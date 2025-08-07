@@ -27,11 +27,13 @@ export interface RichLLMInteraction {
 }
 
 // Model configuration
-export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-20250514";
+export const ANALYSIS_MODEL = typeof process !== 'undefined' && process.env?.ANALYSIS_MODEL 
+  ? process.env.ANALYSIS_MODEL 
+  : "claude-sonnet-4-20250514";
 
 // Configuration for creating Anthropic client
 export function getAnthropicApiKey(): string | undefined {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = typeof process !== 'undefined' ? process.env?.ANTHROPIC_API_KEY : undefined;
   if (!apiKey) {
     console.error('ERROR: ANTHROPIC_API_KEY is not set');
   }
@@ -39,15 +41,15 @@ export function getAnthropicApiKey(): string | undefined {
 }
 
 export function getHeliconeApiKey(): string | undefined {
-  return process.env.HELICONE_API_KEY;
+  return typeof process !== 'undefined' ? process.env?.HELICONE_API_KEY : undefined;
 }
 
 export function isHeliconeEnabled(): boolean {
-  return process.env.HELICONE_CACHE_ENABLED === "true";
+  return typeof process !== 'undefined' && process.env?.HELICONE_CACHE_ENABLED === "true";
 }
 
 export function getHeliconeMaxAge(): string {
-  const maxAge = process.env.HELICONE_CACHE_MAX_AGE;
+  const maxAge = typeof process !== 'undefined' ? process.env?.HELICONE_CACHE_MAX_AGE : undefined;
   if (maxAge) {
     const parsed = parseInt(maxAge, 10);
     if (isNaN(parsed) || parsed <= 0) {
@@ -60,7 +62,7 @@ export function getHeliconeMaxAge(): string {
 }
 
 export function getHeliconeMaxSize(): string {
-  const maxSize = process.env.HELICONE_CACHE_BUCKET_MAX_SIZE;
+  const maxSize = typeof process !== 'undefined' ? process.env?.HELICONE_CACHE_BUCKET_MAX_SIZE : undefined;
   if (maxSize) {
     const parsed = parseInt(maxSize, 10);
     if (isNaN(parsed) || parsed <= 0) {
@@ -94,7 +96,7 @@ export function validateConfiguration(): ConfigValidationResult {
   }
 
   // Validate numeric configurations
-  const maxAge = process.env.HELICONE_CACHE_MAX_AGE;
+  const maxAge = typeof process !== 'undefined' ? process.env?.HELICONE_CACHE_MAX_AGE : undefined;
   if (maxAge) {
     const parsed = parseInt(maxAge, 10);
     if (isNaN(parsed) || parsed <= 0) {
@@ -102,7 +104,7 @@ export function validateConfiguration(): ConfigValidationResult {
     }
   }
 
-  const maxSize = process.env.HELICONE_CACHE_BUCKET_MAX_SIZE;
+  const maxSize = typeof process !== 'undefined' ? process.env?.HELICONE_CACHE_BUCKET_MAX_SIZE : undefined;
   if (maxSize) {
     const parsed = parseInt(maxSize, 10);
     if (isNaN(parsed) || parsed <= 0) {

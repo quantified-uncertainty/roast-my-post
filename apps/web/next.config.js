@@ -107,9 +107,10 @@ const nextConfig = {
       };
     }
     
-    // Ignore native node modules
+    // Ignore native node modules EXCEPT Prisma query engine
     config.module.rules.push({
       test: /\.node$/,
+      exclude: /libquery_engine/,  // Don't ignore Prisma query engine files
       use: 'ignore-loader',
     });
 

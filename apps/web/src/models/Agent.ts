@@ -16,59 +16,55 @@ export type { AgentInput };
 
 export class AgentModel {
   static async createAgent(data: AgentInput, userId: string): Promise<Agent> {
-    try {
-      const id = nanoid(16);
-      const agent = await prisma.agent.create({
-        data: {
-          id,
-          submittedById: userId,
-          versions: {
-            create: {
-              version: 1,
-              name: data.name,
-              description: data.description,
-              primaryInstructions: data.primaryInstructions,
-              selfCritiqueInstructions: data.selfCritiqueInstructions,
-              providesGrades: data.providesGrades || false,
-              extendedCapabilityId: data.extendedCapabilityId,
-              readme: data.readme,
-            },
+    const id = nanoid(16);
+    const agent = await prisma.agent.create({
+      data: {
+        id,
+        submittedById: userId,
+        versions: {
+          create: {
+            version: 1,
+            name: data.name,
+            description: data.description,
+            primaryInstructions: data.primaryInstructions,
+            selfCritiqueInstructions: data.selfCritiqueInstructions,
+            providesGrades: data.providesGrades || false,
+            extendedCapabilityId: data.extendedCapabilityId,
+            readme: data.readme,
           },
         },
-        include: {
-          versions: {
-            orderBy: { version: "desc" },
-            take: 1,
-          },
-          submittedBy: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
+      },
+      include: {
+        versions: {
+          orderBy: { version: "desc" },
+          take: 1,
+        },
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
         },
-      });
+      },
+    });
 
-      return AgentSchema.parse({
-        id: agent.id,
-        name: agent.versions[0].name,
-        version: agent.versions[0].version.toString(),
-        description: agent.versions[0].description,
-        primaryInstructions: agent.versions[0].primaryInstructions || undefined,
-        selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
-        providesGrades: agent.versions[0].providesGrades ?? false,
-        extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
-        readme: agent.versions[0].readme || undefined,
-        owner: {
-          id: agent.submittedById,
-          name: agent.submittedBy.name || "Unknown",
-          email: agent.submittedBy.email || "unknown@example.com",
-        },
-      });
-    } finally {
-      await prisma.$disconnect();
-    }
+    return AgentSchema.parse({
+      id: agent.id,
+      name: agent.versions[0].name,
+      version: agent.versions[0].version.toString(),
+      description: agent.versions[0].description,
+      primaryInstructions: agent.versions[0].primaryInstructions || undefined,
+      selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
+      providesGrades: agent.versions[0].providesGrades ?? false,
+      extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
+      readme: agent.versions[0].readme || undefined,
+      owner: {
+        id: agent.submittedById,
+        name: agent.submittedBy.name || "Unknown",
+        email: agent.submittedBy.email || "unknown@example.com",
+      },
+    });
   }
 
   static async updateAgent(
@@ -76,186 +72,170 @@ export class AgentModel {
     data: AgentInput,
     userId: string
   ): Promise<Agent> {
-    try {
-      const existingAgent = await prisma.agent.findUnique({
-        where: { id: agentId },
-        include: { versions: { orderBy: { version: "desc" }, take: 1 } },
-      });
+    const existingAgent = await prisma.agent.findUnique({
+      where: { id: agentId },
+      include: { versions: { orderBy: { version: "desc" }, take: 1 } },
+    });
 
-      if (!existingAgent) throw new Error("Agent not found");
-      if (existingAgent.submittedById !== userId)
-        throw new Error("You do not have permission to update this agent");
+    if (!existingAgent) throw new Error("Agent not found");
+    if (existingAgent.submittedById !== userId)
+      throw new Error("You do not have permission to update this agent");
 
-      const latestVersion = existingAgent.versions[0].version;
+    const latestVersion = existingAgent.versions[0].version;
 
-      const agent = await prisma.agent.update({
-        where: { id: agentId },
-        data: {
-          updatedAt: new Date(),
-          versions: {
-            create: {
-              version: latestVersion + 1,
-              name: data.name,
-              description: data.description,
-              primaryInstructions: data.primaryInstructions,
-              selfCritiqueInstructions: data.selfCritiqueInstructions,
-              providesGrades: data.providesGrades || false,
-              extendedCapabilityId: data.extendedCapabilityId,
-              readme: data.readme,
-            },
+    const agent = await prisma.agent.update({
+      where: { id: agentId },
+      data: {
+        updatedAt: new Date(),
+        versions: {
+          create: {
+            version: latestVersion + 1,
+            name: data.name,
+            description: data.description,
+            primaryInstructions: data.primaryInstructions,
+            selfCritiqueInstructions: data.selfCritiqueInstructions,
+            providesGrades: data.providesGrades || false,
+            extendedCapabilityId: data.extendedCapabilityId,
+            readme: data.readme,
           },
         },
-        include: {
-          versions: { orderBy: { version: "desc" }, take: 1 },
-          submittedBy: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
+      },
+      include: {
+        versions: { orderBy: { version: "desc" }, take: 1 },
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
         },
-      });
+      },
+    });
 
-      return AgentSchema.parse({
-        id: agent.id,
-        name: agent.versions[0].name,
-        version: agent.versions[0].version.toString(),
-        description: agent.versions[0].description,
-        primaryInstructions: agent.versions[0].primaryInstructions || undefined,
-        selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
-        providesGrades: agent.versions[0].providesGrades ?? false,
-        extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
-        readme: agent.versions[0].readme || undefined,
-        owner: {
-          id: agent.submittedById,
-          name: agent.submittedBy.name || "Unknown",
-          email: agent.submittedBy.email || "unknown@example.com",
-        },
-      });
-    } finally {
-      await prisma.$disconnect();
-    }
+    return AgentSchema.parse({
+      id: agent.id,
+      name: agent.versions[0].name,
+      version: agent.versions[0].version.toString(),
+      description: agent.versions[0].description,
+      primaryInstructions: agent.versions[0].primaryInstructions || undefined,
+      selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
+      providesGrades: agent.versions[0].providesGrades ?? false,
+      extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
+      readme: agent.versions[0].readme || undefined,
+      owner: {
+        id: agent.submittedById,
+        name: agent.submittedBy.name || "Unknown",
+        email: agent.submittedBy.email || "unknown@example.com",
+      },
+    });
   }
 
   static async getAgentWithOwner(
     agentId: string,
     currentUserId?: string
   ): Promise<Agent | null> {
-    try {
-      const dbAgent = await prisma.agent.findUnique({
-        where: { id: agentId },
-        include: {
-          versions: {
-            orderBy: { version: "desc" },
-            take: 1,
-          },
-          submittedBy: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-          ephemeralBatch: {
-            select: {
-              trackingId: true,
-              isEphemeral: true,
-            },
+    const dbAgent = await prisma.agent.findUnique({
+      where: { id: agentId },
+      include: {
+        versions: {
+          orderBy: { version: "desc" },
+          take: 1,
+        },
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
         },
-      });
-
-      if (!dbAgent) return null;
-
-      const isOwner = currentUserId === dbAgent.submittedById;
-
-      return AgentSchema.parse({
-        id: dbAgent.id,
-        name: dbAgent.versions[0].name,
-        version: dbAgent.versions[0].version.toString(),
-        description: dbAgent.versions[0].description,
-        primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,
-        selfCritiqueInstructions: dbAgent.versions[0].selfCritiqueInstructions || undefined,
-        providesGrades: dbAgent.versions[0].providesGrades ?? false,
-        extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
-        readme: dbAgent.versions[0].readme || undefined,
-        owner: {
-          id: dbAgent.submittedById,
-          name: dbAgent.submittedBy.name || "Unknown",
+        ephemeralBatch: {
+          select: {
+            trackingId: true,
+            isEphemeral: true,
+          },
         },
-        isOwner,
-        ephemeralBatch: dbAgent.ephemeralBatch,
-      });
-    } finally {
-      await prisma.$disconnect();
-    }
+      },
+    });
+
+    if (!dbAgent) return null;
+
+    const isOwner = currentUserId === dbAgent.submittedById;
+
+    return AgentSchema.parse({
+      id: dbAgent.id,
+      name: dbAgent.versions[0].name,
+      version: dbAgent.versions[0].version.toString(),
+      description: dbAgent.versions[0].description,
+      primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,
+      selfCritiqueInstructions: dbAgent.versions[0].selfCritiqueInstructions || undefined,
+      providesGrades: dbAgent.versions[0].providesGrades ?? false,
+      extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
+      readme: dbAgent.versions[0].readme || undefined,
+      owner: {
+        id: dbAgent.submittedById,
+        name: dbAgent.submittedBy.name || "Unknown",
+      },
+      isOwner,
+      ephemeralBatch: dbAgent.ephemeralBatch,
+    });
   }
 
   static async getAgentVersions(agentId: string): Promise<AgentVersion[]> {
-    try {
-      const versions = await prisma.agentVersion.findMany({
-        where: { agentId },
-        orderBy: { version: "desc" },
-      });
+    const versions = await prisma.agentVersion.findMany({
+      where: { agentId },
+      orderBy: { version: "desc" },
+    });
 
-      return versions.map((version) =>
-        AgentVersionSchema.parse({
-          id: version.id,
-          version: version.version,
-          name: version.name,
-          description: version.description,
-          primaryInstructions: version.primaryInstructions || undefined,
-          selfCritiqueInstructions: version.selfCritiqueInstructions || undefined,
-          providesGrades: version.providesGrades ?? false,
-          extendedCapabilityId: version.extendedCapabilityId || undefined,
-          readme: version.readme || undefined,
-          createdAt: version.createdAt,
-          updatedAt: version.updatedAt,
-        })
-      );
-    } finally {
-      await prisma.$disconnect();
-    }
+    return versions.map((version) =>
+      AgentVersionSchema.parse({
+        id: version.id,
+        version: version.version,
+        name: version.name,
+        description: version.description,
+        primaryInstructions: version.primaryInstructions || undefined,
+        selfCritiqueInstructions: version.selfCritiqueInstructions || undefined,
+        providesGrades: version.providesGrades ?? false,
+        extendedCapabilityId: version.extendedCapabilityId || undefined,
+        readme: version.readme || undefined,
+        createdAt: version.createdAt,
+        updatedAt: version.updatedAt,
+      })
+    );
   }
 
   static async getAgentReview(agentId: string): Promise<AgentReview | null> {
-    try {
-      const evaluationVersion = await prisma.evaluationVersion.findFirst({
-        where: {
-          agentId: agentId,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          evaluation: {
-            include: {
-              document: {
-                include: {
-                  submittedBy: true,
-                },
+    const evaluationVersion = await prisma.evaluationVersion.findFirst({
+      where: {
+        agentId: agentId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        evaluation: {
+          include: {
+            document: {
+              include: {
+                submittedBy: true,
               },
             },
           },
         },
-      });
+      },
+    });
 
-      if (!evaluationVersion) {
-        return null;
-      }
-
-      return AgentReviewSchema.parse({
-        evaluatedAgentId: agentId,
-        grade: evaluationVersion.grade ?? undefined,
-        summary: evaluationVersion.summary,
-        author:
-          evaluationVersion.evaluation.document.submittedBy.name || "Unknown",
-        createdAt: evaluationVersion.createdAt,
-      });
-    } finally {
-      await prisma.$disconnect();
+    if (!evaluationVersion) {
+      return null;
     }
+
+    return AgentReviewSchema.parse({
+      evaluatedAgentId: agentId,
+      grade: evaluationVersion.grade ?? undefined,
+      summary: evaluationVersion.summary,
+      author:
+        evaluationVersion.evaluation.document.submittedBy.name || "Unknown",
+      createdAt: evaluationVersion.createdAt,
+    });
   }
 
   static async getAgentDocuments(agentId: string, limit: number = 40) {
@@ -320,8 +300,9 @@ export class AgentModel {
           priceInDollars: latestEvaluationVersion?.job?.priceInDollars?.toString() || null,
         };
       });
-    } finally {
-      await prisma.$disconnect();
+    } catch (error) {
+      console.error('Error fetching agent documents:', error);
+      throw error;
     }
   }
 
@@ -437,8 +418,9 @@ export class AgentModel {
           job: evalVersion.job,
         };
       });
-    } finally {
-      await prisma.$disconnect();
+    } catch (error) {
+      console.error('Error fetching agent evaluations:', error);
+      throw error;
     }
   }
 }

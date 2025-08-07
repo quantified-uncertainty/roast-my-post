@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvaluationContent } from "@/components/evaluation";
 import type { Agent } from "@roast/ai";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { decimalToNumber } from "@/lib/prisma-serializers-client";
 
 import { StatusIcon } from "../components";
 import type {

@@ -4,6 +4,13 @@
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "browser": "./browser.ts",
+  "exports": {
+    ".": {
+      "browser": "./browser.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "scripts": {
     "with-env": "dotenv -e ../../apps/web/.env.local --",
     "gen": "pnpm with-env prisma generate",
