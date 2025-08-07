@@ -209,7 +209,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       content: documentVersion.fullContent, // Use computed field directly
       author: documentVersion.authors.join(', '),
       publishedDate: job.evaluation.document.publishedDate.toISOString(),
-      url: documentVersion.urls[0],
+      url: documentVersion.urls[0] || '',
       platforms: documentVersion.platforms,
       reviews: [],
       intendedAgents: documentVersion.intendedAgents,

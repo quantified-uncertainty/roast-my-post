@@ -218,9 +218,10 @@ export class JobRepository implements JobRepositoryInterface {
   async claimNextPendingJob(): Promise<JobWithRelations | null> {
     const result = await this.prisma.$transaction(async (tx) => {
       // Find the oldest pending job with row-level lock
+      const pendingStatus = JobStatus.PENDING;
       const job = await tx.$queryRaw<Array<{id: string}>>`
         SELECT id FROM "Job" 
-        WHERE status = 'PENDING'
+        WHERE status = ${pendingStatus}
         ORDER BY "createdAt" ASC
         LIMIT 1
         FOR UPDATE SKIP LOCKED

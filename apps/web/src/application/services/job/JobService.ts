@@ -115,9 +115,9 @@ export class JobService implements JobServiceInterface {
 
       this.logger.info(`Successfully marked job ${id} as FAILED`);
 
-      // Check if we should create a retry
-      if (await this.shouldRetry(error, job.attempts)) {
-        const retryJob = await this.createRetryJob(job);
+      // Check if we should create a retry (use updated job data to avoid race conditions)
+      if (await this.shouldRetry(error, updatedJob.attempts)) {
+        const retryJob = await this.createRetryJob(updatedJob);
         this.logger.info(`Created retry job ${retryJob.id} for failed job ${id}`);
       } else {
         const reason = !this.isRetryableError(errorMessage) 
