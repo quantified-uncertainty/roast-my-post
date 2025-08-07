@@ -26,9 +26,11 @@ export const isTest = (): boolean => _isTest;
 /**
  * Get environment variable with fallback
  */
-export const getEnvVar = (key: string, fallback?: string): string | undefined => {
+export function getEnvVar(key: string): string | undefined;
+export function getEnvVar(key: string, fallback: string): string;
+export function getEnvVar(key: string, fallback?: string): string | undefined {
   return process.env[key] || fallback;
-};
+}
 
 /**
  * Get required environment variable

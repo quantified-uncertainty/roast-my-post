@@ -7,3 +7,4 @@ export * from './errors';
 export * from './result';
 export * from './environment';
 export * from './logger';
+export * from './config';

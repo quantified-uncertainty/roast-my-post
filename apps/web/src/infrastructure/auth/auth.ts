@@ -13,24 +13,23 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 
 import { prisma } from "@/infrastructure/database/prisma";
+import { config as appConfig } from '@roast/domain';
 
 function buildAuthConfig(): NextAuthConfig {
   const providers: Provider[] = [];
 
-  const { AUTH_SECRET, NEXTAUTH_SECRET, AUTH_RESEND_KEY, EMAIL_FROM } = process.env;
-
-  // Use AUTH_SECRET (v5) with fallback to NEXTAUTH_SECRET (v4 legacy)
-  const authSecret = AUTH_SECRET || NEXTAUTH_SECRET;
+  // Use centralized config with legacy fallback for NEXTAUTH_SECRET
+  const authSecret = appConfig.auth.secret || process.env.NEXTAUTH_SECRET;
 
   if (!authSecret) {
     throw new Error('AUTH_SECRET (or legacy NEXTAUTH_SECRET) environment variable is required but not found');
   }
 
-  if (AUTH_RESEND_KEY && EMAIL_FROM) {
+  if (appConfig.auth.resendKey && appConfig.auth.emailFrom) {
     providers.push(
       Resend({
-        apiKey: AUTH_RESEND_KEY,
-        from: EMAIL_FROM,
+        apiKey: appConfig.auth.resendKey,
+        from: appConfig.auth.emailFrom,
         name: "Email",
       })
     );

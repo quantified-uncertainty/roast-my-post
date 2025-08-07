@@ -411,6 +411,7 @@ This project is organized as a pnpm workspace monorepo:
 
 ### Development Patterns
 - Monorepo with shared packages for database access
+- **Centralized Configuration**: Type-safe, validated environment configuration via `@roast/domain`
 - Async job processing prevents UI blocking
 - Memoized highlight rendering for performance  
 - Runtime validation for LLM outputs
@@ -506,6 +507,46 @@ The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does n
 - `./dev/scripts/worktree-manager.sh list` - List all worktrees and their status
 - `./dev/scripts/worktree-manager.sh ports` - Show port allocations
 - See `/dev/docs/development/worktrees.md` for detailed documentation
+
+## Centralized Configuration System (2025-01-07)
+
+### Overview
+The project uses a centralized, type-safe configuration system via `@roast/domain` that replaces scattered `process.env` usage throughout the codebase.
+
+### Usage
+```typescript
+import { config } from '@roast/domain';
+
+// Type-safe access to all configuration
+const dbUrl = config.database.url;
+const isDev = config.env.isDevelopment;
+const aiKey = config.ai.anthropicApiKey;
+const maxWorkers = config.jobs.adaptiveWorkers.maxWorkers;
+```
+
+### Configuration Categories
+- **`config.env`**: Environment detection (development, production, test)
+- **`config.database`**: Database connection settings
+- **`config.ai`**: AI service configurations (Anthropic, OpenAI, Helicone)
+- **`config.auth`**: Authentication secrets and email settings  
+- **`config.server`**: Server port and host configuration
+- **`config.features`**: Feature flags (debug logging, Docker build mode)
+- **`config.jobs`**: Adaptive worker configuration for job processing
+
+### Benefits
+- **Type Safety**: Full IntelliSense and auto-completion for all config values
+- **Validation**: Startup validation catches missing/invalid environment variables
+- **Consistency**: Single source of truth for all environment configuration
+- **Test Friendly**: Provides sensible defaults for test environments
+- **Documentation**: Self-documenting configuration schema
+
+### Environment Variables
+All environment variables are automatically validated and typed. See `internal-packages/domain/src/core/config.ts` for the complete schema.
+
+### Migration Notes
+- **Before**: `process.env.ANTHROPIC_API_KEY` (string | undefined, no validation)
+- **After**: `config.ai.anthropicApiKey` (string | undefined, validated)
+- Direct `process.env` access should be avoided in favor of the typed config
 
 ## Recent Updates (2025-02-02)
 

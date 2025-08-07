@@ -7,19 +7,19 @@
  */
 
 import { initializeAI } from '@roast/ai';
-import { isServer, getEnvVar } from '@roast/domain';
+import { config, isServer } from '@roast/domain';
 
-// Initialize the AI package with environment variables
+// Initialize the AI package with centralized configuration
 export function initializeAIPackage() {
   initializeAI({
-    anthropicApiKey: getEnvVar('ANTHROPIC_API_KEY'),
-    openRouterApiKey: getEnvVar('OPENROUTER_API_KEY'),
-    heliconeApiKey: getEnvVar('HELICONE_API_KEY'),
-    heliconeEnabled: getEnvVar('HELICONE_ENABLED') === 'true',
-    heliconeMaxAge: getEnvVar('HELICONE_CACHE_MAX_AGE', '3600'),
-    heliconeMaxSize: getEnvVar('HELICONE_CACHE_BUCKET_MAX_SIZE', '10'),
-    searchModel: getEnvVar('SEARCH_MODEL', 'claude-3-haiku-20240307'),
-    analysisModel: getEnvVar('ANALYSIS_MODEL', 'claude-3-5-sonnet-20241022'),
+    anthropicApiKey: config.ai.anthropicApiKey,
+    openRouterApiKey: config.ai.openRouterApiKey,
+    heliconeApiKey: config.ai.heliconeApiKey,
+    heliconeEnabled: config.ai.heliconeEnabled,
+    heliconeMaxAge: config.ai.heliconeMaxAge.toString(),
+    heliconeMaxSize: config.ai.heliconeBucketMaxSize.toString(),
+    searchModel: config.ai.searchModel,
+    analysisModel: config.ai.analysisModel,
   });
 }
 

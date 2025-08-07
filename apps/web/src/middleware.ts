@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { config as appConfig } from '@roast/domain';
 
 export function middleware(request: NextRequest) {
   // Generate a unique nonce for each request
   const nonce = Buffer.from(globalThis.crypto.randomUUID()).toString('base64');
   
   // Check if we're in development
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = appConfig.env.isDevelopment;
   
   // Skip CSP for API routes to avoid interfering with server-side requests
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/');

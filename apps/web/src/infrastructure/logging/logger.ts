@@ -3,7 +3,7 @@
  * In production, this can be replaced with a proper logging service
  */
 
-import { isDevelopment, isTest } from '@roast/domain';
+import { config, isDevelopment, isTest } from '@roast/domain';
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -55,7 +55,7 @@ class Logger {
 
   debug(message: string, context?: LogContext) {
     // Allow debug logs in tests when explicitly enabled
-    const allowTestDebug = process.env.JEST_DEBUG === "true" || process.env.TEST_DEBUG === "true";
+    const allowTestDebug = config.features.testDebug;
     if (this.isDevelopment && (!this.isTest || allowTestDebug)) {
       this.log("debug", message, context);
     }
