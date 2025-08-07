@@ -4,6 +4,7 @@ export interface DocumentWithReviewsProps {
   document: Document;
   isOwner?: boolean;
   initialSelectedEvalIds?: string[];
+  showDebugComments?: boolean;
 }
 
 export interface EvaluationState {
@@ -22,6 +23,7 @@ export interface EvaluationViewProps {
   onEvaluationStateChange: (newState: EvaluationState) => void;
   document: Document;
   contentWithMetadataPrepend: string;
+  showDebugComments?: boolean;
 }
 
 export interface EvaluationSelectorModalProps {

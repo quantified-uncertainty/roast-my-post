@@ -13,6 +13,7 @@ export function DocumentWithEvaluations({
   document,
   isOwner = false,
   initialSelectedEvalIds,
+  showDebugComments = false,
 }: DocumentWithReviewsProps) {
   const hasEvaluations = document.reviews && document.reviews.length > 0;
   
@@ -87,6 +88,7 @@ export function DocumentWithEvaluations({
           onEvaluationStateChange={setEvaluationState}
           document={document}
           contentWithMetadataPrepend={document.content}
+          showDebugComments={showDebugComments}
         />
       ) : (
         <EmptyEvaluationsView

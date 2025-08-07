@@ -57,6 +57,10 @@ class ExtractedForecast {
     return this.extractedForecast.resolutionDate;
   }
 
+  getChunk(): TextChunk {
+    return this.chunk;
+  }
+
   get averageScore(): number {
     return (
       (this.extractedForecast.importanceScore +
@@ -139,16 +143,28 @@ class ExtractedForecast {
     return `📊 Forecast: ${truncated}`;
   }
   
-  private getLevel(): 'error' | 'warning' | 'info' | 'success' {
+  private getLevel(): 'error' | 'warning' | 'info' | 'success' | 'debug' {
     // Forecasts are informational by nature
     const averageScore = this.averageScore;
     
-    if (averageScore >= 80) {
-      return 'info';
-    } else if (averageScore >= 50) {
-      return 'info';
+    // If we have our forecast, show as info level
+    if (this.ourForecast) {
+      if (averageScore >= 80) {
+        return 'success';
+      } else if (averageScore >= 50) {
+        return 'info';
+      } else {
+        return 'warning';
+      }
+    }
+    
+    // For predictions we couldn't analyze:
+    // - High quality predictions that failed: 'info' (visible)
+    // - Low quality predictions: 'debug' (hidden)
+    if (this.shouldGetOurForecastScore >= 60) {
+      return 'info';  // Important prediction we couldn't analyze
     } else {
-      return 'warning'; // Low quality forecasts get warning level
+      return 'debug'; // Low quality prediction
     }
   }
 
@@ -176,12 +192,10 @@ class ExtractedForecast {
       });
     }
 
-    // Keep formatted description for backwards compatibility
-    const forecastWithPrediction: ForecastWithPrediction = {
-      forecast: this.extractedForecast,
-      prediction: this.ourForecast || undefined,
-    };
-    const formattedDescription = generateForecastComment(forecastWithPrediction);
+    // Build appropriate description based on whether we have a forecast
+    const description = this.ourForecast ? 
+      this.buildVerifiedDescription() : 
+      this.buildSkipDescription();
 
     return CommentBuilder.build({
       plugin: 'forecast',
@@ -191,9 +205,9 @@ class ExtractedForecast {
       toolChain,
       
       // Required fields
-      description: formattedDescription,
+      description,
       header: this.buildTitle(),
-      level: this.averageScore >= 7 ? 'success' : this.averageScore >= 5 ? 'info' : 'warning',
+      level: this.getLevel(),
       
       // Additional structured content
       observation: this.buildObservation(),
@@ -266,7 +280,54 @@ class ExtractedForecast {
     return undefined;
   }
 
-  // Removed - now using generateForecastComment from commentGeneration.ts
+  private buildVerifiedDescription(): string {
+    // When we have a forecast, use the existing format
+    const forecastWithPrediction: ForecastWithPrediction = {
+      forecast: this.extractedForecast,
+      prediction: this.ourForecast || undefined,
+    };
+    return generateForecastComment(forecastWithPrediction);
+  }
+  
+  private buildSkipDescription(): string {
+    const shouldAnalyze = this.shouldGetOurForecastScore >= 60;
+    
+    let skipReason: string;
+    let detailedReason: string;
+    
+    if (shouldAnalyze) {
+      // High quality but couldn't generate forecast
+      skipReason = "Technical complexity exceeded automated forecasting capabilities";
+      detailedReason = `This prediction was high-quality enough to warrant analysis, but the system couldn't generate a probability estimate. This could be due to:
+- Conceptual complexity requiring domain expertise
+- Insufficient reference data for calibration  
+- Technical limitations in the forecasting tools
+
+**Recommendation:** This prediction would benefit from expert human analysis.`;
+    } else {
+      // Low quality prediction
+      skipReason = "Low quality prediction not suitable for analysis";
+      detailedReason = "The prediction was too vague or poorly grounded to generate meaningful probability estimates.";
+    }
+    
+    return `**Prediction Found:**
+> "${this.extractedForecast.originalText}"
+
+${this.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
+> "${this.extractedForecast.rewrittenPredictionText}"
+
+` : ''}**Skip Reason:** ${skipReason}
+
+**Quality Score:** ${this.averageScore.toFixed(1)}/10
+
+**Scoring Breakdown:**
+- Importance: ${this.extractedForecast.importanceScore}/10 (how central to document)
+- Precision: ${this.extractedForecast.precisionScore}/10 (how specific/measurable)
+- Verifiability: ${this.extractedForecast.verifiabilityScore}/10 (how easy to verify outcome)  
+- Robustness: ${this.extractedForecast.robustnessScore}/10 (empirical grounding)
+
+${detailedReason}`;
+  }
 }
 
 export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
@@ -464,51 +525,246 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   private async createComments(): Promise<void> {
-    // Process comments in parallel for better performance
+    // Process regular comments in parallel for better performance
     const comments = await Promise.all(
       this.extractedForecasts.map(extractedForecast => extractedForecast.getComment())
     );
     
-    // Filter out null comments and add to array
-    this.comments = comments.filter((comment): comment is Comment => comment !== null);
+    // Generate debug comments for forecasts that were not investigated
+    const debugComments = await this.generateDebugComments();
+    
+    // Filter out null comments and combine regular and debug comments
+    const regularComments = comments.filter((comment): comment is Comment => comment !== null);
+    const validDebugComments = debugComments.filter((comment): comment is Comment => comment !== null);
+    
+    this.comments = [...regularComments, ...validDebugComments];
 
-    logger.debug(`ForecastAnalyzer: Created ${this.comments.length} comments`);
+    logger.debug(`ForecastAnalyzer: Created ${this.comments.length} comments (${regularComments.length} regular, ${validDebugComments.length} debug)`);
+  }
+
+  private async generateDebugComments(): Promise<(Comment | null)[]> {
+    const debugComments: (Comment | null)[] = [];
+    
+    // IMPORTANT: We now handle skipped forecasts in the regular comment flow,
+    // so we only need debug comments for forecasts that couldn't be located.
+    // This avoids creating duplicate comments.
+    
+    // Debug comments ONLY for forecasts that couldn't be located
+    for (const forecast of this.extractedForecasts) {
+      const location = await forecast.findLocationInDocument();
+      if (!location) {
+        const debugComment = await this.createLocationDebugComment(forecast);
+        if (debugComment) {
+          debugComments.push(debugComment);
+        }
+      }
+    }
+
+    return debugComments;
+  }
+
+  // DEPRECATED: These methods are no longer used as we handle skipped forecasts in regular comments
+  // Keeping them commented for reference
+  /*
+  private async createEstimateFailedDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
+    // This functionality is now handled in buildSkipDescription()
+    return null;
+  }
+
+  private async createLowQualityDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
+    // This functionality is now handled in buildSkipDescription()
+    return null;
+  }
+  */
+
+  private async createLocationDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractForecastingClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 40).toISOString(),
+        result: forecast.extractedForecast
+      },
+      {
+        toolName: 'findLocation',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { status: 'failed', reason: 'text_not_found' }
+      }
+    ];
+
+    // Use a default position since we can't locate the text
+    const location = {
+      startOffset: 0,
+      endOffset: forecast.extractedForecast.originalText.length,
+      quotedText: forecast.extractedForecast.originalText
+    };
+
+    return CommentBuilder.build({
+      plugin: 'forecast',
+      location,
+      chunkId: forecast.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Prediction Detected, Location Unknown`,
+      level: 'debug' as const,
+      description: `**Prediction Found:**
+> "${forecast.extractedForecast.originalText}"
+
+${forecast.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
+> "${forecast.extractedForecast.rewrittenPredictionText}"
+
+` : ''}**Skip Reason:** Unable to locate prediction precisely in document
+
+This prediction was extracted but couldn't be positioned accurately. This might be due to:
+- Text reformatting during document processing
+- Prediction spanning multiple paragraphs
+- Paraphrasing during the extraction process
+
+The analysis may still be valid, but the highlighting won't be precise.`,
+    });
   }
 
   private generateAnalysis(): void {
-    if (this.extractedForecasts.length === 0) {
+    const totalForecasts = this.extractedForecasts.length;
+    
+    if (totalForecasts === 0) {
       this.summary = "No forecasting claims found.";
-      this.analysis =
-        "No predictions or forecasts were identified in this document.";
+      this.analysis = "No predictions or forecasts were identified in this document.";
       return;
     }
 
-    // Convert to ForecastWithPrediction format for the summary generator
-    const forecastsWithPredictions: ForecastWithPrediction[] =
-      this.extractedForecasts.map((ef) => ({
-        forecast: ef.extractedForecast,
-        prediction: ef.getOurForecast() || undefined,
-      }));
-
-    // Use the new document summary generator
-    this.analysis = generateDocumentSummary(forecastsWithPredictions);
-
-    // Generate simple summary for the summary field
-    const totalForecasts = this.extractedForecasts.length;
     const forecastsWithProbability = this.extractedForecasts.filter(
       (ef) => ef.extractedForecast.authorProbability !== undefined
     ).length;
     const forecastsWithOurEstimate = this.extractedForecasts.filter(
       (ef) => ef.getOurForecast() !== null
     ).length;
-
-    this.summary = `Found ${totalForecasts} forecasting claim${totalForecasts !== 1 ? "s" : ""}`;
+    
+    // Assess forecast quality
+    const hasExplicitProbabilities = forecastsWithProbability > 0;
+    const mostHaveEstimates = forecastsWithOurEstimate > totalForecasts * 0.7;
+    
+    // User-focused summary (prioritize by assessment quality)
+    let summary = "";
+    if (hasExplicitProbabilities && mostHaveEstimates) {
+      summary = "Forecasting claims identified with quantified predictions";
+    } else if (hasExplicitProbabilities) {
+      summary = "Mixed forecasting quality: some claims lack quantification";
+    } else if (forecastsWithOurEstimate > 0) {
+      summary = "Forecasting claims identified requiring probability estimates";
+    } else {
+      summary = "Forecasting claims identified but difficult to quantify";
+    }
+    
+    // Build impact-oriented analysis with template structure
+    let analysis = "";
+    
+    // Key Findings
+    if (totalForecasts > 0) {
+      analysis += "**Key Findings:**\n";
+      analysis += `- ${totalForecasts} forecasting claim${totalForecasts !== 1 ? 's' : ''} identified\n`;
+      if (forecastsWithProbability > 0) {
+        analysis += `- ${forecastsWithProbability} include${forecastsWithProbability === 1 ? 's' : ''} explicit probability estimates\n`;
+      }
+      if (forecastsWithOurEstimate > 0) {
+        analysis += `- Generated probability estimates for ${forecastsWithOurEstimate} additional claim${forecastsWithOurEstimate !== 1 ? 's' : ''}\n`;
+      }
+      analysis += "\n";
+    }
+    
+    // Document Impact
+    analysis += "**Document Impact:**\n";
+    if (hasExplicitProbabilities && mostHaveEstimates) {
+      analysis += "Strong forecasting methodology with quantified predictions enhances document credibility for future evaluation.\n";
+    } else if (hasExplicitProbabilities) {
+      analysis += "Mixed forecasting quality. Some claims well-quantified while others lack precision for future verification.\n";
+    } else {
+      analysis += "Forecasting claims present but lack quantification. Adding probability estimates would improve predictive value.\n";
+    }
+    analysis += "\n";
+    
+    // Specific Claims Found
+    if (totalForecasts > 0) {
+      analysis += "**🔍 Specific Claims Found:**\n\n";
+      
+      // Show top forecasts (prioritize those with explicit probabilities)
+      const sortedForecasts = this.extractedForecasts
+        .sort((a, b) => {
+          const aHasProb = a.extractedForecast.authorProbability !== undefined;
+          const bHasProb = b.extractedForecast.authorProbability !== undefined;
+          if (aHasProb && !bHasProb) return -1;
+          if (!aHasProb && bHasProb) return 1;
+          return (b.extractedForecast.importanceScore || 0) - (a.extractedForecast.importanceScore || 0);
+        })
+        .slice(0, 3);
+      
+      for (const ef of sortedForecasts) {
+        const forecast = ef.extractedForecast;
+        const hasProb = forecast.authorProbability !== undefined;
+        const ourEstimate = ef.getOurForecast();
+        const icon = hasProb ? '📊' : (ourEstimate ? '🤖' : '❓');
+        
+        analysis += `- ${icon} "${forecast.originalText}"\n`;
+        if (hasProb) {
+          analysis += `  - Author probability: ${forecast.authorProbability}%\n`;
+        }
+        if (ourEstimate && !hasProb) {
+          analysis += `  - Our estimate: ${Math.round(ourEstimate.probability * 100)}%\n`;
+        }
+      }
+      
+      if (this.extractedForecasts.length > 3) {
+        analysis += `  - ...and ${this.extractedForecasts.length - 3} more forecast${this.extractedForecasts.length - 3 !== 1 ? 's' : ''}\n`;
+      }
+      analysis += "\n";
+    }
+    
+    // Technical Details (collapsible)
+    analysis += "<details>\n<summary>Technical Details</summary>\n\n";
+    
+    // Quick summary with visual indicators
+    analysis += "**📊 Quick Summary:**\n";
+    const indicators = [];
     if (forecastsWithProbability > 0) {
-      this.summary += ` (${forecastsWithProbability} with explicit probabilities)`;
+      indicators.push(`📊 ${forecastsWithProbability} explicit probability${forecastsWithProbability !== 1 ? 'ies' : 'y'}`);
     }
     if (forecastsWithOurEstimate > 0) {
-      this.summary += `. Generated our own estimates for ${forecastsWithOurEstimate} claims.`;
+      indicators.push(`🤖 ${forecastsWithOurEstimate} estimated`);
     }
+    const unquantified = totalForecasts - forecastsWithProbability - forecastsWithOurEstimate;
+    if (unquantified > 0) {
+      indicators.push(`❓ ${unquantified} unquantified`);
+    }
+    
+    if (indicators.length > 0) {
+      analysis += indicators.join(' • ') + '\n\n';
+    }
+    
+    analysis += `**🎯 Forecasting Quality:**\n`;
+    if (forecastsWithProbability > 0) {
+      analysis += `- ${Math.round(forecastsWithProbability / totalForecasts * 100)}% of claims include explicit probabilities\n`;
+    }
+    if (forecastsWithOurEstimate > 0) {
+      analysis += `- Generated estimates for ${Math.round(forecastsWithOurEstimate / totalForecasts * 100)}% of remaining claims\n`;
+    }
+    const quantificationRate = (forecastsWithProbability + forecastsWithOurEstimate) / totalForecasts;
+    analysis += `- Overall quantification rate: ${Math.round(quantificationRate * 100)}%\n\n`;
+    
+    // Convert to ForecastWithPrediction format for the detailed summary generator
+    const forecastsWithPredictions: ForecastWithPrediction[] =
+      this.extractedForecasts.map((ef) => ({
+        forecast: ef.extractedForecast,
+        prediction: ef.getOurForecast() || undefined,
+      }));
+    
+    analysis += `**📝 Detailed Forecast Analysis:**\n`;
+    analysis += generateDocumentSummary(forecastsWithPredictions);
+    analysis += "\n</details>";
+    
+    this.analysis = analysis;
+    this.summary = summary;
   }
 
   getCost(): number {

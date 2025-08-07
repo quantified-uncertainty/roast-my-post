@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
@@ -22,10 +23,30 @@ export function EvaluationView({
   onEvaluationStateChange,
   document,
   contentWithMetadataPrepend,
+  showDebugComments = false,
 }: EvaluationViewProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const contentRef = useRef<HTMLDivElement>(null);
   const evaluationsSectionRef = useRef<HTMLDivElement>(null);
   const [isFullWidth, setIsFullWidth] = useState(false);
+
+  // Debug state management
+  const [localShowDebugComments, setLocalShowDebugComments] = useState(showDebugComments);
+  
+  const handleToggleDebugComments = () => {
+    const newShowDebug = !localShowDebugComments;
+    setLocalShowDebugComments(newShowDebug);
+    
+    // Update URL parameter
+    const params = new URLSearchParams(searchParams.toString());
+    if (newShowDebug) {
+      params.set('debug', 'true');
+    } else {
+      params.delete('debug');
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   // Use the scroll behavior hook
   const { scrollContainerRef, headerVisible, isLargeMode, setIsLargeMode } =
@@ -54,8 +75,13 @@ export function EvaluationView({
     return getValidAndSortedComments(comments);
   }, [selectedEvaluations]);
 
-  // Use all comments directly
-  const displayComments = allComments;
+  // Filter debug comments if showDebugComments is false
+  const displayComments = useMemo(() => {
+    if (localShowDebugComments) {
+      return allComments;
+    }
+    return allComments.filter(comment => comment.level !== 'debug');
+  }, [allComments, localShowDebugComments]);
 
   const highlights = useMemo(
     () =>
@@ -96,6 +122,8 @@ export function EvaluationView({
             onEvaluationStateChange={onEvaluationStateChange}
             isLargeMode={isLargeMode}
             onToggleMode={() => setIsLargeMode((v) => !v)}
+            showDebugComments={localShowDebugComments}
+            onToggleDebugComments={handleToggleDebugComments}
           />
         </div>
       </div>
@@ -155,6 +183,7 @@ export function EvaluationView({
                 document={document as any}
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
+                showDebugComments={localShowDebugComments}
               />
             </div>
           </div>

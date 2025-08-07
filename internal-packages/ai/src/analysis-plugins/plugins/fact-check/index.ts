@@ -49,6 +49,10 @@ export class VerifiedFact {
     return this.claim.topic;
   }
 
+  getChunk(): TextChunk {
+    return this.chunk;
+  }
+
   get averageScore(): number {
     return (this.claim.importanceScore + this.claim.checkabilityScore) / 2;
   }
@@ -141,19 +145,67 @@ export class VerifiedFact {
   }
 
   private buildDescription(): string {
-    let description =
-      this.verification?.explanation ||
-      `Fact-check analysis of: ${this.claim.topic}`;
-
-    // Add sources if available from Perplexity research
-    if (this.verification?.sources && this.verification.sources.length > 0) {
-      description += "\n\nSources:";
-      this.verification.sources.forEach((source, index) => {
-        description += `\n${index + 1}. ${source.title || "Source"} - ${source.url}`;
-      });
+    // If verified, use the verification explanation
+    if (this.verification?.explanation) {
+      let description = this.verification.explanation;
+      
+      // Add sources if available from Perplexity research
+      if (this.verification.sources && this.verification.sources.length > 0) {
+        description += "\n\nSources:";
+        this.verification.sources.forEach((source, index) => {
+          description += `\n${index + 1}. ${source.title || "Source"} - ${source.url}`;
+        });
+      }
+      
+      return description;
     }
+    
+    // For unverified facts, provide detailed skip description
+    return this.buildSkipDescription();
+  }
+  
+  private buildSkipDescription(): string {
+    const shouldVerify = this.shouldVerify();
+    
+    // Determine skip reason
+    let skipReason: string;
+    let detailedReason: string;
+    
+    if (shouldVerify) {
+      // Should have been verified but wasn't (likely hit limit)
+      skipReason = "Processing limit reached (max 25 claims per analysis)";
+      detailedReason = "This claim qualified for verification but was skipped due to resource limits. Consider manual fact-checking for high-priority claims like this.";
+    } else {
+      // Low priority - determine why
+      skipReason = "Low priority for fact-checking resources";
+      
+      const reasons = [];
+      if (this.claim.importanceScore < 60 && this.claim.checkabilityScore < 60) {
+        reasons.push("Both importance and checkability scores were too low.");
+      } else if (this.claim.importanceScore < 60) {
+        reasons.push("Importance score was too low for prioritization.");
+      } else if (this.claim.checkabilityScore < 60) {
+        reasons.push("Checkability score was too low for efficient verification.");
+      } else if (this.claim.truthProbability > 70) {
+        reasons.push("Truth probability was too high (likely accurate) to prioritize.");
+      } else {
+        reasons.push("Did not meet combined scoring thresholds.");
+      }
+      
+      detailedReason = reasons.join(" ");
+    }
+    
+    return `**Claim Found:**
+> "${this.claim.originalText}"
 
-    return description;
+**Skip Reason:** ${skipReason}
+
+**Scoring Breakdown:**
+- Importance: ${this.claim.importanceScore}/100${this.claim.importanceScore >= 60 ? ' ✓' : ''} (threshold: ≥60)
+- Checkability: ${this.claim.checkabilityScore}/100${this.claim.checkabilityScore >= 60 ? ' ✓' : ''} (threshold: ≥60)
+- Truth Probability: ${this.claim.truthProbability}%${this.claim.truthProbability <= 70 ? ' ⚠️' : ''} (threshold: ≤70%)
+
+${detailedReason}`;
   }
 
   private buildTitle(): string {
@@ -171,7 +223,7 @@ export class VerifiedFact {
     } else if (verdict === "unverifiable") {
       header = "Unverifiable";
     } else {
-      header = "Needs verification";
+      header = "Claim Detected, Skipped";
     }
 
     // Add confidence if available
@@ -187,11 +239,19 @@ export class VerifiedFact {
     return header;
   }
 
-  private getLevel(): "error" | "warning" | "info" | "success" {
+  private getLevel(): "error" | "warning" | "info" | "success" | "debug" {
     const verdict = this.verification?.verdict;
     if (verdict === "false") return "error";
     if (verdict === "partially-true") return "warning";
     if (verdict === "true") return "success";
+    
+    // For unverified facts:
+    // - Important facts that should have been verified: 'info' (visible by default)
+    // - Low priority facts: 'debug' (hidden by default)
+    if (!this.verification) {
+      return this.shouldVerify() ? "info" : "debug";
+    }
+    
     return "info";
   }
 
@@ -370,9 +430,15 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       });
 
       const commentResults = await Promise.all(commentPromises);
-      const comments: Comment[] = commentResults.filter(
+      const regularComments: Comment[] = commentResults.filter(
         (comment): comment is Comment => comment !== null
       );
+
+      // Generate debug comments for facts that were not investigated
+      const debugComments = await this.generateDebugComments(documentText);
+
+      // Combine regular and debug comments
+      const comments: Comment[] = [...regularComments, ...debugComments.filter(c => c !== null)];
 
       // Sort comments by importance
       comments.sort((a, b) => (b.importance || 0) - (a.importance || 0));
@@ -606,12 +672,80 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     return totalTokens * COSTS.COST_PER_TOKEN;
   }
 
+  private async generateDebugComments(documentText: string): Promise<(Comment | null)[]> {
+    const debugComments: (Comment | null)[] = [];
+    
+    // IMPORTANT: We now handle skipped facts in the regular comment flow,
+    // so we only need debug comments for facts that couldn't be located.
+    // This avoids creating duplicate comments.
+    
+    // Debug comments ONLY for facts that couldn't be located
+    for (const fact of this.facts) {
+      const location = await fact.findLocation(documentText);
+      if (!location) {
+        const debugComment = await this.createLocationDebugComment(fact, documentText);
+        if (debugComment) {
+          debugComments.push(debugComment);
+        }
+      }
+    }
+
+    return debugComments;
+  }
+
+  // DEPRECATED: These methods are no longer used as we handle skipped facts in regular comments
+  // Keeping them commented for reference
+  /*
+  private async createUnverifiedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+    // This functionality is now handled in buildSkipDescription()
+    return null;
+  }
+
+  private async createSkippedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+    // This functionality is now handled in buildSkipDescription()
+    return null;
+  }
+  */
+
+  private async createLocationDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractCheckableClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 30).toISOString(),
+        result: fact.claim
+      },
+      {
+        toolName: 'findLocation',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { status: 'failed', reason: 'text_not_found' }
+      }
+    ];
+
+    // Use a default position since we can't locate the text
+    const location = {
+      startOffset: 0,
+      endOffset: fact.text.length,
+      quotedText: fact.text
+    };
+
+    return CommentBuilder.build({
+      plugin: 'fact-check',
+      location,
+      chunkId: fact.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Fact claim location not found`,
+      level: 'debug' as const,
+      description: `The fact-checker found this claim but couldn't locate it precisely in the document: "${fact.text}". This might be due to text paraphrasing or formatting differences between extraction and document structure.`,
+    });
+  }
+
   private generateAnalysis(): { summary: string; analysisSummary: string } {
     const totalFacts = this.facts.length;
     const verifiedFacts = this.facts.filter((f) => f.verification).length;
-    const researchedFacts = this.facts.filter(
-      (f) => f.factCheckerOutput?.perplexityData
-    ).length;
     const trueFacts = this.facts.filter(
       (f) => f.verification?.verdict === "true"
     ).length;
@@ -621,53 +755,187 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     const partiallyTrueFacts = this.facts.filter(
       (f) => f.verification?.verdict === "partially-true"
     ).length;
-
     const highImportanceFacts = this.facts.filter(
       (f) => f.claim.importanceScore >= 70
     ).length;
-    const likelyFalseFacts = this.facts.filter(
-      (f) => f.claim.truthProbability <= 40
-    ).length;
-    const uncertainFacts = this.facts.filter(
-      (f) => f.claim.truthProbability > 40 && f.claim.truthProbability <= 70
-    ).length;
 
-    const summary = `Found ${totalFacts} factual claims: ${verifiedFacts} verified (${trueFacts} true, ${falseFacts} false, ${partiallyTrueFacts} partially true)${researchedFacts > 0 ? `, ${researchedFacts} researched` : ""}`;
+    // User-focused summary (prioritize by severity)
+    let summary = "";
+    if (falseFacts > 0) {
+      const highImportanceFalse = this.facts.filter(
+        (f) => f.verification?.verdict === "false" && f.claim.importanceScore >= 70
+      ).length;
+      if (highImportanceFalse > 0) {
+        summary = `Critical factual error${highImportanceFalse !== 1 ? 's' : ''} found in key claims`;
+      } else {
+        summary = `Factual error${falseFacts !== 1 ? 's' : ''} identified requiring correction`;
+      }
+    } else if (partiallyTrueFacts > 0) {
+      summary = `Partially accurate claim${partiallyTrueFacts !== 1 ? 's' : ''} needing clarification`;
+    } else if (verifiedFacts > 0) {
+      summary = "Factual claims verified as accurate";
+    } else {
+      summary = `Factual content reviewed (${totalFacts} claim${totalFacts !== 1 ? 's' : ''})`;
+    }
 
-    const topicStats = this.facts.reduce(
-      (acc, fact) => {
-        acc[fact.topic] = (acc[fact.topic] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    // Impact-oriented analysis with template structure
+    let analysisSummary = "";
+    
+    // Key Findings (prioritize by severity)
+    if (falseFacts > 0 || partiallyTrueFacts > 0) {
+      analysisSummary += "**Key Findings:**\n";
+      if (falseFacts > 0) {
+        const highImportanceFalse = this.facts.filter(
+          (f) => f.verification?.verdict === "false" && f.claim.importanceScore >= 70
+        ).length;
+        if (highImportanceFalse > 0) {
+          analysisSummary += `- ${highImportanceFalse} critical false claim${highImportanceFalse !== 1 ? 's' : ''} affecting main arguments\n`;
+        }
+        const otherFalse = falseFacts - (highImportanceFalse || 0);
+        if (otherFalse > 0) {
+          analysisSummary += `- ${otherFalse} additional false claim${otherFalse !== 1 ? 's' : ''} requiring correction\n`;
+        }
+      }
+      if (partiallyTrueFacts > 0) {
+        analysisSummary += `- ${partiallyTrueFacts} partially accurate claim${partiallyTrueFacts !== 1 ? 's' : ''} needing clarification\n`;
+      }
+      analysisSummary += "\n";
+    }
 
-    const analysisSummary = `
-## Fact Check Analysis
+    // Document Impact
+    if (falseFacts > 0 || partiallyTrueFacts > 0) {
+      analysisSummary += "**Document Impact:**\n";
+      const highImportanceFalse = this.facts.filter(
+        (f) => f.verification?.verdict === "false" && f.claim.importanceScore >= 70
+      ).length;
+      if (highImportanceFalse > 0) {
+        analysisSummary += "Critical factual errors may significantly undermine document credibility. Immediate review and correction recommended.\n";
+      } else if (falseFacts > 0) {
+        analysisSummary += "Factual errors present but may not affect core arguments. Review recommended for accuracy.\n";
+      } else {
+        analysisSummary += "Partially accurate claims detected. Overall document integrity maintained but clarifications would improve precision.\n";
+      }
+      analysisSummary += "\n";
+    }
 
-**Overview**: Extracted and analyzed ${totalFacts} factual claims from the document.
+    // Specific Issues Found (for consistency with math plugin)
+    if (falseFacts > 0 || partiallyTrueFacts > 0) {
+      analysisSummary += "**🔍 Specific Issues Found:**\n\n";
+      
+      // Show false claims
+      const falseClaimsList = this.facts
+        .filter(f => f.verification?.verdict === "false")
+        .sort((a, b) => b.claim.importanceScore - a.claim.importanceScore)
+        .slice(0, 3);
+      
+      if (falseClaimsList.length > 0) {
+        analysisSummary += "**❌ False Claims:**\n";
+        for (const fact of falseClaimsList) {
+          const importance = fact.claim.importanceScore >= 70 ? " (Critical)" : "";
+          analysisSummary += `- "${fact.claim.originalText}"${importance}\n`;
+          if (fact.verification?.explanation) {
+            analysisSummary += `  - ${fact.verification.explanation}\n`;
+          }
+        }
+        
+        const remainingFalse = this.facts.filter(f => f.verification?.verdict === "false").length - falseClaimsList.length;
+        if (remainingFalse > 0) {
+          analysisSummary += `  - ...and ${remainingFalse} more false claim${remainingFalse !== 1 ? 's' : ''}\n`;
+        }
+      }
+      
+      // Show partially true claims
+      const partialClaimsList = this.facts
+        .filter(f => f.verification?.verdict === "partially-true")
+        .sort((a, b) => b.claim.importanceScore - a.claim.importanceScore)
+        .slice(0, 2);
+      
+      if (partialClaimsList.length > 0) {
+        analysisSummary += `\n**⚠️ Partially Accurate Claims:**\n`;
+        for (const fact of partialClaimsList) {
+          analysisSummary += `- "${fact.claim.originalText}"\n`;
+          if (fact.verification?.explanation) {
+            analysisSummary += `  - ${fact.verification.explanation}\n`;
+          }
+        }
+      }
+      
+      analysisSummary += "\n";
+    }
 
-**Verification Results** (${verifiedFacts} claims verified${researchedFacts > 0 ? `, ${researchedFacts} with external research 🔍` : ""}):
-- True: ${trueFacts} claims
-- False: ${falseFacts} claims
-- Partially True: ${partiallyTrueFacts} claims
-- Unverified: ${totalFacts - verifiedFacts} claims
+    // Technical Details (collapsible)
+    if (totalFacts > 0) {
+      analysisSummary += "<details>\n<summary>Technical Details</summary>\n\n";
+      
+      const researchedFacts = this.facts.filter(
+        (f) => f.factCheckerOutput?.perplexityData
+      ).length;
+      const likelyFalseFacts = this.facts.filter(
+        (f) => f.claim.truthProbability <= 40
+      ).length;
+      const uncertainFacts = this.facts.filter(
+        (f) => f.claim.truthProbability > 40 && f.claim.truthProbability <= 70
+      ).length;
+      const highImportanceFalse = this.facts.filter(
+        (f) => f.verification?.verdict === "false" && f.claim.importanceScore >= 70
+      ).length;
 
-**Claim Characteristics**:
-- High importance claims: ${highImportanceFacts}
-- Likely false (≤40% truth probability): ${likelyFalseFacts}
-- Uncertain (41-70% truth probability): ${uncertainFacts}
-- Average quality score: ${Math.round(this.facts.reduce((sum, f) => sum + f.averageScore, 0) / totalFacts || 0)}
+      // Quick summary with visual indicators
+      analysisSummary += "**📊 Quick Summary:**\n";
+      const indicators = [];
+      if (highImportanceFalse > 0) {
+        indicators.push(`🔴 ${highImportanceFalse} critical false`);
+      }
+      if (falseFacts > highImportanceFalse) {
+        indicators.push(`🟡 ${falseFacts - highImportanceFalse} other false`);
+      }
+      if (partiallyTrueFacts > 0) {
+        indicators.push(`🔵 ${partiallyTrueFacts} partially true`);
+      }
+      if (trueFacts > 0) {
+        indicators.push(`✅ ${trueFacts} verified true`);
+      }
+      
+      if (indicators.length > 0) {
+        analysisSummary += indicators.join(' • ') + '\n\n';
+      } else {
+        analysisSummary += `📝 ${totalFacts} claim${totalFacts !== 1 ? 's' : ''} reviewed\n\n`;
+      }
 
-**Topics Covered**: ${Object.entries(topicStats)
-      .sort((a, b) => b[1] - a[1])
-      .map(([topic, count]) => `${topic} (${count})`)
-      .join(", ")}
+      analysisSummary += `**🔍 Verification Summary:**\n`;
+      analysisSummary += `- ${totalFacts} factual claim${totalFacts !== 1 ? 's' : ''} extracted and analyzed\n`;
+      analysisSummary += `- ${verifiedFacts} claim${verifiedFacts !== 1 ? 's' : ''} verified${researchedFacts > 0 ? ` (🔬 ${researchedFacts} with external research)` : ""}\n`;
+      if (trueFacts > 0) {
+        analysisSummary += `- ✅ ${trueFacts} verified as true\n`;
+      }
+      if (falseFacts > 0) {
+        analysisSummary += `- ❌ ${falseFacts} verified as false\n`;
+      }
+      if (partiallyTrueFacts > 0) {
+        analysisSummary += `- ⚠️ ${partiallyTrueFacts} verified as partially true\n`;
+      }
+      
+      analysisSummary += `\n**📈 Claim Characteristics:**\n`;
+      analysisSummary += `- ⭐ High importance claims: ${highImportanceFacts}\n`;
+      analysisSummary += `- ⚠️ Likely false (≤40% truth probability): ${likelyFalseFacts}\n`;
+      analysisSummary += `- ❓ Uncertain (41-70% truth probability): ${uncertainFacts}\n`;
+      analysisSummary += `- 📊 Average quality score: ${Math.round(this.facts.reduce((sum, f) => sum + f.averageScore, 0) / totalFacts || 0)}\n`;
 
-${falseFacts > 0 ? `\n**⚠️ Accuracy Concerns**: Found ${falseFacts} false claims that should be corrected.` : ""}
-${likelyFalseFacts > 3 && verifiedFacts === 0 ? `\n**⚠️ Initial Assessment**: Multiple claims appear questionable based on truth probability estimates.` : ""}
-${uncertainFacts > totalFacts / 2 ? `\n**Note**: Many claims in this document are uncertain and would benefit from citations.` : ""}
-    `.trim();
+      const topicStats = this.facts.reduce(
+        (acc, fact) => {
+          acc[fact.topic] = (acc[fact.topic] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+      
+      analysisSummary += `\n**🏷️ Topics Covered:** ${Object.entries(topicStats)
+        .sort((a, b) => b[1] - a[1])
+        .map(([topic, count]) => `${topic} (${count})`)
+        .join(", ")}`;
+      
+      analysisSummary += "\n</details>";
+    }
 
     return { summary, analysisSummary };
   }

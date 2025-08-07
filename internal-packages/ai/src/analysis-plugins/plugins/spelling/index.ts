@@ -351,69 +351,152 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   private generateAnalysis(): void {
-    // Build comprehensive analysis
-    let analysisText = '';
+    const totalErrors = this.errors.length;
+    const hasGradeResult = this.gradeResult !== null;
+    const grade = this.gradeResult?.grade || 0;
     
-    // Always add grade summary if available
-    if (this.gradeResult) {
-      analysisText += generateGradeSummary(this.gradeResult) + '\n\n';
+    // User-focused summary (prioritize by severity)
+    let summary = "";
+    if (totalErrors === 0) {
+      summary = "Writing quality verified as excellent";
+    } else if (hasGradeResult) {
+      if (grade < 60) {
+        summary = `Critical writing quality issues found (${this.gradeResult!.category})`;
+      } else if (grade < 80) {
+        summary = `Significant writing quality issues identified (${this.gradeResult!.category})`;
+      } else {
+        summary = `Minor writing quality issues detected (${this.gradeResult!.category})`;
+      }
+    } else {
+      summary = `Writing issues identified requiring correction`;
     }
     
-    // Always add convention detection results if available
-    if (this.languageConvention) {
-      analysisText += `**Language Convention**: ${this.languageConvention.convention} English`;
-      if (this.languageConvention.confidence < 0.8) {
-        analysisText += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
+    // Build impact-oriented analysis with template structure
+    let analysis = "";
+    
+    // Key Findings (prioritize by severity)
+    if (totalErrors > 0) {
+      analysis += "**Key Findings:**\n";
+      if (hasGradeResult) {
+        const stats = this.gradeResult!.statistics;
+        const grammarErrors = stats.errorsByType['grammar'] || 0;
+        const spellingErrors = stats.errorsByType['spelling'] || 0;
+        
+        if (grammarErrors > 0) {
+          analysis += `- ${grammarErrors} grammar error${grammarErrors !== 1 ? 's' : ''} affecting readability\n`;
+        }
+        if (spellingErrors > 0) {
+          analysis += `- ${spellingErrors} spelling error${spellingErrors !== 1 ? 's' : ''} requiring correction\n`;
+        }
+        if (stats.errorsBySeverity.critical > 0) {
+          analysis += `- ${stats.errorsBySeverity.critical} critical issue${stats.errorsBySeverity.critical !== 1 ? 's' : ''} requiring immediate attention\n`;
+        }
+      } else {
+        analysis += `- ${totalErrors} writing issue${totalErrors !== 1 ? 's' : ''} requiring attention\n`;
       }
-      analysisText += '\n';
+      analysis += "\n";
+    }
+    
+    // Document Impact
+    if (totalErrors > 0) {
+      analysis += "**Document Impact:**\n";
+      if (hasGradeResult && grade < 60) {
+        analysis += "Critical writing quality issues may significantly impact document professionalism and credibility. Immediate review recommended.\n";
+      } else if (hasGradeResult && grade < 80) {
+        analysis += "Writing quality issues present but may not affect core comprehension. Review recommended for professional presentation.\n";
+      } else {
+        analysis += "Minor writing quality issues detected. Overall document integrity maintained but corrections would improve professionalism.\n";
+      }
+      analysis += "\n";
+    }
+    
+    // Specific Issues Found
+    if (totalErrors > 0) {
+      analysis += "**🔍 Specific Issues Found:**\n\n";
+      
+      // Show top errors by severity
+      const sortedErrors = this.errors
+        .sort((a, b) => b.error.importance - a.error.importance)
+        .slice(0, 5);
+      
+      for (const error of sortedErrors) {
+        const severityIcon = error.error.importance > 75 ? '🔴' : 
+                           error.error.importance > 50 ? '🟡' : '🔵';
+        analysis += `- ${severityIcon} **${error.error.type}**: "${error.error.text}"\n`;
+        analysis += `  - Suggested: "${error.error.correction}"\n`;
+      }
+      
+      if (this.errors.length > 5) {
+        analysis += `  - ...and ${this.errors.length - 5} more issue${this.errors.length - 5 !== 1 ? 's' : ''}\n`;
+      }
+      analysis += "\n";
+    }
+    
+    // Technical Details (collapsible)
+    analysis += "<details>\n<summary>Technical Details</summary>\n\n";
+    
+    // Quick summary with visual indicators
+    analysis += "**📊 Quick Summary:**\n";
+    if (totalErrors > 0 && hasGradeResult) {
+      const stats = this.gradeResult!.statistics;
+      const indicators = [];
+      const grammarErrors = stats.errorsByType['grammar'] || 0;
+      const spellingErrors = stats.errorsByType['spelling'] || 0;
+      
+      if (stats.errorsBySeverity.critical > 0) {
+        indicators.push(`🔴 ${stats.errorsBySeverity.critical} critical`);
+      }
+      if (grammarErrors > 0) {
+        indicators.push(`🟡 ${grammarErrors} grammar`);
+      }
+      if (spellingErrors > 0) {
+        indicators.push(`🔵 ${spellingErrors} spelling`);
+      }
+      analysis += indicators.join(' • ') + `\n📊 Overall grade: ${grade}/100 (${this.gradeResult!.category})\n\n`;
+    } else if (totalErrors > 0) {
+      analysis += `🔍 ${totalErrors} issue${totalErrors !== 1 ? 's' : ''} found\n\n`;
+    } else {
+      analysis += "✅ No issues found\n\n";
+    }
+    
+    // Language convention results
+    if (this.languageConvention) {
+      analysis += `**🌍 Language Convention:**\n`;
+      analysis += `- Detected: ${this.languageConvention.convention} English`;
+      if (this.languageConvention.confidence < 0.8) {
+        analysis += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
+      }
+      analysis += '\n';
       
       if (this.languageConvention.consistency < 0.8) {
-        analysisText += `⚠️ Mixed US/UK spelling detected (${Math.round(this.languageConvention.consistency * 100)}% consistency). Consider standardizing to ${this.languageConvention.convention} English.\n`;
+        analysis += `- ⚠️ Mixed conventions detected (${Math.round(this.languageConvention.consistency * 100)}% consistency)\n`;
+        analysis += `- Recommendation: Standardize to ${this.languageConvention.convention} English\n`;
       }
       
       const examples = getConventionExamples(this.languageConvention.convention);
       if (examples.length > 0) {
-        analysisText += examples.map(ex => `• ${ex}`).join('\n') + '\n';
+        analysis += `- Examples: ${examples.join(', ')}\n`;
       }
-      analysisText += '\n';
+      analysis += '\n';
     }
     
-    
-    if (this.errors.length === 0) {
-      // No errors case
-      if (!analysisText) {
-        this.analysis = "The document appears to be free of spelling and grammar errors.";
-      } else {
-        analysisText += "The document appears to be free of spelling and grammar errors.";
-        this.analysis = analysisText;
-      }
-      
-      this.summary = "No spelling or grammar errors found.";
-      if (this.gradeResult) {
-        this.summary = `${this.gradeResult.category} (${this.gradeResult.grade}/100) - ${this.summary}`;
-      }
-      return;
+    // Detailed error breakdown
+    if (totalErrors > 0) {
+      const toolErrors: ToolSpellingErrorWithLocation[] = this.errors.map(e => ({
+        error: e.error,
+        location: {
+          lineNumber: e.chunk.getLineNumber(e.location?.startOffset || 0) || 1,
+          columnNumber: 0
+        }
+      }));
+      analysis += `**📝 Detailed Error Analysis:**\n`;
+      analysis += generateDocumentSummary(toolErrors);
     }
     
-    // Add detailed error analysis - convert to tool format
-    const toolErrors: ToolSpellingErrorWithLocation[] = this.errors.map(e => ({
-      error: e.error,
-      location: {
-        lineNumber: e.chunk.getLineNumber(e.location?.startOffset || 0) || 1,
-        columnNumber: 0
-      }
-    }));
-    analysisText += generateDocumentSummary(toolErrors);
+    analysis += "\n</details>";
     
-    this.analysis = analysisText;
-
-    // Generate simple summary for the summary field
-    if (this.gradeResult) {
-      this.summary = `${this.gradeResult.category} (${this.gradeResult.grade}/100) - ${this.gradeResult.statistics.totalErrors} issue${this.gradeResult.statistics.totalErrors !== 1 ? 's' : ''}`;
-    } else {
-      const totalErrors = this.errors.length;
-      this.summary = `Found ${totalErrors} issue${totalErrors !== 1 ? "s" : ""}`;
-    }
+    this.analysis = analysis;
+    this.summary = summary;
   }
 
   getCost(): number {
