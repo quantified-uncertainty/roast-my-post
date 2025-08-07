@@ -1,21 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import { XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import { checkSpellingGrammarTool } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
-import type { SpellingError } from '@/types/toolResults';
+import type { CheckSpellingGrammarOutput } from '@roast/ai';
 
 const checkToolPath = checkSpellingGrammarTool.config.path;
 
 export default function CheckSpellingGrammarPage() {
   const [text, setText] = useState('');
-  const [result, setResult] = useState<{
-    errors: SpellingError[];
-    grade?: { overallGrade: string; errorCount: number; wordCount: number; reasoning?: string };
-    summary?: string;
-    comments?: Array<{ text: string }>;
-  } | null>(null);
+  const [result, setResult] = useState<CheckSpellingGrammarOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,18 +23,9 @@ export default function CheckSpellingGrammarPage() {
 
     try {
       const response = await runToolWithAuth<
-        { text: string; generateComments: boolean; gradeDocument: boolean },
-        {
-          errors: SpellingError[];
-          grade?: { overallGrade: string; errorCount: number; wordCount: number; reasoning?: string };
-          summary?: string;
-          comments?: Array<{ text: string }>;
-        }
-      >(checkToolPath, {
-        text,
-        generateComments: true,
-        gradeDocument: true
-      });
+        { text: string },
+        CheckSpellingGrammarOutput
+      >(checkToolPath, { text });
       setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -88,62 +74,52 @@ export default function CheckSpellingGrammarPage() {
 
         {result && (
           <div className="space-y-6">
-            {result.grade && (
+            {result.metadata && (
               <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Document Grade</h2>
-                <div className="flex items-center space-x-4">
-                  <div className="text-3xl font-bold">{result.grade.overallGrade}</div>
-                  <div className="text-sm text-gray-600">
-                    <p>Errors: {result.grade.errorCount}</p>
-                    <p>Words: {result.grade.wordCount}</p>
-                  </div>
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Analysis Summary</h2>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">Total Errors Found: {result.metadata.totalErrorsFound}</p>
+                  <p className="text-sm text-gray-600">Convention: {result.metadata.convention} English</p>
+                  {result.metadata.processingTime && (
+                    <p className="text-sm text-gray-600">Processing Time: {result.metadata.processingTime}ms</p>
+                  )}
                 </div>
-                {result.grade.reasoning && (
-                  <p className="mt-4 text-sm text-gray-600">{result.grade.reasoning}</p>
-                )}
-              </div>
-            )}
-
-            {result.summary && (
-              <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-2">Summary</h2>
-                <p className="text-gray-600">{result.summary}</p>
               </div>
             )}
 
             {result.errors && result.errors.length > 0 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-medium text-gray-900">Errors Found</h2>
-                {result.errors.map((error: any, index: number) => (
+                {result.errors.map((error, index) => (
                   <div key={index} className="bg-white shadow rounded-lg p-4">
                     <div className="flex items-start space-x-3">
-                      {error.severity === 'error' ? (
+                      {error.importance >= 70 ? (
                         <XCircleIcon className="h-5 w-5 text-red-500 mt-0.5" />
                       ) : (
                         <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mt-0.5" />
                       )}
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{error.type}</p>
-                        <p className="text-sm text-gray-600 mt-1">{error.message}</p>
+                        <p className="text-sm font-medium text-gray-900 capitalize">{error.type} Error</p>
+                        <div className="text-sm text-gray-600 mt-1">
+                          <span className="font-mono text-red-600">{error.text}</span>
+                          <span className="mx-2">→</span>
+                          <span className="font-mono text-green-600">{error.correction}</span>
+                        </div>
                         {error.context && (
                           <p className="text-sm text-gray-500 mt-2 font-mono bg-gray-50 p-2 rounded">
-                            {error.context.before}
-                            <span className="text-red-600 font-bold">{error.context.text}</span>
-                            {error.context.after}
+                            {error.context}
                           </p>
                         )}
-                        {error.suggestions && error.suggestions.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-xs text-gray-500">Suggestions:</p>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {error.suggestions.map((suggestion: string, idx: number) => (
-                                <span key={idx} className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                                  {suggestion}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
+                        {error.description && (
+                          <p className="text-sm text-gray-600 mt-2">{error.description}</p>
                         )}
+                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                          {error.lineNumber && (
+                            <span>Line {error.lineNumber}</span>
+                          )}
+                          <span>Confidence: {error.confidence}%</span>
+                          <span>Importance: {error.importance}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -151,14 +127,12 @@ export default function CheckSpellingGrammarPage() {
               </div>
             )}
 
-            {result.comments && result.comments.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-medium text-gray-900">Generated Comments</h2>
-                {result.comments.map((comment: any, index: number) => (
-                  <div key={index} className="bg-blue-50 rounded-lg p-4">
-                    <p className="text-sm text-blue-900">{comment.text}</p>
-                  </div>
-                ))}
+            {result.errors && result.errors.length === 0 && (
+              <div className="bg-green-50 rounded-lg p-6">
+                <h2 className="text-lg font-medium text-green-900 mb-2">No Errors Found</h2>
+                <p className="text-sm text-green-700">
+                  Great! Your text appears to be free of spelling and grammar errors.
+                </p>
               </div>
             )}
           </div>
