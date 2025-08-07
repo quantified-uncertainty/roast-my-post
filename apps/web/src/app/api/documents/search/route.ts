@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { DocumentService } from "@/lib/services/DocumentService";
+import { logger } from "@/infrastructure/logging/logger";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
+import { DocumentRepository, EvaluationRepository } from "@roast/db";
 
 export async function GET(request: NextRequest) {
   // Create service instance
-  const documentService = new DocumentService();
+  const documentRepository = new DocumentRepository();
+  const evaluationRepository = new EvaluationRepository();
+  const validator = new DocumentValidator();
+  const evaluationService = new EvaluationService(evaluationRepository, logger);
+  const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
   try {
     const userId = await authenticateRequest(request);
     if (!userId) {

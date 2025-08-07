@@ -1,6 +1,6 @@
 import { ExportEvaluationButton } from "@/components/ExportEvaluationButton";
 import { EvaluationContent } from "@/components/evaluation";
-import type { Evaluation } from "@/types/databaseTypes";
+import type { Evaluation } from "@/shared/types/databaseTypes";
 import Link from "next/link";
 import {
   ChatBubbleLeftIcon,
@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { TaskLogs } from "./TaskLogs";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 interface VersionDetailsProps {
   selectedVersion: NonNullable<Evaluation["versions"]>[number] | null;

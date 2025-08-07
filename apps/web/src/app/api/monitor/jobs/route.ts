@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { prisma } from "@roast/db";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { commonErrors } from "@/lib/api-response-helpers";
-import { isAdmin } from "@/lib/auth";
-import { serializeJobsNumeric } from "@/lib/prisma-serializers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { commonErrors } from "@/infrastructure/http/api-response-helpers";
+import { isAdmin } from "@/infrastructure/auth/auth";
+import { serializeJobsNumeric } from "@/infrastructure/database/prisma-serializers";
 
 export async function GET(request: NextRequest) {
   const userId = await authenticateRequest(request);

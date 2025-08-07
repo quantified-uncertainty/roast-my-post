@@ -1,4 +1,4 @@
-import type { Comment as DbComment } from "@/types/databaseTypes";
+import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import type { Comment as AiComment } from "@roast/ai";
 
 /**

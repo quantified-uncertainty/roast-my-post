@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 
-import { checkDocumentOwnership } from "@/lib/document-auth";
+import { checkDocumentOwnership } from "@/application/services/document-auth";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { PageHeader } from "@/components/PageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { EvaluationContent } from "@/components/evaluation";
-import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/lib/evaluation/evaluationQueries";
+import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 // Note: serializePrismaResult import removed as it's not used in this file
 
 

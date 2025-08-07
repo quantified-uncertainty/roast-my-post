@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
 import { prisma, JobStatus } from "@roast/db";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 const STALE_JOB_TIMEOUT_MINUTES = 30;
 

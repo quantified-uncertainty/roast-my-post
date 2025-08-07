@@ -1,11 +1,11 @@
 import * as yaml from "js-yaml";
 import { NextRequest, NextResponse } from "next/server";
 
-import { commonErrors } from "@/lib/api-response-helpers";
-import { authenticateRequest } from "@/lib/auth-helpers";
+import { commonErrors } from "@/infrastructure/http/api-response-helpers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { estimateTokens } from "@roast/ai";
 import { prisma, type Prisma } from "@roast/db";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 export async function GET(
   request: NextRequest,

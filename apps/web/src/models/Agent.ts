@@ -7,8 +7,8 @@ import {
   AgentSchema,
   AgentVersionSchema,
 } from "@roast/ai";
-import type { AgentReview } from "@/types/evaluationSchema";
-import { AgentReviewSchema } from "@/types/evaluationSchema";
+import type { AgentReview } from "@/shared/types/evaluationSchema";
+import { AgentReviewSchema } from "@/shared/types/evaluationSchema";
 import type { AgentVersion } from "@roast/ai";
 
 export { AgentInputSchema as agentSchema };

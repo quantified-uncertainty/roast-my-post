@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { POST } from "../route";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { importDocumentService } from "@/lib/services/documentImport";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { importDocumentService } from "@/application/services/documentImport";
 
 // Mock dependencies
-jest.mock("@/lib/auth-helpers");
-jest.mock("@/lib/services/documentImport");
+jest.mock("@/infrastructure/auth/auth-helpers");
+jest.mock("@/application/services/documentImport");
 
 const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
 const mockImportDocumentService = importDocumentService as jest.MockedFunction<typeof importDocumentService>;

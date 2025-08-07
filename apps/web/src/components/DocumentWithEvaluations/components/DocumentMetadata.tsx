@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useCallback } from "react";
 
-import type { Document } from "@/types/databaseTypes";
+import type { Document } from "@/shared/types/databaseTypes";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,

@@ -4,11 +4,11 @@ const mockSearchDocuments = jest.fn();
 const mockAuthenticateRequest = jest.fn();
 
 // Mock modules BEFORE imports
-jest.mock('@/lib/auth-helpers', () => ({
+jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: () => mockAuthenticateRequest(),
 }));
 
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/infrastructure/logging/logger', () => ({
   logger: {
     error: jest.fn(),
     warn: jest.fn(),
@@ -17,7 +17,7 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-jest.mock('@/lib/services/DocumentService', () => ({
+jest.mock('@/application/services/DocumentService', () => ({
   DocumentService: jest.fn().mockImplementation(() => ({
     getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
     searchDocuments: (...args: any[]) => mockSearchDocuments(...args),
@@ -26,7 +26,7 @@ jest.mock('@/lib/services/DocumentService', () => ({
 
 // Now import the routes AFTER mocks are set up
 import { NextRequest } from 'next/server';
-import { Result } from '@/lib/core/result';
+import { Result } from '@/shared/core/result';
 import { GET } from '../route';
 
 describe('GET /api/documents/search', () => {

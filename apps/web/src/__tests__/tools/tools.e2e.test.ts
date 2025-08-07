@@ -11,7 +11,7 @@ import {
   extractFactualClaimsTool,
   checkSpellingGrammarTool,
 } from '@roast/ai/server';
-import { logger } from '../../lib/logger';
+import { logger } from '@/infrastructure/logging/logger';
 
 // Test context
 const testContext = {

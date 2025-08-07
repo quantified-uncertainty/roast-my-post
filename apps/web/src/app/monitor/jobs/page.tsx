@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { JobCard, JobSummary, TaskDisplay } from "@/components/job";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 interface Job {
   id: string;

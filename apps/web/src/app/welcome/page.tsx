@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { redirect } from "next/navigation";
 import WelcomeForm from "./WelcomeForm";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";

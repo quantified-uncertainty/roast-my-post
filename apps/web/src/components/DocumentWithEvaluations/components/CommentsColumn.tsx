@@ -3,9 +3,9 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 
 import type { Document } from "@roast/ai";
-import type { Comment as DbComment } from "@/types/databaseTypes";
-import { dbCommentToAiComment } from "@/lib/typeAdapters";
-import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
+import type { Comment as DbComment } from "@/shared/types/databaseTypes";
+import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
+import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 import { COMMENT_COLUMN_WIDTH } from "../constants";
 import type { EvaluationState } from "../types";
 

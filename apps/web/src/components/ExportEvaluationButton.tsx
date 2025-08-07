@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { CheckIcon } from "@heroicons/react/24/solid";
-import { exportEvaluationToXml, copyToClipboard } from "@/lib/evaluation/exportXml";
+import { exportEvaluationToXml, copyToClipboard } from "@/application/workflows/evaluation/exportXml";
 
 interface ExportEvaluationButtonProps {
   evaluationData: {

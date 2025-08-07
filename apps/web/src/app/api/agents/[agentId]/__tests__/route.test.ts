@@ -1,7 +1,7 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { AgentModel } from '@/models/Agent';
-import { authenticateRequest } from '@/lib/auth-helpers';
+import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/models/Agent', () => ({
@@ -10,7 +10,7 @@ jest.mock('@/models/Agent', () => ({
   },
 }));
 
-jest.mock('@/lib/auth-helpers', () => ({
+jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 

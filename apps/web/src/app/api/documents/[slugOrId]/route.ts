@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { DocumentService } from "@/lib/services/DocumentService";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { NotFoundError, AuthorizationError, ValidationError } from "@/lib/core/errors";
+import { logger } from "@/infrastructure/logging/logger";
+import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
+import { DocumentRepository, EvaluationRepository } from "@roast/db";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { NotFoundError, AuthorizationError, ValidationError } from "@/shared/core/errors";
+
+// Helper function to create service instances with dependencies
+function createDocumentService() {
+  const documentRepository = new DocumentRepository();
+  const evaluationRepository = new EvaluationRepository();
+  const validator = new DocumentValidator();
+  const evaluationService = new EvaluationService(evaluationRepository, logger);
+  return new DocumentService(documentRepository, validator, evaluationService, logger);
+}
 
 export async function GET(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
   // Create service instance
-  const documentService = new DocumentService();
+  const documentService = createDocumentService();
   const params = await context.params;
   const { slugOrId: id } = params;
 
@@ -46,7 +56,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
   // Create service instance
-  const documentService = new DocumentService();
+  const documentService = createDocumentService();
   const params = await context.params;
   const { slugOrId: id } = params;
 
@@ -121,7 +131,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ slugOrI
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
   // Create service instance
-  const documentService = new DocumentService();
+  const documentService = createDocumentService();
   const params = await context.params;
   const { slugOrId: id } = params;
 

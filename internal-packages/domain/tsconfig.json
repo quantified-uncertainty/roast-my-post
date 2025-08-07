@@ -7,7 +7,10 @@
     "declarationMap": true,
     "sourceMap": true,
     "composite": true,
-    "incremental": true
+    "incremental": true,
+    "noEmit": false,
+    "module": "CommonJS",
+    "moduleResolution": "node"
   },
   "include": [
     "src/**/*"

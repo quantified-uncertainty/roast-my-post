@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
+import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
 import { prisma } from "@roast/db";
-import { logger } from "@/lib/logger";
-import { generateApiKey, hashApiKey } from "@/lib/crypto";
+import { logger } from "@/infrastructure/logging/logger";
+import { generateApiKey, hashApiKey } from "@/shared/utils/crypto";
 
 export async function GET(request: NextRequest) {
   const userId = await authenticateRequestSessionFirst(request);

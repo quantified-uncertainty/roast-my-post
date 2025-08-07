@@ -1,4 +1,4 @@
-import { getStatusIcon, getStatusStyles, JobStatus } from "@/lib/job/status";
+import { getStatusIcon, getStatusStyles, JobStatus } from "@/application/services/job/status";
 
 interface JobStatusBadgeProps {
   status: JobStatus | string;

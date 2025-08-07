@@ -1,16 +1,16 @@
 import { prisma, JobStatus } from "@roast/db";
 import type { Job as PrismaJob } from "@roast/db";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 import {
   analyzeDocument,
-} from "../lib/documentAnalysis";
+} from "@/application/workflows/documentAnalysis";
 import { Agent } from "@roast/ai";
 import { ANALYSIS_MODEL } from "@roast/ai";
 import {
   calculateApiCostInDollars,
   mapModelToCostModel,
-} from "../utils/costCalculator";
+} from "@/shared/utils/costCalculator";
 import {
   HeliconeSessionManager,
   setGlobalSessionManager,

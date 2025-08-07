@@ -1,4 +1,4 @@
-import type { Evaluation } from "@/types/databaseTypes";
+import type { Evaluation } from "@/shared/types/databaseTypes";
 
 export interface AgentWithEvaluation {
   id: string;

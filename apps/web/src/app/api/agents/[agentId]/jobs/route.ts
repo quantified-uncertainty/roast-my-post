@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma, Prisma } from "@roast/db";
-import { successResponse, commonErrors } from "@/lib/api-response-helpers";
+import { successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 
 export async function GET(
   request: NextRequest,

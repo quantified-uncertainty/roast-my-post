@@ -3,11 +3,11 @@ import { nanoid } from "nanoid";
 import { prisma } from "@roast/db";
 import {
   DocumentValidationSchema,
-} from "@/types/validationSchemas";
-import type { Document, Evaluation } from "@/types/databaseTypes";
-import { generateMarkdownPrepend } from "@/utils/documentMetadata";
-import { getPublicUserFields } from "@/lib/user-permissions";
-import { getCommentProperty } from "@/types/commentTypes";
+} from "@/shared/types/validationSchemas";
+import type { Document, Evaluation } from "@/shared/types/databaseTypes";
+import { generateMarkdownPrepend } from "@/shared/utils/documentMetadata";
+import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
+import { getCommentProperty } from "@/shared/types/commentTypes";
 
 // Helper function to safely convert Decimal to number
 function convertPriceToNumber(price: unknown): number {

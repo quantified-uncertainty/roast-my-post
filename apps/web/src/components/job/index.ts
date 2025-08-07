@@ -5,8 +5,8 @@ export { TaskDisplay } from './TaskDisplay';
 export { LogsViewer } from './LogsViewer';
 
 // Re-export shared utilities
-export { getStatusIcon, getStatusStyles } from '@/lib/job/status';
-export { formatCost, formatDuration, formatDate, formatRelativeDate, formatTaskPrice } from '@/lib/job/formatters';
+export { getStatusIcon, getStatusStyles } from '@/application/services/job/status';
+export { formatCost, formatDuration, formatDate, formatRelativeDate, formatTaskPrice } from '@/application/services/job/formatters';
 export { 
   getDocumentInfo, 
   getAgentInfo, 
@@ -19,6 +19,6 @@ export {
   isRunning,
   isFailed,
   isRetryJob
-} from '@/lib/job/transformers';
-export type { JobData } from '@/lib/job/types';
-export type { JobStatus } from '@/lib/job/status';
+} from '@/application/services/job/transformers';
+export type { JobData } from '@/application/services/job/types';
+export type { JobStatus } from '@/application/services/job/status';

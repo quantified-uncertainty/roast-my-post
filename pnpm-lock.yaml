@@ -99,6 +99,9 @@ importers:
       '@roast/db':
         specifier: workspace:*
         version: link:../../internal-packages/db
+      '@roast/domain':
+        specifier: workspace:*
+        version: link:../../internal-packages/domain
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@20.19.9)(typescript@5.9.2)))

@@ -1,9 +1,9 @@
 "use server";
 
 import { createSafeActionClient } from "next-safe-action";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { AgentModel, agentSchema } from "@/models/Agent";
 import type { Agent, AgentResponse } from "@roast/ai";
 

@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { getEvaluationGrade } from "@/lib/type-guards";
+import { getEvaluationGrade } from "@/shared/utils/type-guards";
 import {
   BeakerIcon,
   BookOpenIcon,

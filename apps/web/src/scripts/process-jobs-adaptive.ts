@@ -4,7 +4,7 @@ import {
   spawn,
 } from "child_process";
 
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { prisma, JobStatus } from "@roast/db";
 import { getAgentTimeout, formatTimeout } from "@/config/agentTimeouts";
 

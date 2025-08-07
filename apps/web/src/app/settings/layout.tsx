@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { SettingsNav } from "./SettingsNav";
 
 export default async function SettingsLayout({

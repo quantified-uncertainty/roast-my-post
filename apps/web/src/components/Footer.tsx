@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { RssIcon } from "@heroicons/react/24/outline";
-import { EXTERNAL_URLS } from "@/lib/constants";
+import { EXTERNAL_URLS } from "@/shared/constants/constants";
 
 export default function Footer() {
   return (

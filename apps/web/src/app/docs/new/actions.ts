@@ -1,19 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
-import { DocumentService } from "@/lib/services/DocumentService";
-import { EvaluationService } from "@/lib/services/EvaluationService";
-import { ValidationError } from "@/lib/core/errors";
+import { auth } from "@/infrastructure/auth/auth";
+import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
+import { DocumentRepository, EvaluationRepository } from "@roast/db";
+import { ValidationError } from "@/shared/core/errors";
 
 import { type DocumentInput } from "./schema";
 
-// Initialize services
-const documentService = new DocumentService();
-const evaluationService = new EvaluationService();
+// Initialize services with dependencies
+const documentRepository = new DocumentRepository();
+const evaluationRepository = new EvaluationRepository();
+const validator = new DocumentValidator();
+const evaluationService = new EvaluationService(evaluationRepository, logger);
+const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
 
 export async function createDocument(data: DocumentInput, agentIds: string[] = []) {
   try {

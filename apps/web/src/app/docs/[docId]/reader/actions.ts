@@ -1,15 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
-import { auth } from "@/lib/auth";
-import { processArticle } from "@/lib/articleImport";
-import { DocumentService } from "@/lib/services/DocumentService";
-import { NotFoundError, AuthorizationError } from "@/lib/core/errors";
+import { auth } from "@/infrastructure/auth/auth";
+import { processArticle } from "@/infrastructure/external/articleImport";
+import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
+import { DocumentRepository, EvaluationRepository } from "@roast/db";
+import { NotFoundError, AuthorizationError } from "@/shared/core/errors";
 
-// Initialize service
-const documentService = new DocumentService();
+// Initialize service with dependencies
+const documentRepository = new DocumentRepository();
+const evaluationRepository = new EvaluationRepository();
+const validator = new DocumentValidator();
+const evaluationService = new EvaluationService(evaluationRepository, logger);
+const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
 
 export async function deleteDocument(docId: string) {
   try {

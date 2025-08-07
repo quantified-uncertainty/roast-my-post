@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
+import { logger } from "@/infrastructure/logging/logger";
+import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
 import { prisma } from "@roast/db";
 
 export async function DELETE(

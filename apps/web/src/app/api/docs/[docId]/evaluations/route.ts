@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
-import { commonErrors } from "@/lib/api-response-helpers";
+import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { DocumentModel } from "@/models/Document";
 
 const queryEvaluationsSchema = z.object({

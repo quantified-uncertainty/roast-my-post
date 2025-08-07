@@ -4,7 +4,7 @@ import { RefObject } from "react";
 import SlateEditor from "@/components/SlateEditor";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { LAYOUT } from "../constants";
-import type { Document } from "@/types/databaseTypes";
+import type { Document } from "@/shared/types/databaseTypes";
 
 interface DocumentContentProps {
   document: Document;

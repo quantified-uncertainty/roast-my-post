@@ -5,8 +5,8 @@ import {
 } from "react";
 
 import type { Agent } from "@roast/ai";
-import { logger } from "@/lib/logger";
-import type { AgentReview } from "@/types/evaluationSchema";
+import { logger } from "@/infrastructure/logging/logger";
+import type { AgentReview } from "@/shared/types/evaluationSchema";
 
 import type {
   ActiveTab,

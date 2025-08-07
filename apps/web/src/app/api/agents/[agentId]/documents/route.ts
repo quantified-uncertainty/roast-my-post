@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { AgentModel } from "@/models/Agent";
 
 export async function GET(

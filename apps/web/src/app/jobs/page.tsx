@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@roast/db";
 import { formatDistanceToNow } from "date-fns";
-import { serializeJob } from "@/lib/prisma-serializers";
+import { serializeJob } from "@/infrastructure/database/prisma-serializers";
 
 export const dynamic = 'force-dynamic';
 

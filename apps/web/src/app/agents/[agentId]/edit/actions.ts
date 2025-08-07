@@ -2,7 +2,7 @@
 
 import { createSafeActionClient } from "next-safe-action";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { AgentModel, agentSchema } from "@/models/Agent";
 import type { AgentResponse } from "@roast/ai";
 

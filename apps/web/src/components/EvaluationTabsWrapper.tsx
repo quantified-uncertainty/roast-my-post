@@ -1,5 +1,5 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/infrastructure/auth/auth";
+import { prisma } from "@/infrastructure/database/prisma";
 import { EvaluationTabs } from "./EvaluationTabs";
 import { RerunButtonClient } from "./RerunButtonClient";
 import { JobStatusIndicator } from "./JobStatusIndicator";

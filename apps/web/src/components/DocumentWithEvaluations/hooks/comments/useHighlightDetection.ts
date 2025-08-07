@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, RefObject } from "react";
-import { checkHighlightsReady } from "@/utils/ui/commentPositioning";
+import { checkHighlightsReady } from "@/shared/utils/ui/commentPositioning";
 import { INITIALIZATION_DELAY } from "../../constants";
 
 export interface UseHighlightDetectionResult {

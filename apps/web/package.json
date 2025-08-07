@@ -34,6 +34,7 @@
     "@prisma/client": "^6.13.0",
     "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
+    "@roast/domain": "workspace:*",
     "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.10.0",
     "chroma-js": "^3.1.2",

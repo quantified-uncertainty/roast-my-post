@@ -1,10 +1,10 @@
 "use server";
 
 import { createSafeActionClient } from "next-safe-action";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { UserModel } from "@/models/User";
 
 // Setup next-safe-action

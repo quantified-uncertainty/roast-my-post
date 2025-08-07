@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
 import { prisma } from "@roast/db";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { commonErrors } from "@/lib/api-response-helpers";
-import { withSecurity } from "@/lib/security-middleware";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { commonErrors } from "@/infrastructure/http/api-response-helpers";
+import { withSecurity } from "@/infrastructure/http/security-middleware";
 
 const rerunEvaluationSchema = z.object({
   fromVersion: z.number().optional(), // Re-run from specific version

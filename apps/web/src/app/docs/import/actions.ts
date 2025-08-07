@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { importDocumentService } from "@/lib/services/documentImport";
-import { logger } from "@/lib/logger";
+import { auth } from "@/infrastructure/auth/auth";
+import { importDocumentService } from "@/application/services/documentImport";
+import { logger } from "@/infrastructure/logging/logger";
 
 export async function importDocument(url: string, agentIds: string[] = []) {
   try {

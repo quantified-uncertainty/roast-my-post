@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { documentChunkerTool } from '@roast/ai/server';
-import { logger } from '@/lib/logger';
-import { auth } from '@/lib/auth';
+import { logger } from '@/infrastructure/logging/logger';
+import { auth } from '@/infrastructure/auth/auth';
 
 export async function POST(request: NextRequest) {
   try {

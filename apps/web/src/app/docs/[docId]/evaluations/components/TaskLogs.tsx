@@ -1,6 +1,6 @@
 import React from "react";
 import { TaskDisplay } from "@/components/job";
-import type { Evaluation } from "@/types/databaseTypes";
+import type { Evaluation } from "@/shared/types/databaseTypes";
 
 interface TaskLogsProps {
   selectedVersion: NonNullable<Evaluation["versions"]>[number];

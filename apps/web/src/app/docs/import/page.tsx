@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 import { Button } from "@/components/Button";
 import { CheckIcon } from "@heroicons/react/24/solid";

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { prisma } from "@roast/db";
-import { authenticateRequest } from "@/lib/auth-helpers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { calculateJobStats } from "@/lib/batch-utils";
+import { calculateJobStats } from "@/shared/utils/batch-utils";
 
 // Schema for ephemeral agent creation
 const ephemeralAgentSchema = z.object({

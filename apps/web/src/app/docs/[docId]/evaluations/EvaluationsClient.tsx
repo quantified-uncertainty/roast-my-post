@@ -6,11 +6,11 @@ import React, {
 } from "react";
 
 import Link from "next/link";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@roast/ai";
-import type { Document } from "@/types/databaseTypes";
+import type { Document } from "@/shared/types/databaseTypes";
 import {
   ArrowLeftIcon,
   DocumentTextIcon,

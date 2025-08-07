@@ -1,7 +1,7 @@
 import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
-import { authenticateRequest, authenticateRequestSessionFirst } from '@/lib/auth-helpers';
+import { authenticateRequest, authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
 
 // Mock dependencies
 jest.mock('@roast/db', () => ({
@@ -12,7 +12,7 @@ jest.mock('@roast/db', () => ({
   },
 }));
 
-jest.mock('@/lib/auth-helpers', () => ({
+jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
   authenticateRequestSessionFirst: jest.fn(),
 }));

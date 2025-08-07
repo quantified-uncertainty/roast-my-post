@@ -1,8 +1,8 @@
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
-import { authenticateRequestSessionFirst } from '@/lib/auth-helpers';
-import { generateApiKey, hashApiKey } from '@/lib/crypto';
+import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
+import { generateApiKey, hashApiKey } from '@/shared/utils/crypto';
 
 // Mock dependencies
 jest.mock('@roast/db', () => ({
@@ -14,11 +14,11 @@ jest.mock('@roast/db', () => ({
   },
 }));
 
-jest.mock('@/lib/auth-helpers', () => ({
+jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequestSessionFirst: jest.fn(),
 }));
 
-jest.mock('@/lib/crypto', () => ({
+jest.mock('@/shared/utils/crypto', () => ({
   generateApiKey: jest.fn(),
   hashApiKey: jest.fn(),
 }));

@@ -10,7 +10,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { GradeBadge } from "@/components/GradeBadge";
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
-import type { Document } from "@/types/databaseTypes";
+import type { Document } from "@/shared/types/databaseTypes";
 
 interface EvaluationAnalysisSectionProps {
   document: Document;

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/infrastructure/database/prisma";
 
 interface PageProps {
   params: Promise<{ 
