@@ -1,53 +1,28 @@
 # Build stage
 FROM node:20-alpine AS builder
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Install dependencies for native modules
+# Install dependencies for native modules and enable corepack
 RUN apk add --no-cache libc6-compat python3 make g++
+RUN corepack enable
 
-# Install pnpm
-RUN npm install -g pnpm@9
-
-# Copy package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY apps/mcp-server/package.json ./apps/mcp-server/
-COPY internal-packages/db/package.json ./internal-packages/db/
-COPY internal-packages/ai/package.json ./internal-packages/ai/
-COPY internal-packages/domain/package.json ./internal-packages/domain/
-
-# Copy Prisma schema
-COPY internal-packages/db/prisma ./internal-packages/db/prisma/
-
-# Install all dependencies
-RUN pnpm install --frozen-lockfile
-
-# Generate Prisma client
-RUN pnpm --filter @roast/db run gen
-
-# Copy source code
+# Copy all source files
 COPY . .
 
-# Build internal packages in dependency order
-# Install dependencies again after copying source (for workspace references)
-RUN pnpm install --frozen-lockfile
+# Install all dependencies with cache mount
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Build packages in correct dependency order
-RUN pnpm --filter @roast/db run build
-RUN pnpm --filter @roast/domain run build  
-RUN pnpm --filter @roast/ai run build
+# Build all packages with dummy env vars for validation only
+RUN NEXT_TELEMETRY_DISABLED=1 \
+    DOCKER_BUILD=true \
+    DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public" \
+    AUTH_SECRET="build-time-dummy" \
+    ANTHROPIC_API_KEY="build-time-dummy" \
+    pnpm -r run build
 
-# Build Next.js
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV DOCKER_BUILD=true
-# Provide dummy values for build-time validation
-ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"  
-ENV AUTH_SECRET="dummy-auth-secret-for-build"
-ENV ANTHROPIC_API_KEY="dummy-anthropic-key-for-build"
-
-# Build Next.js application
-# The existing next.config.js already handles Docker builds gracefully
-RUN pnpm --filter @roast/web run build
+# Deploy web app with dependencies
+RUN pnpm deploy --filter=@roast/web --prod /prod/web
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -56,23 +31,16 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install runtime dependencies
+# Install runtime dependencies and enable corepack
 RUN apk add --no-cache libc6-compat
+RUN corepack enable
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Copy only the standalone build (includes necessary node_modules)
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-
-# Copy Prisma engines from db package (critical for monorepo deployment)
-COPY --from=builder --chown=nextjs:nodejs /app/internal-packages/db/generated/*.node ./apps/web/generated/
-
-# Copy Prisma schema for reference (migrations handled separately)
-COPY --from=builder --chown=nextjs:nodejs /app/internal-packages/db/prisma ./prisma
+# Copy deployed web app (includes built app and pruned dependencies)
+COPY --from=builder --chown=nextjs:nodejs /prod/web ./
 
 USER nextjs
 
@@ -83,4 +51,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["pnpm", "start"]
