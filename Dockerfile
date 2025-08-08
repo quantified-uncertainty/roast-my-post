@@ -24,6 +24,9 @@ RUN NEXT_TELEMETRY_DISABLED=1 \
 # Deploy web app with dependencies
 RUN pnpm deploy --filter=@roast/web --prod /prod/web
 
+# Copy the built Next.js app (.next directory) that pnpm deploy doesn't include
+RUN cp -r /usr/src/app/apps/web/.next /prod/web/.next
+
 # Production stage
 FROM node:20-alpine AS runner
 WORKDIR /app

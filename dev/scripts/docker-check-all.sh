@@ -86,6 +86,76 @@ if docker build \
     -f Dockerfile \
     -t roastmypost-web:test . > /tmp/web-build.log 2>&1; then
     echo -e "${GREEN}✅ Main app Docker build passed${NC}"
+    
+    # Test that .next directory exists
+    echo ""
+    echo "Testing that .next directory exists..."
+    if docker run --rm roastmypost-web:test ls -la .next/ > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ .next directory found${NC}"
+    else
+        echo -e "${RED}❌ .next directory missing - Next.js won't start!${NC}"
+        FAILED=true
+    fi
+    
+    # Test ArgoCD simulation - the ACTUAL runtime command
+    echo ""
+    echo "Testing ArgoCD simulation (ACTUAL runtime)..."
+    
+    # Clean up any existing test containers
+    docker stop argo-test 2>/dev/null || true
+    docker rm argo-test 2>/dev/null || true
+    
+    # Run exactly like ArgoCD does
+    if docker run -d --name argo-test \
+        -e DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
+        -e AUTH_SECRET="test-secret" \
+        -e NEXTAUTH_URL="http://localhost:3000" \
+        -e NODE_ENV="production" \
+        -p 3001:3000 \
+        roastmypost-web:test \
+        pnpm start > /tmp/argo-start.log 2>&1; then
+        
+        echo -e "${GREEN}✅ ArgoCD simulation container started${NC}"
+        
+        # Wait for app to start
+        echo "Waiting 15 seconds for app to start..."
+        sleep 15
+        
+        # Test actual HTTP endpoints like ArgoCD would
+        if curl -f -s http://localhost:3001/api/health > /dev/null 2>&1; then
+            echo -e "${GREEN}✅ Health check endpoint working${NC}"
+        else
+            echo -e "${RED}❌ Health check failed - app won't serve requests${NC}"
+            FAILED=true
+        fi
+        
+        if curl -f -s http://localhost:3001/ > /dev/null 2>&1; then
+            echo -e "${GREEN}✅ Main page endpoint working${NC}"
+        else
+            echo -e "${RED}❌ Main page failed - Next.js not serving properly${NC}"
+            FAILED=true
+        fi
+        
+        # Check for errors in logs
+        if docker logs argo-test 2>&1 | grep -i "error\|fail\|exception" | grep -v "DeprecationWarning" > /tmp/argo-errors.log 2>&1; then
+            if [ -s /tmp/argo-errors.log ]; then
+                echo -e "${YELLOW}⚠️  Found potential errors in logs:${NC}"
+                head -5 /tmp/argo-errors.log
+            fi
+        fi
+        
+        # Cleanup
+        docker stop argo-test > /dev/null 2>&1
+        docker rm argo-test > /dev/null 2>&1
+        
+    else
+        echo -e "${RED}❌ ArgoCD simulation failed to start${NC}"
+        echo "This means ArgoCD will definitely fail!"
+        docker logs argo-test 2>/dev/null | tail -20 || echo "No logs available"
+        docker stop argo-test 2>/dev/null || true
+        docker rm argo-test 2>/dev/null || true
+        FAILED=true
+    fi
 else
     echo -e "${RED}❌ Main app Docker build failed${NC}"
     echo "Last 50 lines of build log:"

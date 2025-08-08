@@ -72,6 +72,42 @@ jobs:
             -t web-test .; then
             echo "web_build=success" >> $GITHUB_OUTPUT
             echo "✅ Main app Docker build passed"
+            
+            # Test that .next directory exists
+            if docker run --rm web-test ls -la .next/; then
+              echo "✅ .next directory found"
+            else
+              echo "::error::.next directory missing - Next.js production build incomplete"
+              echo "web_build=failed" >> $GITHUB_OUTPUT
+            fi
+            
+            # Test ArgoCD simulation - the actual runtime command
+            echo "Testing ArgoCD runtime simulation..."
+            if docker run -d --name argo-test \
+              -e DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
+              -e AUTH_SECRET="test-secret" \
+              -e NEXTAUTH_URL="http://localhost:3000" \
+              -e NODE_ENV="production" \
+              -p 3001:3000 \
+              web-test pnpm start; then
+              
+              sleep 15
+              
+              if curl -f -s http://localhost:3001/api/health; then
+                echo "✅ ArgoCD simulation: Health check working"
+              else
+                echo "::error::ArgoCD simulation failed - health check endpoint not responding"
+                docker logs argo-test || true
+                echo "web_build=failed" >> $GITHUB_OUTPUT
+              fi
+              
+              docker stop argo-test && docker rm argo-test
+            else
+              echo "::error::ArgoCD simulation failed to start - pnpm start command failed"
+              docker logs argo-test || true
+              docker rm argo-test || true
+              echo "web_build=failed" >> $GITHUB_OUTPUT
+            fi
           else
             echo "web_build=failed" >> $GITHUB_OUTPUT
             echo "❌ Main app Docker build failed"
