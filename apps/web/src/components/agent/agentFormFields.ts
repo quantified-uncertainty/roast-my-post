@@ -1,4 +1,4 @@
-import { type AgentInput } from "@/models/Agent";
+import { type AgentInput } from "@roast/ai";
 
 export interface FormFieldConfig {
   name: keyof AgentInput;

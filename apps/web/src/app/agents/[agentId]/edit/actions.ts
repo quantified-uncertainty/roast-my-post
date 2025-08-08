@@ -3,7 +3,7 @@
 import { createSafeActionClient } from "next-safe-action";
 
 import { auth } from "@/infrastructure/auth/auth";
-import { agentSchema } from "@/models/Agent";
+import { AgentInputSchema as agentSchema } from "@roast/ai";
 import { getServices } from "@/application/services/ServiceFactory";
 import type { AgentResponse } from "@roast/ai";
 import { ValidationError } from "@roast/domain";

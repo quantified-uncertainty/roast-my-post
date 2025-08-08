@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
-import { agentSchema } from "@/models/Agent";
+import { AgentInputSchema as agentSchema } from "@roast/ai";
 import { getServices } from "@/application/services/ServiceFactory";
 import { successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { ZodError } from "zod";

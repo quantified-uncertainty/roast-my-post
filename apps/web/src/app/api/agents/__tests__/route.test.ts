@@ -7,11 +7,15 @@ jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequestSessionFirst: jest.fn(),
 }));
 
-jest.mock('@/models/Agent', () => ({
-  agentSchema: {
-    parse: jest.fn((data) => data),
-  },
-}));
+jest.mock('@roast/ai', () => {
+  const actual = jest.requireActual('@roast/ai');
+  return {
+    ...actual,
+    AgentInputSchema: {
+      parse: jest.fn((data) => data),
+    },
+  };
+});
 
 // Mock the Result class to match expected interface
 jest.mock('@roast/domain', () => {
@@ -134,10 +138,10 @@ describe('PUT /api/agents', () => {
 
   it('should validate request body', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema } = require('@/models/Agent');
+    const { AgentInputSchema } = require('@roast/ai');
     const { ZodError } = require('zod');
     
-    agentSchema.parse.mockImplementationOnce(() => {
+    AgentInputSchema.parse.mockImplementationOnce(() => {
       throw new ZodError([
         {
           code: 'invalid_type',
@@ -161,8 +165,8 @@ describe('PUT /api/agents', () => {
 
   it('should require agentId for updates', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema } = require('@/models/Agent');
-    agentSchema.parse.mockReturnValueOnce({
+    const { AgentInputSchema } = require('@roast/ai');
+    AgentInputSchema.parse.mockReturnValueOnce({
       name: 'New Agent',
       description: 'A new agent',
       primaryInstructions: 'Instructions...',
@@ -188,10 +192,10 @@ describe('PUT /api/agents', () => {
 
   it('should update existing agent and create new version', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema } = require('@/models/Agent');
+    const { AgentInputSchema } = require('@roast/ai');
     const { Result } = require('@roast/domain');
     
-    agentSchema.parse.mockReturnValueOnce({
+    AgentInputSchema.parse.mockReturnValueOnce({
       agentId: 'agent-123',
       name: 'Updated Name',
       primaryInstructions: 'New instructions...',
@@ -240,10 +244,10 @@ describe('PUT /api/agents', () => {
 
   it('should handle permission errors from AgentService', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema } = require('@/models/Agent');
+    const { AgentInputSchema } = require('@roast/ai');
     const { Result, ValidationError } = require('@roast/domain');
     
-    agentSchema.parse.mockReturnValueOnce({
+    AgentInputSchema.parse.mockReturnValueOnce({
       agentId: 'agent-123',
       name: 'Updated Name',
     });
