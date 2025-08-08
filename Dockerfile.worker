@@ -18,9 +18,9 @@ RUN test -d node_modules/@roast/domain && echo "✓ @roast/domain found" || (ech
     test -d node_modules/@roast/db && echo "✓ @roast/db found" || (echo "✗ @roast/db not found" && exit 1) && \
     test -d node_modules/@roast/ai && echo "✓ @roast/ai found" || (echo "✗ @roast/ai not found" && exit 1)
 
-# Build workspace packages that need dist files
-RUN pnpm --filter @roast/domain build && \
-    pnpm --filter @roast/db build && \
+# Build workspace packages that need dist files (db first, then domain which depends on it)
+RUN pnpm --filter @roast/db build && \
+    pnpm --filter @roast/domain build && \
     echo "✓ Workspace packages built"
 
 # Deploy web app with all dependencies (including dev deps for tsx)
