@@ -32,8 +32,10 @@ COPY . .
 # Build internal packages in dependency order
 # Note: No need to reinstall after copying source - workspace references work from initial install
 
-# Build packages using turbo (handles dependencies and finds tsc)
-RUN pnpm exec turbo run build --filter='@roast/db' --filter='@roast/domain' --filter='@roast/ai'
+# Build packages directly with npx tsc
+RUN npx tsc --project internal-packages/db/tsconfig.json
+RUN npx tsc --project internal-packages/domain/tsconfig.json  
+RUN npx tsc --project internal-packages/ai/tsconfig.json
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
