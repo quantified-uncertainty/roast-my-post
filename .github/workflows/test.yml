@@ -47,7 +47,7 @@ jobs:
         run: pnpm --filter @roast/db run gen
 
       - name: Build dependent packages
-        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db' --filter='@roast/ai'
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
 
       - name: Run checks in parallel
         run: pnpm turbo run typecheck lint --parallel
@@ -104,7 +104,7 @@ jobs:
         run: pnpm --filter @roast/db run gen
 
       - name: Build dependent packages
-        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db' --filter='@roast/ai'
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -168,7 +168,7 @@ jobs:
         run: pnpm --filter @roast/db run gen
 
       - name: Build dependent packages
-        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db' --filter='@roast/ai'
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -277,7 +277,7 @@ jobs:
         run: pnpm --filter @roast/db run gen
 
       - name: Build dependent packages
-        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db' --filter='@roast/ai'
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy

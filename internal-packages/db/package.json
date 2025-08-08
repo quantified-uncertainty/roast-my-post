@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "node build.js",
+    "build": "tsc",
     "with-env": "dotenv -e ../../apps/web/.env.local --",
     "gen": "pnpm with-env prisma generate",
     "gen:build": "prisma generate",

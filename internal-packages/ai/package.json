@@ -2,40 +2,39 @@
   "name": "@roast/ai",
   "version": "0.1.0",
   "description": "Core AI utilities for RoastMyPost - Claude integration, Helicone tracking, and token management",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "default": "./dist/server.js"
+      "types": "./src/server.ts",
+      "default": "./src/server.ts"
     },
     "./tools/fuzzy-text-locator/core": {
-      "types": "./dist/tools/fuzzy-text-locator/core.d.ts",
-      "default": "./dist/tools/fuzzy-text-locator/core.js"
+      "types": "./src/tools/fuzzy-text-locator/core.ts",
+      "default": "./src/tools/fuzzy-text-locator/core.ts"
     },
     "./analysis-plugins/utils/textHelpers": {
-      "types": "./dist/analysis-plugins/utils/textHelpers.d.ts",
-      "default": "./dist/analysis-plugins/utils/textHelpers.js"
+      "types": "./src/analysis-plugins/utils/textHelpers.ts",
+      "default": "./src/analysis-plugins/utils/textHelpers.ts"
     },
     "./analysis-plugins/types": {
-      "types": "./dist/analysis-plugins/types.d.ts",
-      "default": "./dist/analysis-plugins/types.js"
+      "types": "./src/analysis-plugins/types.ts",
+      "default": "./src/analysis-plugins/types.ts"
     },
     "./analysis-plugins/types/plugin-types": {
-      "types": "./dist/analysis-plugins/types/plugin-types.d.ts",
-      "default": "./dist/analysis-plugins/types/plugin-types.js"
+      "types": "./src/analysis-plugins/types/plugin-types.ts",
+      "default": "./src/analysis-plugins/types/plugin-types.ts"
     },
     "./text-location/line-based": {
-      "types": "./dist/text-location/line-based/index.d.ts",
-      "default": "./dist/text-location/line-based/index.js"
+      "types": "./src/text-location/line-based/index.ts",
+      "default": "./src/text-location/line-based/index.ts"
     }
   },
   "scripts": {
-    "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --config .eslintrc.json --ext .ts,.tsx",
     "test": "jest",

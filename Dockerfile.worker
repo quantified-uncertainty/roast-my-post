@@ -1,34 +1,36 @@
-# Worker Dockerfile - uses tsx for runtime transpilation  
-# Note: Worker needs full monorepo structure for tsx to resolve workspace packages
-FROM node:20-alpine
+# Worker Dockerfile - uses tsx for runtime transpilation
+FROM node:20-alpine AS base
+WORKDIR /usr/src/app
+
+# Install dependencies and enable corepack
+RUN apk add --no-cache libc6-compat python3 make g++
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy all source files
+COPY . .
+
+# Install all dependencies (including dev deps for tsx)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Deploy web app with all dependencies (including dev deps for tsx)
+RUN pnpm deploy --filter=@roast/web /prod/worker
+
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install dependencies for native modules
-RUN apk add --no-cache libc6-compat python3 make g++
-
-# Install pnpm globally
-RUN npm install -g pnpm@9
+# Install runtime dependencies and enable corepack
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Copy all source files with correct ownership
-COPY --chown=nextjs:nodejs . .
+# Copy deployed worker app
+COPY --from=base --chown=nextjs:nodejs /prod/worker ./
 
-# Install all dependencies as root (needed for native modules)
-RUN pnpm install --frozen-lockfile
-
-# Generate Prisma client
-RUN pnpm --filter @roast/db run gen
-
-# Build workspace packages that need building
-# Note: @roast/db doesn't need building - tsx handles TypeScript directly
-RUN pnpm --filter @roast/domain run build  
-RUN pnpm --filter @roast/ai run build
-
-# Switch to non-root user for runtime
 USER nextjs
 
 # Run the adaptive job processor
-CMD ["pnpm", "--filter", "@roast/web", "run", "process-jobs-adaptive"]
+CMD ["pnpm", "run", "process-jobs-adaptive"]
