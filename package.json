@@ -43,7 +43,11 @@
     "check:deps": "pnpm -r exec pnpm outdated || true",
     "check:security": "pnpm audit",
     "check:health": "pnpm run check:all && pnpm run check:deps && pnpm run check:security",
-    "precommit": "pnpm run check && pnpm run test:ci"
+    "precommit": "pnpm run check && pnpm run test:ci",
+    "docker:test": "./dev/scripts/test-docker-builds.sh",
+    "docker:test:compose": "docker-compose -f docker-compose.test.yml build",
+    "docker:validate": "./dev/scripts/validate-monorepo.sh",
+    "docker:quick": "pnpm run docker:validate && pnpm run docker:test"
   },
   "devDependencies": {
     "@hono/node-server": "^1.17.1",
