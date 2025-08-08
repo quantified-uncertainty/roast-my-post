@@ -74,8 +74,12 @@ export function serializeDecimal<T>(obj: T): T {
   }
 
   // Check for Prisma Decimal object using duck typing
+  // Prisma Decimal objects have these properties:
+  // - s (sign), e (exponent), d (digits array)
+  // - toNumber() and toString() methods
   if (typeof obj === 'object' && obj && 
-      obj.constructor && obj.constructor.name === 'Decimal' &&
+      (('s' in obj && 'e' in obj && 'd' in obj) || // Decimal structure
+       (obj.constructor && (obj.constructor.name === 'Decimal' || obj.constructor.name === 'i'))) && // Constructor name (might be minified)
       'toString' in obj && typeof (obj as any).toString === 'function') {
     return (obj as any).toString() as any;
   }
@@ -111,8 +115,12 @@ export function serializeDecimalToNumber<T>(obj: T): T {
   }
 
   // Check for Prisma Decimal object using duck typing
+  // Prisma Decimal objects have these properties:
+  // - s (sign), e (exponent), d (digits array)
+  // - toNumber() and toString() methods
   if (typeof obj === 'object' && obj && 
-      obj.constructor && obj.constructor.name === 'Decimal' &&
+      (('s' in obj && 'e' in obj && 'd' in obj) || // Decimal structure
+       (obj.constructor && (obj.constructor.name === 'Decimal' || obj.constructor.name === 'i'))) && // Constructor name (might be minified)
       'toNumber' in obj && typeof (obj as any).toNumber === 'function') {
     return (obj as any).toNumber() as any;
   }

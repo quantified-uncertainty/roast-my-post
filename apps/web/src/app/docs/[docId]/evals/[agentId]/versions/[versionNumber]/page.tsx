@@ -170,12 +170,15 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
-  const priceString = selectedVersion.job?.priceInDollars as string | null;
-  const costInCents = priceString ? Math.round(parseFloat(priceString) * 100) : null;
-  const priceInDollars = selectedVersion.job?.priceInDollars;
-  const durationInSeconds = selectedVersion.job?.durationInSeconds;
   
-  // Get all evaluations for the sidebar
+  // Extract cost and duration - they're already serialized to strings/proper types
+  const priceInDollars = selectedVersion.job?.priceInDollars;
+  const costInCents = priceInDollars ? Math.round(parseFloat(String(priceInDollars)) * 100) : null;
+  const durationInSeconds = selectedVersion.job?.durationInSeconds 
+    ? Number(selectedVersion.job?.durationInSeconds) 
+    : null;
+  
+  // Get all evaluations for the sidebar - already serialized by serializePrismaResult
   const allEvaluations = evaluation.document.evaluations || [];
   
   // Check if current user owns the document
@@ -221,7 +224,7 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
     { 
       id: 'run-stats', 
       label: 'Run Stats', 
-      show: !!(costInCents || durationInSeconds),
+      show: !!(costInCents || durationInSeconds != null),
       subItems: []
     },
   ].filter(item => item.show);
@@ -356,7 +359,7 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
         )}
 
         {/* Run Stats Section */}
-        {(costInCents || durationInSeconds) && (
+        {(costInCents || durationInSeconds != null) && (
           <div id="run-stats" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 scroll-mt-8">
             <div className="border-b border-gray-200 pb-4 mb-4">
               <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Run Statistics</h2>
@@ -370,7 +373,7 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
                   </dd>
                 </div>
               )}
-              {durationInSeconds && (
+              {durationInSeconds != null && (
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Duration</dt>
                   <dd className="mt-1 text-2xl font-semibold text-gray-900">
