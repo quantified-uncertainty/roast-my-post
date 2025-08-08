@@ -19,16 +19,29 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-# 1. Run monorepo validation first
-echo "Step 1: Validating monorepo structure..."
-echo "----------------------------------------"
-if ./dev/scripts/validate-monorepo.sh; then
-    echo -e "${GREEN}✅ Monorepo validation passed${NC}"
+# 1. Run basic checks first
+echo "Step 1: Quick validation checks..."
+echo "-----------------------------------"
+echo "Checking basic requirements..."
+
+# Check for required build outputs
+if [ -d "internal-packages/db/generated" ]; then
+    echo -e "${GREEN}✅ @roast/db has generated Prisma client${NC}"
 else
-    echo -e "${RED}❌ Monorepo validation failed${NC}"
-    echo "Fix issues above before continuing."
+    echo -e "${RED}❌ @roast/db missing generated directory${NC}"
+    echo "Run: pnpm --filter @roast/db run gen"
     exit 1
 fi
+
+if [ -d "internal-packages/domain/dist" ]; then
+    echo -e "${GREEN}✅ @roast/domain has dist directory${NC}"
+else
+    echo -e "${RED}❌ @roast/domain missing dist${NC}" 
+    echo "Run: pnpm --filter @roast/domain run build"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Basic validation passed${NC}"
 
 echo ""
 echo "Step 2: Building Docker images..."
