@@ -24,13 +24,8 @@ RUN pnpm --filter @roast/db build && \
     echo "✓ Workspace packages built"
 
 # Deploy web app with all dependencies (including dev deps for tsx)
+# Note: pnpm deploy will include the built packages since we built them first
 RUN pnpm deploy --filter=@roast/web /prod/worker
-
-# Copy built workspace packages to deployment
-RUN cp -r internal-packages/domain/dist /prod/worker/node_modules/@roast/domain/ && \
-    cp -r internal-packages/db/dist /prod/worker/node_modules/@roast/db/ && \
-    cp -r internal-packages/db/generated /prod/worker/node_modules/@roast/db/ && \
-    echo "✓ Built packages copied to deployment"
 
 # Validate deployment has packages actually working
 RUN cd /prod/worker && \
