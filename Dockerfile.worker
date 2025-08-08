@@ -13,6 +13,9 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
+# Build all packages first
+RUN pnpm -r run build
+
 # Deploy web app with all dependencies (including dev deps for tsx)
 RUN pnpm deploy --filter=@roast/web /prod/worker
 
