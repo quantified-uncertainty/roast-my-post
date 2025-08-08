@@ -49,11 +49,11 @@ test.describe('Evaluation Versions Page', () => {
       console.log('Error found on page:', await page.textContent('body'));
     }
     
-    // Wait for the page to load
-    await page.waitForSelector('h1', { timeout: 10000 });
+    // Wait for the page to load - look for the main content area
+    await page.waitForSelector('main', { timeout: 10000 });
 
-    // Check that the page title contains version info
-    await expect(page.locator('h1')).toContainText('(v1)');
+    // Check that the page title contains version info (avoid header h1)
+    await expect(page.locator('h1:has-text("Evaluation (v1)")')).toBeVisible();
 
     // Check that the cost is properly formatted (was breaking with [object Object])
     // The cost should be $12.457 (rounded from 12.456789)
@@ -89,8 +89,8 @@ test.describe('Evaluation Versions Page', () => {
       // Wait for navigation
       await page.waitForURL('**/versions/2');
       
-      // Check we're on version 2
-      await expect(page.locator('h1')).toContainText('(v2)');
+      // Check we're on version 2 (avoid header h1)
+      await expect(page.locator('h1:has-text("Evaluation (v2)")')).toBeVisible();
       
       // Check version 2 content
       await expect(page.locator('text=Second version for E2E testing')).toBeVisible();
@@ -130,9 +130,12 @@ test.describe('Evaluation Versions Page', () => {
     // Navigate to version 3
     const url = `/docs/${testData.docId}/evals/${testData.agentId}/versions/3`;
     await page.goto(url);
+    
+    // Wait for the page to load
+    await page.waitForSelector('main', { timeout: 10000 });
 
-    // Check that 0s is displayed, not NaN
-    await expect(page.locator('text=0s')).toBeVisible();
+    // Check that 0s is displayed in the Run Statistics section, not NaN
+    await expect(page.locator('text=Run Statistics').locator('..').locator('text=0s')).toBeVisible();
     
     // Ensure no NaN is displayed
     const nanText = await page.locator('text=NaN').count();
@@ -156,20 +159,26 @@ test.describe('Evaluation Versions Page', () => {
     const url = `/docs/${testData.docId}/evals/${testData.agentId}/versions/1`;
     await page.goto(url);
 
-    // Check that grade is displayed (85/100 or just 85)
-    const gradeElement = page.locator('text=/85|8\\.5/');
+    // Check that grade is displayed as letter grade (85 = A- grade)
+    const gradeElement = page.locator('text=A-');
     await expect(gradeElement).toBeVisible();
   });
 
   test('should display agent and document information', async ({ page }) => {
     const url = `/docs/${testData.docId}/evals/${testData.agentId}/versions/1`;
     await page.goto(url);
+    
+    // Wait for the page to load
+    await page.waitForSelector('main', { timeout: 10000 });
 
-    // Check agent name is displayed
+    // Check agent name is displayed in the Agent Information section
     await expect(page.locator('text=E2E Test Agent')).toBeVisible();
 
-    // Check document title is displayed
+    // Check document title is displayed in breadcrumbs or page header
     await expect(page.locator('text=E2E Test Document for Versions Page')).toBeVisible();
+    
+    // Check that the evaluation title shows the agent name and version
+    await expect(page.locator('h1:has-text("E2E Test Agent Evaluation (v1)")')).toBeVisible();
   });
 
   test('should handle missing job data gracefully', async ({ page }) => {
@@ -192,13 +201,19 @@ test.describe('Evaluation Versions Page', () => {
     // Navigate to version 4
     const url = `/docs/${testData.docId}/evals/${testData.agentId}/versions/4`;
     await page.goto(url);
-
-    // Should not show cost or duration sections
-    const costElement = await page.locator('text=$').count();
-    // There might be other dollar signs, but there shouldn't be a cost for this version
     
-    // Should show the summary
-    await expect(page.locator('text=No job test')).toBeVisible();
+    // Wait for the page to load
+    await page.waitForSelector('main', { timeout: 10000 });
+
+    // Should show the summary in the Summary section
+    await expect(page.locator('text=Summary').locator('..').locator('text=No job test')).toBeVisible({ timeout: 10000 });
+    
+    // Should show the analysis
+    await expect(page.locator('text=Testing without job data')).toBeVisible();
+
+    // Should not show Run Statistics section (no cost/duration)
+    const runStatsSection = page.locator('text=Run Statistics');
+    await expect(runStatsSection).not.toBeVisible();
 
     // Clean up
     await prisma.evaluationVersion.delete({
