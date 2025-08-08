@@ -1,4 +1,4 @@
-name: Docker Build Test (Non-blocking)
+name: Docker Build Test
 
 on:
   pull_request:
@@ -14,7 +14,6 @@ on:
 jobs:
   test-docker-builds:
     runs-on: ubuntu-latest
-    continue-on-error: true  # Non-blocking - won't fail the PR
     
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +30,7 @@ jobs:
             echo "✅ Worker Docker build passed"
           else
             echo "worker_build=failed" >> $GITHUB_OUTPUT
-            echo "::warning::Worker Docker build failed - see logs above"
+            echo "❌ Worker Docker build failed"
           fi
           echo "::endgroup::"
           
@@ -58,7 +57,7 @@ jobs:
             echo "✅ Worker runtime test passed"
           else
             echo "worker_runtime=failed" >> $GITHUB_OUTPUT
-            echo "::warning::Worker runtime test failed - packages may not be accessible"
+            echo "❌ Worker runtime test failed - packages may not be accessible"
           fi
           echo "::endgroup::"
           
@@ -75,9 +74,36 @@ jobs:
             echo "✅ Main app Docker build passed"
           else
             echo "web_build=failed" >> $GITHUB_OUTPUT
-            echo "::warning::Main app Docker build failed - see logs above"
+            echo "❌ Main app Docker build failed"
           fi
           echo "::endgroup::"
+          
+      - name: Check Results and Fail if Needed
+        if: always()
+        run: |
+          FAILED=false
+          
+          if [[ "${{ steps.worker-build.outputs.worker_build }}" == "failed" ]]; then
+            echo "❌ Worker build failed"
+            FAILED=true
+          fi
+          
+          if [[ "${{ steps.worker-runtime.outputs.worker_runtime }}" == "failed" ]]; then
+            echo "❌ Worker runtime test failed"
+            FAILED=true
+          fi
+          
+          if [[ "${{ steps.web-build.outputs.web_build }}" == "failed" ]]; then
+            echo "❌ Main app build failed"
+            FAILED=true
+          fi
+          
+          if [[ "$FAILED" == "true" ]]; then
+            echo "::error::Docker build tests failed. See above for details."
+            exit 1
+          else
+            echo "✅ All Docker build tests passed!"
+          fi
           
       - name: Post Results Comment
         if: always()
@@ -106,13 +132,13 @@ jobs:
               if (webBuild === 'success') results.push('✅ Main app build: Passed');
               else if (webBuild === 'failed') results.push('❌ Main app build: Failed');
               
-              const message = `### 🐳 Docker Build Test Results (Non-blocking)
+              const message = `### 🐳 Docker Build Test Results
             
-            ⚠️ Some Docker builds need attention:
+            ❌ Docker builds failed - this PR cannot be merged until fixed:
             
             ${results.join('\n')}
             
-            Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details. These tests are non-blocking and for informational purposes only.`;
+            Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`;
               
               github.rest.issues.createComment({
                 issue_number: context.issue.number,
