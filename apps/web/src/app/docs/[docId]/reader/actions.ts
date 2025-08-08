@@ -5,16 +5,8 @@ import { logger } from "@/infrastructure/logging/logger";
 
 import { auth } from "@/infrastructure/auth/auth";
 import { processArticle } from "@/infrastructure/external/articleImport";
-import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
-import { DocumentRepository, EvaluationRepository } from "@roast/db";
 import { NotFoundError, AuthorizationError } from '@roast/domain';
-
-// Initialize service with dependencies
-const documentRepository = new DocumentRepository();
-const evaluationRepository = new EvaluationRepository();
-const validator = new DocumentValidator();
-const evaluationService = new EvaluationService(evaluationRepository, logger);
-const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
+import { getServices } from "@/application/services/ServiceFactory";
 
 export async function deleteDocument(docId: string) {
   try {
@@ -28,6 +20,7 @@ export async function deleteDocument(docId: string) {
     }
 
     // Delete the document using the service
+    const { documentService } = getServices();
     const result = await documentService.deleteDocument(docId, session.user.id);
     
     if (result.isError()) {
@@ -73,6 +66,7 @@ export async function reuploadDocument(docId: string) {
     }
 
     // Check ownership using the service
+    const { documentService } = getServices();
     const ownershipResult = await documentService.checkOwnership(docId, session.user.id);
     if (ownershipResult.isError() || !ownershipResult.unwrap()) {
       return {
