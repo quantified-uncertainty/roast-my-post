@@ -1,16 +1,25 @@
 import { processArticle } from '@/infrastructure/external/articleImport';
 
+// Skip these tests by default unless explicitly enabled
+const ENABLE_FIRECRAWL_TESTS = process.env.ENABLE_FIRECRAWL_TESTS === 'true';
+const describeOrSkip = ENABLE_FIRECRAWL_TESTS ? describe : describe.skip;
+
 describe('Article Import End-to-End Tests', () => {
   jest.setTimeout(30000); // 30 second timeout for network requests
 
-  // Fail fast if required API keys are not available
   beforeAll(() => {
+    if (!ENABLE_FIRECRAWL_TESTS) {
+      console.log('⚠️  Skipping Firecrawl e2e tests. Set ENABLE_FIRECRAWL_TESTS=true to run them.');
+      return;
+    }
+    
     if (!process.env.FIRECRAWL_KEY) {
+      console.error('Please run tests with: source .env.local && export FIRECRAWL_KEY && export ENABLE_FIRECRAWL_TESTS=true && pnpm test:e2e');
       throw new Error('FIRECRAWL_KEY is required for article import e2e tests. Set it in your environment or .env.local file.');
     }
   });
 
-  describe('EA Forum Import', () => {
+  describeOrSkip('EA Forum Import', () => {
     const url = 'https://forum.effectivealtruism.org/posts/RPYnR7c6ZmZKBoeLG/you-should-update-on-how-dc-is-talking-about-ai';
     
     it('should import EA Forum article with correct content', async () => {
@@ -103,7 +112,7 @@ describe('Article Import End-to-End Tests', () => {
     });
   });
 
-  describe('Content Cleaning', () => {
+  describeOrSkip('Content Cleaning', () => {
     it('should properly format markdown images', async () => {
       // Test with any of the URLs
       const url = 'https://forum.effectivealtruism.org/posts/RPYnR7c6ZmZKBoeLG/you-should-update-on-how-dc-is-talking-about-ai';

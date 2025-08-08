@@ -19,11 +19,20 @@ const testContext = {
   logger
 };
 
+// Skip these tests by default unless explicitly enabled
+const ENABLE_LLM_TESTS = process.env.ENABLE_LLM_TESTS === 'true';
+const describeOrSkip = ENABLE_LLM_TESTS ? describe : describe.skip;
+
 describe('Tools End-to-End Tests', () => {
   beforeAll(() => {
+    if (!ENABLE_LLM_TESTS) {
+      console.log('⚠️  Skipping LLM e2e tests. Set ENABLE_LLM_TESTS=true to run them.');
+      return;
+    }
+    
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('⚠️  ANTHROPIC_API_KEY is not set in environment');
-      console.error('Please run tests with: source .env.local && export ANTHROPIC_API_KEY && pnpm test:e2e');
+      console.error('Please run tests with: source .env.local && export ANTHROPIC_API_KEY && export ENABLE_LLM_TESTS=true && pnpm test:e2e');
       throw new Error('ANTHROPIC_API_KEY is required for e2e tests. Set it in your environment or .env.local file.');
     }
     
@@ -34,7 +43,7 @@ describe('Tools End-to-End Tests', () => {
   // Set timeout for LLM calls (3 minutes)
   jest.setTimeout(180000);
 
-  describe('Math Checker Tool', () => {
+  describeOrSkip('Math Checker Tool', () => {
     it('should be able to execute without errors', async () => {
       const result = await checkMathTool.execute({
         statement: '2 + 2 = 4'
@@ -78,7 +87,7 @@ describe('Tools End-to-End Tests', () => {
     });
   });
 
-  describe('Forecaster Tool', () => {
+  describeOrSkip('Forecaster Tool', () => {
     it('should generate forecasts for a question', async () => {
       const result = await forecasterTool.execute({
         question: 'Will AI assistants be widely adopted in software development by 2025?',
@@ -109,7 +118,7 @@ describe('Tools End-to-End Tests', () => {
     });
   });
 
-  describe('Fact Checker Tool', () => {
+  describeOrSkip('Fact Checker Tool', () => {
     it('should verify a factual claim', async () => {
       const result = await factCheckerTool.execute({
         claim: 'The Earth is approximately 4.5 billion years old.',
@@ -126,7 +135,7 @@ describe('Tools End-to-End Tests', () => {
     });
   });
 
-  describe('Extract Forecasting Claims Tool', () => {
+  describeOrSkip('Extract Forecasting Claims Tool', () => {
     it('should extract forecasting claims from text', async () => {
       const result = await extractForecastingClaimsTool.execute({
         text: 'We expect revenue to grow 20% next year. AI will likely replace 30% of jobs by 2030.',
@@ -138,7 +147,7 @@ describe('Tools End-to-End Tests', () => {
     });
   });
 
-  describe('Extract Factual Claims Tool', () => {
+  describeOrSkip('Extract Factual Claims Tool', () => {
     it('should extract factual claims and detect contradictions', async () => {
       const result = await extractFactualClaimsTool.execute({
         text: 'Apple was founded in 1976. Microsoft was founded in 1975. Apple was actually founded in 1976.',
@@ -151,7 +160,7 @@ describe('Tools End-to-End Tests', () => {
     });
   });
 
-  describe('Check Spelling Grammar Tool', () => {
+  describeOrSkip('Check Spelling Grammar Tool', () => {
     it('should detect spelling and grammar errors', async () => {
       const result = await checkSpellingGrammarTool.execute({
         text: 'Their are many reasons why this approch might not work. We should of done better.',
