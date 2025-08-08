@@ -1,8 +1,7 @@
 import { logger } from "@/infrastructure/logging/logger";
 import { processArticle } from "@/infrastructure/external/articleImport";
-import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
-import { DocumentRepository, EvaluationRepository } from "@roast/db";
 import { ValidationError } from '@roast/domain';
+import { getServices } from "./ServiceFactory";
 
 export interface ImportDocumentResult {
   success: boolean;
@@ -48,12 +47,8 @@ export async function importDocumentService(
       };
     }
 
-    // Initialize services with dependencies
-    const documentRepository = new DocumentRepository();
-    const evaluationRepository = new EvaluationRepository();
-    const validator = new DocumentValidator();
-    const evaluationService = new EvaluationService(evaluationRepository, logger);
-    const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
+    // Get services from factory
+    const { documentService, evaluationService } = getServices();
 
     // Creating document using the new DocumentService
     const result = await documentService.createDocument(
