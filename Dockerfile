@@ -13,6 +13,13 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
+# Set required environment variables for build
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV DOCKER_BUILD=true
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"  
+ENV AUTH_SECRET="dummy-auth-secret-for-build"
+ENV ANTHROPIC_API_KEY="dummy-anthropic-key-for-build"
+
 # Build all packages
 RUN pnpm -r run build
 
