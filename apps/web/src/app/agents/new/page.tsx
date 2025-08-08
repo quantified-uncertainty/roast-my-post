@@ -13,8 +13,8 @@ import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import {
   type AgentInput,
-  agentSchema,
-} from "@/models/Agent";
+  AgentInputSchema as agentSchema,
+} from "@roast/ai";
 import {
   DocumentTextIcon,
   CodeBracketIcon,

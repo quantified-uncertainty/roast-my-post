@@ -5,18 +5,10 @@ import { logger } from "@/infrastructure/logging/logger";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/infrastructure/auth/auth";
-import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
-import { DocumentRepository, EvaluationRepository } from "@roast/db";
 import { ValidationError } from '@roast/domain';
+import { getServices } from "@/application/services/ServiceFactory";
 
 import { type DocumentInput } from "./schema";
-
-// Initialize services with dependencies
-const documentRepository = new DocumentRepository();
-const evaluationRepository = new EvaluationRepository();
-const validator = new DocumentValidator();
-const evaluationService = new EvaluationService(evaluationRepository, logger);
-const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
 
 export async function createDocument(data: DocumentInput, agentIds: string[] = []) {
   try {
@@ -27,6 +19,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
     }
 
     // Create the document using the new DocumentService
+    const { documentService } = getServices();
     const result = await documentService.createDocument(
       session.user.id,
       {
@@ -53,6 +46,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     // Queue evaluations if agents are selected
     if (agentIds.length > 0) {
+      const { evaluationService } = getServices();
       const evaluationResult = await evaluationService.createEvaluationsForDocument({
         documentId: document.id,
         agentIds,

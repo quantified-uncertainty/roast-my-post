@@ -1,13 +1,52 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
-import { AgentModel } from '@/models/Agent';
 
-// Mock dependencies
-jest.mock('@/models/Agent', () => ({
-  AgentModel: {
-    getAgentWithOwner: jest.fn(),
-    getAgentDocuments: jest.fn(),
-  },
+// Mock the Result class to match expected interface
+jest.mock('@roast/domain', () => {
+  const originalResult = {
+    ok: (value: any) => ({
+      isError: () => false,
+      unwrap: () => value,
+      error: () => null
+    }),
+    fail: (error: any) => ({
+      isError: () => true,
+      unwrap: () => { throw new Error('Cannot unwrap a failed result'); },
+      error: () => error
+    })
+  };
+  
+  return {
+    Result: originalResult,
+    ValidationError: class ValidationError extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'ValidationError';
+      }
+    },
+    AppError: class AppError extends Error {
+      constructor(message: string, code: string) {
+        super(message);
+        this.name = 'AppError';
+      }
+    },
+    isDevelopment: () => false,
+    isTest: () => true
+  };
+});
+
+// Create mock services object
+const mockAgentService = {
+  getAgentWithOwner: jest.fn(),
+  getAgentDocuments: jest.fn(),
+};
+
+const mockServices = {
+  agentService: mockAgentService,
+};
+
+jest.mock('@/application/services/ServiceFactory', () => ({
+  getServices: jest.fn(() => mockServices),
 }));
 
 describe('GET /api/agents/[agentId]/documents', () => {
@@ -19,7 +58,9 @@ describe('GET /api/agents/[agentId]/documents', () => {
   });
 
   it('should return 404 for non-existent agent', async () => {
-    (AgentModel.getAgentWithOwner as jest.Mock).mockResolvedValueOnce(null);
+    const { Result } = require('@roast/domain');
+    
+    mockAgentService.getAgentWithOwner.mockResolvedValueOnce(Result.ok(null));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/documents`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
@@ -30,9 +71,10 @@ describe('GET /api/agents/[agentId]/documents', () => {
   });
 
   it('should return documents evaluated by agent', async () => {
+    const { Result } = require('@roast/domain');
     
     const mockAgent = { id: mockAgentId, name: 'Test Agent' };
-    (AgentModel.getAgentWithOwner as jest.Mock).mockResolvedValueOnce(mockAgent);
+    mockAgentService.getAgentWithOwner.mockResolvedValueOnce(Result.ok(mockAgent));
     
     const mockDocuments = [
       {
@@ -79,7 +121,7 @@ describe('GET /api/agents/[agentId]/documents', () => {
       },
     ];
     
-    (AgentModel.getAgentDocuments as jest.Mock).mockResolvedValueOnce(mockDocuments);
+    mockAgentService.getAgentDocuments.mockResolvedValueOnce(Result.ok(mockDocuments));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/documents`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
@@ -88,15 +130,16 @@ describe('GET /api/agents/[agentId]/documents', () => {
     const data = await response.json();
     expect(data).toEqual({ documents: mockDocuments });
     
-    expect(AgentModel.getAgentWithOwner).toHaveBeenCalledWith(mockAgentId);
-    expect(AgentModel.getAgentDocuments).toHaveBeenCalledWith(mockAgentId, 40);
+    expect(mockAgentService.getAgentWithOwner).toHaveBeenCalledWith(mockAgentId);
+    expect(mockAgentService.getAgentDocuments).toHaveBeenCalledWith(mockAgentId, 40);
   });
 
   it('should return empty array when agent has no evaluations', async () => {
+    const { Result } = require('@roast/domain');
     
     const mockAgent = { id: mockAgentId, name: 'Test Agent' };
-    (AgentModel.getAgentWithOwner as jest.Mock).mockResolvedValueOnce(mockAgent);
-    (AgentModel.getAgentDocuments as jest.Mock).mockResolvedValueOnce([]);
+    mockAgentService.getAgentWithOwner.mockResolvedValueOnce(Result.ok(mockAgent));
+    mockAgentService.getAgentDocuments.mockResolvedValueOnce(Result.ok([]));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/documents`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
@@ -108,13 +151,15 @@ describe('GET /api/agents/[agentId]/documents', () => {
 
 
   it('should handle database errors', async () => {
-    (AgentModel.getAgentWithOwner as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    const { Result, AppError } = require('@roast/domain');
+    
+    mockAgentService.getAgentWithOwner.mockResolvedValueOnce(Result.fail(new AppError('Database error', 'DB_ERROR')));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/documents`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(404);
     const data = await response.json();
-    expect(data.error).toBe('Internal server error');
+    expect(data.error).toBe('Agent not found');
   });
 });

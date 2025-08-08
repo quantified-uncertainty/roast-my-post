@@ -10,6 +10,8 @@ import { DocumentRepository, EvaluationRepository, JobRepository } from '@roast/
 import { createLoggerAdapter } from '@/infrastructure/logging/loggerAdapter';
 import { JobService } from './job/JobService';
 import { JobOrchestrator } from './job/JobOrchestrator';
+import { AgentService } from './AgentService';
+import { AgentRepository } from '@/infrastructure/database/repositories/AgentRepository';
 
 /**
  * Singleton service factory
@@ -21,11 +23,13 @@ export class ServiceFactory {
   private evaluationService?: EvaluationService;
   private jobService?: JobService;
   private jobOrchestrator?: JobOrchestrator;
+  private agentService?: AgentService;
   
   // Repositories (shared across services)
   private documentRepository: DocumentRepository;
   private evaluationRepository: EvaluationRepository;
   private jobRepository: JobRepository;
+  private agentRepository: AgentRepository;
   
   // Validator
   private documentValidator: DocumentValidator;
@@ -38,6 +42,7 @@ export class ServiceFactory {
     this.documentRepository = new DocumentRepository();
     this.evaluationRepository = new EvaluationRepository();
     this.jobRepository = new JobRepository();
+    this.agentRepository = new AgentRepository();
     this.documentValidator = new DocumentValidator();
     this.logger = createLoggerAdapter();
   }
@@ -137,6 +142,19 @@ export class ServiceFactory {
   }
 
   /**
+   * Get or create AgentService instance
+   */
+  getAgentService(): AgentService {
+    if (!this.agentService) {
+      this.agentService = new AgentService(
+        this.agentRepository,
+        this.logger
+      );
+    }
+    return this.agentService;
+  }
+
+  /**
    * Reset singleton instance (useful for testing)
    */
   static reset(): void {
@@ -152,6 +170,7 @@ export function getServices() {
     evaluationService: factory.getEvaluationService(),
     jobService: factory.getJobService(),
     jobOrchestrator: factory.getJobOrchestrator(),
+    agentService: factory.getAgentService(),
     createTransactionalServices: (prismaTransaction: any) => factory.createTransactionalServices(prismaTransaction)
   };
 }

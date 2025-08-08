@@ -3,8 +3,10 @@
 import { createSafeActionClient } from "next-safe-action";
 
 import { auth } from "@/infrastructure/auth/auth";
-import { AgentModel, agentSchema } from "@/models/Agent";
+import { AgentInputSchema as agentSchema } from "@roast/ai";
+import { getServices } from "@/application/services/ServiceFactory";
 import type { AgentResponse } from "@roast/ai";
+import { ValidationError } from "@roast/domain";
 
 // Setup next-safe-action
 const actionClient = createSafeActionClient();
@@ -26,12 +28,26 @@ export const updateAgent = actionClient
         throw new Error("User must be logged in to update an agent");
       }
 
-      const updatedAgent = await AgentModel.updateAgent(
+      const { agentService } = getServices();
+      const result = await agentService.updateAgent(
         agentId,
         data.parsedInput,
         session.user.id
       );
 
+      if (result.isError()) {
+        const error = result.error();
+        const errorMessage = error instanceof ValidationError 
+          ? error.message 
+          : "Failed to update agent";
+        
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
+      const updatedAgent = result.unwrap();
       return {
         success: true,
         agent: updatedAgent,

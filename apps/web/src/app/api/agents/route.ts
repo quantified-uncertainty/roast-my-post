@@ -1,35 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
-import { AgentModel } from "@/models/Agent";
-import { agentSchema } from "@/models/Agent";
-import { prisma } from "@roast/db";
+import { AgentInputSchema as agentSchema } from "@roast/ai";
+import { getServices } from "@/application/services/ServiceFactory";
 import { successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { ZodError } from "zod";
+import { ValidationError, NotFoundError } from "@roast/domain";
 
 export async function GET() {
-  const dbAgents = await prisma.agent.findMany({
-    where: {
-      ephemeralBatchId: null, // Exclude ephemeral agents
-    },
-    include: {
-      versions: {
-        orderBy: {
-          version: "desc",
-        },
-        take: 1,
-      },
-    },
-  });
+  try {
+    const { agentService } = getServices();
+    const result = await agentService.getAllAgents();
 
-  const agents = dbAgents.map((dbAgent) => ({
-    id: dbAgent.id,
-    name: dbAgent.versions[0].name,
-    version: dbAgent.versions[0].version.toString(),
-    description: dbAgent.versions[0].description,
-  }));
+    if (result.isError()) {
+      logger.error('Error fetching agents:', result.error());
+      return commonErrors.serverError("Failed to fetch agents");
+    }
 
-  return NextResponse.json({ agents });
+    const agents = result.unwrap();
+    return NextResponse.json({ agents });
+  } catch (error) {
+    logger.error('Unexpected error in GET /api/agents:', error);
+    return commonErrors.serverError("Failed to fetch agents");
+  }
 }
 
 // PUT /api/agents - Update an existing agent (create new version)
@@ -52,12 +45,33 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update the agent (creates a new version)
-    const agent = await AgentModel.updateAgent(
+    const { agentService } = getServices();
+    const result = await agentService.updateAgent(
       validatedData.agentId,
       validatedData,
       userId
     );
 
+    if (result.isError()) {
+      const error = result.error();
+      
+      if (error instanceof NotFoundError) {
+        return commonErrors.notFound("Agent");
+      }
+      
+      if (error instanceof ValidationError) {
+        // Permission errors are ValidationErrors with specific message
+        if (error.message.includes("permission")) {
+          return commonErrors.forbidden();
+        }
+        return commonErrors.badRequest(error.message);
+      }
+      
+      logger.error('Error updating agent:', error);
+      return commonErrors.serverError("Failed to update agent");
+    }
+
+    const agent = result.unwrap();
     return successResponse({
       success: true,
       agent,
@@ -68,15 +82,6 @@ export async function PUT(request: NextRequest) {
     
     if (error instanceof ZodError) {
       return commonErrors.badRequest("Invalid request data");
-    }
-    
-    if (error instanceof Error) {
-      if (error.message === "Agent not found") {
-        return commonErrors.notFound("Agent");
-      }
-      if (error.message === "You do not have permission to update this agent") {
-        return commonErrors.forbidden();
-      }
     }
     
     return commonErrors.serverError("Failed to update agent");

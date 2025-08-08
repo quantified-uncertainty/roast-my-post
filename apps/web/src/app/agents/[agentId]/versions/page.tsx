@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { auth } from "@/infrastructure/auth/auth";
-import { AgentModel } from "@/models/Agent";
+import { getServices } from "@/application/services/ServiceFactory";
 
 import AgentVersionsClient from "./AgentVersionsClient";
 
@@ -16,17 +16,30 @@ export default async function AgentVersionsPage({
     return notFound();
   }
 
-  const agent = await AgentModel.getAgentWithOwner(
+  const { agentService } = getServices();
+  
+  const agentResult = await agentService.getAgentWithOwner(
     resolvedParams.agentId,
     session.user.id
   );
 
+  if (agentResult.isError()) {
+    return notFound();
+  }
+
+  const agent = agentResult.unwrap();
   if (!agent) {
     return notFound();
   }
 
   // Get agent versions
-  const versions = await AgentModel.getAgentVersions(resolvedParams.agentId);
+  const versionsResult = await agentService.getAgentVersions(resolvedParams.agentId);
+  
+  if (versionsResult.isError()) {
+    return notFound();
+  }
+
+  const versions = versionsResult.unwrap();
 
   return (
     <AgentVersionsClient

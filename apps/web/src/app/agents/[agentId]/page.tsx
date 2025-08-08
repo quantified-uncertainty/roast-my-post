@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import AgentDetail from "@/components/AgentDetail";
 import { auth } from "@/infrastructure/auth/auth";
-import { AgentModel } from "@/models/Agent";
+import { getServices } from "@/application/services/ServiceFactory";
 
 export default async function AgentPage({
   params,
@@ -12,13 +12,19 @@ export default async function AgentPage({
   const resolvedParams = await params;
   const session = await auth();
 
-  const agent = await AgentModel.getAgentWithOwner(
+  const { agentService } = getServices();
+  const result = await agentService.getAgentWithOwner(
     resolvedParams.agentId,
     session?.user?.id
   );
-  if (!agent) {
+  
+  if (result.isError()) {
     return notFound();
   }
 
+  const agent = result.unwrap();
+  if (!agent) {
+    return notFound();
+  }
   return <AgentDetail agent={agent} isOwner={agent.isOwner} />;
 }

@@ -1,29 +1,79 @@
 import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
-import { prisma } from '@roast/db';
-import { authenticateRequest, authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
+import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
-  prisma: {
-    agent: {
-      findMany: jest.fn(),
-    },
-  },
-}));
-
 jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
   authenticateRequestSessionFirst: jest.fn(),
 }));
 
-jest.mock('@/models/Agent', () => ({
-  AgentModel: {
-    updateAgent: jest.fn(),
-  },
-  agentSchema: {
-    parse: jest.fn((data) => data),
-  },
+jest.mock('@roast/ai', () => {
+  const actual = jest.requireActual('@roast/ai');
+  return {
+    ...actual,
+    AgentInputSchema: {
+      parse: jest.fn((data) => data),
+    },
+  };
+});
+
+// Mock the Result class to match expected interface
+jest.mock('@roast/domain', () => {
+  const originalResult = {
+    ok: (value: any) => ({
+      isError: () => false,
+      unwrap: () => value,
+      error: () => null
+    }),
+    fail: (error: any) => ({
+      isError: () => true,
+      unwrap: () => { throw new Error('Cannot unwrap a failed result'); },
+      error: () => error
+    })
+  };
+  
+  return {
+    Result: originalResult,
+    ValidationError: class ValidationError extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'ValidationError';
+      }
+    },
+    NotFoundError: class NotFoundError extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundError';
+      }
+    },
+    AppError: class AppError extends Error {
+      constructor(message: string, code: string) {
+        super(message);
+        this.name = 'AppError';
+      }
+    },
+    isDevelopment: () => false,
+    isTest: () => true
+  };
+});
+
+// Create mock services object
+const mockAgentService = {
+  getAllAgents: jest.fn(),
+  updateAgent: jest.fn(),
+};
+
+const mockServices = {
+  agentService: mockAgentService,
+};
+
+jest.mock('@/application/services/ServiceFactory', () => ({
+  getServices: jest.fn(() => mockServices),
+  ServiceFactory: {
+    getInstance: jest.fn(() => ({
+      getAgentService: jest.fn(() => mockAgentService),
+    }))
+  }
 }));
 
 describe('GET /api/agents', () => {
@@ -33,62 +83,42 @@ describe('GET /api/agents', () => {
 
   it('should return all agents without authentication', async () => {
     // GET doesn't require authentication, it's public
+    const { Result } = require('@roast/domain');
 
-    const mockDbAgents = [
+    const mockAgents = [
       {
         id: 'agent-1',
-        versions: [{
-          name: 'Agent One',
-          description: 'First agent',
-          version: 1,
-        }],
+        name: 'Agent One',
+        version: '1',
+        description: 'First agent',
       },
       {
         id: 'agent-2',
-        versions: [{
-          name: 'Agent Two',
-          description: 'Second agent',
-          version: 2,
-        }],
+        name: 'Agent Two',
+        version: '2',
+        description: 'Second agent',
       },
     ];
     
-    (prisma.agent.findMany as jest.Mock).mockResolvedValueOnce(mockDbAgents);
+    mockAgentService.getAllAgents.mockResolvedValueOnce(
+      Result.ok(mockAgents)
+    );
 
     const response = await GET();
+    
+    // Debug: log actual response if it fails
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.log('GET response error:', response.status, errorData);
+    }
     
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({
-      agents: [
-        {
-          id: 'agent-1',
-          name: 'Agent One',
-          version: '1',
-          description: 'First agent',
-        },
-        {
-          id: 'agent-2',
-          name: 'Agent Two',
-          version: '2',
-          description: 'Second agent',
-        },
-      ]
+      agents: mockAgents
     });
     
-    expect(prisma.agent.findMany).toHaveBeenCalledWith({
-      where: {
-        ephemeralBatchId: null,
-      },
-      include: {
-        versions: {
-          orderBy: {
-            version: 'desc',
-          },
-          take: 1,
-        },
-      },
-    });
+    expect(mockAgentService.getAllAgents).toHaveBeenCalled();
   });
 });
 
@@ -114,10 +144,10 @@ describe('PUT /api/agents', () => {
 
   it('should validate request body', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema } = require('@/models/Agent');
+    const { AgentInputSchema } = require('@roast/ai');
     const { ZodError } = require('zod');
     
-    agentSchema.parse.mockImplementationOnce(() => {
+    AgentInputSchema.parse.mockImplementationOnce(() => {
       throw new ZodError([
         {
           code: 'invalid_type',
@@ -141,8 +171,8 @@ describe('PUT /api/agents', () => {
 
   it('should require agentId for updates', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema } = require('@/models/Agent');
-    agentSchema.parse.mockReturnValueOnce({
+    const { AgentInputSchema } = require('@roast/ai');
+    AgentInputSchema.parse.mockReturnValueOnce({
       name: 'New Agent',
       description: 'A new agent',
       primaryInstructions: 'Instructions...',
@@ -168,9 +198,10 @@ describe('PUT /api/agents', () => {
 
   it('should update existing agent and create new version', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema, AgentModel } = require('@/models/Agent');
+    const { AgentInputSchema } = require('@roast/ai');
+    const { Result } = require('@roast/domain');
     
-    agentSchema.parse.mockReturnValueOnce({
+    AgentInputSchema.parse.mockReturnValueOnce({
       agentId: 'agent-123',
       name: 'Updated Name',
       primaryInstructions: 'New instructions...',
@@ -182,7 +213,9 @@ describe('PUT /api/agents', () => {
       version: 4,
     };
     
-    AgentModel.updateAgent.mockResolvedValueOnce(updatedAgent);
+    mockAgentService.updateAgent.mockResolvedValueOnce(
+      Result.ok(updatedAgent)
+    );
 
     const request = new NextRequest('http://localhost:3000/api/agents', {
       method: 'PUT',
@@ -204,7 +237,7 @@ describe('PUT /api/agents', () => {
       message: 'Successfully created version 4 of agent agent-123',
     });
     
-    expect(AgentModel.updateAgent).toHaveBeenCalledWith(
+    expect(mockAgentService.updateAgent).toHaveBeenCalledWith(
       'agent-123',
       {
         agentId: 'agent-123',
@@ -215,17 +248,18 @@ describe('PUT /api/agents', () => {
     );
   });
 
-  it('should handle permission errors from AgentModel', async () => {
+  it('should handle permission errors from AgentService', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { agentSchema, AgentModel } = require('@/models/Agent');
+    const { AgentInputSchema } = require('@roast/ai');
+    const { Result, ValidationError } = require('@roast/domain');
     
-    agentSchema.parse.mockReturnValueOnce({
+    AgentInputSchema.parse.mockReturnValueOnce({
       agentId: 'agent-123',
       name: 'Updated Name',
     });
     
-    AgentModel.updateAgent.mockRejectedValueOnce(
-      new Error('You do not have permission to update this agent')
+    mockAgentService.updateAgent.mockResolvedValueOnce(
+      Result.fail(new ValidationError('You do not have permission to update this agent'))
     );
 
     const request = new NextRequest('http://localhost:3000/api/agents', {

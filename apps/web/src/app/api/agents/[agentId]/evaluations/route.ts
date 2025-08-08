@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 
-import { AgentModel } from "@/models/Agent";
+import { getServices } from "@/application/services/ServiceFactory";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
@@ -10,14 +10,19 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     const { searchParams } = new URL(request.url);
     const batchId = searchParams.get('batchId');
     
-    // If batchId is provided, fetch evaluations for that batch
-    let evaluations;
-    if (batchId) {
-      evaluations = await AgentModel.getAgentEvaluations(agentId, { batchId });
-    } else {
-      evaluations = await AgentModel.getAgentEvaluations(agentId);
+    const { agentService } = getServices();
+    const options = batchId ? { batchId } : undefined;
+    const result = await agentService.getAgentEvaluations(agentId, options);
+
+    if (result.isError()) {
+      logger.error('Error fetching agent evaluations:', result.error());
+      return NextResponse.json(
+        { error: "Failed to fetch evaluations" },
+        { status: 500 }
+      );
     }
-    
+
+    const evaluations = result.unwrap();
     return NextResponse.json({ evaluations });
   } catch (error) {
     logger.error('Error fetching agent evaluations:', error);

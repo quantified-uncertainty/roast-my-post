@@ -3,11 +3,10 @@ import { processArticle } from '@/infrastructure/external/articleImport';
 describe('Article Import End-to-End Tests', () => {
   jest.setTimeout(30000); // 30 second timeout for network requests
 
-  // Skip if required API keys are not available
+  // Fail fast if required API keys are not available
   beforeAll(() => {
     if (!process.env.FIRECRAWL_KEY) {
-      console.log("Skipping E2E tests - FIRECRAWL_KEY not set");
-      return;
+      throw new Error('FIRECRAWL_KEY is required for article import e2e tests. Set it in your environment or .env.local file.');
     }
   });
 

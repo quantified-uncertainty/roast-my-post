@@ -4,8 +4,10 @@ import { createSafeActionClient } from "next-safe-action";
 import { logger } from "@/infrastructure/logging/logger";
 
 import { auth } from "@/infrastructure/auth/auth";
-import { AgentModel, agentSchema } from "@/models/Agent";
+import { AgentInputSchema as agentSchema } from "@roast/ai";
+import { getServices } from "@/application/services/ServiceFactory";
 import type { Agent, AgentResponse } from "@roast/ai";
+import { ValidationError } from "@roast/domain";
 
 // Setup next-safe-action
 const actionClient = createSafeActionClient();
@@ -41,14 +43,25 @@ export const createAgent = actionClient
         throw new Error("User must be logged in to create an agent");
       }
 
-      const agent = data.parsedInput.agentId
-        ? await AgentModel.updateAgent(
+      const { agentService } = getServices();
+
+      const result = data.parsedInput.agentId
+        ? await agentService.updateAgent(
             data.parsedInput.agentId,
             data.parsedInput,
             session.user.id
           )
-        : await AgentModel.createAgent(data.parsedInput, session.user.id);
+        : await agentService.createAgent(data.parsedInput, session.user.id);
 
+      if (result.isError()) {
+        const error = result.error();
+        if (error instanceof ValidationError) {
+          throw new Error(error.message);
+        }
+        throw new Error("Failed to handle agent");
+      }
+
+      const agent = result.unwrap();
       return createSuccessResponse(agent);
     } catch (error) {
       return createErrorResponse(error);
