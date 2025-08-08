@@ -82,7 +82,13 @@ export class AgentService {
         return Result.fail(new ValidationError("Agent description must be 1000 characters or less"));
       }
 
-      const agent = await this.agentRepository.createAgent(data, userId);
+      const agentResult = await this.agentRepository.createAgent(data, userId);
+      
+      if (agentResult.isError()) {
+        return agentResult;
+      }
+
+      const agent = agentResult.unwrap();
       
       this.logger.info('Agent created successfully', { 
         agentId: agent.id, 
@@ -132,7 +138,13 @@ export class AgentService {
         return Result.fail(new ValidationError("Agent description must be 1000 characters or less"));
       }
 
-      const agent = await this.agentRepository.updateAgent(agentId, data, userId);
+      const agentResult = await this.agentRepository.updateAgent(agentId, data, userId);
+      
+      if (agentResult.isError()) {
+        return agentResult;
+      }
+
+      const agent = agentResult.unwrap();
       
       this.logger.info('Agent updated successfully', { 
         agentId, 
@@ -145,14 +157,6 @@ export class AgentService {
     } catch (error) {
       this.logger.error('Error updating agent', { error, agentId, userId });
       
-      if (error instanceof Error && error.message.includes("not found")) {
-        return Result.fail(new ValidationError("Agent not found"));
-      }
-      
-      if (error instanceof Error && error.message.includes("permission")) {
-        return Result.fail(new ValidationError("You do not have permission to update this agent"));
-      }
-      
       return Result.fail(new AppError("Failed to update agent", "AGENT_UPDATE_ERROR"));
     }
   }
@@ -164,7 +168,13 @@ export class AgentService {
     try {
       this.logger.debug('Fetching agent with owner', { agentId, currentUserId });
 
-      const agent = await this.agentRepository.getAgentWithOwner(agentId);
+      const agentResult = await this.agentRepository.getAgentWithOwner(agentId);
+      
+      if (agentResult.isError()) {
+        return agentResult;
+      }
+
+      const agent = agentResult.unwrap();
       
       if (!agent) {
         return Result.ok(null);
@@ -189,8 +199,13 @@ export class AgentService {
     try {
       this.logger.debug('Fetching agent versions', { agentId });
 
-      const versions = await this.agentRepository.getAgentVersions(agentId);
-      return Result.ok(versions);
+      const versionsResult = await this.agentRepository.getAgentVersions(agentId);
+      
+      if (versionsResult.isError()) {
+        return versionsResult;
+      }
+
+      return Result.ok(versionsResult.unwrap());
     } catch (error) {
       this.logger.error('Error fetching agent versions', { error, agentId });
       return Result.fail(new AppError("Failed to fetch agent versions", "AGENT_VERSIONS_FETCH_ERROR"));
@@ -204,8 +219,13 @@ export class AgentService {
     try {
       this.logger.debug('Fetching agent review', { agentId });
 
-      const review = await this.agentRepository.getAgentReview(agentId);
-      return Result.ok(review);
+      const reviewResult = await this.agentRepository.getAgentReview(agentId);
+      
+      if (reviewResult.isError()) {
+        return reviewResult;
+      }
+
+      return Result.ok(reviewResult.unwrap());
     } catch (error) {
       this.logger.error('Error fetching agent review', { error, agentId });
       return Result.fail(new AppError("Failed to fetch agent review", "AGENT_REVIEW_FETCH_ERROR"));
@@ -219,8 +239,13 @@ export class AgentService {
     try {
       this.logger.debug('Fetching agent documents', { agentId, limit });
 
-      const documents = await this.agentRepository.getAgentDocuments(agentId, limit);
-      return Result.ok(documents);
+      const documentsResult = await this.agentRepository.getAgentDocuments(agentId, limit);
+      
+      if (documentsResult.isError()) {
+        return documentsResult;
+      }
+
+      return Result.ok(documentsResult.unwrap());
     } catch (error) {
       this.logger.error('Error fetching agent documents', { error, agentId, limit });
       return Result.fail(new AppError("Failed to fetch agent documents", "AGENT_DOCUMENTS_FETCH_ERROR"));
@@ -234,8 +259,13 @@ export class AgentService {
     try {
       this.logger.debug('Fetching all agents');
 
-      const agents = await this.agentRepository.getAllAgents();
-      return Result.ok(agents);
+      const agentsResult = await this.agentRepository.getAllAgents();
+      
+      if (agentsResult.isError()) {
+        return agentsResult;
+      }
+
+      return Result.ok(agentsResult.unwrap());
     } catch (error) {
       this.logger.error('Error fetching all agents', { error });
       return Result.fail(new AppError("Failed to fetch agents", "AGENTS_FETCH_ERROR"));
@@ -252,8 +282,13 @@ export class AgentService {
     try {
       this.logger.debug('Fetching agent evaluations', { agentId, options });
 
-      const evaluations = await this.agentRepository.getAgentEvaluations(agentId, options);
-      return Result.ok(evaluations);
+      const evaluationsResult = await this.agentRepository.getAgentEvaluations(agentId, options);
+      
+      if (evaluationsResult.isError()) {
+        return evaluationsResult;
+      }
+
+      return Result.ok(evaluationsResult.unwrap());
     } catch (error) {
       this.logger.error('Error fetching agent evaluations', { error, agentId, options });
       return Result.fail(new AppError("Failed to fetch agent evaluations", "AGENT_EVALUATIONS_FETCH_ERROR"));

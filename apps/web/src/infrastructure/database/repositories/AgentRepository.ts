@@ -4,14 +4,16 @@ import type { Agent, AgentInput, AgentVersion } from "@roast/ai";
 import { AgentSchema, AgentVersionSchema } from "@roast/ai";
 import type { AgentReview } from "@/shared/types/evaluationSchema";
 import { AgentReviewSchema } from "@/shared/types/evaluationSchema";
+import { Result, ValidationError, NotFoundError, AppError } from "@roast/domain";
 
 export class AgentRepository {
   /**
    * Creates a new agent with its first version
    */
-  async createAgent(data: AgentInput, userId: string): Promise<Agent> {
-    const id = nanoid(16);
-    const agent = await prisma.agent.create({
+  async createAgent(data: AgentInput, userId: string): Promise<Result<Agent, AppError>> {
+    try {
+      const id = nanoid(16);
+      const agent = await prisma.agent.create({
       data: {
         id,
         submittedById: userId,
@@ -43,7 +45,7 @@ export class AgentRepository {
       },
     });
 
-    return AgentSchema.parse({
+    const parsedAgent = AgentSchema.parse({
       id: agent.id,
       name: agent.versions[0].name,
       version: agent.versions[0].version.toString(),
@@ -59,22 +61,34 @@ export class AgentRepository {
         email: agent.submittedBy.email || "unknown@example.com",
       },
     });
+
+    return Result.ok(parsedAgent);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_CREATE_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to create agent", "AGENT_CREATE_ERROR"));
+    }
   }
 
   /**
    * Updates an agent by creating a new version
    */
-  async updateAgent(agentId: string, data: AgentInput, userId: string): Promise<Agent> {
-    const existingAgent = await prisma.agent.findUnique({
-      where: { id: agentId },
-      include: { versions: { orderBy: { version: "desc" }, take: 1 } },
-    });
+  async updateAgent(agentId: string, data: AgentInput, userId: string): Promise<Result<Agent, AppError>> {
+    try {
+      const existingAgent = await prisma.agent.findUnique({
+        where: { id: agentId },
+        include: { versions: { orderBy: { version: "desc" }, take: 1 } },
+      });
 
-    if (!existingAgent) throw new Error("Agent not found");
-    if (existingAgent.submittedById !== userId)
-      throw new Error("You do not have permission to update this agent");
+      if (!existingAgent) {
+        return Result.fail(new NotFoundError("Agent not found"));
+      }
+      if (existingAgent.submittedById !== userId) {
+        return Result.fail(new ValidationError("You do not have permission to update this agent"));
+      }
 
-    const latestVersion = existingAgent.versions[0].version;
+      const latestVersion = existingAgent.versions[0].version;
 
     const agent = await prisma.agent.update({
       where: { id: agentId },
@@ -105,7 +119,7 @@ export class AgentRepository {
       },
     });
 
-    return AgentSchema.parse({
+    const parsedAgent = AgentSchema.parse({
       id: agent.id,
       name: agent.versions[0].name,
       version: agent.versions[0].version.toString(),
@@ -121,13 +135,22 @@ export class AgentRepository {
         email: agent.submittedBy.email || "unknown@example.com",
       },
     });
+
+    return Result.ok(parsedAgent);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_UPDATE_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to update agent", "AGENT_UPDATE_ERROR"));
+    }
   }
 
   /**
    * Retrieves an agent with owner information
    */
-  async getAgentWithOwner(agentId: string): Promise<Agent | null> {
-    const dbAgent = await prisma.agent.findUnique({
+  async getAgentWithOwner(agentId: string): Promise<Result<Agent | null, AppError>> {
+    try {
+      const dbAgent = await prisma.agent.findUnique({
       where: { id: agentId },
       include: {
         versions: {
@@ -150,9 +173,9 @@ export class AgentRepository {
       },
     });
 
-    if (!dbAgent) return null;
+    if (!dbAgent) return Result.ok(null);
 
-    return AgentSchema.parse({
+    const parsedAgent = AgentSchema.parse({
       id: dbAgent.id,
       name: dbAgent.versions[0].name,
       version: dbAgent.versions[0].version.toString(),
@@ -168,39 +191,57 @@ export class AgentRepository {
       },
       ephemeralBatch: dbAgent.ephemeralBatch,
     });
+
+    return Result.ok(parsedAgent);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_FETCH_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to fetch agent", "AGENT_FETCH_ERROR"));
+    }
   }
 
   /**
    * Gets all versions of an agent
    */
-  async getAgentVersions(agentId: string): Promise<AgentVersion[]> {
-    const versions = await prisma.agentVersion.findMany({
-      where: { agentId },
-      orderBy: { version: "desc" },
-    });
+  async getAgentVersions(agentId: string): Promise<Result<AgentVersion[], AppError>> {
+    try {
+      const versions = await prisma.agentVersion.findMany({
+        where: { agentId },
+        orderBy: { version: "desc" },
+      });
 
-    return versions.map((version) =>
-      AgentVersionSchema.parse({
-        id: version.id,
-        version: version.version,
-        name: version.name,
-        description: version.description,
-        primaryInstructions: version.primaryInstructions || undefined,
-        selfCritiqueInstructions: version.selfCritiqueInstructions || undefined,
-        providesGrades: version.providesGrades ?? false,
-        extendedCapabilityId: version.extendedCapabilityId || undefined,
-        readme: version.readme || undefined,
-        createdAt: version.createdAt,
-        updatedAt: version.updatedAt,
-      })
-    );
+      const parsedVersions = versions.map((version) =>
+        AgentVersionSchema.parse({
+          id: version.id,
+          version: version.version,
+          name: version.name,
+          description: version.description,
+          primaryInstructions: version.primaryInstructions || undefined,
+          selfCritiqueInstructions: version.selfCritiqueInstructions || undefined,
+          providesGrades: version.providesGrades ?? false,
+          extendedCapabilityId: version.extendedCapabilityId || undefined,
+          readme: version.readme || undefined,
+          createdAt: version.createdAt,
+          updatedAt: version.updatedAt,
+        })
+      );
+
+      return Result.ok(parsedVersions);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_VERSIONS_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to fetch agent versions", "AGENT_VERSIONS_ERROR"));
+    }
   }
 
   /**
    * Gets the latest review for an agent
    */
-  async getAgentReview(agentId: string): Promise<AgentReview | null> {
-    const evaluationVersion = await prisma.evaluationVersion.findFirst({
+  async getAgentReview(agentId: string): Promise<Result<AgentReview | null, AppError>> {
+    try {
+      const evaluationVersion = await prisma.evaluationVersion.findFirst({
       where: {
         agentId: agentId,
       },
@@ -221,10 +262,10 @@ export class AgentRepository {
     });
 
     if (!evaluationVersion) {
-      return null;
+      return Result.ok(null);
     }
 
-    return AgentReviewSchema.parse({
+    const review = AgentReviewSchema.parse({
       evaluatedAgentId: agentId,
       grade: evaluationVersion.grade ?? undefined,
       summary: evaluationVersion.summary,
@@ -232,13 +273,22 @@ export class AgentRepository {
         evaluationVersion.evaluation.document.submittedBy.name || "Unknown",
       createdAt: evaluationVersion.createdAt,
     });
+
+    return Result.ok(review);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_REVIEW_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to fetch agent review", "AGENT_REVIEW_ERROR"));
+    }
   }
 
   /**
    * Gets documents that have been evaluated by an agent
    */
-  async getAgentDocuments(agentId: string, limit: number = 40) {
-    const evaluations = await prisma.evaluation.findMany({
+  async getAgentDocuments(agentId: string, limit: number = 40): Promise<Result<any[], AppError>> {
+    try {
+      const evaluations = await prisma.evaluation.findMany({
       where: {
         agentId: agentId,
       },
@@ -278,7 +328,7 @@ export class AgentRepository {
       },
     });
 
-    return evaluations.map((evaluation: any) => {
+    const documents = evaluations.map((evaluation: any) => {
       const latestDocumentVersion = evaluation.document?.versions?.[0];
       const latestEvaluationVersion = evaluation.versions?.[0];
 
@@ -298,13 +348,22 @@ export class AgentRepository {
         priceInDollars: latestEvaluationVersion?.job?.priceInDollars?.toString() || null,
       };
     });
+
+    return Result.ok(documents);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_DOCUMENTS_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to fetch agent documents", "AGENT_DOCUMENTS_ERROR"));
+    }
   }
 
   /**
    * Gets all non-ephemeral agents with basic information
    */
-  async getAllAgents(): Promise<Array<{ id: string; name: string; version: string; description: string }>> {
-    const dbAgents = await prisma.agent.findMany({
+  async getAllAgents(): Promise<Result<Array<{ id: string; name: string; version: string; description: string }>, AppError>> {
+    try {
+      const dbAgents = await prisma.agent.findMany({
       where: {
         ephemeralBatchId: null, // Exclude ephemeral agents
       },
@@ -318,20 +377,29 @@ export class AgentRepository {
       },
     });
 
-    return dbAgents.map((dbAgent) => ({
+    const agents = dbAgents.map((dbAgent) => ({
       id: dbAgent.id,
       name: dbAgent.versions[0].name,
       version: dbAgent.versions[0].version.toString(),
       description: dbAgent.versions[0].description,
     }));
+
+    return Result.ok(agents);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_LIST_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to fetch agents", "AGENT_LIST_ERROR"));
+    }
   }
 
   /**
    * Gets evaluations performed by an agent
    */
-  async getAgentEvaluations(agentId: string, options?: { limit?: number; batchId?: string }) {
-    const limit = options?.limit || 50;
-    const batchId = options?.batchId;
+  async getAgentEvaluations(agentId: string, options?: { limit?: number; batchId?: string }): Promise<Result<any[], AppError>> {
+    try {
+      const limit = options?.limit || 50;
+      const batchId = options?.batchId;
     
     let whereConditions: any = {
       agentId: agentId,
@@ -415,7 +483,7 @@ export class AgentRepository {
       },
     });
 
-    return evaluations.map((evalVersion) => {
+    const results = evaluations.map((evalVersion) => {
       const latestDocumentVersion = evalVersion.evaluation.document.versions[0];
       
       return {
@@ -440,5 +508,13 @@ export class AgentRepository {
         job: evalVersion.job,
       };
     });
+
+    return Result.ok(results);
+    } catch (error) {
+      if (error instanceof Error) {
+        return Result.fail(new AppError(error.message, "AGENT_EVALUATIONS_ERROR"));
+      }
+      return Result.fail(new AppError("Failed to fetch agent evaluations", "AGENT_EVALUATIONS_ERROR"));
+    }
   }
 }
