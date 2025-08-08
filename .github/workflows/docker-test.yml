@@ -1,0 +1,149 @@
+name: Docker Build Test
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile*'
+      - 'apps/**'
+      - 'internal-packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/docker-test.yml'
+
+jobs:
+  test-docker-builds:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Test Worker Build
+        id: worker-build
+        run: |
+          echo "::group::Testing Worker Docker Build"
+          if docker build -f Dockerfile.worker -t worker-test .; then
+            echo "worker_build=success" >> $GITHUB_OUTPUT
+            echo "✅ Worker Docker build passed"
+          else
+            echo "worker_build=failed" >> $GITHUB_OUTPUT
+            echo "❌ Worker Docker build failed"
+          fi
+          echo "::endgroup::"
+          
+      - name: Test Worker Runtime
+        id: worker-runtime
+        if: steps.worker-build.outputs.worker_build == 'success'
+        run: |
+          echo "::group::Testing Worker Package Access"
+          if docker run --rm worker-test sh -c '
+            cd /app/apps/web && 
+            npx tsx -e "
+              try {
+                require(\"@roast/domain\");
+                require(\"@roast/db\");
+                require(\"@roast/ai\");
+                console.log(\"✅ All packages accessible\");
+              } catch (e) {
+                console.error(\"❌ Package loading failed:\", e.message);
+                process.exit(1);
+              }
+            "
+          '; then
+            echo "worker_runtime=success" >> $GITHUB_OUTPUT
+            echo "✅ Worker runtime test passed"
+          else
+            echo "worker_runtime=failed" >> $GITHUB_OUTPUT
+            echo "❌ Worker runtime test failed - packages may not be accessible"
+          fi
+          echo "::endgroup::"
+          
+      - name: Test Main App Build
+        id: web-build
+        run: |
+          echo "::group::Testing Main App Docker Build"
+          if docker build \
+            --build-arg SKIP_ENV_VALIDATION=true \
+            --build-arg DATABASE_URL="postgresql://postgres:postgres@localhost:5432/test" \
+            -f Dockerfile \
+            -t web-test .; then
+            echo "web_build=success" >> $GITHUB_OUTPUT
+            echo "✅ Main app Docker build passed"
+          else
+            echo "web_build=failed" >> $GITHUB_OUTPUT
+            echo "❌ Main app Docker build failed"
+          fi
+          echo "::endgroup::"
+          
+      - name: Check Results and Fail if Needed
+        if: always()
+        run: |
+          FAILED=false
+          
+          if [[ "${{ steps.worker-build.outputs.worker_build }}" == "failed" ]]; then
+            echo "❌ Worker build failed"
+            FAILED=true
+          fi
+          
+          if [[ "${{ steps.worker-runtime.outputs.worker_runtime }}" == "failed" ]]; then
+            echo "❌ Worker runtime test failed"
+            FAILED=true
+          fi
+          
+          if [[ "${{ steps.web-build.outputs.web_build }}" == "failed" ]]; then
+            echo "❌ Main app build failed"
+            FAILED=true
+          fi
+          
+          if [[ "$FAILED" == "true" ]]; then
+            echo "::error::Docker build tests failed. See above for details."
+            exit 1
+          else
+            echo "✅ All Docker build tests passed!"
+          fi
+          
+      - name: Post Results Comment
+        if: always()
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            // Check if any tests failed
+            const workerBuild = '${{ steps.worker-build.outputs.worker_build }}';
+            const workerRuntime = '${{ steps.worker-runtime.outputs.worker_runtime }}';
+            const webBuild = '${{ steps.web-build.outputs.web_build }}';
+            
+            const hasFailures = workerBuild === 'failed' || 
+                               workerRuntime === 'failed' || 
+                               webBuild === 'failed';
+            
+            if (hasFailures) {
+              const results = [];
+              if (workerBuild === 'success') results.push('✅ Worker build: Passed');
+              else if (workerBuild === 'failed') results.push('❌ Worker build: Failed');
+              
+              if (workerRuntime === 'success') results.push('✅ Worker runtime: Passed');
+              else if (workerRuntime === 'failed') results.push('❌ Worker runtime: Failed');
+              else if (!workerRuntime) results.push('⏭️ Worker runtime: Skipped');
+              
+              if (webBuild === 'success') results.push('✅ Main app build: Passed');
+              else if (webBuild === 'failed') results.push('❌ Main app build: Failed');
+              
+              const message = `### 🐳 Docker Build Test Results
+            
+            ❌ Docker builds failed - this PR cannot be merged until fixed:
+            
+            ${results.join('\n')}
+            
+            Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: message
+              });
+            }

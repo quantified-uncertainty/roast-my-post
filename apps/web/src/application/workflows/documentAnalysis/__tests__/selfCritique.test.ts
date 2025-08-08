@@ -25,7 +25,8 @@ jest.mock("@roast/ai", () => ({
 
 // Mock withTimeout - no need to mock the submodule since it's imported from main package
 
-import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
+import { callClaudeWithTool } from "@roast/ai";
+import { setupClaudeToolMock } from "@roast/ai/testing";
 
 describe("Self-Critique", () => {
   let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;

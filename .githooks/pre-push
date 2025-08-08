@@ -1,0 +1,35 @@
+#!/bin/bash
+# Git pre-push hook to check Docker builds before pushing
+# 
+# To enable this hook:
+#   git config core.hooksPath .githooks
+#
+# Or copy to your local hooks:
+#   cp .githooks/pre-push .git/hooks/pre-push
+#   chmod +x .git/hooks/pre-push
+
+# Check if any Docker-related files have changed
+DOCKER_CHANGED=$(git diff --cached --name-only origin/main HEAD | grep -E "(Dockerfile|apps/|internal-packages/|package\.json|pnpm-lock\.yaml)" | head -1)
+
+if [ -n "$DOCKER_CHANGED" ]; then
+    echo "🐳 Docker-related files changed, running Docker checks..."
+    echo "   (This may take 2-3 minutes)"
+    echo ""
+    
+    # Run the comprehensive Docker check
+    if ./dev/scripts/docker-check-all.sh; then
+        echo "✅ Docker checks passed, proceeding with push"
+    else
+        echo ""
+        echo "❌ Docker checks failed!"
+        echo ""
+        echo "Push aborted to prevent CI failures."
+        echo "Fix the issues above and try again."
+        echo ""
+        echo "To bypass this check (not recommended):"
+        echo "  git push --no-verify"
+        exit 1
+    fi
+else
+    echo "No Docker-related changes detected, skipping Docker checks"
+fi

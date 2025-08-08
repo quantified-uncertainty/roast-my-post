@@ -1,42 +1,32 @@
-# Worker Dockerfile - uses tsx for runtime transpilation
-FROM node:20-alpine AS base
-WORKDIR /usr/src/app
+# Worker Dockerfile - Simple approach that builds everything in place
+FROM node:20-alpine AS builder
 
-# Install dependencies and enable corepack
+WORKDIR /app
+
+# Install dependencies for build
 RUN apk add --no-cache libc6-compat python3 make g++
+
+# Enable pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy all source files
+# Copy everything
 COPY . .
 
-# Install all dependencies (including dev deps for tsx)
+# Install all dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
-# Early validation - check workspace packages exist
-RUN test -d node_modules/@roast/domain && echo "✓ @roast/domain found" || (echo "✗ @roast/domain not found" && exit 1) && \
-    test -d node_modules/@roast/db && echo "✓ @roast/db found" || (echo "✗ @roast/db not found" && exit 1) && \
-    test -d node_modules/@roast/ai && echo "✓ @roast/ai found" || (echo "✗ @roast/ai not found" && exit 1)
+# Build the packages that need building (in dependency order)
+RUN pnpm --filter @roast/db run build
+RUN pnpm --filter @roast/domain run build
+# Note: @roast/ai doesn't need building - it's consumed as TypeScript by tsx
 
-# Build workspace packages that need dist files (db first, then domain which depends on it)
-RUN pnpm --filter @roast/db build && \
-    pnpm --filter @roast/domain build && \
-    echo "✓ Workspace packages built"
-
-# Deploy web app with all dependencies (including dev deps for tsx)
-# Note: pnpm deploy will include the built packages since we built them first
-RUN pnpm deploy --filter=@roast/web /prod/worker
-
-# Validate deployment has packages actually working
-RUN cd /prod/worker && \
-    node -e "try { require('@roast/domain'); console.log('✓ @roast/domain works'); } catch(e) { console.error('✗ @roast/domain failed:', e.message); exit(1); }" && \
-    node -e "try { require('@roast/db'); console.log('✓ @roast/db works'); } catch(e) { console.error('✗ @roast/db failed:', e.message); exit(1); }" && \
-    node -e "try { require('@roast/ai'); console.log('✓ @roast/ai works'); } catch(e) { console.error('✗ @roast/ai failed:', e.message); exit(1); }"
-
+# ================================ Runner ================================
 FROM node:20-alpine AS runner
+
 WORKDIR /app
 
-# Install runtime dependencies and enable corepack
+# Install runtime dependencies
 RUN apk add --no-cache libc6-compat
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -44,10 +34,14 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Copy deployed worker app
-COPY --from=base --chown=nextjs:nodejs /prod/worker ./
+# Copy the entire built application from builder
+COPY --from=builder --chown=nextjs:nodejs /app .
 
+# Switch to non-root user
 USER nextjs
+
+# Set working directory to the web app
+WORKDIR /app/apps/web
 
 # Run the adaptive job processor
 CMD ["pnpm", "run", "process-jobs-adaptive"]

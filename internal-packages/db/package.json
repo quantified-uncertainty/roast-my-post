@@ -37,5 +37,19 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "files": [
+    "dist",
+    "generated",
+    "prisma",
+    "browser.ts"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "scripts-comments": {
+    "prepublishOnly": "Builds everything before publishing"
+  },
+  "prepublishOnly": "pnpm run gen:build && pnpm run build"
 }

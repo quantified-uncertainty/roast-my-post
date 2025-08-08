@@ -697,6 +697,118 @@ The MCP server cache issue is not a configuration problem—it's a fundamental l
 
 **Remember**: This problem will recur every time you make significant changes to the MCP server code or configuration. Build the restart step into your development workflow.
 
+## Docker Build Strategy for pnpm Monorepo (2025-02-08)
+
+### The Challenge
+Building Docker images for a pnpm workspace monorepo is complex because:
+1. **pnpm uses symlinks** for workspace dependencies, which break in Docker's layer system
+2. **pnpm deploy** creates self-contained deployments but doesn't build TypeScript packages
+3. **Publishing packages** adds complexity with versioning, especially for branch development
+4. **Turbo prune** (used by Squiggle) has issues with Prisma postinstall scripts
+
+### Investigation Journey
+We explored multiple approaches before finding the right solution:
+
+1. **First attempt: pnpm deploy** ❌
+   - Created pruned deployment but TypeScript packages weren't built
+   - Runtime error: `Cannot find module '@roast/domain/dist/index.js'`
+   
+2. **Second attempt: Turbo prune (Squiggle-style)** ❌
+   - Squiggle publishes packages to NPM, avoiding workspace issues
+   - Turbo prune failed with Prisma: `schema.prisma: file not found`
+   - Would require publishing to GitHub Packages or NPM
+
+3. **Publishing consideration** ❌
+   - Considered publishing @roast/domain and @roast/db to GitHub Packages
+   - User feedback: "We'll be frequently changing many of the libs"
+   - Branch development would be problematic with version management
+
+4. **Final solution: Simple build-in-Docker** ✅
+   - Build everything inside Docker container
+   - Copy entire monorepo, install all dependencies
+   - Build only packages that need compilation
+   - Simple, reliable, no external dependencies
+
+### Key Discoveries
+
+#### TypeScript Execution: tsx vs node
+**Critical insight**: The worker uses `tsx` (TypeScript executor) not `node`, which changes everything:
+
+```bash
+# This works (tsx executes TypeScript directly):
+npx tsx -e "const ai = require('@roast/ai'); console.log('✅')"
+
+# This fails (node needs compiled JavaScript):
+node -e "const ai = require('@roast/ai'); console.log('❌')"
+```
+
+**Implications**:
+- `@roast/ai` doesn't need building for the worker (it runs under tsx)
+- `@roast/domain` and `@roast/db` DO need building (contain Prisma generated code)
+- Next.js handles TypeScript transpilation for web app via `transpilePackages`
+
+#### Package Build Requirements
+| Package | Needs Building? | Why |
+|---------|----------------|------|
+| @roast/db | ✅ Yes | Contains Prisma generated client (JavaScript) |
+| @roast/domain | ✅ Yes | Imported by other packages that expect dist/ |
+| @roast/ai | ❌ No | Worker uses tsx, web uses transpilePackages |
+
+### Current Docker Strategy
+
+```dockerfile
+# Simple approach - build everything in Docker
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copy everything
+COPY . .
+
+# Install all dependencies
+RUN pnpm install --frozen-lockfile
+
+# Build only what needs building
+RUN pnpm --filter @roast/db run build
+RUN pnpm --filter @roast/domain run build
+# Note: @roast/ai doesn't need building - consumed as TypeScript by tsx
+
+# Runner stage copies everything from builder
+```
+
+**Benefits**:
+- Simple and predictable
+- No external package registry needed
+- Works with any branch or local changes
+- Preserves monorepo structure
+
+**Trade-offs**:
+- Larger Docker images (includes all source)
+- Longer build times (builds in Docker)
+- Acceptable for our use case
+
+### Testing Docker Builds Locally
+
+```bash
+# Use the test script to verify builds
+./dev/scripts/test-docker-builds.sh
+
+# Tests that all packages are accessible at runtime
+docker run --rm roastmypost-worker:test \
+  sh -c 'npx tsx -e "
+    require(\"@roast/domain\");  // ✅
+    require(\"@roast/db\");      // ✅  
+    require(\"@roast/ai\");      // ✅
+  "'
+```
+
+### Why Squiggle's Approach Works
+Squiggle successfully uses Turbo + Docker because:
+1. **They publish packages to NPM** - no workspace dependencies in Docker
+2. **No Prisma** - avoids postinstall script issues with Turbo
+3. **Stable packages** - less frequent changes than our internal packages
+
+For projects with frequently changing internal packages, the simple "build in Docker" approach is more practical.
+
 ## Critical Prisma/Database Debugging Guide (2024-06-25)
 
 ### Common Prisma Issues and Solutions

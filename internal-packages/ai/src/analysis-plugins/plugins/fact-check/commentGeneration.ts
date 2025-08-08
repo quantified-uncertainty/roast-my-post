@@ -21,7 +21,7 @@ export function generateFactCheckComments(
 
 function generateCommentContent(
   fact: VerifiedFact,
-  location?: DocumentLocation
+  _location?: DocumentLocation
 ): string {
   // Determine severity and emoji based on verification status
   let severity: CommentSeverity;
@@ -100,7 +100,7 @@ function generateCommentContent(
   let content = styledHeader;
 
   // Add research indicator if Perplexity was used
-  if (fact.factCheckerOutput?.perplexityData) {
+  if ((fact.factCheckerOutput as any)?.perplexityData) {
     content += `\n\n**🔍 Research conducted**: This claim was verified using external sources.`;
   }
 
@@ -138,10 +138,10 @@ function generateCommentContent(
   }
 
   // Add Perplexity debug information if available
-  if (fact.factCheckerOutput?.perplexityData) {
+  if ((fact.factCheckerOutput as any)?.perplexityData) {
     content += "\n\n<details>\n<summary>Debug: Research Data</summary>\n\n";
     content += "```json\n";
-    content += JSON.stringify(fact.factCheckerOutput.perplexityData, null, 2);
+    content += JSON.stringify((fact.factCheckerOutput as any).perplexityData, null, 2);
     content += "\n```\n\n</details>";
   }
 

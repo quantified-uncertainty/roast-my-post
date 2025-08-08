@@ -5,7 +5,7 @@
  * with the Job system to persist logs for debugging and monitoring.
  */
 
-import { logger, type LogContext } from "../shared/logger";
+import { logger } from "../shared/logger";
 
 export interface PluginLogEntry {
   timestamp: string;
@@ -29,12 +29,12 @@ export interface PluginLogEntry {
       name: string;
       message: string;
       stack?: string;
-      context?: any;
+      context?: unknown;
     };
     pluginName?: string;
     chunkCount?: number;
     chunkIds?: string[];
-    data?: any;
+    data?: unknown;
   };
 }
 
@@ -116,7 +116,7 @@ export class PluginLogger {
     this.updatePluginStats(entry.plugin, entry);
 
     // Also log to console for development
-    const contextStr = entry.context ? JSON.stringify(entry.context, null, 2) : '';
+    const _contextStr = entry.context ? JSON.stringify(entry.context, null, 2) : '';
     const phaseStr = entry.phase ? `[${entry.phase}] ` : '';
     
     switch (entry.level) {
