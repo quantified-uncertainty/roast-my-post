@@ -19,8 +19,10 @@ COPY internal-packages/domain/package.json ./internal-packages/domain/
 # Copy Prisma schema
 COPY internal-packages/db/prisma ./internal-packages/db/prisma/
 
-# Install all dependencies
-RUN pnpm install --frozen-lockfile
+# Install all dependencies with cache mount
+RUN --mount=type=cache,target=/app/node_modules/.pnpm \
+    --mount=type=cache,target=/app/.pnpm-store \
+    pnpm install --frozen-lockfile
 
 # Generate Prisma client
 RUN pnpm --filter @roast/db run gen
@@ -29,8 +31,7 @@ RUN pnpm --filter @roast/db run gen
 COPY . .
 
 # Build internal packages in dependency order
-# Install dependencies again after copying source (for workspace references)
-RUN pnpm install --frozen-lockfile
+# Note: No need to reinstall after copying source - workspace references work from initial install
 
 # Build packages in correct dependency order
 RUN pnpm --filter @roast/db run build

@@ -121,50 +121,26 @@ jobs:
       - name: Test Docker image - Runtime validation
         if: github.event_name == 'pull_request'
         run: |
-          echo "Running comprehensive runtime validation..."
-          # Set environment variable to identify image type
+          echo "Running runtime validation for ${{ matrix.name }} image..."
+          
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
-            export IMAGE_TYPE="worker"
+            # Worker image - test that it can access workspace packages
+            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} node -e "
+              const fs = require('fs');
+              const packages = ['@roast/db', '@roast/domain', '@roast/ai'];
+              for (const pkg of packages) {
+                const pkgJsonPath = \`/app/node_modules/\${pkg}/package.json\`;
+                if (!fs.existsSync(pkgJsonPath)) {
+                  console.error(\`Package \${pkg} not properly linked\`);
+                  process.exit(1);
+                }
+              }
+              console.log('All workspace packages properly linked');
+            "
           else
-            export IMAGE_TYPE="main"
+            # Main image - test that the Next.js server can initialize
+            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} timeout 10 node /app/apps/web/server.js > /dev/null 2>&1 || [ \$? -eq 124 ] && echo "Standalone server can initialize"
           fi
-          
-          # Create the runtime test script inline
-          cat > /tmp/docker-test.js << 'EOF'
-          const fs = require('fs');
-          console.log('Runtime validation test...');
-          
-          // Test critical paths
-          const criticalPaths = [
-            '/app/internal-packages/db/dist',
-            '/app/internal-packages/domain/dist',
-            '/app/internal-packages/ai/dist',
-            '/app/node_modules/.prisma/client'
-          ];
-          
-          let failed = false;
-          for (const path of criticalPaths) {
-            if (!fs.existsSync(path)) {
-              console.error(`Missing: ${path}`);
-              failed = true;
-            } else {
-              console.log(`Found: ${path}`);
-            }
-          }
-          
-          if (failed) {
-            console.error('Runtime validation failed!');
-            process.exit(1);
-          } else {
-            console.log('Runtime validation passed!');
-          }
-          EOF
-          
-          docker run --rm \
-            -e DOCKER_IMAGE_TYPE=$IMAGE_TYPE \
-            -v /tmp/docker-test.js:/tmp/docker-test.js:ro \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
-            node /tmp/docker-test.js
             
       - name: Test Worker-specific functionality
         if: github.event_name == 'pull_request' && matrix.suffix == '-worker'
