@@ -24,8 +24,7 @@ RUN --mount=type=cache,target=/app/node_modules/.pnpm \
     --mount=type=cache,target=/app/.pnpm-store \
     pnpm install --frozen-lockfile
 
-# Generate Prisma client
-RUN pnpm --filter @roast/db run gen
+# Prisma client is generated automatically by postinstall hook during pnpm install
 
 # Copy source code
 COPY . .
@@ -33,10 +32,8 @@ COPY . .
 # Build internal packages in dependency order
 # Note: No need to reinstall after copying source - workspace references work from initial install
 
-# Build packages in correct dependency order
-RUN pnpm --filter @roast/db run build
-RUN pnpm --filter @roast/domain run build  
-RUN pnpm --filter @roast/ai run build
+# Build packages using turbo (handles dependencies and finds tsc)
+RUN pnpm exec turbo run build --filter='@roast/db' --filter='@roast/domain' --filter='@roast/ai'
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
