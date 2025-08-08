@@ -47,6 +47,7 @@
     "docker:test": "./dev/scripts/test-docker-builds.sh",
     "docker:test:compose": "docker-compose -f docker-compose.test.yml build",
     "docker:validate": "./dev/scripts/validate-monorepo.sh",
+    "docker:check": "./dev/scripts/docker-check-all.sh",
     "docker:quick": "pnpm run docker:validate && pnpm run docker:test"
   },
   "devDependencies": {

@@ -1,5 +1,18 @@
 # Docker Quick Debugging Guide
 
+## 🎯 Pre-Push Check (Matches CI Exactly)
+```bash
+# Run this before pushing to catch CI failures locally
+pnpm run docker:check
+
+# This runs the EXACT same tests as CI:
+# 1. Validates monorepo structure
+# 2. Builds worker Docker image
+# 3. Tests worker runtime packages
+# 4. Builds main app Docker image
+# 5. Reports pass/fail just like CI would
+```
+
 ## 🚨 When Docker Builds Fail
 
 ### 1-Minute Health Check
