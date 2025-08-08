@@ -1,7 +1,8 @@
 // Core AI utilities for RoastMyPost
 export * from './claude/wrapper';
-export * from './claude/testUtils';
-export * from './claude/mockHelpers';
+// Test utilities are not exported from main index - import them directly if needed
+// export * from './claude/testUtils';
+// export * from './claude/mockHelpers';
 export * from './helicone/api-client';
 export * from './helicone/costFetcher';
 // Export the new simple session manager
