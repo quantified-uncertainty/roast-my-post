@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/index.js';
+import { PrismaClient } from '../generated';
 
 // Extended client type
 function createExtendedClient() {
@@ -43,5 +43,5 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Type exports
-export { Prisma } from '../generated/index.js';
-export type { PrismaClient } from '../generated/index.js';
+export { Prisma } from '../generated';
+export type { PrismaClient } from '../generated';

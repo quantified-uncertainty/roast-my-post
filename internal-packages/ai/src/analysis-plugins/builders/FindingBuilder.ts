@@ -75,7 +75,7 @@ export class FindingBuilder {
   /**
    * Add metadata to the finding
    */
-  withMetadata(metadata: Record<string, any>): this {
+  withMetadata(metadata: Record<string, unknown>): this {
     this.finding.metadata = {
       ...this.finding.metadata,
       ...metadata

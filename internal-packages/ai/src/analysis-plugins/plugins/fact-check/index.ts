@@ -24,7 +24,7 @@ export class VerifiedFact {
   public claim: ExtractedFactualClaim;
   private chunk: TextChunk;
   public verification?: FactCheckResult;
-  public factCheckerOutput?: any; // Store full fact-checker output including Perplexity data
+  public factCheckerOutput?: unknown; // Store full fact-checker output including Perplexity data
   private processingStartTime: number;
 
   constructor(
@@ -484,7 +484,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
   private async extractFactsFromChunk(chunk: TextChunk): Promise<{
     facts: VerifiedFact[];
-    llmInteraction?: any;
+    llmInteraction?: unknown;
     error?: string;
   }> {
     try {
@@ -644,7 +644,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     }
   }
 
-  private convertRichToLLMInteraction(rich: any): LLMInteraction {
+  private convertRichToLLMInteraction(rich: unknown): LLMInteraction {
     return {
       messages: [
         { role: "user" as const, content: rich.prompt },
@@ -707,7 +707,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   }
   */
 
-  private async createLocationDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+  private async createLocationDebugComment(fact: VerifiedFact, _documentText: string): Promise<Comment | null> {
     const toolChain: ToolChainResult[] = [
       {
         toolName: 'extractCheckableClaims',

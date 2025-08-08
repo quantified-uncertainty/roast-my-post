@@ -32,6 +32,10 @@
     "./text-location/line-based": {
       "types": "./src/text-location/line-based/index.ts",
       "default": "./src/text-location/line-based/index.ts"
+    },
+    "./testing": {
+      "types": "./src/testing.ts",
+      "default": "./src/testing.ts"
     }
   },
   "scripts": {

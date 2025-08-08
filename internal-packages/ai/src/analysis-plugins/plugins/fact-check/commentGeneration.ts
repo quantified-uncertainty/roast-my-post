@@ -21,7 +21,7 @@ export function generateFactCheckComments(
 
 function generateCommentContent(
   fact: VerifiedFact,
-  location?: DocumentLocation
+  _location?: DocumentLocation
 ): string {
   // Determine severity and emoji based on verification status
   let severity: CommentSeverity;

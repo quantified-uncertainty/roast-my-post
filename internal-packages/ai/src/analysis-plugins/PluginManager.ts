@@ -6,7 +6,7 @@
  */
 
 // Document and Comment types are passed as parameters to avoid circular dependencies
-import type { LLMInteraction } from "./types";
+// LLMInteraction type removed - was unused
 import type { Comment } from "../shared/types";
 import { HeliconeSessionManager, getGlobalSessionManager } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
@@ -479,7 +479,7 @@ export class PluginManager {
     }
 
     const tasks: FullDocumentAnalysisResult["tasks"] = [];
-    const targetHighlights = Math.max(1, options.targetHighlights || 5);
+    const _targetHighlights = Math.max(1, options.targetHighlights || 5);
 
     try {
       // Step 1: Run plugin-based analysis
@@ -692,7 +692,7 @@ export class PluginManager {
     if (!error) return false;
 
     // Check for common retryable error patterns
-    const errorMessage = (error as any)?.message || String(error);
+    const errorMessage = (error as unknown as Error)?.message || String(error);
 
     // Network/timeout errors are retryable
     if (
@@ -738,7 +738,7 @@ export class PluginManager {
    * Determine the appropriate recovery action for a failed plugin
    */
   private determineRecoveryAction(pluginName: string, error: unknown): string {
-    const errorMessage = (error as any)?.message || String(error);
+    const errorMessage = (error as unknown as Error)?.message || String(error);
 
     // Specific recovery actions based on error type
     if (errorMessage.includes("timeout")) {

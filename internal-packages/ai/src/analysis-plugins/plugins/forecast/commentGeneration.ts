@@ -1,7 +1,7 @@
 import type { ExtractedForecast } from "../../../tools/extract-forecasting-claims";
 
 import type { ForecasterOutput } from "../../../tools/forecaster";
-import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
+import { CommentSeverity, formatDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
 
 interface ForecastWithPrediction {
   forecast: ExtractedForecast;
@@ -233,7 +233,7 @@ function generateTopOverconfidentPredictions(forecasts: ForecastWithPrediction[]
     
     if (p.individualForecasts && p.individualForecasts.length > 0) {
       section += `**Individual model forecasts:**\n\n`;
-      p.individualForecasts.forEach((individual: any, i: number) => {
+      p.individualForecasts.forEach((individual: unknown, i: number) => {
         section += `- **Model ${i + 1}:** ${individual.probability}% - "${individual.reasoning}"\n`;
       });
       section += `\n`;
@@ -246,7 +246,7 @@ function generateTopOverconfidentPredictions(forecasts: ForecastWithPrediction[]
   return section;
 }
 
-function getRobustnessAdjective(score: number): string {
+function _getRobustnessAdjective(score: number): string {
   if (score < 20) return "extremely weak";
   if (score < 40) return "questionable";
   if (score < 60) return "uncertain";
@@ -254,7 +254,7 @@ function getRobustnessAdjective(score: number): string {
   return "robust";
 }
 
-function getRobustnessExplanation(score: number): string {
+function _getRobustnessExplanation(score: number): string {
   if (score < 20) {
     return "Almost certainly overstated. Lacks precedent or violates known constraints.";
   }
@@ -267,7 +267,7 @@ function getRobustnessExplanation(score: number): string {
   return "Generally plausible but consider potential biases.";
 }
 
-function identifySpecificationIssues(forecast: ExtractedForecast): string[] {
+function _identifySpecificationIssues(forecast: ExtractedForecast): string[] {
   const issues: string[] = [];
   const text = forecast.originalText.toLowerCase();
 
@@ -413,13 +413,13 @@ ${generateTopOverconfidentPredictions(forecasts)}
   return summary;
 }
 
-function generateBar(value: number, total: number): string {
+function _generateBar(value: number, total: number): string {
   const percentage = value / total;
   const filled = Math.round(percentage * 12);
   return "█".repeat(filled) + "░".repeat(12 - filled);
 }
 
-function generateSystematicIssues(forecasts: ForecastWithPrediction[]): string {
+function _generateSystematicIssues(forecasts: ForecastWithPrediction[]): string {
   const issues: string[] = [];
 
   const missingProbs = forecasts.filter(
@@ -663,7 +663,7 @@ function generateRawForecastData(forecasts: ForecastWithPrediction[]): string {
     "avg_robustness": ${Math.round(forecasts.reduce((sum, f) => sum + f.forecast.robustnessScore, 0) / forecasts.length)}
   },
   "forecasts": [
-${forecasts.map((fp, index) => `    {
+${forecasts.map((fp, _index) => `    {
       "original": "${fp.forecast.originalText.replace(/"/g, '\\"')}",
       "rewritten": "${fp.forecast.rewrittenPredictionText.replace(/"/g, '\\"')}",
       "author_prob": ${fp.forecast.authorProbability || 'null'},
@@ -691,7 +691,7 @@ function generateDistributionBar(value: number, total: number): string {
   return "█".repeat(filled) + "░".repeat(empty);
 }
 
-function generateRecommendations(forecasts: ForecastWithPrediction[]): string {
+function _generateRecommendations(forecasts: ForecastWithPrediction[]): string {
   const recs: string[] = [];
 
   const hasRanges = forecasts.some(

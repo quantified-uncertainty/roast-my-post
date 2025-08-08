@@ -89,7 +89,7 @@ export class TextChunk implements ITextChunk {
       searchTextLength: searchText.length,
       chunkId: this.id,
       chunkTextLength: this.text.length,
-      plugin: (options as any).pluginName
+      plugin: (options as Record<string, unknown>).pluginName as string
     });
 
     // Validate inputs
@@ -97,7 +97,7 @@ export class TextChunk implements ITextChunk {
       logger.warn('Invalid input for text search', {
         hasSearchText: !!searchText,
         hasChunkText: !!this.text,
-        plugin: (options as any).pluginName
+        plugin: (options as Record<string, unknown>).pluginName as string
       });
       return null;
     }
@@ -109,7 +109,7 @@ export class TextChunk implements ITextChunk {
       logger.debug('Text not found in chunk', {
         searchText: searchText.slice(0, 50),
         chunkId: this.id,
-        plugin: (options as any).pluginName
+        plugin: (options as Record<string, unknown>).pluginName as string
       });
       return null;
     }
@@ -118,7 +118,7 @@ export class TextChunk implements ITextChunk {
       strategy: location.strategy,
       confidence: location.confidence,
       preview: location.quotedText.slice(0, 50),
-      plugin: (options as any).pluginName
+      plugin: (options as Record<string, unknown>).pluginName as string
     });
 
     return {
