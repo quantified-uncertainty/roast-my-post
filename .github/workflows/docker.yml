@@ -118,7 +118,8 @@ jobs:
                 require('@roast/ai');
                 console.log('Runtime validation passed');
               } catch (e) {
-                console.error('Runtime validation failed');
+                console.error('Runtime validation failed:', e.message);
+                console.error('Error details:', e.stack);
                 process.exit(1);
               }
             "
