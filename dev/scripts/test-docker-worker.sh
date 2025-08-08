@@ -2,7 +2,7 @@
 # Test script for Docker worker build
 # This script builds the worker image and tests package accessibility
 
-set -e
+set -euo pipefail
 
 echo "========================================="
 echo "Docker Worker Build Test"

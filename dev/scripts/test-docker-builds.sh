@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Test script for Docker builds
 
@@ -27,7 +28,7 @@ docker run --rm \
   -e NEXTAUTH_URL="http://localhost:3000" \
   -e AUTH_SECRET="test-secret" \
   roastmypost-worker:test \
-  sh -c 'cd /app/apps/web && node -e "
+  sh -c 'cd /app/apps/web && npx tsx -e "
     console.log(\"Testing package access...\");
     try {
       const domain = require(\"@roast/domain\");

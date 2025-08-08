@@ -19,6 +19,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # Build the packages that need building (in dependency order)
 RUN pnpm --filter @roast/db run build
 RUN pnpm --filter @roast/domain run build
+# Note: @roast/ai doesn't need building - it's consumed as TypeScript by tsx
 
 # ================================ Runner ================================
 FROM node:20-alpine AS runner

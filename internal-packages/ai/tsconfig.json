@@ -6,7 +6,9 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "target": "ES2022",
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": [
