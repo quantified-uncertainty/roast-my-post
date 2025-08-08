@@ -23,19 +23,24 @@ jobs:
         uses: docker/setup-buildx-action@v3
         
       - name: Test Worker Build
+        id: worker-build
         run: |
           echo "::group::Testing Worker Docker Build"
-          docker build -f Dockerfile.worker -t worker-test . || {
+          if docker build -f Dockerfile.worker -t worker-test .; then
+            echo "worker_build=success" >> $GITHUB_OUTPUT
+            echo "✅ Worker Docker build passed"
+          else
+            echo "worker_build=failed" >> $GITHUB_OUTPUT
             echo "::warning::Worker Docker build failed - see logs above"
-            exit 0  # Don't fail the job
-          }
+          fi
           echo "::endgroup::"
           
       - name: Test Worker Runtime
-        if: success()
+        id: worker-runtime
+        if: steps.worker-build.outputs.worker_build == 'success'
         run: |
           echo "::group::Testing Worker Package Access"
-          docker run --rm worker-test sh -c '
+          if docker run --rm worker-test sh -c '
             cd /app/apps/web && 
             npx tsx -e "
               try {
@@ -48,23 +53,30 @@ jobs:
                 process.exit(1);
               }
             "
-          ' || {
+          '; then
+            echo "worker_runtime=success" >> $GITHUB_OUTPUT
+            echo "✅ Worker runtime test passed"
+          else
+            echo "worker_runtime=failed" >> $GITHUB_OUTPUT
             echo "::warning::Worker runtime test failed - packages may not be accessible"
-            exit 0  # Don't fail the job
-          }
+          fi
           echo "::endgroup::"
           
       - name: Test Main App Build
+        id: web-build
         run: |
           echo "::group::Testing Main App Docker Build"
-          docker build \
+          if docker build \
             --build-arg SKIP_ENV_VALIDATION=true \
             --build-arg DATABASE_URL="postgresql://postgres:postgres@localhost:5432/test" \
             -f Dockerfile \
-            -t web-test . || {
+            -t web-test .; then
+            echo "web_build=success" >> $GITHUB_OUTPUT
+            echo "✅ Main app Docker build passed"
+          else
+            echo "web_build=failed" >> $GITHUB_OUTPUT
             echo "::warning::Main app Docker build failed - see logs above"
-            exit 0  # Don't fail the job
-          }
+          fi
           echo "::endgroup::"
           
       - name: Post Results Comment
@@ -73,16 +85,35 @@ jobs:
         continue-on-error: true
         with:
           script: |
-            const message = `
-            ### 🐳 Docker Build Test Results (Non-blocking)
+            // Check if any tests failed
+            const workerBuild = '${{ steps.worker-build.outputs.worker_build }}';
+            const workerRuntime = '${{ steps.worker-runtime.outputs.worker_runtime }}';
+            const webBuild = '${{ steps.web-build.outputs.web_build }}';
             
-            ${context.job.status === 'success' ? '✅ All Docker builds passed!' : '⚠️ Some Docker builds need attention'}
+            const hasFailures = workerBuild === 'failed' || 
+                               workerRuntime === 'failed' || 
+                               webBuild === 'failed';
             
-            Check the workflow logs for details. These tests are non-blocking and for informational purposes only.
-            `;
+            if (hasFailures) {
+              const results = [];
+              if (workerBuild === 'success') results.push('✅ Worker build: Passed');
+              else if (workerBuild === 'failed') results.push('❌ Worker build: Failed');
+              
+              if (workerRuntime === 'success') results.push('✅ Worker runtime: Passed');
+              else if (workerRuntime === 'failed') results.push('❌ Worker runtime: Failed');
+              else if (!workerRuntime) results.push('⏭️ Worker runtime: Skipped');
+              
+              if (webBuild === 'success') results.push('✅ Main app build: Passed');
+              else if (webBuild === 'failed') results.push('❌ Main app build: Failed');
+              
+              const message = `### 🐳 Docker Build Test Results (Non-blocking)
             
-            // Only post if there are issues
-            if (context.job.status !== 'success') {
+            ⚠️ Some Docker builds need attention:
+            
+            ${results.join('\n')}
+            
+            Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details. These tests are non-blocking and for informational purposes only.`;
+              
               github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
