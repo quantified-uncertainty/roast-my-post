@@ -1,45 +1,36 @@
-# Worker Dockerfile - includes full Node.js environment for running scripts
-FROM node:20-alpine
-WORKDIR /app
+# Worker Dockerfile - uses tsx for runtime transpilation
+FROM node:20-alpine AS base
+WORKDIR /usr/src/app
 
-# Install dependencies for native modules
+# Install dependencies and enable corepack
 RUN apk add --no-cache libc6-compat python3 make g++
+RUN corepack enable
 
-# Install pnpm
-RUN npm install -g pnpm@9
-
-# Copy package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY apps/mcp-server/package.json ./apps/mcp-server/
-COPY internal-packages/db/package.json ./internal-packages/db/
-COPY internal-packages/ai/package.json ./internal-packages/ai/
-COPY internal-packages/domain/package.json ./internal-packages/domain/
-
-# Copy Prisma schema
-COPY internal-packages/db/prisma ./internal-packages/db/prisma/
-
-# Install all dependencies (including dev dependencies for tsx) with cache mount
-RUN --mount=type=cache,target=/app/node_modules/.pnpm \
-    --mount=type=cache,target=/app/.pnpm-store \
-    pnpm install --frozen-lockfile
-
-# Prisma client is generated automatically by postinstall hook during pnpm install
-
-# Copy source code
+# Copy all source files
 COPY . .
 
-# Build internal packages in dependency order
-# Note: No need to reinstall after copying source - workspace references work from initial install
+# Install all dependencies (including dev deps for tsx)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Skip building internal packages - they're used via workspace references
-# The packages will be transpiled on-demand when needed by tsx
+# Deploy web app with all dependencies (including dev deps for tsx)
+RUN pnpm deploy --filter=@roast/web /prod/worker
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Install runtime dependencies and enable corepack
+RUN apk add --no-cache libc6-compat
+RUN corepack enable
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
+# Copy deployed worker app (includes tsx and all workspace dependencies)
+COPY --from=base --chown=nextjs:nodejs /prod/worker ./
+
 USER nextjs
 
 # Run the adaptive job processor
-CMD ["pnpm", "--filter", "@roast/web", "run", "process-jobs-adaptive"]
+CMD ["pnpm", "run", "process-jobs-adaptive"]
