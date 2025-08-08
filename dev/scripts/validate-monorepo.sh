@@ -45,10 +45,13 @@ for pkg in internal-packages/*/package.json apps/*/package.json; do
         if [ "$pkg_name" = "null" ]; then
             error "$pkg missing 'name' field"
         else
-            # Check for main/exports field
-            has_main=$(jq -r '.main // .exports // "none"' "$pkg")
-            if [ "$has_main" = "none" ]; then
-                warning "$pkg_name has no 'main' or 'exports' field"
+            # Only check for main/exports in internal packages (libraries)
+            # Apps like Next.js don't need these fields
+            if [[ "$pkg" == internal-packages/* ]]; then
+                has_main=$(jq -r '.main // .exports // "none"' "$pkg")
+                if [ "$has_main" = "none" ]; then
+                    warning "$pkg_name has no 'main' or 'exports' field"
+                fi
             fi
         fi
     fi
