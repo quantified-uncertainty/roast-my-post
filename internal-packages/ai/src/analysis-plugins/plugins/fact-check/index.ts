@@ -645,17 +645,18 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   }
 
   private convertRichToLLMInteraction(rich: unknown): LLMInteraction {
+    const richTyped = rich as any; // Type assertion for legacy data
     return {
       messages: [
-        { role: "user" as const, content: rich.prompt },
-        { role: "assistant" as const, content: rich.response },
+        { role: "user" as const, content: richTyped.prompt },
+        { role: "assistant" as const, content: richTyped.response },
       ],
       usage: {
-        input_tokens: rich.tokensUsed?.prompt || 0,
-        output_tokens: rich.tokensUsed?.completion || 0,
-        prompt_tokens: rich.tokensUsed?.prompt || 0,
-        completion_tokens: rich.tokensUsed?.completion || 0,
-        total_tokens: rich.tokensUsed?.total || 0,
+        input_tokens: richTyped.tokensUsed?.prompt || 0,
+        output_tokens: richTyped.tokensUsed?.completion || 0,
+        prompt_tokens: richTyped.tokensUsed?.prompt || 0,
+        completion_tokens: richTyped.tokensUsed?.completion || 0,
+        total_tokens: richTyped.tokensUsed?.total || 0,
       },
     };
   }
