@@ -61,7 +61,6 @@
     "next-safe-action": "^7.10.8",
     "openai": "^4.93.0",
     "prism-react-renderer": "^2.4.1",
-    "puppeteer": "^24.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
