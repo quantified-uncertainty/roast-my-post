@@ -22,8 +22,8 @@ RUN pnpm install --frozen-lockfile
 # Generate Prisma client
 RUN pnpm --filter @roast/db run gen
 
-# Build all workspace packages
-RUN pnpm --filter @roast/db run build
+# Build workspace packages that need building
+# Note: @roast/db doesn't need building - tsx handles TypeScript directly
 RUN pnpm --filter @roast/domain run build  
 RUN pnpm --filter @roast/ai run build
 

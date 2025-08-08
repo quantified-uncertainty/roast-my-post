@@ -107,9 +107,30 @@ jobs:
           echo "Running runtime validation for ${{ matrix.name }} image..."
           
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
-            # Worker image - verify process-jobs-adaptive command is available
-            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
-              timeout 5 pnpm run process-jobs-adaptive --help 2>/dev/null || echo "✓ Worker command available"
+            # CRITICAL: Test that worker can actually import workspace packages
+            echo "Testing workspace package imports..."
+            
+            # Test @roast/domain import
+            docker run --rm \
+              -e DATABASE_URL="postgresql://test:test@localhost:5432/test?schema=public" \
+              -e AUTH_SECRET="test" \
+              -e ANTHROPIC_API_KEY="test" \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
+              node -e "try { require('@roast/domain'); console.log('✓ @roast/domain works'); } catch(e) { console.error('✗ @roast/domain failed:', e.message); process.exit(1); }"
+            
+            # Test @roast/db import
+            docker run --rm \
+              -e DATABASE_URL="postgresql://test:test@localhost:5432/test?schema=public" \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
+              node -e "try { require('@roast/db'); console.log('✓ @roast/db works'); } catch(e) { console.error('✗ @roast/db failed:', e.message); process.exit(1); }"
+            
+            # Test @roast/ai import
+            docker run --rm \
+              -e ANTHROPIC_API_KEY="test" \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
+              node -e "try { require('@roast/ai'); console.log('✓ @roast/ai works'); } catch(e) { console.error('✗ @roast/ai failed:', e.message); process.exit(1); }"
+            
+            echo "✓ All workspace packages can be imported"
           else
             # Main image - basic runtime check
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
