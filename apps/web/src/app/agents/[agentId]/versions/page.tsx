@@ -23,11 +23,14 @@ export default async function AgentVersionsPage({
     session.user.id
   );
 
-  if (agentResult.isError() || !agentResult.unwrap()) {
+  if (agentResult.isError()) {
     return notFound();
   }
 
-  const agent = agentResult.unwrap()!;
+  const agent = agentResult.unwrap();
+  if (!agent) {
+    return notFound();
+  }
 
   // Get agent versions
   const versionsResult = await agentService.getAgentVersions(resolvedParams.agentId);

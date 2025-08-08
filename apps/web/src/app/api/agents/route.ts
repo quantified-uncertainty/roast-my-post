@@ -5,7 +5,7 @@ import { AgentInputSchema as agentSchema } from "@roast/ai";
 import { getServices } from "@/application/services/ServiceFactory";
 import { successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { ZodError } from "zod";
-import { ValidationError } from "@roast/domain";
+import { ValidationError, NotFoundError } from "@roast/domain";
 
 export async function GET() {
   try {
@@ -54,10 +54,13 @@ export async function PUT(request: NextRequest) {
 
     if (result.isError()) {
       const error = result.error();
+      
+      if (error instanceof NotFoundError) {
+        return commonErrors.notFound("Agent");
+      }
+      
       if (error instanceof ValidationError) {
-        if (error.message.includes("not found")) {
-          return commonErrors.notFound("Agent");
-        }
+        // Permission errors are ValidationErrors with specific message
         if (error.message.includes("permission")) {
           return commonErrors.forbidden();
         }

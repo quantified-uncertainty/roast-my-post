@@ -18,10 +18,13 @@ export default async function AgentPage({
     session?.user?.id
   );
   
-  if (result.isError() || !result.unwrap()) {
+  if (result.isError()) {
     return notFound();
   }
 
-  const agent = result.unwrap()!;
+  const agent = result.unwrap();
+  if (!agent) {
+    return notFound();
+  }
   return <AgentDetail agent={agent} isOwner={agent.isOwner} />;
 }

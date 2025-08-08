@@ -40,6 +40,12 @@ jest.mock('@roast/domain', () => {
         this.name = 'ValidationError';
       }
     },
+    NotFoundError: class NotFoundError extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundError';
+      }
+    },
     AppError: class AppError extends Error {
       constructor(message: string, code: string) {
         super(message);

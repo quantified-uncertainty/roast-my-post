@@ -68,7 +68,14 @@ export async function reuploadDocument(docId: string) {
     // Check ownership using the service
     const { documentService } = getServices();
     const ownershipResult = await documentService.checkOwnership(docId, session.user.id);
-    if (ownershipResult.isError() || !ownershipResult.unwrap()) {
+    if (ownershipResult.isError()) {
+      return {
+        success: false,
+        error: "You don't have permission to re-upload this document",
+      };
+    }
+    
+    if (!ownershipResult.unwrap()) {
       return {
         success: false,
         error: "You don't have permission to re-upload this document",

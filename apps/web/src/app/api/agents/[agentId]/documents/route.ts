@@ -14,7 +14,11 @@ export async function GET(
 
     // Verify agent exists (allow public access)
     const agentResult = await agentService.getAgentWithOwner(agentId);
-    if (agentResult.isError() || !agentResult.unwrap()) {
+    if (agentResult.isError()) {
+      return Response.json({ error: "Agent not found" }, { status: 404 });
+    }
+    
+    if (!agentResult.unwrap()) {
       return Response.json({ error: "Agent not found" }, { status: 404 });
     }
 
