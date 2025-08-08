@@ -120,9 +120,9 @@ jobs:
       - name: Run unit tests with coverage (PR builds skip coverage)
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            pnpm --filter @roast/web run test:ci-nocov --maxWorkers=1
+            pnpm --filter @roast/web run test:ci-nocov
           else
-            pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary --maxWorkers=2
+            pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
           fi
 
   # Integration tests (3-4 minutes) - parallel with other jobs  
