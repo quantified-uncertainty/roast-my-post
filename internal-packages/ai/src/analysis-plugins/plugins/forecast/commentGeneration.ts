@@ -233,7 +233,7 @@ function generateTopOverconfidentPredictions(forecasts: ForecastWithPrediction[]
     
     if (p.individualForecasts && p.individualForecasts.length > 0) {
       section += `**Individual model forecasts:**\n\n`;
-      p.individualForecasts.forEach((individual: unknown, i: number) => {
+      p.individualForecasts.forEach((individual: any, i: number) => {
         section += `- **Model ${i + 1}:** ${individual.probability}% - "${individual.reasoning}"\n`;
       });
       section += `\n`;

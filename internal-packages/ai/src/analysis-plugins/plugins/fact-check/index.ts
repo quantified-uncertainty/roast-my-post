@@ -869,7 +869,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       analysisSummary += "<details>\n<summary>Technical Details</summary>\n\n";
       
       const researchedFacts = this.facts.filter(
-        (f) => f.factCheckerOutput?.perplexityData
+        (f) => (f.factCheckerOutput as any)?.perplexityData
       ).length;
       const likelyFalseFacts = this.facts.filter(
         (f) => f.claim.truthProbability <= 40

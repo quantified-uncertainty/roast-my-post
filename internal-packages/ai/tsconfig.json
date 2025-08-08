@@ -18,7 +18,10 @@
     "src/**/*.test.tsx",
     "src/**/mockHelpers.ts",
     "src/**/testUtils.ts",
-    "src/test-setup.ts"
+    "src/test-setup.ts",
+    "src/testing.ts",
+    "src/claude/mockHelpers.ts",
+    "src/claude/testUtils.ts"
   ],
   "references": [
     { "path": "../db" }
