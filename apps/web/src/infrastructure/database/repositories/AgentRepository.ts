@@ -301,6 +301,32 @@ export class AgentRepository {
   }
 
   /**
+   * Gets all non-ephemeral agents with basic information
+   */
+  async getAllAgents(): Promise<Array<{ id: string; name: string; version: string; description: string }>> {
+    const dbAgents = await prisma.agent.findMany({
+      where: {
+        ephemeralBatchId: null, // Exclude ephemeral agents
+      },
+      include: {
+        versions: {
+          orderBy: {
+            version: "desc",
+          },
+          take: 1,
+        },
+      },
+    });
+
+    return dbAgents.map((dbAgent) => ({
+      id: dbAgent.id,
+      name: dbAgent.versions[0].name,
+      version: dbAgent.versions[0].version.toString(),
+      description: dbAgent.versions[0].description,
+    }));
+  }
+
+  /**
    * Gets evaluations performed by an agent
    */
   async getAgentEvaluations(agentId: string, options?: { limit?: number; batchId?: string }) {

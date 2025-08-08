@@ -228,12 +228,27 @@ export class AgentService {
   }
 
   /**
+   * Gets all non-ephemeral agents
+   */
+  async getAllAgents(): Promise<Result<Array<{ id: string; name: string; version: string; description: string }>, AppError>> {
+    try {
+      this.logger.debug('Fetching all agents');
+
+      const agents = await this.agentRepository.getAllAgents();
+      return Result.ok(agents);
+    } catch (error) {
+      this.logger.error('Error fetching all agents', { error });
+      return Result.fail(new AppError("Failed to fetch agents", "AGENTS_FETCH_ERROR"));
+    }
+  }
+
+  /**
    * Gets evaluations performed by an agent
    */
   async getAgentEvaluations(
     agentId: string, 
     options?: { limit?: number; batchId?: string }
-  ): Promise<Result<AgentEvaluation[]>> {
+  ): Promise<Result<AgentEvaluation[], AppError>> {
     try {
       this.logger.debug('Fetching agent evaluations', { agentId, options });
 

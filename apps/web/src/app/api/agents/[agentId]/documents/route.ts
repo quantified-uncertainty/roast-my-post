@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
-import { AgentModel } from "@/models/Agent";
+import { getServices } from "@/application/services/ServiceFactory";
 
 export async function GET(
   request: NextRequest,
@@ -10,9 +10,11 @@ export async function GET(
     const resolvedParams = await params;
     const { agentId } = resolvedParams;
 
+    const { agentService } = getServices();
+
     // Verify agent exists (allow public access)
-    const agent = await AgentModel.getAgentWithOwner(agentId);
-    if (!agent) {
+    const agentResult = await agentService.getAgentWithOwner(agentId);
+    if (agentResult.isError() || !agentResult.unwrap()) {
       return Response.json({ error: "Agent not found" }, { status: 404 });
     }
 
@@ -21,8 +23,17 @@ export async function GET(
     const limit = parseInt(searchParams.get("limit") || "40");
 
     // Fetch documents evaluated by this agent
-    const documents = await AgentModel.getAgentDocuments(agentId, limit);
+    const documentsResult = await agentService.getAgentDocuments(agentId, limit);
 
+    if (documentsResult.isError()) {
+      logger.error('Error fetching agent documents:', documentsResult.error());
+      return Response.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
+    }
+
+    const documents = documentsResult.unwrap();
     return Response.json({ documents });
   } catch (error) {
     logger.error('Error fetching agent documents:', error);
