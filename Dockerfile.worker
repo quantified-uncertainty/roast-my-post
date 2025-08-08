@@ -27,7 +27,7 @@ RUN corepack enable
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Copy deployed worker app (includes tsx and all workspace dependencies)
+# Copy deployed worker app
 COPY --from=base --chown=nextjs:nodejs /prod/worker ./
 
 USER nextjs

@@ -50,5 +50,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
-# Start the application (pnpm deploy sets up the correct structure)
+# Start the application
 CMD ["pnpm", "start"]

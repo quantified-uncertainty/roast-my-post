@@ -227,7 +227,7 @@ jobs:
           docker build -t roastmypost:ci-test .
           docker run --rm roastmypost:ci-test node -e "console.log('Docker build test passed')"
 
-  # Sharded unit tests (experimental) - only run if explicitly requested
+  # Sharded unit tests - only run if explicitly requested via commit message or manual trigger
   unit-tests-sharded:
     name: Unit Tests (Sharded ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest

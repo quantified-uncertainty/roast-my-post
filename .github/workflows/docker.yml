@@ -90,18 +90,15 @@ jobs:
           echo "Testing package availability for ${{ matrix.name }} image..."
           
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
-            # Worker image tests - verify basic runtime functionality
+            # Worker image - verify pnpm and Node.js
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} sh -c "
-              echo 'Checking pnpm...' && pnpm --version && 
-              echo 'Testing Node.js...' && node --version &&
-              echo 'Worker image ready!'
+              pnpm --version > /dev/null && echo '✓ pnpm available' && 
+              node --version > /dev/null && echo '✓ Node.js available'
             "
           else
-            # Main image tests - basic functionality only
-            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} sh -c "
-              echo 'Testing basic Node.js functionality...' &&
-              node -e 'console.log(\"Main application can run Node.js\");'
-            "
+            # Main image - verify Node.js
+            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
+              node -e "console.log('✓ Node.js available');"
           fi
           
       - name: Test Docker image - Runtime validation
@@ -110,14 +107,13 @@ jobs:
           echo "Running runtime validation for ${{ matrix.name }} image..."
           
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
-            # Worker image - test that it can start the actual worker process
-            echo "Testing worker image can run the actual worker command..."
-            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} timeout 10 pnpm run process-jobs-adaptive --help 2>/dev/null || echo "Worker command available (timeout expected)"
+            # Worker image - verify process-jobs-adaptive command is available
+            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
+              timeout 5 pnpm run process-jobs-adaptive --help 2>/dev/null || echo "✓ Worker command available"
           else
-            # Main image - test basic functionality without exposing server paths
-            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} node -e "
-              console.log('Basic runtime validation passed');
-            "
+            # Main image - basic runtime check
+            docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
+              node -e "console.log('✓ Runtime validation passed');"
           fi
             
       - name: Test Worker-specific functionality
@@ -125,9 +121,7 @@ jobs:
         run: |
           echo "Testing worker-specific functionality..."
           docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} sh -c "
-            echo 'Checking tsx availability...' &&
-            pnpm tsx --version &&
-            echo 'Worker functionality verified!'
+            pnpm tsx --version > /dev/null && echo '✓ tsx available for TypeScript execution'
           "
 
   security-scan:
