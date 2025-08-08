@@ -24,7 +24,7 @@ export class VerifiedFact {
   public claim: ExtractedFactualClaim;
   private chunk: TextChunk;
   public verification?: FactCheckResult;
-  public factCheckerOutput?: any; // Store full fact-checker output including Perplexity data
+  public factCheckerOutput?: unknown; // Store full fact-checker output including Perplexity data
   private processingStartTime: number;
 
   constructor(
@@ -484,7 +484,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
   private async extractFactsFromChunk(chunk: TextChunk): Promise<{
     facts: VerifiedFact[];
-    llmInteraction?: any;
+    llmInteraction?: unknown;
     error?: string;
   }> {
     try {
@@ -644,18 +644,19 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     }
   }
 
-  private convertRichToLLMInteraction(rich: any): LLMInteraction {
+  private convertRichToLLMInteraction(rich: unknown): LLMInteraction {
+    const richTyped = rich as any; // Type assertion for legacy data
     return {
       messages: [
-        { role: "user" as const, content: rich.prompt },
-        { role: "assistant" as const, content: rich.response },
+        { role: "user" as const, content: richTyped.prompt },
+        { role: "assistant" as const, content: richTyped.response },
       ],
       usage: {
-        input_tokens: rich.tokensUsed?.prompt || 0,
-        output_tokens: rich.tokensUsed?.completion || 0,
-        prompt_tokens: rich.tokensUsed?.prompt || 0,
-        completion_tokens: rich.tokensUsed?.completion || 0,
-        total_tokens: rich.tokensUsed?.total || 0,
+        input_tokens: richTyped.tokensUsed?.prompt || 0,
+        output_tokens: richTyped.tokensUsed?.completion || 0,
+        prompt_tokens: richTyped.tokensUsed?.prompt || 0,
+        completion_tokens: richTyped.tokensUsed?.completion || 0,
+        total_tokens: richTyped.tokensUsed?.total || 0,
       },
     };
   }
@@ -707,7 +708,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   }
   */
 
-  private async createLocationDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+  private async createLocationDebugComment(fact: VerifiedFact, _documentText: string): Promise<Comment | null> {
     const toolChain: ToolChainResult[] = [
       {
         toolName: 'extractCheckableClaims',
@@ -868,7 +869,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       analysisSummary += "<details>\n<summary>Technical Details</summary>\n\n";
       
       const researchedFacts = this.facts.filter(
-        (f) => f.factCheckerOutput?.perplexityData
+        (f) => (f.factCheckerOutput as any)?.perplexityData
       ).length;
       const likelyFalseFacts = this.facts.filter(
         (f) => f.claim.truthProbability <= 40

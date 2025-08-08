@@ -5,10 +5,26 @@
     "rootDir": "./src",
     "composite": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "types": ["node"],
+    "target": "ES2022",
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/**/__tests__/session-tests-wip/**/*"],
+  "exclude": [
+    "node_modules", 
+    "dist", 
+    "src/**/__tests__/**/*",
+    "src/**/__mocks__/**/*",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/mockHelpers.ts",
+    "src/**/testUtils.ts",
+    "src/test-setup.ts",
+    "src/testing.ts",
+    "src/claude/mockHelpers.ts",
+    "src/claude/testUtils.ts"
+  ],
   "references": [
     { "path": "../db" }
   ]

@@ -1,0 +1,59 @@
+# Docker Compose for testing builds locally
+# Usage: docker-compose -f docker-compose.test.yml build
+version: '3.8'
+
+services:
+  # Test worker build
+  worker-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: roastmypost-worker:test
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/roast_my_post?schema=public
+      - ANTHROPIC_API_KEY=test-key
+      - OPENAI_API_KEY=test-key
+      - INNGEST_EVENT_KEY=test-key
+      - INNGEST_SIGNING_KEY=test-key
+      - NEXTAUTH_SECRET=test-secret
+      - AUTH_SECRET=test-secret
+    command: |
+      sh -c 'echo "Testing package loading..." && 
+             cd /app/apps/web && 
+             npx tsx -e "
+               require(\"@roast/domain\");
+               require(\"@roast/db\");
+               require(\"@roast/ai\");
+               console.log(\"✅ All packages loaded successfully\");
+             "'
+    depends_on:
+      - db
+
+  # Test main app build
+  web-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SKIP_ENV_VALIDATION=true
+        - DATABASE_URL=postgresql://postgres:postgres@db:5432/roast_my_post?schema=public
+    image: roastmypost-web:test
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/roast_my_post?schema=public
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=test-secret
+      - AUTH_SECRET=test-secret
+    command: |
+      sh -c 'echo "✅ Web build successful"'
+    depends_on:
+      - db
+
+  # Minimal postgres for testing
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=roast_my_post
+    tmpfs:
+      - /var/lib/postgresql/data
