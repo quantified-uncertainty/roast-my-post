@@ -12,13 +12,13 @@ env:
   NEXTAUTH_URL: http://localhost:3000
   AUTH_SECRET: test-secret-for-ci-only
   ANTHROPIC_API_KEY: dummy-key-for-ci
-  OPENROUTER_API_KEY: dummy-key-for-ci
 
 jobs:
   # Quick static checks (2-3 minutes) - runs first to fail fast
   static-checks:
     name: Static Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,6 +59,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16
@@ -129,6 +130,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [static-checks] # Only run if static checks pass
     services:
       postgres:
@@ -178,6 +180,7 @@ jobs:
   build:
     name: Build Application
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [static-checks] # Only run if static checks pass
     env:
       DATABASE_URL: postgresql://dummy/dummy # Build-time only
@@ -217,6 +220,7 @@ jobs:
   docker-test:
     name: Docker Build Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [static-checks] # Only run if static checks pass
     steps:
       - name: Checkout code
@@ -231,6 +235,7 @@ jobs:
   unit-tests-sharded:
     name: Unit Tests (Sharded ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: contains(github.event.head_commit.message, '[test-sharded]') || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
@@ -284,6 +289,7 @@ jobs:
   ci-status:
     name: CI Status
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [unit-tests, integration-tests, build, docker-test]
     if: always()
     steps:
