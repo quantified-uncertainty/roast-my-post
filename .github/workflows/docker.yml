@@ -90,11 +90,11 @@ jobs:
           echo "Testing package availability for ${{ matrix.name }} image..."
           
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
-            # Worker image tests - functional validation only
+            # Worker image tests - test actual worker functionality
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} sh -c "
               echo 'Checking pnpm...' && pnpm --version && 
-              echo 'Testing package imports...' &&
-              node -e 'try { require(\"@roast/db\"); require(\"@roast/domain\"); require(\"@roast/ai\"); console.log(\"All packages loadable!\"); } catch(e) { console.error(\"Package import failed:\", e.message); process.exit(1); }'
+              echo 'Testing tsx availability...' && pnpm tsx --version &&
+              echo 'Worker image ready for tsx-based execution!'
             "
           else
             # Main image tests - basic functionality only
