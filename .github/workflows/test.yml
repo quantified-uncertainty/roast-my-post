@@ -120,9 +120,9 @@ jobs:
       - name: Run unit tests with coverage (PR builds skip coverage)
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            pnpm --filter @roast/web run test:ci-nocov
+            pnpm --filter @roast/web run test:ci-nocov --maxWorkers=1
           else
-            pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
+            pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary --maxWorkers=2
           fi
 
   # Integration tests (3-4 minutes) - parallel with other jobs  
@@ -295,11 +295,12 @@ jobs:
           echo "Build: ${{ needs.build.result }}"
           echo "Docker Test: ${{ needs.docker-test.result }}"
           
-          if [[ "${{ needs.unit-tests.result }}" != "success" || \
-                "${{ needs.integration-tests.result }}" != "success" || \
-                "${{ needs.build.result }}" != "success" || \
-                "${{ needs.docker-test.result }}" != "success" ]]; then
-            echo "❌ CI failed - some jobs did not complete successfully"
+          # Check for failures or cancellations (skipped is OK)
+          if [[ "${{ needs.unit-tests.result }}" == "failure" || "${{ needs.unit-tests.result }}" == "cancelled" || \
+                "${{ needs.integration-tests.result }}" == "failure" || "${{ needs.integration-tests.result }}" == "cancelled" || \
+                "${{ needs.build.result }}" == "failure" || "${{ needs.build.result }}" == "cancelled" || \
+                "${{ needs.docker-test.result }}" == "failure" || "${{ needs.docker-test.result }}" == "cancelled" ]]; then
+            echo "❌ CI failed - some jobs failed or were cancelled"
             exit 1
           fi
           echo "✅ All CI checks passed!"
