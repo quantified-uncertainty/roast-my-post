@@ -29,10 +29,10 @@ RUN --mount=type=cache,target=/app/node_modules/.pnpm \
 # Copy source code
 COPY . .
 
-# Build packages with TypeScript compiler (after copying source for dependencies)
-RUN npx -p typescript tsc --project internal-packages/db/tsconfig.json
-RUN npx -p typescript tsc --project internal-packages/domain/tsconfig.json  
-RUN npx -p typescript tsc --project internal-packages/ai/tsconfig.json
+# Build packages with project's TypeScript compiler
+RUN cd internal-packages/db && ../../node_modules/.bin/tsc
+RUN cd internal-packages/domain && ../../node_modules/.bin/tsc  
+RUN cd internal-packages/ai && ../../node_modules/.bin/tsc
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
