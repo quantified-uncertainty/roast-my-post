@@ -220,8 +220,11 @@ importers:
       '@babel/preset-typescript':
         specifier: ^7.27.1
         version: 7.27.1(@babel/core@7.28.0)
+      '@playwright/browser-chromium':
+        specifier: ^1.54.2
+        version: 1.54.2
       '@playwright/test':
-        specifier: ^1.51.1
+        specifier: ^1.54.2
         version: 1.54.2
       '@prisma/nextjs-monorepo-workaround-plugin':
         specifier: ^6.13.0
@@ -1734,6 +1737,10 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
+
+  '@playwright/browser-chromium@1.54.2':
+    resolution: {integrity: sha512-DqmhKemShLoF3x4LxEnTc0XPlHSedB3grOpokz9nnXkRsdMHIjVjeGz5QyZXWh6wONWNQrLbdD5iU5cb3tRsLg==}
+    engines: {node: '>=18'}
 
   '@playwright/test@1.54.2':
     resolution: {integrity: sha512-A+znathYxPf+72riFd1r1ovOLqsIIB0jKIoPjyK2kqEIe30/6jF6BC7QNluHuwUmsD2tv1XZVugN8GqfTMOxsA==}
@@ -7301,6 +7308,10 @@ snapshots:
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
+
+  '@playwright/browser-chromium@1.54.2':
+    dependencies:
+      playwright-core: 1.54.2
 
   '@playwright/test@1.54.2':
     dependencies:
