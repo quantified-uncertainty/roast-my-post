@@ -29,10 +29,7 @@ RUN --mount=type=cache,target=/app/node_modules/.pnpm \
 # Copy source code
 COPY . .
 
-# Build internal packages in dependency order
-# Note: No need to reinstall after copying source - workspace references work from initial install
-
-# Build packages with TypeScript compiler from installed packages
+# Build packages with TypeScript compiler (after copying source for dependencies)
 RUN npx -p typescript tsc --project internal-packages/db/tsconfig.json
 RUN npx -p typescript tsc --project internal-packages/domain/tsconfig.json  
 RUN npx -p typescript tsc --project internal-packages/ai/tsconfig.json

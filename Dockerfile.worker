@@ -32,10 +32,8 @@ COPY . .
 # Build internal packages in dependency order
 # Note: No need to reinstall after copying source - workspace references work from initial install
 
-# Build packages with TypeScript compiler from installed packages
-RUN npx -p typescript tsc --project internal-packages/db/tsconfig.json
-RUN npx -p typescript tsc --project internal-packages/domain/tsconfig.json  
-RUN npx -p typescript tsc --project internal-packages/ai/tsconfig.json
+# Skip building internal packages - they're used via workspace references
+# The packages will be transpiled on-demand when needed by tsx
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
