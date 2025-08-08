@@ -42,6 +42,16 @@ jest.mock("@/infrastructure/logging/logger", () => ({
   },
 }));
 
+jest.mock("@/application/services/ServiceFactory", () => ({
+  getServices: jest.fn(() => ({
+    createTransactionalServices: jest.fn(() => ({
+      jobService: {
+        createJob: jest.fn().mockResolvedValue({ id: "job-123" }),
+      },
+    })),
+  })),
+}));
+
 describe("/api/batches POST", () => {
   const mockUserId = "user-123";
   const mockRequest = (body: any) => {

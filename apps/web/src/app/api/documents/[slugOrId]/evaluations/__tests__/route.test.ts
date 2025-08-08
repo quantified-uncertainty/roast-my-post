@@ -30,6 +30,21 @@ jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
+// Mock the ServiceFactory 
+const mockJobService = {
+  createJob: jest.fn().mockResolvedValue({ id: "job-123", status: "PENDING" }),
+};
+
+const mockGetServices = jest.fn(() => ({
+  createTransactionalServices: jest.fn(() => ({
+    jobService: mockJobService,
+  })),
+}));
+
+jest.mock('@/application/services/ServiceFactory', () => ({
+  getServices: mockGetServices,
+}));
+
 describe('GET /api/documents/[slugOrId]/evaluations', () => {
   const mockDocId = 'doc-123';
   const mockUser = { id: 'user-123', email: 'test@example.com' };
@@ -203,6 +218,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockJobService.createJob.mockClear();
   });
 
   it('should require authentication', async () => {
@@ -245,21 +261,12 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
       id: 'eval-123',
     };
     
-    const mockJob = {
-      id: 'job-123',
-      status: 'PENDING',
-      createdAt: new Date(),
-    };
-    
     (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
     (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
       const mockTx = {
         evaluation: {
           findFirst: jest.fn().mockResolvedValueOnce(null),
           create: jest.fn().mockResolvedValueOnce(mockEvaluation),
-        },
-        job: {
-          create: jest.fn().mockResolvedValueOnce(mockJob),
         },
       };
       return await callback(mockTx);
@@ -272,12 +279,18 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     });
     
     const response = await POST(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
+    
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.error('Test error:', response.status, errorData);
+    }
+    
     expect(response.status).toBe(200);
     
     const data = await response.json();
     expect(data).toEqual({
       evaluationId: mockEvaluation.id,
-      jobId: mockJob.id,
+      jobId: "job-123",
       status: 'pending',
       created: true,
     });

@@ -8,6 +8,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { prisma, JobStatus } from "@roast/db";
 import { getAgentTimeout, formatTimeout } from "@/shared/constants/config/agentTimeouts";
 import { config } from '@roast/domain';
+import { getServices } from "@/application/services/ServiceFactory";
 
 // Configuration from centralized config system
 const DEFAULT_MAX_WORKERS = config.jobs.adaptiveWorkers.maxWorkers;
@@ -395,14 +396,8 @@ class AdaptiveJobProcessor {
 
   private async markJobAsFailed(jobId: string, errorMessage: string) {
     try {
-      await prisma.job.update({
-        where: { id: jobId },
-        data: {
-          status: JobStatus.FAILED,
-          error: errorMessage,
-          completedAt: new Date()
-        }
-      });
+      const { jobService } = getServices();
+      await jobService.markAsFailed(jobId, new Error(errorMessage));
       console.log(`   ✅ Marked job ${jobId} as FAILED`);
     } catch (error) {
       console.error(`   ❌ Failed to update job ${jobId} status:`, error);
@@ -414,6 +409,7 @@ class AdaptiveJobProcessor {
     cutoffTime.setTime(cutoffTime.getTime() - STALE_JOB_TIMEOUT_MS);
     
     try {
+      const { jobService } = getServices();
       const staleJobs = await prisma.job.findMany({
         where: {
           status: JobStatus.RUNNING,
@@ -444,14 +440,9 @@ class AdaptiveJobProcessor {
           
           const errorMessage = `Job terminated: Running for ${runningTime} minutes (exceeded ${STALE_JOB_TIMEOUT_MS/1000/60} minute timeout). Process likely crashed.`;
           
-          await prisma.job.update({
-            where: { id: job.id },
-            data: {
-              status: JobStatus.FAILED,
-              error: errorMessage,
-              completedAt: new Date()
-            }
-          });
+          // Use JobService for consistent failure handling including retry logic
+          const { jobService } = getServices();
+          await jobService.markAsFailed(job.id, new Error(errorMessage));
           
           console.log(`   ❌ Marked stale job ${job.id} as FAILED (ran for ${runningTime}m)`);
         }

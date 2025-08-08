@@ -34,7 +34,7 @@ export async function updateDocumentWithAgents(
     },
   });
 
-  // Create evaluations and jobs for new agents
+  // Create evaluations and jobs for additional agents
   const existingEvaluations = await prisma.evaluation.findMany({
     where: { documentId },
     select: { agentId: true },
@@ -55,11 +55,11 @@ export async function updateDocumentWithAgents(
           },
         });
 
-        // Create the job
-        const job = await tx.job.create({
-          data: {
-            evaluationId: evaluation.id,
-          },
+        // Create the job using JobService for consistency
+        const { getServices } = await import("@/application/services/ServiceFactory");
+        const transactionalServices = getServices().createTransactionalServices(tx);
+        const job = await transactionalServices.jobService.createJob({
+          evaluationId: evaluation.id,
         });
 
         return { evaluation, job };

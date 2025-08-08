@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { prisma } from "@roast/db";
-import { ValidationError, NotFoundError } from '@roast/domain';
+import { NotFoundError } from '@roast/domain';
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({
@@ -16,18 +16,18 @@ const queryEvaluationsSchema = z.object({
 
 async function createEvaluation(documentId: string, agentId: string) {
   return await prisma.$transaction(async (tx) => {
+    const { getServices } = await import("@/application/services/ServiceFactory");
+    const transactionalServices = getServices().createTransactionalServices(tx);
+    
     // Check if evaluation already exists
     const existing = await tx.evaluation.findFirst({
       where: { documentId, agentId }
     });
     
     if (existing) {
-      // Create new job for re-evaluation
-      const job = await tx.job.create({
-        data: {
-          evaluationId: existing.id,
-          status: 'PENDING',
-        }
+      // Create new job for re-evaluation using JobService
+      const job = await transactionalServices.jobService.createJob({
+        evaluationId: existing.id,
       });
       
       return { evaluation: existing, job, created: false };
@@ -41,12 +41,9 @@ async function createEvaluation(documentId: string, agentId: string) {
       }
     });
     
-    // Create job
-    const job = await tx.job.create({
-      data: {
-        evaluationId: evaluation.id,
-        status: 'PENDING',
-      }
+    // Create job using JobService
+    const job = await transactionalServices.jobService.createJob({
+      evaluationId: evaluation.id,
     });
     
     return { evaluation, job, created: true };

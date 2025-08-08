@@ -6,8 +6,10 @@
  */
 
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
-import { DocumentRepository, EvaluationRepository } from '@roast/db';
+import { DocumentRepository, EvaluationRepository, JobRepository } from '@roast/db';
 import { createLoggerAdapter } from '@/infrastructure/logging/loggerAdapter';
+import { JobService } from './job/JobService';
+import { JobOrchestrator } from './job/JobOrchestrator';
 
 /**
  * Singleton service factory
@@ -17,10 +19,13 @@ export class ServiceFactory {
   
   private documentService?: DocumentService;
   private evaluationService?: EvaluationService;
+  private jobService?: JobService;
+  private jobOrchestrator?: JobOrchestrator;
   
   // Repositories (shared across services)
   private documentRepository: DocumentRepository;
   private evaluationRepository: EvaluationRepository;
+  private jobRepository: JobRepository;
   
   // Validator
   private documentValidator: DocumentValidator;
@@ -32,6 +37,7 @@ export class ServiceFactory {
     // Initialize shared dependencies once
     this.documentRepository = new DocumentRepository();
     this.evaluationRepository = new EvaluationRepository();
+    this.jobRepository = new JobRepository();
     this.documentValidator = new DocumentValidator();
     this.logger = createLoggerAdapter();
   }
@@ -77,11 +83,14 @@ export class ServiceFactory {
    * Use this when you need services that share the same database transaction
    */
   createTransactionalServices(prismaTransaction: any) {
-    // Create new repositories with the transaction client
+    // Create repositories with the transaction client
     const txDocumentRepo = new DocumentRepository(prismaTransaction);
     const txEvaluationRepo = new EvaluationRepository(prismaTransaction);
+    const txJobRepo = new JobRepository(prismaTransaction);
     
     // Create services with transactional repositories
+    const txJobService = new JobService(txJobRepo, this.logger);
+    
     const txEvaluationService = new EvaluationService(
       txEvaluationRepo,
       this.logger
@@ -96,10 +105,37 @@ export class ServiceFactory {
     
     return {
       documentService: txDocumentService,
-      evaluationService: txEvaluationService
+      evaluationService: txEvaluationService,
+      jobService: txJobService
     };
   }
   
+  /**
+   * Get or create JobService instance
+   */
+  getJobService(): JobService {
+    if (!this.jobService) {
+      this.jobService = new JobService(
+        this.jobRepository,
+        this.logger
+      );
+    }
+    return this.jobService;
+  }
+
+  /**
+   * Get or create JobOrchestrator instance
+   */
+  getJobOrchestrator(): JobOrchestrator {
+    if (!this.jobOrchestrator) {
+      this.jobOrchestrator = new JobOrchestrator(
+        this.getJobService(), // Use the service getter to ensure proper initialization
+        this.logger
+      );
+    }
+    return this.jobOrchestrator;
+  }
+
   /**
    * Reset singleton instance (useful for testing)
    */
@@ -113,6 +149,9 @@ export function getServices() {
   const factory = ServiceFactory.getInstance();
   return {
     documentService: factory.getDocumentService(),
-    evaluationService: factory.getEvaluationService()
+    evaluationService: factory.getEvaluationService(),
+    jobService: factory.getJobService(),
+    jobOrchestrator: factory.getJobOrchestrator(),
+    createTransactionalServices: (prismaTransaction: any) => factory.createTransactionalServices(prismaTransaction)
   };
 }

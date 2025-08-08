@@ -55,7 +55,7 @@ export async function importDocumentService(
     const evaluationService = new EvaluationService(evaluationRepository, logger);
     const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
 
-    // Creating document using the new DocumentService
+    // Creating document using the DocumentService
     const result = await documentService.createDocument(
       userId,
       {
