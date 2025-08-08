@@ -1,7 +1,5 @@
 name: CI/CD Pipeline
 
-# Test caching by making a small change
-
 on:
   push:
     branches: [main]
@@ -9,12 +7,55 @@ on:
     branches: [main]
   workflow_dispatch:
 
-jobs:
-  test:
-    name: Test, Lint, and Build
-    runs-on: ubuntu-latest
+env:
+  # Common environment variables
+  NEXTAUTH_URL: http://localhost:3000
+  AUTH_SECRET: test-secret-for-ci-only
+  ANTHROPIC_API_KEY: dummy-key-for-ci
+  OPENROUTER_API_KEY: dummy-key-for-ci
 
-    # PostgreSQL service container
+jobs:
+  # Quick static checks (2-3 minutes) - runs first to fail fast
+  static-checks:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Run checks in parallel
+        run: pnpm turbo run typecheck lint --parallel
+
+      - name: Validate script TypeScript
+        run: pnpm --filter @roast/web run typecheck:scripts
+
+  # Unit tests with database (3-4 minutes) - parallel with other jobs
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16
@@ -29,15 +70,108 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-
-    # Minimal environment variables for CI
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
-      NEXTAUTH_URL: http://localhost:3000
-      AUTH_SECRET: test-secret-for-ci-only
-      ANTHROPIC_API_KEY: dummy-key-for-ci  # Required at build time
-      OPENROUTER_API_KEY: dummy-key-for-ci # Required at build time
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Cache Jest
+        uses: actions/cache@v4
+        with:
+          path: /tmp/jest_*
+          key: ${{ runner.os }}-jest-${{ hashFiles('**/*.test.ts', '**/*.test.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-jest-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Run database migrations
+        run: pnpm --filter @roast/db exec prisma migrate deploy
+
+      - name: Run configuration validation tests
+        run: pnpm --filter @roast/web run test:ci --testMatch='**/*config*.test.ts'
+
+      - name: Run script smoke tests
+        run: pnpm --filter @roast/web run test:ci --testMatch='**/*script*.test.ts'
+
+      - name: Validate script runtime
+        run: pnpm --filter @roast/web run test:scripts
+
+      - name: Run unit tests with coverage (PR builds skip coverage)
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            pnpm --filter @roast/web run test:ci-nocov
+          else
+            pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
+          fi
+
+  # Integration tests (3-4 minutes) - parallel with other jobs  
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [static-checks] # Only run if static checks pass
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: roast_my_post_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Run database migrations
+        run: pnpm --filter @roast/db exec prisma migrate deploy
+
+      - name: Run safe integration tests
+        run: pnpm --filter @roast/web run test:ci-integration
+
+  # Application build (4-5 minutes) - parallel with tests
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: [static-checks] # Only run if static checks pass
+    env:
+      DATABASE_URL: postgresql://dummy/dummy # Build-time only
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -60,7 +194,67 @@ jobs:
           key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-nextjs-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Build application
+        run: pnpm --filter @roast/web run build
+
+  # Docker build test (runs in parallel)
+  docker-test:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [static-checks] # Only run if static checks pass
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test Docker build
+        run: |
+          docker build -t roastmypost:ci-test .
+          docker run --rm roastmypost:ci-test node -e "console.log('Docker build test passed')"
+
+  # Sharded unit tests (experimental) - only run if explicitly requested
+  unit-tests-sharded:
+    name: Unit Tests (Sharded ${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[test-sharded]') || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: roast_my_post_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -71,34 +265,29 @@ jobs:
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
 
-      - name: Run TypeScript type checking
-        run: pnpm turbo run typecheck
+      - name: Run tests (shard ${{ matrix.shard }} of 4)
+        run: pnpm --filter @roast/web run test:shard --shard=${{ matrix.shard }}/4
 
-      - name: Validate script TypeScript
-        run: pnpm --filter @roast/web run typecheck:scripts
-
-      - name: Run linting
-        run: pnpm --filter @roast/web run lint
-
-      - name: Run configuration validation tests
-        run: pnpm --filter @roast/web run test:ci --testMatch='**/*config*.test.ts'
-
-      - name: Run script smoke tests
-        run: pnpm --filter @roast/web run test:ci --testMatch='**/*script*.test.ts'
-
-      - name: Validate script runtime
-        run: pnpm --filter @roast/web run test:scripts
-
-      - name: Run CI tests (unit tests only)
-        run: pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
-
-      - name: Run safe integration tests (no external APIs)
-        run: pnpm --filter @roast/web run test:ci-integration
-
-      - name: Build application
-        run: pnpm --filter @roast/web run build
-
-      - name: Test Docker build
+  # Final status check - required for branch protection
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, build, docker-test]
+    if: always()
+    steps:
+      - name: Check CI Status
         run: |
-          docker build -t roastmypost:ci-test .
-          docker run --rm roastmypost:ci-test node -e "console.log('Docker build test passed')"
+          echo "=== CI Results ==="
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Docker Test: ${{ needs.docker-test.result }}"
+          
+          if [[ "${{ needs.unit-tests.result }}" != "success" || \
+                "${{ needs.integration-tests.result }}" != "success" || \
+                "${{ needs.build.result }}" != "success" || \
+                "${{ needs.docker-test.result }}" != "success" ]]; then
+            echo "❌ CI failed - some jobs did not complete successfully"
+            exit 1
+          fi
+          echo "✅ All CI checks passed!"

@@ -30,7 +30,8 @@
     "build": {
       "dependsOn": ["^build", "@roast/db#gen:build"],
       "outputs": ["dist/**", ".next/**", "build/**"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.test.tsx", "!**/*.md"]
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.test.tsx", "!**/*.md"],
+      "outputLogs": "new-only"
     },
     "dev": {
       "dependsOn": ["@roast/db#gen"],
@@ -40,59 +41,121 @@
     "lint": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": [],
-      "inputs": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/eslint*"]
+      "inputs": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/eslint*"],
+      "outputLogs": "errors-only"
     },
     "typecheck": {
-      "dependsOn": ["^build", "@roast/db#gen"],
+      "dependsOn": ["@roast/db#gen"],
       "outputs": [],
-      "inputs": ["**/*.ts", "**/*.tsx", "**/tsconfig*.json"]
+      "inputs": ["**/*.ts", "**/*.tsx", "**/tsconfig*.json"],
+      "outputLogs": "errors-only"
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "cache": false
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV"],
+      "outputLogs": "new-only"
     },
     "test:unit": {
-      "dependsOn": ["build"],
+      "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"]
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV"],
+      "outputLogs": "new-only"
     },
     "test:integration": {
-      "dependsOn": ["build"],
+      "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
       "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
-      "cache": false
+      "env": ["CI", "NODE_ENV", "DATABASE_URL"],
+      "cache": false,
+      "outputLogs": "full"
     },
     "test:ci": {
-      "dependsOn": ["build"],
+      "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"]
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV"],
+      "outputLogs": "new-only"
+    },
+    "test:ci-integration": {
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV", "DATABASE_URL"],
+      "cache": false,
+      "outputLogs": "full"
+    },
+    "test:ci-nocov": {
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": [],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV"],
+      "outputLogs": "new-only"
+    },
+    "test:shard": {
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": [],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV"],
+      "cache": false,
+      "outputLogs": "new-only"
     },
     "test:e2e": {
-      "dependsOn": ["build"],
+      "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
       "inputs": ["src/**", "**/*.e2e.test.ts", "**/jest.config.*"],
-      "cache": false
+      "env": ["CI", "NODE_ENV", "FIRECRAWL_KEY"],
+      "cache": false,
+      "outputLogs": "full"
     },
     "test:llm": {
-      "dependsOn": ["build"],
+      "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
       "inputs": ["src/**", "**/*.llm.test.ts", "**/jest.config.*"],
-      "cache": false
+      "env": ["CI", "NODE_ENV", "ANTHROPIC_API_KEY", "OPENAI_API_KEY"],
+      "cache": false,
+      "outputLogs": "full"
+    },
+    "test:fast": {
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV", "DATABASE_URL"],
+      "outputLogs": "new-only"
+    },
+    "test:without-llms": {
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/*.e2e.test.ts", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV", "DATABASE_URL", "FIRECRAWL_KEY"],
+      "outputLogs": "new-only"
+    },
+    "test:without-external": {
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/jest.config.*"],
+      "env": ["CI", "NODE_ENV", "DATABASE_URL"],
+      "outputLogs": "new-only"
     },
     "gen": {
       "cache": false,
-      "outputs": ["generated/**"]
+      "outputs": ["generated/**"],
+      "outputLogs": "errors-only"
     },
     "gen:build": {
       "cache": false,
-      "outputs": ["generated/**"]
+      "outputs": ["generated/**"],
+      "outputLogs": "errors-only"
     },
     "db:push": {
-      "cache": false
+      "cache": false,
+      "outputLogs": "full"
     },
     "db:migrate": {
-      "cache": false
+      "cache": false,
+      "outputLogs": "full"
     }
   }
 }
