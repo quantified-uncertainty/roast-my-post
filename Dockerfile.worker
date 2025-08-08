@@ -27,11 +27,23 @@ RUN pnpm --filter @roast/db build && \
 # Note: pnpm deploy will include the built packages since we built them first
 RUN pnpm deploy --filter=@roast/web /prod/worker
 
+# Ensure built files are in deployment (pnpm deploy might not copy everything)
+RUN if [ ! -d /prod/worker/node_modules/@roast/db/dist ]; then \
+        cp -r internal-packages/db/dist /prod/worker/node_modules/@roast/db/; \
+    fi && \
+    if [ ! -d /prod/worker/node_modules/@roast/db/generated ]; then \
+        cp -r internal-packages/db/generated /prod/worker/node_modules/@roast/db/; \
+    fi && \
+    if [ ! -d /prod/worker/node_modules/@roast/domain/dist ]; then \
+        cp -r internal-packages/domain/dist /prod/worker/node_modules/@roast/domain/; \
+    fi && \
+    echo "✓ Ensured built packages are in deployment"
+
 # Validate deployment has packages actually working
 RUN cd /prod/worker && \
-    node -e "try { require('@roast/domain'); console.log('✓ @roast/domain works'); } catch(e) { console.error('✗ @roast/domain failed:', e.message); exit(1); }" && \
-    node -e "try { require('@roast/db'); console.log('✓ @roast/db works'); } catch(e) { console.error('✗ @roast/db failed:', e.message); exit(1); }" && \
-    node -e "try { require('@roast/ai'); console.log('✓ @roast/ai works'); } catch(e) { console.error('✗ @roast/ai failed:', e.message); exit(1); }"
+    node -e "try { require('@roast/domain'); console.log('✓ @roast/domain works'); } catch(e) { console.error('✗ @roast/domain failed:', e.message); process.exit(1); }" && \
+    node -e "try { require('@roast/db'); console.log('✓ @roast/db works'); } catch(e) { console.error('✗ @roast/db failed:', e.message); process.exit(1); }" && \
+    node -e "try { require('@roast/ai'); console.log('✓ @roast/ai works'); } catch(e) { console.error('✗ @roast/ai failed:', e.message); process.exit(1); }"
 
 FROM node:20-alpine AS runner
 WORKDIR /app
