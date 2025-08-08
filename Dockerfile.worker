@@ -13,8 +13,24 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
+# Early validation - fail fast if packages aren't resolvable
+RUN node -e "try { require.resolve('@roast/domain'); console.log('✓ @roast/domain found'); } catch(e) { console.error('✗ @roast/domain not found'); process.exit(1); }" && \
+    node -e "try { require.resolve('@roast/db'); console.log('✓ @roast/db found'); } catch(e) { console.error('✗ @roast/db not found'); process.exit(1); }" && \
+    node -e "try { require.resolve('@roast/ai'); console.log('✓ @roast/ai found'); } catch(e) { console.error('✗ @roast/ai not found'); process.exit(1); }"
+
+# Build workspace packages that need dist files
+RUN pnpm --filter @roast/domain build && \
+    pnpm --filter @roast/db build && \
+    echo "✓ Workspace packages built"
+
 # Deploy web app with all dependencies (including dev deps for tsx)
 RUN pnpm deploy --filter=@roast/web /prod/worker
+
+# Validate deployment has packages accessible
+RUN cd /prod/worker && \
+    node -e "try { require('@roast/domain'); console.log('✓ @roast/domain works in deployment'); } catch(e) { console.error('✗ @roast/domain failed in deployment:', e.message); process.exit(1); }" && \
+    node -e "try { require('@roast/db'); console.log('✓ @roast/db works in deployment'); } catch(e) { console.error('✗ @roast/db failed in deployment:', e.message); process.exit(1); }" && \
+    node -e "try { require('@roast/ai'); console.log('✓ @roast/ai works in deployment'); } catch(e) { console.error('✗ @roast/ai failed in deployment:', e.message); process.exit(1); }"
 
 FROM node:20-alpine AS runner
 WORKDIR /app
