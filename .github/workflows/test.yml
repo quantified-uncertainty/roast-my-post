@@ -46,6 +46,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
 
+      - name: Build dependent packages
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
+
       - name: Run checks in parallel
         run: pnpm turbo run typecheck lint --parallel
 
@@ -98,6 +101,9 @@ jobs:
 
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
+
+      - name: Build dependent packages
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -159,6 +165,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
 
+      - name: Build dependent packages
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
+
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
 
@@ -201,8 +210,8 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
 
-      - name: Build application
-        run: pnpm --filter @roast/web run build
+      - name: Build all packages
+        run: pnpm turbo run build
 
   # Docker build test (runs in parallel)
   docker-test:
@@ -261,6 +270,9 @@ jobs:
 
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
+
+      - name: Build dependent packages
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy

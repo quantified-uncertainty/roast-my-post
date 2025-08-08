@@ -45,7 +45,7 @@
       "outputLogs": "errors-only"
     },
     "typecheck": {
-      "dependsOn": ["@roast/db#gen"],
+      "dependsOn": ["^build", "@roast/db#gen"],
       "outputs": [],
       "inputs": ["**/*.ts", "**/*.tsx", "**/tsconfig*.json"],
       "outputLogs": "errors-only"
