@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 # Install dependencies for native modules and enable corepack
 RUN apk add --no-cache libc6-compat python3 make g++
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy all source files
 COPY . .
@@ -33,7 +33,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install runtime dependencies and enable corepack
 RUN apk add --no-cache libc6-compat
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
