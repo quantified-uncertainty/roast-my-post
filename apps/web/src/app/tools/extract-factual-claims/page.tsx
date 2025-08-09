@@ -74,7 +74,7 @@ function renderResult(result: ExtractFactualClaimsResult) {
 
 export default function ExtractFactualClaimsPage() {
   // Get schemas directly from the generated schemas - no duplication!
-  const { inputSchema, outputSchema } = toolSchemas['extract-factual-claims'];
+  const { inputSchema, outputSchema } = toolSchemas[extractFactualClaimsTool.config.id as keyof typeof toolSchemas];
 
   const examples = [
     "The Great Wall of China was built over several centuries and stretches approximately 13,000 miles. It was constructed using various materials including stone, brick, and earth.",

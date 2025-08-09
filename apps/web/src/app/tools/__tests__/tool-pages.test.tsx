@@ -6,23 +6,37 @@
  */
 
 describe('Tool UI Pages', () => {
-  // Tools that have UI pages (exclude 'forecaster' which only has API)
-  const toolsWithUI = [
-    'check-math',
-    'check-math-hybrid',
-    'check-math-with-mathjs',
-    'check-spelling-grammar',
-    'detect-language-convention',
-    'document-chunker',
-    'extract-factual-claims',
-    'extract-forecasting-claims',
-    'extract-math-expressions',
-    'fact-checker',
-    'forecaster-simple',
-    'fuzzy-text-locator',
-    // 'link-validator', // Temporarily skip - has complex imports that fail in test environment
-    'perplexity-research',
-  ];
+  // Get tool IDs from centralized registry, falling back to static list for test environments
+  let toolsWithUI: string[];
+  
+  try {
+    // Try to import from centralized registry
+    const { allTools } = require('@roast/ai');
+    const toolsWithoutUI = ['forecaster'] as const; // 'forecaster' only has API, no UI page
+    const toolsWithComplexImports = ['link-validator'] as const; // Skip due to test environment issues
+    
+    toolsWithUI = Object.keys(allTools).filter(
+      toolId => !toolsWithoutUI.includes(toolId as any) && 
+                !toolsWithComplexImports.includes(toolId as any)
+    );
+  } catch (error) {
+    // Fallback to static list for test environments where AI package imports fail
+    toolsWithUI = [
+      'check-math',
+      'check-math-hybrid', 
+      'check-math-with-mathjs',
+      'check-spelling-grammar',
+      'detect-language-convention',
+      'document-chunker',
+      'extract-factual-claims',
+      'extract-forecasting-claims',
+      'extract-math-expressions',
+      'fact-checker',
+      'forecaster-simple',
+      'fuzzy-text-locator',
+      'perplexity-research',
+    ];
+  }
 
   describe.each(toolsWithUI)('Tool Page: %s', (toolId) => {
     it(`should have a page file at /tools/${toolId}/page.tsx`, async () => {

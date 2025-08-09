@@ -86,7 +86,7 @@ export default function CheckMathWithMathJsPage() {
   };
 
   // Get input and output schemas from generated schemas
-  const { inputSchema, outputSchema } = toolSchemas['check-math-with-mathjs'];
+  const { inputSchema, outputSchema } = toolSchemas[checkMathWithMathJsTool.config.id as keyof typeof toolSchemas];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

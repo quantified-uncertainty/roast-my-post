@@ -12,7 +12,6 @@ on:
         options:
           - 'integration'
           - 'llm'
-          - 'playwright'
           - 'all'
       test_pattern:
         description: 'Test pattern (optional - leave empty for all)'
@@ -44,9 +43,9 @@ jobs:
           case "${{ github.event.inputs.test_suite }}" in
             "integration")
               if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
-                COMMAND="pnpm --filter @roast/web run test:integration --testNamePattern='${{ github.event.inputs.test_pattern }}'"
+                COMMAND="pnpm --filter @roast/web run test:integration --testNamePattern='${{ github.event.inputs.test_pattern }}' && cd apps/web && npx playwright test --grep '${{ github.event.inputs.test_pattern }}' --workers=4"
               else
-                COMMAND="pnpm --filter @roast/web run test:integration"
+                COMMAND="pnpm --filter @roast/web run test:integration && cd apps/web && npx playwright test --workers=4"
               fi
               ;;
             "llm")
@@ -54,13 +53,6 @@ jobs:
                 COMMAND="pnpm --filter @roast/web run test:llm --testNamePattern='${{ github.event.inputs.test_pattern }}'"
               else
                 COMMAND="pnpm --filter @roast/web run test:llm"
-              fi
-              ;;
-            "playwright")
-              if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
-                COMMAND="cd apps/web && npx playwright test --grep '${{ github.event.inputs.test_pattern }}' --workers=4"
-              else
-                COMMAND="cd apps/web && npx playwright test --workers=4"
               fi
               ;;
             "all")
@@ -75,7 +67,7 @@ jobs:
           case "${{ github.event.inputs.test_suite }}" in
             "integration")
               echo "cost=0.00" >> $GITHUB_OUTPUT
-              echo "time=10" >> $GITHUB_OUTPUT
+              echo "time=3" >> $GITHUB_OUTPUT
               ;;
             "llm")
               if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
@@ -86,13 +78,9 @@ jobs:
                 echo "time=30" >> $GITHUB_OUTPUT
               fi
               ;;
-            "playwright")
-              echo "cost=0.00" >> $GITHUB_OUTPUT
-              echo "time=2" >> $GITHUB_OUTPUT
-              ;;
             "all")
               echo "cost=1.50" >> $GITHUB_OUTPUT
-              echo "time=45" >> $GITHUB_OUTPUT
+              echo "time=35" >> $GITHUB_OUTPUT
               ;;
           esac
 
@@ -150,7 +138,7 @@ jobs:
         run: pnpm --filter @roast/db run gen
 
       - name: Install Playwright browsers
-        if: github.event.inputs.test_suite == 'playwright' || github.event.inputs.test_suite == 'all'
+        if: github.event.inputs.test_suite == 'integration' || github.event.inputs.test_suite == 'all'
         run: pnpm --filter @roast/web exec playwright install chromium
 
       - name: Run database migrations

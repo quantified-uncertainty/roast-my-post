@@ -16,7 +16,7 @@ export default function DocumentChunkerPage() {
   const [showOutputSchema, setShowOutputSchema] = useState(false);
   
   // Get schemas from generated schemas
-  const { inputSchema, outputSchema } = toolSchemas['document-chunker'];
+  const { inputSchema, outputSchema } = toolSchemas[documentChunkerTool.config.id as keyof typeof toolSchemas];
 
   const handleChunk = async () => {
     if (!text.trim()) return;

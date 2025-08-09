@@ -78,7 +78,7 @@ function renderResult(result: FactCheckResult) {
 
 export default function FactCheckerPage() {
   // Get schemas directly from the generated schemas - no duplication!
-  const { inputSchema, outputSchema } = toolSchemas['fact-checker'];
+  const { inputSchema, outputSchema } = toolSchemas[factCheckerTool.config.id as keyof typeof toolSchemas];
 
   const examples = [
     "The Eiffel Tower is 324 meters tall and was built in 1889.",

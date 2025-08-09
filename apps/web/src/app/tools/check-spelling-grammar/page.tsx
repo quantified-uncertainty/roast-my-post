@@ -132,7 +132,7 @@ function renderResult(result: CheckSpellingGrammarOutput) {
 
 export default function CheckSpellingGrammarPage() {
   // Get schemas directly from the generated schemas - no API fetch needed!
-  const { inputSchema, outputSchema } = toolSchemas['check-spelling-grammar'];
+  const { inputSchema, outputSchema } = toolSchemas[checkSpellingGrammarTool.config.id as keyof typeof toolSchemas];
 
   return (
     <ToolPageTemplate<{ text: string }, CheckSpellingGrammarOutput>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
-import { toolSchemas } from '@roast/ai';
+import { checkMathTool, toolSchemas } from '@roast/ai';
 import { ApiDocumentation } from '../components/ApiDocumentation';
 
 interface CheckMathResult {
@@ -27,7 +27,7 @@ export default function MathCheckerPage() {
   const [lastInput, setLastInput] = useState<any>(null);
   
   // Get schemas from generated schemas
-  const { inputSchema, outputSchema } = toolSchemas['check-math'];
+  const { inputSchema, outputSchema } = toolSchemas[checkMathTool.config.id as keyof typeof toolSchemas];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

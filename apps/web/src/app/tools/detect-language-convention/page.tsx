@@ -16,7 +16,7 @@ export default function DetectLanguageConventionPage() {
   const [showOutputSchema, setShowOutputSchema] = useState(false);
   
   // Get schemas from generated schemas
-  const { inputSchema, outputSchema } = toolSchemas['detect-language-convention'];
+  const { inputSchema, outputSchema } = toolSchemas[detectLanguageConventionTool.config.id as keyof typeof toolSchemas];
 
   const handleCheck = async () => {
     if (!text.trim()) return;

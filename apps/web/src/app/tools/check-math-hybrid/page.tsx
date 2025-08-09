@@ -51,7 +51,7 @@ export default function MathCheckerHybridPage() {
   const [lastInput, setLastInput] = useState<any>(null);
   
   // Get schemas from generated schemas
-  const { inputSchema, outputSchema } = toolSchemas['check-math-hybrid'];
+  const { inputSchema, outputSchema } = toolSchemas[checkMathHybridTool.config.id as keyof typeof toolSchemas];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
