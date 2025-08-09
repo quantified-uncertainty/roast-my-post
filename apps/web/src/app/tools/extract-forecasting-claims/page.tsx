@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon } from '@heroicons/react/24/solid';
-import { extractForecastingClaimsTool } from '@roast/ai';
+import { CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, ChartBarIcon } from '@heroicons/react/24/solid';
+import { extractForecastingClaimsTool, toolSchemas } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { ToolPageLayout } from '@/app/tools/components/ToolPageLayout';
+import { ApiDocumentation } from '@/app/tools/components/ApiDocumentation';
 
 const checkToolPath = extractForecastingClaimsTool.config.path;
 
@@ -12,6 +14,9 @@ export default function ExtractForecastingClaimsPage() {
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get schemas from centralized registry
+  const { inputSchema, outputSchema } = toolSchemas[extractForecastingClaimsTool.config.id as keyof typeof toolSchemas];
 
   const handleExtract = async () => {
     if (!text.trim()) return;
@@ -43,14 +48,11 @@ export default function ExtractForecastingClaimsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Extract Forecasting Claims</h1>
-        <p className="text-gray-600">
-          Extract and analyze predictions and forecasts from text.
-        </p>
-      </div>
-
+    <ToolPageLayout
+      title={extractForecastingClaimsTool.config.name}
+      description={extractForecastingClaimsTool.config.description}
+      icon={<ChartBarIcon className="h-8 w-8 text-purple-600" />}
+    >
       <div className="space-y-6">
         <div>
           <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-2">
@@ -131,6 +133,14 @@ export default function ExtractForecastingClaimsPage() {
           </div>
         )}
       </div>
-    </div>
+      
+      <ApiDocumentation 
+        title="API Documentation"
+        endpoint={`/api/tools/${extractForecastingClaimsTool.config.id}`}
+        method="POST"
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+      />
+    </ToolPageLayout>
   );
 }

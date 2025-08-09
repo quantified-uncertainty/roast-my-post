@@ -5,7 +5,7 @@ import DocumentsClient from "./DocumentsClient";
 export const dynamic = 'force-dynamic';
 
 export default async function DocumentsPage() {
-  // Load recent 50 documents efficiently (only fetches what's needed)
+  // Load 50 documents efficiently (only fetches what's needed)
   const recentDocuments = await DocumentModel.getRecentDocumentsWithEvaluations(50);
 
   return (

@@ -244,7 +244,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_recent_evaluations",
-        description: "Get recent evaluations with optional filtering",
+        description: "Get evaluations with optional filtering",
         inputSchema: {
           type: "object",
           properties: {
@@ -284,7 +284,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_failed_jobs",
-        description: "Get recent failed jobs with error details",
+        description: "Get failed jobs with error details",
         inputSchema: {
           type: "object",
           properties: {
@@ -344,7 +344,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "analyze_recent_evals",
-        description: "Analyze recent evaluations with comprehensive statistics",
+        description: "Analyze evaluations with comprehensive statistics",
         inputSchema: {
           type: "object",
           properties: {

@@ -84,7 +84,7 @@ Once configured, you can use these tools in Claude:
 
 ```
 "Show me all active agents"
-"Get recent failed evaluations for agent-123"
+"Get failed evaluations for agent-123"
 "What's the performance of the ASSESSOR agents over the last 30 days?"
 "Search for documents by ozzie"
 "Search for 'machine learning' in document content"

@@ -2,11 +2,11 @@ import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
 
 const config: PlaywrightTestConfig = {
-  testDir: "./playwright-tests",
+  testDir: "./tests/playwright",
   testMatch: "**/*.spec.ts",
-  timeout: 30 * 1000,
+  timeout: 60 * 1000, // Increased for slow initial compilation
   expect: {
-    timeout: 5000,
+    timeout: 10000, // Increased for slow page loads
   },
   fullyParallel: true,
   forbidOnly: !!process.env["CI"],
@@ -30,6 +30,10 @@ const config: PlaywrightTestConfig = {
     command: "npm run dev",
     port: 3000,
     reuseExistingServer: !process.env["CI"],
+    env: {
+      ...process.env,
+      BYPASS_TOOL_AUTH: "true",
+    },
   },
 };
 

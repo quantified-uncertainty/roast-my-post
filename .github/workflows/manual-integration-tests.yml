@@ -43,9 +43,9 @@ jobs:
           case "${{ github.event.inputs.test_suite }}" in
             "integration")
               if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
-                COMMAND="pnpm --filter @roast/web run test:integration --testNamePattern='${{ github.event.inputs.test_pattern }}'"
+                COMMAND="pnpm --filter @roast/web run test:integration --testNamePattern='${{ github.event.inputs.test_pattern }}' && cd apps/web && npx playwright test --grep '${{ github.event.inputs.test_pattern }}' --workers=4"
               else
-                COMMAND="pnpm --filter @roast/web run test:integration"
+                COMMAND="pnpm --filter @roast/web run test:integration && cd apps/web && npx playwright test --workers=4"
               fi
               ;;
             "llm")
@@ -56,7 +56,7 @@ jobs:
               fi
               ;;
             "all")
-              COMMAND="pnpm --filter @roast/web run test:without-llms && pnpm --filter @roast/web run test:llm"
+              COMMAND="pnpm --filter @roast/web run test:without-llms && pnpm --filter @roast/web run test:llm && cd apps/web && npx playwright test --workers=4"
               ;;
           esac
           echo "command=$COMMAND" >> $GITHUB_OUTPUT
@@ -67,7 +67,7 @@ jobs:
           case "${{ github.event.inputs.test_suite }}" in
             "integration")
               echo "cost=0.00" >> $GITHUB_OUTPUT
-              echo "time=10" >> $GITHUB_OUTPUT
+              echo "time=3" >> $GITHUB_OUTPUT
               ;;
             "llm")
               if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
@@ -80,7 +80,7 @@ jobs:
               ;;
             "all")
               echo "cost=1.50" >> $GITHUB_OUTPUT
-              echo "time=40" >> $GITHUB_OUTPUT
+              echo "time=35" >> $GITHUB_OUTPUT
               ;;
           esac
 
@@ -136,6 +136,10 @@ jobs:
 
       - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
+
+      - name: Install Playwright browsers
+        if: github.event.inputs.test_suite == 'integration' || github.event.inputs.test_suite == 'all'
+        run: pnpm --filter @roast/web exec playwright install chromium
 
       - name: Run database migrations
         run: pnpm --filter @roast/db run db:migrate

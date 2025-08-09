@@ -23,6 +23,8 @@ export { initializeAI, type AIConfig } from './config';
 
 // Tools system - types and configs only (implementations in server.ts)
 export * from './tools/configs';
+// Export generated schemas for client-side use
+export { toolSchemas, getToolSchema, type ToolId } from './tools/generated-schemas';
 export type { 
   Tool,
   ToolContext,

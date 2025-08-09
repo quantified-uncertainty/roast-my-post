@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { detectLanguageConventionTool, type DetectLanguageConventionOutput } from '@roast/ai';
+import { detectLanguageConventionTool, type DetectLanguageConventionOutput, toolSchemas } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { LanguageIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ToolPageLayout } from '../components/ToolPageLayout';
+import { ApiDocumentation } from '../components/ApiDocumentation';
 
 const checkToolPath = detectLanguageConventionTool.config.path;
 
@@ -11,6 +14,11 @@ export default function DetectLanguageConventionPage() {
   const [result, setResult] = useState<DetectLanguageConventionOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showInputSchema, setShowInputSchema] = useState(false);
+  const [showOutputSchema, setShowOutputSchema] = useState(false);
+  
+  // Get schemas from generated schemas
+  const { inputSchema, outputSchema } = toolSchemas[detectLanguageConventionTool.config.id as keyof typeof toolSchemas];
 
   const handleCheck = async () => {
     if (!text.trim()) return;
@@ -30,13 +38,11 @@ export default function DetectLanguageConventionPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Detect Language Convention</h1>
-        <p className="text-gray-600">
-          Analyze text to detect the language variant (US English, UK English, etc.).
-        </p>
-      </div>
+    <ToolPageLayout
+      title={detectLanguageConventionTool.config.name}
+      description={detectLanguageConventionTool.config.description}
+      icon={<LanguageIcon className="h-8 w-8 text-green-600" />}
+    >
 
       <div className="space-y-6">
         <div>
@@ -109,6 +115,14 @@ export default function DetectLanguageConventionPage() {
           </div>
         )}
       </div>
-    </div>
+
+      <ApiDocumentation 
+        title="API Documentation"
+        endpoint={`/api/tools/${detectLanguageConventionTool.config.id}`}
+        method="POST"
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+      />
+    </ToolPageLayout>
   );
 }

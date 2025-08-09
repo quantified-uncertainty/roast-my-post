@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, CalculatorIcon } from '@heroicons/react/24/outline';
+import { checkMathTool, toolSchemas } from '@roast/ai';
+import { ApiDocumentation } from '../components/ApiDocumentation';
+import { ToolPageLayout } from '../components/ToolPageLayout';
 
 interface CheckMathResult {
   status: 'verified_true' | 'verified_false' | 'cannot_verify';
@@ -22,6 +25,10 @@ export default function MathCheckerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CheckMathResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastInput, setLastInput] = useState<any>(null);
+  
+  // Get schemas from generated schemas
+  const { inputSchema, outputSchema } = toolSchemas[checkMathTool.config.id as keyof typeof toolSchemas];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +36,14 @@ export default function MathCheckerPage() {
     setError(null);
     setResult(null);
 
+    const input = { statement };
+    setLastInput(input);
+    
     try {
       const response = await fetch('/api/tools/check-math', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statement }),
+        body: JSON.stringify(input),
       });
 
       if (!response.ok) {
@@ -64,18 +74,11 @@ export default function MathCheckerPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Statement Checker</h1>
-        <p className="text-gray-600">
-          Check a single mathematical statement for accuracy and correctness.
-        </p>
-      </div>
+    <ToolPageLayout
+      title={checkMathTool.config.name}
+      description={checkMathTool.config.description}
+      icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}
+    >
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
@@ -182,6 +185,15 @@ export default function MathCheckerPage() {
           </div>
         </div>
       )}
-    </div>
+
+      {/* API Documentation */}
+      <ApiDocumentation
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+        lastInput={lastInput}
+        lastOutput={result}
+        endpoint="/api/tools/check-math"
+      />
+    </ToolPageLayout>
   );
 }

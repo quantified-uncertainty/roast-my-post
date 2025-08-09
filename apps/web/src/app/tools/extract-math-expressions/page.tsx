@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { extractMathExpressionsTool } from '@roast/ai';
+import { CalculatorIcon } from '@heroicons/react/24/outline';
+import { extractMathExpressionsTool, toolSchemas } from '@roast/ai';
+import { ToolPageLayout } from '../components/ToolPageLayout';
+import { ApiDocumentation } from '../components/ApiDocumentation';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
 const checkToolPath = extractMathExpressionsTool.config.path;
@@ -11,6 +14,9 @@ export default function ExtractMathExpressionsPage() {
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get schemas from centralized registry
+  const { inputSchema, outputSchema } = toolSchemas[extractMathExpressionsTool.config.id as keyof typeof toolSchemas];
 
   const handleExtract = async () => {
     if (!text.trim()) return;
@@ -33,14 +39,11 @@ export default function ExtractMathExpressionsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Extract Math Expressions</h1>
-        <p className="text-gray-600">
-          Extract and verify mathematical expressions from text.
-        </p>
-      </div>
-
+    <ToolPageLayout
+      title={extractMathExpressionsTool.config.name}
+      description={extractMathExpressionsTool.config.description}
+      icon={<CalculatorIcon className="h-8 w-8 text-green-600" />}
+    >
       <div className="space-y-6">
         <div>
           <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-2">
@@ -94,6 +97,14 @@ export default function ExtractMathExpressionsPage() {
           </div>
         )}
       </div>
-    </div>
+      
+      <ApiDocumentation 
+        title="API Documentation"
+        endpoint={`/api/tools/${extractMathExpressionsTool.config.id}`}
+        method="POST"
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+      />
+    </ToolPageLayout>
   );
 }

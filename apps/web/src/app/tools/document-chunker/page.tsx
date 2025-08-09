@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { documentChunkerTool, DocumentChunkerOutput } from '@roast/ai';
+import { documentChunkerTool, DocumentChunkerOutput, toolSchemas } from '@roast/ai';
+import { DocumentTextIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { ToolPageLayout } from '../components/ToolPageLayout';
+import { ApiDocumentation } from '../components/ApiDocumentation';
 
 const checkToolPath = documentChunkerTool.config.path;
 
@@ -11,6 +14,11 @@ export default function DocumentChunkerPage() {
   const [result, setResult] = useState<DocumentChunkerOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showInputSchema, setShowInputSchema] = useState(false);
+  const [showOutputSchema, setShowOutputSchema] = useState(false);
+  
+  // Get schemas from generated schemas
+  const { inputSchema, outputSchema } = toolSchemas[documentChunkerTool.config.id as keyof typeof toolSchemas];
 
   const handleChunk = async () => {
     if (!text.trim()) return;
@@ -30,13 +38,11 @@ export default function DocumentChunkerPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Document Chunker</h1>
-        <p className="text-gray-600">
-          Split documents into semantic chunks for processing.
-        </p>
-      </div>
+    <ToolPageLayout
+      title={documentChunkerTool.config.name}
+      description={documentChunkerTool.config.description}
+      icon={<DocumentTextIcon className="h-8 w-8 text-purple-600" />}
+    >
 
       <div className="space-y-6">
         <div>
@@ -103,6 +109,14 @@ export default function DocumentChunkerPage() {
           </div>
         )}
       </div>
-    </div>
+
+      <ApiDocumentation 
+        title="API Documentation"
+        endpoint={`/api/tools/${documentChunkerTool.config.id}`}
+        method="POST"
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+      />
+    </ToolPageLayout>
   );
 }
