@@ -141,17 +141,13 @@ export default function LinkValidatorPage() {
       // Convert validations to LinkAnalysis format for the analysis generator
       const linkAnalysisResults: LinkAnalysis[] = response!.validations.map(validation => ({
         url: validation.url,
+        status: validation.accessible ? 'accessible' : 
+                validation.error?.type === 'redirect' ? 'redirect' : 
+                validation.error ? 'error' : 'broken',
+        statusCode: validation.details?.statusCode,
         finalUrl: validation.finalUrl,
+        error: validation.error?.message,
         timestamp: new Date(validation.timestamp),
-        accessError: validation.error ? {
-          type: validation.error.type as any,
-          ...(validation.error.message && { message: validation.error.message }),
-          ...(validation.error.statusCode && { statusCode: validation.error.statusCode }),
-        } : undefined,
-        linkDetails: validation.details ? {
-          contentType: validation.details.contentType,
-          statusCode: validation.details.statusCode,
-        } : undefined,
       }));
 
       // Generate the analysis and summary
