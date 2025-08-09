@@ -183,8 +183,14 @@ describe('createToolRoute', () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       
       const errorTool: Tool<any, any> = {
-        ...mockTool,
-        execute: jest.fn().mockRejectedValue(new Error('Tool execution failed'))
+        config: mockTool.config,
+        inputSchema: mockTool.inputSchema,
+        outputSchema: mockTool.outputSchema,
+        execute: jest.fn().mockRejectedValue(new Error('Tool execution failed')),
+        run: mockTool.run,
+        validateAccess: mockTool.validateAccess,
+        beforeExecute: mockTool.beforeExecute,
+        afterExecute: mockTool.afterExecute
       };
 
       const route = createToolRoute(errorTool);
