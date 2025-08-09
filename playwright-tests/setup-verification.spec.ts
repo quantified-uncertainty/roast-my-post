@@ -5,7 +5,8 @@ import { setupTestAuthWithEnvBypass, isAuthenticated } from './database-helpers'
 test.describe('Playwright Setup Verification', () => {
   test('should be able to access the app', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/Roast My Post/i);
+    // Check for the main heading instead of title tag
+    await expect(page.locator('h1').first()).toContainText('Roast My Post');
   });
 
   test('should be able to navigate to tools page', async ({ page }) => {
@@ -33,9 +34,9 @@ test.describe('Playwright Setup Verification', () => {
   test('should be able to set up environment auth bypass', async ({ page }) => {
     await setupTestAuthWithEnvBypass(page);
     
-    // Check that environment variables are mocked
+    // Check that localStorage was set correctly
     const hasEnvBypass = await page.evaluate(() => {
-      return (window as any).process?.env?.BYPASS_TOOL_AUTH === 'true';
+      return window.localStorage.getItem('playwright-auth-bypass') === 'true';
     });
     
     expect(hasEnvBypass).toBeTruthy();
@@ -50,9 +51,9 @@ test.describe('Playwright Setup Verification', () => {
     // Should be able to access the tool page (not redirected to sign-in)
     await expect(page).toHaveURL('/tools/fuzzy-text-locator');
     
-    // Should see the tool interface
-    await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('textarea')).toBeVisible();
+    // Should see the tool interface - use more specific selector
+    await expect(page.locator('h1:has-text("Fuzzy Text Locator")')).toBeVisible();
+    await expect(page.locator('textarea').first()).toBeVisible();
   });
 
   test('should be able to access document-chunker tool with bypass', async ({ page }) => {
@@ -64,8 +65,8 @@ test.describe('Playwright Setup Verification', () => {
     // Should be able to access the tool page
     await expect(page).toHaveURL('/tools/document-chunker');
     
-    // Should see the tool interface
-    await expect(page.locator('h1')).toBeVisible();
+    // Should see the tool interface - use more specific selector
+    await expect(page.locator('h1:has-text("Document Chunker")')).toBeVisible();
     await expect(page.locator('textarea')).toBeVisible();
   });
 

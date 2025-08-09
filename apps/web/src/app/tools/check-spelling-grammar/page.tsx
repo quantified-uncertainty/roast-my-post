@@ -2,7 +2,7 @@
 
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { checkSpellingGrammarTool } from '@roast/ai';
-import { ToolPageTemplate } from '../components/ToolPageTemplate';
+import { ToolPageWithSchemas } from '../components/ToolPageWithSchemas';
 import type { CheckSpellingGrammarOutput } from '@roast/ai';
 
 const severityConfig = {
@@ -128,7 +128,9 @@ function renderResult(result: CheckSpellingGrammarOutput) {
 }
 
 export default function CheckSpellingGrammarPage() {
-  const inputSchema = {
+  // Fallback schemas in case the API fetch fails
+  // These will be replaced by the actual schemas from the tool
+  const fallbackInputSchema = {
     type: 'object',
     properties: {
       text: {
@@ -165,7 +167,7 @@ export default function CheckSpellingGrammarPage() {
     required: ['text']
   };
 
-  const outputSchema = {
+  const fallbackOutputSchema = {
     type: 'object',
     properties: {
       errors: {
@@ -197,7 +199,7 @@ export default function CheckSpellingGrammarPage() {
   };
 
   return (
-    <ToolPageTemplate<{ text: string }, CheckSpellingGrammarOutput>
+    <ToolPageWithSchemas<{ text: string }, CheckSpellingGrammarOutput>
       title="Spelling & Grammar Checker"
       description="Identify and correct spelling and grammar errors in your text using advanced AI analysis. Get detailed explanations and suggestions for improvements."
       icon={DocumentTextIcon}
@@ -210,8 +212,8 @@ export default function CheckSpellingGrammarPage() {
       toolId="check-spelling-grammar"
       renderResult={renderResult}
       prepareInput={(text) => ({ text })}
-      inputSchema={inputSchema}
-      outputSchema={outputSchema}
+      fallbackInputSchema={fallbackInputSchema}
+      fallbackOutputSchema={fallbackOutputSchema}
       extractLlmInteraction={(result) => (result as any).llmInteraction}
     />
   );

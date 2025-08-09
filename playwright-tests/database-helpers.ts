@@ -150,6 +150,9 @@ export async function cleanupTestData(page: Page, userIds: string[] = []) {
  * This is simpler but less realistic than actual database operations
  */
 export async function setupTestAuthWithEnvBypass(page: Page) {
+  // Navigate to a page first to ensure localStorage is accessible
+  await page.goto('/');
+  
   // Set environment variable that our auth middleware recognizes
   await page.addInitScript(() => {
     // Mock environment variable

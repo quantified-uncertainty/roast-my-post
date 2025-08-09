@@ -88,6 +88,9 @@ export class AuthHelper {
  * This uses the BYPASS_TOOL_AUTH environment variable
  */
 export async function setupTestAuthBypass(page: Page) {
+  // Navigate to a page first to ensure localStorage is accessible
+  await page.goto('/');
+  
   // Add the bypass flag to the page
   await page.addInitScript(() => {
     // Set environment flag that our createToolRoute checks
@@ -104,6 +107,9 @@ export async function setupTestAuthBypass(page: Page) {
  * Helper to test that auth is working by trying to access API without auth
  */
 export async function testAuthRequired(page: Page, toolPath: string) {
+  // Navigate to ensure page is loaded
+  await page.goto('/');
+  
   // Clear any bypass flags
   await page.evaluate(() => {
     delete (window as any).__test_bypass_auth;

@@ -47,7 +47,9 @@ describe('createToolRoute', () => {
     run: jest.fn(),
     validateAccess: jest.fn().mockResolvedValue(true),
     beforeExecute: jest.fn().mockResolvedValue(undefined),
-    afterExecute: jest.fn().mockResolvedValue(undefined)
+    afterExecute: jest.fn().mockResolvedValue(undefined),
+    getInputJsonSchema: jest.fn().mockReturnValue({ type: 'object', properties: {} }),
+    getOutputJsonSchema: jest.fn().mockReturnValue({ type: 'object', properties: {} })
   };
 
   const mockRequest = (body: any) => ({
@@ -65,8 +67,8 @@ describe('createToolRoute', () => {
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
-      const route = createToolRoute(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const { POST } = createToolRoute(mockTool);
+      const response = await POST(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).toHaveBeenCalled();
@@ -79,8 +81,8 @@ describe('createToolRoute', () => {
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
-      const route = createToolRoute(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const { POST } = createToolRoute(mockTool);
+      const response = await POST(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).toHaveBeenCalled();
@@ -92,8 +94,8 @@ describe('createToolRoute', () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       const mockAuth = auth as jest.Mock;
 
-      const route = createToolRoute(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const { POST } = createToolRoute(mockTool);
+      const response = await POST(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).not.toHaveBeenCalled();
@@ -112,8 +114,8 @@ describe('createToolRoute', () => {
         expires: new Date().toISOString()
       } as any);
 
-      const route = createToolRoute(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const { POST } = createToolRoute(mockTool);
+      const response = await POST(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).toHaveBeenCalled();
@@ -173,8 +175,8 @@ describe('createToolRoute', () => {
       const { createToolRoute: createToolRouteProd } = await import('./createToolRoute');
       const { auth: authProd } = await import('@/infrastructure/auth/auth');
       
-      const route = createToolRouteProd(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const { POST } = createToolRouteProd(mockTool);
+      const response = await POST(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(authProd).toHaveBeenCalled();
@@ -195,11 +197,13 @@ describe('createToolRoute', () => {
         run: mockTool.run,
         validateAccess: mockTool.validateAccess,
         beforeExecute: mockTool.beforeExecute,
-        afterExecute: mockTool.afterExecute
+        afterExecute: mockTool.afterExecute,
+        getInputJsonSchema: mockTool.getInputJsonSchema,
+        getOutputJsonSchema: mockTool.getOutputJsonSchema
       };
 
-      const route = createToolRoute(errorTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const { POST } = createToolRoute(errorTool);
+      const response = await POST(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -215,8 +219,8 @@ describe('createToolRoute', () => {
         json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
       } as unknown as NextRequest;
 
-      const route = createToolRoute(mockTool);
-      const response = await route(badRequest);
+      const { POST } = createToolRoute(mockTool);
+      const response = await POST(badRequest);
       const data = await response.json();
 
       expect(response.status).toBe(500);
