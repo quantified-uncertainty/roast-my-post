@@ -1,7 +1,7 @@
 'use client';
 
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { extractFactualClaimsTool } from '@roast/ai';
+import { extractFactualClaimsTool, toolSchemas } from '@roast/ai';
 import { ToolPageTemplate } from '../components/ToolPageTemplate';
 
 interface ExtractFactualClaimsResult {
@@ -73,81 +73,8 @@ function renderResult(result: ExtractFactualClaimsResult) {
 }
 
 export default function ExtractFactualClaimsPage() {
-  const inputSchema = {
-    type: 'object',
-    properties: {
-      text: {
-        type: 'string',
-        description: 'Text to extract factual claims from',
-        minLength: 1,
-        maxLength: 100000
-      },
-      maxClaims: {
-        type: 'number',
-        description: 'Maximum number of claims to extract',
-        default: 20,
-        minimum: 1,
-        maximum: 100
-      },
-      confidenceThreshold: {
-        type: 'number',
-        description: 'Minimum confidence threshold (0-1)',
-        default: 0.6,
-        minimum: 0,
-        maximum: 1
-      },
-      claimTypes: {
-        type: 'array',
-        items: {
-          type: 'string',
-          enum: ['factual', 'statistical', 'historical', 'scientific', 'other']
-        },
-        description: 'Types of claims to extract'
-      }
-    },
-    required: ['text']
-  };
-
-  const outputSchema = {
-    type: 'object',
-    properties: {
-      claims: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            claim: { type: 'string', description: 'The extracted factual claim' },
-            type: {
-              type: 'string',
-              enum: ['factual', 'statistical', 'historical', 'scientific', 'other'],
-              description: 'Type of claim'
-            },
-            confidence: { 
-              type: 'number', 
-              minimum: 0, 
-              maximum: 1,
-              description: 'Confidence in the extraction'
-            },
-            context: { 
-              type: 'string', 
-              description: 'Surrounding context for the claim'
-            },
-            verifiable: { 
-              type: 'boolean', 
-              description: 'Whether the claim can be verified'
-            }
-          }
-        }
-      },
-      metadata: {
-        type: 'object',
-        properties: {
-          totalClaims: { type: 'number' },
-          processingTime: { type: 'number' }
-        }
-      }
-    }
-  };
+  // Get schemas directly from the generated schemas - no duplication!
+  const { inputSchema, outputSchema } = toolSchemas['extract-factual-claims'];
 
   const examples = [
     "The Great Wall of China was built over several centuries and stretches approximately 13,000 miles. It was constructed using various materials including stone, brick, and earth.",

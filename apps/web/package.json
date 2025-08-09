@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm --filter @roast/ai run check-schemas && next build",
     "start": "next start",
     "lint": "eslint . --config ./config/eslint/.eslintrc.json",
     "typecheck": "tsc --noEmit",

@@ -1,7 +1,7 @@
 'use client';
 
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
-import { factCheckerTool } from '@roast/ai';
+import { factCheckerTool, toolSchemas } from '@roast/ai';
 import { ToolPageTemplate } from '../components/ToolPageTemplate';
 
 interface FactCheckResult {
@@ -77,66 +77,8 @@ function renderResult(result: FactCheckResult) {
 }
 
 export default function FactCheckerPage() {
-  const inputSchema = {
-    type: 'object',
-    properties: {
-      text: {
-        type: 'string',
-        description: 'Text containing claims to fact-check',
-        minLength: 1,
-        maxLength: 50000
-      },
-      maxClaims: {
-        type: 'number',
-        description: 'Maximum number of claims to check',
-        default: 10,
-        minimum: 1,
-        maximum: 50
-      },
-      confidenceThreshold: {
-        type: 'number',
-        description: 'Minimum confidence threshold (0-1)',
-        default: 0.7,
-        minimum: 0,
-        maximum: 1
-      }
-    },
-    required: ['text']
-  };
-
-  const outputSchema = {
-    type: 'object',
-    properties: {
-      checkedClaims: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            claim: { type: 'string', description: 'The extracted claim' },
-            verdict: {
-              type: 'string',
-              enum: ['TRUE', 'FALSE', 'MOSTLY_TRUE', 'MOSTLY_FALSE', 'UNCLEAR', 'UNVERIFIABLE'],
-              description: 'Fact-check verdict'
-            },
-            explanation: { type: 'string', description: 'Explanation of the verdict' },
-            confidence: { type: 'number', minimum: 0, maximum: 1 },
-            sources: { 
-              type: 'array', 
-              items: { type: 'string' },
-              description: 'Sources used for verification'
-            }
-          }
-        }
-      },
-      metadata: {
-        type: 'object',
-        properties: {
-          totalClaims: { type: 'number' },
-          processingTime: { type: 'number' }
-        }
-      }
-    }
-  };
+  // Get schemas directly from the generated schemas - no duplication!
+  const { inputSchema, outputSchema } = toolSchemas['fact-checker'];
 
   const examples = [
     "The Eiffel Tower is 324 meters tall and was built in 1889.",
