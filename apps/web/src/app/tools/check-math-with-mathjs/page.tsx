@@ -39,7 +39,7 @@ export default function CheckMathWithMathJsPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Get examples from the tool configuration
-  const exampleStatements = checkMathWithMathJsTool.config.examples || [
+  const exampleStatements = (checkMathWithMathJsTool.config as any).examples || [
     '2 + 2 = 4',
     'sqrt(144) = 12',
     '10% of 50 is 5',
@@ -129,7 +129,7 @@ export default function CheckMathWithMathJsPage() {
       <div className="mb-8">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Try these examples:</h3>
         <div className="flex flex-wrap gap-2">
-          {exampleStatements.map((example, index) => (
+          {exampleStatements.map((example: string, index: number) => (
             <button
               key={index}
               onClick={() => {

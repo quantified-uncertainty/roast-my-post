@@ -83,7 +83,7 @@ describe('Math Verification Tool API Route', () => {
 
   describe('Normal Authentication Mode', () => {
     it('should reject requests without authentication', async () => {
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
       const request = createRequest({ statement: '2 + 2 = 4' });
@@ -96,7 +96,7 @@ describe('Math Verification Tool API Route', () => {
     });
 
     it('should process requests with valid authentication', async () => {
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue({
         user: { id: 'user-123', email: 'test@example.com', role: 'USER' },
         expires: new Date().toISOString()
@@ -119,7 +119,7 @@ describe('Math Verification Tool API Route', () => {
     });
 
     it('should process requests without authentication when bypass is enabled', async () => {
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
       const request = createRequest({ statement: '2 + 2 = 4' });
@@ -229,7 +229,7 @@ describe('Math Verification Tool API Route', () => {
       }));
 
       process.env.BYPASS_TOOL_AUTH = 'true';
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
       // Re-import route with production config

@@ -24,7 +24,7 @@ const severityConfig = {
 };
 
 // Get examples from tool config or use defaults
-const examples = checkSpellingGrammarTool.config.examples || [
+const examples = (checkSpellingGrammarTool.config as any).examples || [
   "Their going to there house over they're.",
   "The cat chased it's tail around the house.",
   "Me and him went to the store yesterday.",
@@ -43,19 +43,16 @@ function renderResult(result: CheckSpellingGrammarOutput) {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Total Errors:</span>
-              <span className="text-sm font-medium">{result.metadata.errorCount}</span>
+              <span className="text-sm font-medium">{result.metadata.totalErrorsFound}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Spelling Errors:</span>
-              <span className="text-sm font-medium">{result.metadata.spellingErrorCount}</span>
+              <span className="text-sm text-gray-600">Convention:</span>
+              <span className="text-sm font-medium">{result.metadata.convention}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Grammar Errors:</span>
-              <span className="text-sm font-medium">{result.metadata.grammarErrorCount}</span>
-            </div>
-            {result.metadata.overallAssessment && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-gray-700">{result.metadata.overallAssessment}</p>
+            {result.metadata.processingTime && (
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Processing Time:</span>
+                <span className="text-sm font-medium">{result.metadata.processingTime}ms</span>
               </div>
             )}
           </div>
@@ -67,7 +64,8 @@ function renderResult(result: CheckSpellingGrammarOutput) {
           <h2 className="text-lg font-medium text-gray-900 mb-4">Errors Found</h2>
           <div className="space-y-4">
             {result.errors.map((error, index) => {
-              const config = severityConfig[error.severity as keyof typeof severityConfig] || severityConfig.minor;
+              const severity = error.importance > 70 ? 'critical' : error.importance > 40 ? 'major' : 'minor';
+              const config = severityConfig[severity];
               const Icon = config.icon;
               
               return (
@@ -80,7 +78,7 @@ function renderResult(result: CheckSpellingGrammarOutput) {
                           {error.type === 'spelling' ? 'Spelling' : 'Grammar'} Error
                         </span>
                         <span className={`text-xs px-2 py-1 rounded-full ${config.bgColor} ${config.color}`}>
-                          {error.severity}
+                          {severity}
                         </span>
                       </div>
                       
@@ -94,13 +92,13 @@ function renderResult(result: CheckSpellingGrammarOutput) {
                         </p>
                       )}
                       
-                      {error.explanation && (
-                        <p className="text-sm text-gray-600 italic">{error.explanation}</p>
+                      {error.description && (
+                        <p className="text-sm text-gray-600 italic">{error.description}</p>
                       )}
                       
-                      {error.position && (
+                      {error.lineNumber && (
                         <p className="text-xs text-gray-500 mt-2">
-                          Position: Line {error.position.line}, Column {error.position.column}
+                          Line: {error.lineNumber}
                         </p>
                       )}
                     </div>
@@ -124,14 +122,7 @@ function renderResult(result: CheckSpellingGrammarOutput) {
         </div>
       )}
 
-      {result.correctedText && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Corrected Text</h2>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{result.correctedText}</p>
-          </div>
-        </div>
-      )}
+      {/* Corrected text can be generated from the errors if needed */}
     </>
   );
 }

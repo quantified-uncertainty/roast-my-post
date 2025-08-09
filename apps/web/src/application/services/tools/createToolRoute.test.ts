@@ -44,7 +44,10 @@ describe('createToolRoute', () => {
     inputSchema: {} as any,
     outputSchema: {} as any,
     execute: jest.fn().mockResolvedValue({ result: 'success' }),
-    run: jest.fn()
+    run: jest.fn(),
+    validateAccess: jest.fn().mockResolvedValue(true),
+    beforeExecute: jest.fn().mockResolvedValue(undefined),
+    afterExecute: jest.fn().mockResolvedValue(undefined)
   };
 
   const mockRequest = (body: any) => ({
@@ -59,7 +62,7 @@ describe('createToolRoute', () => {
 
   describe('Authentication', () => {
     it('should require authentication when BYPASS_TOOL_AUTH is not set', async () => {
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
       const route = createToolRoute(mockTool);
@@ -73,7 +76,7 @@ describe('createToolRoute', () => {
 
     it('should require authentication when BYPASS_TOOL_AUTH is false', async () => {
       process.env.BYPASS_TOOL_AUTH = 'false';
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
       const route = createToolRoute(mockTool);
@@ -87,7 +90,7 @@ describe('createToolRoute', () => {
 
     it('should bypass authentication when BYPASS_TOOL_AUTH=true in development', async () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
 
       const route = createToolRoute(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
@@ -103,7 +106,7 @@ describe('createToolRoute', () => {
     });
 
     it('should use authenticated user ID when session exists', async () => {
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue({
         user: { id: 'user-123', email: 'test@example.com', role: 'USER' },
         expires: new Date().toISOString()
@@ -159,7 +162,7 @@ describe('createToolRoute', () => {
       
       // Re-import to get the mocked version
       const { createToolRoute: createToolRouteProd } = await import('./createToolRoute');
-      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
       const route = createToolRouteProd(mockTool);
@@ -179,7 +182,7 @@ describe('createToolRoute', () => {
     it('should handle tool execution errors gracefully', async () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       
-      const errorTool = {
+      const errorTool: Tool<any, any> = {
         ...mockTool,
         execute: jest.fn().mockRejectedValue(new Error('Tool execution failed'))
       };
