@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { LinkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { perplexityResearchTool, toolSchemas } from '@roast/ai';
-import { ToolPageLayout } from '../components/ToolPageLayout';
-import { ApiDocumentation } from '../components/ApiDocumentation';
+import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
+import { ToolDocumentation } from '../components/ToolDocumentation';
 
 interface ResearchResult {
   query: string;
@@ -62,12 +62,9 @@ export default function PerplexityResearchPage() {
     low: 'bg-gray-100 text-gray-800 border-gray-200'
   };
 
-  return (
-    <ToolPageLayout
-      title={perplexityResearchTool.config.name}
-      description={perplexityResearchTool.config.description}
-      icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
-    >
+  // Try tab content (form and results)
+  const tryContent = (
+    <div className="space-y-6">
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
@@ -196,13 +193,66 @@ export default function PerplexityResearchPage() {
         </div>
       )}
       
-      <ApiDocumentation 
-        title="API Documentation"
-        endpoint={`/api/tools/${perplexityResearchTool.config.id}`}
-        method="POST"
-        inputSchema={inputSchema}
-        outputSchema={outputSchema}
-      />
-    </ToolPageLayout>
+    </div>
+  );
+
+  // README content (in production, this would be imported from a build script)
+  const readmeContent = `# Perplexity Research Tool
+
+A research assistant tool that uses the Perplexity API to search for up-to-date information on any topic. Perfect for gathering context, finding recent developments, and collecting sources for analysis and forecasting tasks.
+
+## Overview
+
+The Perplexity Research Tool leverages Perplexity AI's search capabilities to:
+
+1. **Search across the web** - Accesses current information from multiple sources
+2. **Summarize findings** - Provides concise summaries of research results  
+3. **Categorize sources** - Ranks sources by relevance (high/medium/low)
+4. **Extract key findings** - Highlights the most important insights
+5. **Support focus areas** - Tailors searches to specific domains (academic, news, technical, etc.)
+
+## Key Features
+
+- **Real-time search**: Accesses current information, not limited to training data
+- **Source categorization**: Automatically ranks sources by relevance
+- **Configurable results**: Control number of sources (3-10)
+- **Focus area targeting**: Optimize searches for different domains
+- **Key findings extraction**: Automatically identifies important insights
+- **Source metadata**: Full URLs, titles, and snippets for verification
+
+## Focus Areas
+
+- **general** - Broad web search across all sources
+- **academic** - Prioritize scholarly articles and research papers
+- **news** - Focus on recent news and current events
+- **technical** - Emphasize technical documentation and specifications
+- **market** - Target financial and market information
+
+## Best Practices
+
+1. **Be specific**: More specific queries yield better, more relevant results
+2. **Use focus areas**: Choose the appropriate focus area for your research domain
+3. **Verify sources**: Always check the provided URLs for full context
+4. **Combine with other tools**: Use results to inform fact-checking or forecasting analyses
+5. **Track timestamps**: Note when research was conducted for time-sensitive topics`;
+
+  // Docs tab content
+  const docsContent = (
+    <ToolDocumentation 
+      toolId={perplexityResearchTool.config.id}
+      inputSchema={inputSchema}
+      outputSchema={outputSchema}
+      readmeContent={readmeContent}
+    />
+  );
+
+  return (
+    <TabbedToolPageLayout
+      title={perplexityResearchTool.config.name}
+      description={perplexityResearchTool.config.description}
+      icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
+      tryContent={tryContent}
+      docsContent={docsContent}
+    />
   );
 }
