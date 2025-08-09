@@ -16,6 +16,10 @@ data/
 /coverage
 coverage/
 */coverage/
+playwright-report/
+**/playwright-report/
+test-results/
+**/test-results/
 
 # next.js
 /.next/
