@@ -3,11 +3,50 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, LinkIcon, ChevronLeftIcon } from '@heroicons/react/24/solid';
-import { linkValidator, generateLinkAnalysisAndSummary, type LinkAnalysis } from '@roast/ai/server';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 
-const linkValidatorPath = linkValidator.config.path;
+// Type definitions that were imported from server
+type LinkAnalysis = {
+  url: string;
+  status: 'accessible' | 'redirect' | 'broken' | 'error';
+  statusCode?: number;
+  finalUrl?: string;
+  error?: string;
+  timestamp: Date;
+};
+
+// Hardcode the path since we can't import from server in client components
+const linkValidatorPath = '/api/tools/link-validator';
+
+// Client-side replacement for generateLinkAnalysisAndSummary
+function generateLinkAnalysisAndSummary(links: LinkAnalysis[], documentType: string) {
+  const total = links.length;
+  const accessible = links.filter(l => l.status === 'accessible').length;
+  const redirects = links.filter(l => l.status === 'redirect').length;
+  const broken = links.filter(l => l.status === 'broken' || l.status === 'error').length;
+  
+  const grade = total > 0 ? Math.round((accessible / total) * 100) : 100;
+  
+  const analysis = `## Link Validation Report
+
+**${documentType} Analysis**
+- Total links: ${total}
+- Accessible: ${accessible}
+- Redirects: ${redirects}
+- Broken/Errors: ${broken}
+
+### Details
+${links.map(link => {
+  let statusEmoji = link.status === 'accessible' ? '✅' : 
+                    link.status === 'redirect' ? '↪️' : '❌';
+  return `${statusEmoji} ${link.url}${link.finalUrl && link.finalUrl !== link.url ? ` → ${link.finalUrl}` : ''}${link.error ? ` (${link.error})` : ''}`;
+}).join('\n')}`;
+
+  const summary = `Checked ${total} links: ${accessible} accessible, ${redirects} redirects, ${broken} broken. Grade: ${grade}%`;
+  
+  return { analysis, summary, grade };
+}
 
 interface LinkValidation {
   url: string;
