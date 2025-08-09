@@ -17,7 +17,7 @@
     "test:fast": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(e2e|llm)\\.test\\.' --maxWorkers=50%",
     "test:without-llms": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.llm\\.test\\.' --maxWorkers=50%",
     "test:without-external": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(e2e|llm)\\.test\\.' --maxWorkers=50%",
-    "test:ci": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.' --maxWorkers=3",
+    "test:ci": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.|playwright' --maxWorkers=3",
     "test:ci-integration": "jest --config ./config/jest/jest.config.cjs --testMatch='**/*.integration.test.ts' --testPathIgnorePatterns='(articleImport|comprehensiveAnalysis|markdownPrepend)\\.integration\\.test' --maxWorkers=2",
     "test:ci-nocov": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.' --maxWorkers=3 --coverage=false",
     "test:shard": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.' --maxWorkers=2",

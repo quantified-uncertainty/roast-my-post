@@ -58,4 +58,6 @@ module.exports = {
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts", "<rootDir>/config/jest/setup.js"],
+  // Exclude Playwright tests from Jest
+  testPathIgnorePatterns: ["/node_modules/", "/tests/playwright/"],
 };

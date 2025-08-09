@@ -44,7 +44,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:llm": "jest --testMatch='**/*.llm.test.ts'"
+    "test:llm": "jest --testMatch='**/*.llm.test.ts'",
+    "generate-schemas": "tsx scripts/generate-schemas.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

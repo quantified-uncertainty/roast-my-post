@@ -1,8 +1,8 @@
 'use client';
 
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { checkSpellingGrammarTool } from '@roast/ai';
-import { ToolPageWithSchemas } from '../components/ToolPageWithSchemas';
+import { checkSpellingGrammarTool, toolSchemas } from '@roast/ai';
+import { ToolPageTemplate } from '../components/ToolPageTemplate';
 import type { CheckSpellingGrammarOutput } from '@roast/ai';
 
 const severityConfig = {
@@ -128,78 +128,11 @@ function renderResult(result: CheckSpellingGrammarOutput) {
 }
 
 export default function CheckSpellingGrammarPage() {
-  // Fallback schemas in case the API fetch fails
-  // These will be replaced by the actual schemas from the tool
-  const fallbackInputSchema = {
-    type: 'object',
-    properties: {
-      text: {
-        type: 'string',
-        description: 'The text to check for spelling and grammar errors',
-        minLength: 1,
-        maxLength: 500000
-      },
-      context: {
-        type: 'string',
-        description: 'Additional context about the text (optional)',
-        maxLength: 1000
-      },
-      maxErrors: {
-        type: 'number',
-        description: 'Maximum number of errors to return',
-        default: 50,
-        minimum: 1,
-        maximum: 100
-      },
-      convention: {
-        type: 'string',
-        enum: ['US', 'UK', 'auto'],
-        default: 'auto',
-        description: 'Which English convention to use'
-      },
-      strictness: {
-        type: 'string',
-        enum: ['minimal', 'standard', 'thorough'],
-        default: 'standard',
-        description: 'How strict the checking should be'
-      }
-    },
-    required: ['text']
-  };
-
-  const fallbackOutputSchema = {
-    type: 'object',
-    properties: {
-      errors: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            text: { type: 'string', description: 'The incorrect text' },
-            correction: { type: 'string', description: 'Suggested correction' },
-            conciseCorrection: { type: 'string', description: 'Minimal change notation' },
-            type: { type: 'string', enum: ['spelling', 'grammar'] },
-            context: { type: 'string', description: 'Surrounding context' },
-            importance: { type: 'number', minimum: 0, maximum: 100 },
-            confidence: { type: 'number', minimum: 0, maximum: 100 },
-            description: { type: 'string', nullable: true },
-            lineNumber: { type: 'number' }
-          }
-        }
-      },
-      metadata: {
-        type: 'object',
-        properties: {
-          totalErrorsFound: { type: 'number' },
-          convention: { type: 'string' },
-          processingTime: { type: 'number' }
-        }
-      }
-    }
-  };
+  // Get schemas directly from the generated schemas - no API fetch needed!
+  const { inputSchema, outputSchema } = toolSchemas['check-spelling-grammar'];
 
   return (
-    <ToolPageWithSchemas<{ text: string }, CheckSpellingGrammarOutput>
+    <ToolPageTemplate<{ text: string }, CheckSpellingGrammarOutput>
       title="Spelling & Grammar Checker"
       description="Identify and correct spelling and grammar errors in your text using advanced AI analysis. Get detailed explanations and suggestions for improvements."
       icon={DocumentTextIcon}
@@ -212,8 +145,8 @@ export default function CheckSpellingGrammarPage() {
       toolId="check-spelling-grammar"
       renderResult={renderResult}
       prepareInput={(text) => ({ text })}
-      fallbackInputSchema={fallbackInputSchema}
-      fallbackOutputSchema={fallbackOutputSchema}
+      inputSchema={inputSchema}
+      outputSchema={outputSchema}
       extractLlmInteraction={(result) => (result as any).llmInteraction}
     />
   );
