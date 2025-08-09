@@ -112,7 +112,19 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
     category: 'analysis' as const,
     costEstimate: '~$0.02-0.05 per statement (uses Claude with multiple tool calls)',
     path: '/tools/check-math-with-mathjs',
-    status: 'stable' as const
+    status: 'stable' as const,
+    examples: [
+      '2 + 2 = 4',
+      'The binomial coefficient "10 choose 3" equals 120',
+      'Converting 100 fahrenheit to celsius gives 37.78 degrees',
+      '10% of 50 is 5',
+      'sqrt(144) = 12',
+      'log(1000, 10) = 3',
+      'The derivative of x³ is 3x²',
+      '5 km + 3000 m = 8 km',
+      'The area of a circle with radius 5 is 25π',
+      'sin(90 degrees) = 1',
+    ]
   };
   
   inputSchema = inputSchema;

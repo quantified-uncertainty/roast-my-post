@@ -1,143 +1,156 @@
 'use client';
 
-import { useState } from 'react';
-import { XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { checkSpellingGrammarTool } from '@roast/ai';
-import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { ToolPageTemplate } from '../components/ToolPageTemplate';
 import type { CheckSpellingGrammarOutput } from '@roast/ai';
 
-const checkToolPath = checkSpellingGrammarTool.config.path;
+const severityConfig = {
+  critical: {
+    icon: XCircleIcon,
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+  },
+  major: {
+    icon: ExclamationTriangleIcon,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+  },
+  minor: {
+    icon: ExclamationTriangleIcon,
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-50',
+  },
+};
 
-export default function CheckSpellingGrammarPage() {
-  const [text, setText] = useState('');
-  const [result, setResult] = useState<CheckSpellingGrammarOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// Get examples from tool config or use defaults
+const examples = checkSpellingGrammarTool.config.examples || [
+  "Their going to there house over they're.",
+  "The cat chased it's tail around the house.",
+  "Me and him went to the store yesterday.",
+  "I could of gone to the party but I was to tired.",
+  "The data shows that sales has increased significantly."
+];
 
-  const handleCheck = async () => {
-    if (!text.trim()) return;
-
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await runToolWithAuth<
-        { text: string },
-        CheckSpellingGrammarOutput
-      >(checkToolPath, { text });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+function renderResult(result: CheckSpellingGrammarOutput) {
+  const hasErrors = result.errors && result.errors.length > 0;
+  
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Check Spelling & Grammar</h1>
-        <p className="text-gray-600">
-          Identify spelling and grammar errors in your text with AI-powered analysis.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-2">
-            Enter text to check
-          </label>
-          <textarea
-            id="text"
-            rows={10}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Enter your text here..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </div>
-
-        <button
-          onClick={handleCheck}
-          disabled={isLoading || !text.trim()}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Checking...' : 'Check Text'}
-        </button>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-6">
-            {result.metadata && (
-              <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Analysis Summary</h2>
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Total Errors Found: {result.metadata.totalErrorsFound}</p>
-                  <p className="text-sm text-gray-600">Convention: {result.metadata.convention} English</p>
-                  {result.metadata.processingTime && (
-                    <p className="text-sm text-gray-600">Processing Time: {result.metadata.processingTime}ms</p>
-                  )}
-                </div>
+    <>
+      {result.metadata && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Analysis Summary</h2>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Total Errors:</span>
+              <span className="text-sm font-medium">{result.metadata.errorCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Spelling Errors:</span>
+              <span className="text-sm font-medium">{result.metadata.spellingErrorCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Grammar Errors:</span>
+              <span className="text-sm font-medium">{result.metadata.grammarErrorCount}</span>
+            </div>
+            {result.metadata.overallAssessment && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-gray-700">{result.metadata.overallAssessment}</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
 
-            {result.errors && result.errors.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-medium text-gray-900">Errors Found</h2>
-                {result.errors.map((error, index) => (
-                  <div key={index} className="bg-white shadow rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                      {error.importance >= 70 ? (
-                        <XCircleIcon className="h-5 w-5 text-red-500 mt-0.5" />
-                      ) : (
-                        <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900 capitalize">{error.type} Error</p>
-                        <div className="text-sm text-gray-600 mt-1">
-                          <span className="font-mono text-red-600">{error.text}</span>
-                          <span className="mx-2">→</span>
-                          <span className="font-mono text-green-600">{error.correction}</span>
-                        </div>
-                        {error.context && (
-                          <p className="text-sm text-gray-500 mt-2 font-mono bg-gray-50 p-2 rounded">
-                            {error.context}
-                          </p>
-                        )}
-                        {error.description && (
-                          <p className="text-sm text-gray-600 mt-2">{error.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                          {error.lineNumber && (
-                            <span>Line {error.lineNumber}</span>
-                          )}
-                          <span>Confidence: {error.confidence}%</span>
-                          <span>Importance: {error.importance}</span>
-                        </div>
+      {hasErrors ? (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Errors Found</h2>
+          <div className="space-y-4">
+            {result.errors.map((error, index) => {
+              const config = severityConfig[error.severity as keyof typeof severityConfig] || severityConfig.minor;
+              const Icon = config.icon;
+              
+              return (
+                <div key={index} className={`p-4 rounded-lg ${config.bgColor} border-l-4 border-l-${config.color}`}>
+                  <div className="flex items-start">
+                    <Icon className={`h-5 w-5 ${config.color} mt-0.5 mr-3 flex-shrink-0`} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-sm font-medium ${config.color}`}>
+                          {error.type === 'spelling' ? 'Spelling' : 'Grammar'} Error
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${config.bgColor} ${config.color}`}>
+                          {error.severity}
+                        </span>
                       </div>
+                      
+                      <p className="text-sm text-gray-700 mb-2">
+                        <strong>Found:</strong> "{error.text}"
+                      </p>
+                      
+                      {error.correction && (
+                        <p className="text-sm text-gray-700 mb-2">
+                          <strong>Suggestion:</strong> "{error.correction}"
+                        </p>
+                      )}
+                      
+                      {error.explanation && (
+                        <p className="text-sm text-gray-600 italic">{error.explanation}</p>
+                      )}
+                      
+                      {error.position && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          Position: Line {error.position.line}, Column {error.position.column}
+                        </p>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {result.errors && result.errors.length === 0 && (
-              <div className="bg-green-50 rounded-lg p-6">
-                <h2 className="text-lg font-medium text-green-900 mb-2">No Errors Found</h2>
-                <p className="text-sm text-green-700">
-                  Great! Your text appears to be free of spelling and grammar errors.
-                </p>
-              </div>
-            )}
+                </div>
+              );
+            })}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      ) : (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <CheckCircleIcon className="h-6 w-6 text-green-600 mr-3" />
+            <div>
+              <h3 className="text-lg font-medium text-green-900">No Errors Found</h3>
+              <p className="text-sm text-green-700 mt-1">
+                Your text appears to be free of spelling and grammar errors.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {result.correctedText && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Corrected Text</h2>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{result.correctedText}</p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function CheckSpellingGrammarPage() {
+  return (
+    <ToolPageTemplate<{ text: string }, CheckSpellingGrammarOutput>
+      title="Spelling & Grammar Checker"
+      description="Identify and correct spelling and grammar errors in your text using advanced AI analysis. Get detailed explanations and suggestions for improvements."
+      icon={DocumentTextIcon}
+      warningMessage="This tool uses AI to detect errors and may not catch every issue. Always review suggestions carefully, especially for specialized or technical content."
+      inputLabel="Text to Check"
+      inputPlaceholder="Enter or paste your text here to check for spelling and grammar errors..."
+      buttonText="Check Text"
+      inputRows={10}
+      examples={examples}
+      toolPath={checkSpellingGrammarTool.config.path || '/api/tools/check-spelling-grammar'}
+      renderResult={renderResult}
+      prepareInput={(text) => ({ text })}
+    />
   );
 }

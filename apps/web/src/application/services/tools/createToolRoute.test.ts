@@ -1,0 +1,213 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createToolRoute } from './createToolRoute';
+import { Tool } from '@roast/ai';
+import { auth } from '@/infrastructure/auth/auth';
+import { logger } from '@/infrastructure/logging/logger';
+
+// Mock the auth module
+jest.mock('@/infrastructure/auth/auth');
+jest.mock('@/infrastructure/logging/logger');
+
+// Mock config module
+jest.mock('@roast/domain', () => ({
+  config: {
+    env: {
+      isDevelopment: true,
+      isTest: true,
+      isProduction: false,
+      nodeEnv: 'test'
+    },
+    features: {
+      dockerBuild: false
+    },
+    auth: {
+      secret: 'test-secret-for-testing',
+      nextAuthUrl: 'http://localhost:3000',
+      resendKey: undefined,
+      emailFrom: undefined
+    },
+    ai: {
+      anthropicApiKey: 'test-key'
+    }
+  }
+}));
+
+describe('createToolRoute', () => {
+  const mockTool: Tool<any, any> = {
+    config: {
+      id: 'test-tool',
+      name: 'Test Tool',
+      description: 'A test tool',
+      version: '1.0.0',
+      category: 'utility'
+    },
+    inputSchema: {} as any,
+    outputSchema: {} as any,
+    execute: jest.fn().mockResolvedValue({ result: 'success' }),
+    run: jest.fn()
+  };
+
+  const mockRequest = (body: any) => ({
+    json: jest.fn().mockResolvedValue(body)
+  }) as unknown as NextRequest;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Reset environment variables
+    delete process.env.BYPASS_TOOL_AUTH;
+  });
+
+  describe('Authentication', () => {
+    it('should require authentication when BYPASS_TOOL_AUTH is not set', async () => {
+      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      mockAuth.mockResolvedValue(null);
+
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
+      const data = await response.json();
+
+      expect(mockAuth).toHaveBeenCalled();
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Not authenticated');
+    });
+
+    it('should require authentication when BYPASS_TOOL_AUTH is false', async () => {
+      process.env.BYPASS_TOOL_AUTH = 'false';
+      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      mockAuth.mockResolvedValue(null);
+
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
+      const data = await response.json();
+
+      expect(mockAuth).toHaveBeenCalled();
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Not authenticated');
+    });
+
+    it('should bypass authentication when BYPASS_TOOL_AUTH=true in development', async () => {
+      process.env.BYPASS_TOOL_AUTH = 'true';
+      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
+      const data = await response.json();
+
+      expect(mockAuth).not.toHaveBeenCalled();
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.result).toEqual({ result: 'success' });
+      expect(logger.info).toHaveBeenCalledWith(
+        '[DEV] Bypassing authentication for Test Tool tool'
+      );
+    });
+
+    it('should use authenticated user ID when session exists', async () => {
+      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      mockAuth.mockResolvedValue({
+        user: { id: 'user-123', email: 'test@example.com', role: 'USER' },
+        expires: new Date().toISOString()
+      } as any);
+
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
+      const data = await response.json();
+
+      expect(mockAuth).toHaveBeenCalled();
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(mockTool.execute).toHaveBeenCalledWith(
+        { test: 'data' },
+        expect.objectContaining({
+          userId: 'user-123',
+          logger
+        })
+      );
+    });
+  });
+
+  describe('Production Safety', () => {
+    beforeEach(() => {
+      // Mock production environment
+      jest.resetModules();
+      jest.doMock('@roast/domain', () => ({
+        config: {
+          env: {
+            isDevelopment: false,
+            isProduction: true,
+            isTest: false,
+            nodeEnv: 'production'
+          },
+          features: {
+            dockerBuild: false
+          },
+          auth: {
+            secret: 'test-secret-for-testing',
+            nextAuthUrl: 'http://localhost:3000',
+            resendKey: undefined,
+            emailFrom: undefined
+          },
+          ai: {
+            anthropicApiKey: 'test-key'
+          }
+        }
+      }));
+    });
+
+    it('should NOT bypass authentication in production even with BYPASS_TOOL_AUTH=true', async () => {
+      process.env.BYPASS_TOOL_AUTH = 'true';
+      
+      // Re-import to get the mocked version
+      const { createToolRoute: createToolRouteProd } = await import('./createToolRoute');
+      const mockAuth = auth as jest.MockedFunction<typeof auth>;
+      mockAuth.mockResolvedValue(null);
+
+      const route = createToolRouteProd(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
+      const data = await response.json();
+
+      expect(mockAuth).toHaveBeenCalled();
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Not authenticated');
+      expect(logger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('[DEV] Bypassing')
+      );
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle tool execution errors gracefully', async () => {
+      process.env.BYPASS_TOOL_AUTH = 'true';
+      
+      const errorTool = {
+        ...mockTool,
+        execute: jest.fn().mockRejectedValue(new Error('Tool execution failed'))
+      };
+
+      const route = createToolRoute(errorTool);
+      const response = await route(mockRequest({ test: 'data' }));
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Tool execution failed');
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('should handle JSON parsing errors', async () => {
+      process.env.BYPASS_TOOL_AUTH = 'true';
+      
+      const badRequest = {
+        json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
+      } as unknown as NextRequest;
+
+      const route = createToolRoute(mockTool);
+      const response = await route(badRequest);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Invalid JSON');
+    });
+  });
+});

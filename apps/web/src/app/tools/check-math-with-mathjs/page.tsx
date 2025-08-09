@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { checkMathWithMathJsTool } from '@roast/ai';
-import { CheckIcon, XMarkIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, XMarkIcon, QuestionMarkCircleIcon, CalculatorIcon } from '@heroicons/react/24/outline';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
 const checkToolPath = checkMathWithMathJsTool.config.path;
@@ -13,20 +13,20 @@ const statusConfig = {
     color: 'text-green-600',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
-    label: 'Verified Correct'
+    label: 'Verified True'
   },
   verified_false: {
     icon: XMarkIcon,
     color: 'text-red-600', 
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
-    label: 'Incorrect'
+    label: 'Verified False'
   },
   cannot_verify: {
     icon: QuestionMarkCircleIcon,
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
     label: 'Cannot Verify'
   }
 };
@@ -38,6 +38,14 @@ export default function CheckMathWithMathJsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get examples from the tool configuration
+  const exampleStatements = checkMathWithMathJsTool.config.examples || [
+    '2 + 2 = 4',
+    'sqrt(144) = 12',
+    '10% of 50 is 5',
+    '5 km + 3000 m = 8 km',
+  ];
+
   const handleCheck = async () => {
     if (!statement.trim()) return;
 
@@ -46,7 +54,7 @@ export default function CheckMathWithMathJsPage() {
     setResult(null);
 
     try {
-      const response = await runToolWithAuth(checkToolPath, { 
+      const response = await runToolWithAuth('/api/tools/check-math-with-mathjs', { 
         statement,
         ...(context.trim() && { context }) 
       });
@@ -59,60 +67,92 @@ export default function CheckMathWithMathJsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Check Math with MathJS</h1>
-        <p className="text-gray-600">
-          Verify mathematical statements using the MathJS library and AI reasoning.
+        <div className="flex items-center gap-3 mb-4">
+          <CalculatorIcon className="h-8 w-8 text-blue-600" />
+          <h1 className="text-3xl font-bold text-gray-900">Math Verification Agent</h1>
+        </div>
+        <p className="text-gray-600 mb-4">
+          Verify mathematical statements using Claude with MathJS tools. This agentic approach uses
+          Claude to intelligently choose and use appropriate MathJS functions for numerical computation.
         </p>
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <strong>Note:</strong> This tool uses numerical computation (MathJS), not symbolic math.
+            It cannot verify symbolic equations, theorems, or perform algebraic manipulations.
+            For best results, use concrete numerical statements.
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-6">
+      <form onSubmit={(e) => { e.preventDefault(); handleCheck(); }} className="space-y-6 mb-8">
         <div>
           <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-2">
             Mathematical Statement
           </label>
           <textarea
             id="statement"
-            rows={3}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Enter a mathematical statement to verify (e.g., '2 + 2 = 4', 'The square root of 16 is 4')"
             value={statement}
             onChange={(e) => setStatement(e.target.value)}
+            placeholder="Enter a mathematical statement to verify..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            rows={3}
+            required
           />
         </div>
 
         <div>
           <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-2">
-            Context (Optional)
+            Additional Context (Optional)
           </label>
           <textarea
             id="context"
-            rows={2}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Provide any additional context if needed..."
             value={context}
             onChange={(e) => setContext(e.target.value)}
+            placeholder="Provide any additional context if needed..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            rows={2}
           />
         </div>
 
         <button
-          onClick={handleCheck}
+          type="submit"
           disabled={isLoading || !statement.trim()}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? 'Checking...' : 'Check Statement'}
+          {isLoading ? 'Verifying...' : 'Verify Statement'}
         </button>
+      </form>
 
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
+      {/* Example Statements */}
+      <div className="mb-8">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Try these examples:</h3>
+        <div className="flex flex-wrap gap-2">
+          {exampleStatements.map((example, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setStatement(example);
+                setContext('');
+              }}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              {example}
+            </button>
+          ))}
+        </div>
+      </div>
 
-        {result && (
-          <div className="space-y-6">
-            <div className={`rounded-lg border p-6 ${statusConfig[result.status as keyof typeof statusConfig]?.bgColor} ${statusConfig[result.status as keyof typeof statusConfig]?.borderColor}`}>
+      {error && (
+        <div className="rounded-md bg-red-50 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-6">
+          <div className={`rounded-lg border p-6 ${statusConfig[result.status as keyof typeof statusConfig]?.bgColor} ${statusConfig[result.status as keyof typeof statusConfig]?.borderColor}`}>
               <div className="flex items-start space-x-3">
                 {(() => {
                   const config = statusConfig[result.status as keyof typeof statusConfig];
@@ -161,7 +201,6 @@ export default function CheckMathWithMathJsPage() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }
