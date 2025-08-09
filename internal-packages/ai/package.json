@@ -46,8 +46,9 @@
     "test:coverage": "jest --coverage",
     "test:llm": "jest --testMatch='**/*.llm.test.ts'",
     "generate-schemas": "tsx scripts/generate-tool-schemas.ts",
+    "generate-readmes": "tsx scripts/generate-tool-readmes.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
-    "prebuild": "pnpm run generate-schemas"
+    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
