@@ -12,7 +12,7 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
     version: '1.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.01-0.03 per check (computational + optional LLM)',
-    path: '/tools/check-math-hybrid',
+    path: '/api/tools/check-math-hybrid',
     status: 'stable' as const
   };
   

@@ -52,7 +52,7 @@ export class DetectLanguageConventionTool extends Tool<DetectLanguageConventionI
     description: 'Detect whether text uses US or UK English conventions',
     version: '1.0.0',
     category: 'analysis' as const,
-    path: '/tools/detect-language-convention',
+    path: '/api/tools/detect-language-convention',
     status: 'stable' as const,
     costEstimate: '~$0.00 (no LLM calls)',
     inputSchema,

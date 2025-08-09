@@ -2,24 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Tool } from '@roast/ai';
 import { logger } from '@/infrastructure/logging/logger';
 import { auth } from '@/infrastructure/auth/auth';
+import { config } from '@roast/domain';
 
 export function createToolRoute(tool: Tool<any, any>) {
-  return async function POST(request: NextRequest) {
+  const POST = async function (request: NextRequest) {
     try {
-      // Check authentication
-      const session = await auth();
-      if (!session?.user?.id) {
-        return NextResponse.json(
-          { success: false, error: 'Not authenticated' },
-          { status: 401 }
-        );
+      let userId: string;
+      
+      // Development bypass when BYPASS_TOOL_AUTH is set
+      if (process.env.BYPASS_TOOL_AUTH === 'true' && config.env.isDevelopment) {
+        logger.info(`[DEV] Bypassing authentication for ${tool.config.name} tool`);
+        userId = 'dev-bypass-user';
+      } else {
+        // Check authentication
+        const session = await auth();
+        if (!session?.user?.id) {
+          return NextResponse.json(
+            { success: false, error: 'Not authenticated' },
+            { status: 401 }
+          );
+        }
+        userId = session.user.id;
       }
 
       const data = await request.json();
       
       // Execute the tool with user context
       const result = await tool.execute(data, {
-        userId: session.user.id,
+        userId,
         logger,
       });
 
@@ -41,4 +51,6 @@ export function createToolRoute(tool: Tool<any, any>) {
       );
     }
   };
+  
+  return POST;
 }

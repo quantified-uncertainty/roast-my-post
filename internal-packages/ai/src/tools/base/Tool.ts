@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { logger as defaultLogger } from '../../shared/logger';
 import { getGlobalSessionManager } from '../../helicone/simpleSessionManager';
 
@@ -35,6 +36,23 @@ export abstract class Tool<TInput = any, TOutput = any> {
   async beforeExecute(input: TInput, context: ToolContext): Promise<void> {}
   async afterExecute(output: TOutput, context: ToolContext): Promise<void> {}
   
+  // Schema conversion methods
+  getInputJsonSchema() {
+    return zodToJsonSchema(this.inputSchema, {
+      $refStrategy: 'none',
+      errorMessages: false,
+      markdownDescription: false,
+    });
+  }
+  
+  getOutputJsonSchema() {
+    return zodToJsonSchema(this.outputSchema, {
+      $refStrategy: 'none',
+      errorMessages: false,
+      markdownDescription: false,
+    });
+  }
+  
   // Common functionality
   async run(input: unknown, context: ToolContext): Promise<TOutput> {
     // Validate input
@@ -58,7 +76,7 @@ export abstract class Tool<TInput = any, TOutput = any> {
     
     let output: TOutput;
     if (sessionManager) {
-      // Track tool execution in session hierarchy
+      // Track tool execution in session tracking if available
       output = await sessionManager.trackTool(this.config.id, executeWithTracking);
     } else {
       // Execute without tracking

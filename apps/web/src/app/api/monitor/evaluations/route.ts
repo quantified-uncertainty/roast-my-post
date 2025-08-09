@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   }
   
   try {
-    // Get the 20 most recent evaluations with their latest versions
+    // Get the 20 latest evaluations with their latest versions
     const recentEvaluations = await prisma.evaluation.findMany({
       take: 20,
       orderBy: {

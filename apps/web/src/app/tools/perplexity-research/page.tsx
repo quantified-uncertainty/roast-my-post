@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeftIcon, LinkIcon } from '@heroicons/react/24/outline';
+import { LinkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { perplexityResearchTool, toolSchemas } from '@roast/ai';
+import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
+import { ToolDocumentation } from '../components/ToolDocumentation';
 
 interface ResearchResult {
   query: string;
@@ -24,6 +26,9 @@ export default function PerplexityResearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ResearchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get schemas from centralized registry
+  const { inputSchema, outputSchema } = toolSchemas[perplexityResearchTool.config.id as keyof typeof toolSchemas];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,20 +62,9 @@ export default function PerplexityResearchPage() {
     low: 'bg-gray-100 text-gray-800 border-gray-200'
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Perplexity Research</h1>
-        <p className="text-gray-600">
-          Research any topic using Perplexity AI to find relevant, up-to-date information and sources.
-          This tool helps gather context for forecasting and analysis tasks.
-        </p>
-      </div>
+  // Try tab content (form and results)
+  const tryContent = (
+    <div className="space-y-6">
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
@@ -198,6 +192,67 @@ export default function PerplexityResearchPage() {
           </div>
         </div>
       )}
+      
     </div>
+  );
+
+  // README content (in production, this would be imported from a build script)
+  const readmeContent = `# Perplexity Research Tool
+
+A research assistant tool that uses the Perplexity API to search for up-to-date information on any topic. Perfect for gathering context, finding recent developments, and collecting sources for analysis and forecasting tasks.
+
+## Overview
+
+The Perplexity Research Tool leverages Perplexity AI's search capabilities to:
+
+1. **Search across the web** - Accesses current information from multiple sources
+2. **Summarize findings** - Provides concise summaries of research results  
+3. **Categorize sources** - Ranks sources by relevance (high/medium/low)
+4. **Extract key findings** - Highlights the most important insights
+5. **Support focus areas** - Tailors searches to specific domains (academic, news, technical, etc.)
+
+## Key Features
+
+- **Real-time search**: Accesses current information, not limited to training data
+- **Source categorization**: Automatically ranks sources by relevance
+- **Configurable results**: Control number of sources (3-10)
+- **Focus area targeting**: Optimize searches for different domains
+- **Key findings extraction**: Automatically identifies important insights
+- **Source metadata**: Full URLs, titles, and snippets for verification
+
+## Focus Areas
+
+- **general** - Broad web search across all sources
+- **academic** - Prioritize scholarly articles and research papers
+- **news** - Focus on recent news and current events
+- **technical** - Emphasize technical documentation and specifications
+- **market** - Target financial and market information
+
+## Best Practices
+
+1. **Be specific**: More specific queries yield better, more relevant results
+2. **Use focus areas**: Choose the appropriate focus area for your research domain
+3. **Verify sources**: Always check the provided URLs for full context
+4. **Combine with other tools**: Use results to inform fact-checking or forecasting analyses
+5. **Track timestamps**: Note when research was conducted for time-sensitive topics`;
+
+  // Docs tab content
+  const docsContent = (
+    <ToolDocumentation 
+      toolId={perplexityResearchTool.config.id}
+      inputSchema={inputSchema}
+      outputSchema={outputSchema}
+      readmeContent={readmeContent}
+    />
+  );
+
+  return (
+    <TabbedToolPageLayout
+      title={perplexityResearchTool.config.name}
+      description={perplexityResearchTool.config.description}
+      icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
+      tryContent={tryContent}
+      docsContent={docsContent}
+    />
   );
 }

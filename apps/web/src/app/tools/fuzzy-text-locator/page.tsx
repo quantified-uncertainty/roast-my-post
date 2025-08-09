@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { fuzzyTextLocatorTool, TextLocationFinderOutput } from '@roast/ai';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { fuzzyTextLocatorTool, TextLocationFinderOutput, toolSchemas } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { ToolPageLayout } from '../components/ToolPageLayout';
+import { ApiDocumentation } from '../components/ApiDocumentation';
 
 const checkToolPath = fuzzyTextLocatorTool.config?.path || '/api/tools/fuzzy-text-locator';
 
@@ -12,6 +15,9 @@ export default function FuzzyTextLocatorPage() {
   const [result, setResult] = useState<TextLocationFinderOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get schemas from centralized registry
+  const { inputSchema, outputSchema } = toolSchemas[fuzzyTextLocatorTool.config.id as keyof typeof toolSchemas];
 
   const handleSearch = async () => {
     if (!documentText.trim() || !targetText.trim()) return;
@@ -34,13 +40,11 @@ export default function FuzzyTextLocatorPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Fuzzy Text Locator</h1>
-        <p className="text-gray-600">
-          Find text in documents using fuzzy matching algorithms.
-        </p>
-      </div>
+    <ToolPageLayout
+      title={fuzzyTextLocatorTool.config.name}
+      description={fuzzyTextLocatorTool.config.description}
+      icon={<MagnifyingGlassIcon className="h-8 w-8 text-blue-600" />}
+    >
 
       <div className="space-y-6">
         <div>
@@ -113,6 +117,14 @@ export default function FuzzyTextLocatorPage() {
           </div>
         )}
       </div>
-    </div>
+      
+      <ApiDocumentation 
+        title="API Documentation"
+        endpoint={`/api/tools/${fuzzyTextLocatorTool.config.id}`}
+        method="POST"
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+      />
+    </ToolPageLayout>
   );
 }

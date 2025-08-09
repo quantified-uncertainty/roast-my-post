@@ -133,13 +133,11 @@ console.log(JSON.stringify({
 EOF
 
 cd apps/web
-resolution_result=$(npx tsx "$test_file" 2>/dev/null || echo '{"error": true}')
+resolution_result=$(npx tsx "$test_file" 2>/dev/null | tail -1)
 cd ../..
 rm "$test_file"
 
-if echo "$resolution_result" | grep -q '"error"'; then
-    error "Failed to test package resolution"
-else
+if echo "$resolution_result" | jq . > /dev/null 2>&1; then
     domain_ok=$(echo "$resolution_result" | jq -r '.domain')
     db_ok=$(echo "$resolution_result" | jq -r '.db')
     ai_ok=$(echo "$resolution_result" | jq -r '.ai')
@@ -147,6 +145,8 @@ else
     [ "$domain_ok" = "true" ] && success "@roast/domain resolves correctly" || error "@roast/domain resolution failed"
     [ "$db_ok" = "true" ] && success "@roast/db resolves correctly" || error "@roast/db resolution failed"
     [ "$ai_ok" = "true" ] && success "@roast/ai resolves correctly" || error "@roast/ai resolution failed"
+else
+    error "Failed to test package resolution"
 fi
 
 # 7. Quick Docker build test (optional)

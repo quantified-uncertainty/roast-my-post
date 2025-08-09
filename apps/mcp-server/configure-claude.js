@@ -116,7 +116,7 @@ function configure() {
   console.log('2. Look for "roast-my-post" in the MCP tools menu');
   console.log("3. Try commands like:");
   console.log('   - "Show me all agents"');
-  console.log('   - "Get recent failed evaluations"');
+  console.log('   - "Get failed evaluations"');
   console.log('   - "What are the stats for agent-123?"');
   console.log("\n✨ MCP server configured successfully!");
 }
