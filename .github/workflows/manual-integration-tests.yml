@@ -12,6 +12,7 @@ on:
         options:
           - 'integration'
           - 'llm'
+          - 'playwright'
           - 'all'
       test_pattern:
         description: 'Test pattern (optional - leave empty for all)'
@@ -55,8 +56,15 @@ jobs:
                 COMMAND="pnpm --filter @roast/web run test:llm"
               fi
               ;;
+            "playwright")
+              if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
+                COMMAND="cd apps/web && npx playwright test --grep '${{ github.event.inputs.test_pattern }}' --workers=4"
+              else
+                COMMAND="cd apps/web && npx playwright test --workers=4"
+              fi
+              ;;
             "all")
-              COMMAND="pnpm --filter @roast/web run test:without-llms && pnpm --filter @roast/web run test:llm"
+              COMMAND="pnpm --filter @roast/web run test:without-llms && pnpm --filter @roast/web run test:llm && cd apps/web && npx playwright test --workers=4"
               ;;
           esac
           echo "command=$COMMAND" >> $GITHUB_OUTPUT
@@ -78,9 +86,13 @@ jobs:
                 echo "time=30" >> $GITHUB_OUTPUT
               fi
               ;;
+            "playwright")
+              echo "cost=0.00" >> $GITHUB_OUTPUT
+              echo "time=2" >> $GITHUB_OUTPUT
+              ;;
             "all")
               echo "cost=1.50" >> $GITHUB_OUTPUT
-              echo "time=40" >> $GITHUB_OUTPUT
+              echo "time=45" >> $GITHUB_OUTPUT
               ;;
           esac
 
@@ -136,6 +148,10 @@ jobs:
 
       - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
+
+      - name: Install Playwright browsers
+        if: github.event.inputs.test_suite == 'playwright' || github.event.inputs.test_suite == 'all'
+        run: pnpm --filter @roast/web exec playwright install chromium
 
       - name: Run database migrations
         run: pnpm --filter @roast/db run db:migrate

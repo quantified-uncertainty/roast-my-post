@@ -30,6 +30,10 @@ const config: PlaywrightTestConfig = {
     command: "npm run dev",
     port: 3000,
     reuseExistingServer: !process.env["CI"],
+    env: {
+      ...process.env,
+      BYPASS_TOOL_AUTH: "true",
+    },
   },
 };
 
