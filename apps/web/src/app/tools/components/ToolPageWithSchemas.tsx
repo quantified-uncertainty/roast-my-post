@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { ToolPageTemplate } from './ToolPageTemplate';
 import type { ComponentProps } from 'react';
 
-type ToolPageTemplateProps = ComponentProps<typeof ToolPageTemplate>;
-
 interface ToolSchemas {
   inputSchema?: any;
   outputSchema?: any;
@@ -16,7 +14,7 @@ interface ToolSchemas {
  * This eliminates the need to manually duplicate schema definitions
  */
 export function ToolPageWithSchemas<TInput, TOutput>(
-  props: Omit<ToolPageTemplateProps, 'inputSchema' | 'outputSchema'> & {
+  props: Omit<ComponentProps<typeof ToolPageTemplate<TInput, TOutput>>, 'inputSchema' | 'outputSchema'> & {
     toolId: string;
     fallbackInputSchema?: any;
     fallbackOutputSchema?: any;
@@ -46,7 +44,7 @@ export function ToolPageWithSchemas<TInput, TOutput>(
   }, [props.toolId, props.fallbackInputSchema, props.fallbackOutputSchema]);
 
   return (
-    <ToolPageTemplate
+    <ToolPageTemplate<TInput, TOutput>
       {...props}
       inputSchema={schemas.inputSchema}
       outputSchema={schemas.outputSchema}
