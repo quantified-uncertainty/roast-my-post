@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { checkMathWithMathJsTool } from '@roast/ai';
+import { checkMathWithMathJsTool, toolSchemas } from '@roast/ai';
 import { CheckIcon, XMarkIcon, QuestionMarkCircleIcon, CalculatorIcon, CodeBracketIcon, ChatBubbleLeftRightIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
@@ -73,66 +73,8 @@ export default function CheckMathWithMathJsPage() {
     }
   };
 
-  // Get input and output schemas from the tool
-  const inputSchema = {
-    type: 'object',
-    properties: {
-      statement: {
-        type: 'string',
-        description: 'The mathematical statement to verify',
-        maxLength: 5000
-      },
-      context: {
-        type: 'string',
-        description: 'Additional context about the statement (optional)',
-        maxLength: 1000
-      }
-    },
-    required: ['statement']
-  };
-
-  const outputSchema = {
-    type: 'object',
-    properties: {
-      statement: { type: 'string', description: 'The original statement' },
-      status: { 
-        type: 'string',
-        enum: ['verified_true', 'verified_false', 'cannot_verify'],
-        description: 'Verification status'
-      },
-      explanation: { type: 'string', description: 'Clear explanation of the verification' },
-      verificationDetails: {
-        type: 'object',
-        properties: {
-          mathJsExpression: { type: 'string' },
-          computedValue: { type: 'string' },
-          steps: { type: 'array', items: { type: 'object' } }
-        }
-      },
-      errorDetails: {
-        type: 'object',
-        properties: {
-          errorType: { type: 'string', enum: ['calculation', 'logic', 'unit', 'notation', 'conceptual'] },
-          severity: { type: 'string', enum: ['critical', 'major', 'minor'] },
-          conciseCorrection: { type: 'string' },
-          expectedValue: { type: 'string' },
-          actualValue: { type: 'string' }
-        }
-      },
-      llmInteraction: {
-        type: 'object',
-        properties: {
-          model: { type: 'string' },
-          prompt: { type: 'string' },
-          response: { type: 'string' },
-          tokensUsed: { type: 'object' },
-          timestamp: { type: 'string', format: 'date-time' },
-          duration: { type: 'number' }
-        }
-      }
-    },
-    required: ['statement', 'status', 'explanation']
-  };
+  // Get input and output schemas from generated schemas
+  const { inputSchema, outputSchema } = toolSchemas['check-math-with-mathjs'];
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

@@ -17,11 +17,15 @@ import extractFactualClaimsTool from '../src/tools/extract-factual-claims';
 import factCheckerTool from '../src/tools/fact-checker';
 import checkMathWithMathJsTool from '../src/tools/check-math-with-mathjs';
 import checkMathTool from '../src/tools/check-math';
+import checkMathHybridTool from '../src/tools/check-math-hybrid';
 import extractMathExpressionsTool from '../src/tools/extract-math-expressions';
 import extractForecastingClaimsTool from '../src/tools/extract-forecasting-claims';
 import documentChunkerTool from '../src/tools/document-chunker';
 import fuzzyTextLocatorTool from '../src/tools/fuzzy-text-locator';
 import { detectLanguageConventionTool } from '../src/tools/detect-language-convention';
+import forecasterTool from '../src/tools/forecaster';
+import { linkValidator } from '../src/tools/link-validator';
+import perplexityResearchTool from '../src/tools/perplexity-research';
 
 const tools = {
   'check-spelling-grammar': checkSpellingGrammarTool,
@@ -29,11 +33,15 @@ const tools = {
   'fact-checker': factCheckerTool,
   'check-math-with-mathjs': checkMathWithMathJsTool,
   'check-math': checkMathTool,
+  'check-math-hybrid': checkMathHybridTool,
   'extract-math-expressions': extractMathExpressionsTool,
   'extract-forecasting-claims': extractForecastingClaimsTool,
   'document-chunker': documentChunkerTool,
   'fuzzy-text-locator': fuzzyTextLocatorTool,
   'detect-language-convention': detectLanguageConventionTool,
+  'forecaster': forecasterTool,
+  'link-validator': linkValidator,
+  'perplexity-research': perplexityResearchTool,
 };
 
 // Convert schemas
