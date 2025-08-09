@@ -14,7 +14,7 @@ import { allTools } from './all-tools';
 
 /**
  * Create a hash of current tool schemas for comparison
- * Must match the exact format used in generate-schemas.ts
+ * Must match the exact format used in generate-tool-schemas.ts
  */
 function getCurrentSchemaHash(): string {
   const schemas: Record<string, any> = {};

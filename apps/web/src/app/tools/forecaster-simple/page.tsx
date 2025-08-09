@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { forecasterTool } from '@roast/ai';
+import { ChartBarIcon } from '@heroicons/react/24/outline';
+import { forecasterTool, toolSchemas } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { ToolPageLayout } from '../components/ToolPageLayout';
+import { ApiDocumentation } from '../components/ApiDocumentation';
 
 const checkToolPath = forecasterTool.config.path;
 
@@ -11,6 +14,9 @@ export default function ForecasterSimplePage() {
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get schemas from centralized registry
+  const { inputSchema, outputSchema } = toolSchemas[forecasterTool.config.id as keyof typeof toolSchemas];
 
   const handleForecast = async () => {
     if (!question.trim()) return;
@@ -30,13 +36,11 @@ export default function ForecasterSimplePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Forecaster (Simple)</h1>
-        <p className="text-gray-600">
-          Generate AI-powered forecasts for specific questions.
-        </p>
-      </div>
+    <ToolPageLayout
+      title={forecasterTool.config.name}
+      description={forecasterTool.config.description}
+      icon={<ChartBarIcon className="h-8 w-8 text-indigo-600" />}
+    >
 
       <div className="space-y-6">
         <div>
@@ -94,6 +98,14 @@ export default function ForecasterSimplePage() {
           </div>
         )}
       </div>
-    </div>
+      
+      <ApiDocumentation 
+        title="API Documentation"
+        endpoint={`/api/tools/${forecasterTool.config.id}`}
+        method="POST"
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+      />
+    </ToolPageLayout>
   );
 }

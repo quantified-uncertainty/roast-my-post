@@ -10,6 +10,8 @@ interface ApiDocumentationProps {
   lastOutput?: any;
   endpoint?: string;
   description?: string;
+  title?: string;
+  method?: string;
 }
 
 export function ApiDocumentation({
@@ -18,7 +20,9 @@ export function ApiDocumentation({
   lastInput,
   lastOutput,
   endpoint,
-  description
+  description,
+  title = "API Documentation",
+  method = "POST"
 }: ApiDocumentationProps) {
   const [showInputSchema, setShowInputSchema] = useState(false);
   const [showOutputSchema, setShowOutputSchema] = useState(false);
@@ -29,14 +33,14 @@ export function ApiDocumentation({
       <div className="px-6 py-4 border-b">
         <div className="flex items-center gap-2">
           <CodeBracketIcon className="h-5 w-5 text-gray-600" />
-          <h3 className="text-lg font-medium text-gray-900">API Documentation</h3>
+          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
         </div>
         {description && (
           <p className="mt-2 text-sm text-gray-600">{description}</p>
         )}
         {endpoint && (
           <div className="mt-2">
-            <code className="text-xs bg-gray-100 px-2 py-1 rounded">POST {endpoint}</code>
+            <code className="text-xs bg-gray-100 px-2 py-1 rounded">{method} {endpoint}</code>
           </div>
         )}
       </div>
@@ -125,7 +129,7 @@ export function ApiDocumentation({
                 <h5 className="text-sm font-medium text-gray-700 mb-2">JavaScript/TypeScript:</h5>
                 <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
 {`const response = await fetch('${endpoint || '/api/tools/[tool-name]'}', {
-  method: 'POST',
+  method: '${method}',
   headers: {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer YOUR_API_KEY'
@@ -139,7 +143,7 @@ const result = await response.json();`}</pre>
               <div>
                 <h5 className="text-sm font-medium text-gray-700 mb-2">cURL:</h5>
                 <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
-{`curl -X POST ${endpoint || 'https://your-domain.com/api/tools/[tool-name]'} \\
+{`curl -X ${method} ${endpoint || 'https://your-domain.com/api/tools/[tool-name]'} \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -d '${lastInput ? JSON.stringify(lastInput) : '{"statement": "2 + 2 = 4"}'}'`}</pre>

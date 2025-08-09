@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeftIcon, LinkIcon } from '@heroicons/react/24/outline';
+import { LinkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { perplexityResearchTool, toolSchemas } from '@roast/ai';
+import { ToolPageLayout } from '../components/ToolPageLayout';
+import { ApiDocumentation } from '../components/ApiDocumentation';
 
 interface ResearchResult {
   query: string;
@@ -24,6 +26,9 @@ export default function PerplexityResearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ResearchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get schemas from centralized registry
+  const { inputSchema, outputSchema } = toolSchemas[perplexityResearchTool.config.id as keyof typeof toolSchemas];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,19 +63,11 @@ export default function PerplexityResearchPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Perplexity Research</h1>
-        <p className="text-gray-600">
-          Research any topic using Perplexity AI to find relevant, up-to-date information and sources.
-          This tool helps gather context for forecasting and analysis tasks.
-        </p>
-      </div>
+    <ToolPageLayout
+      title={perplexityResearchTool.config.name}
+      description={perplexityResearchTool.config.description}
+      icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
+    >
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
@@ -198,6 +195,14 @@ export default function PerplexityResearchPage() {
           </div>
         </div>
       )}
-    </div>
+      
+      <ApiDocumentation 
+        title="API Documentation"
+        endpoint={`/api/tools/${perplexityResearchTool.config.id}`}
+        method="POST"
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+      />
+    </ToolPageLayout>
   );
 }
