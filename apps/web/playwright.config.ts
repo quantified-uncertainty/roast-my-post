@@ -2,7 +2,7 @@ import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
 
 const config: PlaywrightTestConfig = {
-  testDir: "./playwright-tests",
+  testDir: "./tests/playwright",
   testMatch: "**/*.spec.ts",
   timeout: 30 * 1000,
   expect: {
