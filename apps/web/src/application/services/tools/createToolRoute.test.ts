@@ -67,8 +67,8 @@ describe('createToolRoute', () => {
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
-      const { POST } = createToolRoute(mockTool);
-      const response = await POST(mockRequest({ test: 'data' }));
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).toHaveBeenCalled();
@@ -81,8 +81,8 @@ describe('createToolRoute', () => {
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
-      const { POST } = createToolRoute(mockTool);
-      const response = await POST(mockRequest({ test: 'data' }));
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).toHaveBeenCalled();
@@ -94,8 +94,8 @@ describe('createToolRoute', () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       const mockAuth = auth as jest.Mock;
 
-      const { POST } = createToolRoute(mockTool);
-      const response = await POST(mockRequest({ test: 'data' }));
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).not.toHaveBeenCalled();
@@ -114,8 +114,8 @@ describe('createToolRoute', () => {
         expires: new Date().toISOString()
       } as any);
 
-      const { POST } = createToolRoute(mockTool);
-      const response = await POST(mockRequest({ test: 'data' }));
+      const route = createToolRoute(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(mockAuth).toHaveBeenCalled();
@@ -175,8 +175,8 @@ describe('createToolRoute', () => {
       const { createToolRoute: createToolRouteProd } = await import('./createToolRoute');
       const { auth: authProd } = await import('@/infrastructure/auth/auth');
       
-      const { POST } = createToolRouteProd(mockTool);
-      const response = await POST(mockRequest({ test: 'data' }));
+      const route = createToolRouteProd(mockTool);
+      const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(authProd).toHaveBeenCalled();
@@ -202,8 +202,8 @@ describe('createToolRoute', () => {
         getOutputJsonSchema: mockTool.getOutputJsonSchema
       };
 
-      const { POST } = createToolRoute(errorTool);
-      const response = await POST(mockRequest({ test: 'data' }));
+      const route = createToolRoute(errorTool);
+      const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -219,8 +219,8 @@ describe('createToolRoute', () => {
         json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
       } as unknown as NextRequest;
 
-      const { POST } = createToolRoute(mockTool);
-      const response = await POST(badRequest);
+      const route = createToolRoute(mockTool);
+      const response = await route(badRequest);
       const data = await response.json();
 
       expect(response.status).toBe(500);

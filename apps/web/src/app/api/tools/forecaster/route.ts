@@ -1,4 +1,4 @@
 import { createToolRoute } from '@/application/services/tools/createToolRoute';
 import { forecasterTool } from '@roast/ai/server';
 
-export const { GET, POST } = createToolRoute(forecasterTool);
+export const POST = createToolRoute(forecasterTool);

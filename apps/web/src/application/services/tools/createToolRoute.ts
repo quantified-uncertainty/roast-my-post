@@ -52,31 +52,5 @@ export function createToolRoute(tool: Tool<any, any>) {
     }
   };
   
-  const GET = async function (_request: NextRequest) {
-    try {
-      // Return tool metadata including JSON schemas
-      return NextResponse.json({
-        success: true,
-        tool: {
-          config: tool.config,
-          inputSchema: tool.getInputJsonSchema(),
-          outputSchema: tool.getOutputJsonSchema(),
-        }
-      });
-    } catch (error) {
-      logger.error(`${tool.config.name} schema error:`, error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get schemas';
-      
-      return NextResponse.json(
-        {
-          success: false,
-          error: errorMessage,
-        },
-        { status: 500 }
-      );
-    }
-  };
-  
-  return { GET, POST };
+  return POST;
 }
