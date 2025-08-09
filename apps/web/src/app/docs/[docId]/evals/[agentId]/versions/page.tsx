@@ -12,7 +12,7 @@ export default async function VersionsRedirectPage({ params }: PageProps) {
   const resolvedParams = await params;
   const { docId, agentId } = resolvedParams;
 
-  // Get the most recent version
+  // Get the latest version
   const latestVersion = await prisma.evaluationVersion.findFirst({
     where: {
       evaluation: {
