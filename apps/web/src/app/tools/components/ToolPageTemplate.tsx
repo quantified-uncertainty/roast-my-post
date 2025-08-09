@@ -4,6 +4,8 @@ import { useState, ReactNode, ComponentType } from 'react';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { ToolErrorBoundary } from './ToolErrorBoundary';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { ApiDocumentation } from './ApiDocumentation';
+import { AgentInteraction } from './AgentInteraction';
 
 export interface ToolPageTemplateProps<TInput = any, TOutput = any> {
   // Basic info
@@ -36,6 +38,12 @@ export interface ToolPageTemplateProps<TInput = any, TOutput = any> {
   renderResult: (result: TOutput) => ReactNode;
   prepareInput?: (primaryText: string, secondaryText?: string) => TInput;
   validateInput?: (text: string) => string | null;
+  
+  // API Documentation
+  inputSchema?: any;
+  outputSchema?: any;
+  showApiDocs?: boolean;
+  extractLlmInteraction?: (result: TOutput) => any;
 }
 
 export function ToolPageTemplate<TInput = any, TOutput = any>({
@@ -54,12 +62,17 @@ export function ToolPageTemplate<TInput = any, TOutput = any>({
   renderResult,
   prepareInput = (text: string) => ({ text } as TInput),
   validateInput,
+  inputSchema,
+  outputSchema,
+  showApiDocs = true,
+  extractLlmInteraction,
 }: ToolPageTemplateProps<TInput, TOutput>) {
   const [primaryText, setPrimaryText] = useState('');
   const [secondaryText, setSecondaryText] = useState('');
   const [result, setResult] = useState<TOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastInput, setLastInput] = useState<TInput | null>(null);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -86,6 +99,7 @@ export function ToolPageTemplate<TInput = any, TOutput = any>({
 
     try {
       const input = prepareInput(primaryText, secondaryText);
+      setLastInput(input);
       const response = await runToolWithAuth<TInput, TOutput>(toolPath, input);
       setResult(response);
     } catch (err) {
@@ -194,6 +208,23 @@ export function ToolPageTemplate<TInput = any, TOutput = any>({
         {result && (
           <div className="space-y-6">
             {renderResult(result)}
+            
+            {/* Show agent interaction if available */}
+            {extractLlmInteraction && (
+              <AgentInteraction llmInteraction={extractLlmInteraction(result)} />
+            )}
+            
+            {/* Show API documentation */}
+            {showApiDocs && (inputSchema || outputSchema) && (
+              <ApiDocumentation
+                inputSchema={inputSchema}
+                outputSchema={outputSchema}
+                lastInput={lastInput}
+                lastOutput={result}
+                endpoint={toolPath}
+                description="Use this endpoint to integrate the tool into your application."
+              />
+            )}
           </div>
         )}
       </div>
