@@ -207,7 +207,7 @@ export default function CheckSpellingGrammarPage() {
       buttonText="Check Text"
       inputRows={10}
       examples={examples}
-      toolPath={checkSpellingGrammarTool.config.path || '/api/tools/check-spelling-grammar'}
+      toolId="check-spelling-grammar"
       renderResult={renderResult}
       prepareInput={(text) => ({ text })}
       inputSchema={inputSchema}

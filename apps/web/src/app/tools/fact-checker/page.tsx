@@ -157,7 +157,7 @@ export default function FactCheckerPage() {
       buttonText="Check Facts"
       inputRows={8}
       examples={examples}
-      toolPath={factCheckerTool.config.path || '/api/tools/fact-checker'}
+      toolId="fact-checker"
       renderResult={renderResult}
       prepareInput={(text) => ({ text })}
       inputSchema={inputSchema}

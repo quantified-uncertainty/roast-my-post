@@ -167,7 +167,7 @@ export default function ExtractFactualClaimsPage() {
       buttonText="Extract Claims"
       inputRows={10}
       examples={examples}
-      toolPath={extractFactualClaimsTool.config.path || '/api/tools/extract-factual-claims'}
+      toolId="extract-factual-claims"
       renderResult={renderResult}
       prepareInput={(text) => ({ text })}
       inputSchema={inputSchema}

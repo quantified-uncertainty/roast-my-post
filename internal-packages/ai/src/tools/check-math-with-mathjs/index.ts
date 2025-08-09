@@ -111,7 +111,7 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
     version: '2.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.02-0.05 per statement (uses Claude with multiple tool calls)',
-    path: '/tools/check-math-with-mathjs',
+    path: '/api/tools/check-math-with-mathjs',
     status: 'stable' as const,
     examples: [
       '2 + 2 = 4',

@@ -67,7 +67,7 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
     version: '1.1.0',
     category: 'utility',
     costEstimate: 'Free (or minimal LLM cost if fallback is used)',
-    path: '/tools/fuzzy-text-locator',
+    path: '/api/tools/fuzzy-text-locator',
     status: 'stable'
   };
 

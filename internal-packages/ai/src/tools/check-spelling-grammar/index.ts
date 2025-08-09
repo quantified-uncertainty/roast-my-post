@@ -71,7 +71,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     version: '2.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.01-0.02 per check',
-    path: '/tools/check-spelling-grammar',
+    path: '/api/tools/check-spelling-grammar',
     status: 'stable' as const
   };
   

@@ -34,7 +34,7 @@ export interface ToolPageTemplateProps<TInput = any, TOutput = any> {
   examples?: string[];
   
   // Tool execution
-  toolPath: string;
+  toolId: string;  // Just pass the tool ID, we'll derive the API path
   renderResult: (result: TOutput) => ReactNode;
   prepareInput?: (primaryText: string, secondaryText?: string) => TInput;
   validateInput?: (text: string) => string | null;
@@ -58,7 +58,7 @@ export function ToolPageTemplate<TInput = any, TOutput = any>({
   inputRows = 10,
   secondaryInput,
   examples,
-  toolPath,
+  toolId,
   renderResult,
   prepareInput = (text: string) => ({ text } as TInput),
   validateInput,
@@ -73,6 +73,8 @@ export function ToolPageTemplate<TInput = any, TOutput = any>({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastInput, setLastInput] = useState<TInput | null>(null);
+  
+  const apiPath = `/api/tools/${toolId}`;
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -100,7 +102,7 @@ export function ToolPageTemplate<TInput = any, TOutput = any>({
     try {
       const input = prepareInput(primaryText, secondaryText);
       setLastInput(input);
-      const response = await runToolWithAuth<TInput, TOutput>(toolPath, input);
+      const response = await runToolWithAuth<TInput, TOutput>(apiPath, input);
       setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -221,7 +223,7 @@ export function ToolPageTemplate<TInput = any, TOutput = any>({
                 outputSchema={outputSchema}
                 lastInput={lastInput}
                 lastOutput={result}
-                endpoint={toolPath}
+                endpoint={apiPath}
                 description="Use this endpoint to integrate the tool into your application."
               />
             )}

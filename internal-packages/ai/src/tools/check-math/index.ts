@@ -55,7 +55,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     version: '1.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.02 per check (1 Claude call with longer analysis)',
-    path: '/tools/check-math',
+    path: '/api/tools/check-math',
     status: 'stable' as const
   };
   
