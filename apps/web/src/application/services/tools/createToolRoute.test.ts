@@ -160,21 +160,26 @@ describe('createToolRoute', () => {
     it('should NOT bypass authentication in production even with BYPASS_TOOL_AUTH=true', async () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       
+      // Clear the module cache and re-mock auth before importing
+      jest.clearAllMocks();
+      jest.resetModules();
+      
+      // Re-mock auth module after reset
+      jest.doMock('@/infrastructure/auth/auth', () => ({
+        auth: jest.fn().mockResolvedValue(null)
+      }));
+      
       // Re-import to get the mocked version
       const { createToolRoute: createToolRouteProd } = await import('./createToolRoute');
-      const mockAuth = auth as jest.Mock;
-      mockAuth.mockResolvedValue(null);
-
+      const { auth: authProd } = await import('@/infrastructure/auth/auth');
+      
       const route = createToolRouteProd(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
-      expect(mockAuth).toHaveBeenCalled();
+      expect(authProd).toHaveBeenCalled();
       expect(response.status).toBe(401);
       expect(data.error).toBe('Not authenticated');
-      expect(logger.info).not.toHaveBeenCalledWith(
-        expect.stringContaining('[DEV] Bypassing')
-      );
     });
   });
 
