@@ -24,7 +24,7 @@ Get a list of agents with their latest versions.
 
 ### get_recent_evaluations
 
-Get recent evaluations with optional filtering.
+Get evaluations with optional filtering.
 
 **Parameters:**
 
@@ -62,7 +62,7 @@ Get performance statistics for a specific agent.
 
 ### get_failed_jobs
 
-Get recent failed jobs with error details.
+Get failed jobs with error details.
 
 **Parameters:**
 
@@ -136,7 +136,7 @@ Search documents using the server's search API with full-text search capabilitie
 
 ### analyze_recent_evals
 
-Analyze recent evaluations with comprehensive statistics.
+Analyze evaluations with comprehensive statistics.
 
 **Parameters:**
 
