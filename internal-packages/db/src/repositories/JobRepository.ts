@@ -221,7 +221,7 @@ export class JobRepository implements JobRepositoryInterface {
       const pendingStatus = JobStatus.PENDING;
       const job = await tx.$queryRaw<Array<{id: string}>>`
         SELECT id FROM "Job" 
-        WHERE status = ${pendingStatus}
+        WHERE status = ${pendingStatus}::"JobStatus"
         ORDER BY "createdAt" ASC
         LIMIT 1
         FOR UPDATE SKIP LOCKED

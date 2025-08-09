@@ -33,6 +33,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/@roast/db/generated/libquery_engine-linux-musl*.so.node
 
 # Install runtime dependencies and enable corepack
 RUN apk add --no-cache libc6-compat
@@ -44,6 +45,12 @@ RUN addgroup -g 1001 -S nodejs && \
 
 # Copy deployed web app (includes built app and pruned dependencies)
 COPY --from=builder --chown=nextjs:nodejs /prod/web ./
+
+# Create Prisma client directory and symlink to the engine files from @roast/db
+RUN mkdir -p .prisma/client generated && \
+    ENGINE_FILE=$(ls /app/node_modules/@roast/db/generated/libquery_engine-linux-musl*.so.node | head -1) && \
+    ln -sf "$ENGINE_FILE" .prisma/client/ && \
+    ln -sf "$ENGINE_FILE" generated/
 
 USER nextjs
 
