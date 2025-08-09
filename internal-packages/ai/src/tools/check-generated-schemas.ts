@@ -98,7 +98,7 @@ if (require.main === module) {
     console.log('✅ Generated schemas are up-to-date');
     process.exit(0);
   } catch (error) {
-    console.error('❌', error.message);
+    console.error('❌', error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
