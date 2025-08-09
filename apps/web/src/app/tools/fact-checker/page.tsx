@@ -1,102 +1,168 @@
 'use client';
 
-import { useState } from 'react';
+import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { factCheckerTool } from '@roast/ai';
-import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { ToolPageTemplate } from '../components/ToolPageTemplate';
 
-const checkToolPath = factCheckerTool.config.path;
+interface FactCheckResult {
+  checkedClaims: Array<{
+    claim: string;
+    verdict: 'TRUE' | 'FALSE' | 'MOSTLY_TRUE' | 'MOSTLY_FALSE' | 'UNCLEAR' | 'UNVERIFIABLE';
+    explanation: string;
+    confidence?: number;
+    sources?: string[];
+  }>;
+  metadata?: {
+    totalClaims: number;
+    processingTime?: number;
+  };
+  llmInteraction?: any;
+}
+
+function renderResult(result: FactCheckResult) {
+  if (!result.checkedClaims || result.checkedClaims.length === 0) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+        <p className="text-gray-600">No claims found to fact-check in the provided text.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-medium text-gray-900">
+        {result.checkedClaims.length} Claims Checked
+      </h2>
+      {result.checkedClaims.map((claim, index) => (
+        <div key={index} className="bg-white shadow rounded-lg p-4">
+          <p className="text-sm text-gray-900 mb-2 font-medium">{claim.claim}</p>
+          <div className="flex items-start space-x-2">
+            <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+              claim.verdict === 'TRUE' ? 'text-green-800 bg-green-100' :
+              claim.verdict === 'FALSE' ? 'text-red-800 bg-red-100' :
+              claim.verdict === 'MOSTLY_TRUE' ? 'text-blue-800 bg-blue-100' :
+              claim.verdict === 'MOSTLY_FALSE' ? 'text-orange-800 bg-orange-100' :
+              claim.verdict === 'UNCLEAR' ? 'text-yellow-800 bg-yellow-100' :
+              'text-gray-800 bg-gray-100'
+            }`}>
+              {claim.verdict.replace('_', ' ')}
+            </span>
+            <p className="text-sm text-gray-600 flex-1">{claim.explanation}</p>
+          </div>
+          {claim.confidence && (
+            <p className="text-xs text-gray-500 mt-2">
+              Confidence: {Math.round(claim.confidence * 100)}%
+            </p>
+          )}
+          {claim.sources && claim.sources.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-600 mb-1">Sources:</p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                {claim.sources.map((source, idx) => (
+                  <li key={idx}>• {source}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      ))}
+      {result.metadata && (
+        <div className="text-xs text-gray-500 mt-4">
+          Total claims processed: {result.metadata.totalClaims}
+          {result.metadata.processingTime && ` • Processing time: ${result.metadata.processingTime}ms`}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function FactCheckerPage() {
-  const [text, setText] = useState('');
-  const [result, setResult] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const inputSchema = {
+    type: 'object',
+    properties: {
+      text: {
+        type: 'string',
+        description: 'Text containing claims to fact-check',
+        minLength: 1,
+        maxLength: 50000
+      },
+      maxClaims: {
+        type: 'number',
+        description: 'Maximum number of claims to check',
+        default: 10,
+        minimum: 1,
+        maximum: 50
+      },
+      confidenceThreshold: {
+        type: 'number',
+        description: 'Minimum confidence threshold (0-1)',
+        default: 0.7,
+        minimum: 0,
+        maximum: 1
+      }
+    },
+    required: ['text']
+  };
 
-  const handleCheck = async () => {
-    if (!text.trim()) return;
-
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await runToolWithAuth(checkToolPath, { text });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
+  const outputSchema = {
+    type: 'object',
+    properties: {
+      checkedClaims: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            claim: { type: 'string', description: 'The extracted claim' },
+            verdict: {
+              type: 'string',
+              enum: ['TRUE', 'FALSE', 'MOSTLY_TRUE', 'MOSTLY_FALSE', 'UNCLEAR', 'UNVERIFIABLE'],
+              description: 'Fact-check verdict'
+            },
+            explanation: { type: 'string', description: 'Explanation of the verdict' },
+            confidence: { type: 'number', minimum: 0, maximum: 1 },
+            sources: { 
+              type: 'array', 
+              items: { type: 'string' },
+              description: 'Sources used for verification'
+            }
+          }
+        }
+      },
+      metadata: {
+        type: 'object',
+        properties: {
+          totalClaims: { type: 'number' },
+          processingTime: { type: 'number' }
+        }
+      }
     }
   };
 
+  const examples = [
+    "The Eiffel Tower is 324 meters tall and was built in 1889.",
+    "COVID-19 vaccines contain microchips for tracking people.",
+    "The human brain uses about 20% of the body's total energy.",
+    "Climate change is caused by increased greenhouse gas emissions from human activities.",
+    "The Great Wall of China is visible from space with the naked eye."
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Fact Checker</h1>
-        <p className="text-gray-600">
-          Check facts and verify claims using AI-powered analysis.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-2">
-            Enter text to fact-check
-          </label>
-          <textarea
-            id="text"
-            rows={10}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Enter text containing facts to check..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </div>
-
-        <button
-          onClick={handleCheck}
-          disabled={isLoading || !text.trim()}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Checking...' : 'Check Facts'}
-        </button>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        {result && result.checkedClaims && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              {result.checkedClaims.length} Claims Checked
-            </h2>
-            {result.checkedClaims.map((claim: any, index: number) => (
-              <div key={index} className="bg-white shadow rounded-lg p-4">
-                <p className="text-sm text-gray-900 mb-2">{claim.claim}</p>
-                <div className="flex items-start space-x-2">
-                  <span className={`text-sm font-medium ${
-                    claim.verdict === 'TRUE' ? 'text-green-600' :
-                    claim.verdict === 'FALSE' ? 'text-red-600' :
-                    claim.verdict === 'MOSTLY_TRUE' ? 'text-blue-600' :
-                    claim.verdict === 'MOSTLY_FALSE' ? 'text-orange-600' :
-                    'text-gray-600'
-                  }`}>
-                    {claim.verdict}
-                  </span>
-                  <p className="text-sm text-gray-600 flex-1">{claim.explanation}</p>
-                </div>
-                {claim.confidence && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Confidence: {Math.round(claim.confidence * 100)}%
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <ToolPageTemplate<{ text: string }, FactCheckResult>
+      title="Fact Checker"
+      description="Check facts and verify claims using AI-powered analysis. Identifies factual claims in text and provides verdicts with explanations and confidence scores."
+      icon={ShieldCheckIcon}
+      warningMessage="Fact-checking results are based on AI analysis and available information. Always verify important claims through multiple reliable sources."
+      inputLabel="Text to Fact-Check"
+      inputPlaceholder="Enter text containing facts to check..."
+      buttonText="Check Facts"
+      inputRows={8}
+      examples={examples}
+      toolPath={factCheckerTool.config.path || '/api/tools/fact-checker'}
+      renderResult={renderResult}
+      prepareInput={(text) => ({ text })}
+      inputSchema={inputSchema}
+      outputSchema={outputSchema}
+      extractLlmInteraction={(result) => (result as any).llmInteraction}
+    />
   );
 }
