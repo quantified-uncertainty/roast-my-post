@@ -134,3 +134,19 @@ export async function testAuthRequired(page: Page, toolPath: string) {
   // Should be 401 Unauthorized without auth
   expect(response.status).toBe(401);
 }
+
+/**
+ * Set up test auth with environment bypass (same as setupTestAuthBypass)
+ * This is an alias for backward compatibility
+ */
+export async function setupTestAuthWithEnvBypass(page: Page) {
+  return setupTestAuthBypass(page);
+}
+
+/**
+ * Check if user is authenticated
+ */
+export async function isAuthenticated(page: Page): Promise<boolean> {
+  const authHelper = new AuthHelper(page);
+  return authHelper.isSignedIn();
+}

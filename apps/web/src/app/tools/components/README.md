@@ -90,7 +90,7 @@ export default function MyToolPage() {
 ## Adding a New Tool
 
 1. Create the tool in `@roast/ai/src/tools/`
-2. Add it to the generation script in `@roast/ai/scripts/generate-schemas.ts`
+2. Add it to the generation script in `@roast/ai/scripts/generate-tool-schemas.ts`
 3. Run `pnpm --filter @roast/ai run generate-schemas`
 4. Create the tool page using the generated schemas
 5. The schemas will be automatically available via import

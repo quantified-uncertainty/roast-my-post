@@ -45,7 +45,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:llm": "jest --testMatch='**/*.llm.test.ts'",
-    "generate-schemas": "tsx scripts/generate-schemas.ts",
+    "generate-schemas": "tsx scripts/generate-tool-schemas.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
     "prebuild": "pnpm run generate-schemas"
   },

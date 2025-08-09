@@ -82,9 +82,10 @@ export default function MathCheckerHybridPage() {
     }
   };
 
-  const exampleStatements = [
+  // Get examples from the tool configuration, with fallback examples
+  const exampleStatements = (checkMathHybridTool.config as any).examples || [
     '2 + 2 = 5',
-    '100 - 30% = 60',
+    '100 - 30% = 60', 
     '1 kilometer equals 100 meters',
     '15 ÷ 3 = 6',
     'π × 5² = 78.5',

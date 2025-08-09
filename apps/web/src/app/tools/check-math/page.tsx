@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, CalculatorIcon } from '@heroicons/react/24/outline';
 import { checkMathTool, toolSchemas } from '@roast/ai';
 import { ApiDocumentation } from '../components/ApiDocumentation';
+import { ToolPageLayout } from '../components/ToolPageLayout';
 
 interface CheckMathResult {
   status: 'verified_true' | 'verified_false' | 'cannot_verify';
@@ -73,18 +74,11 @@ export default function MathCheckerPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Statement Checker</h1>
-        <p className="text-gray-600">
-          Check a single mathematical statement for accuracy and correctness.
-        </p>
-      </div>
+    <ToolPageLayout
+      title={checkMathTool.config.name}
+      description={checkMathTool.config.description}
+      icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}
+    >
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
@@ -200,6 +194,6 @@ export default function MathCheckerPage() {
         lastOutput={result}
         endpoint="/api/tools/check-math"
       />
-    </div>
+    </ToolPageLayout>
   );
 }

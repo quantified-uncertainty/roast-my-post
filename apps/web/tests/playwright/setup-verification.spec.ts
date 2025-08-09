@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { AuthHelper, setupTestAuthBypass } from './auth-helpers';
-import { setupTestAuthWithEnvBypass, isAuthenticated } from './database-helpers';
+import { AuthHelper, setupTestAuthBypass, setupTestAuthWithEnvBypass, isAuthenticated } from './auth-helpers';
 
 test.describe('Playwright Setup Verification', () => {
   test('should be able to access the app', async ({ page }) => {
