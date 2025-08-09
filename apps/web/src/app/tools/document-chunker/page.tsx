@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { documentChunkerTool, DocumentChunkerOutput } from '@roast/ai';
+import { documentChunkerTool, DocumentChunkerOutput, toolSchemas } from '@roast/ai';
+import { CodeBracketIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
 const checkToolPath = documentChunkerTool.config.path;
@@ -11,6 +12,11 @@ export default function DocumentChunkerPage() {
   const [result, setResult] = useState<DocumentChunkerOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showInputSchema, setShowInputSchema] = useState(false);
+  const [showOutputSchema, setShowOutputSchema] = useState(false);
+  
+  // Get schemas from generated schemas
+  const { inputSchema, outputSchema } = toolSchemas['document-chunker'];
 
   const handleChunk = async () => {
     if (!text.trim()) return;
@@ -102,6 +108,60 @@ export default function DocumentChunkerPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* API Documentation Section */}
+      <div className="bg-white shadow rounded-lg mt-8">
+        <div className="px-6 py-4 border-b">
+          <div className="flex items-center gap-2">
+            <CodeBracketIcon className="h-5 w-5 text-gray-600" />
+            <h3 className="text-lg font-medium text-gray-900">API Documentation</h3>
+          </div>
+        </div>
+        
+        {/* Input Schema */}
+        <div className="border-b">
+          <button
+            onClick={() => setShowInputSchema(!showInputSchema)}
+            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="font-medium text-gray-700">Input Schema</span>
+            {showInputSchema ? (
+              <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+            ) : (
+              <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+            )}
+          </button>
+          {showInputSchema && (
+            <div className="px-6 pb-4">
+              <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
+                {JSON.stringify(inputSchema, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+
+        {/* Output Schema */}
+        <div>
+          <button
+            onClick={() => setShowOutputSchema(!showOutputSchema)}
+            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="font-medium text-gray-700">Output Schema</span>
+            {showOutputSchema ? (
+              <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+            ) : (
+              <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+            )}
+          </button>
+          {showOutputSchema && (
+            <div className="px-6 pb-4">
+              <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
+                {JSON.stringify(outputSchema, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

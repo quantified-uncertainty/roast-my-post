@@ -1,8 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { toolSchemas } from '@roast/ai';
+import checkMathHybridTool from '@roast/ai/tools/check-math-hybrid';
+import { ApiDocumentation } from '../components/ApiDocumentation';
+import {
+  ToolPageLayout,
+  ToolFormSection,
+  ToolInputField,
+  ToolSubmitButton,
+  ToolExamples,
+  ToolError,
+  ToolResultSection
+} from '../components/ToolPageLayout';
+import { CalculatorIcon } from '@heroicons/react/24/outline';
 
 interface CheckMathHybridResult {
   statement: string;
@@ -38,6 +49,10 @@ export default function MathCheckerHybridPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CheckMathHybridResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastInput, setLastInput] = useState<any>(null);
+  
+  // Get schemas from generated schemas
+  const { inputSchema, outputSchema } = toolSchemas['check-math-hybrid'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,11 +60,14 @@ export default function MathCheckerHybridPage() {
     setError(null);
     setResult(null);
 
+    const input = { statement };
+    setLastInput(input);
+    
     try {
       const response = await fetch('/api/tools/check-math-hybrid', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statement }),
+        body: JSON.stringify(input),
       });
 
       if (!response.ok) {
@@ -79,67 +97,43 @@ export default function MathCheckerHybridPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
+    <ToolPageLayout
+      title={checkMathHybridTool.config.name}
+      description={checkMathHybridTool.config.description}
+      icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}
+    >
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Hybrid Math Checker</h1>
-        <p className="text-gray-600">
-          Comprehensive verification using MathJS first, then falling back to LLM analysis for complex statements.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
-        <div>
-          <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-1">
-            Mathematical Statement <span className="text-red-500">*</span>
-          </label>
-          <input
+      <ToolFormSection onSubmit={handleSubmit}>
+        <div className="bg-white p-6 rounded-lg shadow-sm border space-y-6">
+          <ToolInputField
+            label="Mathematical Statement"
             id="statement"
             type="text"
             value={statement}
-            onChange={(e) => setStatement(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            onChange={setStatement}
             placeholder="Enter a mathematical statement (e.g., '2 + 2 = 4')"
             required
           />
-          <div className="mt-2 space-y-1">
-            <p className="text-sm text-gray-600">Example statements:</p>
-            <div className="flex flex-wrap gap-2">
-              {exampleStatements.map((example, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setStatement(example)}
-                  className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
-          </div>
+          
+          <ToolExamples
+            examples={exampleStatements}
+            onSelect={setStatement}
+            label="Example statements:"
+          />
+          
+          <ToolSubmitButton
+            isLoading={isLoading}
+            disabled={!statement.trim()}
+            loadingText="Checking Statement..."
+            text="Check Statement"
+          />
         </div>
+      </ToolFormSection>
 
-        <button
-          type="submit"
-          disabled={isLoading || !statement.trim()}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Checking Statement...' : 'Check Statement'}
-        </button>
-      </form>
-
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
+      {error && <ToolError error={error} />}
 
       {result && (
-        <div className="mt-8 space-y-6">
+        <ToolResultSection>
           <div className={`p-6 rounded-lg border ${
             result.status === 'verified_true' 
               ? 'bg-green-50 border-green-200' 
@@ -247,8 +241,17 @@ export default function MathCheckerHybridPage() {
               )}
             </div>
           </div>
-        </div>
+        </ToolResultSection>
       )}
-    </div>
+
+      {/* API Documentation */}
+      <ApiDocumentation
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+        lastInput={lastInput}
+        lastOutput={result}
+        endpoint="/api/tools/check-math-hybrid"
+      />
+    </ToolPageLayout>
   );
 }

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { toolSchemas } from '@roast/ai';
+import { ApiDocumentation } from '../components/ApiDocumentation';
 
 interface CheckMathResult {
   status: 'verified_true' | 'verified_false' | 'cannot_verify';
@@ -22,6 +24,10 @@ export default function MathCheckerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CheckMathResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastInput, setLastInput] = useState<any>(null);
+  
+  // Get schemas from generated schemas
+  const { inputSchema, outputSchema } = toolSchemas['check-math'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +35,14 @@ export default function MathCheckerPage() {
     setError(null);
     setResult(null);
 
+    const input = { statement };
+    setLastInput(input);
+    
     try {
       const response = await fetch('/api/tools/check-math', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statement }),
+        body: JSON.stringify(input),
       });
 
       if (!response.ok) {
@@ -182,6 +191,15 @@ export default function MathCheckerPage() {
           </div>
         </div>
       )}
+
+      {/* API Documentation */}
+      <ApiDocumentation
+        inputSchema={inputSchema}
+        outputSchema={outputSchema}
+        lastInput={lastInput}
+        lastOutput={result}
+        endpoint="/api/tools/check-math"
+      />
     </div>
   );
 }

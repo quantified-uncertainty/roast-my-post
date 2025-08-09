@@ -2,7 +2,22 @@
 
 import { useState } from 'react';
 import { checkMathWithMathJsTool, toolSchemas } from '@roast/ai';
-import { CheckIcon, XMarkIcon, QuestionMarkCircleIcon, CalculatorIcon, CodeBracketIcon, ChatBubbleLeftRightIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, XMarkIcon, QuestionMarkCircleIcon, CalculatorIcon, CodeBracketIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { 
+  ApiDocumentationContainer, 
+  SchemaSection, 
+  CollapsibleSection,
+  MetricDisplay 
+} from '../components/SchemaComponents';
+import {
+  ToolPageLayout,
+  ToolFormSection,
+  ToolInputField,
+  ToolSubmitButton,
+  ToolExamples,
+  ToolError,
+  ToolResultSection
+} from '../components/ToolPageLayout';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
 const checkToolPath = checkMathWithMathJsTool.config.path;
@@ -37,9 +52,6 @@ export default function CheckMathWithMathJsPage() {
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showInputSchema, setShowInputSchema] = useState(false);
-  const [showOutputSchema, setShowOutputSchema] = useState(false);
-  const [showAgentMessages, setShowAgentMessages] = useState(false);
   const [lastInput, setLastInput] = useState<any>(null);
 
   // Get examples from the tool configuration
@@ -76,92 +88,62 @@ export default function CheckMathWithMathJsPage() {
   // Get input and output schemas from generated schemas
   const { inputSchema, outputSchema } = toolSchemas['check-math-with-mathjs'];
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleCheck();
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <CalculatorIcon className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Math Verification Agent</h1>
-        </div>
-        <p className="text-gray-600 mb-4">
-          Verify mathematical statements using Claude with MathJS tools. This agentic approach uses
-          Claude to intelligently choose and use appropriate MathJS functions for numerical computation.
-        </p>
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            <strong>Note:</strong> This tool uses numerical computation (MathJS), not symbolic math.
-            It cannot verify symbolic equations, theorems, or perform algebraic manipulations.
-            For best results, use concrete numerical statements.
-          </p>
-        </div>
-      </div>
+    <ToolPageLayout
+      title={checkMathWithMathJsTool.config.name}
+      description={checkMathWithMathJsTool.config.description}
+      icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}
+      warning={{
+        message: 'This tool uses numerical computation (MathJS), not symbolic math. It cannot verify symbolic equations, theorems, or perform algebraic manipulations. For best results, use concrete numerical statements.',
+        type: 'warning'
+      }}
+    >
 
-      <form onSubmit={(e) => { e.preventDefault(); handleCheck(); }} className="space-y-6 mb-8">
-        <div>
-          <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-2">
-            Mathematical Statement
-          </label>
-          <textarea
-            id="statement"
-            value={statement}
-            onChange={(e) => setStatement(e.target.value)}
-            placeholder="Enter a mathematical statement to verify..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            rows={3}
-            required
-          />
-        </div>
+      <ToolFormSection onSubmit={handleSubmit}>
+        <ToolInputField
+          label="Mathematical Statement"
+          id="statement"
+          value={statement}
+          onChange={setStatement}
+          placeholder="Enter a mathematical statement to verify..."
+          required
+          rows={3}
+        />
+        
+        <ToolInputField
+          label="Additional Context (Optional)"
+          id="context"
+          value={context}
+          onChange={setContext}
+          placeholder="Provide any additional context if needed..."
+          rows={2}
+        />
+        
+        <ToolSubmitButton
+          isLoading={isLoading}
+          disabled={!statement.trim()}
+          loadingText="Verifying..."
+          text="Verify Statement"
+        />
+      </ToolFormSection>
 
-        <div>
-          <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Context (Optional)
-          </label>
-          <textarea
-            id="context"
-            value={context}
-            onChange={(e) => setContext(e.target.value)}
-            placeholder="Provide any additional context if needed..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            rows={2}
-          />
-        </div>
+      <ToolExamples
+        examples={exampleStatements}
+        onSelect={(example) => {
+          setStatement(example);
+          setContext('');
+        }}
+      />
 
-        <button
-          type="submit"
-          disabled={isLoading || !statement.trim()}
-          className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Verifying...' : 'Verify Statement'}
-        </button>
-      </form>
-
-      {/* Example Statements */}
-      <div className="mb-8">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Try these examples:</h3>
-        <div className="flex flex-wrap gap-2">
-          {exampleStatements.map((example: string, index: number) => (
-            <button
-              key={index}
-              onClick={() => {
-                setStatement(example);
-                setContext('');
-              }}
-              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-            >
-              {example}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-800">{error}</p>
-        </div>
-      )}
+      {error && <ToolError error={error} />}
 
       {result && (
-        <div className="space-y-6">
+        <ToolResultSection>
           {/* Main Result */}
           <div className={`rounded-lg border p-6 ${statusConfig[result.status as keyof typeof statusConfig]?.bgColor} ${statusConfig[result.status as keyof typeof statusConfig]?.borderColor}`}>
             <div className="flex items-start space-x-3">
@@ -218,111 +200,53 @@ export default function CheckMathWithMathJsPage() {
 
           {/* Agent Messages Section */}
           {result.llmInteraction && (
-            <div className="bg-white shadow rounded-lg">
-              <button
-                onClick={() => setShowAgentMessages(!showAgentMessages)}
-                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+            <ApiDocumentationContainer
+              title="Agent Messages"
+              icon={<ChatBubbleLeftRightIcon className="h-5 w-5 text-gray-600" />}
+            >
+              <CollapsibleSection 
+                title="LLM Interaction"
+                badge={`${result.llmInteraction.tokensUsed?.total || 0} tokens`}
+                borderBottom={false}
               >
-                <div className="flex items-center gap-2">
-                  <ChatBubbleLeftRightIcon className="h-5 w-5 text-gray-600" />
-                  <h3 className="text-lg font-medium text-gray-900">Agent Messages</h3>
-                  <span className="text-sm text-gray-500">
-                    ({result.llmInteraction.tokensUsed?.total || 0} tokens, {result.llmInteraction.duration || 0}ms)
-                  </span>
-                </div>
-                {showAgentMessages ? (
-                  <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              {showAgentMessages && (
-                <div className="px-6 pb-6 space-y-4">
+                <div className="space-y-4">
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Response:</h4>
                     <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto whitespace-pre-wrap">
                       {result.llmInteraction.response}
                     </pre>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    Model: {result.llmInteraction.model}
-                  </div>
+                  <MetricDisplay label="Model" value={result.llmInteraction.model} />
+                  <MetricDisplay label="Duration" value={result.llmInteraction.duration} unit="ms" />
                 </div>
-              )}
-            </div>
+              </CollapsibleSection>
+            </ApiDocumentationContainer>
           )}
 
           {/* API Documentation Section */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <CodeBracketIcon className="h-5 w-5 text-gray-600" />
-                <h3 className="text-lg font-medium text-gray-900">API Documentation</h3>
-              </div>
-            </div>
-            
-            {/* Input Schema */}
-            <div className="border-b">
-              <button
-                onClick={() => setShowInputSchema(!showInputSchema)}
-                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-              >
-                <span className="font-medium text-gray-700">Input Schema</span>
-                {showInputSchema ? (
-                  <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              {showInputSchema && (
-                <div className="px-6 pb-4">
-                  <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
-                    {JSON.stringify(inputSchema, null, 2)}
-                  </pre>
-                  {lastInput && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Last Input:</h5>
-                      <pre className="text-xs bg-blue-50 p-3 rounded overflow-x-auto">
-                        {JSON.stringify(lastInput, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Output Schema */}
-            <div>
-              <button
-                onClick={() => setShowOutputSchema(!showOutputSchema)}
-                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-              >
-                <span className="font-medium text-gray-700">Output Schema</span>
-                {showOutputSchema ? (
-                  <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              {showOutputSchema && (
-                <div className="px-6 pb-4">
-                  <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
-                    {JSON.stringify(outputSchema, null, 2)}
-                  </pre>
-                  {result && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Current Output:</h5>
-                      <pre className="text-xs bg-green-50 p-3 rounded overflow-x-auto">
-                        {JSON.stringify(result, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+          <ApiDocumentationContainer
+            title="API Documentation"
+            endpoint={checkToolPath}
+            icon={<CodeBracketIcon className="h-5 w-5 text-gray-600" />}
+          >
+            <SchemaSection
+              title="Input Schema"
+              schema={inputSchema}
+              example={lastInput}
+              exampleTitle="Last Input"
+              exampleClassName="bg-blue-50"
+            />
+            <SchemaSection
+              title="Output Schema"
+              schema={outputSchema}
+              example={result}
+              exampleTitle="Current Output"
+              exampleClassName="bg-green-50"
+              borderBottom={false}
+            />
+          </ApiDocumentationContainer>
+        </ToolResultSection>
       )}
-    </div>
+    </ToolPageLayout>
   );
 }
