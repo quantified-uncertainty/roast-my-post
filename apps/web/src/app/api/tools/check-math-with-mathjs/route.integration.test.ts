@@ -22,8 +22,16 @@ jest.mock('@roast/domain', () => ({
     },
     ai: {
       anthropicApiKey: 'test-key'
+    },
+    auth: {
+      secret: 'test-secret',
+      resendKey: undefined,
+      emailFrom: undefined
     }
-  }
+  },
+  isDevelopment: jest.fn(() => true),
+  isTest: jest.fn(() => true),
+  isProduction: jest.fn(() => false)
 }));
 
 // Mock the actual tool execution to avoid calling Claude
@@ -35,6 +43,11 @@ jest.mock('@roast/ai/server', () => ({
       path: '/tools/check-math-with-mathjs'
     },
     execute: jest.fn().mockImplementation(async (input) => {
+      // Validate required fields like the real tool would
+      if (!input.statement) {
+        throw new Error('Statement is required');
+      }
+      
       // Simulate tool behavior
       if (input.statement === '2 + 2 = 4') {
         return {
@@ -203,45 +216,39 @@ describe('Math Verification Tool API Route', () => {
 
       expect(response.status).toBe(500);
       expect(data.success).toBe(false);
-      expect(data.error).toBeDefined();
+      expect(data.error).toBe('Statement is required');
     });
   });
 
   describe('Security', () => {
     it('should not bypass authentication in production', async () => {
-      // Mock production environment
-      jest.resetModules();
-      jest.doMock('@roast/domain', () => ({
-        config: {
-          env: {
-            isDevelopment: false,
-            isProduction: true,
-            isTest: false,
-            nodeEnv: 'production'
-          },
-          features: {
-            dockerBuild: false
-          },
-          ai: {
-            anthropicApiKey: 'test-key'
-          }
-        }
-      }));
+      // Temporarily override isDevelopment to return false (production mode)
+      const originalIsDevelopment = require('@roast/domain').config.env.isDevelopment;
+      Object.defineProperty(require('@roast/domain').config.env, 'isDevelopment', {
+        value: false,
+        configurable: true
+      });
 
       process.env.BYPASS_TOOL_AUTH = 'true';
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
-      // Re-import route with production config
-      const { POST: POST_PROD } = await import('./route');
-      
-      const request = createRequest({ statement: '2 + 2 = 4' });
-      const response = await POST_PROD(request);
-      const data = await response.json();
+      try {
+        const request = createRequest({ statement: '2 + 2 = 4' });
+        const response = await POST(request);
+        const data = await response.json();
 
-      expect(mockAuth).toHaveBeenCalled();
-      expect(response.status).toBe(401);
-      expect(data.error).toBe('Not authenticated');
+        // In production, bypass should not work even if BYPASS_TOOL_AUTH is set
+        expect(mockAuth).toHaveBeenCalled();
+        expect(response.status).toBe(401);
+        expect(data.error).toBe('Not authenticated');
+      } finally {
+        // Restore original value
+        Object.defineProperty(require('@roast/domain').config.env, 'isDevelopment', {
+          value: originalIsDevelopment,
+          configurable: true
+        });
+      }
     });
   });
 });
