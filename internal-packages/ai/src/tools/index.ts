@@ -4,6 +4,9 @@ export * from './base/types';
 export * from './base/testRunner';
 export { toolRegistry } from './registry';
 
+// Centralized tool registry
+export * from './all-tools';
+
 // Shared utilities
 export * from './shared/cache-utils';
 export * from './shared/math-schemas';

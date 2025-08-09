@@ -11,43 +11,13 @@ import path from 'path';
 import { createHash } from 'crypto';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-// Import all tools
-import checkSpellingGrammarTool from '../src/tools/check-spelling-grammar';
-import extractFactualClaimsTool from '../src/tools/extract-factual-claims';
-import factCheckerTool from '../src/tools/fact-checker';
-import checkMathWithMathJsTool from '../src/tools/check-math-with-mathjs';
-import checkMathTool from '../src/tools/check-math';
-import checkMathHybridTool from '../src/tools/check-math-hybrid';
-import extractMathExpressionsTool from '../src/tools/extract-math-expressions';
-import extractForecastingClaimsTool from '../src/tools/extract-forecasting-claims';
-import documentChunkerTool from '../src/tools/document-chunker';
-import fuzzyTextLocatorTool from '../src/tools/fuzzy-text-locator';
-import { detectLanguageConventionTool } from '../src/tools/detect-language-convention';
-import forecasterTool from '../src/tools/forecaster';
-import { linkValidator } from '../src/tools/link-validator';
-import perplexityResearchTool from '../src/tools/perplexity-research';
-
-const tools = {
-  'check-spelling-grammar': checkSpellingGrammarTool,
-  'extract-factual-claims': extractFactualClaimsTool,
-  'fact-checker': factCheckerTool,
-  'check-math-with-mathjs': checkMathWithMathJsTool,
-  'check-math': checkMathTool,
-  'check-math-hybrid': checkMathHybridTool,
-  'extract-math-expressions': extractMathExpressionsTool,
-  'extract-forecasting-claims': extractForecastingClaimsTool,
-  'document-chunker': documentChunkerTool,
-  'fuzzy-text-locator': fuzzyTextLocatorTool,
-  'detect-language-convention': detectLanguageConventionTool,
-  'forecaster': forecasterTool,
-  'link-validator': linkValidator,
-  'perplexity-research': perplexityResearchTool,
-};
+// Import all tools from centralized registry
+import { allTools } from '../src/tools/all-tools';
 
 // Convert schemas
 const schemas: Record<string, any> = {};
 
-for (const [id, tool] of Object.entries(tools)) {
+for (const [id, tool] of Object.entries(allTools)) {
   schemas[id] = {
     config: tool.config,
     inputSchema: tool.getInputJsonSchema(),
@@ -81,5 +51,5 @@ export function getToolSchema(toolId: ToolId) {
 const outputPath = path.join(__dirname, '../src/tools/generated-schemas.ts');
 fs.writeFileSync(outputPath, output);
 
-console.log(`✅ Generated schemas for ${Object.keys(tools).length} tools`);
+console.log(`✅ Generated schemas for ${Object.keys(allTools).length} tools`);
 console.log(`📁 Output: ${outputPath}`);

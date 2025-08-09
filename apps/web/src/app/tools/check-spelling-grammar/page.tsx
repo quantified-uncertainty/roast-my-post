@@ -10,18 +10,21 @@ const severityConfig = {
     icon: XCircleIcon,
     color: 'text-red-600',
     bgColor: 'bg-red-50',
+    borderColor: 'border-l-red-600',
   },
   major: {
     icon: ExclamationTriangleIcon,
     color: 'text-orange-600',
     bgColor: 'bg-orange-50',
+    borderColor: 'border-l-orange-600',
   },
   minor: {
     icon: ExclamationTriangleIcon,
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
+    borderColor: 'border-l-yellow-600',
   },
-};
+} as const;
 
 // Get examples from tool config or use defaults
 const examples = (checkSpellingGrammarTool.config as any).examples || [
@@ -69,7 +72,7 @@ function renderResult(result: CheckSpellingGrammarOutput) {
               const Icon = config.icon;
               
               return (
-                <div key={index} className={`p-4 rounded-lg ${config.bgColor} border-l-4 border-l-${config.color}`}>
+                <div key={index} className={`p-4 rounded-lg ${config.bgColor} border-l-4 ${config.borderColor}`}>
                   <div className="flex items-start">
                     <Icon className={`h-5 w-5 ${config.color} mt-0.5 mr-3 flex-shrink-0`} />
                     <div className="flex-1">

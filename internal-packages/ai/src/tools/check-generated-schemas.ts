@@ -9,38 +9,8 @@ import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
 
-// Import all tools to check their current state
-import checkSpellingGrammarTool from './check-spelling-grammar';
-import extractFactualClaimsTool from './extract-factual-claims';
-import factCheckerTool from './fact-checker';
-import checkMathWithMathJsTool from './check-math-with-mathjs';
-import checkMathTool from './check-math';
-import checkMathHybridTool from './check-math-hybrid';
-import extractMathExpressionsTool from './extract-math-expressions';
-import extractForecastingClaimsTool from './extract-forecasting-claims';
-import documentChunkerTool from './document-chunker';
-import fuzzyTextLocatorTool from './fuzzy-text-locator';
-import { detectLanguageConventionTool } from './detect-language-convention';
-import forecasterTool from './forecaster';
-import { linkValidator } from './link-validator';
-import perplexityResearchTool from './perplexity-research';
-
-const tools = {
-  'check-spelling-grammar': checkSpellingGrammarTool,
-  'extract-factual-claims': extractFactualClaimsTool,
-  'fact-checker': factCheckerTool,
-  'check-math-with-mathjs': checkMathWithMathJsTool,
-  'check-math': checkMathTool,
-  'check-math-hybrid': checkMathHybridTool,
-  'extract-math-expressions': extractMathExpressionsTool,
-  'extract-forecasting-claims': extractForecastingClaimsTool,
-  'document-chunker': documentChunkerTool,
-  'fuzzy-text-locator': fuzzyTextLocatorTool,
-  'detect-language-convention': detectLanguageConventionTool,
-  'forecaster': forecasterTool,
-  'link-validator': linkValidator,
-  'perplexity-research': perplexityResearchTool,
-};
+// Import all tools from centralized registry
+import { allTools } from './all-tools';
 
 /**
  * Create a hash of current tool schemas for comparison
@@ -49,7 +19,7 @@ const tools = {
 function getCurrentSchemaHash(): string {
   const schemas: Record<string, any> = {};
   
-  for (const [id, tool] of Object.entries(tools)) {
+  for (const [id, tool] of Object.entries(allTools)) {
     schemas[id] = {
       config: tool.config,
       inputSchema: tool.getInputJsonSchema(),

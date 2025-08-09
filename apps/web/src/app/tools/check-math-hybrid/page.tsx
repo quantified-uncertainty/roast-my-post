@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toolSchemas } from '@roast/ai';
-import checkMathHybridTool from '@roast/ai/tools/check-math-hybrid';
+import { checkMathHybridTool, toolSchemas } from '@roast/ai';
 import { ApiDocumentation } from '../components/ApiDocumentation';
 import {
   ToolPageLayout,
