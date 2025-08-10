@@ -118,6 +118,30 @@ export default function PerplexityResearchPage() {
           </div>
         </div>
 
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">Example queries:</p>
+          <div className="space-y-2">
+            {[
+              "Latest breakthroughs in large language model efficiency 2024",
+              "Current renewable energy investment trends and policy changes",
+              "Recent CRISPR safety advances and regulatory updates",
+              "What are the latest developments in quantum computing error correction?",
+              "Impact of AI on cybersecurity threat detection methods",
+              "Recent studies on intermittent fasting and metabolic health"
+            ].map((example: string, i: number) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setQuery(example)}
+                disabled={isLoading}
+                className="block w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded border text-gray-700 transition-colors"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <button
           type="submit"
           disabled={isLoading || !query.trim()}
