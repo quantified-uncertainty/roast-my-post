@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeftIcon, CalculatorIcon } from '@heroicons/react/24/outline';
-import { checkMathTool, toolSchemas } from '@roast/ai';
-import { ApiDocumentation } from '../components/ApiDocumentation';
-import { ToolPageLayout } from '../components/ToolPageLayout';
+import { CalculatorIcon } from '@heroicons/react/24/outline';
+import { checkMathTool, toolSchemas, getToolReadme } from '@roast/ai';
+import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
+import { ToolDocumentation } from '../components/ToolDocumentation';
 
 interface CheckMathResult {
   status: 'verified_true' | 'verified_false' | 'cannot_verify';
@@ -25,7 +25,6 @@ export default function MathCheckerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CheckMathResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [lastInput, setLastInput] = useState<any>(null);
   
   // Get schemas from generated schemas
   const { inputSchema, outputSchema } = toolSchemas[checkMathTool.config.id as keyof typeof toolSchemas];
@@ -36,22 +35,9 @@ export default function MathCheckerPage() {
     setError(null);
     setResult(null);
 
-    const input = { statement };
-    setLastInput(input);
-    
     try {
-      const response = await fetch('/api/tools/check-math', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setResult(data.result);
+      const response = await runToolWithAuth<{ statement: string }, CheckMathResult>('/api/tools/check-math', { statement });
+      setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -67,19 +53,9 @@ export default function MathCheckerPage() {
     'The derivative of x^2 is 3x'
   ];
 
-  const severityColors = {
-    critical: 'bg-red-100 border-red-300 text-red-900',
-    major: 'bg-orange-100 border-orange-300 text-orange-900',
-    minor: 'bg-yellow-100 border-yellow-300 text-yellow-900',
-  };
-
-  return (
-    <ToolPageLayout
-      title={checkMathTool.config.name}
-      description={checkMathTool.config.description}
-      icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}
-    >
-
+  // Try tab content
+  const tryContent = (
+    <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
           <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-1">
@@ -185,15 +161,29 @@ export default function MathCheckerPage() {
           </div>
         </div>
       )}
+    </div>
+  );
 
-      {/* API Documentation */}
-      <ApiDocumentation
-        inputSchema={inputSchema}
-        outputSchema={outputSchema}
-        lastInput={lastInput}
-        lastOutput={result}
-        endpoint="/api/tools/check-math"
-      />
-    </ToolPageLayout>
+  // README content from generated file
+  const readmeContent = getToolReadme(checkMathTool.config.id);
+
+  // Docs tab content
+  const docsContent = (
+    <ToolDocumentation 
+      toolId={checkMathTool.config.id}
+      inputSchema={inputSchema}
+      outputSchema={outputSchema}
+      readmeContent={readmeContent}
+    />
+  );
+
+  return (
+    <TabbedToolPageLayout
+      title={checkMathTool.config.name}
+      description={checkMathTool.config.description}
+      icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}
+      tryContent={tryContent}
+      docsContent={docsContent}
+    />
   );
 }

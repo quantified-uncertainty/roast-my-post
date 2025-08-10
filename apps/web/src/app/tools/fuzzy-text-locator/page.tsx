@@ -7,7 +7,7 @@ import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
 
-const checkToolPath = fuzzyTextLocatorTool.config?.path || '/api/tools/fuzzy-text-locator';
+const checkToolPath = '/api/tools/fuzzy-text-locator';
 
 export default function FuzzyTextLocatorPage() {
   const [documentText, setDocumentText] = useState('');

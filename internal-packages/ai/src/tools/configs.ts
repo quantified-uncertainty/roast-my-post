@@ -51,7 +51,7 @@ export const fuzzyTextLocatorTool = {
   config: {
     id: 'fuzzy-text-locator',
     name: 'Fuzzy Text Locator',
-    path: '/api/tools/fuzzy-text-locator',
+    path: '/tools/fuzzy-text-locator',
     description: 'Find text locations with fuzzy matching'
   }
 };
