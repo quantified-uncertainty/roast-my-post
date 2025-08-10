@@ -5,7 +5,8 @@ import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, DocumentTextIcon
 import { checkSpellingGrammarTool, toolSchemas, getToolReadme } from '@roast/ai';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
-import { runToolWithAuth } from '../utils/runToolWithAuth';
+import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
+import { useToolExecution } from '../hooks/useToolExecution';
 import type { CheckSpellingGrammarOutput } from '@roast/ai';
 
 const severityConfig = {
@@ -135,48 +136,47 @@ function renderResult(result: CheckSpellingGrammarOutput) {
 
 export default function CheckSpellingGrammarPage() {
   const [text, setText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<CheckSpellingGrammarOutput | null>(null);
-  const [error, setError] = useState<string | null>(null);
   
   // Get schemas from centralized registry
   const { inputSchema, outputSchema } = toolSchemas[checkSpellingGrammarTool.config.id as keyof typeof toolSchemas];
 
+  // Use the hook for state management and execution
+  const { result, isLoading, error, execute } = useToolExecution<
+    { text: string },
+    CheckSpellingGrammarOutput
+  >('/api/tools/check-spelling-grammar', {
+    validateInput: (input) => {
+      if (!input.text.trim()) return 'Please enter some text to check';
+      if (input.text.length < 3) return 'Text must be at least 3 characters long';
+      return true;
+    },
+    formatError: (err) => `Spelling/grammar check failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+    onExecuteComplete: (result) => {
+      if (result && result.metadata) {
+        console.log(`Found ${result.metadata.totalErrorsFound} errors`);
+      }
+    }
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await runToolWithAuth<{ text: string }, CheckSpellingGrammarOutput>('/api/tools/check-spelling-grammar', { text });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
+    execute({ text });
   };
 
   // Try tab content (form and results)
   const tryContent = (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
-        <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">
-            Text to Check <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            id="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-            rows={10}
-            placeholder="Enter or paste your text here to check for spelling and grammar errors..."
-            disabled={isLoading}
-            required
-          />
-        </div>
+        <TextAreaField
+          id="text"
+          label="Text to Check"
+          value={text}
+          onChange={setText}
+          placeholder="Enter or paste your text here to check for spelling and grammar errors..."
+          rows={10}
+          disabled={isLoading}
+          required
+        />
 
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">Example texts:</p>
@@ -195,20 +195,15 @@ export default function CheckSpellingGrammarPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !text.trim()}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Checking Text...' : 'Check Text'}
-        </button>
+        <SubmitButton
+          isLoading={isLoading}
+          disabled={!text.trim()}
+          text="Check Text"
+          loadingText="Checking Text..."
+        />
       </form>
 
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
+      <ErrorDisplay error={error} />
 
       {result && (
         <div className="mt-8">
