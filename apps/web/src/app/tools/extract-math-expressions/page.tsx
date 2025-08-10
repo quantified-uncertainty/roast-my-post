@@ -3,22 +3,11 @@
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { extractMathExpressionsTool, type ExtractMathExpressionsOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
+import { getSeverityColor } from '../utils/resultFormatting';
+import { toolExamples } from '../utils/exampleTexts';
 
 export default function ExtractMathExpressionsPage() {
-  const exampleText = `According to our analysis, revenue grew by 50% from $2 million to $3 million last year. 
-The compound annual growth rate (CAGR) is calculated as (V_f/V_i)^(1/n) - 1, where n is the number of years.
-With 15% of the budget allocated to R&D, that's approximately $450,000 in research spending.
-The efficiency formula E = output/input shows we achieved 85% efficiency this quarter.
-Our projections show that if we maintain a 7% growth rate, revenue will double in about 10 years (using the rule of 72: 72/7 ≈ 10).`;
-
-  const getSeverityColor = (severity?: string) => {
-    const colors: Record<string, string> = {
-      'critical': 'bg-red-100 text-red-800',
-      'major': 'bg-orange-100 text-orange-800',
-      'minor': 'bg-yellow-100 text-yellow-800'
-    };
-    return colors[severity || ''] || 'bg-gray-100 text-gray-800';
-  };
+  const exampleText = toolExamples['extract-math-expressions'] as string;
 
   const renderResult = (result: ExtractMathExpressionsOutput) => {
     return (

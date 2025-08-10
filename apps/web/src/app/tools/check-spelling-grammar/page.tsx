@@ -1,43 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { checkSpellingGrammarTool, toolSchemas, getToolReadme } from '@roast/ai';
+import { severityConfig } from '../utils/resultFormatting';
+import { toolExamples } from '../utils/exampleTexts';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
 import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
 import { useToolExecution } from '../hooks/useToolExecution';
 import type { CheckSpellingGrammarOutput } from '@roast/ai';
 
-const severityConfig = {
-  critical: {
-    icon: XCircleIcon,
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-l-red-600',
-  },
-  major: {
-    icon: ExclamationTriangleIcon,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-l-orange-600',
-  },
-  minor: {
-    icon: ExclamationTriangleIcon,
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-l-yellow-600',
-  },
-} as const;
-
-// Get examples from tool config or use defaults
-const examples = (checkSpellingGrammarTool.config as any).examples || [
-  "Their going to there house over they're.",
-  "The cat chased it's tail around the house.",
-  "Me and him went to the store yesterday.",
-  "I could of gone to the party but I was to tired.",
-  "The data shows that sales has increased significantly."
-];
+// Get examples from centralized config
+const examples = [...(toolExamples['check-spelling-grammar'] as readonly string[])];
 
 function renderResult(result: CheckSpellingGrammarOutput) {
   const hasErrors = result.errors && result.errors.length > 0;

@@ -3,6 +3,8 @@
 import { LinkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { perplexityResearchTool } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
+import { relevanceColors } from '../utils/resultFormatting';
+import { toolExamples } from '../utils/exampleTexts';
 
 interface ResearchResult {
   query: string;
@@ -24,11 +26,6 @@ interface ResearchInput {
 }
 
 export default function PerplexityResearchPage() {
-  const relevanceColors = {
-    high: 'bg-green-100 text-green-800 border-green-200',
-    medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    low: 'bg-gray-100 text-gray-800 border-gray-200'
-  };
 
   const renderResult = (result: ResearchResult) => {
     return (
@@ -92,14 +89,7 @@ export default function PerplexityResearchPage() {
     );
   };
 
-  const queryExamples = [
-    "Latest breakthroughs in large language model efficiency 2024",
-    "Current renewable energy investment trends and policy changes",
-    "Recent CRISPR safety advances and regulatory updates",
-    "What are the latest developments in quantum computing error correction?",
-    "Impact of AI on cybersecurity threat detection methods",
-    "Recent studies on intermittent fasting and metabolic health"
-  ];
+  const queryExamples = [...(toolExamples['perplexity-research'] as readonly string[])];
 
   return (
     <GenericToolPage<ResearchInput, ResearchResult>

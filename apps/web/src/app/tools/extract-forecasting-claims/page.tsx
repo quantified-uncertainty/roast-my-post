@@ -1,8 +1,10 @@
 'use client';
 
-import { CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, ChartBarIcon } from '@heroicons/react/24/solid';
+import { ChartBarIcon } from '@heroicons/react/24/solid';
 import { extractForecastingClaimsTool } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
+import { getScoreColor, getScoreIcon } from '../utils/resultFormatting';
+import { toolExamples } from '../utils/exampleTexts';
 
 interface ForecastResult {
   forecasts: Array<{
@@ -18,17 +20,6 @@ interface ForecastResult {
 }
 
 export default function ExtractForecastingClaimsPage() {
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return 'text-green-600';
-    if (score >= 40) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getScoreIcon = (score: number) => {
-    if (score >= 70) return CheckCircleIcon;
-    if (score >= 40) return ExclamationTriangleIcon;
-    return XCircleIcon;
-  };
 
   const renderResult = (result: ForecastResult) => {
     if (!result.forecasts) return null;
@@ -85,12 +76,7 @@ export default function ExtractForecastingClaimsPage() {
     );
   };
 
-  const examples = [
-    "By 2030, renewable energy will account for 80% of global electricity generation, driven by falling costs and government incentives.",
-    "The S&P 500 will likely reach 6,000 points by the end of 2025, assuming continued economic growth and AI sector expansion.",
-    "Climate change will cause sea levels to rise by 15-25cm by 2050, affecting coastal cities worldwide.",
-    "Electric vehicle adoption will exceed 50% of new car sales in Europe by 2028 due to stricter emissions regulations."
-  ];
+  const examples = [...(toolExamples['extract-forecasting-claims'] as readonly string[])];
 
   return (
     <GenericToolPage<{ text: string }, ForecastResult>

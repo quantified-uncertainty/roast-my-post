@@ -7,6 +7,8 @@ import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
 import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
 import { useToolExecution } from '../hooks/useToolExecution';
+import { getConventionColor } from '../utils/resultFormatting';
+import { toolExamples } from '../utils/exampleTexts';
 
 interface LanguageConventionResult {
   convention: 'US' | 'UK' | 'UNKNOWN';
@@ -40,22 +42,12 @@ export default function DetectLanguageConventionPage() {
     execute({ text });
   };
 
+  const exampleText = toolExamples['detect-language-convention'] as string;
   const exampleTexts = [
     { label: 'US English', text: 'The organization analyzed the color of the aluminum samples from the center of the data.' },
     { label: 'UK English', text: 'The organisation analysed the colour of the aluminium samples from the centre of the data.' },
-    { label: 'Mixed', text: 'The organization analysed the color of the aluminium samples from the center of the data.' }
+    { label: 'Mixed', text: exampleText }
   ];
-
-  const getConventionColor = (convention: string) => {
-    switch (convention) {
-      case 'US':
-        return 'bg-blue-50 border-blue-200 text-blue-800';
-      case 'UK':
-        return 'bg-red-50 border-red-200 text-red-800';
-      default:
-        return 'bg-gray-50 border-gray-200 text-gray-800';
-    }
-  };
 
   // Try tab content
   const tryContent = (

@@ -3,6 +3,7 @@
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { ClaimListDisplay, StatsSummary } from '../components/results';
+import { toolExamples } from '../utils/exampleTexts';
 
 interface FactCheckResult {
   claims: Array<{
@@ -52,7 +53,7 @@ export default function FactCheckerPage() {
     );
   };
 
-  const exampleText = "The Earth is flat. Water boils at 100°C at sea level. The Great Wall of China is visible from space. Humans only use 10% of their brain.";
+  const exampleText = toolExamples['fact-checker'] as string;
 
   return (
     <GenericToolPage<{ text: string }, FactCheckResult>

@@ -3,6 +3,7 @@
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { ClaimListDisplay } from '../components/results';
+import { toolExamples } from '../utils/exampleTexts';
 
 interface ExtractFactualClaimsResult {
   claims: Array<{
@@ -59,11 +60,7 @@ export default function ExtractFactualClaimsPage() {
     );
   };
 
-  const exampleText = `The Earth orbits the Sun once every 365.25 days. 
-Climate change is causing global temperatures to rise by 1.5°C above pre-industrial levels. 
-The Pacific Ocean is the largest ocean on Earth, covering about 63 million square miles. 
-COVID-19 vaccines have been administered to over 5 billion people worldwide. 
-The speed of light in a vacuum is exactly 299,792,458 meters per second.`;
+  const exampleText = toolExamples['extract-factual-claims'] as string;
 
   return (
     <GenericToolPage<{ text: string }, ExtractFactualClaimsResult>
