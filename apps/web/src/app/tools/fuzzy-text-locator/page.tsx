@@ -13,7 +13,7 @@ interface FuzzyLocatorInput {
 
 export default function FuzzyTextLocatorPage() {
   // Create multiple examples with descriptive labels
-  const exampleInputs = examples ? examples.map((ex, i) => {
+  const exampleInputs = examples ? examples.map((ex: any, i) => {
     // Extract context from the example for a descriptive label
     const labels = [
       'Quick Brown Fox',  // Classic text with repeated phrase
@@ -30,7 +30,7 @@ export default function FuzzyTextLocatorPage() {
 
   return (
     <GenericToolPage<FuzzyLocatorInput, TextLocationFinderOutput>
-      toolId={fuzzyTextLocatorTool.config.id as any}
+      toolId="fuzzy-text-locator"
       title={fuzzyTextLocatorTool.config.name}
       description={fuzzyTextLocatorTool.config.description}
       icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}

@@ -1,4 +1,6 @@
-export const examples = [
+import type { PairedExamples } from '../types/examples';
+
+export const examples: PairedExamples = [
   {
     text: `The quick brown fox jumps over the lazy dog. This sentence contains all letters of the alphabet.
 The quick brown fox runs across the field. This is a similar but different sentence.

@@ -4,6 +4,7 @@ import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { checkSpellingGrammarTool, type CheckSpellingGrammarOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { SpellingGrammarDisplay } from '../components/results/SpellingGrammarDisplay';
+import { commonFields } from '../utils/fieldConfigs';
 import { examples } from './examples';
 
 interface SpellingGrammarInput {
@@ -14,22 +15,18 @@ interface SpellingGrammarInput {
 export default function CheckSpellingGrammarPage() {
   return (
     <GenericToolPage<SpellingGrammarInput, CheckSpellingGrammarOutput>
-      toolId={checkSpellingGrammarTool.config.id as keyof typeof import('@roast/ai').toolSchemas}
+      toolId="check-spelling-grammar"
       title={checkSpellingGrammarTool.config.name}
       description={checkSpellingGrammarTool.config.description}
       icon={<DocumentTextIcon className="h-8 w-8 text-indigo-600" />}
       warning="This tool uses AI to detect errors and may not catch every issue. Always review suggestions carefully, especially for specialized or technical content."
       fields={[
-        {
-          type: 'textarea',
-          name: 'text',
-          label: 'Text to Check',
-          placeholder: 'Enter or paste your text here to check for spelling and grammar errors...',
-          rows: 10,
-          required: true,
-          examples: examples || undefined
-        }
+        commonFields.textAnalysis('text', 'Text to Check')
       ]}
+      exampleInputs={examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex }
+      }))}
       submitButtonText="Check Text"
       loadingText="Checking Text..."
       validateInput={(input) => {

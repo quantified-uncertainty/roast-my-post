@@ -12,7 +12,7 @@ export default function CheckMathWithMathJSPage() {
 
   return (
     <GenericToolPage
-      toolId={checkMathWithMathJsTool.config.id as any}
+      toolId="check-math-with-mathjs"
       title={checkMathWithMathJsTool.config.name}
       description={checkMathWithMathJsTool.config.description}
       icon={<CalculatorIcon className="h-8 w-8 text-indigo-600" />}

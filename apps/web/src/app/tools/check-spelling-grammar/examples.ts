@@ -1,4 +1,6 @@
-export const examples = [
+import type { TextExamples } from '../types/examples';
+
+export const examples: TextExamples = [
   "Their going to there house over they're.",
   "The cat chased it's tail around the house.",
   "Me and him went to the store yesterday.",

@@ -12,7 +12,7 @@ export default function CheckMathHybridPage() {
 
   return (
     <GenericToolPage
-      toolId={checkMathHybridTool.config.id as any}
+      toolId="check-math-hybrid"
       title={checkMathHybridTool.config.name}
       description={checkMathHybridTool.config.description}
       icon={<CalculatorIcon className="h-8 w-8 text-purple-600" />}

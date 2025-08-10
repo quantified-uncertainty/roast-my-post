@@ -12,7 +12,7 @@ export default function MathCheckerPage() {
 
   return (
     <GenericToolPage
-      toolId={checkMathTool.config.id as any}
+      toolId="check-math"
       title={checkMathTool.config.name}
       description={checkMathTool.config.description}
       icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}

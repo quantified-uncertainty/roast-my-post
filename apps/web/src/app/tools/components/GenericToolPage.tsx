@@ -18,7 +18,7 @@ export interface FieldConfig {
   max?: number;
   step?: number;
   options?: Array<{ value: string; label: string }>;
-  defaultValue?: any;
+  defaultValue?: string | number | boolean;
   helperText?: string;
   examples?: string[];
   className?: string;
@@ -85,7 +85,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
   
   // Initialize form state
   const getInitialValues = (): TInput => {
-    const values: any = {};
+    const values: Record<string, string | number | boolean> = {};
     fields.forEach(field => {
       values[field.name] = field.defaultValue ?? (field.type === 'checkbox' ? false : '');
     });
@@ -110,7 +110,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
     execute(processedData);
   };
   
-  const handleFieldChange = (name: string, value: any) => {
+  const handleFieldChange = (name: string, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   

@@ -31,7 +31,7 @@ interface ForecastResult {
   };
 }
 
-export default function ForecasterSimplePage() {
+export default function ForecasterPage() {
 
   const renderResult = (result: ForecastResult) => {
     return <ForecastResultDisplay result={result} />;
@@ -40,7 +40,7 @@ export default function ForecasterSimplePage() {
   return (
     <GenericToolPage<ForecastInput, ForecastResult>
       toolId={'forecaster' as keyof typeof import('@roast/ai').toolSchemas}
-      title="Simple Forecaster"
+      title="Forecaster"
       description="Make probabilistic forecasts about future events using ensemble reasoning"
       icon={<ChartBarIcon className="h-8 w-8 text-purple-600" />}
       fields={[
