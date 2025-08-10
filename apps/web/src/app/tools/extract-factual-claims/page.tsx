@@ -1,192 +1,97 @@
 'use client';
 
-import { useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { extractFactualClaimsTool, toolSchemas, getToolReadme } from '@roast/ai';
-import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
-import { ToolDocumentation } from '../components/ToolDocumentation';
-import { runToolWithAuth } from '../utils/runToolWithAuth';
-import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
+import { GenericToolPage } from '../components/GenericToolPage';
+import { ClaimListDisplay } from '../components/results';
 
 interface ExtractFactualClaimsResult {
   claims: Array<{
     claim: string;
-    type: 'factual' | 'statistical' | 'historical' | 'scientific' | 'other';
     confidence: number;
-    context?: string;
+    type: string;
+    evidence?: string;
     verifiable: boolean;
   }>;
-  metadata?: {
+  summary?: {
     totalClaims: number;
-    processingTime?: number;
+    verifiableClaims: number;
+    unverifiableClaims: number;
   };
-  llmInteraction?: any;
-}
-
-function renderResult(result: ExtractFactualClaimsResult) {
-  if (!result.claims || result.claims.length === 0) {
-    return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-        <p className="text-gray-600">No factual claims found in the provided text.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-medium text-gray-900">
-        {result.claims.length} Factual Claims Extracted
-      </h2>
-      {result.claims.map((claim, index) => (
-        <div key={index} className="bg-white shadow rounded-lg p-4">
-          <p className="text-sm text-gray-900 mb-2 font-medium">{claim.claim}</p>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-              claim.type === 'factual' ? 'text-blue-800 bg-blue-100' :
-              claim.type === 'statistical' ? 'text-purple-800 bg-purple-100' :
-              claim.type === 'historical' ? 'text-amber-800 bg-amber-100' :
-              claim.type === 'scientific' ? 'text-green-800 bg-green-100' :
-              'text-gray-800 bg-gray-100'
-            }`}>
-              {claim.type.toUpperCase()}
-            </span>
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              claim.verifiable ? 'text-green-800 bg-green-100' : 'text-red-800 bg-red-100'
-            }`}>
-              {claim.verifiable ? 'Verifiable' : 'Not Verifiable'}
-            </span>
-            <span className="text-xs text-gray-500">
-              Confidence: {Math.round(claim.confidence * 100)}%
-            </span>
-          </div>
-          {claim.context && (
-            <p className="text-xs text-gray-600 mt-1">
-              <strong>Context:</strong> {claim.context}
-            </p>
-          )}
-        </div>
-      ))}
-      {result.metadata && (
-        <div className="text-xs text-gray-500 mt-4">
-          Total claims processed: {result.metadata.totalClaims}
-          {result.metadata.processingTime && ` • Processing time: ${result.metadata.processingTime}ms`}
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function ExtractFactualClaimsPage() {
-  const [text, setText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<ExtractFactualClaimsResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Get schemas from centralized registry
-  const { inputSchema, outputSchema } = toolSchemas[extractFactualClaimsTool.config.id as keyof typeof toolSchemas];
+  const renderResult = (result: ExtractFactualClaimsResult) => {
+    const claimsForDisplay = result.claims.map(claim => ({
+      claim: claim.claim,
+      verdict: claim.verifiable ? 'unverified' as const : 'unverifiable' as const,
+      confidence: claim.confidence,
+      type: claim.type,
+      evidence: claim.evidence
+    }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await runToolWithAuth<{ text: string }, ExtractFactualClaimsResult>('/api/tools/extract-factual-claims', { text });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
+    return (
+      <>
+        {result.summary && (
+          <div className="mb-6 grid grid-cols-3 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded">
+              <p className="text-2xl font-bold">{result.summary.totalClaims}</p>
+              <p className="text-xs text-gray-600">Total Claims</p>
+            </div>
+            <div className="text-center p-3 bg-green-50 rounded">
+              <p className="text-2xl font-bold text-green-600">{result.summary.verifiableClaims}</p>
+              <p className="text-xs text-gray-600">Verifiable</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded">
+              <p className="text-2xl font-bold text-gray-600">{result.summary.unverifiableClaims}</p>
+              <p className="text-xs text-gray-600">Unverifiable</p>
+            </div>
+          </div>
+        )}
+        
+        <ClaimListDisplay
+          claims={claimsForDisplay}
+          title="Extracted Factual Claims"
+          showSources={false}
+          showConfidence={true}
+          noClaimsMessage="No factual claims found in the text"
+        />
+      </>
+    );
   };
 
-  const examples = [
-    "The Great Wall of China was built over several centuries and stretches approximately 13,000 miles. It was constructed using various materials including stone, brick, and earth.",
-    "In 2023, global temperatures rose by 1.2°C above pre-industrial levels. Sea levels have increased by 21cm since 1993 according to NASA data.",
-    "Apple Inc. was founded in 1976 by Steve Jobs, Steve Wozniak, and Ronald Wayne. The company went public in 1980 with the largest IPO in history at that time.",
-    "COVID-19 has infected over 700 million people worldwide as of 2024. The virus belongs to the coronavirus family and causes respiratory illness."
-  ];
-
-  // Try tab content (form and results)
-  const tryContent = (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
-        <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">
-            Text to Analyze <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            id="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            rows={10}
-            placeholder="Enter text to extract factual claims from..."
-            required
-          />
-        </div>
-
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Example texts:</p>
-          <div className="space-y-2">
-            {examples.map((example: string, i: number) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setText(example)}
-                className="block w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded border text-gray-700 transition-colors"
-              >
-                {example.substring(0, 100)}...
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={isLoading || !text.trim()}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Extracting Claims...' : 'Extract Claims'}
-        </button>
-      </form>
-
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
-
-      {result && (
-        <div className="mt-8">
-          {renderResult(result)}
-        </div>
-      )}
-    </div>
-  );
-
-  // README content from generated file
-  const readmeContent = getToolReadme(extractFactualClaimsTool.config.id);
-
-  // Docs tab content
-  const docsContent = (
-    <ToolDocumentation 
-      toolId={extractFactualClaimsTool.config.id}
-      inputSchema={inputSchema}
-      outputSchema={outputSchema}
-      readmeContent={readmeContent}
-    />
-  );
+  const exampleText = `The Earth orbits the Sun once every 365.25 days. 
+Climate change is causing global temperatures to rise by 1.5°C above pre-industrial levels. 
+The Pacific Ocean is the largest ocean on Earth, covering about 63 million square miles. 
+COVID-19 vaccines have been administered to over 5 billion people worldwide. 
+The speed of light in a vacuum is exactly 299,792,458 meters per second.`;
 
   return (
-    <TabbedToolPageLayout
-      title={extractFactualClaimsTool.config.name}
-      description={extractFactualClaimsTool.config.description}
+    <GenericToolPage<{ text: string }, ExtractFactualClaimsResult>
+      toolId="extract-factual-claims"
+      title="Extract Factual Claims"
+      description="Extract and analyze factual claims from text using AI"
       icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
-      warning="Claim extraction is based on AI analysis. Review extracted claims for accuracy and completeness before using them for research or verification."
-      tryContent={tryContent}
-      docsContent={docsContent}
+      fields={[
+        {
+          type: 'textarea',
+          name: 'text',
+          label: 'Text to Analyze',
+          placeholder: 'Enter text to extract factual claims from...',
+          rows: 8,
+          required: true,
+          helperText: 'The tool will identify statements that make factual assertions'
+        }
+      ]}
+      renderResult={renderResult}
+      exampleInput={{ text: exampleText }}
+      exampleText="Load example text"
+      submitButtonText="Extract Claims"
+      loadingText="Extracting Claims..."
+      validateInput={(input) => {
+        if (!input.text.trim()) return 'Please enter some text to analyze';
+        if (input.text.length < 20) return 'Text must be at least 20 characters';
+        return true;
+      }}
     />
   );
 }

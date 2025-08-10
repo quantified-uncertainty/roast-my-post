@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useToolExecution } from '../useToolExecution';
 import { runToolWithAuth } from '../../utils/runToolWithAuth';

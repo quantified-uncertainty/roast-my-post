@@ -20,6 +20,7 @@ export interface FieldConfig {
   options?: Array<{ value: string; label: string }>;
   defaultValue?: any;
   helperText?: string;
+  examples?: string[];
 }
 
 export interface GenericToolPageProps<TInput, TOutput> {
@@ -138,18 +139,37 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
     switch (field.type) {
       case 'textarea':
         return (
-          <TextAreaField
-            key={field.name}
-            id={field.name}
-            label={field.label}
-            value={value || ''}
-            onChange={(val) => handleFieldChange(field.name, val)}
-            placeholder={field.placeholder}
-            rows={field.rows}
-            required={field.required}
-            disabled={isLoading}
-            helperText={field.helperText}
-          />
+          <div key={field.name}>
+            <TextAreaField
+              id={field.name}
+              label={field.label}
+              value={value || ''}
+              onChange={(val) => handleFieldChange(field.name, val)}
+              placeholder={field.placeholder}
+              rows={field.rows}
+              required={field.required}
+              disabled={isLoading}
+              helperText={field.helperText}
+            />
+            {field.examples && field.examples.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm font-medium text-gray-700 mb-2">Example inputs:</p>
+                <div className="space-y-2">
+                  {field.examples.map((example, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handleFieldChange(field.name, example)}
+                      disabled={isLoading}
+                      className="block w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded border text-gray-700 transition-colors"
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         );
         
       case 'text':

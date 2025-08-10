@@ -11,3 +11,5 @@ export type { Claim } from './ClaimListDisplay';
 
 export { StatsSummary } from './StatsSummary';
 export type { StatItem } from './StatsSummary';
+
+export { LinkValidationDisplay } from './LinkValidationDisplay';
