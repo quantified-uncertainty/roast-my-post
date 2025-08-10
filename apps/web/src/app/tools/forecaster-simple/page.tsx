@@ -3,7 +3,7 @@
 import { ChartBarIcon } from '@heroicons/react/24/outline';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { ForecastResultDisplay } from '../components/results/ForecastResultDisplay';
-import { toolExamples } from '../utils/exampleTexts';
+import { getToolExamples } from '../utils/exampleTexts';
 
 interface ForecastInput {
   question: string;
@@ -32,12 +32,7 @@ interface ForecastResult {
 }
 
 export default function ForecasterSimplePage() {
-  const exampleQuestions = [
-    'Will AI assistants be widely adopted in software development by 2025?',
-    'Will electric vehicles represent over 50% of new car sales by 2030?',
-    'Will a major social media platform shut down in the next 2 years?',
-    'Will quantum computers solve a practically useful problem by 2026?'
-  ];
+  const exampleQuestion = getToolExamples('forecaster-simple') as string;
 
   const renderResult = (result: ForecastResult) => {
     return <ForecastResultDisplay result={result} />;
@@ -57,7 +52,7 @@ export default function ForecasterSimplePage() {
           placeholder: 'Enter a yes/no question about a future event...',
           rows: 3,
           required: true,
-          examples: exampleQuestions,
+          examples: [exampleQuestion],
           helperText: 'Ask a clear yes/no question about a specific future event'
         },
         {
