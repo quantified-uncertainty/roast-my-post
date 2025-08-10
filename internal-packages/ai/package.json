@@ -48,6 +48,7 @@
     "generate-schemas": "tsx scripts/generate-tool-schemas.ts",
     "generate-readmes": "tsx scripts/generate-tool-readmes.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
+    "check-readmes": "pnpm --filter @roast/web test generated-readmes.test.ts",
     "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes"
   },
   "dependencies": {
