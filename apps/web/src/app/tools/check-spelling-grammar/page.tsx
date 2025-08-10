@@ -161,10 +161,6 @@ export default function CheckSpellingGrammarPage() {
   // Try tab content (form and results)
   const tryContent = (
     <div className="space-y-6">
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
-        <p className="text-sm text-amber-700">This tool uses AI to detect errors and may not catch every issue. Always review suggestions carefully, especially for specialized or technical content.</p>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
           <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">

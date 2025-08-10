@@ -110,10 +110,6 @@ export default function ExtractFactualClaimsPage() {
   // Try tab content (form and results)
   const tryContent = (
     <div className="space-y-6">
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
-        <p className="text-sm text-amber-700">Claim extraction is based on AI analysis. Review extracted claims for accuracy and completeness before using them for research or verification.</p>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
           <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">

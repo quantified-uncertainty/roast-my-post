@@ -115,10 +115,6 @@ export default function FactCheckerPage() {
   // Try tab content (form and results)
   const tryContent = (
     <div className="space-y-6">
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
-        <p className="text-sm text-amber-700">Fact-checking results are based on AI analysis and available information. Always verify important claims through multiple reliable sources.</p>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
           <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">
