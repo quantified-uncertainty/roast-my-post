@@ -6,33 +6,58 @@ import { LinkValidationDisplay } from '../components/results';
 import { examples } from './examples';
 
 interface LinkValidationResult {
-  links: Array<{
+  urls: string[];
+  validations: Array<{
     url: string;
-    status: 'valid' | 'invalid' | 'warning';
-    statusCode?: number;
-    error?: string;
-    redirectUrl?: string;
-    contentType?: string;
-    responseTime?: number;
+    finalUrl?: string;
+    timestamp: Date;
+    accessible: boolean;
+    error?: {
+      type: string;
+      message?: string;
+      statusCode?: number;
+    };
+    details?: {
+      contentType: string;
+      statusCode: number;
+    };
   }>;
   summary: {
-    total: number;
-    valid: number;
-    invalid: number;
-    warnings: number;
+    totalLinks: number;
+    workingLinks: number;
+    brokenLinks: number;
+    errorBreakdown: Record<string, number>;
   };
 }
 
 interface LinkValidatorInput {
   text: string;
-  checkExternal: boolean;
-  followRedirects: boolean;
+  maxUrls?: number;
 }
 
 export default function LinkValidatorPage() {
 
   const renderResult = (result: LinkValidationResult) => {
-    return <LinkValidationDisplay result={result} />;
+    // Transform the API result to match LinkValidationDisplay's expected format
+    const transformedResult = {
+      links: result.validations.map(v => ({
+        url: v.url,
+        status: v.accessible ? 'valid' as const : 'invalid' as const,
+        statusCode: v.details?.statusCode || v.error?.statusCode,
+        error: v.error?.message,
+        redirectUrl: v.finalUrl !== v.url ? v.finalUrl : undefined,
+        contentType: v.details?.contentType,
+        responseTime: undefined // Not provided by API
+      })),
+      summary: {
+        total: result.summary.totalLinks,
+        valid: result.summary.workingLinks,
+        invalid: result.summary.brokenLinks,
+        warnings: 0 // Calculate warnings if needed
+      }
+    };
+    
+    return <LinkValidationDisplay result={transformedResult} />;
   };
 
   return (
@@ -48,25 +73,23 @@ export default function LinkValidatorPage() {
           label: 'Text with URLs',
           placeholder: 'Enter text containing URLs to validate...',
           rows: 8,
-          required: true
+          required: true,
+          helperText: 'The tool will extract and validate all URLs found in the text'
         },
         {
-          type: 'checkbox',
-          name: 'checkExternal',
-          label: 'Check external links (makes HTTP requests)',
-          defaultValue: true
-        },
-        {
-          type: 'checkbox',
-          name: 'followRedirects',
-          label: 'Follow redirects',
-          defaultValue: true
+          type: 'number',
+          name: 'maxUrls',
+          label: 'Maximum URLs to validate',
+          defaultValue: 20,
+          min: 1,
+          max: 100,
+          helperText: 'Limit the number of URLs to validate (default: 20)'
         }
       ]}
       renderResult={renderResult}
       exampleInputs={examples ? examples.map((ex, i) => ({
         label: `Example ${i + 1}`,
-        value: { text: ex, checkExternal: true, followRedirects: true }
+        value: { text: ex, maxUrls: 20 }
       })) : undefined}
       submitButtonText="Validate Links"
       loadingText="Validating Links..."

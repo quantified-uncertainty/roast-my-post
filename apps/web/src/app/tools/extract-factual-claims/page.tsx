@@ -7,27 +7,30 @@ import { examples } from './examples';
 
 interface ExtractFactualClaimsResult {
   claims: Array<{
-    claim: string;
-    confidence: number;
-    type: string;
-    evidence?: string;
-    verifiable: boolean;
+    originalText: string;
+    topic: string;
+    importanceScore: number;
+    checkabilityScore: number;
+    truthProbability: number;
   }>;
   summary?: {
-    totalClaims: number;
-    verifiableClaims: number;
-    unverifiableClaims: number;
+    totalFound: number;
+    aboveThreshold: number;
+    averageQuality: number;
   };
 }
 
 export default function ExtractFactualClaimsPage() {
   const renderResult = (result: ExtractFactualClaimsResult) => {
     const claimsForDisplay = result.claims.map(claim => ({
-      claim: claim.claim,
-      verdict: claim.verifiable ? 'unverified' as const : 'unverifiable' as const,
-      confidence: claim.confidence,
-      type: claim.type,
-      evidence: claim.evidence
+      claim: claim.originalText,
+      verdict: claim.truthProbability >= 70 ? 'verified' as const : 
+              claim.truthProbability >= 50 ? 'unverified' as const :
+              claim.truthProbability >= 30 ? 'misleading' as const : 'false' as const,
+      confidence: claim.truthProbability / 100,
+      type: claim.topic,
+      importance: claim.importanceScore,
+      evidence: `Checkability: ${claim.checkabilityScore}%, Truth probability: ${claim.truthProbability}%`
     }));
 
     return (
@@ -35,16 +38,16 @@ export default function ExtractFactualClaimsPage() {
         {result.summary && (
           <div className="mb-6 grid grid-cols-3 gap-4">
             <div className="text-center p-3 bg-gray-50 rounded">
-              <p className="text-2xl font-bold">{result.summary.totalClaims}</p>
-              <p className="text-xs text-gray-600">Total Claims</p>
+              <p className="text-2xl font-bold">{result.summary.totalFound}</p>
+              <p className="text-xs text-gray-600">Total Found</p>
             </div>
             <div className="text-center p-3 bg-green-50 rounded">
-              <p className="text-2xl font-bold text-green-600">{result.summary.verifiableClaims}</p>
-              <p className="text-xs text-gray-600">Verifiable</p>
+              <p className="text-2xl font-bold text-green-600">{result.summary.aboveThreshold}</p>
+              <p className="text-xs text-gray-600">Above Threshold</p>
             </div>
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <p className="text-2xl font-bold text-gray-600">{result.summary.unverifiableClaims}</p>
-              <p className="text-xs text-gray-600">Unverifiable</p>
+            <div className="text-center p-3 bg-blue-50 rounded">
+              <p className="text-2xl font-bold text-blue-600">{result.summary.averageQuality}%</p>
+              <p className="text-xs text-gray-600">Avg Quality</p>
             </div>
           </div>
         )}
