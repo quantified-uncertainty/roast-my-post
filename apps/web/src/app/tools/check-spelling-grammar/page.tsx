@@ -174,9 +174,10 @@ export default function CheckSpellingGrammarPage() {
             id="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             rows={10}
             placeholder="Enter or paste your text here to check for spelling and grammar errors..."
+            disabled={isLoading}
             required
           />
         </div>
@@ -189,7 +190,8 @@ export default function CheckSpellingGrammarPage() {
                 key={i}
                 type="button"
                 onClick={() => setText(example)}
-                className="block w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded border text-gray-700 transition-colors"
+                disabled={isLoading}
+                className="block w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded border text-gray-700 transition-colors"
               >
                 {example}
               </button>
@@ -221,7 +223,7 @@ export default function CheckSpellingGrammarPage() {
   );
 
   // README content from generated file
-  const readmeContent = getToolReadme(checkSpellingGrammarTool.config.id as any);
+  const readmeContent = getToolReadme(checkSpellingGrammarTool.config.id);
 
   // Docs tab content
   const docsContent = (

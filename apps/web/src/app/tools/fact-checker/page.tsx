@@ -175,7 +175,7 @@ export default function FactCheckerPage() {
   );
 
   // Load README content from generated file
-  const readmeContent = getToolReadme(factCheckerTool.config.id as any);
+  const readmeContent = getToolReadme(factCheckerTool.config.id);
 
   // Docs tab content
   const docsContent = (

@@ -170,7 +170,7 @@ export default function ExtractFactualClaimsPage() {
   );
 
   // README content from generated file
-  const readmeContent = getToolReadme(extractFactualClaimsTool.config.id as any);
+  const readmeContent = getToolReadme(extractFactualClaimsTool.config.id);
 
   // Docs tab content
   const docsContent = (

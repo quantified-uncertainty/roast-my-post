@@ -197,7 +197,7 @@ export default function PerplexityResearchPage() {
   );
 
   // Load README content from generated file
-  const readmeContent = getToolReadme(perplexityResearchTool.config.id as any);
+  const readmeContent = getToolReadme(perplexityResearchTool.config.id);
 
   // Docs tab content
   const docsContent = (

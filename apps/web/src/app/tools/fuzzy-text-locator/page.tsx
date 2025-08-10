@@ -169,7 +169,7 @@ export default function FuzzyTextLocatorPage() {
   );
 
   // README content from generated file
-  const readmeContent = getToolReadme(fuzzyTextLocatorTool.config.id as any);
+  const readmeContent = getToolReadme(fuzzyTextLocatorTool.config.id);
 
   // Docs tab content
   const docsContent = (

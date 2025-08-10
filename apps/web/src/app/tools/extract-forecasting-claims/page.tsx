@@ -158,7 +158,7 @@ export default function ExtractForecastingClaimsPage() {
   );
 
   // README content from generated file
-  const readmeContent = getToolReadme(extractForecastingClaimsTool.config.id as any);
+  const readmeContent = getToolReadme(extractForecastingClaimsTool.config.id);
 
   // Docs tab content
   const docsContent = (
