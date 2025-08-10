@@ -7,7 +7,8 @@ import { getSeverityColor } from '../utils/resultFormatting';
 import { toolExamples } from '../utils/exampleTexts';
 
 export default function ExtractMathExpressionsPage() {
-  const exampleText = toolExamples['extract-math-expressions'] as string;
+  const examples = toolExamples['extract-math-expressions'] as string[];
+  const exampleText = examples[0];
 
   const renderResult = (result: ExtractMathExpressionsOutput) => {
     return (

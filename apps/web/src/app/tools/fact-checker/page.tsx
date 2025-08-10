@@ -53,7 +53,8 @@ export default function FactCheckerPage() {
     );
   };
 
-  const exampleText = toolExamples['fact-checker'] as string;
+  const examples = toolExamples['fact-checker'] as string[];
+  const exampleText = examples[0];
 
   return (
     <GenericToolPage<{ text: string }, FactCheckResult>

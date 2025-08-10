@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { toolExamples, getToolExamples, getRandomExample } from '../exampleTexts';
+import { toolExamples, getToolExamples } from '../exampleTexts';
 
 describe('exampleTexts utilities', () => {
   describe('toolExamples', () => {
@@ -24,17 +24,18 @@ describe('exampleTexts utilities', () => {
       expect(Array.isArray(toolExamples['perplexity-research'])).toBe(true);
     });
 
-    it('should have string examples for single-example tools', () => {
-      expect(typeof toolExamples['extract-factual-claims']).toBe('string');
-      expect(typeof toolExamples['fact-checker']).toBe('string');
-      expect(typeof toolExamples['extract-math-expressions']).toBe('string');
-      expect(typeof toolExamples['document-chunker']).toBe('string');
+    it('should have array examples for multiple-example tools', () => {
+      expect(Array.isArray(toolExamples['extract-factual-claims'])).toBe(true);
+      expect(Array.isArray(toolExamples['fact-checker'])).toBe(true);
+      expect(Array.isArray(toolExamples['extract-math-expressions'])).toBe(true);
+      expect(Array.isArray(toolExamples['document-chunker'])).toBe(true);
     });
 
-    it('should have object examples for complex tools', () => {
-      expect(typeof toolExamples['fuzzy-text-locator']).toBe('object');
-      expect(toolExamples['fuzzy-text-locator']).toHaveProperty('text');
-      expect(toolExamples['fuzzy-text-locator']).toHaveProperty('search');
+    it('should have array of object examples for complex tools', () => {
+      expect(Array.isArray(toolExamples['fuzzy-text-locator'])).toBe(true);
+      const firstExample = toolExamples['fuzzy-text-locator'][0];
+      expect(firstExample).toHaveProperty('text');
+      expect(firstExample).toHaveProperty('search');
     });
   });
 
@@ -52,10 +53,10 @@ describe('exampleTexts utilities', () => {
       expect(examples1).toEqual(examples2); // Same content
     });
 
-    it('should return strings directly for string examples', () => {
-      const example = getToolExamples('fact-checker');
-      expect(typeof example).toBe('string');
-      expect(example).toContain('Earth is flat');
+    it('should return arrays for array examples', () => {
+      const examples = getToolExamples('fact-checker') as string[];
+      expect(Array.isArray(examples)).toBe(true);
+      expect(examples[0]).toContain('Earth is flat');
     });
 
     it('should return undefined for invalid tool IDs', () => {
@@ -63,49 +64,15 @@ describe('exampleTexts utilities', () => {
       expect(example).toBeUndefined();
     });
 
-    it('should handle fuzzy-text-locator object example', () => {
-      const example = getToolExamples('fuzzy-text-locator');
-      expect(typeof example).toBe('object');
-      expect(example).toHaveProperty('text');
-      expect(example).toHaveProperty('search');
+    it('should handle fuzzy-text-locator array of object examples', () => {
+      const examples = getToolExamples('fuzzy-text-locator') as Array<{text: string, search: string}>;
+      expect(Array.isArray(examples)).toBe(true);
+      const firstExample = examples[0];
+      expect(firstExample).toHaveProperty('text');
+      expect(firstExample).toHaveProperty('search');
     });
   });
 
-  describe('getRandomExample', () => {
-    it('should return a random example from array examples', () => {
-      // Mock Math.random to test deterministically
-      const originalRandom = Math.random;
-      
-      // Test first item
-      Math.random = jest.fn(() => 0);
-      const first = getRandomExample('check-spelling-grammar');
-      expect(first).toBe("Their going to there house over they're.");
-      
-      // Test last item
-      Math.random = jest.fn(() => 0.99);
-      const last = getRandomExample('check-spelling-grammar');
-      expect(last).toBe("The data shows that sales has increased significantly.");
-      
-      // Restore
-      Math.random = originalRandom;
-    });
-
-    it('should return the string directly for single examples', () => {
-      const example = getRandomExample('fact-checker');
-      expect(typeof example).toBe('string');
-      expect(example).toContain('Earth is flat');
-    });
-
-    it('should return undefined for non-array, non-string examples', () => {
-      const example = getRandomExample('fuzzy-text-locator');
-      expect(example).toBeUndefined();
-    });
-
-    it('should return undefined for invalid tool IDs', () => {
-      const example = getRandomExample('non-existent-tool');
-      expect(example).toBeUndefined();
-    });
-  });
 
   describe('example content validation', () => {
     it('should have meaningful spelling/grammar examples', () => {
@@ -116,17 +83,17 @@ describe('exampleTexts utilities', () => {
     });
 
     it('should have valid math examples', () => {
-      const example = toolExamples['extract-math-expressions'] as string;
-      expect(example).toContain('50%');
-      expect(example).toContain('(V_f/V_i)^(1/n) - 1');
-      expect(example).toContain('E = output/input');
+      const examples = toolExamples['extract-math-expressions'] as string[];
+      expect(examples[0]).toContain('50%');
+      expect(examples[0]).toContain('(V_f/V_i)^(1/n) - 1');
+      expect(examples[1]).toContain('E = output/input');
     });
 
-    it('should have valid URLs in link-validator example', () => {
-      const example = toolExamples['link-validator'] as string;
-      expect(example).toContain('https://docs.example.com');
-      expect(example).toContain('https://github.com');
-      expect(example).toContain('https://notarealwebsite12345.com');
+    it('should have valid URLs in link-validator examples', () => {
+      const examples = toolExamples['link-validator'] as string[];
+      expect(examples[0]).toContain('https://docs.example.com');
+      expect(examples[0]).toContain('https://github.com');
+      expect(examples[0]).toContain('https://notarealwebsite12345.com');
     });
 
     it('should have valid forecast questions', () => {

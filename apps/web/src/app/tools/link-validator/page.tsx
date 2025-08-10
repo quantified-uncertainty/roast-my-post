@@ -30,7 +30,8 @@ interface LinkValidatorInput {
 }
 
 export default function LinkValidatorPage() {
-  const exampleText = toolExamples['link-validator'] as string;
+  const examples = toolExamples['link-validator'] as string[];
+  const exampleText = examples[0];
 
   const renderResult = (result: LinkValidationResult) => {
     return <LinkValidationDisplay result={result} />;

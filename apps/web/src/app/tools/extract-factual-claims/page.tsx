@@ -60,7 +60,8 @@ export default function ExtractFactualClaimsPage() {
     );
   };
 
-  const exampleText = toolExamples['extract-factual-claims'] as string;
+  const examples = toolExamples['extract-factual-claims'] as string[];
+  const exampleText = examples[0];
 
   return (
     <GenericToolPage<{ text: string }, ExtractFactualClaimsResult>

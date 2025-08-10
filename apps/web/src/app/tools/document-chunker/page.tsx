@@ -13,7 +13,8 @@ interface ChunkerInput {
 }
 
 export default function DocumentChunkerPage() {
-  const exampleText = toolExamples['document-chunker'] as string;
+  const examples = toolExamples['document-chunker'] as string[];
+  const exampleText = examples[0];
 
   const renderResult = (result: DocumentChunkerOutput) => {
     return <DocumentChunkerDisplay result={result} />;
