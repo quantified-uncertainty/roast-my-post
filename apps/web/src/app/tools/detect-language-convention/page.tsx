@@ -11,15 +11,17 @@ interface LanguageConventionInput {
 }
 
 interface LanguageConventionResult {
-  convention: 'US' | 'UK' | 'UNKNOWN';
+  convention: 'US' | 'UK';
   confidence: number;
-  reasoning: string;
-  indicators: {
-    spelling?: string[];
-    vocabulary?: string[];
-    grammar?: string[];
-    punctuation?: string[];
-    dateFormat?: string[];
+  consistency: number;
+  evidence: Array<{
+    word: string;
+    convention: 'US' | 'UK';
+    count: number;
+  }>;
+  documentType?: {
+    type: 'academic' | 'technical' | 'blog' | 'casual' | 'unknown';
+    confidence: number;
   };
 }
 

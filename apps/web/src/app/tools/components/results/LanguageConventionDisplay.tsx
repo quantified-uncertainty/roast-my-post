@@ -2,15 +2,17 @@ import React from 'react';
 import { getConventionColor } from '../../utils/resultFormatting';
 
 interface LanguageConventionResult {
-  convention: 'US' | 'UK' | 'UNKNOWN';
+  convention: 'US' | 'UK';
   confidence: number;
-  reasoning: string;
-  indicators: {
-    spelling?: string[];
-    vocabulary?: string[];
-    grammar?: string[];
-    punctuation?: string[];
-    dateFormat?: string[];
+  consistency: number;
+  evidence: Array<{
+    word: string;
+    convention: 'US' | 'UK';
+    count: number;
+  }>;
+  documentType?: {
+    type: 'academic' | 'technical' | 'blog' | 'casual' | 'unknown';
+    confidence: number;
   };
 }
 
@@ -27,45 +29,34 @@ export function LanguageConventionDisplay({ result, className = '' }: LanguageCo
       <div className={`p-4 rounded-lg border ${getConventionColor(result.convention)}`}>
         <div className="flex items-center justify-between mb-3">
           <p className="font-semibold text-lg">
-            {result.convention === 'US' ? '🇺🇸 US English' : 
-             result.convention === 'UK' ? '🇬🇧 UK English' : 
-             '❓ Unknown/Mixed'}
+            {result.convention === 'US' ? '🇺🇸 US English' : '🇬🇧 UK English'}
           </p>
-          <span className="text-sm">
-            Confidence: {Math.round(result.confidence * 100)}%
-          </span>
+          <div className="text-sm text-right">
+            <div>Confidence: {Math.round(result.confidence * 100)}%</div>
+            <div>Consistency: {Math.round(result.consistency * 100)}%</div>
+          </div>
         </div>
         
-        <p className="text-sm mb-4">{result.reasoning}</p>
+        {result.documentType && (
+          <p className="text-sm mb-4">
+            Document type: <span className="font-medium capitalize">{result.documentType.type}</span> 
+            {' '}({Math.round(result.documentType.confidence * 100)}% confidence)
+          </p>
+        )}
         
-        {Object.entries(result.indicators).length > 0 && (
+        {result.evidence && result.evidence.length > 0 && (
           <div className="mt-4 space-y-2">
-            <p className="text-sm font-medium">Indicators found:</p>
-            {result.indicators.spelling && result.indicators.spelling.length > 0 && (
-              <div className="text-sm">
-                <span className="font-medium">Spelling:</span> {result.indicators.spelling.join(', ')}
-              </div>
-            )}
-            {result.indicators.vocabulary && result.indicators.vocabulary.length > 0 && (
-              <div className="text-sm">
-                <span className="font-medium">Vocabulary:</span> {result.indicators.vocabulary.join(', ')}
-              </div>
-            )}
-            {result.indicators.grammar && result.indicators.grammar.length > 0 && (
-              <div className="text-sm">
-                <span className="font-medium">Grammar:</span> {result.indicators.grammar.join(', ')}
-              </div>
-            )}
-            {result.indicators.punctuation && result.indicators.punctuation.length > 0 && (
-              <div className="text-sm">
-                <span className="font-medium">Punctuation:</span> {result.indicators.punctuation.join(', ')}
-              </div>
-            )}
-            {result.indicators.dateFormat && result.indicators.dateFormat.length > 0 && (
-              <div className="text-sm">
-                <span className="font-medium">Date Format:</span> {result.indicators.dateFormat.join(', ')}
-              </div>
-            )}
+            <p className="text-sm font-medium">Evidence found:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {result.evidence.map((item, index) => (
+                <div key={index} className="text-sm bg-gray-50 p-2 rounded">
+                  <span className="font-medium">{item.word}</span>
+                  <span className="text-gray-600 ml-2">
+                    ({item.convention === 'US' ? '🇺🇸' : '🇬🇧'} × {item.count})
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

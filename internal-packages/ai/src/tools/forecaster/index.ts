@@ -64,7 +64,7 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
     version: '1.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.05 per forecast (6 Claude calls)',
-    path: '/api/tools/forecaster-simple',
+    path: '/tools/forecaster',
     status: 'experimental' as const
   };
   

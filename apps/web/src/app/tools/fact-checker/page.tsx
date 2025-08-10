@@ -8,41 +8,51 @@ import { examples } from './examples';
 interface FactCheckResult {
   claims: Array<{
     claim: string;
-    verdict: 'true' | 'false' | 'unverifiable' | 'misleading';
-    confidence: number;
+    verdict: 'true' | 'false' | 'partially-true' | 'unverifiable' | 'outdated';
+    confidence: 'high' | 'medium' | 'low';
     explanation: string;
-    sources?: string[];
+    sources?: Array<{ title: string; url: string }>;
   }>;
   summary?: {
     totalClaims: number;
     trueClaims: number;
     falseClaims: number;
+    partiallyTrueClaims: number;
     unverifiableClaims: number;
-    misleadingClaims: number;
+    outdatedClaims: number;
   };
 }
 
 export default function FactCheckerPage() {
   const renderResult = (result: FactCheckResult) => {
+    // Transform confidence to numeric for ClaimListDisplay
+    const transformedClaims = result.claims.map(claim => ({
+      ...claim,
+      confidence: claim.confidence === 'high' ? 90 : claim.confidence === 'medium' ? 60 : 30,
+      verdict: claim.verdict === 'partially-true' ? 'misleading' as const : claim.verdict,
+      sources: claim.sources?.map(s => s.url)
+    }));
+
     return (
       <>
         {result.summary && (
           <StatsSummary
             title="Fact Check Summary"
-            columns={5}
+            columns={6}
             stats={[
               { label: 'Total', value: result.summary.totalClaims, color: 'gray' },
               { label: 'True', value: result.summary.trueClaims, color: 'green' },
               { label: 'False', value: result.summary.falseClaims, color: 'red' },
-              { label: 'Misleading', value: result.summary.misleadingClaims, color: 'yellow' },
-              { label: 'Unverifiable', value: result.summary.unverifiableClaims, color: 'gray' }
+              { label: 'Partial', value: result.summary.partiallyTrueClaims, color: 'yellow' },
+              { label: 'Unverifiable', value: result.summary.unverifiableClaims, color: 'gray' },
+              { label: 'Outdated', value: result.summary.outdatedClaims, color: 'orange' }
             ]}
           />
         )}
         
         <div className="mt-6">
           <ClaimListDisplay
-            claims={result.claims}
+            claims={transformedClaims}
             title="Fact Check Results"
             showSources={true}
             showConfidence={true}

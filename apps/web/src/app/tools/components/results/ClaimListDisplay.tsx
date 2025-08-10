@@ -1,9 +1,9 @@
 import React from 'react';
-import { CheckCircleIcon, XCircleIcon, QuestionMarkCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, XCircleIcon, QuestionMarkCircleIcon, ExclamationTriangleIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 export interface Claim {
   claim: string;
-  verdict?: 'true' | 'false' | 'unverifiable' | 'misleading' | 'verified' | 'unverified';
+  verdict?: 'true' | 'false' | 'unverifiable' | 'misleading' | 'verified' | 'unverified' | 'outdated';
   confidence?: number;
   explanation?: string;
   sources?: string[];
@@ -62,6 +62,13 @@ const verdictConfig = {
     bgColor: 'bg-gray-50',
     borderColor: 'border-gray-200',
     label: 'Unverified'
+  },
+  outdated: {
+    icon: ClockIcon,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+    borderColor: 'border-orange-200',
+    label: 'Outdated'
   }
 } as const;
 
@@ -111,7 +118,9 @@ export function ClaimListDisplay({
                     <div className="flex items-center gap-2">
                       {showConfidence && claim.confidence !== undefined && (
                         <span className="text-sm text-gray-600">
-                          {Math.round(claim.confidence * 100)}% confidence
+                          {typeof claim.confidence === 'number' 
+                            ? `${Math.round(claim.confidence)}% confidence`
+                            : `${claim.confidence} confidence`}
                         </span>
                       )}
                       {claim.importance !== undefined && (
