@@ -54,7 +54,6 @@ export default function FactCheckerPage() {
   };
 
   const examples = toolExamples['fact-checker'] as string[];
-  const exampleText = examples[0];
 
   return (
     <GenericToolPage<{ text: string }, FactCheckResult>
@@ -74,8 +73,10 @@ export default function FactCheckerPage() {
         }
       ]}
       renderResult={renderResult}
-      exampleInput={{ text: exampleText }}
-      exampleText="Load example claims"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex }
+      })) : undefined}
       submitButtonText="Check Facts"
       loadingText="Checking Facts..."
       validateInput={(input) => {

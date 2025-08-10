@@ -28,8 +28,10 @@ export default function CheckMathWithMathJSPage() {
           className: 'font-mono'
         }
       ]}
-      exampleInput={examples && examples[0] ? { statement: examples[0] } : undefined}
-      exampleText="Load Example"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { statement: ex }
+      })) : undefined}
       submitButtonText="Verify Statement"
       loadingText="Verifying..."
       submitButtonClassName="!bg-indigo-600 hover:!bg-indigo-700"

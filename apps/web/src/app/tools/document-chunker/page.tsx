@@ -14,7 +14,6 @@ interface ChunkerInput {
 
 export default function DocumentChunkerPage() {
   const examples = toolExamples['document-chunker'] as string[];
-  const exampleText = examples[0];
 
   const renderResult = (result: DocumentChunkerOutput) => {
     return <DocumentChunkerDisplay result={result} />;
@@ -58,8 +57,10 @@ export default function DocumentChunkerPage() {
         }
       ]}
       renderResult={renderResult}
-      exampleInput={{ text: exampleText, maxChunkSize: 1000, overlap: 100 }}
-      exampleText="Load example document"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex, maxChunkSize: 1000, overlap: 100 }
+      })) : undefined}
       submitButtonText="Chunk Document"
       loadingText="Chunking Document..."
       validateInput={(input) => {

@@ -162,23 +162,28 @@ describe('GenericToolPage', () => {
     });
   });
 
-  it('should load example input when button is clicked', () => {
-    const exampleInput = { testField: 'example value' };
+  it('should load example inputs when buttons are clicked', () => {
+    const exampleInputs = [
+      { label: 'Example 1', value: { testField: 'example value 1' } },
+      { label: 'Example 2', value: { testField: 'example value 2' } }
+    ];
     
     render(
       <GenericToolPage 
         {...defaultProps} 
-        exampleInput={exampleInput}
-        exampleText="Load Example"
+        exampleInputs={exampleInputs}
       />
     );
     
-    const exampleButton = screen.getByText('Load Example');
+    const exampleButton1 = screen.getByText('Example 1');
+    const exampleButton2 = screen.getByText('Example 2');
     const input = screen.getByLabelText(/Test Field/) as HTMLInputElement;
     
-    fireEvent.click(exampleButton);
+    fireEvent.click(exampleButton1);
+    expect(input.value).toBe('example value 1');
     
-    expect(input.value).toBe('example value');
+    fireEvent.click(exampleButton2);
+    expect(input.value).toBe('example value 2');
   });
 
   it('should display warning message when provided', () => {

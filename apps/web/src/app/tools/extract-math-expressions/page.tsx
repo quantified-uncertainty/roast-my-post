@@ -8,7 +8,6 @@ import { toolExamples } from '../utils/exampleTexts';
 
 export default function ExtractMathExpressionsPage() {
   const examples = toolExamples['extract-math-expressions'] as string[];
-  const exampleText = examples[0];
 
   const renderResult = (result: ExtractMathExpressionsOutput) => {
     return (
@@ -101,8 +100,10 @@ export default function ExtractMathExpressionsPage() {
         }
       ]}
       renderResult={renderResult}
-      exampleInput={{ text: exampleText }}
-      exampleText="Load example text"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex }
+      })) : undefined}
       submitButtonText="Extract Math Expressions"
       loadingText="Extracting..."
       validateInput={(input) => {

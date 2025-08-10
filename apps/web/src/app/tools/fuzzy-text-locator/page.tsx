@@ -11,9 +11,25 @@ interface FuzzyLocatorInput {
   searchText: string;
 }
 
-const examples = getToolExamples('fuzzy-text-locator') as { text: string; search: string };
+const exampleData = getToolExamples('fuzzy-text-locator') as Array<{ text: string; search: string }>;
 
 export default function FuzzyTextLocatorPage() {
+  // Create multiple examples with descriptive labels
+  const exampleInputs = exampleData ? exampleData.map((ex, i) => {
+    // Extract context from the example for a descriptive label
+    const labels = [
+      'Quick Brown Fox',  // Classic text with repeated phrase
+      'Neural Networks',  // Technical ML content
+      'Sustainable Development',  // Environmental content
+      'Agile Development'  // Software development content
+    ];
+    
+    return {
+      label: labels[i] || `Example ${i + 1}`,
+      value: { documentText: ex.text, searchText: ex.search }
+    };
+  }) : [];
+
   return (
     <GenericToolPage<FuzzyLocatorInput, TextLocationFinderOutput>
       toolId={fuzzyTextLocatorTool.config.id as any}
@@ -38,8 +54,7 @@ export default function FuzzyTextLocatorPage() {
           placeholder: 'Enter the text you want to find...'
         }
       ]}
-      exampleInput={examples ? { documentText: examples.text, searchText: examples.search } : undefined}
-      exampleText="Load Example"
+      exampleInputs={exampleInputs}
       submitButtonText="Find Text"
       loadingText="Searching..."
       renderResult={(result) => <FuzzyTextLocatorDisplay result={result} />}

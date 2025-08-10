@@ -4,13 +4,12 @@ import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { checkSpellingGrammarTool, type CheckSpellingGrammarOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { SpellingGrammarDisplay } from '../components/results/SpellingGrammarDisplay';
-import { getToolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface SpellingGrammarInput {
   text: string;
 }
 
-const examples = getToolExamples('check-spelling-grammar') as string[];
 
 export default function CheckSpellingGrammarPage() {
   return (

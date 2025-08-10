@@ -61,7 +61,6 @@ export default function ExtractFactualClaimsPage() {
   };
 
   const examples = toolExamples['extract-factual-claims'] as string[];
-  const exampleText = examples[0];
 
   return (
     <GenericToolPage<{ text: string }, ExtractFactualClaimsResult>
@@ -81,8 +80,10 @@ export default function ExtractFactualClaimsPage() {
         }
       ]}
       renderResult={renderResult}
-      exampleInput={{ text: exampleText }}
-      exampleText="Load example text"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex }
+      })) : undefined}
       submitButtonText="Extract Claims"
       loadingText="Extracting Claims..."
       validateInput={(input) => {

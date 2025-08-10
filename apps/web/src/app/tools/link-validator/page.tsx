@@ -31,7 +31,6 @@ interface LinkValidatorInput {
 
 export default function LinkValidatorPage() {
   const examples = toolExamples['link-validator'] as string[];
-  const exampleText = examples[0];
 
   const renderResult = (result: LinkValidationResult) => {
     return <LinkValidationDisplay result={result} />;
@@ -66,8 +65,10 @@ export default function LinkValidatorPage() {
         }
       ]}
       renderResult={renderResult}
-      exampleInput={{ text: exampleText, checkExternal: true, followRedirects: true }}
-      exampleText="Load example text with links"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex, checkExternal: true, followRedirects: true }
+      })) : undefined}
       submitButtonText="Validate Links"
       loadingText="Validating Links..."
       validateInput={(input) => {
