@@ -21,9 +21,10 @@ export interface FieldConfig {
   defaultValue?: any;
   helperText?: string;
   examples?: string[];
+  className?: string;
 }
 
-export interface GenericToolPageProps<TInput, TOutput> {
+export interface GenericToolPageProps<TInput = Record<string, any>, TOutput = unknown> {
   toolId: keyof typeof toolSchemas;
   title: string;
   description: string;
@@ -34,9 +35,11 @@ export interface GenericToolPageProps<TInput, TOutput> {
   exampleText?: string;
   submitButtonText?: string;
   loadingText?: string;
+  submitButtonClassName?: string;
   validateInput?: (input: TInput) => boolean | string;
   formatError?: (error: unknown) => string;
   onExecuteComplete?: (result?: TOutput, error?: string) => void;
+  onBeforeSubmit?: (input: TInput) => TInput;
   warning?: string;
 }
 
@@ -72,9 +75,11 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
   exampleText,
   submitButtonText = 'Submit',
   loadingText = 'Processing...',
+  submitButtonClassName,
   validateInput,
   formatError,
   onExecuteComplete,
+  onBeforeSubmit,
   warning
 }: GenericToolPageProps<TInput, TOutput>) {
   // Get schemas from centralized registry
@@ -103,7 +108,8 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
   
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    execute(formData);
+    const processedData = onBeforeSubmit ? onBeforeSubmit(formData) : formData;
+    execute(processedData);
   };
   
   const handleFieldChange = (name: string, value: any) => {
@@ -183,7 +189,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
               type="text"
               value={value || ''}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 ${field.className || ''}`}
               placeholder={field.placeholder}
               required={field.required}
               disabled={isLoading}
@@ -295,6 +301,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
           disabled={!isFormValid()}
           text={submitButtonText}
           loadingText={loadingText}
+          className={submitButtonClassName}
         />
       </form>
       
