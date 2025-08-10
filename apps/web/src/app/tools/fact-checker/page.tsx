@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
-import { factCheckerTool, toolSchemas } from '@roast/ai';
+import { factCheckerTool, toolSchemas, getToolReadme } from '@roast/ai';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
 import { runToolWithAuth } from '../utils/runToolWithAuth';
@@ -174,70 +174,8 @@ export default function FactCheckerPage() {
     </div>
   );
 
-  // README content
-  const readmeContent = `# Fact Checker Tool
-
-An AI-powered fact-checking tool that analyzes text to identify and verify factual claims. Provides verdicts with explanations, confidence scores, and source references.
-
-## Overview
-
-The Fact Checker tool uses advanced AI to:
-
-1. **Extract Claims** - Identifies factual statements in the provided text
-2. **Verify Information** - Cross-references claims against reliable knowledge sources
-3. **Provide Verdicts** - Assigns accuracy ratings (TRUE, FALSE, MOSTLY_TRUE, etc.)
-4. **Explain Reasoning** - Offers detailed explanations for each verdict
-5. **Rate Confidence** - Provides confidence scores for assessment reliability
-
-## Key Features
-
-- **Multiple Verdict Types**: TRUE, FALSE, MOSTLY_TRUE, MOSTLY_FALSE, UNCLEAR, UNVERIFIABLE
-- **Confidence Scoring**: Percentage confidence for each fact-check result
-- **Source References**: Cites sources used for verification when available
-- **Detailed Explanations**: Clear reasoning for each verdict
-- **Batch Processing**: Handles multiple claims in a single text input
-
-## Verdict Categories
-
-- **TRUE**: The claim is factually accurate based on available evidence
-- **FALSE**: The claim is demonstrably incorrect
-- **MOSTLY_TRUE**: The claim is largely accurate but may have minor inaccuracies
-- **MOSTLY_FALSE**: The claim contains significant inaccuracies but isn't entirely wrong
-- **UNCLEAR**: Insufficient or conflicting evidence to make a determination
-- **UNVERIFIABLE**: Cannot be verified due to lack of reliable sources
-
-## Best Practices
-
-1. **Use Multiple Sources**: Always cross-check important claims with multiple reliable sources
-2. **Consider Context**: Factor in the context and nuance of claims
-3. **Check Recency**: Verify that information is current, especially for rapidly changing topics
-4. **Understand Limitations**: AI fact-checking has limitations and may not catch all nuances
-5. **Critical Thinking**: Use results as a starting point, not a final authority
-
-## Example Use Cases
-
-### News Article Verification
-\`\`\`
-Verify claims in news articles about current events, statistics, or historical facts.
-\`\`\`
-
-### Research Paper Review
-\`\`\`
-Check factual statements in academic papers, reports, or research documents.
-\`\`\`
-
-### Social Media Posts
-\`\`\`
-Quickly verify claims made in social media posts or viral content.
-\`\`\`
-
-## Limitations
-
-- Results are based on AI analysis and available training data
-- May not have access to the most recent information
-- Cannot verify highly specialized or niche claims without proper sources
-- Should not be used as the sole source for critical fact-checking decisions
-- Effectiveness varies with claim complexity and available evidence`;
+  // Load README content from generated file
+  const readmeContent = getToolReadme(factCheckerTool.config.id as any);
 
   // Docs tab content
   const docsContent = (

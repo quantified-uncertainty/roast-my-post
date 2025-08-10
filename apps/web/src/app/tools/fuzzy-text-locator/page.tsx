@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { fuzzyTextLocatorTool, TextLocationFinderOutput, toolSchemas } from '@roast/ai';
+import { fuzzyTextLocatorTool, TextLocationFinderOutput, toolSchemas, getToolReadme } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
@@ -168,123 +168,8 @@ export default function FuzzyTextLocatorPage() {
     </div>
   );
 
-  // README content
-  const readmeContent = `# Fuzzy Text Locator
-
-A powerful text location tool that finds text within documents using multiple search strategies, from exact matching to AI-powered semantic search.
-
-## Overview
-
-The Fuzzy Text Locator uses a cascade of search strategies to find text positions in documents:
-
-1. **Exact Match** - Fastest, requires perfect character-for-character match
-2. **Quote-Normalized Match** - Handles smart quotes, apostrophes, and similar variations
-3. **Partial Match** - Finds the longest matching substring for truncated text
-4. **Fuzzy Match (uFuzzy)** - Tolerates typos, case differences, and minor variations
-5. **LLM Fallback** - Uses AI to find paraphrased or semantically similar text
-
-## Key Features
-
-- **Multi-strategy approach**: Tries simple strategies first, falls back to complex ones
-- **Character-level precision**: Returns exact start/end positions in the document
-- **Confidence scoring**: Each strategy provides a confidence score (0.0-1.0)
-- **Quote normalization**: Handles smart quotes, em-dashes, ellipses automatically
-- **Partial matching**: Finds truncated quotes or partial text
-- **Semantic search**: Optional LLM fallback for paraphrased content
-
-## Search Strategies
-
-### Exact Match
-- **Speed**: Fastest
-- **Use case**: When you have the exact text
-- **Confidence**: 1.0
-
-### Quote-Normalized Match
-- **Speed**: Fast
-- **Use case**: Text with smart quotes, apostrophes, em-dashes
-- **Confidence**: 1.0
-- **Example**: "don't" matches "don't"
-
-### Partial Match
-- **Speed**: Fast
-- **Use case**: Truncated quotes or first part of long text
-- **Confidence**: 0.65-0.7
-- **Example**: "The research shows" matches longer quote starting with those words
-
-### Fuzzy Match (uFuzzy)
-- **Speed**: Medium
-- **Use case**: Text with typos, case differences, minor variations
-- **Confidence**: 0.6-0.95
-- **Example**: "mashine learning" matches "machine learning"
-
-### LLM Fallback
-- **Speed**: Slow (API call)
-- **Use case**: Paraphrased text, semantic similarity
-- **Confidence**: 0.5-0.9
-- **Example**: "car drove fast" matches "automobile moved swiftly"
-
-## Performance Considerations
-
-- Strategies are tried in order from fastest to slowest
-- Most searches complete in < 10ms without LLM
-- LLM fallback adds 500-2000ms depending on text length
-- For large documents, consider chunking for better performance
-
-## Integration with Plugins
-
-The tool is designed to be used by analysis plugins:
-
-\`\`\`typescript
-import { findTextLocation } from '@/tools/fuzzy-text-locator';
-
-// In your plugin
-const location = await findTextLocation(
-  errorText,
-  documentText,
-  {
-    normalizeQuotes: true,
-    useLLMFallback: true,
-    pluginName: 'my-plugin'
-  }
-);
-\`\`\`
-
-## Use Cases
-
-### Document Highlighting
-\`\`\`
-Find exact positions for highlighting specific text in documents.
-\`\`\`
-
-### Quote Attribution
-\`\`\`
-Locate quotes or citations within longer documents for verification.
-\`\`\`
-
-### Content Validation
-\`\`\`
-Verify that specific text exists in documents, even with minor variations.
-\`\`\`
-
-### Text Analysis
-\`\`\`
-Find and analyze specific passages or phrases across document collections.
-\`\`\`
-
-## Best Practices
-
-1. **Start with exact text**: Use the exact text when possible for fastest results
-2. **Handle variations**: The tool automatically handles common text variations
-3. **Check confidence scores**: Higher confidence indicates more reliable matches
-4. **Use appropriate strategies**: Different strategies work better for different use cases
-5. **Test with sample data**: Verify results with known text positions
-
-## Limitations
-
-- LLM fallback requires API access and adds latency
-- Very large documents may have performance implications
-- Semantic matching accuracy depends on text similarity
-- Some edge cases with special characters may not be handled perfectly`;
+  // README content from generated file
+  const readmeContent = getToolReadme(fuzzyTextLocatorTool.config.id as any);
 
   // Docs tab content
   const docsContent = (
