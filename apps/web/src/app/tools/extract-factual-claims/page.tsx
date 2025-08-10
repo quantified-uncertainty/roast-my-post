@@ -1,105 +1,94 @@
 'use client';
 
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { extractFactualClaimsTool, toolSchemas } from '@roast/ai';
-import { ToolPageTemplate } from '../components/ToolPageTemplate';
+import { GenericToolPage } from '../components/GenericToolPage';
+import { ClaimListDisplay } from '../components/results';
+import { toolExamples } from '../utils/exampleTexts';
 
 interface ExtractFactualClaimsResult {
   claims: Array<{
     claim: string;
-    type: 'factual' | 'statistical' | 'historical' | 'scientific' | 'other';
     confidence: number;
-    context?: string;
+    type: string;
+    evidence?: string;
     verifiable: boolean;
   }>;
-  metadata?: {
+  summary?: {
     totalClaims: number;
-    processingTime?: number;
+    verifiableClaims: number;
+    unverifiableClaims: number;
   };
-  llmInteraction?: any;
-}
-
-function renderResult(result: ExtractFactualClaimsResult) {
-  if (!result.claims || result.claims.length === 0) {
-    return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-        <p className="text-gray-600">No factual claims found in the provided text.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-medium text-gray-900">
-        {result.claims.length} Factual Claims Extracted
-      </h2>
-      {result.claims.map((claim, index) => (
-        <div key={index} className="bg-white shadow rounded-lg p-4">
-          <p className="text-sm text-gray-900 mb-2 font-medium">{claim.claim}</p>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-              claim.type === 'factual' ? 'text-blue-800 bg-blue-100' :
-              claim.type === 'statistical' ? 'text-purple-800 bg-purple-100' :
-              claim.type === 'historical' ? 'text-amber-800 bg-amber-100' :
-              claim.type === 'scientific' ? 'text-green-800 bg-green-100' :
-              'text-gray-800 bg-gray-100'
-            }`}>
-              {claim.type.toUpperCase()}
-            </span>
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              claim.verifiable ? 'text-green-800 bg-green-100' : 'text-red-800 bg-red-100'
-            }`}>
-              {claim.verifiable ? 'Verifiable' : 'Not Verifiable'}
-            </span>
-            <span className="text-xs text-gray-500">
-              Confidence: {Math.round(claim.confidence * 100)}%
-            </span>
-          </div>
-          {claim.context && (
-            <p className="text-xs text-gray-600 mt-1">
-              <strong>Context:</strong> {claim.context}
-            </p>
-          )}
-        </div>
-      ))}
-      {result.metadata && (
-        <div className="text-xs text-gray-500 mt-4">
-          Total claims processed: {result.metadata.totalClaims}
-          {result.metadata.processingTime && ` • Processing time: ${result.metadata.processingTime}ms`}
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function ExtractFactualClaimsPage() {
-  // Get schemas directly from the generated schemas - no duplication!
-  const { inputSchema, outputSchema } = toolSchemas[extractFactualClaimsTool.config.id as keyof typeof toolSchemas];
+  const renderResult = (result: ExtractFactualClaimsResult) => {
+    const claimsForDisplay = result.claims.map(claim => ({
+      claim: claim.claim,
+      verdict: claim.verifiable ? 'unverified' as const : 'unverifiable' as const,
+      confidence: claim.confidence,
+      type: claim.type,
+      evidence: claim.evidence
+    }));
 
-  const examples = [
-    "The Great Wall of China was built over several centuries and stretches approximately 13,000 miles. It was constructed using various materials including stone, brick, and earth.",
-    "In 2023, global temperatures rose by 1.2°C above pre-industrial levels. Sea levels have increased by 21cm since 1993 according to NASA data.",
-    "Apple Inc. was founded in 1976 by Steve Jobs, Steve Wozniak, and Ronald Wayne. The company went public in 1980 with the largest IPO in history at that time.",
-    "COVID-19 has infected over 700 million people worldwide as of 2024. The virus belongs to the coronavirus family and causes respiratory illness."
-  ];
+    return (
+      <>
+        {result.summary && (
+          <div className="mb-6 grid grid-cols-3 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded">
+              <p className="text-2xl font-bold">{result.summary.totalClaims}</p>
+              <p className="text-xs text-gray-600">Total Claims</p>
+            </div>
+            <div className="text-center p-3 bg-green-50 rounded">
+              <p className="text-2xl font-bold text-green-600">{result.summary.verifiableClaims}</p>
+              <p className="text-xs text-gray-600">Verifiable</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded">
+              <p className="text-2xl font-bold text-gray-600">{result.summary.unverifiableClaims}</p>
+              <p className="text-xs text-gray-600">Unverifiable</p>
+            </div>
+          </div>
+        )}
+        
+        <ClaimListDisplay
+          claims={claimsForDisplay}
+          title="Extracted Factual Claims"
+          showSources={false}
+          showConfidence={true}
+          noClaimsMessage="No factual claims found in the text"
+        />
+      </>
+    );
+  };
+
+  const exampleText = toolExamples['extract-factual-claims'] as string;
 
   return (
-    <ToolPageTemplate<{ text: string }, ExtractFactualClaimsResult>
-      title="Extract Factual Claims"
-      description="Extract and classify factual claims from text using AI analysis. Identifies verifiable statements and categorizes them by type with confidence scores."
-      icon={MagnifyingGlassIcon}
-      warningMessage="Claim extraction is based on AI analysis. Review extracted claims for accuracy and completeness before using them for research or verification."
-      inputLabel="Text to Analyze"
-      inputPlaceholder="Enter text to extract factual claims from..."
-      buttonText="Extract Claims"
-      inputRows={10}
-      examples={examples}
+    <GenericToolPage<{ text: string }, ExtractFactualClaimsResult>
       toolId="extract-factual-claims"
+      title="Extract Factual Claims"
+      description="Extract and analyze factual claims from text using AI"
+      icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
+      fields={[
+        {
+          type: 'textarea',
+          name: 'text',
+          label: 'Text to Analyze',
+          placeholder: 'Enter text to extract factual claims from...',
+          rows: 8,
+          required: true,
+          helperText: 'The tool will identify statements that make factual assertions'
+        }
+      ]}
       renderResult={renderResult}
-      prepareInput={(text) => ({ text })}
-      inputSchema={inputSchema}
-      outputSchema={outputSchema}
-      extractLlmInteraction={(result) => (result as any).llmInteraction}
+      exampleInput={{ text: exampleText }}
+      exampleText="Load example text"
+      submitButtonText="Extract Claims"
+      loadingText="Extracting Claims..."
+      validateInput={(input) => {
+        if (!input.text.trim()) return 'Please enter some text to analyze';
+        if (input.text.length < 20) return 'Text must be at least 20 characters';
+        return true;
+      }}
     />
   );
 }

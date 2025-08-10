@@ -36,6 +36,14 @@
     "./testing": {
       "types": "./src/testing.ts",
       "default": "./src/testing.ts"
+    },
+    "./tools/all-tools": {
+      "types": "./src/tools/all-tools.ts",
+      "default": "./src/tools/all-tools.ts"
+    },
+    "./tools/generated-readmes": {
+      "types": "./src/tools/generated-readmes.ts",
+      "default": "./src/tools/generated-readmes.ts"
     }
   },
   "scripts": {
@@ -46,8 +54,10 @@
     "test:coverage": "jest --coverage",
     "test:llm": "jest --testMatch='**/*.llm.test.ts'",
     "generate-schemas": "tsx scripts/generate-tool-schemas.ts",
+    "generate-readmes": "tsx scripts/generate-tool-readmes.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
-    "prebuild": "pnpm run generate-schemas"
+    "check-readmes": "pnpm --filter @roast/web test generated-readmes.test.ts",
+    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

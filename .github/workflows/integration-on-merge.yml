@@ -5,39 +5,94 @@ on:
     branches: [main]
 
 jobs:
-  trigger-integration-tests:
-    name: Trigger Integration Tests
+  run-integration-tests:
+    name: Run Integration + Playwright Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # PostgreSQL service container
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: roast_my_post_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
-      - name: Trigger Integration Tests (includes Playwright)
-        uses: actions/github-script@v7
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // Trigger integration tests (now includes Playwright automatically)
-            const result = await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'manual-integration-tests.yml',
-              ref: 'main',
-              inputs: {
-                test_suite: 'integration',  // Now includes both integration + Playwright
-                test_pattern: '',
-                max_cost_dollars: '0.00',
-                send_slack_notification: 'false'
-              }
-            });
-            
-            console.log('Triggered integration + Playwright tests workflow');
-            
-            // Add summary
-            await core.summary
-              .addHeading('🔄 Post-Merge Tests Triggered')
-              .addTable([
-                [{data: 'Commit', header: true}, {data: '${{ github.sha }}'}],
-                [{data: 'Author', header: true}, {data: '${{ github.actor }}'}],
-                [{data: 'Test Suite', header: true}, {data: 'Integration + Playwright'}],
-                [{data: 'Estimated Time', header: true}, {data: '~3 minutes'}]
-              ])
-              .addRaw(`\n[View running workflow](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions)`)
-              .write();
+          node-version: '18'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @roast/web exec playwright install chromium
+
+      - name: Run database migrations
+        run: pnpm --filter @roast/db run db:migrate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+
+      - name: Run Integration Tests
+        run: pnpm --filter @roast/web run test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+          AUTH_SECRET: test-secret-for-ci-only
+          NEXTAUTH_URL: http://localhost:3000
+          ANTHROPIC_API_KEY: dummy-key-for-ci
+
+      - name: Run Playwright Tests
+        run: cd apps/web && npx playwright test --workers=2
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+          AUTH_SECRET: test-secret-for-ci-only
+          NEXTAUTH_URL: http://localhost:3000
+          BYPASS_TOOL_AUTH: "true"
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-merge-test-results-${{ github.run_number }}
+          path: |
+            apps/web/coverage/
+            apps/web/test-results/
+            apps/web/playwright-report/
+            apps/web/*.log
+          retention-days: 7
+          if-no-files-found: ignore

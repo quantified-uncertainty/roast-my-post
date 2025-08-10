@@ -1,50 +1,52 @@
-# Fact Checker Tool
+# Fact Checker
 
-The fact-checker tool is designed to verify the accuracy of specific factual claims. It works in tandem with the extract-factual-claims tool to provide a complete fact-checking pipeline.
+AI-powered tool for verifying the accuracy of specific factual claims with detailed evidence and reasoning.
 
-## How it Works
+## What it does
 
-This tool takes a specific claim and verifies its accuracy by:
+- **Verifies Claims**: Analyzes specific claims for accuracy and truthfulness
+- **Provides Verdicts**: Returns true, false, partially-true, unverifiable, or outdated
+- **Explains Reasoning**: Detailed explanations with supporting evidence
+- **Suggests Corrections**: Offers accurate alternatives for false claims
+- **Assesses Confidence**: Indicates reliability of the verification
 
-1. Analyzing the claim for accuracy
-2. Providing a verdict (true, false, partially-true, unverifiable, outdated)
-3. Explaining the reasoning with evidence
-4. Suggesting corrections if needed
+## Verification Process
 
-## Separation of Concerns
+1. Analyzes the claim against current knowledge and sources
+2. Determines accuracy with nuanced verdicts (not just true/false)
+3. Provides evidence and reasoning for the verdict
+4. Suggests corrections when claims are inaccurate or misleading
 
-Similar to the forecasting system, fact-checking is split into two tools:
+## Verdict Types
 
-- **extract-factual-claims**: Finds and scores factual claims in documents
-- **fact-checker**: Verifies the accuracy of specific claims
+**True**: Claim is accurate and supported by reliable evidence
+**False**: Claim is demonstrably incorrect
+**Partially-true**: Claim contains accurate elements but is misleading or incomplete
+**Unverifiable**: Cannot be verified with available sources
+**Outdated**: Was true but no longer current
 
-This separation allows:
-- Better performance through parallel processing
-- Cleaner interfaces and testing
-- Flexibility to use either tool independently
-- Cost optimization by only verifying high-priority claims
+## Use Cases
 
-## Example Usage
+- **Individual Claim Verification**: Check specific statements for accuracy
+- **Content Review**: Verify key claims in articles or documents
+- **Research Validation**: Confirm factual assertions in academic work
+- **Misinformation Detection**: Identify and correct false information
 
-```typescript
-const result = await factCheckerTool.execute({
-  claim: "The Great Wall of China is visible from space",
-  context: "Common misconception about landmarks"
-});
+## Integration
 
-// Result includes:
-// - verdict: 'false'
-// - confidence: 'high'
-// - explanation: "This is a common myth. The Great Wall is not visible..."
-// - evidence: ["NASA has confirmed...", "Astronauts have stated..."]
-// - corrections: "The Great Wall is not visible from space without aid"
-```
+Works with **Extract Factual Claims** tool:
+1. Extract claims from documents
+2. Prioritize high-importance claims
+3. Verify selected claims for accuracy
+4. Generate comprehensive fact-check reports
 
-## Integration with FactCheckAnalyzerJob
+## Important Notes
 
-The FactCheckAnalyzerJob orchestrates both tools:
+- Focuses on verifying specific claims (not extracting them)
+- Provides evidence-based reasoning for all verdicts
+- Best used for high-priority or controversial claims
+- Always includes confidence levels for reliability assessment
 
-1. Extracts claims using extract-factual-claims
-2. Scores and filters claims based on importance, controversiality, and verifiability
-3. Verifies high-priority claims using fact-checker
-4. Generates comments combining extraction scores and verification results
+## Limitations
+
+Effectiveness depends on claim specificity and available evidence sources. Cannot verify highly specialized or very recent claims.

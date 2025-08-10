@@ -133,6 +133,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
@@ -244,8 +246,10 @@ jobs:
           path: |
             apps/web/coverage/
             apps/web/test-results/
+            apps/web/playwright-report/
             apps/web/*.log
           retention-days: 7
+          if-no-files-found: ignore
 
   cleanup:
     needs: [setup, run-tests]
