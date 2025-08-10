@@ -13,3 +13,7 @@ export { StatsSummary } from './StatsSummary';
 export type { StatItem } from './StatsSummary';
 
 export { LinkValidationDisplay } from './LinkValidationDisplay';
+
+export { ForecastResultDisplay } from './ForecastResultDisplay';
+
+export { DocumentChunkerDisplay } from './DocumentChunkerDisplay';
