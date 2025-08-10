@@ -21,3 +21,7 @@ export { DocumentChunkerDisplay } from './DocumentChunkerDisplay';
 export { FuzzyTextLocatorDisplay } from './FuzzyTextLocatorDisplay';
 
 export { MathCheckDisplay } from './MathCheckDisplay';
+
+export { SpellingGrammarDisplay } from './SpellingGrammarDisplay';
+
+export { LanguageConventionDisplay } from './LanguageConventionDisplay';
