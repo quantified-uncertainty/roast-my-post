@@ -50,8 +50,9 @@ export const toolReadmes = ${JSON.stringify(readmes, null, 2)} as const;
 
 export type ToolId = keyof typeof toolReadmes;
 
-export function getToolReadme(toolId: ToolId): string {
-  return toolReadmes[toolId] || \`# \${toolId}\\n\\n*README content not available*\`;
+export function getToolReadme(toolId: string): string {
+  const typedToolId = toolId as ToolId;
+  return toolReadmes[typedToolId] || \`# \${toolId}\\n\\n*README content not available*\`;
 }
 `;
 

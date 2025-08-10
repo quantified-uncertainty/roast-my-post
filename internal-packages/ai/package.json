@@ -36,6 +36,14 @@
     "./testing": {
       "types": "./src/testing.ts",
       "default": "./src/testing.ts"
+    },
+    "./tools/all-tools": {
+      "types": "./src/tools/all-tools.ts",
+      "default": "./src/tools/all-tools.ts"
+    },
+    "./tools/generated-readmes": {
+      "types": "./src/tools/generated-readmes.ts",
+      "default": "./src/tools/generated-readmes.ts"
     }
   },
   "scripts": {
