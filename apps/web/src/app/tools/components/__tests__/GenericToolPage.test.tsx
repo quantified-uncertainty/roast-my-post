@@ -149,9 +149,11 @@ describe('GenericToolPage', () => {
       />
     );
     
+    const input = screen.getByLabelText(/Test Field/);
     const submitButton = screen.getByRole('button', { name: /Submit/i });
     
-    // Try to submit without input
+    // Add input that passes basic validation but fails custom validation
+    fireEvent.change(input, { target: { value: 'abc' } }); // Less than 5 characters
     fireEvent.click(submitButton);
     
     await waitFor(() => {
@@ -248,7 +250,7 @@ describe('GenericToolPage', () => {
       />
     );
     
-    const submitButton = screen.getByRole('button');
+    const submitButton = screen.getByRole('button', { name: /Analyze/i });
     expect(submitButton).toHaveTextContent('Analyze');
     
     // Trigger loading state
