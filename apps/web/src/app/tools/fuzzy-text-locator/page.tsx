@@ -4,18 +4,16 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { fuzzyTextLocatorTool, TextLocationFinderOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { FuzzyTextLocatorDisplay } from '../components/results/FuzzyTextLocatorDisplay';
-import { getToolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface FuzzyLocatorInput {
   documentText: string;
   searchText: string;
 }
 
-const exampleData = getToolExamples('fuzzy-text-locator') as Array<{ text: string; search: string }>;
-
 export default function FuzzyTextLocatorPage() {
   // Create multiple examples with descriptive labels
-  const exampleInputs = exampleData ? exampleData.map((ex, i) => {
+  const exampleInputs = examples ? examples.map((ex, i) => {
     // Extract context from the example for a descriptive label
     const labels = [
       'Quick Brown Fox',  // Classic text with repeated phrase

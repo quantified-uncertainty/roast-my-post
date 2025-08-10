@@ -4,7 +4,7 @@ import { LanguageIcon } from '@heroicons/react/24/outline';
 import { detectLanguageConventionTool } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { LanguageConventionDisplay } from '../components/results/LanguageConventionDisplay';
-import { getToolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface LanguageConventionInput {
   text: string;
@@ -22,15 +22,6 @@ interface LanguageConventionResult {
     dateFormat?: string[];
   };
 }
-
-const centralExample = getToolExamples('detect-language-convention') as string;
-
-// Create diverse examples for better testing
-const examples = [
-  'The organization analyzed the color of the aluminum samples from the center of the data.',
-  'The organisation analysed the colour of the aluminium samples from the centre of the data.',
-  centralExample || 'The program utilizes advanced algorithms to optimize performance and minimize resource usage.'
-];
 
 export default function DetectLanguageConventionPage() {
   return (

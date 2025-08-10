@@ -3,7 +3,7 @@
 import { LinkIcon } from '@heroicons/react/24/outline';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { LinkValidationDisplay } from '../components/results';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface LinkValidationResult {
   links: Array<{
@@ -30,7 +30,6 @@ interface LinkValidatorInput {
 }
 
 export default function LinkValidatorPage() {
-  const examples = toolExamples['link-validator'] as string[];
 
   const renderResult = (result: LinkValidationResult) => {
     return <LinkValidationDisplay result={result} />;

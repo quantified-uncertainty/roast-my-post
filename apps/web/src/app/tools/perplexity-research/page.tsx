@@ -4,7 +4,7 @@ import { LinkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { perplexityResearchTool } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { relevanceColors } from '../utils/resultFormatting';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface ResearchResult {
   query: string;
@@ -89,7 +89,6 @@ export default function PerplexityResearchPage() {
     );
   };
 
-  const queryExamples = [...(toolExamples['perplexity-research'] as readonly string[])];
 
   return (
     <GenericToolPage<ResearchInput, ResearchResult>
@@ -105,7 +104,7 @@ export default function PerplexityResearchPage() {
           placeholder: 'e.g., What are the latest developments in quantum computing error correction?',
           rows: 3,
           required: true,
-          examples: queryExamples
+          examples: examples
         },
         {
           type: 'select',

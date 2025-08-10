@@ -3,7 +3,7 @@
 import { ChartBarIcon } from '@heroicons/react/24/outline';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { ForecastResultDisplay } from '../components/results/ForecastResultDisplay';
-import { getToolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface ForecastInput {
   question: string;
@@ -32,7 +32,6 @@ interface ForecastResult {
 }
 
 export default function ForecasterSimplePage() {
-  const exampleQuestion = getToolExamples('forecaster-simple') as string;
 
   const renderResult = (result: ForecastResult) => {
     return <ForecastResultDisplay result={result} />;
@@ -52,7 +51,7 @@ export default function ForecasterSimplePage() {
           placeholder: 'Enter a yes/no question about a future event...',
           rows: 3,
           required: true,
-          examples: [exampleQuestion],
+          examples: examples,
           helperText: 'Ask a clear yes/no question about a specific future event'
         },
         {

@@ -4,7 +4,7 @@ import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { documentChunkerTool, type DocumentChunkerOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { DocumentChunkerDisplay } from '../components/results/DocumentChunkerDisplay';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface ChunkerInput {
   text: string;
@@ -13,7 +13,6 @@ interface ChunkerInput {
 }
 
 export default function DocumentChunkerPage() {
-  const examples = toolExamples['document-chunker'] as string[];
 
   const renderResult = (result: DocumentChunkerOutput) => {
     return <DocumentChunkerDisplay result={result} />;

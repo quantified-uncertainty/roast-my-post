@@ -5,9 +5,7 @@ import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { checkMathTool } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { MathCheckDisplay } from '../components/results/MathCheckDisplay';
-import { getToolExamples } from '../utils/exampleTexts';
-
-const examples = getToolExamples('check-math') as string[];
+import { examples } from './examples';
 
 export default function MathCheckerPage() {
   const [lastStatement, setLastStatement] = useState('');

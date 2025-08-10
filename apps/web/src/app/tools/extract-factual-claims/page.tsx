@@ -3,7 +3,7 @@
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { ClaimListDisplay } from '../components/results';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface ExtractFactualClaimsResult {
   claims: Array<{
@@ -60,8 +60,7 @@ export default function ExtractFactualClaimsPage() {
     );
   };
 
-  const examples = toolExamples['extract-factual-claims'] as string[];
-
+  
   return (
     <GenericToolPage<{ text: string }, ExtractFactualClaimsResult>
       toolId="extract-factual-claims"

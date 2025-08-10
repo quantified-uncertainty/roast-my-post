@@ -4,10 +4,9 @@ import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { extractMathExpressionsTool, type ExtractMathExpressionsOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { getSeverityColor } from '../utils/resultFormatting';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 export default function ExtractMathExpressionsPage() {
-  const examples = toolExamples['extract-math-expressions'] as string[];
 
   const renderResult = (result: ExtractMathExpressionsOutput) => {
     return (

@@ -3,7 +3,7 @@
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { ClaimListDisplay, StatsSummary } from '../components/results';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface FactCheckResult {
   claims: Array<{
@@ -53,7 +53,6 @@ export default function FactCheckerPage() {
     );
   };
 
-  const examples = toolExamples['fact-checker'] as string[];
 
   return (
     <GenericToolPage<{ text: string }, FactCheckResult>
