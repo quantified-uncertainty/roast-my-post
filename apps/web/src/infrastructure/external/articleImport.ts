@@ -334,7 +334,7 @@ export function extractContent(dom: JSDOM): string {
       return doc.body.innerHTML;
     }
     
-    console.warn(
+    logger.warn(
       "Could not find main content element. Using body as fallback."
     );
     contentElement = doc.body;
@@ -371,7 +371,7 @@ export function extractContent(dom: JSDOM): string {
   unwantedSelectors.forEach((selector) => {
     const elements = contentElement?.querySelectorAll(selector);
     if (elements && elements.length > 0) {
-      console.log(`Removing ${elements.length} elements matching: ${selector}`);
+      logger.debug(`Removing ${elements.length} elements matching: ${selector}`);
     }
     elements?.forEach((el: Element) => el.remove());
   });
