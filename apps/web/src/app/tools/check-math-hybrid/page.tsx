@@ -6,6 +6,7 @@ import { checkMathHybridTool, toolSchemas, getToolReadme } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
+import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
 
 interface MathResult {
   correct: boolean;
@@ -61,20 +62,15 @@ export default function CheckMathHybridPage() {
   const tryContent = (
     <div className="space-y-6">
       <form onSubmit={(e) => { e.preventDefault(); handleCheck(); }} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
-        <div>
-          <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-1">
-            Mathematical Statement <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            id="statement"
-            value={statement}
-            onChange={(e) => setStatement(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-            rows={3}
-            placeholder="Enter a mathematical statement to verify..."
-            required
-          />
-        </div>
+        <TextAreaField
+          id="statement"
+          label="Mathematical Statement"
+          value={statement}
+          onChange={setStatement}
+          placeholder="Enter a mathematical statement to verify..."
+          rows={3}
+          required
+        />
 
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">Example statements:</p>
@@ -92,20 +88,16 @@ export default function CheckMathHybridPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !statement.trim()}
-          className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Checking...' : 'Check Statement'}
-        </button>
+        <SubmitButton
+          isLoading={isLoading}
+          disabled={!statement.trim()}
+          text="Check Statement"
+          loadingText="Checking..."
+          className="!bg-purple-600 hover:!bg-purple-700"
+        />
       </form>
 
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
+      <ErrorDisplay error={error} />
 
       {result && (
         <div className="mt-8">

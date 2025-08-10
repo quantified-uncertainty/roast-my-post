@@ -6,6 +6,7 @@ import { extractMathExpressionsTool, toolSchemas, getToolReadme, type ExtractMat
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
+import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
 
 export default function ExtractMathExpressionsPage() {
   const [text, setText] = useState('');
@@ -77,20 +78,15 @@ Our projections show that if we maintain a 7% growth rate, revenue will double i
           </button>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !text.trim()}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Extracting...' : 'Extract Math Expressions'}
-        </button>
+        <SubmitButton
+          isLoading={isLoading}
+          disabled={!text.trim()}
+          text="Extract Math Expressions"
+          loadingText="Extracting..."
+        />
       </form>
 
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
+      <ErrorDisplay error={error} />
 
       {result && (
         <div className="mt-8">

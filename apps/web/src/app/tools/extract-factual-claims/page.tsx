@@ -6,6 +6,7 @@ import { extractFactualClaimsTool, toolSchemas, getToolReadme } from '@roast/ai'
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
 import { runToolWithAuth } from '../utils/runToolWithAuth';
+import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
 
 interface ExtractFactualClaimsResult {
   claims: Array<{

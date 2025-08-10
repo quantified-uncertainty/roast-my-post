@@ -5,6 +5,7 @@ import { LinkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { perplexityResearchTool, toolSchemas, getToolReadme } from '@roast/ai';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
+import { ErrorDisplay, SubmitButton } from '../components/common';
 
 interface ResearchResult {
   query: string;

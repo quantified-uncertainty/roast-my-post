@@ -6,6 +6,7 @@ import { checkMathTool, toolSchemas, getToolReadme } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
+import { ErrorDisplay, SubmitButton } from '../components/common';
 
 interface CheckMathResult {
   status: 'verified_true' | 'verified_false' | 'cannot_verify';
@@ -87,20 +88,16 @@ export default function MathCheckerPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !statement.trim()}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Checking Statement...' : 'Check Statement'}
-        </button>
+        <SubmitButton
+          isLoading={isLoading}
+          disabled={!statement.trim()}
+          text="Check Statement"
+          loadingText="Checking Statement..."
+          className="!bg-green-600 hover:!bg-green-700"
+        />
       </form>
 
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
+      <ErrorDisplay error={error} />
 
       {result && (
         <div className="mt-8 space-y-6">

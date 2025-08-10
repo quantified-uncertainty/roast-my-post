@@ -6,6 +6,7 @@ import { toolSchemas, getToolReadme } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
+import { ErrorDisplay, SubmitButton, TextAreaField } from '../components/common';
 
 interface ForecastResult {
   question: string;
@@ -148,20 +149,15 @@ export default function ForecasterSimplePage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !question.trim()}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Generating Forecast...' : 'Generate Forecast'}
-        </button>
+        <SubmitButton
+          isLoading={isLoading}
+          disabled={!question.trim()}
+          text="Generate Forecast"
+          loadingText="Generating Forecast..."
+        />
       </form>
 
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
+      <ErrorDisplay error={error} />
 
       {result && (
         <div className="mt-8 space-y-6">

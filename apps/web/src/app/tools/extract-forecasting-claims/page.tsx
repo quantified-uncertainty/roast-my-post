@@ -6,6 +6,7 @@ import { extractForecastingClaimsTool, toolSchemas, getToolReadme } from '@roast
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '@/app/tools/components/TabbedToolPageLayout';
 import { ToolDocumentation } from '@/app/tools/components/ToolDocumentation';
+import { ErrorDisplay, SubmitButton, TextAreaField } from '@/app/tools/components/common';
 
 const checkToolPath = extractForecastingClaimsTool.config.path;
 

@@ -6,6 +6,7 @@ import { fuzzyTextLocatorTool, TextLocationFinderOutput, toolSchemas, getToolRea
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 import { TabbedToolPageLayout } from '../components/TabbedToolPageLayout';
 import { ToolDocumentation } from '../components/ToolDocumentation';
+import { ErrorDisplay } from '../components/common';
 
 const checkToolPath = '/api/tools/fuzzy-text-locator';
 
@@ -104,15 +105,11 @@ export default function FuzzyTextLocatorPage() {
           disabled={isLoading || !documentText.trim() || !targetText.trim()}
           className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? 'Searching...' : 'Search'}
+          {isLoading ? 'Searching...' : 'Find Text'}
         </button>
       </form>
 
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
+      <ErrorDisplay error={error} />
 
       {result && (
         <div className="mt-8">
