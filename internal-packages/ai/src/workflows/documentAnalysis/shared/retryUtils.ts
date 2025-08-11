@@ -2,7 +2,7 @@
  * Shared retry utilities for document analysis
  */
 
-import { logger } from '@/infrastructure/logging/logger';
+import { logger } from '../../../utils/logger';
 
 export interface RetryOptions {
   maxRetries: number;

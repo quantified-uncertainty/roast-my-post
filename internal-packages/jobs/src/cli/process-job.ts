@@ -1,12 +1,10 @@
 #!/usr/bin/env tsx
 
-import { config } from "dotenv";
+import { findWorkspaceRoot, loadWebAppEnvironment } from '../utils/workspace';
 
-// Load environment variables with proper precedence BEFORE importing Prisma
-// Load from apps/web where the environment variables are stored
-config({ path: "../../apps/web/.env.local", override: false }); // Development
-config({ path: "../../apps/web/.env", override: false });        // Production/fallback
-// System environment variables take highest precedence (already loaded)
+// Find workspace root and load environment variables BEFORE importing anything else
+const workspaceRoot = findWorkspaceRoot(__dirname);
+loadWebAppEnvironment(workspaceRoot);
 
 import { JobRepository } from '@roast/db';
 import { JobService } from '../core/JobService';

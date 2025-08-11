@@ -1,11 +1,10 @@
 #!/usr/bin/env tsx
 
-import { config as dotenvConfig } from "dotenv";
+import { findWorkspaceRoot, loadWebAppEnvironment } from '../utils/workspace';
 
-// Load environment variables with proper precedence BEFORE importing Prisma
-// Load from apps/web where the environment variables are stored
-dotenvConfig({ path: "../../apps/web/.env.local", override: false }); // Development
-dotenvConfig({ path: "../../apps/web/.env", override: false });        // Production/fallback
+// Find workspace root and load environment variables BEFORE importing anything else
+const workspaceRoot = findWorkspaceRoot(__dirname);
+loadWebAppEnvironment(workspaceRoot);
 
 import {
   ChildProcess,
