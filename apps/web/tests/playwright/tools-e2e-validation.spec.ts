@@ -183,7 +183,7 @@ test.describe('Tool End-to-End Validation', () => {
       });
       console.log('✅ Tool warm-up complete');
     } catch (e) {
-      console.log('⚠️  Could not warm up tools:', e.message);
+      console.log('⚠️  Could not warm up tools:', e instanceof Error ? e.message : 'Unknown error');
     }
   });
 
@@ -218,7 +218,7 @@ test.describe('Tool End-to-End Validation', () => {
   // Test each tool
   for (const [toolId, metadata] of Object.entries(toolMetadata)) {
     test(`${toolId}: produces sensible output`, async ({ page }) => {
-      const validation = TOOL_VALIDATION[toolId];
+      const validation = TOOL_VALIDATION[toolId as keyof typeof TOOL_VALIDATION];
       if (!validation) {
         console.warn(`⚠️  No validation defined for ${toolId}`);
         return;
@@ -344,8 +344,8 @@ test.describe('Tool End-to-End Validation', () => {
         }
         
       } catch (error) {
-        result.issues.push(`Test failed: ${error.message}`);
-        console.error(`❌ ${toolId}: ${error.message}`);
+        result.issues.push(`Test failed: ${error instanceof Error ? error.message : String(error)}`);
+        console.error(`❌ ${toolId}: ${error instanceof Error ? error.message : String(error)}`);
       }
       
       results.push(result);
@@ -418,7 +418,9 @@ async function getToolOutput(page: Page): Promise<string> {
   
   // Fallback: get all text after the submit button
   const bodyText = await page.locator('main, body').textContent();
-  const buttonText = toolMetadata[page.url().split('/').pop() || '']?.buttonText || '';
+  const toolIdFromUrl = page.url().split('/').pop() || '';
+  const metadata = toolIdFromUrl in toolMetadata ? toolMetadata[toolIdFromUrl as keyof typeof toolMetadata] : null;
+  const buttonText = metadata?.buttonText || '';
   const afterButton = bodyText?.split(buttonText).pop() || '';
   
   return afterButton.trim();
