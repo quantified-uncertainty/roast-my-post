@@ -26,9 +26,7 @@ async function createEvaluation(documentId: string, agentId: string) {
     
     if (existing) {
       // Create new job for re-evaluation using JobService
-      const job = await transactionalServices.jobService.createJob({
-        evaluationId: existing.id,
-      });
+      const job = await transactionalServices.jobService.createJob(existing.id);
       
       return { evaluation: existing, job, created: false };
     }
@@ -42,9 +40,7 @@ async function createEvaluation(documentId: string, agentId: string) {
     });
     
     // Create job using JobService
-    const job = await transactionalServices.jobService.createJob({
-      evaluationId: evaluation.id,
-    });
+    const job = await transactionalServices.jobService.createJob(evaluation.id);
     
     return { evaluation, job, created: true };
   });

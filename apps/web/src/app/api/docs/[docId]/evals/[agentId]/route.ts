@@ -105,9 +105,7 @@ export const POST = withSecurity(
       
       if (existing) {
         // Create new job for re-evaluation using JobService
-        const job = await transactionalServices.jobService.createJob({
-          evaluationId: existing.id,
-        });
+        const job = await transactionalServices.jobService.createJob(existing.id);
         
         return { evaluation: existing, job, created: false };
       }
@@ -121,9 +119,7 @@ export const POST = withSecurity(
       });
       
       // Create job using JobService
-      const job = await transactionalServices.jobService.createJob({
-        evaluationId: evaluation.id,
-      });
+      const job = await transactionalServices.jobService.createJob(evaluation.id);
       
       return { evaluation, job, created: true };
     });

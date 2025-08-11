@@ -58,9 +58,7 @@ export async function updateDocumentWithAgents(
         // Create the job using JobService for consistency
         const { getServices } = await import("@/application/services/ServiceFactory");
         const transactionalServices = getServices().createTransactionalServices(tx);
-        const job = await transactionalServices.jobService.createJob({
-          evaluationId: evaluation.id,
-        });
+        const job = await transactionalServices.jobService.createJob(evaluation.id);
 
         return { evaluation, job };
       });

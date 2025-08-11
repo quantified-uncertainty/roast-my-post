@@ -1,0 +1,392 @@
+/**
+ * Job Orchestrator
+ * 
+ * Coordinates the complete job processing workflow.
+ * Handles document analysis, evaluation creation, session management.
+ * Now uses @roast/ai workflows directly instead of dependency injection.
+ */
+
+import type { JobWithRelations, JobEntity } from '@roast/db';
+import { prisma } from '@roast/db';
+import type { JobService } from './JobService';
+import type { Logger, JobProcessingResult, Document } from '../types';
+import { 
+  analyzeDocument,
+  type TaskResult
+} from '@roast/ai';
+import { Agent } from '@roast/ai';
+import { ANALYSIS_MODEL } from '@roast/ai';
+import {
+  calculateApiCostInDollars,
+  mapModelToCostModel,
+} from '@roast/ai';
+import {
+  HeliconeSessionManager,
+  setGlobalSessionManager,
+} from '@roast/ai';
+import { fetchJobCostWithRetry } from '@roast/ai';
+
+export interface JobOrchestratorInterface {
+  processJob(job: JobWithRelations): Promise<JobProcessingResult>;
+  run(): Promise<boolean>;
+}
+
+export class JobOrchestrator implements JobOrchestratorInterface {
+  constructor(
+    private jobService: JobService,
+    private logger: Logger
+  ) {}
+
+  /**
+   * Process a complete job from start to finish
+   */
+  async processJob(job: JobWithRelations): Promise<JobProcessingResult> {
+    const startTime = Date.now();
+    let sessionManager: HeliconeSessionManager | undefined;
+
+    try {
+      // Setup Helicone session tracking
+      sessionManager = await this.setupSessionTracking(job);
+
+      // Extract and validate job data
+      const { documentForAnalysis, agent } = this.prepareJobData(job);
+
+      // Execute document analysis using @roast/ai workflows
+      const analysisResult = await this.executeAnalysis(
+        documentForAnalysis, 
+        agent, 
+        job.id, 
+        sessionManager
+      );
+
+      // Create evaluation version and save results
+      await this.saveAnalysisResults(job, analysisResult, agent);
+
+      // Calculate costs and duration
+      const priceInDollars = await this.calculateJobCost(job.id, analysisResult.tasks);
+      const durationInSeconds = (Date.now() - startTime) / 1000;
+
+      // Create execution log
+      const logContent = this.createExecutionLog(
+        job, 
+        analysisResult, 
+        priceInDollars, 
+        durationInSeconds,
+        startTime
+      );
+
+      // Mark job as completed
+      const completedJob = await this.jobService.markAsCompleted(job.id, {
+        llmThinking: analysisResult.thinking,
+        priceInDollars,
+        durationInSeconds,
+        logs: logContent,
+      });
+
+      return {
+        success: true,
+        job: completedJob,
+        logFilename: `${new Date().toISOString().replace(/[:.]/g, '-')}-job-${job.id}.md`,
+        logContent,
+      };
+
+    } catch (error) {
+      this.logger.error(`Job ${job.id} processing failed:`, error);
+      
+      const failedJob = await this.jobService.markAsFailed(job.id, error);
+      
+      return {
+        success: false,
+        job: failedJob,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+
+    } finally {
+      // Always clear session manager
+      if (sessionManager) {
+        setGlobalSessionManager(undefined);
+      }
+    }
+  }
+
+  /**
+   * Find and process the next available job
+   */
+  async run(): Promise<boolean> {
+    try {
+      this.logger.info('🔍 Looking for pending jobs...');
+      const job = await this.jobService.claimNextPendingJob();
+
+      if (!job) {
+        this.logger.info('✅ No pending jobs found.');
+        return false;
+      }
+
+      const result = await this.processJob(job);
+      
+      if (result.success) {
+        this.logger.info(`✅ Job ${job.id} completed successfully`);
+      } else {
+        this.logger.error(`❌ Job ${job.id} failed:`, result.error);
+        throw result.error;
+      }
+
+      return true;
+    } catch (error) {
+      // Re-throw for caller to handle
+      throw error;
+    }
+  }
+
+  /**
+   * Setup Helicone session tracking for the job
+   */
+  private async setupSessionTracking(job: JobWithRelations): Promise<HeliconeSessionManager | undefined> {
+    try {
+      const documentVersion = job.evaluation.document.versions[0];
+      const agentVersion = job.evaluation.agent.versions[0];
+      
+      if (documentVersion && agentVersion) {
+        // Use originalJobId for retries to group them under the same session
+        const sessionId = job.originalJobId || job.id;
+        const truncatedTitle = documentVersion.title.length > 50 
+          ? documentVersion.title.slice(0, 50) + '...' 
+          : documentVersion.title;
+        
+        const sessionManager = HeliconeSessionManager.forJob(
+          sessionId,
+          `${agentVersion.name} evaluating ${truncatedTitle}`,
+          {
+            JobId: job.id,
+            JobAttempt: job.originalJobId ? 'retry' : 'initial',
+            DocumentId: job.evaluation.document.id,
+            AgentId: job.evaluation.agent.id,
+            AgentVersion: agentVersion.version.toString(),
+            EvaluationId: job.evaluation.id,
+            UserId: job.evaluation.agent.submittedBy?.id || 'anonymous',
+          }
+        );
+        
+        // Set as global for automatic header propagation
+        setGlobalSessionManager(sessionManager);
+        return sessionManager;
+      }
+    } catch (error) {
+      this.logger.warn('⚠️ Failed to create Helicone session manager:', error);
+      // Continue without session tracking rather than failing the job
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Prepare document and agent data for analysis
+   */
+  private prepareJobData(job: JobWithRelations) {
+    const documentVersion = job.evaluation.document.versions[0];
+    const agentVersion = job.evaluation.agent.versions[0];
+
+    if (!documentVersion) {
+      throw new Error('Document version not found');
+    }
+
+    if (!agentVersion) {
+      throw new Error('Agent version not found');
+    }
+
+    // Prepare document for analysis using Prisma's computed fullContent field
+    const documentForAnalysis: Document = {
+      id: job.evaluation.document.id,
+      slug: job.evaluation.document.id,
+      title: documentVersion.title,
+      content: documentVersion.fullContent, // Use computed field directly
+      author: documentVersion.authors.join(', '),
+      publishedDate: job.evaluation.document.publishedDate.toISOString(),
+      url: documentVersion.urls[0] || '',
+      platforms: documentVersion.platforms,
+      reviews: [],
+      intendedAgents: documentVersion.intendedAgents,
+    };
+
+    // Prepare agent info
+    const agent: Agent = {
+      id: job.evaluation.agent.id,
+      name: agentVersion.name,
+      version: agentVersion.version.toString(),
+      description: agentVersion.description,
+      primaryInstructions: agentVersion.primaryInstructions || undefined,
+      selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
+      providesGrades: agentVersion.providesGrades || false,
+      extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
+    };
+
+    return { documentForAnalysis, agent, documentVersion, agentVersion };
+  }
+
+  /**
+   * Execute the document analysis workflow
+   */
+  private async executeAnalysis(
+    documentForAnalysis: Document, 
+    agent: Agent, 
+    jobId: string, 
+    sessionManager?: HeliconeSessionManager
+  ) {
+    // Track the analysis phase with session manager
+    return await (sessionManager 
+      ? sessionManager.trackAnalysis('document', async () => {
+          return analyzeDocument(documentForAnalysis, agent, 500, 5, jobId);
+        })
+      : analyzeDocument(documentForAnalysis, agent, 500, 5, jobId));
+  }
+
+  /**
+   * Save analysis results to database
+   */
+  private async saveAnalysisResults(job: JobWithRelations, analysisResult: any, agent: Agent) {
+    const { tasks, ...evaluationOutputs } = analysisResult;
+
+    // Get the latest version number for this evaluation
+    const latestEvaluationVersion = await prisma.evaluationVersion.findFirst({
+      where: { evaluationId: job.evaluation.id },
+      orderBy: { version: 'desc' },
+      select: { version: true },
+    });
+    
+    const nextVersion = latestEvaluationVersion?.version 
+      ? latestEvaluationVersion.version + 1 
+      : 1;
+
+    const documentVersion = job.evaluation.document.versions[0];
+    const agentVersion = job.evaluation.agent.versions[0];
+
+    // Create evaluation version
+    const evaluationVersion = await prisma.evaluationVersion.create({
+      data: {
+        agentId: agent.id,
+        version: nextVersion,
+        summary: evaluationOutputs.summary,
+        analysis: evaluationOutputs.analysis,
+        grade: evaluationOutputs.grade,
+        selfCritique: evaluationOutputs.selfCritique,
+        agentVersionId: agentVersion.id,
+        evaluationId: job.evaluation.id,
+        documentVersionId: documentVersion.id,
+        job: {
+          connect: {
+            id: job.id,
+          },
+        },
+      },
+    });
+
+    // Save tasks to database
+    for (const task of tasks) {
+      await prisma.task.create({
+        data: {
+          name: task.name,
+          modelName: task.modelName,
+          priceInDollars: task.priceInDollars,
+          timeInSeconds: task.timeInSeconds,
+          log: task.log,
+          jobId: job.id,
+        },
+      });
+    }
+
+    // Save highlights to database
+    const highlights = evaluationOutputs.highlights || [];
+    for (const highlight of highlights) {
+      await prisma.comment.create({
+        data: {
+          evaluationVersion: {
+            connect: {
+              id: evaluationVersion.id,
+            },
+          },
+          description: highlight.description,
+          importance: highlight.importance,
+          grade: highlight.grade,
+          highlight: highlight.highlight,
+          agent: {
+            connect: {
+              id: agent.id,
+            },
+          },
+        },
+      });
+    }
+  }
+
+  /**
+   * Calculate total cost for the job
+   */
+  private async calculateJobCost(jobId: string, tasks: TaskResult[]): Promise<number> {
+    let totalCost = 0;
+
+    // Calculate cost from tasks
+    for (const task of tasks) {
+      totalCost += task.priceInDollars || 0;
+    }
+
+    // Try to get more accurate cost from Helicone if available
+    try {
+      const heliconeCost = await fetchJobCostWithRetry(jobId);
+      if (heliconeCost !== null && heliconeCost > 0) {
+        // Use Helicone cost if available and non-zero
+        return heliconeCost;
+      }
+    } catch (error) {
+      this.logger.warn('Failed to fetch Helicone cost, using calculated cost', { error });
+    }
+
+    return totalCost;
+  }
+
+  /**
+   * Create a detailed execution log for the job
+   */
+  private createExecutionLog(
+    job: JobWithRelations,
+    analysisResult: any,
+    priceInDollars: number,
+    durationInSeconds: number,
+    startTime: number
+  ): string {
+    const documentVersion = job.evaluation.document.versions[0];
+    const agentVersion = job.evaluation.agent.versions[0];
+    
+    const log = [
+      `# Job Execution Log`,
+      ``,
+      `## Metadata`,
+      `- Job ID: ${job.id}`,
+      `- Evaluation ID: ${job.evaluation.id}`,
+      `- Document: ${documentVersion.title}`,
+      `- Agent: ${agentVersion.name} v${agentVersion.version}`,
+      `- Started: ${new Date(startTime).toISOString()}`,
+      `- Duration: ${durationInSeconds.toFixed(2)}s`,
+      `- Cost: $${priceInDollars.toFixed(4)}`,
+      `- Status: SUCCESS`,
+      ``,
+      `## Analysis Summary`,
+      `- Highlights generated: ${analysisResult.highlights?.length || 0}`,
+      `- Grade: ${analysisResult.grade || 'N/A'}`,
+      `- Self-critique: ${analysisResult.selfCritique ? 'Yes' : 'No'}`,
+      ``,
+      `## Task Breakdown`,
+    ];
+
+    if (analysisResult.tasks && analysisResult.tasks.length > 0) {
+      for (const task of analysisResult.tasks) {
+        log.push(`### ${task.name}`);
+        log.push(`- Model: ${task.modelName}`);
+        log.push(`- Duration: ${task.timeInSeconds.toFixed(2)}s`);
+        log.push(`- Cost: $${task.priceInDollars.toFixed(4)}`);
+        log.push(``);
+      }
+    }
+
+    return log.join('\n');
+  }
+}

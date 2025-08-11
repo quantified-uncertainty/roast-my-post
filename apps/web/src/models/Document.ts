@@ -5,7 +5,7 @@ import {
   DocumentValidationSchema,
 } from "@/shared/types/validationSchemas";
 import type { Document, Evaluation } from "@/shared/types/databaseTypes";
-import { generateMarkdownPrepend } from "@/shared/utils/documentMetadata";
+import { generateMarkdownPrepend } from "@roast/ai";
 import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";
 import { getServices } from "@/application/services/ServiceFactory";
@@ -969,9 +969,7 @@ export class DocumentModel {
 
     // Create a new job for this evaluation
     const { jobService } = getServices();
-    await jobService.createJob({
-      evaluationId: evaluation.id,
-    });
+    await jobService.createJob(evaluation.id);
 
     return { success: true };
   }
@@ -1010,9 +1008,7 @@ export class DocumentModel {
 
     // Create a new job for this evaluation
     const { jobService } = getServices();
-    await jobService.createJob({
-      evaluationId: evaluation.id,
-    });
+    await jobService.createJob(evaluation.id);
 
     return { success: true };
   }

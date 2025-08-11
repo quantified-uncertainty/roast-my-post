@@ -1,0 +1,33 @@
+{
+  "name": "@roast/jobs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Job processing package for RoastMyPost",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "process-job": "tsx src/cli/process-job.ts",
+    "process-adaptive": "tsx src/cli/process-adaptive.ts"
+  },
+  "dependencies": {
+    "@roast/ai": "workspace:*",
+    "@roast/db": "workspace:*",
+    "@roast/domain": "workspace:*",
+    "dotenv": "^17.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

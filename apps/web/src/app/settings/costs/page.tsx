@@ -1,6 +1,6 @@
 import { auth } from "@/infrastructure/auth/auth";
 import { redirect } from "next/navigation";
-import { formatCost } from "@/shared/utils/costCalculator";
+import { formatCost } from "@/shared/utils/formatting";
 import { prisma } from "@roast/db";
 import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 

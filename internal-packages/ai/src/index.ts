@@ -21,6 +21,26 @@ export * from './types';
 // Configuration
 export { initializeAI, type AIConfig } from './config';
 
+// Document analysis workflows
+export * from './workflows';
+
+// Cost calculation utilities
+export { 
+  calculateApiCostInDollars, 
+  mapModelToCostModel,
+  calculateCost,
+  OPENROUTER_PRICING,
+  type ModelName
+} from './utils/costCalculator';
+
+// Document metadata utilities
+export {
+  generateMarkdownPrepend,
+  countPrependLines,
+  getPrependLength,
+  type DocumentMetadata
+} from './utils/documentMetadata';
+
 // Tools system - types and configs only (implementations in server.ts)
 export * from './tools/configs';
 // Export generated schemas for client-side use
