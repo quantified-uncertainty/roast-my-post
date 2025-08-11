@@ -80,4 +80,19 @@ export class JobService {
     });
     return this.mapToEntity(job);
   }
+
+  /**
+   * Mark a job as failed with error details
+   */
+  async markAsFailed(jobId: string, error: Error): Promise<JobEntity> {
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        status: JobStatus.FAILED,
+        completedAt: new Date(),
+        error: error.message,
+      },
+    });
+    return this.mapToEntity(job);
+  }
 }

@@ -6,7 +6,7 @@
  */
 
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
-import { DocumentRepository, EvaluationRepository, JobRepository } from '@roast/db';
+import { DocumentRepository, EvaluationRepository } from '@roast/db';
 import { createLoggerAdapter } from '@/infrastructure/logging/loggerAdapter';
 import { AgentService } from './AgentService';
 import { JobService } from './JobService';
@@ -26,7 +26,6 @@ export class ServiceFactory {
   // Repositories (shared across services)
   private documentRepository: DocumentRepository;
   private evaluationRepository: EvaluationRepository;
-  private jobRepository: JobRepository;
   private agentRepository: AgentRepository;
   
   // Validator
@@ -39,7 +38,6 @@ export class ServiceFactory {
     // Initialize shared dependencies once
     this.documentRepository = new DocumentRepository();
     this.evaluationRepository = new EvaluationRepository();
-    this.jobRepository = new JobRepository();
     this.agentRepository = new AgentRepository();
     this.documentValidator = new DocumentValidator();
     this.logger = createLoggerAdapter();
