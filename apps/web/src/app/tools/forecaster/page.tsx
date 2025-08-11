@@ -51,7 +51,6 @@ export default function ForecasterPage() {
           placeholder: 'Enter a yes/no question about a future event...',
           rows: 3,
           required: true,
-          examples: examples,
           helperText: 'Ask a clear yes/no question about a specific future event'
         },
         {
@@ -80,6 +79,15 @@ export default function ForecasterPage() {
         }
       ]}
       renderResult={renderResult}
+      exampleInputs={examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { 
+          question: ex,
+          context: '',
+          numForecasts: 3,
+          usePerplexity: false
+        }
+      }))}
       submitButtonText="Generate Forecast"
       loadingText="Generating Forecasts..."
       validateInput={(input) => {
