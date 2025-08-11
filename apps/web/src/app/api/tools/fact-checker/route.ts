@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/application/services/tools/createToolRoute';
+import { createToolAPIHandler } from '@/application/services/tools/createToolAPIHandler';
 import { multiFactCheckerTool } from '@roast/ai/server';
 
-export const POST = createToolRoute(multiFactCheckerTool);
+export const POST = createToolAPIHandler(multiFactCheckerTool);

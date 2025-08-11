@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/application/services/tools/createToolRoute';
+import { createToolAPIHandler } from '@/application/services/tools/createToolAPIHandler';
 import { detectLanguageConventionTool } from '@roast/ai/server';
 
-export const POST = createToolRoute(detectLanguageConventionTool);
+export const POST = createToolAPIHandler(detectLanguageConventionTool);

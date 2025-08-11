@@ -6,58 +6,77 @@
 export const toolMetadata = {
   'check-math': {
     buttonText: 'Check Statement',
+    exampleButtonType: 'numbered' as const, // "Example 1", "Example 2", etc.
     exampleIndex: 1, // Use middle example
   },
   'check-math-hybrid': {
     buttonText: 'Check Statement',
+    exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
+    exampleText: 'Find the slope of the line through points',
   },
   'check-math-with-mathjs': {
     buttonText: 'Verify Statement',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
   'check-spelling-grammar': {
     buttonText: 'Check Text',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
   'fact-checker': {
     buttonText: 'Check Facts',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
   'extract-factual-claims': {
     buttonText: 'Extract Claims',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
   'extract-forecasting-claims': {
     buttonText: 'Extract Forecasts',
+    exampleButtonType: 'descriptive' as const, // Full text examples
     exampleIndex: 1,
+    exampleText: 'The S&P 500 will likely reach 6,000 points by the end of 2025',
   },
   'detect-language-convention': {
     buttonText: 'Detect Convention',
+    exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
+    exampleText: 'She travelled to the centre of town',
   },
   'document-chunker': {
     buttonText: 'Chunk Document',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
   'extract-math-expressions': {
     buttonText: 'Extract Math Expressions',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
   'fuzzy-text-locator': {
     buttonText: 'Find Text',
-    exampleIndex: 0, // This tool might have different example structure
+    exampleButtonType: 'descriptive' as const,
+    exampleIndex: 0,
+    exampleText: 'The quick brown fox jumps over the lazy dog',
   },
   'link-validator': {
     buttonText: 'Validate Links',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
   'perplexity-research': {
     buttonText: 'Research Query',
+    exampleButtonType: 'descriptive' as const,
     exampleIndex: 2, // Use a middle example
+    exampleText: 'Recent CRISPR safety advances and regulatory updates',
   },
   'forecaster': {
     buttonText: 'Generate Forecast',
+    exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   }
 } as const;

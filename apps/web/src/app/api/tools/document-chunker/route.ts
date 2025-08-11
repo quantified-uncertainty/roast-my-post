@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/application/services/tools/createToolRoute';
+import { createToolAPIHandler } from '@/application/services/tools/createToolAPIHandler';
 import { documentChunkerTool } from '@roast/ai/server';
 
-export const POST = createToolRoute(documentChunkerTool);
+export const POST = createToolAPIHandler(documentChunkerTool);

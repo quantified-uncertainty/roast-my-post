@@ -4,7 +4,15 @@ import { logger } from '@/infrastructure/logging/logger';
 import { auth } from '@/infrastructure/auth/auth';
 import { config } from '@roast/domain';
 
-export function createToolRoute(tool: Tool<any, any>) {
+/**
+ * Creates an API route handler for a tool that users can execute.
+ * This does NOT create new tools - it creates API endpoints for existing tools.
+ * Users run/execute tools through these endpoints, they don't create new tools.
+ * 
+ * @param tool - The pre-defined tool instance from @roast/ai package
+ * @returns A Next.js POST route handler that executes the tool
+ */
+export function createToolAPIHandler(tool: Tool<any, any>) {
   const POST = async function (request: NextRequest) {
     try {
       let userId: string;
@@ -54,3 +62,7 @@ export function createToolRoute(tool: Tool<any, any>) {
   
   return POST;
 }
+
+// Export the legacy name for backwards compatibility
+// TODO: Remove this once all usages are updated
+export const createToolRoute = createToolAPIHandler;

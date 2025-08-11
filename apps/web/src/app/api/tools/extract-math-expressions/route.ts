@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/application/services/tools/createToolRoute';
+import { createToolAPIHandler } from '@/application/services/tools/createToolAPIHandler';
 import { extractMathExpressionsTool } from '@roast/ai/server';
 
-export const POST = createToolRoute(extractMathExpressionsTool);
+export const POST = createToolAPIHandler(extractMathExpressionsTool);
