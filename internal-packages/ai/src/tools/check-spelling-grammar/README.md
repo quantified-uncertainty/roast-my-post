@@ -1,34 +1,20 @@
-# Spelling & Grammar Checker
+# Check Spelling & Grammar
 
-AI-powered tool for detecting and correcting spelling and grammar errors with severity ratings and detailed explanations.
+A sophisticated proofreading tool that combines language convention detection with Claude-based error analysis. Features adjustable strictness levels and automatic US/UK English convention handling.
 
-## What it does
+## How It Works
 
-- **Detects Errors**: Identifies spelling mistakes and grammar issues
-- **Classifies Severity**: Rates errors as critical (70+), major (40-70), or minor (<40)
-- **Provides Corrections**: Suggests specific improvements with explanations
-- **Shows Location**: Pinpoints exact line numbers for each error
+First detects the document's language convention (US/UK/mixed) using the detect-language-convention tool, then sends text to Claude with detailed instructions for error detection. The tool uses importance scoring (0-100) and confidence levels to prioritize errors, with configurable strictness levels (minimal/standard/thorough) that adjust the error detection threshold.
 
-## Common Error Types
+## Capabilities & Limitations
 
-**Spelling**: Typos, misspelled words, confused words (their/there/they're)
-**Grammar**: Subject-verb disagreement, wrong tenses, punctuation errors
+**Strengths:** Intelligent convention handling - can enforce specific US/UK spelling or adapt to mixed conventions. Three strictness levels for different use cases. Returns exact error text with concise corrections, importance scores, and confidence ratings. Provides explanations only for complex errors to reduce noise.
 
-## Use Cases
+**Limitations:** Costs ~$0.01-0.02 per check using Claude Haiku. Limited to 50 errors by default (configurable). Line numbers are approximate. For exact position finding, combine with fuzzy-text-locator tool.
 
-- **Academic Writing**: Essays, research papers, publications
-- **Business Communication**: Emails, reports, proposals  
-- **Content Creation**: Blog posts, articles, marketing copy
-- **Learning**: Educational explanations help improve writing skills
+## Technical Details
 
-## Important Notes
-
-- AI may miss context-dependent errors or flag intentional style choices
-- Technical/specialized terms might be incorrectly flagged
-- Always review suggestions critically - not all are necessary corrections
-- Best used as a first pass before human proofreading
-- Multiple passes can catch additional issues after corrections are made
-
-## Limitations
-
-Cannot replace human proofreading for critical documents. Accuracy varies with text complexity.
+- **Strictness levels:** minimal (importance ≥51), standard (≥26), thorough (≥0)
+- **Convention modes:** US, UK, or auto-detect with mixed convention support
+- **Error scoring:** importance (0-100), confidence (0-100), with contextual descriptions
+- **Location:** Implementation in `/internal-packages/ai/src/tools/check-spelling-grammar/`

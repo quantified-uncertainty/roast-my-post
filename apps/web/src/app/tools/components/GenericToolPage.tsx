@@ -311,7 +311,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
       <ErrorDisplay error={error} />
       
       {result && (
-        <div className="mt-8">
+        <div className="mt-8" data-testid="tool-result">
           {renderResult(result)}
         </div>
       )}

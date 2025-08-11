@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/application/services/tools/createToolRoute';
+import { createToolAPIHandler } from '@/application/services/tools/createToolAPIHandler';
 import { checkMathHybridTool } from '@roast/ai/server';
 
-export const POST = createToolRoute(checkMathHybridTool);
+export const POST = createToolAPIHandler(checkMathHybridTool);

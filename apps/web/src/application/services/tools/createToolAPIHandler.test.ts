@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createToolRoute } from './createToolRoute';
+import { createToolAPIHandler } from './createToolAPIHandler';
 import { Tool } from '@roast/ai';
 import { auth } from '@/infrastructure/auth/auth';
 import { logger } from '@/infrastructure/logging/logger';
@@ -32,7 +32,7 @@ jest.mock('@roast/domain', () => ({
   }
 }));
 
-describe('createToolRoute', () => {
+describe('createToolAPIHandler', () => {
   const mockTool: Tool<any, any> = {
     config: {
       id: 'test-tool',
@@ -67,7 +67,7 @@ describe('createToolRoute', () => {
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
-      const route = createToolRoute(mockTool);
+      const route = createToolAPIHandler(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
@@ -81,7 +81,7 @@ describe('createToolRoute', () => {
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue(null);
 
-      const route = createToolRoute(mockTool);
+      const route = createToolAPIHandler(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
@@ -94,7 +94,7 @@ describe('createToolRoute', () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       const mockAuth = auth as jest.Mock;
 
-      const route = createToolRoute(mockTool);
+      const route = createToolAPIHandler(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
@@ -114,7 +114,7 @@ describe('createToolRoute', () => {
         expires: new Date().toISOString()
       } as any);
 
-      const route = createToolRoute(mockTool);
+      const route = createToolAPIHandler(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
@@ -172,10 +172,10 @@ describe('createToolRoute', () => {
       }));
       
       // Re-import to get the mocked version
-      const { createToolRoute: createToolRouteProd } = await import('./createToolRoute');
+      const { createToolAPIHandler: createToolAPIHandlerProd } = await import('./createToolAPIHandler');
       const { auth: authProd } = await import('@/infrastructure/auth/auth');
       
-      const route = createToolRouteProd(mockTool);
+      const route = createToolAPIHandlerProd(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
@@ -202,7 +202,7 @@ describe('createToolRoute', () => {
         getOutputJsonSchema: mockTool.getOutputJsonSchema
       };
 
-      const route = createToolRoute(errorTool);
+      const route = createToolAPIHandler(errorTool);
       const response = await route(mockRequest({ test: 'data' }));
       const data = await response.json();
 
@@ -219,7 +219,7 @@ describe('createToolRoute', () => {
         json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
       } as unknown as NextRequest;
 
-      const route = createToolRoute(mockTool);
+      const route = createToolAPIHandler(mockTool);
       const response = await route(badRequest);
       const data = await response.json();
 

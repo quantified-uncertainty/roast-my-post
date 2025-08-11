@@ -4,7 +4,6 @@
  */
 
 import {
-  DEFAULT_TIMEOUT,
   withTimeout,
 } from "../../shared/types";
 import { callClaudeWithTool } from "../../claude/wrapper";
@@ -35,6 +34,9 @@ async function generateSingleForecast(
   // Add timestamp and random seed to prevent caching
   const timestamp = Date.now();
   const randomSeed = Math.random();
+  
+  // Use a longer timeout for forecasting (5 minutes per forecast)
+  const FORECAST_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
   // Random prefix to break cache patterns
   const randomPrefixes = [
@@ -107,8 +109,8 @@ ${options.question}
         required: ["probability", "reasoning"],
       }
     }),
-    DEFAULT_TIMEOUT,
-    `Forecast generation timed out after ${DEFAULT_TIMEOUT / 60000} minutes`
+    FORECAST_TIMEOUT,
+    `Forecast generation timed out after ${FORECAST_TIMEOUT / 60000} minutes`
   );
 
   return { 
