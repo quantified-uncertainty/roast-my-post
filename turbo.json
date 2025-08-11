@@ -65,7 +65,7 @@
       "outputLogs": "new-only"
     },
     "test:integration": {
-      "dependsOn": ["@roast/db#gen"],
+      "dependsOn": ["@roast/db#gen", "@roast/domain#build"],
       "outputs": ["coverage/**"],
       "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
       "env": ["CI", "NODE_ENV", "DATABASE_URL"],
@@ -80,7 +80,7 @@
       "outputLogs": "new-only"
     },
     "test:ci-integration": {
-      "dependsOn": ["@roast/db#gen"],
+      "dependsOn": ["@roast/db#gen", "@roast/domain#build"],
       "outputs": ["coverage/**"],
       "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
       "env": ["CI", "NODE_ENV", "DATABASE_URL"],
