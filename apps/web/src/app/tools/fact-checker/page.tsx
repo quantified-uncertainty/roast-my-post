@@ -45,7 +45,7 @@ export default function FactCheckerPage() {
               { label: 'False', value: result.summary.falseClaims, color: 'red' },
               { label: 'Partial', value: result.summary.partiallyTrueClaims, color: 'yellow' },
               { label: 'Unverifiable', value: result.summary.unverifiableClaims, color: 'gray' },
-              { label: 'Outdated', value: result.summary.outdatedClaims, color: 'orange' }
+              { label: 'Outdated', value: result.summary.outdatedClaims, color: 'gray' }
             ]}
           />
         )}

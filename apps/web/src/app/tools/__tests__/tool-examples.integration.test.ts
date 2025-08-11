@@ -35,7 +35,7 @@ describe('Tool Examples Integration Tests', () => {
         examples = examplesModule.examples;
         
         // Get the tool from registry
-        tool = toolRegistry.getTool(toolId);
+        tool = toolRegistry.get(toolId);
       } catch (error) {
         // If import fails, skip tests for this tool
         console.warn(`Could not load examples for ${toolId}:`, error);
