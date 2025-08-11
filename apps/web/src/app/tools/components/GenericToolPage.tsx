@@ -18,7 +18,7 @@ export interface FieldConfig {
   max?: number;
   step?: number;
   options?: Array<{ value: string; label: string }>;
-  defaultValue?: any;
+  defaultValue?: string | number | boolean;
   helperText?: string;
   examples?: string[];
   className?: string;
@@ -31,8 +31,7 @@ export interface GenericToolPageProps<TInput = Record<string, any>, TOutput = un
   icon: ReactNode;
   fields: FieldConfig[];
   renderResult: (result: TOutput) => ReactNode;
-  exampleInput?: Partial<TInput>;
-  exampleText?: string;
+  exampleInputs?: Array<{ label: string; value: Partial<TInput> }>; // Multiple examples with labels
   submitButtonText?: string;
   loadingText?: string;
   submitButtonClassName?: string;
@@ -71,8 +70,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
   icon,
   fields,
   renderResult,
-  exampleInput,
-  exampleText,
+  exampleInputs,
   submitButtonText = 'Submit',
   loadingText = 'Processing...',
   submitButtonClassName,
@@ -87,7 +85,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
   
   // Initialize form state
   const getInitialValues = (): TInput => {
-    const values: any = {};
+    const values: Record<string, string | number | boolean> = {};
     fields.forEach(field => {
       values[field.name] = field.defaultValue ?? (field.type === 'checkbox' ? false : '');
     });
@@ -112,14 +110,12 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
     execute(processedData);
   };
   
-  const handleFieldChange = (name: string, value: any) => {
+  const handleFieldChange = (name: string, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const loadExample = () => {
-    if (exampleInput) {
-      setFormData(prev => ({ ...prev, ...exampleInput }));
-    }
+  const loadExample = (example: Partial<TInput>) => {
+    setFormData(prev => ({ ...prev, ...example }));
   };
   
   // Check if form is valid for submission
@@ -283,16 +279,23 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         {fields.map(renderField)}
         
-        {exampleInput && exampleText && (
+        {/* Multiple examples with labels */}
+        {exampleInputs && exampleInputs.length > 0 && (
           <div>
-            <button
-              type="button"
-              onClick={loadExample}
-              className="text-sm text-indigo-600 hover:text-indigo-500"
-              disabled={isLoading}
-            >
-              {exampleText}
-            </button>
+            <p className="text-sm font-medium text-gray-700 mb-2">Load example:</p>
+            <div className="flex flex-wrap gap-2">
+              {exampleInputs.map((example, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => loadExample(example.value)}
+                  disabled={isLoading}
+                  className="px-3 py-1 text-sm bg-gray-50 hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded border text-gray-700 transition-colors"
+                >
+                  {example.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         

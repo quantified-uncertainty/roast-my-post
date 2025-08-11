@@ -1,7 +1,6 @@
 import React from 'react';
-import { CalculatorIcon, CheckCircleIcon, XCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, XCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import type { CheckMathOutput, CheckMathWithMathJSOutput } from '@roast/ai';
-import { getStatusColor } from '../../utils/resultFormatting';
 
 // Union type for all math check outputs
 type MathCheckResult = CheckMathOutput | CheckMathWithMathJSOutput | any;

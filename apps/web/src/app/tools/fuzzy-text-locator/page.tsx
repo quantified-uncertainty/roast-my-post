@@ -4,19 +4,33 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { fuzzyTextLocatorTool, TextLocationFinderOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { FuzzyTextLocatorDisplay } from '../components/results/FuzzyTextLocatorDisplay';
-import { getToolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface FuzzyLocatorInput {
   documentText: string;
   searchText: string;
 }
 
-const examples = getToolExamples('fuzzy-text-locator') as { text: string; search: string };
-
 export default function FuzzyTextLocatorPage() {
+  // Create multiple examples with descriptive labels
+  const exampleInputs = examples ? examples.map((ex: any, i) => {
+    // Extract context from the example for a descriptive label
+    const labels = [
+      'Quick Brown Fox',  // Classic text with repeated phrase
+      'Neural Networks',  // Technical ML content
+      'Sustainable Development',  // Environmental content
+      'Agile Development'  // Software development content
+    ];
+    
+    return {
+      label: labels[i] || `Example ${i + 1}`,
+      value: { documentText: ex.text, searchText: ex.search }
+    };
+  }) : [];
+
   return (
     <GenericToolPage<FuzzyLocatorInput, TextLocationFinderOutput>
-      toolId={fuzzyTextLocatorTool.config.id as any}
+      toolId="fuzzy-text-locator"
       title={fuzzyTextLocatorTool.config.name}
       description={fuzzyTextLocatorTool.config.description}
       icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
@@ -38,8 +52,7 @@ export default function FuzzyTextLocatorPage() {
           placeholder: 'Enter the text you want to find...'
         }
       ]}
-      exampleInput={examples ? { documentText: examples.text, searchText: examples.search } : undefined}
-      exampleText="Load Example"
+      exampleInputs={exampleInputs}
       submitButtonText="Find Text"
       loadingText="Searching..."
       renderResult={(result) => <FuzzyTextLocatorDisplay result={result} />}

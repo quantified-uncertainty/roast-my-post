@@ -32,7 +32,7 @@ describe('Tool UI Pages', () => {
       'extract-forecasting-claims',
       'extract-math-expressions',
       'fact-checker',
-      'forecaster-simple',
+      'forecaster',
       'fuzzy-text-locator',
       'perplexity-research',
     ];

@@ -5,16 +5,14 @@ import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { checkMathTool } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { MathCheckDisplay } from '../components/results/MathCheckDisplay';
-import { getToolExamples } from '../utils/exampleTexts';
-
-const examples = getToolExamples('check-math') as string;
+import { examples } from './examples';
 
 export default function MathCheckerPage() {
   const [lastStatement, setLastStatement] = useState('');
 
   return (
     <GenericToolPage
-      toolId={checkMathTool.config.id as any}
+      toolId="check-math"
       title={checkMathTool.config.name}
       description={checkMathTool.config.description}
       icon={<CalculatorIcon className="h-8 w-8 text-blue-600" />}
@@ -28,8 +26,10 @@ export default function MathCheckerPage() {
           className: 'font-mono text-sm'
         }
       ]}
-      exampleInput={examples ? { statement: examples.split('\n')[0] } : undefined}
-      exampleText="Load Example"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { statement: ex }
+      })) : undefined}
       submitButtonText="Check Statement"
       loadingText="Checking Statement..."
       submitButtonClassName="!bg-green-600 hover:!bg-green-700"

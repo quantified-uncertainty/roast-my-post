@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatPercentage, getConsensusColor } from '../../utils/resultFormatting';
+import { getConsensusColor } from '../../utils/resultFormatting';
 
 interface ForecastResult {
   question: string;

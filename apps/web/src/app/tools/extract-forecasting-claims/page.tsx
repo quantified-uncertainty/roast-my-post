@@ -4,7 +4,7 @@ import { ChartBarIcon } from '@heroicons/react/24/solid';
 import { extractForecastingClaimsTool } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { getScoreColor, getScoreIcon } from '../utils/resultFormatting';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface ForecastResult {
   forecasts: Array<{
@@ -76,7 +76,6 @@ export default function ExtractForecastingClaimsPage() {
     );
   };
 
-  const examples = [...(toolExamples['extract-forecasting-claims'] as readonly string[])];
 
   return (
     <GenericToolPage<{ text: string }, ForecastResult>

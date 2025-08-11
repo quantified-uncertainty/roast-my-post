@@ -4,7 +4,7 @@ import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { documentChunkerTool, type DocumentChunkerOutput } from '@roast/ai';
 import { GenericToolPage } from '../components/GenericToolPage';
 import { DocumentChunkerDisplay } from '../components/results/DocumentChunkerDisplay';
-import { toolExamples } from '../utils/exampleTexts';
+import { examples } from './examples';
 
 interface ChunkerInput {
   text: string;
@@ -13,7 +13,6 @@ interface ChunkerInput {
 }
 
 export default function DocumentChunkerPage() {
-  const exampleText = toolExamples['document-chunker'] as string;
 
   const renderResult = (result: DocumentChunkerOutput) => {
     return <DocumentChunkerDisplay result={result} />;
@@ -57,8 +56,10 @@ export default function DocumentChunkerPage() {
         }
       ]}
       renderResult={renderResult}
-      exampleInput={{ text: exampleText, maxChunkSize: 1000, overlap: 100 }}
-      exampleText="Load example document"
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex, maxChunkSize: 1000, overlap: 100 }
+      })) : undefined}
       submitButtonText="Chunk Document"
       loadingText="Chunking Document..."
       validateInput={(input) => {
