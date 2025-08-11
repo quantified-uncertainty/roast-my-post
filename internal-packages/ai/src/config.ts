@@ -16,21 +16,30 @@ function getEnv(key: string, fallback?: string): string | undefined {
 
 /**
  * AI Configuration
+ * Uses getters to ensure environment variables are read lazily
  */
 export const aiConfig = {
   // Model configuration
-  analysisModel: getEnv('ANALYSIS_MODEL', 'claude-sonnet-4-20250514') as string,
+  get analysisModel(): string {
+    return getEnv('ANALYSIS_MODEL', 'claude-sonnet-4-20250514') as string;
+  },
   
   // API Keys
-  anthropicApiKey: getEnv('ANTHROPIC_API_KEY'),
-  openaiApiKey: getEnv('OPENAI_API_KEY'),
+  get anthropicApiKey(): string | undefined {
+    return getEnv('ANTHROPIC_API_KEY');
+  },
+  get openaiApiKey(): string | undefined {
+    return getEnv('OPENAI_API_KEY');
+  },
   
   // Helicone configuration
-  helicone: {
-    apiKey: getEnv('HELICONE_API_KEY'),
-    enabled: getEnv('HELICONE_CACHE_ENABLED') === 'true',
-    cacheMaxAge: parseInt(getEnv('HELICONE_CACHE_MAX_AGE', '86400') || '86400', 10),
-    cacheBucketMaxSize: parseInt(getEnv('HELICONE_CACHE_BUCKET_MAX_SIZE', '10') || '10', 10),
+  get helicone() {
+    return {
+      apiKey: getEnv('HELICONE_API_KEY'),
+      enabled: getEnv('HELICONE_CACHE_ENABLED') === 'true',
+      cacheMaxAge: parseInt(getEnv('HELICONE_CACHE_MAX_AGE', '86400') || '86400', 10),
+      cacheBucketMaxSize: parseInt(getEnv('HELICONE_CACHE_BUCKET_MAX_SIZE', '10') || '10', 10),
+    };
   },
   
   // Validation

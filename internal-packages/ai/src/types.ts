@@ -28,7 +28,9 @@ export interface RichLLMInteraction {
 }
 
 // Model configuration - use centralized config
-export const ANALYSIS_MODEL = aiConfig.analysisModel;
+// Note: This is read at import time, so if env vars are set after import, it won't pick them up
+// For dynamic reading, use aiConfig.analysisModel directly
+export const ANALYSIS_MODEL = 'claude-sonnet-4-20250514';
 
 // Configuration for creating Anthropic client - use centralized config
 export function getAnthropicApiKey(): string | undefined {
