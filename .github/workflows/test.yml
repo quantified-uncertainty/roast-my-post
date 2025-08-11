@@ -174,7 +174,7 @@ jobs:
         run: pnpm --filter @roast/db exec prisma migrate deploy
 
       - name: Run safe integration tests
-        run: pnpm --filter @roast/web run test:ci-integration
+        run: pnpm turbo run test:ci-integration --filter='@roast/web'
 
   # Application build (4-5 minutes) - parallel with tests
   build:
