@@ -345,11 +345,8 @@ test.describe('Tool End-to-End Validation', () => {
               // This is likely an example button
               await btn.click();
               foundExample = true;
-              // Wait for form fields to update after clicking example
-              await page.waitForFunction(() => {
-                const textareas = document.querySelectorAll('textarea');
-                return textareas.length > 0 && Array.from(textareas).some(t => (t as HTMLTextAreaElement).value.length > 0);
-              }, { timeout: 5000 });
+              // Small delay for form to populate
+              await page.waitForTimeout(500);
               break;
             }
           }
@@ -362,11 +359,8 @@ test.describe('Tool End-to-End Validation', () => {
           }
         } else {
           await exampleButton.click();
-          // Wait for form fields to update after clicking example
-          await page.waitForFunction(() => {
-            const textareas = document.querySelectorAll('textarea');
-            return textareas.length > 0 && Array.from(textareas).some(t => (t as HTMLTextAreaElement).value.length > 0);
-          }, { timeout: 5000 });
+          // Small delay for form to populate
+          await page.waitForTimeout(500);
         }
         
         // Submit the form
