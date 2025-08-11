@@ -69,11 +69,9 @@ async function testToolWithAuth(page: Page, toolId: string, testData: any) {
   // Check that we got some result
   // Look for common result indicators
   const resultIndicators = [
-    page.locator('[data-testid="tool-result"]'),
-    page.locator('.result'),
-    page.locator('[class*="result"]'),
-    page.locator('pre'), // JSON results
-    page.locator('[class*="output"]'),
+    page.locator('[data-testid="tool-result"]'),  // Primary: data-testid
+    page.locator('.result'),                       // Fallback: specific class
+    page.locator('pre'),                           // Fallback: JSON results
   ];
   
   let resultFound = false;
@@ -98,12 +96,12 @@ async function testToolWithAuth(page: Page, toolId: string, testData: any) {
   if (!resultFound) {
     // Check if there's an error message
     const errorSelectors = [
+      '[data-testid="tool-error"]',  // Primary: data-testid
       'text=error',
       'text=Error',
       'text=failed',
       'text=Failed',
-      '[class*="error"]',
-      '.error-message'
+      '.error-message'  // Removed broad [class*="error"] selector
     ];
     
     let errorMessage = '';
@@ -212,7 +210,7 @@ test.describe('Tool Functionality Tests', () => {
     await page.waitForTimeout(2000);
     
     // Check for result indicators
-    const hasResult = await page.locator('pre, .result, [data-testid="result"]').isVisible();
+    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible();
     expect(hasResult).toBeTruthy();
   });
   
@@ -231,7 +229,7 @@ test.describe('Tool Functionality Tests', () => {
     await page.waitForTimeout(2000);
     
     // Check for result
-    const hasResult = await page.locator('pre, .result, [data-testid="result"]').isVisible();
+    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible();
     expect(hasResult).toBeTruthy();
   });
 });
@@ -248,7 +246,7 @@ test.describe('Tool Error Handling', () => {
     await submitButton.click();
     
     // Should show error message or validation
-    const errorMessage = await page.locator('text=required, text=enter, [class*="error"]').isVisible({ timeout: 2000 }).catch(() => false);
+    const errorMessage = await page.locator('[data-testid="tool-error"], text=required, text=enter').isVisible({ timeout: 2000 }).catch(() => false);
     
     if (!errorMessage) {
       // Check if form validation prevented submission

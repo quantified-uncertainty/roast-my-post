@@ -173,15 +173,25 @@ test.describe('Tool End-to-End Validation', () => {
     console.log('🔥 Warming up tools with cold start issues...');
     try {
       // Make a quick request to fuzzy-text-locator to warm it up
-      await fetch('http://localhost:3000/api/tools/fuzzy-text-locator', {
+      const response = await fetch('http://localhost:3000/api/tools/fuzzy-text-locator', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Test-Auth-Bypass': 'true' // Include auth bypass for warm-up
+        },
         body: JSON.stringify({
           documentText: 'warm up',
           searchText: 'warm'
         })
       });
-      console.log('✅ Tool warm-up complete');
+      
+      // Check HTTP status
+      if (!response.ok) {
+        console.warn(`⚠️  Tool warm-up returned status ${response.status}: ${response.statusText}`);
+        // Don't throw - warm-up is not critical to test success
+      } else {
+        console.log('✅ Tool warm-up complete (status: 200)');
+      }
     } catch (e) {
       console.log('⚠️  Could not warm up tools:', e instanceof Error ? e.message : 'Unknown error');
     }
@@ -378,7 +388,7 @@ test.describe('Tool End-to-End Validation', () => {
           await page.waitForTimeout(1000);
           
           // Should either show error or have validation
-          const hasError = await page.locator('[role="alert"], [class*="error"], text=/required|enter|provide/i').isVisible();
+          const hasError = await page.locator('[data-testid="tool-error"], [role="alert"], text=/required|enter|provide/i').isVisible();
           const stillDisabled = await submitButton.isDisabled();
           
           expect(hasError || stillDisabled, `${toolId} should handle empty input with error or disabled state`).toBe(true);
@@ -396,12 +406,11 @@ async function getToolOutput(page: Page): Promise<string> {
   
   // Try different selectors for results
   const selectors = [
-    '[data-testid="tool-result"]',
-    '[class*="result"]:not(button)',
-    'pre',
-    '[role="region"]',
-    '.prose',
-    'div:has(> p):below(button)'
+    '[data-testid="tool-result"]',  // Primary: data-testid
+    'pre',                           // Fallback: code blocks
+    '[role="region"]',               // Fallback: semantic regions
+    '.prose',                        // Fallback: prose content
+    'div:has(> p):below(button)'     // Last resort: div with paragraph after button
   ];
   
   for (const selector of selectors) {

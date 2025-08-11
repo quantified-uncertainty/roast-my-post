@@ -17,7 +17,7 @@ export function ErrorDisplay({ error, className = '' }: ErrorDisplayProps) {
   if (!error) return null;
   
   return (
-    <div className={`mt-6 p-4 bg-red-50 border border-red-200 rounded-md ${className}`}>
+    <div className={`mt-6 p-4 bg-red-50 border border-red-200 rounded-md ${className}`} data-testid="tool-error">
       <p className="text-red-800">Error: {error}</p>
     </div>
   );
