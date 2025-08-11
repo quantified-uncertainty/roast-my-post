@@ -72,7 +72,7 @@ export const toolMetadata = {
     buttonText: 'Research Query',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 2, // Use a middle example
-    exampleText: 'Recent CRISPR safety advances and regulatory updates',
+    exampleText: 'CRISPR safety advances and regulatory updates',
   },
   'forecaster': {
     buttonText: 'Generate Forecast',

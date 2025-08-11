@@ -26,5 +26,15 @@ pnpm playwright test tools-validation.spec.ts \
     --grep "Tool AI Validation Tests" \
     --reporter=list
 
+# Capture the exit code
+TEST_EXIT_CODE=$?
+
 echo ""
-echo "Test completed!"
+if [ $TEST_EXIT_CODE -eq 0 ]; then
+    echo "✅ Test completed successfully!"
+else
+    echo "❌ Test failed with exit code: $TEST_EXIT_CODE"
+fi
+
+# Exit with the test's exit code to propagate to CI
+exit $TEST_EXIT_CODE

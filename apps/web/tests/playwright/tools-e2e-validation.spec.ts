@@ -160,6 +160,12 @@ interface TestResult {
 test.describe('Tool End-to-End Validation', () => {
   let anthropic: Anthropic | null = null;
   const results: TestResult[] = [];
+  
+  // Test isolation: track created resources for cleanup
+  const testResources = {
+    screenshots: [] as string[],
+    startTime: Date.now(),
+  };
 
   test.beforeAll(async () => {
     if (ANTHROPIC_API_KEY) {
@@ -169,43 +175,97 @@ test.describe('Tool End-to-End Validation', () => {
       console.log('⚠️  No API key - running basic validation only');
     }
     
-    // Warm up tools that have cold start issues
+    // Warm up tools that have cold start issues with retry logic
     console.log('🔥 Warming up tools with cold start issues...');
-    try {
-      // Make a quick request to fuzzy-text-locator to warm it up
-      const response = await fetch('http://localhost:3000/api/tools/fuzzy-text-locator', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Test-Auth-Bypass': 'true' // Include auth bypass for warm-up
-        },
-        body: JSON.stringify({
-          documentText: 'warm up',
-          searchText: 'warm'
-        })
-      });
-      
-      // Check HTTP status
-      if (!response.ok) {
-        console.warn(`⚠️  Tool warm-up returned status ${response.status}: ${response.statusText}`);
-        // Don't throw - warm-up is not critical to test success
-      } else {
-        console.log('✅ Tool warm-up complete (status: 200)');
+    
+    const warmUpWithRetry = async (maxAttempts = 3) => {
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const response = await fetch('http://localhost:3000/api/tools/fuzzy-text-locator', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-Test-Auth-Bypass': 'true' // Include auth bypass for warm-up
+            },
+            body: JSON.stringify({
+              documentText: 'warm up',
+              searchText: 'warm'
+            }),
+            signal: AbortSignal.timeout(5000) // 5 second timeout per attempt
+          });
+          
+          // Check HTTP status
+          if (response.ok) {
+            console.log('✅ Tool warm-up complete (status: 200)');
+            return true;
+          } else {
+            console.warn(`⚠️  Attempt ${attempt}/${maxAttempts}: Tool warm-up returned status ${response.status}`);
+          }
+        } catch (e) {
+          console.warn(`⚠️  Attempt ${attempt}/${maxAttempts} failed:`, e instanceof Error ? e.message : 'Unknown error');
+        }
+        
+        // Wait before retry (exponential backoff)
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-    } catch (e) {
-      console.log('⚠️  Could not warm up tools:', e instanceof Error ? e.message : 'Unknown error');
-    }
+      
+      console.log('⚠️  Tool warm-up failed after all attempts, continuing anyway...');
+      return false;
+    };
+    
+    await warmUpWithRetry();
   });
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, browserName }, testInfo) => {
+    // Set up authentication bypass
     await setupTestAuthBypass(page);
+    
+    // Add test metadata for better debugging
+    await page.addInitScript(() => {
+      window.localStorage.setItem('test-run-id', `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    });
+    
+    // Set viewport for consistency
+    await page.setViewportSize({ width: 1280, height: 720 });
+    
+    // Log test start
+    console.log(`\n📝 Starting test: ${testInfo.title} [${browserName}]`);
+  });
+  
+  test.afterEach(async ({ page }, testInfo) => {
+    // Capture screenshot on failure for debugging
+    if (testInfo.status === 'failed') {
+      const screenshotPath = `test-results/failures/${testInfo.title.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}.png`;
+      await page.screenshot({ path: screenshotPath, fullPage: true });
+      testResources.screenshots.push(screenshotPath);
+      console.log(`📸 Screenshot saved: ${screenshotPath}`);
+    }
+    
+    // Clear any test data from localStorage
+    await page.evaluate(() => {
+      const testKeys = Object.keys(localStorage).filter(key => key.startsWith('test-'));
+      testKeys.forEach(key => localStorage.removeItem(key));
+    });
+    
+    // Clear cookies to ensure clean state
+    await page.context().clearCookies();
   });
 
-  test.afterAll(() => {
+  test.afterAll(async () => {
+    // Clean up test resources
+    if (testResources.screenshots.length > 0) {
+      console.log(`\n🧹 Created ${testResources.screenshots.length} debug screenshots during failed tests`);
+    }
+    
+    const testDuration = ((Date.now() - testResources.startTime) / 1000).toFixed(2);
+    
     // Print summary report
     console.log('\n========================================');
     console.log('TOOL VALIDATION SUMMARY');
     console.log('========================================\n');
+    console.log(`⏱️  Total test duration: ${testDuration}s`);
     
     const passed = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
@@ -285,7 +345,11 @@ test.describe('Tool End-to-End Validation', () => {
               // This is likely an example button
               await btn.click();
               foundExample = true;
-              await page.waitForTimeout(500);
+              // Wait for form fields to update after clicking example
+              await page.waitForFunction(() => {
+                const textareas = document.querySelectorAll('textarea');
+                return textareas.length > 0 && Array.from(textareas).some(t => (t as HTMLTextAreaElement).value.length > 0);
+              }, { timeout: 5000 });
               break;
             }
           }
@@ -298,7 +362,11 @@ test.describe('Tool End-to-End Validation', () => {
           }
         } else {
           await exampleButton.click();
-          await page.waitForTimeout(500); // Let form populate
+          // Wait for form fields to update after clicking example
+          await page.waitForFunction(() => {
+            const textareas = document.querySelectorAll('textarea');
+            return textareas.length > 0 && Array.from(textareas).some(t => (t as HTMLTextAreaElement).value.length > 0);
+          }, { timeout: 5000 });
         }
         
         // Submit the form
@@ -385,7 +453,16 @@ test.describe('Tool End-to-End Validation', () => {
         
         if (!isDisabled) {
           await submitButton.click();
-          await page.waitForTimeout(1000);
+          
+          // Wait for either error message or button state change
+          await page.waitForFunction(() => {
+            // Check if error message appeared
+            const hasError = document.querySelector('[data-testid="tool-error"], [role="alert"]');
+            // Check if button is re-enabled (form processed)
+            const button = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+            const isProcessed = button && !button.textContent?.includes('...');
+            return hasError || isProcessed;
+          }, { timeout: 5000 });
           
           // Should either show error or have validation
           const hasError = await page.locator('[data-testid="tool-error"], [role="alert"], text=/required|enter|provide/i').isVisible();
@@ -401,8 +478,15 @@ test.describe('Tool End-to-End Validation', () => {
 // Helper functions
 
 async function getToolOutput(page: Page): Promise<string> {
-  // Wait for results to appear
-  await page.waitForTimeout(2000);
+  // Wait for results to appear using proper selector
+  try {
+    await page.waitForSelector('[data-testid="tool-result"], pre, [role="region"], .prose', { 
+      timeout: 5000,
+      state: 'visible' 
+    });
+  } catch {
+    // If no result selector found, continue to fallback logic
+  }
   
   // Try different selectors for results
   const selectors = [

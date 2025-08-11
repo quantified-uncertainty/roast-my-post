@@ -144,8 +144,24 @@ test.describe('Tool Authentication Requirements', () => {
 
 // Test tools with authentication bypass (for development/testing)
 test.describe('Tools with Auth Bypass', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
     await setupTestAuthBypass(page);
+    
+    // Add unique test identifier for isolation
+    await page.addInitScript((testId) => {
+      window.localStorage.setItem('test-id', testId);
+    }, `${testInfo.title}-${Date.now()}`);
+    
+    // Set consistent viewport
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
+  
+  test.afterEach(async ({ page }) => {
+    // Clean up test data
+    await page.evaluate(() => {
+      const testKeys = Object.keys(localStorage).filter(key => key.startsWith('test-'));
+      testKeys.forEach(key => localStorage.removeItem(key));
+    });
   });
   
   for (const [toolId, testData] of Object.entries(toolTestData)) {
@@ -180,10 +196,36 @@ test.describe('Tools with Real Authentication', () => {
 
 // Test tool functionality without auth bypass
 test.describe('Tool Functionality Tests', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
     // Create a test session (this would be implemented with real session creation)
     const authHelper = new AuthHelper(page);
     await authHelper.createTestSession();
+    
+    // Add test isolation
+    await page.addInitScript((testId) => {
+      window.localStorage.setItem('test-session-id', testId);
+    }, `session-${testInfo.title}-${Date.now()}`);
+    
+    // Set consistent viewport
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
+  
+  test.afterEach(async ({ page }, testInfo) => {
+    // Capture screenshot on failure
+    if (testInfo.status === 'failed') {
+      await page.screenshot({ 
+        path: `test-results/auth-failures/${testInfo.title.replace(/[^a-z0-9]/gi, '-')}.png`,
+        fullPage: true 
+      });
+    }
+    
+    // Clean up test session data
+    await page.evaluate(() => {
+      const testKeys = Object.keys(localStorage).filter(key => 
+        key.startsWith('test-') || key.startsWith('session-')
+      );
+      testKeys.forEach(key => localStorage.removeItem(key));
+    });
   });
   
   test('fuzzy-text-locator should find text matches', async ({ page }) => {
@@ -206,11 +248,8 @@ test.describe('Tool Functionality Tests', () => {
     const submitButton = page.locator('button[type="submit"]').first();
     await submitButton.click();
     
-    // Wait for result
-    await page.waitForTimeout(2000);
-    
-    // Check for result indicators
-    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible();
+    // Wait for result to appear
+    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible({ timeout: 5000 });
     expect(hasResult).toBeTruthy();
   });
   
@@ -225,11 +264,8 @@ test.describe('Tool Functionality Tests', () => {
     const submitButton = page.locator('button[type="submit"]').first();
     await submitButton.click();
     
-    // Wait for result
-    await page.waitForTimeout(2000);
-    
-    // Check for result
-    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible();
+    // Wait for result to appear
+    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible({ timeout: 5000 });
     expect(hasResult).toBeTruthy();
   });
 });
