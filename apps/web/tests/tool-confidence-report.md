@@ -30,7 +30,7 @@ Based on comprehensive testing of all 14 tools in the Roast My Post application:
 
 ### ⚠️ Tools with Minor Issues (7%)
 
-1. **fuzzy-text-locator** - Works but has slower response times, may timeout in automated tests
+1. **fuzzy-text-locator** - Has cold start issue (first request slow due to uFuzzy initialization), subsequent requests are instant
 
 ## Test Configuration Improvements
 
@@ -60,14 +60,22 @@ Based on comprehensive testing of all 14 tools in the Roast My Post application:
 
 ### Minor:
 1. Some automated tests fail due to timing issues despite increased timeouts
-2. Fuzzy-text-locator occasionally slow to respond
+2. Fuzzy-text-locator has cold start issue (uFuzzy initialization on first request)
 3. AI validation skipped when ANTHROPIC_API_KEY not set
 
+### Root Cause Identified:
+The fuzzy-text-locator creates a new uFuzzy instance on every search (`new uFuzzy(ufConfig)`), causing initialization overhead on the first request. This is why:
+- First request: ~5-10 seconds (module loading + initialization)
+- Subsequent requests: <100ms (modules cached, but still creating instances)
+- Tests timeout because each test hits the cold start penalty
+
 ### Recommendations:
-1. Consider implementing retry logic for flaky tests
-2. Add visual regression testing for UI consistency
-3. Implement health check endpoint for each tool
-4. Add performance monitoring for API response times
+1. **Fix fuzzy-text-locator cold start**: Cache uFuzzy instances or lazy-load on module init
+2. **Add test warm-up phase**: Pre-initialize tools before running tests
+3. Consider implementing retry logic for flaky tests
+4. Add visual regression testing for UI consistency
+5. Implement health check endpoint for each tool
+6. Add performance monitoring for API response times
 
 ## Conclusion
 

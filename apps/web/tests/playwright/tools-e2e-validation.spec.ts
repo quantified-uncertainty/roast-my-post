@@ -161,12 +161,29 @@ test.describe('Tool End-to-End Validation', () => {
   let anthropic: Anthropic | null = null;
   const results: TestResult[] = [];
 
-  test.beforeAll(() => {
+  test.beforeAll(async () => {
     if (ANTHROPIC_API_KEY) {
       anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
       console.log('✅ AI validation enabled with Sonnet 4');
     } else {
       console.log('⚠️  No API key - running basic validation only');
+    }
+    
+    // Warm up tools that have cold start issues
+    console.log('🔥 Warming up tools with cold start issues...');
+    try {
+      // Make a quick request to fuzzy-text-locator to warm it up
+      await fetch('http://localhost:3000/api/tools/fuzzy-text-locator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentText: 'warm up',
+          searchText: 'warm'
+        })
+      });
+      console.log('✅ Tool warm-up complete');
+    } catch (e) {
+      console.log('⚠️  Could not warm up tools:', e.message);
     }
   });
 
