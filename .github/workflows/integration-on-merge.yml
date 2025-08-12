@@ -53,8 +53,11 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
 
+      - name: Generate AI package files
+        run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
+
       - name: Build dependent packages
-        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db' --filter='@roast/ai' --filter='@roast/jobs'
 
       - name: Install Playwright browsers
         run: pnpm --filter @roast/web exec playwright install chromium
