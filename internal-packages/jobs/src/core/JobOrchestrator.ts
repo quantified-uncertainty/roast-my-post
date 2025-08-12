@@ -309,6 +309,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
   /**
    * Save highlights with validation
+   * 
+   * Note: Highlights are linked to evaluations through comments (not directly).
+   * This ensures every highlight has an associated comment for context.
    */
   private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string) {
     if (!highlights || highlights.length === 0) {
@@ -342,13 +345,20 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         }
       }
 
+      // Only create highlight if we have highlight data
+      if (!comment.highlight) {
+        // Skip this comment if no highlight data
+        this.logger.warn(`Skipping comment without highlight data: ${comment.description}`);
+        continue;
+      }
+
       // Create highlight with validation status
       const createdHighlight = await prisma.evaluationHighlight.create({
         data: {
-          startOffset: comment.highlight!.startOffset,
-          endOffset: comment.highlight!.endOffset,
-          quotedText: comment.highlight!.quotedText,
-          prefix: comment.highlight!.prefix || null,
+          startOffset: comment.highlight.startOffset,
+          endOffset: comment.highlight.endOffset,
+          quotedText: comment.highlight.quotedText,
+          prefix: comment.highlight.prefix || null,
           isValid,
           error,
         },
