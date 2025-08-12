@@ -47,7 +47,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --config .eslintrc.json --ext .ts,.tsx",
     "test": "jest",

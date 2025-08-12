@@ -2,8 +2,8 @@
 export { prisma } from './client';
 export { ensureDbConnected, withDb } from './ensure-connected';
 
-// Temporarily removed to test declaration generation
-// export type { Prisma, PrismaClient } from '../generated';
+// Re-export Prisma types from client (which properly exports from generated)
+export { Prisma, type PrismaClient } from './client';
 
 // Repositories
 export * from './repositories/DocumentRepository';
