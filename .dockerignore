@@ -39,6 +39,9 @@ __tests__
 !.next/static
 dist
 build
+.turbo
+**/tsconfig.tsbuildinfo
+**/node_modules/.cache
 
 # Documentation
 *.md
