@@ -1,12 +1,14 @@
 import { logger } from "../../../utils/logger";
-import type { Agent, Document } from "@roast/ai";
+import type { Agent, Document } from "@roast/db";
 import {
   callClaudeWithTool,
+  MODEL_CONFIG,
+} from "../../../claude/wrapper";
+import {
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
   DEFAULT_TEMPERATURE,
-  MODEL_CONFIG,
   withTimeout,
-} from "@roast/ai";
+} from "../../../types/openai";
 
 import { shouldIncludeGrade } from "../shared/agentContext";
 import { calculateLLMCost } from "../shared/costUtils";

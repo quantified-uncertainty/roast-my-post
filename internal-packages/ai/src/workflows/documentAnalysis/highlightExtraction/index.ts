@@ -1,13 +1,16 @@
 import { logger } from "../../../utils/logger";
 import type { Anthropic } from "@anthropic-ai/sdk";
-import type { Agent, Comment, Document, LLMMessage } from "@roast/ai";
+import type { Agent, Comment, Document } from "@roast/db";
+import type { LLMMessage } from "../../../types";
 import {
   callClaudeWithTool,
+  MODEL_CONFIG,
+} from "../../../claude/wrapper";
+import {
   DEFAULT_TEMPERATURE,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
-  MODEL_CONFIG,
   withTimeout,
-} from "@roast/ai";
+} from "../../../types/openai";
 
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
