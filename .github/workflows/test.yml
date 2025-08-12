@@ -51,10 +51,8 @@ jobs:
 
       - name: Build packages (required for typecheck)
         run: |
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/ai run build
-          pnpm --filter @roast/jobs run build
+          # Use turbo to build in dependency order and cache
+          pnpm turbo run build --filter='@roast/db' --filter='@roast/domain' --filter='@roast/ai' --filter='@roast/jobs'
 
       - name: Run checks in parallel
         run: pnpm turbo run typecheck lint --parallel
@@ -115,10 +113,8 @@ jobs:
 
       - name: Build packages (required for tests)
         run: |
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/ai run build
-          pnpm --filter @roast/jobs run build
+          # Use turbo to build packages efficiently with caching
+          pnpm turbo run build --filter='@roast/db' --filter='@roast/domain' --filter='@roast/ai' --filter='@roast/jobs'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -186,10 +182,8 @@ jobs:
 
       - name: Build packages (required for tests)
         run: |
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/ai run build
-          pnpm --filter @roast/jobs run build
+          # Use turbo to build packages efficiently with caching
+          pnpm turbo run build --filter='@roast/db' --filter='@roast/domain' --filter='@roast/ai' --filter='@roast/jobs'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -302,10 +296,8 @@ jobs:
 
       - name: Build packages (required for tests)
         run: |
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/ai run build
-          pnpm --filter @roast/jobs run build
+          # Use turbo to build packages efficiently with caching
+          pnpm turbo run build --filter='@roast/db' --filter='@roast/domain' --filter='@roast/ai' --filter='@roast/jobs'
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
