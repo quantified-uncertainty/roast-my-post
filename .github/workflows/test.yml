@@ -113,6 +113,13 @@ jobs:
       - name: Generate AI package files
         run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
 
+      - name: Build packages (required for tests)
+        run: |
+          pnpm --filter @roast/db run build
+          pnpm --filter @roast/domain run build
+          pnpm --filter @roast/ai run build
+          pnpm --filter @roast/jobs run build
+
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
 
@@ -176,6 +183,13 @@ jobs:
 
       - name: Generate AI package files
         run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
+
+      - name: Build packages (required for tests)
+        run: |
+          pnpm --filter @roast/db run build
+          pnpm --filter @roast/domain run build
+          pnpm --filter @roast/ai run build
+          pnpm --filter @roast/jobs run build
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -285,6 +299,13 @@ jobs:
 
       - name: Generate AI package files
         run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
+
+      - name: Build packages (required for tests)
+        run: |
+          pnpm --filter @roast/db run build
+          pnpm --filter @roast/domain run build
+          pnpm --filter @roast/ai run build
+          pnpm --filter @roast/jobs run build
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
