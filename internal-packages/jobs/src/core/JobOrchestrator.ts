@@ -295,13 +295,76 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     }
 
     // Save highlights to database
-    // Note: The highlight saving logic is complex and should be handled by the web app
-    // For now, we'll just log that highlights were generated
     const highlights = evaluationOutputs.highlights || [];
     if (highlights.length > 0) {
-      this.logger.info(`Generated ${highlights.length} highlights for evaluation`, {
+      await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.content);
+      this.logger.info(`Saved ${highlights.length} highlights for evaluation`, {
         evaluationId: job.evaluation.id,
         highlightCount: highlights.length,
+      });
+    }
+  }
+
+  /**
+   * Save highlights with validation
+   */
+  private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string) {
+    if (!highlights || highlights.length === 0) {
+      return;
+    }
+
+    for (const comment of highlights) {
+      // Validate highlight by checking if quotedText matches document at specified offsets
+      let isValid = true;
+      let error: string | null = null;
+      
+      if (!comment.highlight) {
+        isValid = false;
+        error = 'Highlight is missing';
+      } else {
+        try {
+          const actualText = fullContent.slice(
+            comment.highlight.startOffset, 
+            comment.highlight.endOffset
+          );
+          
+          if (actualText !== comment.highlight.quotedText) {
+            isValid = false;
+            error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+            this.logger.warn(`Invalid highlight detected: ${error}`);
+          }
+        } catch (highlightError) {
+          isValid = false;
+          error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
+          this.logger.warn(`Highlight validation failed: ${error}`);
+        }
+      }
+
+      // Create highlight with validation status
+      const createdHighlight = await prisma.evaluationHighlight.create({
+        data: {
+          startOffset: comment.highlight!.startOffset,
+          endOffset: comment.highlight!.endOffset,
+          quotedText: comment.highlight!.quotedText,
+          prefix: comment.highlight!.prefix || null,
+          isValid,
+          error,
+        },
+      });
+
+      // Create comment linked to highlight
+      await prisma.evaluationComment.create({
+        data: {
+          description: comment.description || 'No description',
+          importance: comment.importance || null,
+          grade: comment.grade || null,
+          header: comment.header || null,
+          level: comment.level || null,
+          source: comment.source || null,
+          metadata: comment.metadata as any || null,
+          evaluationVersionId,
+          highlightId: createdHighlight.id,
+        },
       });
     }
   }
