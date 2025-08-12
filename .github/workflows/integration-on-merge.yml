@@ -60,6 +60,9 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
 
+      - name: Build dependent packages
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
+
       - name: Install Playwright browsers
         run: pnpm --filter @roast/web exec playwright install chromium
 
@@ -69,7 +72,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
 
       - name: Run Integration Tests
-        run: pnpm --filter @roast/web run test:integration
+        run: pnpm turbo run test:integration --filter='@roast/web'
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
           AUTH_SECRET: test-secret-for-ci-only
