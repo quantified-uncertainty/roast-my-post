@@ -42,6 +42,5 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-// Type exports
-export { Prisma } from '../generated';
-export type { PrismaClient } from '../generated';
+// Type exports - use type-only exports to avoid compilation issues
+export type { Prisma, PrismaClient } from '../generated';

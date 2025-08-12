@@ -48,12 +48,6 @@ jobs:
 
       - name: Generate AI package files
         run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
-      
-      - name: Build dependent packages
-        run: |
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/jobs run build
 
       - name: Run checks in parallel
         run: pnpm turbo run typecheck lint --parallel
@@ -111,12 +105,6 @@ jobs:
 
       - name: Generate AI package files
         run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
-      
-      - name: Build dependent packages
-        run: |
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/jobs run build
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -181,12 +169,6 @@ jobs:
 
       - name: Generate AI package files
         run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
-      
-      - name: Build dependent packages
-        run: |
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/jobs run build
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
@@ -296,12 +278,6 @@ jobs:
 
       - name: Generate AI package files
         run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
-      
-      - name: Build dependent packages
-        run: |
-          pnpm --filter @roast/domain run build
-          pnpm --filter @roast/db run build
-          pnpm --filter @roast/jobs run build
 
       - name: Run database migrations
         run: pnpm --filter @roast/db exec prisma migrate deploy
