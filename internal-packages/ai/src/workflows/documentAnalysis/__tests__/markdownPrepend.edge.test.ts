@@ -18,7 +18,7 @@ jest.mock("@roast/ai", () => ({
 // withTimeout is now mocked in the main @roast/ai mock above
 
 import { callClaudeWithTool } from "@roast/ai";
-import { setupClaudeToolMock } from "@roast/ai/testing";
+import { setupClaudeToolMock } from "../../../testing";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({

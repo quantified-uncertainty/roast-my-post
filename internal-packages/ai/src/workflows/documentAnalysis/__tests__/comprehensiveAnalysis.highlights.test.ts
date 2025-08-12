@@ -25,7 +25,7 @@ jest.mock("../../../utils/costCalculator", () => ({
 // Mock withTimeout from openai types
 // withTimeout is now mocked in the main @roast/ai mock
 import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
-import { setupClaudeToolMock } from "@roast/ai/testing";
+import { setupClaudeToolMock } from "../../../testing";
 import type { ClaudeCallResult } from "@roast/ai";
 import { withTimeout } from "@roast/ai";
 

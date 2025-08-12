@@ -2,7 +2,7 @@ import { generateSelfCritique } from "../selfCritique";
 import type { Agent } from "@roast/ai";
 
 // Mock logger to avoid console output
-jest.mock("@/infrastructure/logging/logger", () => ({
+jest.mock("../../../utils/logger", () => ({
   logger: {
     error: jest.fn(),
     info: jest.fn(),
@@ -26,7 +26,7 @@ jest.mock("@roast/ai", () => ({
 // Mock withTimeout - no need to mock the submodule since it's imported from main package
 
 import { callClaudeWithTool } from "@roast/ai";
-import { setupClaudeToolMock } from "@roast/ai/testing";
+import { setupClaudeToolMock } from "../../../testing";
 
 describe("Self-Critique", () => {
   let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;

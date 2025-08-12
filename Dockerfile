@@ -13,13 +13,19 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
-# Build all packages with dummy env vars for validation only
+# Build workspace packages that need dist files (in dependency order)
+RUN pnpm --filter @roast/db run build && \
+    pnpm --filter @roast/domain run build && \
+    pnpm --filter @roast/ai run build && \
+    pnpm --filter @roast/jobs run build
+
+# Build web app with dummy env vars for validation only
 RUN NEXT_TELEMETRY_DISABLED=1 \
     DOCKER_BUILD=true \
     DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public" \
     AUTH_SECRET="build-time-dummy" \
     ANTHROPIC_API_KEY="build-time-dummy" \
-    pnpm -r run build
+    pnpm --filter @roast/web run build
 
 # Deploy web app with dependencies
 RUN pnpm deploy --filter=@roast/web --prod /prod/web

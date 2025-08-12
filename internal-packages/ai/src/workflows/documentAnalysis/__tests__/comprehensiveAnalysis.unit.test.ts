@@ -19,10 +19,10 @@ jest.mock("@roast/ai", () => ({
 // Mock withTimeout from openai types
 // withTimeout is now mocked in the main @roast/ai mock
 import { callClaudeWithTool } from "@roast/ai";
-import { setupClaudeToolMock } from "@roast/ai/testing";
+import { setupClaudeToolMock } from "../../../../testing";
 
 // Mock the cost calculator
-jest.mock("../../utils/costCalculator", () => ({
+jest.mock("../../../utils/costCalculator", () => ({
   calculateApiCost: jest.fn(() => 0.5), // Return 0.5 cents
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));

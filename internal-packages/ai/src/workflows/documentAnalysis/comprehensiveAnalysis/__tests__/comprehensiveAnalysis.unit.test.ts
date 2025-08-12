@@ -2,7 +2,7 @@ import { generateComprehensiveAnalysis } from "../index";
 import { extractHighlightsFromAnalysis } from "../../highlightExtraction";
 import type { Agent, Document, ComprehensiveAnalysisOutputs } from "@roast/ai";
 import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
-import { setupClaudeToolMock } from "@roast/ai/testing";
+import { setupClaudeToolMock } from "../../../../testing";
 
 // Mock the @roast/ai module  
 jest.mock("@roast/ai", () => ({

@@ -16,10 +16,11 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
-# Build the packages that need building (in dependency order)
-RUN pnpm --filter @roast/db run build
-RUN pnpm --filter @roast/domain run build
-# Note: @roast/ai doesn't need building - it's consumed as TypeScript by tsx
+# Build workspace packages that need dist files (in dependency order)
+RUN pnpm --filter @roast/db run build && \
+    pnpm --filter @roast/domain run build && \
+    pnpm --filter @roast/ai run build && \
+    pnpm --filter @roast/jobs run build
 
 # ================================ Runner ================================
 FROM node:20-alpine AS runner

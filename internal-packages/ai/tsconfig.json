@@ -8,7 +8,8 @@
     "declarationMap": true,
     "types": ["node", "jest"],
     "target": "ES2022",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "isolatedModules": true
   },
   "include": ["src/**/*"],
   "exclude": [
