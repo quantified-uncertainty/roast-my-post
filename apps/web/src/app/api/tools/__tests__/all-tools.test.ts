@@ -6,25 +6,11 @@
  * 3. Main tools route returns tool metadata
  */
 
+import { toolRegistry } from '@roast/ai/server';
+
 describe('Tool API Endpoints', () => {
-  // Define all tools
-  const tools = [
-    'check-math',
-    'check-math-hybrid',
-    'check-math-with-mathjs',
-    'check-spelling-grammar',
-    'detect-language-convention',
-    'document-chunker',
-    'extract-factual-claims',
-    'extract-forecasting-claims',
-    'extract-math-expressions',
-    'fact-checker',
-    'forecaster',
-    'forecaster-simple',
-    'fuzzy-text-locator',
-    'link-validator',
-    'perplexity-research',
-  ];
+  // Get tool IDs dynamically from the registry
+  const tools = toolRegistry.getMetadata().map(tool => tool.id);
 
   describe.each(tools)('Tool: %s', (toolId) => {
     it(`should have a route file at /api/tools/${toolId}/route.ts`, async () => {

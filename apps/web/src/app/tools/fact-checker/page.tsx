@@ -1,110 +1,99 @@
 'use client';
 
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
-import { factCheckerTool, toolSchemas } from '@roast/ai';
-import { ToolPageTemplate } from '../components/ToolPageTemplate';
+import { GenericToolPage } from '../components/GenericToolPage';
+import { ClaimListDisplay, StatsSummary } from '../components/results';
+import { examples } from './examples';
 
 interface FactCheckResult {
-  checkedClaims: Array<{
+  claims: Array<{
     claim: string;
-    verdict: 'TRUE' | 'FALSE' | 'MOSTLY_TRUE' | 'MOSTLY_FALSE' | 'UNCLEAR' | 'UNVERIFIABLE';
+    verdict: 'true' | 'false' | 'partially-true' | 'unverifiable' | 'outdated';
+    confidence: 'high' | 'medium' | 'low';
     explanation: string;
-    confidence?: number;
-    sources?: string[];
+    sources?: Array<{ title: string; url: string }>;
   }>;
-  metadata?: {
+  summary?: {
     totalClaims: number;
-    processingTime?: number;
+    trueClaims: number;
+    falseClaims: number;
+    partiallyTrueClaims: number;
+    unverifiableClaims: number;
+    outdatedClaims: number;
   };
-  llmInteraction?: any;
-}
-
-function renderResult(result: FactCheckResult) {
-  if (!result.checkedClaims || result.checkedClaims.length === 0) {
-    return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-        <p className="text-gray-600">No claims found to fact-check in the provided text.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-medium text-gray-900">
-        {result.checkedClaims.length} Claims Checked
-      </h2>
-      {result.checkedClaims.map((claim, index) => (
-        <div key={index} className="bg-white shadow rounded-lg p-4">
-          <p className="text-sm text-gray-900 mb-2 font-medium">{claim.claim}</p>
-          <div className="flex items-start space-x-2">
-            <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-              claim.verdict === 'TRUE' ? 'text-green-800 bg-green-100' :
-              claim.verdict === 'FALSE' ? 'text-red-800 bg-red-100' :
-              claim.verdict === 'MOSTLY_TRUE' ? 'text-blue-800 bg-blue-100' :
-              claim.verdict === 'MOSTLY_FALSE' ? 'text-orange-800 bg-orange-100' :
-              claim.verdict === 'UNCLEAR' ? 'text-yellow-800 bg-yellow-100' :
-              'text-gray-800 bg-gray-100'
-            }`}>
-              {claim.verdict.replace('_', ' ')}
-            </span>
-            <p className="text-sm text-gray-600 flex-1">{claim.explanation}</p>
-          </div>
-          {claim.confidence && (
-            <p className="text-xs text-gray-500 mt-2">
-              Confidence: {Math.round(claim.confidence * 100)}%
-            </p>
-          )}
-          {claim.sources && claim.sources.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs text-gray-600 mb-1">Sources:</p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                {claim.sources.map((source, idx) => (
-                  <li key={idx}>• {source}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      ))}
-      {result.metadata && (
-        <div className="text-xs text-gray-500 mt-4">
-          Total claims processed: {result.metadata.totalClaims}
-          {result.metadata.processingTime && ` • Processing time: ${result.metadata.processingTime}ms`}
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function FactCheckerPage() {
-  // Get schemas directly from the generated schemas - no duplication!
-  const { inputSchema, outputSchema } = toolSchemas[factCheckerTool.config.id as keyof typeof toolSchemas];
+  const renderResult = (result: FactCheckResult) => {
+    // Transform confidence to numeric for ClaimListDisplay
+    const transformedClaims = result.claims.map(claim => ({
+      ...claim,
+      confidence: claim.confidence === 'high' ? 90 : claim.confidence === 'medium' ? 60 : 30,
+      verdict: claim.verdict === 'partially-true' ? 'misleading' as const : claim.verdict,
+      sources: claim.sources?.map(s => s.url)
+    }));
 
-  const examples = [
-    "The Eiffel Tower is 324 meters tall and was built in 1889.",
-    "COVID-19 vaccines contain microchips for tracking people.",
-    "The human brain uses about 20% of the body's total energy.",
-    "Climate change is caused by increased greenhouse gas emissions from human activities.",
-    "The Great Wall of China is visible from space with the naked eye."
-  ];
+    return (
+      <>
+        {result.summary && (
+          <StatsSummary
+            title="Fact Check Summary"
+            columns={6}
+            stats={[
+              { label: 'Total', value: result.summary.totalClaims, color: 'gray' },
+              { label: 'True', value: result.summary.trueClaims, color: 'green' },
+              { label: 'False', value: result.summary.falseClaims, color: 'red' },
+              { label: 'Partial', value: result.summary.partiallyTrueClaims, color: 'yellow' },
+              { label: 'Unverifiable', value: result.summary.unverifiableClaims, color: 'gray' },
+              { label: 'Outdated', value: result.summary.outdatedClaims, color: 'gray' }
+            ]}
+          />
+        )}
+        
+        <div className="mt-6">
+          <ClaimListDisplay
+            claims={transformedClaims}
+            title="Fact Check Results"
+            showSources={true}
+            showConfidence={true}
+            noClaimsMessage="No claims to fact check"
+          />
+        </div>
+      </>
+    );
+  };
+
 
   return (
-    <ToolPageTemplate<{ text: string }, FactCheckResult>
-      title="Fact Checker"
-      description="Check facts and verify claims using AI-powered analysis. Identifies factual claims in text and provides verdicts with explanations and confidence scores."
-      icon={ShieldCheckIcon}
-      warningMessage="Fact-checking results are based on AI analysis and available information. Always verify important claims through multiple reliable sources."
-      inputLabel="Text to Fact-Check"
-      inputPlaceholder="Enter text containing facts to check..."
-      buttonText="Check Facts"
-      inputRows={8}
-      examples={examples}
+    <GenericToolPage<{ text: string }, FactCheckResult>
       toolId="fact-checker"
+      title="Fact Checker"
+      description="Verify factual claims in text using AI-powered fact checking"
+      icon={<ShieldCheckIcon className="h-8 w-8 text-indigo-600" />}
+      fields={[
+        {
+          type: 'textarea',
+          name: 'text',
+          label: 'Text to Fact Check',
+          placeholder: 'Enter text containing factual claims to verify...',
+          rows: 8,
+          required: true,
+          helperText: 'The tool will identify and verify factual claims'
+        }
+      ]}
       renderResult={renderResult}
-      prepareInput={(text) => ({ text })}
-      inputSchema={inputSchema}
-      outputSchema={outputSchema}
-      extractLlmInteraction={(result) => (result as any).llmInteraction}
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex }
+      })) : undefined}
+      submitButtonText="Check Facts"
+      loadingText="Checking Facts..."
+      validateInput={(input) => {
+        if (!input.text.trim()) return 'Please enter some text to fact check';
+        if (input.text.length < 10) return 'Text must be at least 10 characters';
+        return true;
+      }}
+      warning="Fact checking uses AI and may not be 100% accurate. Always verify important claims through multiple sources."
     />
   );
 }

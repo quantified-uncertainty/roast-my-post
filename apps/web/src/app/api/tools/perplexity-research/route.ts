@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/application/services/tools/createToolRoute';
+import { createToolAPIHandler } from '@/application/services/tools/createToolAPIHandler';
 import { perplexityResearchTool } from '@roast/ai/server';
 
-export const POST = createToolRoute(perplexityResearchTool);
+export const POST = createToolAPIHandler(perplexityResearchTool);

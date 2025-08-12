@@ -11,7 +11,14 @@ export async function runToolWithAuth<TData = unknown, TResult = unknown>(
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const responseText = await response.text();
+    
+    let error;
+    try {
+      error = JSON.parse(responseText);
+    } catch {
+      throw new Error(`HTTP ${response.status}: ${responseText.slice(0, 200)}...`);
+    }
     throw new Error(error.error || 'Tool execution failed');
   }
 

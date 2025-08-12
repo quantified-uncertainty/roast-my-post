@@ -1,130 +1,61 @@
 'use client';
 
-import { useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { fuzzyTextLocatorTool, TextLocationFinderOutput, toolSchemas } from '@roast/ai';
-import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
-import { ToolPageLayout } from '../components/ToolPageLayout';
-import { ApiDocumentation } from '../components/ApiDocumentation';
+import { fuzzyTextLocatorTool, TextLocationFinderOutput } from '@roast/ai';
+import { GenericToolPage } from '../components/GenericToolPage';
+import { FuzzyTextLocatorDisplay } from '../components/results/FuzzyTextLocatorDisplay';
+import { examples } from './examples';
 
-const checkToolPath = fuzzyTextLocatorTool.config?.path || '/api/tools/fuzzy-text-locator';
+interface FuzzyLocatorInput {
+  documentText: string;
+  searchText: string;
+}
 
 export default function FuzzyTextLocatorPage() {
-  const [documentText, setDocumentText] = useState('');
-  const [targetText, setTargetText] = useState('');
-  const [result, setResult] = useState<TextLocationFinderOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Get schemas from centralized registry
-  const { inputSchema, outputSchema } = toolSchemas[fuzzyTextLocatorTool.config.id as keyof typeof toolSchemas];
-
-  const handleSearch = async () => {
-    if (!documentText.trim() || !targetText.trim()) return;
-
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await runToolWithAuth<{ documentText: string; searchText: string }, TextLocationFinderOutput>(checkToolPath, { 
-        documentText,
-        searchText: targetText 
-      });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Create multiple examples with descriptive labels
+  const exampleInputs = examples ? examples.map((ex: any, i) => {
+    // Extract context from the example for a descriptive label
+    const labels = [
+      'Quick Brown Fox',  // Classic text with repeated phrase
+      'Neural Networks',  // Technical ML content
+      'Sustainable Development',  // Environmental content
+      'Agile Development'  // Software development content
+    ];
+    
+    return {
+      label: labels[i] || `Example ${i + 1}`,
+      value: { documentText: ex.text, searchText: ex.search }
+    };
+  }) : [];
 
   return (
-    <ToolPageLayout
+    <GenericToolPage<FuzzyLocatorInput, TextLocationFinderOutput>
+      toolId="fuzzy-text-locator"
       title={fuzzyTextLocatorTool.config.name}
       description={fuzzyTextLocatorTool.config.description}
-      icon={<MagnifyingGlassIcon className="h-8 w-8 text-blue-600" />}
-    >
-
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="documentText" className="block text-sm font-medium text-gray-700 mb-2">
-            Document Text
-          </label>
-          <textarea
-            id="documentText"
-            rows={8}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Enter the document text to search in..."
-            value={documentText}
-            onChange={(e) => setDocumentText(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="targetText" className="block text-sm font-medium text-gray-700 mb-2">
-            Text to Find
-          </label>
-          <textarea
-            id="targetText"
-            rows={3}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Enter the text you want to find..."
-            value={targetText}
-            onChange={(e) => setTargetText(e.target.value)}
-          />
-        </div>
-
-        <button
-          onClick={handleSearch}
-          disabled={isLoading || !documentText.trim() || !targetText.trim()}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Searching...' : 'Search'}
-        </button>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-4">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Search Result</h2>
-              {result.found ? (
-                <div className="space-y-2">
-                  <p className="text-green-600 font-medium">✓ Text found</p>
-                  {result.location && (
-                    <div className="bg-gray-50 p-3 rounded">
-                      <p className="text-sm text-gray-600">
-                        <strong>Position:</strong> Characters {result.location.startOffset} - {result.location.endOffset}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Confidence:</strong> {Math.round((result.location.confidence || 0) * 100)}%
-                      </p>
-                      <p className="text-sm text-gray-600 mt-2">
-                        <strong>Found text:</strong> <code className="bg-white px-1">{result.location.quotedText}</code>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-red-600">✗ Text not found</p>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <ApiDocumentation 
-        title="API Documentation"
-        endpoint={`/api/tools/${fuzzyTextLocatorTool.config.id}`}
-        method="POST"
-        inputSchema={inputSchema}
-        outputSchema={outputSchema}
-      />
-    </ToolPageLayout>
+      icon={<MagnifyingGlassIcon className="h-8 w-8 text-indigo-600" />}
+      fields={[
+        {
+          type: 'textarea',
+          name: 'documentText',
+          label: 'Document Text',
+          required: true,
+          rows: 8,
+          placeholder: 'Enter the document text to search in...'
+        },
+        {
+          type: 'textarea',
+          name: 'searchText',
+          label: 'Text to Find',
+          required: true,
+          rows: 3,
+          placeholder: 'Enter the text you want to find...'
+        }
+      ]}
+      exampleInputs={exampleInputs}
+      submitButtonText="Find Text"
+      loadingText="Searching..."
+      renderResult={(result) => <FuzzyTextLocatorDisplay result={result} />}
+    />
   );
 }

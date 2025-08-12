@@ -49,6 +49,8 @@ module.exports = {
     "^@roast/db$": "<rootDir>/../../internal-packages/db/src/index.ts",
     "^@roast/ai$": "<rootDir>/../../internal-packages/ai/src/index.ts",
     "^@roast/ai/(.*)$": "<rootDir>/../../internal-packages/ai/src/$1",
+    "^@roast/domain$": "<rootDir>/../../internal-packages/domain/src/index.ts",
+    "^@roast/domain/(.*)$": "<rootDir>/../../internal-packages/domain/src/$1",
     "^server-only$": "<rootDir>/src/__mocks__/server-only.js",
     "^next-auth$": "<rootDir>/src/__mocks__/next-auth.js",
     "^next-auth/providers/resend$": "<rootDir>/src/__mocks__/next-auth/providers/resend.js",

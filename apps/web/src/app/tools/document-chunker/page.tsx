@@ -1,122 +1,74 @@
 'use client';
 
-import { useState } from 'react';
-import { documentChunkerTool, DocumentChunkerOutput, toolSchemas } from '@roast/ai';
-import { DocumentTextIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
-import { ToolPageLayout } from '../components/ToolPageLayout';
-import { ApiDocumentation } from '../components/ApiDocumentation';
+import { DocumentTextIcon } from '@heroicons/react/24/outline';
+import { documentChunkerTool, type DocumentChunkerOutput } from '@roast/ai';
+import { GenericToolPage } from '../components/GenericToolPage';
+import { DocumentChunkerDisplay } from '../components/results/DocumentChunkerDisplay';
+import { examples } from './examples';
 
-const checkToolPath = documentChunkerTool.config.path;
+interface ChunkerInput {
+  text: string;
+  maxChunkSize: number;
+  overlap: number;
+}
 
 export default function DocumentChunkerPage() {
-  const [text, setText] = useState('');
-  const [result, setResult] = useState<DocumentChunkerOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showInputSchema, setShowInputSchema] = useState(false);
-  const [showOutputSchema, setShowOutputSchema] = useState(false);
-  
-  // Get schemas from generated schemas
-  const { inputSchema, outputSchema } = toolSchemas[documentChunkerTool.config.id as keyof typeof toolSchemas];
 
-  const handleChunk = async () => {
-    if (!text.trim()) return;
-
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await runToolWithAuth<{ text: string }, DocumentChunkerOutput>(checkToolPath, { text });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
+  const renderResult = (result: DocumentChunkerOutput) => {
+    return <DocumentChunkerDisplay result={result} />;
   };
 
   return (
-    <ToolPageLayout
+    <GenericToolPage<ChunkerInput, DocumentChunkerOutput>
+      toolId={documentChunkerTool.config.id as keyof typeof import('@roast/ai').toolSchemas}
       title={documentChunkerTool.config.name}
       description={documentChunkerTool.config.description}
-      icon={<DocumentTextIcon className="h-8 w-8 text-purple-600" />}
-    >
-
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-2">
-            Enter document text
-          </label>
-          <textarea
-            id="text"
-            rows={10}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Enter your document text here..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </div>
-
-        <button
-          onClick={handleChunk}
-          disabled={isLoading || !text.trim()}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Processing...' : 'Chunk Document'}
-        </button>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-6">
-            {result.metadata?.warnings && result.metadata.warnings.length > 0 && (
-              <div className="bg-yellow-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-yellow-800 mb-2">Warnings</h3>
-                {result.metadata.warnings.map((warning: string, idx: number) => (
-                  <p key={idx} className="text-sm text-yellow-700">• {warning}</p>
-                ))}
-              </div>
-            )}
-
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
-                {result.chunks.length} Chunks Created
-              </h2>
-              <div className="space-y-4">
-                {result.chunks.map((chunk: any, idx: number) => (
-                  <div key={idx} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm font-medium text-gray-900">
-                        Chunk {idx + 1}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {chunk.text?.length || 0} characters
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                      {chunk.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <ApiDocumentation 
-        title="API Documentation"
-        endpoint={`/api/tools/${documentChunkerTool.config.id}`}
-        method="POST"
-        inputSchema={inputSchema}
-        outputSchema={outputSchema}
-      />
-    </ToolPageLayout>
+      icon={<DocumentTextIcon className="h-8 w-8 text-indigo-600" />}
+      fields={[
+        {
+          type: 'textarea',
+          name: 'text',
+          label: 'Document Text',
+          placeholder: 'Enter or paste your document text here...',
+          rows: 10,
+          required: true,
+          helperText: 'The text will be split into overlapping chunks for processing'
+        },
+        {
+          type: 'number',
+          name: 'maxChunkSize',
+          label: 'Maximum Chunk Size',
+          defaultValue: 1000,
+          min: 100,
+          max: 5000,
+          step: 100,
+          helperText: 'Maximum number of characters per chunk'
+        },
+        {
+          type: 'number',
+          name: 'overlap',
+          label: 'Overlap Size',
+          defaultValue: 100,
+          min: 0,
+          max: 500,
+          step: 50,
+          helperText: 'Number of overlapping characters between chunks'
+        }
+      ]}
+      renderResult={renderResult}
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex, maxChunkSize: 1000, overlap: 100 }
+      })) : undefined}
+      submitButtonText="Chunk Document"
+      loadingText="Chunking Document..."
+      validateInput={(input) => {
+        if (!input.text.trim()) return 'Please enter document text';
+        if (input.text.length < 50) return 'Document must be at least 50 characters';
+        if (input.overlap >= input.maxChunkSize) return 'Overlap must be less than chunk size';
+        return true;
+      }}
+      warning="Chunks are created based on character count. Consider semantic boundaries for better results."
+    />
   );
 }

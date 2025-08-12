@@ -1,110 +1,114 @@
 'use client';
 
-import { useState } from 'react';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
-import { extractMathExpressionsTool, toolSchemas } from '@roast/ai';
-import { ToolPageLayout } from '../components/ToolPageLayout';
-import { ApiDocumentation } from '../components/ApiDocumentation';
-import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
-
-const checkToolPath = extractMathExpressionsTool.config.path;
+import { extractMathExpressionsTool, type ExtractMathExpressionsOutput } from '@roast/ai';
+import { GenericToolPage } from '../components/GenericToolPage';
+import { getSeverityColor } from '../utils/resultFormatting';
+import { examples } from './examples';
 
 export default function ExtractMathExpressionsPage() {
-  const [text, setText] = useState('');
-  const [result, setResult] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Get schemas from centralized registry
-  const { inputSchema, outputSchema } = toolSchemas[extractMathExpressionsTool.config.id as keyof typeof toolSchemas];
 
-  const handleExtract = async () => {
-    if (!text.trim()) return;
-
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await runToolWithAuth(checkToolPath, { 
-        text,
-        verifyCalculations: true 
-      });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <ToolPageLayout
-      title={extractMathExpressionsTool.config.name}
-      description={extractMathExpressionsTool.config.description}
-      icon={<CalculatorIcon className="h-8 w-8 text-green-600" />}
-    >
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-2">
-            Enter text with math expressions
-          </label>
-          <textarea
-            id="text"
-            rows={10}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            placeholder="Enter text containing mathematical expressions..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </div>
-
-        <button
-          onClick={handleExtract}
-          disabled={isLoading || !text.trim()}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Extracting...' : 'Extract Math'}
-        </button>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        {result && result.expressions && (
+  const renderResult = (result: ExtractMathExpressionsOutput) => {
+    return (
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">
+          Found {result.expressions.length} Mathematical Expression{result.expressions.length !== 1 ? 's' : ''}
+        </h2>
+        
+        {result.expressions.length === 0 ? (
+          <p className="text-gray-600">No mathematical expressions found in the text.</p>
+        ) : (
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              {result.expressions.length} Expressions Found
-            </h2>
-            {result.expressions.map((expr: any, index: number) => (
-              <div key={index} className={`rounded-lg p-4 ${expr.hasError ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                <p className="text-sm font-mono mb-2">{expr.originalText}</p>
-                {expr.normalizedExpression && expr.normalizedExpression !== expr.originalText && (
-                  <p className="text-xs text-gray-600 mb-2">
-                    Normalized: <code>{expr.normalizedExpression}</code>
-                  </p>
-                )}
-                {expr.hasError && expr.error && (
-                  <p className="text-sm text-red-600">{expr.error}</p>
-                )}
-                {expr.calculatedResult !== undefined && (
-                  <p className="text-sm text-gray-700">Result: {expr.calculatedResult}</p>
-                )}
+            {result.expressions.map((expr, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Expression {index + 1}</span>
+                    {expr.severity && (
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(expr.severity)}`}>
+                        {expr.severity}
+                      </span>
+                    )}
+                    {expr.hasError && (
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                        Error
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    Complexity: {expr.complexityScore}/100
+                  </span>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="bg-gray-50 p-2 rounded">
+                    <p className="font-mono text-sm">{expr.originalText}</p>
+                  </div>
+                  
+                  {expr.hasError && expr.errorExplanation && (
+                    <div className="bg-red-50 p-2 rounded">
+                      <p className="text-xs font-medium text-red-900 mb-1">Error:</p>
+                      <p className="text-sm text-red-800">{expr.errorExplanation}</p>
+                      {expr.correctedVersion && (
+                        <div className="mt-2">
+                          <p className="text-xs font-medium text-green-900">Corrected:</p>
+                          <p className="font-mono text-sm text-green-800">{expr.correctedVersion}</p>
+                        </div>
+                      )}
+                      {expr.conciseCorrection && (
+                        <p className="text-xs text-gray-600 mt-1">({expr.conciseCorrection})</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {expr.simplifiedExplanation && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 mb-1">Simplified Explanation:</p>
+                      <p className="text-sm text-gray-700">{expr.simplifiedExplanation}</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-4 text-xs text-gray-500">
+                    <span>Importance: {expr.contextImportanceScore}/100</span>
+                    {expr.hasError && <span>Severity: {expr.errorSeverityScore}/100</span>}
+                    <span>Status: {expr.verificationStatus}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
-      
-      <ApiDocumentation 
-        title="API Documentation"
-        endpoint={`/api/tools/${extractMathExpressionsTool.config.id}`}
-        method="POST"
-        inputSchema={inputSchema}
-        outputSchema={outputSchema}
-      />
-    </ToolPageLayout>
+    );
+  };
+
+  return (
+    <GenericToolPage<{ text: string }, ExtractMathExpressionsOutput>
+      toolId={extractMathExpressionsTool.config.id as keyof typeof import('@roast/ai').toolSchemas}
+      title={extractMathExpressionsTool.config.name}
+      description={extractMathExpressionsTool.config.description}
+      icon={<CalculatorIcon className="h-8 w-8 text-indigo-600" />}
+      fields={[
+        {
+          type: 'textarea',
+          name: 'text',
+          label: 'Text with Mathematical Content',
+          placeholder: 'Enter text containing mathematical expressions, formulas, or calculations...',
+          rows: 8,
+          required: true
+        }
+      ]}
+      renderResult={renderResult}
+      exampleInputs={examples ? examples.map((ex, i) => ({
+        label: `Example ${i + 1}`,
+        value: { text: ex }
+      })) : undefined}
+      submitButtonText="Extract Math Expressions"
+      loadingText="Extracting..."
+      validateInput={(input) => {
+        if (!input.text.trim()) return 'Please enter some text to analyze';
+        return true;
+      }}
+    />
   );
 }
