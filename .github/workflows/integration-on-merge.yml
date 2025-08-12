@@ -74,7 +74,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           echo "Starting integration tests..."
-          if ! pnpm turbo run test:integration --filter='@roast/web'; then
+          if ! pnpm turbo run test:ci-integration --filter='@roast/web'; then
             echo "❌ Integration tests failed"
             exit 1
           fi
@@ -83,7 +83,6 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
           AUTH_SECRET: test-secret-for-ci-only
           NEXTAUTH_URL: http://localhost:3000
-          ANTHROPIC_API_KEY: dummy-key-for-ci
 
       - name: Run Playwright Tests
         run: cd apps/web && npx playwright test --workers=2
