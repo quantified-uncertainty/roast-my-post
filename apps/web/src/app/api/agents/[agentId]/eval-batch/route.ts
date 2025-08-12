@@ -207,11 +207,10 @@ export async function POST(
       }
     }
 
-    // Create all jobs directly in the database
+    // Create all jobs using JobService to maintain validation and consistency
+    const { jobService } = getServices();
     for (const jobData of jobsToCreate) {
-      await prisma.job.create({
-        data: jobData
-      });
+      await jobService.createJob(jobData.evaluationId, jobData.agentEvalBatchId);
     }
 
     // Return the created batch with job count

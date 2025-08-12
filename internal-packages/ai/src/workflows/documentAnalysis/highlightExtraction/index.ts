@@ -35,11 +35,8 @@ export async function extractHighlightsFromAnalysis(
 ): Promise<{ task: TaskResult; outputs: HighlightAnalysisOutputs }> {
   const startTime = Date.now();
 
-  // If we have structured highlight insights from the analysis, we can use them directly
-  if (
-    analysisData.highlightInsights &&
-    analysisData.highlightInsights.length > 0
-  ) {
+  // If we have structured highlight insights array (even if empty), use pure logic path
+  if (analysisData.highlightInsights && Array.isArray(analysisData.highlightInsights)) {
     // Convert insights to highlights format
     const highlights: Comment[] = [];
     const lineBasedHighlights: LineBasedHighlight[] = [];
