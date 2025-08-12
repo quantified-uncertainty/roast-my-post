@@ -53,8 +53,19 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
 
+      - name: Clean build artifacts
+        run: pnpm turbo run clean --filter='@roast/domain' --filter='@roast/db' || true
+
       - name: Build dependent packages
         run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db'
+
+      - name: Verify @roast/domain build
+        run: |
+          if [ ! -f "internal-packages/domain/dist/index.js" ]; then
+            echo "❌ @roast/domain build failed - missing dist/index.js"
+            exit 1
+          fi
+          echo "✅ @roast/domain build verified"
 
       - name: Install Playwright browsers
         run: pnpm --filter @roast/web exec playwright install chromium
