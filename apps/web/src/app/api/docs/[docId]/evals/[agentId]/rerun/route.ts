@@ -67,9 +67,7 @@ export const POST = withSecurity(
 
     // Create new job for re-run
     const { jobService } = getServices();
-    const job = await jobService.createJob({
-      evaluationId: evaluation.id,
-    });
+    const job = await jobService.createJob(evaluation.id);
 
     // Log the re-run action
     logger.info('Evaluation re-run initiated', {

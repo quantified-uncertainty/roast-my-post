@@ -240,10 +240,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create job using JobService for consistency
-        await transactionalServices.jobService.createJob({
-          evaluationId: evaluation.id,
-          agentEvalBatchId: batch.id,
-        });
+        await transactionalServices.jobService.createJob(evaluation.id, batch.id);
       }
 
       // Return the batch with counts

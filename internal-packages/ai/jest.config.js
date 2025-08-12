@@ -22,8 +22,5 @@ module.exports = {
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**'
   ],
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
-  }
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts']
 };

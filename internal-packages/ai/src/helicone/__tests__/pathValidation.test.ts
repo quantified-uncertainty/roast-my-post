@@ -1,4 +1,4 @@
-import { describe, expect, test } from '@jest/globals';
+// jest globals are available by default
 import { HeliconeSessionManager } from '../simpleSessionManager';
 
 describe('Path Validation Fix', () => {

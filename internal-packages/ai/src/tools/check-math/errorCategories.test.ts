@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+// jest globals are available by default
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 import type { MathErrorType } from '../shared/math-schemas';
 

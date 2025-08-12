@@ -1,7 +1,9 @@
 // Server-only exports - Prisma client should never be imported in browser
 export { prisma } from './client';
 export { ensureDbConnected, withDb } from './ensure-connected';
-export { Prisma, PrismaClient } from '../generated'; // Server-side only - needed for query types
+
+// Re-export Prisma types from client (which properly exports from generated)
+export { Prisma, type PrismaClient } from './client';
 
 // Repositories
 export * from './repositories/DocumentRepository';

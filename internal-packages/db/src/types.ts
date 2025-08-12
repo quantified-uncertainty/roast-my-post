@@ -30,6 +30,7 @@ export type {
   AgentVersion,
   Evaluation,
   EvaluationVersion,
+  EvaluationComment,
   Job,
   AgentEvalBatch,
 } from '../generated';
