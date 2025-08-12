@@ -297,7 +297,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     // Save highlights to database
     const highlights = evaluationOutputs.highlights || [];
     if (highlights.length > 0) {
-      await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.content);
+      // Use fullContent (which includes markdownPrepend) for validation
+      // since highlights were generated based on the full content
+      await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.fullContent);
       this.logger.info(`Saved ${highlights.length} highlights for evaluation`, {
         evaluationId: job.evaluation.id,
         highlightCount: highlights.length,

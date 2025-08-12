@@ -418,7 +418,8 @@ export class JobRepository implements JobRepositoryInterface {
             id: v.id,
             title: v.title,
             content: v.content,
-            fullContent: v.fullContent,
+            // Compute fullContent: prepend + content if prepend exists, otherwise just content
+            fullContent: v.markdownPrepend ? v.markdownPrepend + v.content : v.content,
             authors: v.authors,
             urls: v.urls,
             platforms: v.platforms,
