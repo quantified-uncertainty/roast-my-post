@@ -72,7 +72,13 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
 
       - name: Run Integration Tests
-        run: pnpm turbo run test:integration --filter='@roast/web'
+        run: |
+          echo "Starting integration tests..."
+          if ! pnpm turbo run test:integration --filter='@roast/web'; then
+            echo "❌ Integration tests failed"
+            exit 1
+          fi
+          echo "✅ Integration tests passed"
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
           AUTH_SECRET: test-secret-for-ci-only
