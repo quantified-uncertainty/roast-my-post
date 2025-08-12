@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+// jest globals are available by default
 import { checkMathHybridTool } from './index';
 import { checkMathWithMathJsTool } from '../check-math-with-mathjs';
 import { checkMathTool } from '../check-math';

@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+// jest globals are available by default
 import { extractMathExpressionsTool } from './index';
 import { logger } from '../../shared/logger';
 

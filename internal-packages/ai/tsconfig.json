@@ -6,7 +6,7 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "types": ["node"],
+    "types": ["node", "jest"],
     "target": "ES2022",
     "esModuleInterop": true
   },

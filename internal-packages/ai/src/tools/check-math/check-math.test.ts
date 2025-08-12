@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+// jest globals are available by default
 import CheckMathTool from './index';
 import { logger } from '../../shared/logger';
 import { createMockLLMInteraction } from '../../claude/testUtils';

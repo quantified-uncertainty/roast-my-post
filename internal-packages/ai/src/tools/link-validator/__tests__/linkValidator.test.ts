@@ -1,4 +1,4 @@
-import { describe, expect, it, jest, beforeEach } from "@jest/globals";
+// jest globals are available by default
 import { linkValidator } from "../index";
 
 // Mock fetch globally

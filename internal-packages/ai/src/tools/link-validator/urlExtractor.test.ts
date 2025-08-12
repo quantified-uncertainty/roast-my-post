@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+// jest globals are available by default
 import { extractUrls } from "./urlExtractor";
 
 describe("extractUrls ordering", () => {

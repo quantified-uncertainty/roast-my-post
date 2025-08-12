@@ -1,8 +1,4 @@
-import {
-  describe,
-  expect,
-  it,
-} from "@jest/globals";
+// jest globals are available by default
 
 import { exactSearch } from "../exactSearch";
 import { llmSearch } from "../llmSearch";

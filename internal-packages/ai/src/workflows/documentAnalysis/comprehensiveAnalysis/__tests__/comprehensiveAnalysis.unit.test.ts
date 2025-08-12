@@ -1,17 +1,18 @@
 import { generateComprehensiveAnalysis } from "../index";
 import { extractHighlightsFromAnalysis } from "../../highlightExtraction";
-import type { Agent, Document, ComprehensiveAnalysisOutputs } from "../../../types";
-import { callClaudeWithTool, MODEL_CONFIG } from "../../../../claude/wrapper";
-import { setupClaudeToolMock } from "../../../../testing";
+import type { Agent, Document, ComprehensiveAnalysisOutputs } from "@roast/ai";
+import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
+import { setupClaudeToolMock } from "@roast/ai/testing";
 
-// Mock the claude wrapper
-jest.mock("../../../../claude/wrapper", () => ({
+// Mock the @roast/ai module  
+jest.mock("@roast/ai", () => ({
   callClaudeWithTool: jest.fn(),
   MODEL_CONFIG: {
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
   },
   createHeliconeHeaders: jest.fn(() => ({})),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
   withTimeout: jest.fn((promise) => promise),
 }));
 

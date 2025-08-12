@@ -1,4 +1,4 @@
-import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals';
+// jest globals are available by default
 import { 
   HeliconeSessionManager, 
   setGlobalSessionManager,

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+// jest globals are available by default
 import { extractMathExpressionsTool } from './index';
 import { logger } from '../../shared/logger';
 import { setupClaudeToolMock } from '../../claude/mockHelpers';

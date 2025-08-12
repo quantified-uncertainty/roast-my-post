@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+// jest globals are available by default
 import { LineBasedLocator } from './index';
 
 describe('LineBasedLocator', () => {
