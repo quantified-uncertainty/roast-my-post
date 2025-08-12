@@ -1,5 +1,6 @@
 import { logger } from "../../../utils/logger";
-import type { Agent, Document } from "@roast/db";
+import type { Document } from "../../../types/documents";
+import type { Agent } from "../../../types/agentSchema";
 import {
   callClaudeWithTool,
   MODEL_CONFIG,

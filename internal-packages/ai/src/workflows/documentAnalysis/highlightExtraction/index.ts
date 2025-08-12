@@ -1,6 +1,9 @@
 import { logger } from "../../../utils/logger";
 import type { Anthropic } from "@anthropic-ai/sdk";
-import type { Agent, Comment, Document } from "@roast/db";
+import type { EvaluationComment } from "@roast/db";
+import type { Document } from "../../../types/documents";
+import type { Agent } from "../../../types/agentSchema";
+import type { Comment } from "../../../shared/types";
 import type { LLMMessage } from "../../../types";
 import {
   callClaudeWithTool,

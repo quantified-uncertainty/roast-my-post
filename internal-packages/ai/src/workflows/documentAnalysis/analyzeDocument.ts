@@ -1,7 +1,7 @@
-import type { Agent } from "@roast/ai";
 import { logger } from "../../utils/logger";
-import type { Document } from "@roast/ai";
-import type { Comment } from "@roast/ai";
+import type { Document } from "../../types/documents";
+import type { Agent } from "../../types/agentSchema";
+import type { Comment } from "../../shared/types";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";

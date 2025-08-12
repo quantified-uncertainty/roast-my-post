@@ -177,6 +177,24 @@ export interface JobWithRelations extends JobEntity {
         version: number;
       }>;
     };
+    agent: {
+      id: string;
+      submittedBy: {
+        id: string;
+        name: string | null;
+        email: string;
+      };
+      versions: Array<{
+        id: string;
+        name: string;
+        description: string;
+        version: number;
+        primaryInstructions: string | null;
+        selfCritiqueInstructions: string | null;
+        providesGrades: boolean;
+        extendedCapabilityId: string | null;
+      }>;
+    };
   };
 }
 
@@ -239,12 +257,16 @@ export type { Prisma, PrismaClient } from '../generated';
 // Re-export Prisma domain types 
 export type {
   User,
-  Document,
   DocumentVersion,
-  Agent,
   AgentVersion,
   Evaluation,
   EvaluationVersion,
   Job,
   AgentEvalBatch,
 } from '../generated';
+
+// Export EvaluationComment directly (don't alias as Comment to avoid conflicts)
+export type { EvaluationComment } from '../generated';
+
+// Re-export base Prisma types that don't conflict with AI package
+export type { Document as PrismaDocument, Agent as PrismaAgent } from '../generated';
