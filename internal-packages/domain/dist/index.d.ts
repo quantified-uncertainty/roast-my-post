@@ -1,5 +1,4 @@
-// Manual declaration file for @roast/domain package
-
+// Declaration file for @roast/domain package
 export declare const config: {
   database: {
     url: string;
