@@ -322,13 +322,10 @@ function extractTimestamp(filename: string): string {
   return new Date().toISOString();
 }
 
-function groupByCategory(cases: typeof testCases) {
-  const groups: Record<string, typeof testCases> = {};
+function groupByCategory<T extends { category: string }>(cases: T[]) {
+  const groups: Record<string, T[]> = {};
   cases.forEach(tc => {
-    if (!groups[tc.category]) {
-      groups[tc.category] = [];
-    }
-    groups[tc.category].push(tc);
+    (groups[tc.category] ??= []).push(tc);
   });
   return groups;
 }

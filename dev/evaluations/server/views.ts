@@ -164,21 +164,22 @@ export function renderResults(data: any, filename: string) {
                     `)}
                   </td>
                   <td class="errors">
-                    ${result.runs[0]?.errors ? 
-                      getUniqueErrors(result.runs).map(error => html`
-                        <div class="error-item">
-                          <span class="error-text">${error.text}</span>
-                          <span class="arrow">→</span>
-                          <span class="error-correction">${error.correction}</span>
-                          <span class="error-type ${error.type}">${error.type}</span>
-                        </div>
-                      `) :
-                      result.runs[0]?.status ? html`
-                        <span class="status-badge ${result.runs[0].status}">
-                          ${result.runs[0].status.replace(/_/g, ' ')}
-                        </span>
-                      ` : ''
-                    }
+                    ${result.runs && result.runs.length > 0
+                      ? (result.runs[0].errors
+                          ? getUniqueErrors(result.runs).map(error => html`
+                              <div class="error-item">
+                                <span class="error-text">${error.text}</span>
+                                <span class="arrow">→</span>
+                                <span class="error-correction">${error.correction}</span>
+                                <span class="error-type ${error.type}">${error.type}</span>
+                              </div>
+                            `)
+                          : (result.runs[0].status
+                              ? html`<span class="status-badge ${result.runs[0].status}">
+                                       ${result.runs[0].status.replace(/_/g, ' ')}
+                                     </span>`
+                              : ''))
+                      : html`<span class="status-badge cannot_verify">no runs</span>`}
                   </td>
                   <td class="consistency">
                     <span class="consistency-badge ${getConsistencyClass(result.consistencyScore)}">
