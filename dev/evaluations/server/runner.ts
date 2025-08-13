@@ -3,8 +3,8 @@ import * as dotenv from "dotenv";
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 
-import { logger } from "../../../apps/web/src/lib/logger";
-import { checkSpellingGrammarTool } from "../../../apps/web/src/tools/check-spelling-grammar";
+import { logger } from "../../../internal-packages/ai/src/shared/logger";
+import { checkSpellingGrammarTool } from "../../../internal-packages/ai/src/tools/check-spelling-grammar";
 import type { TestCase } from "../data/test-cases";
 
 // Try multiple paths to find .env
@@ -96,7 +96,7 @@ export async function runEvaluation(
         try {
           // Create a context with the session
           const contextWithSession = {
-            logger,
+            logger: logger,
             userId: "test-evaluation",
             sessionId, // This ensures the tool uses the same session
           };
@@ -107,10 +107,16 @@ export async function runEvaluation(
           );
           const duration = Date.now() - start;
 
-          // Check expectations
+          // Check expectations - use testCase.expectations or create default
+          const expectations = testCase.expectations || {
+            shouldFindErrors: testCase.shouldFindErrors ?? true,
+            minErrors: testCase.minErrors,
+            maxErrors: testCase.maxErrors,
+            mustFind: testCase.mustFind
+          };
           const { passed, reasons } = checkExpectations(
             output,
-            testCase.expectations
+            expectations
           );
 
           return {

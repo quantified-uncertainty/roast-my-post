@@ -4,9 +4,9 @@
   "description": "This directory contains the evaluation framework for the spelling/grammar checking tool.",
   "main": "index.js",
   "scripts": {
-    "start": "cd /Users/ozziegooen/Documents/Github/ui-cleanup/evaluations && tsx server/index.ts",
-    "dev": "cd /Users/ozziegooen/Documents/Github/ui-cleanup/evaluations && tsx watch server/index.ts",
-    "evaluate": "cd /Users/ozziegooen/Documents/Github/ui-cleanup/evaluations && tsx scripts/run-evaluation.ts",
+    "start": "tsx server/index.ts",
+    "dev": "tsx watch server/index.ts",
+    "evaluate": "tsx scripts/run-evaluation.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
