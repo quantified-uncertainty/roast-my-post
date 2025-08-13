@@ -70,5 +70,10 @@ The tool now includes code-level deterministic comparison logic that automatical
 
 The tool includes comprehensive test coverage:
 - **Unit tests:** `numeric-comparison.test.ts` - Tests comparison logic
+- **Parser tests:** `mathjs-parser-utils.test.ts` - Tests AST parsing and equality detection
 - **Integration tests:** `deterministic-comparison.integration.test.ts` - Tests with real MathJS evaluations
 - **E2E tests:** `check-math-with-mathjs.e2e.test.ts` - Full tool testing with Claude API
+
+## Architecture
+
+For a detailed explanation of how the tool works internally, including data flow, design decisions, and the parser-based approach, see [ARCHITECTURE.md](./ARCHITECTURE.md).

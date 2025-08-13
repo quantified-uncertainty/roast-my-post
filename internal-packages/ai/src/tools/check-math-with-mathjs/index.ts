@@ -17,10 +17,16 @@ import { getGlobalSessionManager, getCurrentHeliconeHeaders } from '../../helico
 // Import numeric comparison utilities
 import { 
   compareNumericValues, 
-  parseEqualityStatement,
   formatNumber,
   ComparisonResult 
 } from './numeric-comparison';
+
+// Import MathJS parser utilities
+import {
+  parseEqualityStatement,
+  formatForMathJS,
+  type EqualityCheckResult
+} from './mathjs-parser-utils';
 
 // Import types and schemas
 import { CheckMathAgenticInput, CheckMathAgenticOutput } from './types';
@@ -462,58 +468,36 @@ IMPORTANT:
     context.logger.info(`[CheckMathWithMathJsTool] Attempting direct MathJS evaluation for: "${input.statement}"`);
     
     try {
-      // First, try to handle special mathematical symbols
-      let normalizedStatement = input.statement;
-      normalizedStatement = normalizedStatement.replace(/π/g, 'pi');
-      normalizedStatement = normalizedStatement.replace(/×/g, '*');
-      normalizedStatement = normalizedStatement.replace(/÷/g, '/');
-      normalizedStatement = normalizedStatement.replace(/−/g, '-');
-      normalizedStatement = normalizedStatement.replace(/–/g, '-');
+      // Format the statement for MathJS
+      const formattedStatement = formatForMathJS(input.statement);
       
-      // Parse the statement to find equals sign
-      const parts = normalizedStatement.split('=');
-      if (parts.length !== 2) {
-        // Not a simple equation, need LLM help
+      // Use parser to check if it's an equality
+      const equalityCheck = parseEqualityStatement(formattedStatement);
+      
+      if (!equalityCheck || !equalityCheck.isEquality) {
+        // Not an equality expression, need LLM help
         return null;
       }
       
-      const leftSide = parts[0].trim();
-      const rightSide = parts[1].trim();
-      
-      // Try to evaluate both sides
-      let leftValue: any;
-      let rightValue: any;
-      let leftExpression = leftSide;
-      let rightExpression = rightSide;
-      
-      try {
-        leftValue = evaluate(leftSide);
-        leftExpression = leftSide;
-      } catch (e) {
-        // Try some common conversions
-        const converted = this.convertToMathJs(leftSide);
-        if (!converted) return null;
-        leftExpression = converted;
-        leftValue = evaluate(leftExpression);
+      if (equalityCheck.leftValue === undefined || equalityCheck.rightValue === undefined) {
+        // Couldn't evaluate one or both sides
+        return null;
       }
       
-      try {
-        rightValue = evaluate(rightSide);
-        rightExpression = rightSide;
-      } catch (e) {
-        // Try some common conversions
-        const converted = this.convertToMathJs(rightSide);
-        if (!converted) return null;
-        rightExpression = converted;
-        rightValue = evaluate(rightExpression);
-      }
+      // We have both values, now compare them
+      const leftValue = equalityCheck.leftValue;
+      const rightValue = equalityCheck.rightValue;
+      const leftExpression = equalityCheck.leftExpression || String(leftValue);
+      const rightExpression = equalityCheck.rightExpression || String(rightValue);
       
       // Format the values for display
       const leftFormatted = formatNumber(leftValue);
       const rightFormatted = formatNumber(rightValue);
       
       // Use deterministic comparison logic
-      const comparison = compareNumericValues(rightSide, leftValue, {
+      // For direct evaluation, we compare using the right side's original text
+      const rightSideOriginal = input.statement.split(/[=≈≅]/)[1]?.trim() || rightFormatted;
+      const comparison = compareNumericValues(rightSideOriginal, leftValue, {
         allowApproximation: true,
         useRelativeTolerance: false,
         absoluteTolerance: 1e-10
@@ -550,7 +534,7 @@ IMPORTANT:
         return {
           statement: input.statement,
           status: 'verified_false',
-          explanation: `The statement is incorrect. ${leftExpression} equals ${leftFormatted}, not ${rightSide}. ${comparison.reason}`,
+          explanation: `The statement is incorrect. ${leftExpression} equals ${leftFormatted}, not ${rightSideOriginal}. ${comparison.reason}`,
           verificationDetails: {
             mathJsExpression: leftExpression,
             computedValue: leftFormatted,
@@ -562,14 +546,14 @@ IMPORTANT:
           errorDetails: {
             errorType: 'calculation',
             severity: 'major',
-            conciseCorrection: `${rightSide} → ${expectedValue}`,
+            conciseCorrection: `${rightSideOriginal} → ${expectedValue}`,
             expectedValue: expectedValue,
-            actualValue: rightSide
+            actualValue: rightSideOriginal
           },
           llmInteraction: {
             model: 'direct-evaluation',
             prompt: input.statement,
-            response: `Direct MathJS evaluation found error: ${leftExpression} = ${leftFormatted}, not ${rightSide}`,
+            response: `Direct MathJS evaluation found error: ${leftExpression} = ${leftFormatted}, not ${rightSideOriginal}`,
             tokensUsed: { prompt: 0, completion: 0, total: 0 },
             timestamp: new Date(),
             duration: Date.now() - startTime
@@ -819,17 +803,24 @@ Respond with a JSON object containing:
   }
 
   private tryEvaluateEquality(expression: string, context: ToolContext): any | null {
-    const equalityParts = parseEqualityStatement(expression);
+    // Use the parser-based approach to check for equality
+    const equalityCheck = parseEqualityStatement(expression);
     
-    if (!equalityParts || !equalityParts.left || !equalityParts.right) {
+    if (!equalityCheck || !equalityCheck.isEquality) {
+      return null;
+    }
+
+    // If we couldn't evaluate the sides (e.g., symbolic math), return null
+    if (equalityCheck.leftValue === undefined || equalityCheck.rightValue === undefined) {
+      context.logger.debug(`Equality detected but couldn't evaluate sides: ${expression}`);
       return null;
     }
 
     try {
-      const leftValue = evaluate(equalityParts.left);
-      const rightValue = evaluate(equalityParts.right);
-      
-      const comparison = this.compareEqualityValues(leftValue, rightValue);
+      const comparison = this.compareEqualityValues(
+        equalityCheck.leftValue, 
+        equalityCheck.rightValue
+      );
       
       return {
         success: true,
@@ -837,15 +828,18 @@ Respond with a JSON object containing:
         type: 'boolean',
         raw: comparison.isEqual,
         comparisonDetails: {
-          left: formatNumber(leftValue),
-          right: formatNumber(rightValue),
+          left: formatNumber(equalityCheck.leftValue),
+          right: formatNumber(equalityCheck.rightValue),
           isEqual: comparison.isEqual,
-          reason: comparison.reason
+          reason: comparison.reason,
+          operator: equalityCheck.operator,
+          leftExpression: equalityCheck.leftExpression,
+          rightExpression: equalityCheck.rightExpression
         }
       };
     } catch (evalError) {
-      // If we can't evaluate the parts separately, return null to try standard evaluation
-      context.logger.debug(`Failed to evaluate equality parts separately: ${evalError}`);
+      // If comparison fails, return null to try standard evaluation
+      context.logger.debug(`Failed to compare equality values: ${evalError}`);
       return null;
     }
   }

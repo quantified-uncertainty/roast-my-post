@@ -239,33 +239,3 @@ export function formatNumber(value: number, maxDecimals: number = 6): string {
   return formatted.replace(/\.?0+$/, '');
 }
 
-/**
- * Check if a mathematical statement contains an equality assertion
- * @param statement - The mathematical statement
- * @returns Object with parsed left and right sides, or null if not an equality
- */
-export function parseEqualityStatement(statement: string): { left: string; right: string } | null {
-  // Handle different equality operators
-  const equalityPatterns = [
-    '===',  // Strict equality (rare in math)
-    '==',   // Double equals
-    '=',    // Single equals (most common in math)
-    '≈',    // Approximately equal
-    '≅',    // Congruent/approximately equal
-  ];
-  
-  for (const pattern of equalityPatterns) {
-    const index = statement.indexOf(pattern);
-    if (index > 0 && index < statement.length - pattern.length) {
-      const left = statement.substring(0, index).trim();
-      const right = statement.substring(index + pattern.length).trim();
-      
-      // Make sure both sides have content
-      if (left && right) {
-        return { left, right };
-      }
-    }
-  }
-  
-  return null;
-}

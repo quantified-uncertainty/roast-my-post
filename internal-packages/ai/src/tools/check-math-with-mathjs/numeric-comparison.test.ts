@@ -3,7 +3,6 @@ import {
   countDecimalPlaces,
   roundToDecimalPlaces,
   compareNumericValues,
-  parseEqualityStatement,
   formatNumber
 } from './numeric-comparison';
 
@@ -115,21 +114,6 @@ describe('Numeric Comparison Utilities', () => {
     });
   });
 
-  describe('parseEqualityStatement', () => {
-    it('should parse various equality operators', () => {
-      expect(parseEqualityStatement('2 + 2 = 4')).toEqual({ left: '2 + 2', right: '4' });
-      expect(parseEqualityStatement('10/3 == 3.33')).toEqual({ left: '10/3', right: '3.33' });
-      expect(parseEqualityStatement('π ≈ 3.14')).toEqual({ left: 'π', right: '3.14' });
-      expect(parseEqualityStatement('a ≅ b')).toEqual({ left: 'a', right: 'b' });
-      expect(parseEqualityStatement('x === y')).toEqual({ left: 'x', right: 'y' });
-    });
-
-    it('should return null for non-equality statements', () => {
-      expect(parseEqualityStatement('2 + 2')).toBe(null);
-      expect(parseEqualityStatement('= 4')).toBe(null);
-      expect(parseEqualityStatement('just text')).toBe(null);
-    });
-  });
 
   describe('formatNumber', () => {
     it('should format numbers nicely', () => {
