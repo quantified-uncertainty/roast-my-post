@@ -14,6 +14,14 @@ import { generateCacheSeed } from '../shared/cache-utils';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { getGlobalSessionManager, getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
 
+// Import numeric comparison utilities
+import { 
+  compareNumericValues, 
+  parseEqualityStatement,
+  formatNumber,
+  ComparisonResult 
+} from './numeric-comparison';
+
 // Import types and schemas
 import { CheckMathAgenticInput, CheckMathAgenticOutput } from './types';
 import { inputSchema, outputSchema } from './schemas';
@@ -166,19 +174,16 @@ MATHJS SYNTAX EXAMPLES:
 - Constants: pi, e
 
 APPROXIMATION RULES:
-When comparing values, check if one is a reasonable approximation of the other:
-- If the stated value has N decimal places, accept if it matches the computed value rounded to N decimal places
-- To check approximations:
-  1. Count decimal places in the stated value (e.g., 3.33 has 2 decimal places)
-  2. Round the computed value to the same number of decimal places
-  3. If they match, it's a valid approximation → verified_true
-- Examples of ACCEPTABLE approximations:
-  * Statement: "10/3 = 3.33" → Computed: 3.3333... → Round to 2 decimals: 3.33 → ACCEPT
-  * Statement: "π = 3.14" → Computed: 3.14159... → Round to 2 decimals: 3.14 → ACCEPT
-  * Statement: "√2 = 1.414" → Computed: 1.41421... → Round to 3 decimals: 1.414 → ACCEPT
-- Examples of UNACCEPTABLE approximations:
-  * Statement: "π = 3.0" → Computed: 3.14159... → Round to 1 decimal: 3.1 → REJECT (3.0 ≠ 3.1)
-  * Statement: "10/3 = 3.0" → Computed: 3.3333... → Round to 1 decimal: 3.3 → REJECT (3.0 ≠ 3.3)
+NOTE: The system uses deterministic code-level comparison for numeric values.
+When you evaluate expressions that result in equality checks, the system will:
+- Automatically handle reasonable approximations based on decimal precision
+- Accept values that match when rounded to the same precision as stated
+- Apply consistent rounding rules across all comparisons
+
+When using evaluate_expression with comparisons:
+- The tool will return true/false based on deterministic comparison logic
+- Approximations are handled automatically (e.g., "10/3 == 3.33" will be true)
+- You don't need to manually check approximations - just evaluate and trust the result
 
 IMPORTANT:
 - Keep explanations clear and concise 
@@ -503,18 +508,22 @@ IMPORTANT:
         rightValue = evaluate(rightExpression);
       }
       
-      // Format the values for comparison
-      const leftFormatted = format(leftValue, { precision: 14 });
-      const rightFormatted = format(rightValue, { precision: 14 });
+      // Format the values for display
+      const leftFormatted = formatNumber(leftValue);
+      const rightFormatted = formatNumber(rightValue);
       
-      // Compare values (handle floating point precision)
-      const isEqual = Math.abs(leftValue - rightValue) < 1e-10;
+      // Use deterministic comparison logic
+      const comparison = compareNumericValues(rightSide, leftValue, {
+        allowApproximation: true,
+        useRelativeTolerance: false,
+        absoluteTolerance: 1e-10
+      });
       
-      if (isEqual) {
+      if (comparison.isEqual) {
         return {
           statement: input.statement,
           status: 'verified_true',
-          explanation: `The statement is correct. ${leftExpression} equals ${leftFormatted}.`,
+          explanation: `The statement is correct. ${leftExpression} equals ${leftFormatted}. ${comparison.reason}`,
           verificationDetails: {
             mathJsExpression: leftExpression,
             computedValue: leftFormatted,
@@ -526,17 +535,22 @@ IMPORTANT:
           llmInteraction: {
             model: 'direct-evaluation',
             prompt: input.statement,
-            response: `Direct MathJS evaluation: ${leftExpression} = ${leftFormatted}`,
+            response: `Direct MathJS evaluation: ${leftExpression} = ${leftFormatted} (${comparison.reason})`,
             tokensUsed: { prompt: 0, completion: 0, total: 0 },
             timestamp: new Date(),
             duration: Date.now() - startTime
           }
         };
       } else {
+        // Get the properly rounded expected value for the correction
+        const expectedValue = comparison.roundedComputedValue !== undefined 
+          ? formatNumber(comparison.roundedComputedValue)
+          : leftFormatted;
+          
         return {
           statement: input.statement,
           status: 'verified_false',
-          explanation: `The statement is incorrect. ${leftExpression} equals ${leftFormatted}, not ${rightFormatted}.`,
+          explanation: `The statement is incorrect. ${leftExpression} equals ${leftFormatted}, not ${rightSide}. ${comparison.reason}`,
           verificationDetails: {
             mathJsExpression: leftExpression,
             computedValue: leftFormatted,
@@ -548,14 +562,14 @@ IMPORTANT:
           errorDetails: {
             errorType: 'calculation',
             severity: 'major',
-            conciseCorrection: `${rightFormatted} → ${leftFormatted}`,
-            expectedValue: leftFormatted,
-            actualValue: rightFormatted
+            conciseCorrection: `${rightSide} → ${expectedValue}`,
+            expectedValue: expectedValue,
+            actualValue: rightSide
           },
           llmInteraction: {
             model: 'direct-evaluation',
             prompt: input.statement,
-            response: `Direct MathJS evaluation found error: ${leftExpression} = ${leftFormatted}, not ${rightFormatted}`,
+            response: `Direct MathJS evaluation found error: ${leftExpression} = ${leftFormatted}, not ${rightSide}`,
             tokensUsed: { prompt: 0, completion: 0, total: 0 },
             timestamp: new Date(),
             duration: Date.now() - startTime
@@ -787,6 +801,45 @@ Respond with a JSON object containing:
   
   private evaluateExpression(input: { expression: string }, context: ToolContext): any {
     try {
+      // Check if this is an equality comparison that needs special handling
+      const equalityParts = parseEqualityStatement(input.expression);
+      
+      if (equalityParts && equalityParts.left && equalityParts.right) {
+        // This is an equality check - evaluate both sides and compare
+        try {
+          const leftValue = evaluate(equalityParts.left);
+          const rightValue = evaluate(equalityParts.right);
+          
+          // Use deterministic comparison
+          const comparison = compareNumericValues(
+            formatNumber(rightValue), 
+            typeof leftValue === 'number' ? leftValue : parseFloat(String(leftValue)),
+            {
+              allowApproximation: true,
+              useRelativeTolerance: false,
+              absoluteTolerance: 1e-10
+            }
+          );
+          
+          return {
+            success: true,
+            result: comparison.isEqual ? 'true' : 'false',
+            type: 'boolean',
+            raw: comparison.isEqual,
+            comparisonDetails: {
+              left: formatNumber(leftValue),
+              right: formatNumber(rightValue),
+              isEqual: comparison.isEqual,
+              reason: comparison.reason
+            }
+          };
+        } catch (evalError) {
+          // Fall back to standard evaluation if parts can't be evaluated separately
+          context.logger.debug(`Failed to evaluate equality parts separately: ${evalError}`);
+        }
+      }
+      
+      // Standard evaluation
       const result = evaluate(input.expression);
       
       // Format the result nicely
@@ -794,7 +847,7 @@ Respond with a JSON object containing:
       if (typeof result === 'boolean') {
         formatted = result.toString();
       } else if (typeof result === 'number') {
-        formatted = result.toString();
+        formatted = formatNumber(result);
       } else {
         formatted = format(result);
       }
