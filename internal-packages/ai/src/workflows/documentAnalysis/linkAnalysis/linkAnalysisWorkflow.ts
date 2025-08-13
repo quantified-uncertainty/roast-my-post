@@ -53,19 +53,21 @@ export async function analyzeLinkDocument(
   const fullContent = prepend + document.content;
   
   // Use the link-validator tool to get URLs
+  // For link validation, we want to check ALL URLs, not limit based on targetHighlights
   const toolResult = await linkValidator.run({
     text: fullContent,
-    maxUrls: targetHighlights * 4, // Get more URLs than highlights needed
+    maxUrls: 100, // Check up to 100 URLs (reasonable limit for performance)
   }, {
     logger: console, // Use console as logger
   });
   const urls = toolResult.urls;
   
+  // For link validation, report all link issues found (up to 50)
   const highlights = generateLinkHighlights(
     linkAnalysisResult.linkAnalysisResults,
     urls,
     fullContent, // Pass the full content for correct position finding
-    targetHighlights
+    50 // Report up to 50 link issues
   );
   
   // Only adjust highlight offsets if the document content doesn't already include prepend
