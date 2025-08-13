@@ -801,69 +801,90 @@ Respond with a JSON object containing:
   
   private evaluateExpression(input: { expression: string }, context: ToolContext): any {
     try {
-      // Check if this is an equality comparison that needs special handling
-      const equalityParts = parseEqualityStatement(input.expression);
-      
-      if (equalityParts && equalityParts.left && equalityParts.right) {
-        // This is an equality check - evaluate both sides and compare
-        try {
-          const leftValue = evaluate(equalityParts.left);
-          const rightValue = evaluate(equalityParts.right);
-          
-          // Use deterministic comparison
-          const comparison = compareNumericValues(
-            formatNumber(rightValue), 
-            typeof leftValue === 'number' ? leftValue : parseFloat(String(leftValue)),
-            {
-              allowApproximation: true,
-              useRelativeTolerance: false,
-              absoluteTolerance: 1e-10
-            }
-          );
-          
-          return {
-            success: true,
-            result: comparison.isEqual ? 'true' : 'false',
-            type: 'boolean',
-            raw: comparison.isEqual,
-            comparisonDetails: {
-              left: formatNumber(leftValue),
-              right: formatNumber(rightValue),
-              isEqual: comparison.isEqual,
-              reason: comparison.reason
-            }
-          };
-        } catch (evalError) {
-          // Fall back to standard evaluation if parts can't be evaluated separately
-          context.logger.debug(`Failed to evaluate equality parts separately: ${evalError}`);
-        }
+      // Try equality comparison first
+      const equalityResult = this.tryEvaluateEquality(input.expression, context);
+      if (equalityResult) {
+        return equalityResult;
       }
       
-      // Standard evaluation
-      const result = evaluate(input.expression);
-      
-      // Format the result nicely
-      let formatted: string;
-      if (typeof result === 'boolean') {
-        formatted = result.toString();
-      } else if (typeof result === 'number') {
-        formatted = formatNumber(result);
-      } else {
-        formatted = format(result);
-      }
-      
-      return {
-        success: true,
-        result: formatted,
-        type: typeof result,
-        raw: result
-      };
+      // Fall back to standard evaluation
+      return this.evaluateStandard(input.expression);
     } catch (error: any) {
       return {
         success: false,
         error: error.message,
         type: 'error'
       };
+    }
+  }
+
+  private tryEvaluateEquality(expression: string, context: ToolContext): any | null {
+    const equalityParts = parseEqualityStatement(expression);
+    
+    if (!equalityParts || !equalityParts.left || !equalityParts.right) {
+      return null;
+    }
+
+    try {
+      const leftValue = evaluate(equalityParts.left);
+      const rightValue = evaluate(equalityParts.right);
+      
+      const comparison = this.compareEqualityValues(leftValue, rightValue);
+      
+      return {
+        success: true,
+        result: comparison.isEqual ? 'true' : 'false',
+        type: 'boolean',
+        raw: comparison.isEqual,
+        comparisonDetails: {
+          left: formatNumber(leftValue),
+          right: formatNumber(rightValue),
+          isEqual: comparison.isEqual,
+          reason: comparison.reason
+        }
+      };
+    } catch (evalError) {
+      // If we can't evaluate the parts separately, return null to try standard evaluation
+      context.logger.debug(`Failed to evaluate equality parts separately: ${evalError}`);
+      return null;
+    }
+  }
+
+  private compareEqualityValues(leftValue: any, rightValue: any): ComparisonResult {
+    // Convert values to numbers for comparison
+    const leftNumber = typeof leftValue === 'number' ? leftValue : parseFloat(String(leftValue));
+    const rightNumber = typeof rightValue === 'number' ? rightValue : parseFloat(String(rightValue));
+    
+    // Use deterministic comparison with standard options
+    return compareNumericValues(
+      formatNumber(rightNumber),
+      leftNumber,
+      {
+        allowApproximation: true,
+        useRelativeTolerance: false,
+        absoluteTolerance: 1e-10
+      }
+    );
+  }
+
+  private evaluateStandard(expression: string): any {
+    const result = evaluate(expression);
+    
+    return {
+      success: true,
+      result: this.formatResult(result),
+      type: typeof result,
+      raw: result
+    };
+  }
+
+  private formatResult(result: any): string {
+    if (typeof result === 'boolean') {
+      return result.toString();
+    } else if (typeof result === 'number') {
+      return formatNumber(result);
+    } else {
+      return format(result);
     }
   }
 }
