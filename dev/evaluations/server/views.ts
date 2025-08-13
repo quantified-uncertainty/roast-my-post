@@ -1,18 +1,21 @@
 import { html } from 'hono/html';
 import type { EvaluationResult } from './runner';
 
-export function renderDashboard(files: any[]) {
+export function renderDashboard(files: any[], tool: string = 'spelling') {
+  const toolName = tool === 'math' ? 'Math Verification' : 'Spelling/Grammar';
+  const toolIcon = tool === 'math' ? '🔢' : '📝';
   return html`<!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Spelling/Grammar Evaluation Dashboard</title>
+      <title>${toolName} Evaluation Dashboard</title>
       <link rel="stylesheet" href="/static/styles.css">
     </head>
     <body>
       <div class="container">
         <header>
-          <h1>📊 Spelling/Grammar Evaluation Dashboard</h1>
+          <h1>${toolIcon} ${toolName} Evaluation Dashboard</h1>
+          <a href="/" class="back-link">← Back to Tools</a>
           <div class="actions">
             <button id="runEvaluation" class="btn btn-primary">Run New Evaluation</button>
             <button id="viewTestCases" class="btn">View Test Cases</button>

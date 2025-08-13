@@ -894,3 +894,69 @@ details pre {
   margin-left: 8px;
   opacity: 0.8;
 }
+/* Tool Selection Page */
+.tool-selection {
+  text-align: center;
+  padding: 48px 0;
+}
+
+.tool-selection h2 {
+  margin-bottom: 32px;
+  font-size: 24px;
+  color: #333;
+}
+
+.tool-cards {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tool-card {
+  background: white;
+  border: 1px solid #d1d5da;
+  border-radius: 8px;
+  padding: 32px;
+  width: 300px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.tool-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  border-color: #0366d6;
+}
+
+.tool-card h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: #0366d6;
+}
+
+.tool-card p {
+  color: #586069;
+  margin-bottom: 8px;
+}
+
+.tool-card p:first-of-type {
+  font-family: monospace;
+  font-size: 14px;
+  color: #6a737d;
+}
+
+/* Back link */
+.back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #0366d6;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+EOF < /dev/null
