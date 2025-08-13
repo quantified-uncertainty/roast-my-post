@@ -53,7 +53,7 @@ const MATH_AGENT_TOOLS: Anthropic.Tool[] = [
   },
   {
     name: 'provide_verdict',
-    description: 'Provide the final verification result',
+    description: 'Provide the final verification result. IMPORTANT: Accept reasonable approximations - if the stated value matches the computed value when rounded to the same number of decimal places shown in the statement, mark as verified_true.',
     input_schema: {
       type: 'object',
       properties: {
@@ -155,6 +155,7 @@ APPROACH:
 1. ALWAYS start by calling evaluate_expression to check any numerical claims
 2. For symbolic/theoretical statements: return 'cannot_verify' (MathJS only does numerical computation)
 3. For unit mismatches: compute the correct value and note the error
+4. IMPORTANT: Division by zero is UNDEFINED in mathematics, not infinity. Even though MathJS returns "Infinity", statements like "x/0 = infinity" should be marked as verified_false with a conceptual error
 
 MATHJS SYNTAX EXAMPLES:
 - Arithmetic: 2 + 2, 5 * 7, 10 / 2
@@ -164,10 +165,25 @@ MATHJS SYNTAX EXAMPLES:
 - Percentages: 30% * 150 or 0.3 * 150
 - Constants: pi, e
 
+APPROXIMATION RULES:
+When comparing values, check if one is a reasonable approximation of the other:
+- If the stated value has N decimal places, accept if it matches the computed value rounded to N decimal places
+- To check approximations:
+  1. Count decimal places in the stated value (e.g., 3.33 has 2 decimal places)
+  2. Round the computed value to the same number of decimal places
+  3. If they match, it's a valid approximation → verified_true
+- Examples of ACCEPTABLE approximations:
+  * Statement: "10/3 = 3.33" → Computed: 3.3333... → Round to 2 decimals: 3.33 → ACCEPT
+  * Statement: "π = 3.14" → Computed: 3.14159... → Round to 2 decimals: 3.14 → ACCEPT
+  * Statement: "√2 = 1.414" → Computed: 1.41421... → Round to 3 decimals: 1.414 → ACCEPT
+- Examples of UNACCEPTABLE approximations:
+  * Statement: "π = 3.0" → Computed: 3.14159... → Round to 1 decimal: 3.1 → REJECT (3.0 ≠ 3.1)
+  * Statement: "10/3 = 3.0" → Computed: 3.3333... → Round to 1 decimal: 3.3 → REJECT (3.0 ≠ 3.3)
+
 IMPORTANT:
 - Keep explanations clear and concise 
 - Always include mathjs_expression and computed_value when using MathJS
-- For rounding (e.g., π ≈ 3.14), accept if reasonable
+- Accept reasonable approximations based on the decimal precision shown in the statement
 - For unit errors, provide the correct value with proper units`;
 
       const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;

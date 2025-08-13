@@ -94,15 +94,24 @@ app.get('/spelling', async (c) => {
   const localResultsDir = path.join(process.cwd(), 'results');
   const parentResultsDir = path.join(process.cwd(), '..', 'results');
   
-  // Get files from both directories
+  // Get all files from both directories
   const localFiles = await getResultFiles(localResultsDir);
   const parentFiles = await getResultFiles(parentResultsDir);
   
-  // Merge and deduplicate by filename
-  const allFiles = [...localFiles];
-  const localFileNames = new Set(localFiles.map(f => f.name));
+  // Filter to only include spelling results (exclude math-evaluation files)
+  const isSpellingFile = (filename: string) => {
+    return filename.startsWith('spelling-') || 
+           (filename.startsWith('evaluation-') && !filename.includes('math-evaluation'));
+  };
   
-  for (const file of parentFiles) {
+  const localSpellingFiles = localFiles.filter(f => isSpellingFile(f.name));
+  const parentSpellingFiles = parentFiles.filter(f => isSpellingFile(f.name));
+  
+  // Merge and deduplicate by filename
+  const allFiles = [...localSpellingFiles];
+  const localFileNames = new Set(localSpellingFiles.map(f => f.name));
+  
+  for (const file of parentSpellingFiles) {
     if (!localFileNames.has(file.name)) {
       allFiles.push(file);
     }

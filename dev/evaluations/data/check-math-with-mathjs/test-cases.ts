@@ -274,7 +274,7 @@ export const testCases: TestCase[] = [
     input: { statement: '1 kg = 1000 pounds' },
     expectations: {
       status: 'verified_false',
-      errorType: 'calculation'
+      errorType: 'unit'  // This is a unit conversion error, not a calculation error
     },
     description: 'Should detect incorrect unit conversion'
   },
@@ -410,5 +410,243 @@ export const testCases: TestCase[] = [
       errorType: 'calculation'
     },
     description: 'Should detect incorrect discount calculation (should be $40)'
+  },
+
+  // Approximation and Rounding Cases (Important for your concern!)
+  {
+    id: 'approximation-reasonable-rounding-1',
+    category: 'Approximations',
+    name: 'Reasonable rounding 2 decimals',
+    input: { statement: 'The result of 10/3 is 3.33' },
+    expectations: {
+      status: 'verified_true'  // Should accept as reasonable approximation
+    },
+    description: 'Should accept reasonable 2-decimal rounding (actual: 3.333...)'
+  },
+  {
+    id: 'approximation-reasonable-rounding-2',
+    category: 'Approximations',
+    name: 'Reasonable rounding 3 decimals',
+    input: { statement: 'π × 2 = 6.283' },
+    expectations: {
+      status: 'verified_true'  // Should accept as reasonable approximation
+    },
+    description: 'Should accept reasonable 3-decimal rounding (actual: 6.28318...)'
+  },
+  {
+    id: 'approximation-small-difference',
+    category: 'Approximations',
+    name: 'Small difference acceptable',
+    input: { statement: '√2 = 1.414' },
+    expectations: {
+      status: 'verified_true'  // Should accept small approximation
+    },
+    description: 'Should accept small approximation (actual: 1.41421...)'
+  },
+  {
+    id: 'approximation-percentage-close',
+    category: 'Approximations',
+    name: 'Percentage calculation close',
+    input: { statement: '33.3% of 100 is 33.3' },
+    expectations: {
+      status: 'verified_true'  // Should accept (vs 33.333...)
+    },
+    description: 'Should accept close percentage calculation'
+  },
+  {
+    id: 'approximation-division-result',
+    category: 'Approximations',
+    name: 'Division with minor rounding',
+    input: { statement: '100 ÷ 7 = 14.29' },
+    expectations: {
+      status: 'verified_true'  // Should accept (actual: 14.2857...)
+    },
+    description: 'Should accept reasonable division rounding'
+  },
+  {
+    id: 'approximation-trig-rounding',
+    category: 'Approximations',
+    name: 'Trig function rounding',
+    input: { statement: 'cos(60°) = 0.5' },
+    expectations: {
+      status: 'verified_true'  // Exact match, should definitely pass
+    },
+    description: 'Should verify exact trig value'
+  },
+  {
+    id: 'approximation-significant-error',
+    category: 'Approximations',
+    name: 'Significant approximation error',
+    input: { statement: 'π = 3.0' },
+    expectations: {
+      status: 'verified_false',  // Too far off
+      errorType: 'calculation'
+    },
+    description: 'Should reject significant approximation error'
+  },
+
+  // More Arithmetic Errors
+  {
+    id: 'arithmetic-multiplication-error',
+    category: 'Basic Arithmetic',
+    name: 'Multiplication error',
+    input: { statement: '7 × 8 = 54' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect multiplication error (should be 56)'
+  },
+  {
+    id: 'arithmetic-division-error',
+    category: 'Basic Arithmetic',
+    name: 'Division error',
+    input: { statement: '100 ÷ 4 = 20' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect division error (should be 25)'
+  },
+  {
+    id: 'arithmetic-subtraction-error',
+    category: 'Basic Arithmetic',
+    name: 'Subtraction error',
+    input: { statement: '93 - 27 = 64' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect subtraction error (should be 66)'
+  },
+  {
+    id: 'arithmetic-order-operations-error',
+    category: 'Basic Arithmetic',
+    name: 'Order of operations error',
+    input: { statement: '2 + 3 × 4 = 20' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect PEMDAS error (should be 14, not 20)'
+  },
+
+  // Percentage Errors
+  {
+    id: 'percentage-increase-error',
+    category: 'Percentages',
+    name: 'Percentage increase error',
+    input: { statement: 'A 25% increase on 80 gives 105' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect percentage increase error (should be 100)'
+  },
+  {
+    id: 'percentage-of-error',
+    category: 'Percentages',
+    name: 'Percentage of error',
+    input: { statement: '15% of 200 is 35' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect percentage calculation error (should be 30)'
+  },
+
+  // Fraction Errors
+  {
+    id: 'fraction-addition-error',
+    category: 'Fractions',
+    name: 'Fraction addition error',
+    input: { statement: '1/2 + 1/3 = 2/5' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect fraction addition error (should be 5/6)'
+  },
+  {
+    id: 'fraction-multiplication-error',
+    category: 'Fractions',
+    name: 'Fraction multiplication error',
+    input: { statement: '2/3 × 3/4 = 6/7' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect fraction multiplication error (should be 1/2)'
+  },
+
+  // Scientific Notation Errors
+  {
+    id: 'scientific-notation-error',
+    category: 'Scientific',
+    name: 'Scientific notation error',
+    input: { statement: '3.2 × 10^3 = 320' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect scientific notation error (should be 3200)'
+  },
+  {
+    id: 'scientific-exponent-error',
+    category: 'Scientific',
+    name: 'Exponent calculation error',
+    input: { statement: '2^10 = 1000' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect exponent error (should be 1024)'
+  },
+
+  // Statistics Errors
+  {
+    id: 'stats-mean-error',
+    category: 'Statistics',
+    name: 'Mean calculation error',
+    input: { statement: 'The mean of 2, 4, 6, 8, 10 is 7' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect mean calculation error (should be 6)'
+  },
+
+  // Edge Cases
+  {
+    id: 'edge-division-by-zero',
+    category: 'Edge Cases',
+    name: 'Division by zero claim',
+    input: { statement: '5 divided by 0 equals infinity' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'conceptual'  // This is a conceptual error, not a calculation error
+    },
+    description: 'Should recognize that division by zero is undefined, not infinity'
+  },
+  {
+    id: 'edge-very-large-numbers',
+    category: 'Edge Cases',
+    name: 'Large number calculation',
+    input: { statement: '1 million × 1 thousand = 1 billion' },
+    expectations: {
+      status: 'verified_true'
+    },
+    description: 'Should handle large numbers correctly'
+  },
+  {
+    id: 'edge-zero-property-error',
+    category: 'Edge Cases',
+    name: 'Zero multiplication error',
+    input: { statement: '0 × 999999 = 1' },
+    expectations: {
+      status: 'verified_false',
+      errorType: 'calculation'
+    },
+    description: 'Should detect zero property violation'
   }
 ];
