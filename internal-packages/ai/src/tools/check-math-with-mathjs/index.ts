@@ -250,6 +250,13 @@ IMPORTANT:
         };
       }
       
+      // Try direct evaluation first for simple equality statements
+      const directResult = await this.tryDirectEvaluation(input, context);
+      if (directResult) {
+        context.logger.info(`[CheckMathWithMathJsTool] Direct evaluation successful, skipping LLM`);
+        return directResult;
+      }
+      
       // Track tool calls for debugging
       const toolCalls: Array<{ tool: string; input: any; output: any }> = [];
       let finalResponse: any = null;
