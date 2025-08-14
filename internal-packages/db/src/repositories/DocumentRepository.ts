@@ -59,6 +59,7 @@ export interface CreateDocumentData {
   submittedById: string;
   importUrl?: string;
   ephemeralBatchId?: string;
+  markdownPrepend?: string;
 }
 
 export interface UpdateDocumentData {
@@ -312,6 +313,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
             urls: data.url ? [data.url] : [],
             platforms: data.platforms || [],
             importUrl: data.importUrl,
+            markdownPrepend: data.markdownPrepend,
             version: 1
           }
         }

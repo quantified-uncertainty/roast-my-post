@@ -5,7 +5,7 @@ import {
   DocumentValidationSchema,
 } from "@/shared/types/validationSchemas";
 import type { Document, Evaluation } from "@/shared/types/databaseTypes";
-import { generateMarkdownPrepend } from "@roast/ai";
+import { generateMarkdownPrepend } from "@roast/domain";
 import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";
 import { getServices } from "@/application/services/ServiceFactory";

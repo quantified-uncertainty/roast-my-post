@@ -1,4 +1,4 @@
-import { generateMarkdownPrepend, countPrependLines, getPrependLength } from '@roast/ai';
+import { generateMarkdownPrepend, countPrependLines, getPrependLength } from '@roast/domain';
 
 describe('documentMetadata utilities', () => {
   describe('generateMarkdownPrepend', () => {

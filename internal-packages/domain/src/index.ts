@@ -14,3 +14,6 @@ export * from './validators';
 
 // Domain services
 export * from './services';
+
+// Utilities
+export * from './utils/documentMetadata';

@@ -33,13 +33,7 @@ export {
   type ModelName
 } from './utils/costCalculator';
 
-// Document metadata utilities
-export {
-  generateMarkdownPrepend,
-  countPrependLines,
-  getPrependLength,
-  type DocumentMetadata
-} from './utils/documentMetadata';
+// Document metadata utilities moved to @roast/domain
 
 // Tools system - types and configs only (implementations in server.ts)
 export * from './tools/configs';

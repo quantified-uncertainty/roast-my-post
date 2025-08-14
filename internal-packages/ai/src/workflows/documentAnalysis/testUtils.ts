@@ -1,5 +1,5 @@
 import type { Document } from "@roast/ai";
-import { generateMarkdownPrepend, countPrependLines } from '../../utils/documentMetadata';
+import { generateMarkdownPrepend, countPrependLines } from '@roast/domain';
 
 /**
  * Creates a test document with optional markdown prepend
