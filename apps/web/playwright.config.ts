@@ -1,5 +1,30 @@
 import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
+import * as dotenv from "dotenv";
+import * as path from "path";
+
+// Load environment variables in order of precedence:
+// 1. .env.test (test-specific)
+// 2. .env.local (local overrides)
+// 3. ../../.env (root project env)
+dotenv.config({ path: path.resolve(__dirname, ".env.test") });
+dotenv.config({ path: path.resolve(__dirname, ".env.local") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+// Check for required environment variables
+const requiredEnvVars = ["DATABASE_URL", "AUTH_SECRET", "NEXTAUTH_URL"];
+const missingEnvVars = requiredEnvVars.filter((v) => !process.env[v]);
+
+if (missingEnvVars.length > 0) {
+  console.error("❌ Missing required environment variables for Playwright tests:");
+  missingEnvVars.forEach((v) => console.error(`  - ${v}`));
+  console.error("\nPlease set these in one of:");
+  console.error("  1. .env.test (recommended for test-specific config)");
+  console.error("  2. .env.local (for local overrides)");
+  console.error("  3. Environment variables");
+  console.error("\nSee .env.test.example for a template.");
+  process.exit(1);
+}
 
 const config: PlaywrightTestConfig = {
   testDir: "./tests/playwright",
@@ -33,9 +58,6 @@ const config: PlaywrightTestConfig = {
     env: {
       ...process.env,
       BYPASS_TOOL_AUTH: "true",
-      // Pass through API keys from CI environment
-      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || "dummy-key-for-ci",
-      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "dummy-key-for-ci",
     },
   },
 };
