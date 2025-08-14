@@ -322,6 +322,9 @@ importers:
       '@roast/db':
         specifier: workspace:*
         version: link:../db
+      '@roast/domain':
+        specifier: workspace:*
+        version: link:../domain
       mathjs:
         specifier: ^14.0.1
         version: 14.6.0

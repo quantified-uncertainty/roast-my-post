@@ -86,7 +86,7 @@ export class DocumentService {
         title: sanitized.title,
         author: sanitized.authors,
         platforms: sanitized.platforms || [],
-        publishedDate: new Date().toISOString().split("T")[0],
+        publishedDate: sanitized.publishedDate || null,
       });
 
       // Create document
