@@ -167,16 +167,18 @@ jobs:
           export AUTH_SECRET="test-secret-for-ci-only"
           export NEXTAUTH_URL="http://localhost:3000"
           
-          # Set dummy API key for build-time validation (overridden for LLM tests)
+          # Set dummy API keys for build-time validation (overridden for LLM tests)
           export ANTHROPIC_API_KEY="dummy-key-for-ci"
+          export OPENROUTER_API_KEY="dummy-key-for-ci"
           
-          # Only set real API key for LLM tests
+          # Only set real API keys for LLM tests
           if [[ "${{ github.event.inputs.test_suite }}" == "llm" || "${{ github.event.inputs.test_suite }}" == "all" ]]; then
             if [[ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]]; then
               echo "❌ ANTHROPIC_API_KEY not set - cannot run LLM tests"
               exit 1
             fi
             export ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}"
+            export OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY || 'dummy-key-for-ci' }}"
           fi
           
           # Record start time

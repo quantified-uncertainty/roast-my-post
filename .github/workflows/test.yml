@@ -12,6 +12,7 @@ env:
   NEXTAUTH_URL: http://localhost:3000
   AUTH_SECRET: test-secret-for-ci-only
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || 'dummy-key-for-ci' }}
+  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'dummy-key-for-ci' }}
 
 jobs:
   # Quick static checks (2-3 minutes) - runs first to fail fast
