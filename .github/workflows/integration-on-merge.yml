@@ -87,6 +87,8 @@ jobs:
           AUTH_SECRET: test-secret-for-ci-only
           NEXTAUTH_URL: http://localhost:3000
           BYPASS_TOOL_AUTH: "true"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 
       - name: Upload Test Results
         if: always()

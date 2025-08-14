@@ -64,10 +64,10 @@ const config: PlaywrightTestConfig = {
     env: {
       ...process.env,
       BYPASS_TOOL_AUTH: "true",
-      // Pass through API keys if they exist, otherwise use empty string
+      // Always provide string values - empty string if not set
       // The dev server will load from .env.local if these are empty
-      ...(process.env.ANTHROPIC_API_KEY && { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY }),
-      ...(process.env.OPENROUTER_API_KEY && { OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY }),
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || "",
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
     },
   },
 };
