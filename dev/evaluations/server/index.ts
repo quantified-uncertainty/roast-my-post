@@ -39,13 +39,14 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { testCases } from '../data/test-cases';
+import { testCases as spellingTestCases } from '../data/check-spelling-grammar/test-cases';
+import { testCases as mathTestCases } from '../data/check-math-with-mathjs/test-cases';
 import { runEvaluation } from './runner';
 import { renderDashboard, renderResults } from './views';
 import * as fs from 'fs/promises';
 
 const app = new Hono();
-const PORT = 8765;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8767;
 
 // Middleware
 app.use('*', cors());
@@ -54,14 +55,84 @@ app.use('*', logger());
 // Serve static files
 app.use('/static/*', serveStatic({ root: path.join(process.cwd(), 'server') }));
 
-// Home page - Dashboard
+// Home page - Tool selection
 app.get('/', async (c) => {
+  return c.html(`<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Evaluation Dashboard</title>
+      <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+      <div class="container">
+        <header>
+          <h1>🧪 Tool Evaluation Dashboard</h1>
+        </header>
+        <div class="tool-selection">
+          <h2>Select a Tool to Evaluate</h2>
+          <div class="tool-cards">
+            <div class="tool-card" onclick="window.location.href='/spelling'">
+              <h3>📝 Spelling & Grammar</h3>
+              <p>check-spelling-grammar</p>
+              <p>${spellingTestCases.length} test cases</p>
+            </div>
+            <div class="tool-card" onclick="window.location.href='/math'">
+              <h3>🔢 Math Verification</h3>
+              <p>check-math-with-mathjs</p>
+              <p>${mathTestCases.length} test cases</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>`);
+});
+
+// Spelling/Grammar Dashboard
+app.get('/spelling', async (c) => {
   const localResultsDir = path.join(process.cwd(), 'results');
   const parentResultsDir = path.join(process.cwd(), '..', 'results');
   
-  // Get files from both directories
+  // Get all files from both directories
   const localFiles = await getResultFiles(localResultsDir);
   const parentFiles = await getResultFiles(parentResultsDir);
+  
+  // Filter to only include spelling results (exclude math-evaluation files)
+  const isSpellingFile = (filename: string) => {
+    return filename.startsWith('spelling-') || 
+           (filename.startsWith('evaluation-') && !filename.includes('math-evaluation'));
+  };
+  
+  const localSpellingFiles = localFiles.filter(f => isSpellingFile(f.name));
+  const parentSpellingFiles = parentFiles.filter(f => isSpellingFile(f.name));
+  
+  // Merge and deduplicate by filename
+  const allFiles = [...localSpellingFiles];
+  const localFileNames = new Set(localSpellingFiles.map(f => f.name));
+  
+  for (const file of parentSpellingFiles) {
+    if (!localFileNames.has(file.name)) {
+      allFiles.push(file);
+    }
+  }
+  
+  // Sort by modified date
+  allFiles.sort((a, b) => 
+    new Date(b.modified).getTime() - new Date(a.modified).getTime()
+  );
+  
+  return c.html(renderDashboard(allFiles, 'spelling'));
+});
+
+// Math Dashboard
+app.get('/math', async (c) => {
+  const localResultsDir = path.join(process.cwd(), 'results');
+  const parentResultsDir = path.join(process.cwd(), '..', 'results');
+  
+  // Get files from both directories (filter for math results)
+  const localFiles = await getResultFiles(localResultsDir, 'math-');
+  const parentFiles = await getResultFiles(parentResultsDir, 'math-');
   
   // Merge and deduplicate by filename
   const allFiles = [...localFiles];
@@ -78,11 +149,31 @@ app.get('/', async (c) => {
     new Date(b.modified).getTime() - new Date(a.modified).getTime()
   );
   
-  return c.html(renderDashboard(allFiles));
+  return c.html(renderDashboard(allFiles, 'math'));
 });
 
-// API: List test cases
+// API: List spelling test cases
+app.get('/api/spelling/test-cases', (c) => {
+  return c.json({
+    total: spellingTestCases.length,
+    categories: groupByCategory(spellingTestCases),
+    cases: spellingTestCases
+  });
+});
+
+// API: List math test cases
+app.get('/api/math/test-cases', (c) => {
+  return c.json({
+    total: mathTestCases.length,
+    categories: groupByCategory(mathTestCases),
+    cases: mathTestCases
+  });
+});
+
+// API: List test cases (backwards compatibility)
 app.get('/api/test-cases', (c) => {
+  const tool = c.req.query('tool') || 'spelling';
+  const testCases = tool === 'math' ? mathTestCases : spellingTestCases;
   return c.json({
     total: testCases.length,
     categories: groupByCategory(testCases),
@@ -124,7 +215,10 @@ app.get('/api/results/:filename', async (c) => {
 // API: Run evaluation
 app.post('/api/evaluate', async (c) => {
   const body = await c.req.json();
-  const { testIds, runs = 3 } = body;
+  const { testIds, runs = 3, tool = 'spelling' } = body;
+  
+  // Select test cases based on tool
+  const testCases = tool === 'math' ? mathTestCases : spellingTestCases;
   
   // Filter test cases
   const casesToRun = testIds 
@@ -137,7 +231,7 @@ app.post('/api/evaluate', async (c) => {
   
   // Start evaluation (async - returns immediately)
   const evaluationId = Date.now().toString();
-  runEvaluationAsync(evaluationId, casesToRun, runs);
+  runEvaluationAsync(evaluationId, casesToRun, runs, tool);
   
   return c.json({ 
     evaluationId, 
@@ -194,11 +288,11 @@ app.get('/results/:filename', async (c) => {
 });
 
 // Helper functions
-async function getResultFiles(dir: string) {
+async function getResultFiles(dir: string, prefix: string = '') {
   try {
     await fs.access(dir);
     const files = await fs.readdir(dir);
-    const jsonFiles = files.filter(f => f.endsWith('.json'));
+    const jsonFiles = files.filter(f => f.endsWith('.json') && (prefix ? f.startsWith(prefix) : true));
     
     const fileStats = await Promise.all(
       jsonFiles.map(async (filename) => {
@@ -228,25 +322,23 @@ function extractTimestamp(filename: string): string {
   return new Date().toISOString();
 }
 
-function groupByCategory(cases: typeof testCases) {
-  const groups: Record<string, typeof testCases> = {};
+function groupByCategory<T extends { category: string }>(cases: T[]) {
+  const groups: Record<string, T[]> = {};
   cases.forEach(tc => {
-    if (!groups[tc.category]) {
-      groups[tc.category] = [];
-    }
-    groups[tc.category].push(tc);
+    (groups[tc.category] ??= []).push(tc);
   });
   return groups;
 }
 
-async function runEvaluationAsync(id: string, cases: typeof testCases, runs: number) {
+async function runEvaluationAsync(id: string, cases: any, runs: number, tool: string = 'spelling') {
   try {
-    console.log(`Starting evaluation ${id} with ${cases.length} tests, ${runs} runs each`);
-    const results = await runEvaluation(cases, runs);
+    console.log(`Starting ${tool} evaluation ${id} with ${cases.length} tests, ${runs} runs each`);
+    const results = await runEvaluation(cases, runs, tool);
     
-    // Save results
+    // Save results with tool prefix
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-    const filename = `evaluation-${timestamp}.json`;
+    const prefix = tool === 'math' ? 'math-' : 'spelling-';
+    const filename = `${prefix}evaluation-${timestamp}.json`;
     const filepath = path.join(process.cwd(), 'results', filename);
     
     // Ensure results directory exists

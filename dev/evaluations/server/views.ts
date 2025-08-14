@@ -1,18 +1,21 @@
 import { html } from 'hono/html';
 import type { EvaluationResult } from './runner';
 
-export function renderDashboard(files: any[]) {
+export function renderDashboard(files: any[], tool: string = 'spelling') {
+  const toolName = tool === 'math' ? 'Math Verification' : 'Spelling/Grammar';
+  const toolIcon = tool === 'math' ? '🔢' : '📝';
   return html`<!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Spelling/Grammar Evaluation Dashboard</title>
+      <title>${toolName} Evaluation Dashboard</title>
       <link rel="stylesheet" href="/static/styles.css">
     </head>
     <body>
       <div class="container">
         <header>
-          <h1>📊 Spelling/Grammar Evaluation Dashboard</h1>
+          <h1>${toolIcon} ${toolName} Evaluation Dashboard</h1>
+          <a href="/" class="back-link">← Back to Tools</a>
           <div class="actions">
             <button id="runEvaluation" class="btn btn-primary">Run New Evaluation</button>
             <button id="viewTestCases" class="btn">View Test Cases</button>
@@ -161,14 +164,22 @@ export function renderResults(data: any, filename: string) {
                     `)}
                   </td>
                   <td class="errors">
-                    ${getUniqueErrors(result.runs).map(error => html`
-                      <div class="error-item">
-                        <span class="error-text">${error.text}</span>
-                        <span class="arrow">→</span>
-                        <span class="error-correction">${error.correction}</span>
-                        <span class="error-type ${error.type}">${error.type}</span>
-                      </div>
-                    `)}
+                    ${result.runs && result.runs.length > 0
+                      ? (result.runs[0].errors
+                          ? getUniqueErrors(result.runs).map(error => html`
+                              <div class="error-item">
+                                <span class="error-text">${error.text}</span>
+                                <span class="arrow">→</span>
+                                <span class="error-correction">${error.correction}</span>
+                                <span class="error-type ${error.type}">${error.type}</span>
+                              </div>
+                            `)
+                          : (result.runs[0].status
+                              ? html`<span class="status-badge ${result.runs[0].status}">
+                                       ${result.runs[0].status.replace(/_/g, ' ')}
+                                     </span>`
+                              : ''))
+                      : html`<span class="status-badge cannot_verify">no runs</span>`}
                   </td>
                   <td class="consistency">
                     <span class="consistency-badge ${getConsistencyClass(result.consistencyScore)}">
@@ -186,15 +197,31 @@ export function renderResults(data: any, filename: string) {
                     <div class="test-details">
                       <div class="detail-section">
                         <h4>Input</h4>
-                        <pre>${result.testCase.input.text}</pre>
+                        ${result.testCase.input.text ? 
+                          html`<pre>${result.testCase.input.text}</pre>` :
+                          result.testCase.input.statement ?
+                          html`<pre>${result.testCase.input.statement}</pre>` :
+                          html`<pre>${JSON.stringify(result.testCase.input, null, 2)}</pre>`
+                        }
                         ${result.testCase.input.context ? html`<p>Context: ${result.testCase.input.context}</p>` : ''}
                       </div>
                       <div class="detail-section">
                         <h4>Expected</h4>
                         <ul>
-                          <li>Should find errors: ${result.testCase.expectations.shouldFindErrors ? 'Yes' : 'No'}</li>
-                          ${result.testCase.expectations.minErrors ? html`<li>Min errors: ${result.testCase.expectations.minErrors}</li>` : ''}
-                          ${result.testCase.expectations.maxErrors ? html`<li>Max errors: ${result.testCase.expectations.maxErrors}</li>` : ''}
+                          ${result.testCase.expectations.shouldFindErrors !== undefined ? 
+                            html`<li>Should find errors: ${result.testCase.expectations.shouldFindErrors ? 'Yes' : 'No'}</li>` : ''}
+                          ${result.testCase.expectations.status ? 
+                            html`<li>Status: ${result.testCase.expectations.status}</li>` : ''}
+                          ${result.testCase.expectations.errorType ? 
+                            html`<li>Error type: ${result.testCase.expectations.errorType}</li>` : ''}
+                          ${result.testCase.expectations.minErrors ? 
+                            html`<li>Min errors: ${result.testCase.expectations.minErrors}</li>` : ''}
+                          ${result.testCase.expectations.maxErrors ? 
+                            html`<li>Max errors: ${result.testCase.expectations.maxErrors}</li>` : ''}
+                          ${result.testCase.expectations.minConfidence ? 
+                            html`<li>Min confidence: ${result.testCase.expectations.minConfidence}</li>` : ''}
+                          ${result.testCase.expectations.maxConfidence ? 
+                            html`<li>Max confidence: ${result.testCase.expectations.maxConfidence}</li>` : ''}
                         </ul>
                       </div>
                       <div class="detail-section">
@@ -206,8 +233,10 @@ export function renderResults(data: any, filename: string) {
                                 Run ${i+1} (${run.duration}ms) ${run.passed ? '✅' : '❌'}
                                 ${run.failureReasons && run.failureReasons.length > 0 ? 
                                   html`<span class="failure-count">${run.failureReasons.length} issues</span>` : 
-                                  run.errors.length > 0 ? 
+                                  run.errors && run.errors.length > 0 ? 
                                   html`<span class="error-count">${run.errors.length} errors found</span>` : 
+                                  run.status ? 
+                                  html`<span class="error-count">Status: ${run.status}</span>` :
                                   ''}
                               </span>
                             </summary>
@@ -268,11 +297,13 @@ function getUniqueErrors(runs: any[]) {
   const unique = [];
   
   for (const run of runs) {
-    for (const error of run.errors) {
-      const key = `${error.text}-${error.correction}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(error);
+    if (run.errors && Array.isArray(run.errors)) {
+      for (const error of run.errors) {
+        const key = `${error.text}-${error.correction}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(error);
+        }
       }
     }
   }

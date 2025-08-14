@@ -9,11 +9,11 @@ export const inputSchema = z.object({
 // Output schema - hybrid verification result
 export const outputSchema = z.object({
   statement: z.string().describe('The original statement that was verified'),
-  status: z.enum(['verified_true', 'verified_false', 'cannot_verify']).describe('Hybrid verification result'),
+  status: z.enum(['verified_true', 'verified_false', 'verified_warning', 'cannot_verify']).describe('Hybrid verification result'),
   explanation: z.string().describe('Clear explanation of the verification result'),
   verifiedBy: z.enum(['mathjs', 'llm', 'both']).describe('Which tool(s) provided the verification'),
   mathJsResult: z.object({
-    status: z.enum(['verified_true', 'verified_false', 'cannot_verify']).describe('MathJS verification result'),
+    status: z.enum(['verified_true', 'verified_false', 'verified_warning', 'cannot_verify']).describe('MathJS verification result'),
     explanation: z.string().describe('MathJS explanation'),
     mathJsExpression: z.string().optional().describe('The MathJS expression used'),
     computedValue: z.string().optional().describe('Computed value from MathJS'),

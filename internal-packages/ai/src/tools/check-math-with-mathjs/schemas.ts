@@ -10,8 +10,8 @@ export const inputSchema = z.object({
 // Output schema - simple verification result
 export const outputSchema = z.object({
   statement: z.string().describe('The original statement that was verified'),
-  status: z.enum(['verified_true', 'verified_false', 'cannot_verify']).describe('Verification result'),
-  explanation: z.string().describe('Clear explanation of why the statement is true, false, or cannot be verified'),
+  status: z.enum(['verified_true', 'verified_false', 'verified_warning', 'cannot_verify']).describe('Verification result: true (exact/good), false (wrong), warning (rough approximation), or cannot verify'),
+  explanation: z.string().describe('Clear explanation of why the statement is true, false, warning, or cannot be verified'),
   verificationDetails: z.object({
     mathJsExpression: z.string().optional().describe('The MathJS expression used for verification'),
     computedValue: z.string().optional().describe('The computed value from mathematical evaluation'),

@@ -13,15 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function showEvaluationDialog() {
+  // Detect which tool we're evaluating based on URL
+  const tool = window.location.pathname.includes('/math') ? 'math' : 'spelling';
+  
   // For now, just run all tests
-  const confirmed = confirm('Run evaluation on all test cases?');
+  const confirmed = confirm(`Run ${tool} evaluation on all test cases?`);
   if (!confirmed) return;
   
   try {
     const response = await fetch('/api/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ runs: 3 })
+      body: JSON.stringify({ runs: 3, tool: tool })
     });
     
     const result = await response.json();
@@ -40,8 +43,11 @@ async function showEvaluationDialog() {
 }
 
 async function showTestCases() {
+  // Detect which tool we're viewing based on URL
+  const tool = window.location.pathname.includes('/math') ? 'math' : 'spelling';
+  
   try {
-    const response = await fetch('/api/test-cases');
+    const response = await fetch(`/api/${tool}/test-cases`);
     const data = await response.json();
     
     // Create modal-like display

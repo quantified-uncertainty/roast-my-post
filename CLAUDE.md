@@ -42,6 +42,7 @@ git diff --cached                    # Verify staged changes
 git commit -m "message"               # Only if staging correct
 
 # FORBIDDEN files: node_modules/, .claude/, *.log, .env.local, package-lock.json
+# NOTE: Deletions of package-lock.json are allowed (we want to remove them in pnpm projects)
 ```
 
 ### Database Safety

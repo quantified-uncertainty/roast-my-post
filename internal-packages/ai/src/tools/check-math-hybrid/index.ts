@@ -32,7 +32,7 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
       
       let llmResult: any = null;
       let toolsUsed: Array<'mathjs' | 'llm'> = ['mathjs'];
-      let finalStatus: 'verified_true' | 'verified_false' | 'cannot_verify' = mathJsResult.status;
+      let finalStatus: 'verified_true' | 'verified_false' | 'verified_warning' | 'cannot_verify' = mathJsResult.status;
       let explanation = mathJsResult.explanation;
       let verifiedBy: 'mathjs' | 'llm' | 'both' = 'mathjs';
       
