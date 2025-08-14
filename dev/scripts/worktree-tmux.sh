@@ -162,17 +162,18 @@ create_worktree() {
 }
 EOF
     
-    # Copy and update .env files
+    # Copy and update .env files to apps/web directory
     echo -e "${YELLOW}Setting up environment...${NC}"
-    for env_file in "$GIT_ROOT"/.env*; do
+    mkdir -p "$WORKTREE_PATH/apps/web"
+    for env_file in "$GIT_ROOT/apps/web"/.env*; do
         if [ -f "$env_file" ] && [[ ! "$env_file" =~ \.example$ ]]; then
             filename=$(basename "$env_file")
-            cp "$env_file" "$WORKTREE_PATH/$filename"
+            cp "$env_file" "$WORKTREE_PATH/apps/web/$filename"
             
             # Update ports in .env
             if [[ "$filename" =~ ^\.env ]]; then
-                sed -i.bak "s|http://localhost:[0-9]*|http://localhost:$DEV_PORT|g" "$WORKTREE_PATH/$filename"
-                rm "$WORKTREE_PATH/$filename.bak"
+                sed -i.bak "s|http://localhost:[0-9]*|http://localhost:$DEV_PORT|g" "$WORKTREE_PATH/apps/web/$filename"
+                rm "$WORKTREE_PATH/apps/web/$filename.bak"
             fi
         fi
     done
@@ -273,8 +274,10 @@ start_tmux_session() {
     
     # Window: Workers
     tmux new-window -t "$SESSION" -n "workers" -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION:workers" "echo 'Building AI package for job processor...'" C-m
+    tmux send-keys -t "$SESSION:workers" "pnpm --filter @roast/ai run build" C-m
     tmux send-keys -t "$SESSION:workers" "echo 'Starting job processor...'" C-m
-    tmux send-keys -t "$SESSION:workers" "pnpm run process-jobs" C-m
+    tmux send-keys -t "$SESSION:workers" "cd apps/web && pnpm run process-jobs" C-m
     tmux split-window -t "$SESSION:workers" -h -c "$WORKTREE_PATH"
     tmux send-keys -t "$SESSION:workers.2" "echo 'TypeScript watch mode...'" C-m
     tmux send-keys -t "$SESSION:workers.2" "pnpm --filter @roast/web run typecheck --watch" C-m
