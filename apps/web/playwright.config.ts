@@ -1,5 +1,36 @@
 import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
+import * as dotenv from "dotenv";
+import * as path from "path";
+
+// Only load dotenv files when not in CI
+// CI environments set environment variables directly
+if (!process.env.CI) {
+  // Load environment variables in order of precedence:
+  // 1. .env.test (test-specific)
+  // 2. .env.local (local overrides)
+  // 3. ../../.env (root project env)
+  dotenv.config({ path: path.resolve(__dirname, ".env.test") });
+  dotenv.config({ path: path.resolve(__dirname, ".env.local") });
+  dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+}
+
+// Check for required environment variables (only fail in local development)
+const requiredEnvVars = ["DATABASE_URL", "AUTH_SECRET", "NEXTAUTH_URL"];
+const missingEnvVars = requiredEnvVars.filter((v) => !process.env[v]);
+
+// Only exit if we're not in CI and variables are missing
+// In CI, these are set by the GitHub Actions workflow
+if (!process.env.CI && missingEnvVars.length > 0) {
+  console.error("❌ Missing required environment variables for Playwright tests:");
+  missingEnvVars.forEach((v) => console.error(`  - ${v}`));
+  console.error("\nPlease set these in one of:");
+  console.error("  1. .env.test (recommended for test-specific config)");
+  console.error("  2. .env.local (for local overrides)");
+  console.error("  3. Environment variables");
+  console.error("\nSee .env.test.example for a template.");
+  process.exit(1);
+}
 
 const config: PlaywrightTestConfig = {
   testDir: "./tests/playwright",

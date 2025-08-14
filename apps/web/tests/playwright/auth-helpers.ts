@@ -99,7 +99,7 @@ export async function setupTestAuthBypass(page: Page) {
   
   // Also set localStorage flag for consistency
   await page.evaluate(() => {
-    window.localStorage.setItem('test-auth-bypass', 'true');
+    window.localStorage.setItem('playwright-auth-bypass', 'true');
   });
 }
 
