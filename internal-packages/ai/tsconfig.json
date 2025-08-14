@@ -27,6 +27,7 @@
     "src/claude/testUtils.ts"
   ],
   "references": [
-    { "path": "../db" }
+    { "path": "../db" },
+    { "path": "../domain" }
   ]
 }
