@@ -77,6 +77,11 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
   async execute(input: TextLocationFinderInput, context: ToolContext): Promise<TextLocationFinderOutput> {
     const startTime = Date.now();
     
+    // Validate input exists
+    if (!input || !input.documentText || !input.searchText) {
+      throw new Error(`Invalid input: documentText and searchText are required. Received: ${JSON.stringify(input)}`);
+    }
+    
     context.logger.debug(`FuzzyTextLocator: Searching for "${input.searchText}" in document of ${input.documentText.length} characters`);
 
     try {

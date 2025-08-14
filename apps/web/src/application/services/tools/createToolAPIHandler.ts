@@ -51,6 +51,15 @@ export function createToolAPIHandler(tool: Tool<any, any>) {
         throw jsonError;
       }
       
+      // Validate data was parsed successfully
+      if (!data || typeof data !== 'object') {
+        logger.error(`${tool.config.name} received invalid data:`, data);
+        return NextResponse.json(
+          { success: false, error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      
       // Execute the tool with user context
       const result = await tool.execute(data, {
         userId,
