@@ -80,8 +80,10 @@
     "tsx": "^4.7.0",
     "typescript": "^5.7.3"
   },
-  "peerDependencies": {
-    "@roast/db": "workspace:*",
+  "dependencies": {
     "@roast/domain": "workspace:*"
+  },
+  "peerDependencies": {
+    "@roast/db": "workspace:*"
   }
 }
