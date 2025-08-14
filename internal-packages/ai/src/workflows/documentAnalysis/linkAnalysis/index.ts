@@ -3,7 +3,7 @@ import { linkValidator, generateLinkAnalysisReport, generateNoLinksReport, type 
 import { logger } from "../../../utils/logger";
 import type { Document } from "@roast/ai";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
-import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
+import { generateMarkdownPrepend } from "@roast/domain";
 
 export async function generateLinkAnalysis(
   document: Document,

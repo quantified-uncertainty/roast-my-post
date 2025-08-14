@@ -80,6 +80,17 @@
     "tsx": "^4.7.0",
     "typescript": "^5.7.3"
   },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.54.0",
+    "@leeoniya/ufuzzy": "^1.0.18",
+    "@roast/domain": "workspace:*",
+    "mathjs": "^14.0.1",
+    "openai": "^4.77.0",
+    "tiktoken": "^1.0.17",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.24.6"
+  },
   "peerDependencies": {
     "@roast/db": "workspace:*"
   }

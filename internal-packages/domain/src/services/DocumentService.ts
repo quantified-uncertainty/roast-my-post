@@ -13,6 +13,7 @@ import type {
   CreateDocumentData as RepositoryCreateDocumentData,
   UpdateDocumentData as RepositoryUpdateDocumentData
 } from '@roast/db';
+import { generateMarkdownPrepend } from '../utils/documentMetadata';
 import type { DocumentValidator } from '../validators/DocumentValidator';
 import type { EvaluationService } from './EvaluationService';
 import type { Logger } from '../core/logger';
@@ -80,12 +81,21 @@ export class DocumentService {
       // Sanitize data
       const sanitized = this.validator.sanitizeCreateData(data);
 
+      // Generate markdownPrepend for the document
+      const markdownPrepend = generateMarkdownPrepend({
+        title: sanitized.title,
+        author: sanitized.authors,
+        platforms: sanitized.platforms || [],
+        publishedDate: sanitized.publishedDate || null,
+      });
+
       // Create document
       const createData: RepositoryCreateDocumentData = {
         ...sanitized,
         submittedById: userId,
         importUrl: data.importUrl,
-        ephemeralBatchId: data.ephemeralBatchId
+        ephemeralBatchId: data.ephemeralBatchId,
+        markdownPrepend
       };
 
       const repoDocument = await this.docRepo.create(createData);

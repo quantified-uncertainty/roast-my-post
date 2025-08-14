@@ -8,7 +8,7 @@ import {
 } from "@roast/ai/server";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./";
-import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
+import { generateMarkdownPrepend } from "@roast/domain";
 
 /**
  * Complete link analysis workflow that produces thinking, analysis, summary, and highlights
