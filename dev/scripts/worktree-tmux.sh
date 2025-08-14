@@ -281,8 +281,8 @@ start_tmux_session() {
     
     # Window: Database
     tmux new-window -t "$SESSION" -n "database" -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION:database" "echo 'Starting Prisma Studio on port $PRISMA_PORT...'" C-m
-    tmux send-keys -t "$SESSION:database" "pnpm --filter @roast/db run db:studio -p $PRISMA_PORT" C-m
+    tmux send-keys -t "$SESSION:database" "echo 'Database tools ready. Start Prisma Studio with:'" C-m
+    tmux send-keys -t "$SESSION:database" "echo 'pnpm --filter @roast/db run db:studio -p $PRISMA_PORT'" C-m
     tmux split-window -t "$SESSION:database" -h -c "$WORKTREE_PATH"
     tmux send-keys -t "$SESSION:database.2" "echo 'Database monitoring...'" C-m
     tmux send-keys -t "$SESSION:database.2" "# You can run database queries here" C-m
