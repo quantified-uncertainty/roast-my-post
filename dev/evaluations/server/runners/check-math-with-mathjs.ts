@@ -1,57 +1,13 @@
-// Load environment variables
-import * as dotenv from "dotenv";
-import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 import { logger } from "../../../../internal-packages/ai/src/shared/logger";
 import { checkMathWithMathJsTool } from "../../../../internal-packages/ai/src/tools/check-math-with-mathjs";
 import type { TestCase } from "../../data/check-math-with-mathjs/test-cases";
+import { BaseRunner } from "../../shared/BaseRunner";
+import { MathRunResult } from "../../shared/TestInterfaces";
 
-// Try multiple paths to find .env
-const envPaths = [
-  path.join(process.cwd(), ".env.local"),
-  path.join(process.cwd(), "..", ".env.local"),
-  path.join(process.cwd(), "..", "..", ".env.local"),
-  path.join(__dirname, "..", "..", "..", ".env.local"),
-  path.join(__dirname, "..", "..", "..", "..", ".env.local"),
-  path.join(process.cwd(), ".env"),
-  path.join(process.cwd(), "..", ".env"),
-  path.join(process.cwd(), "..", "..", ".env"),
-  path.join(__dirname, "..", "..", "..", ".env"),
-  path.join(__dirname, "..", "..", "..", "..", ".env"),
-];
-
-let envLoaded = false;
-for (const envPath of envPaths) {
-  const result = dotenv.config({ path: envPath });
-  if (!result.error) {
-    console.log(`[Math Runner] Loaded .env from: ${envPath}`);
-    envLoaded = true;
-    break;
-  }
-}
-
-if (!envLoaded) {
-  console.warn(
-    "[Math Runner] Warning: Could not load .env file from any of the expected paths"
-  );
-}
-
-// Check if API key is loaded
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.warn("[Math Runner] Warning: ANTHROPIC_API_KEY not found in environment");
-} else {
-  console.log("[Math Runner] ANTHROPIC_API_KEY loaded successfully");
-}
-
-export interface RunResult {
-  passed: boolean;
-  status: 'verified_true' | 'verified_false' | 'cannot_verify';
-  errorType?: string;
+export interface RunResult extends MathRunResult {
   explanation: string;
-  output: any;
-  duration: number;
-  failureReasons: string[];
 }
 
 export interface TestResult {
@@ -74,6 +30,14 @@ export interface EvaluationResult {
   };
   results: TestResult[];
 }
+
+class MathEvaluationRunner extends BaseRunner {
+  constructor() {
+    super("Math Runner");
+  }
+}
+
+const runner = new MathEvaluationRunner();
 
 export async function runMathEvaluation(
   testCases: TestCase[],

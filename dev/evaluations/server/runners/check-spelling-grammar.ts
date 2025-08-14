@@ -1,54 +1,12 @@
-// Load environment variables
-import * as dotenv from "dotenv";
-import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 import { logger } from "../../../../internal-packages/ai/src/shared/logger";
 import { checkSpellingGrammarTool } from "../../../../internal-packages/ai/src/tools/check-spelling-grammar";
 import type { TestCase } from "../../data/check-spelling-grammar/test-cases";
+import { BaseRunner } from "../../shared/BaseRunner";
+import { SpellingRunResult } from "../../shared/TestInterfaces";
 
-// Try multiple paths to find .env
-const envPaths = [
-  path.join(process.cwd(), ".env.local"),
-  path.join(process.cwd(), "..", ".env.local"),
-  path.join(__dirname, "..", "..", ".env.local"),
-  path.join(__dirname, "..", "..", "..", ".env.local"),
-  path.join(process.cwd(), ".env"),
-  path.join(process.cwd(), "..", ".env"),
-  path.join(__dirname, "..", "..", ".env"),
-  path.join(__dirname, "..", "..", "..", ".env"),
-];
-
-let envLoaded = false;
-for (const envPath of envPaths) {
-  const result = dotenv.config({ path: envPath });
-  if (!result.error) {
-    console.log(`[Runner] Loaded .env from: ${envPath}`);
-    envLoaded = true;
-    break;
-  }
-}
-
-if (!envLoaded) {
-  console.warn(
-    "[Runner] Warning: Could not load .env file from any of the expected paths"
-  );
-}
-
-// Check if API key is loaded
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.warn("[Runner] Warning: ANTHROPIC_API_KEY not found in environment");
-} else {
-  console.log("[Runner] ANTHROPIC_API_KEY loaded successfully");
-}
-
-export interface RunResult {
-  passed: boolean;
-  errors: any[];
-  output: any;
-  duration: number;
-  failureReasons: string[];
-}
+export interface RunResult extends SpellingRunResult {}
 
 export interface TestResult {
   testCase: TestCase;
@@ -70,6 +28,14 @@ export interface EvaluationResult {
   };
   results: TestResult[];
 }
+
+class SpellingEvaluationRunner extends BaseRunner {
+  constructor() {
+    super("Spelling Runner");
+  }
+}
+
+const runner = new SpellingEvaluationRunner();
 
 export async function runEvaluation(
   testCases: TestCase[],
