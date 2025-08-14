@@ -33,7 +33,23 @@ export function createToolAPIHandler(tool: Tool<any, any>) {
         userId = session.user.id;
       }
 
-      const data = await request.json();
+      // Handle aborted requests gracefully
+      let data;
+      try {
+        data = await request.json();
+      } catch (jsonError) {
+        // Check if this is an aborted request (timeout or cancelled)
+        if (jsonError instanceof Error && 
+            (jsonError.message.includes('aborted') || 
+             jsonError.message.includes('Unexpected end of JSON'))) {
+          return NextResponse.json(
+            { success: false, error: 'Request was aborted or timed out' },
+            { status: 408 } // Request Timeout
+          );
+        }
+        // Re-throw other JSON parsing errors
+        throw jsonError;
+      }
       
       // Execute the tool with user context
       const result = await tool.execute(data, {
