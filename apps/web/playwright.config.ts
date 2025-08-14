@@ -33,9 +33,9 @@ const config: PlaywrightTestConfig = {
     env: {
       ...process.env,
       BYPASS_TOOL_AUTH: "true",
-      // Pass through API keys from CI environment
-      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || "dummy-key-for-ci",
-      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "dummy-key-for-ci",
+      // In CI, use the secrets; locally the dev server will load .env.local
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
     },
   },
 };
