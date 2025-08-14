@@ -121,7 +121,10 @@ get_next_ports() {
     local max_id=-1
     for config in "$CONFIG_DIR"/*.json; do
         if [ -f "$config" ]; then
-            id=$(basename "$config" .json | grep -o '[0-9]*$' || echo "0")
+            id=$(basename "$config" .json | grep -o '[0-9]*$')
+            if [ -z "$id" ]; then
+                id=0
+            fi
             if [ "$id" -gt "$max_id" ]; then
                 max_id=$id
             fi
@@ -175,19 +178,19 @@ EOF
     done
     
     # Copy mcp-server .env
-    if [ -f "$GIT_ROOT/mcp-server/.env" ]; then
-        mkdir -p "$WORKTREE_PATH/mcp-server"
-        cp "$GIT_ROOT/mcp-server/.env" "$WORKTREE_PATH/mcp-server/.env"
+    if [ -f "$GIT_ROOT/apps/mcp-server/.env" ]; then
+        mkdir -p "$WORKTREE_PATH/apps/mcp-server"
+        cp "$GIT_ROOT/apps/mcp-server/.env" "$WORKTREE_PATH/apps/mcp-server/.env"
     fi
     
     # Install dependencies
     cd "$WORKTREE_PATH"
     echo -e "${YELLOW}Installing dependencies...${NC}"
-    npm install --silent
-    npx prisma generate
+    pnpm install
+    pnpm --filter @roast/db run gen
     
-    if [ -d "mcp-server" ]; then
-        cd mcp-server && npm install --silent && cd ..
+    if [ -d "apps/mcp-server" ]; then
+        cd apps/mcp-server && pnpm install && cd ../..
     fi
     
     # Create tmux helper script
@@ -259,36 +262,36 @@ start_tmux_session() {
     # Create tmux session with first window
     tmux new-session -d -s "$SESSION" -n "dev" -c "$WORKTREE_PATH"
     
-    # Window 0: Dev Server (with logs pane)
-    tmux send-keys -t "$SESSION:0" "echo 'Starting dev server on port $DEV_PORT...'" C-m
-    tmux send-keys -t "$SESSION:0" "PORT=$DEV_PORT npm run dev" C-m
-    tmux split-window -t "$SESSION:0" -h -p 30 -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION:0.1" "echo 'Dev server logs will appear here'" C-m
-    tmux send-keys -t "$SESSION:0.1" "sleep 5 && curl -s http://localhost:$DEV_PORT/api/health || echo 'Server starting...'" C-m
+    # Window: Dev Server (with logs pane)
+    tmux send-keys -t "$SESSION:dev" "echo 'Starting dev server on port $DEV_PORT...'" C-m
+    tmux send-keys -t "$SESSION:dev" "PORT=$DEV_PORT pnpm --filter @roast/web dev" C-m
+    tmux split-window -t "$SESSION:dev" -h -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION:dev.2" "echo 'Dev server logs will appear here'" C-m
+    tmux send-keys -t "$SESSION:dev.2" "sleep 5 && curl -s http://localhost:$DEV_PORT/api/health || echo 'Server starting...'" C-m
     
-    # Window 1: Workers
-    tmux new-window -t "$SESSION:1" -n "workers" -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION:1" "echo 'Starting job processor...'" C-m
-    tmux send-keys -t "$SESSION:1" "npm run process-jobs-adaptive" C-m
-    tmux split-window -t "$SESSION:1" -h -p 50 -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION:1.1" "echo 'TypeScript watch mode...'" C-m
-    tmux send-keys -t "$SESSION:1.1" "npm run typecheck -- --watch" C-m
+    # Window: Workers
+    tmux new-window -t "$SESSION" -n "workers" -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION:workers" "echo 'Starting job processor...'" C-m
+    tmux send-keys -t "$SESSION:workers" "pnpm run process-jobs" C-m
+    tmux split-window -t "$SESSION:workers" -h -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION:workers.2" "echo 'TypeScript watch mode...'" C-m
+    tmux send-keys -t "$SESSION:workers.2" "pnpm --filter @roast/web run typecheck --watch" C-m
     
-    # Window 2: Database
-    tmux new-window -t "$SESSION:2" -n "database" -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION:2" "echo 'Starting Prisma Studio on port $PRISMA_PORT...'" C-m
-    tmux send-keys -t "$SESSION:2" "npx prisma studio -p $PRISMA_PORT" C-m
-    tmux split-window -t "$SESSION:2" -h -p 50 -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION:2.1" "echo 'Database monitoring...'" C-m
-    tmux send-keys -t "$SESSION:2.1" "# You can run database queries here" C-m
+    # Window: Database
+    tmux new-window -t "$SESSION" -n "database" -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION:database" "echo 'Starting Prisma Studio on port $PRISMA_PORT...'" C-m
+    tmux send-keys -t "$SESSION:database" "pnpm --filter @roast/db run db:studio -p $PRISMA_PORT" C-m
+    tmux split-window -t "$SESSION:database" -h -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION:database.2" "echo 'Database monitoring...'" C-m
+    tmux send-keys -t "$SESSION:database.2" "# You can run database queries here" C-m
     
-    # Window 3: Free terminal
-    tmux new-window -t "$SESSION:3" -n "terminal" -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION:3" "echo 'Free terminal for ad-hoc commands'" C-m
-    tmux send-keys -t "$SESSION:3" "echo 'Branch: $BRANCH | Dev: $DEV_PORT | Prisma: $PRISMA_PORT'" C-m
+    # Window: Free terminal
+    tmux new-window -t "$SESSION" -n "terminal" -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION:terminal" "echo 'Free terminal for ad-hoc commands'" C-m
+    tmux send-keys -t "$SESSION:terminal" "echo 'Branch: $BRANCH | Dev: $DEV_PORT | Prisma: $PRISMA_PORT'" C-m
     
     # Select first window
-    tmux select-window -t "$SESSION:0"
+    tmux select-window -t "$SESSION:dev"
     
     echo -e "${GREEN}✓ Session started successfully!${NC}"
     echo ""
