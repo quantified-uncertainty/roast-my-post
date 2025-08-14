@@ -263,6 +263,8 @@ start_tmux_session() {
     tmux new-session -d -s "$SESSION" -n "dev" -c "$WORKTREE_PATH"
     
     # Window: Dev Server (with logs pane)
+    tmux send-keys -t "$SESSION:dev" "echo 'Installing dependencies and building packages...'" C-m
+    tmux send-keys -t "$SESSION:dev" "pnpm install && pnpm --filter @roast/domain run build && pnpm --filter @roast/db run build" C-m
     tmux send-keys -t "$SESSION:dev" "echo 'Starting dev server on port $DEV_PORT...'" C-m
     tmux send-keys -t "$SESSION:dev" "PORT=$DEV_PORT pnpm --filter @roast/web dev" C-m
     tmux split-window -t "$SESSION:dev" -h -c "$WORKTREE_PATH"

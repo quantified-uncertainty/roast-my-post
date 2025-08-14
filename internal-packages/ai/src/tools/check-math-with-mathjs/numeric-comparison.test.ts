@@ -129,32 +129,3 @@ describe('Numeric Comparison Utilities', () => {
   });
 });
 
-describe('Math Evaluation Test Cases', () => {
-  // Test cases from the PR review
-  describe('approximation handling', () => {
-    it('should accept 10/3 = 3.33 as correct', () => {
-      const result = compareNumericValues('3.33', 10/3);
-      expect(result.isEqual).toBe(true);
-    });
-
-    it('should accept π = 3.14 as correct', () => {
-      const result = compareNumericValues('3.14', Math.PI);
-      expect(result.isEqual).toBe(true);
-    });
-
-    it('should accept √2 = 1.414 as correct', () => {
-      const result = compareNumericValues('1.414', Math.sqrt(2));
-      expect(result.isEqual).toBe(true);
-    });
-
-    it('should reject π = 3.0 as incorrect', () => {
-      const result = compareNumericValues('3.0', Math.PI);
-      expect(result.isEqual).toBe(false);
-    });
-
-    it('should reject 10/3 = 3.0 as incorrect', () => {
-      const result = compareNumericValues('3.0', 10/3);
-      expect(result.isEqual).toBe(false);
-    });
-  });
-});

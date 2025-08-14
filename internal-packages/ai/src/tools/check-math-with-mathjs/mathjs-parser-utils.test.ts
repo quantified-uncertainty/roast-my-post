@@ -109,7 +109,7 @@ describe('MathJS Parser Utilities', () => {
       expect(formatForMathJS('2 × 3')).toBe('2 * 3');
       expect(formatForMathJS('6 ÷ 2')).toBe('6 / 2');
       expect(formatForMathJS('5 − 3')).toBe('5 - 3');
-      expect(formatForMathJS('√16')).toBe('sqrt16');
+      expect(formatForMathJS('√16')).toBe('sqrt(16)');
       expect(formatForMathJS('∞')).toBe('Infinity');
     });
 
