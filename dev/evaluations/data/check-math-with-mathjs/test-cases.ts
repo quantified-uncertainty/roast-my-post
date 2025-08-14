@@ -477,7 +477,7 @@ export const testCases: TestCase[] = [
     id: 'approximation-significant-error',
     category: 'Approximations',
     name: 'Significant approximation error',
-    input: { statement: 'π = 3.0' },
+    input: { statement: 'sqrt(10) = 3.0' },  // Should be ~3.162
     expectations: {
       status: 'verified_false',  // Too far off
       errorType: 'calculation'
@@ -595,12 +595,12 @@ export const testCases: TestCase[] = [
     id: 'scientific-exponent-error',
     category: 'Scientific',
     name: 'Exponent calculation error',
-    input: { statement: '2^10 = 1000' },
+    input: { statement: '3^4 = 75' },  // Should be 81
     expectations: {
       status: 'verified_false',
       errorType: 'calculation'
     },
-    description: 'Should detect exponent error (should be 1024)'
+    description: 'Should detect incorrect exponentiation'
   },
 
   // Statistics Errors

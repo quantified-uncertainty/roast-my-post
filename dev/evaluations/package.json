@@ -7,7 +7,8 @@
     "start": "tsx server/index.ts",
     "dev": "tsx watch server/index.ts",
     "evaluate": "tsx scripts/run-evaluation.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +19,11 @@
     "dotenv": "^17.2.1",
     "hono": "^4.8.10",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^30.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.1"
   }
 }

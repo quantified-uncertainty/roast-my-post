@@ -46,7 +46,7 @@ import { renderDashboard, renderResults } from './views';
 import * as fs from 'fs/promises';
 
 const app = new Hono();
-const PORT = 8765;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8767;
 
 // Middleware
 app.use('*', cors());

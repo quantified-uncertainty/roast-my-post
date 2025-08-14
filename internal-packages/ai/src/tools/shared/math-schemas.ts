@@ -4,6 +4,7 @@ import { Anthropic } from '@anthropic-ai/sdk';
 export const MATH_VERIFICATION_STATUS = {
   TRUE: 'verified_true',
   FALSE: 'verified_false', 
+  WARNING: 'verified_warning',  // New status for rough approximations
   CANNOT_VERIFY: 'cannot_verify'
 } as const;
 
@@ -12,8 +13,8 @@ export type MathVerificationStatus = typeof MATH_VERIFICATION_STATUS[keyof typeo
 // Base schema properties - always present
 export const mathStatusSchema = {
   type: "string" as const,
-  enum: ["verified_true", "verified_false", "cannot_verify"],
-  description: "Whether the mathematical statement is verified as true, false, or cannot be verified"
+  enum: ["verified_true", "verified_false", "verified_warning", "cannot_verify"],
+  description: "Whether the mathematical statement is verified as true (exact/good approximation), false (wrong), warning (rough approximation), or cannot be verified"
 };
 
 export const mathExplanationSchema = {

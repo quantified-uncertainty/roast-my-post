@@ -1,4 +1,4 @@
-import { evaluate, format, parse } from 'mathjs';
+import { evaluate, format, parse, equal } from 'mathjs';
 import { Tool } from '../base/Tool';
 import { logger } from '../../shared/logger';
 import type { ToolContext } from '../base/Tool';
@@ -18,6 +18,7 @@ import { getGlobalSessionManager, getCurrentHeliconeHeaders } from '../../helico
 import { 
   compareNumericValues, 
   formatNumber,
+  countDecimalPlaces,
   ComparisonResult 
 } from './numeric-comparison';
 
@@ -73,8 +74,8 @@ const MATH_AGENT_TOOLS: Anthropic.Tool[] = [
       properties: {
         status: {
           type: 'string',
-          enum: ['verified_true', 'verified_false', 'cannot_verify'],
-          description: 'The verification status'
+          enum: ['verified_true', 'verified_false', 'verified_warning', 'cannot_verify'],
+          description: 'The verification status: true (exact/good), false (wrong), warning (rough approximation), or cannot verify'
         },
         explanation: {
           type: 'string',
@@ -267,8 +268,8 @@ IMPORTANT:
         { role: 'user', content: userPrompt }
       ];
       
-      // Create Anthropic client
-      const anthropic = createAnthropicClient();
+      // Create Anthropic client (lazy - only when needed)
+      let anthropic: Anthropic | null = null;
       
       // Allow up to 5 rounds of tool calls with 60 second timeout
       let lastResponse: Anthropic.Message | null = null;
@@ -281,6 +282,11 @@ IMPORTANT:
         // Check for timeout
         if (Date.now() - startTime > TIMEOUT_MS) {
           throw new Error(`Tool execution timed out after ${TIMEOUT_MS}ms`);
+        }
+        
+        // Create client lazily if not yet created
+        if (!anthropic) {
+          anthropic = createAnthropicClient();
         }
         
         // Call Claude with tools using the Anthropic client directly
@@ -475,10 +481,8 @@ IMPORTANT:
     context.logger.info(`[CheckMathWithMathJsTool] Attempting direct MathJS evaluation for: "${input.statement}"`);
     
     try {
-      // Format the statement for MathJS
+      // Step 1: Format and parse the statement
       const formattedStatement = formatForMathJS(input.statement);
-      
-      // Use parser to check if it's an equality
       const equalityCheck = parseEqualityStatement(formattedStatement);
       
       if (!equalityCheck || !equalityCheck.isEquality) {
@@ -491,32 +495,108 @@ IMPORTANT:
         return null;
       }
       
-      // We have both values, now compare them
-      const leftValue = equalityCheck.leftValue;
-      const rightValue = equalityCheck.rightValue;
-      const leftExpression = equalityCheck.leftExpression || String(leftValue);
-      const rightExpression = equalityCheck.rightExpression || String(rightValue);
+      // Step 2: Determine evaluation strategy based on value types
+      const evaluationStrategy = this.determineEvaluationStrategy(
+        equalityCheck.leftValue,
+        equalityCheck.rightValue
+      );
       
-      // Format the values for display
-      const leftFormatted = formatNumber(leftValue);
-      const rightFormatted = formatNumber(rightValue);
+      // Step 3: Evaluate based on the strategy
+      let isEqual: boolean;
+      let comparisonDetails: any = {};
       
-      // Use deterministic comparison logic
-      // For direct evaluation, we compare using the right side's original text
-      const rightSideOriginal = input.statement.split(/[=≈≅]/)[1]?.trim() || rightFormatted;
-      const comparison = compareNumericValues(rightSideOriginal, leftValue, {
-        allowApproximation: true,
-        useRelativeTolerance: false,
-        absoluteTolerance: 1e-10
-      });
+      switch (evaluationStrategy) {
+        case 'units':
+          // For units: Use MathJS's built-in equality check
+          // MathJS handles unit conversions correctly (e.g., 5 km + 3000 m == 8 km)
+          if (equalityCheck.evaluationResult !== undefined) {
+            isEqual = equalityCheck.evaluationResult;
+            comparisonDetails = {
+              method: 'MathJS unit comparison',
+              reason: isEqual ? 'Unit values are equal' : 'Unit values are not equal'
+            };
+          } else {
+            // Fallback: try using MathJS equal function
+            try {
+              isEqual = equal(equalityCheck.leftValue, equalityCheck.rightValue);
+              comparisonDetails = {
+                method: 'MathJS equal() function',
+                reason: isEqual ? 'Unit values are equal' : 'Unit values are not equal'
+              };
+            } catch {
+              return null; // Can't compare, need LLM
+            }
+          }
+          break;
+          
+        case 'numbers':
+          // For numbers: Use our approximation logic
+          const comparison = this.compareNumericValuesWithApproximation(
+            equalityCheck.leftValue,
+            equalityCheck.rightValue,
+            input.statement
+          );
+          isEqual = comparison.isEqual;
+          comparisonDetails = comparison;
+          
+          // Check if this should be a warning
+          if (comparison.shouldWarn) {
+            // Return warning status for rough approximations
+            const leftExpression = equalityCheck.leftExpression || String(equalityCheck.leftValue);
+            const rightExpression = equalityCheck.rightExpression || String(equalityCheck.rightValue);
+            const leftFormatted = this.formatValue(equalityCheck.leftValue);
+            const rightFormatted = this.formatValue(equalityCheck.rightValue);
+            
+            return {
+              statement: input.statement,
+              status: 'verified_warning',
+              explanation: `The statement uses a rough approximation. ${leftExpression} equals ${leftFormatted}, which rounds to ${rightFormatted} at the stated precision, but consider using more decimal places for accuracy. ${comparison.reason || ''}`.trim(),
+              verificationDetails: {
+                mathJsExpression: formattedStatement,
+                computedValue: leftFormatted,
+                steps: [
+                  { expression: leftExpression, result: leftFormatted },
+                  { expression: rightExpression, result: rightFormatted }
+                ]
+              },
+              errorDetails: {
+                errorType: 'calculation',
+                severity: 'minor',
+                conciseCorrection: `Consider using ${leftFormatted.substring(0, rightFormatted.length + 2)}`,
+                expectedValue: leftFormatted,
+                actualValue: rightFormatted
+              },
+              llmInteraction: {
+                model: 'direct-evaluation',
+                prompt: input.statement,
+                response: `Direct evaluation: rough approximation warning`,
+                tokensUsed: { prompt: 0, completion: 0, total: 0 },
+                timestamp: new Date(),
+                duration: Date.now() - startTime
+              }
+            };
+          }
+          break;
+          
+        case 'mixed':
+        default:
+          // Mixed types or unknown: need LLM help
+          return null;
+      }
       
-      if (comparison.isEqual) {
+      // Step 4: Build the response
+      const leftExpression = equalityCheck.leftExpression || String(equalityCheck.leftValue);
+      const rightExpression = equalityCheck.rightExpression || String(equalityCheck.rightValue);
+      const leftFormatted = this.formatValue(equalityCheck.leftValue);
+      const rightFormatted = this.formatValue(equalityCheck.rightValue);
+      
+      if (isEqual) {
         return {
           statement: input.statement,
           status: 'verified_true',
-          explanation: `The statement is correct. ${leftExpression} equals ${leftFormatted}. ${comparison.reason}`,
+          explanation: `The statement is correct. ${leftExpression} equals ${rightFormatted}. ${comparisonDetails.reason || ''}`.trim(),
           verificationDetails: {
-            mathJsExpression: leftExpression,
+            mathJsExpression: formattedStatement,
             computedValue: leftFormatted,
             steps: [
               { expression: leftExpression, result: leftFormatted },
@@ -526,24 +606,24 @@ IMPORTANT:
           llmInteraction: {
             model: 'direct-evaluation',
             prompt: input.statement,
-            response: `Direct MathJS evaluation: ${leftExpression} = ${leftFormatted} (${comparison.reason})`,
+            response: `Direct evaluation: ${comparisonDetails.method || 'comparison'}`,
             tokensUsed: { prompt: 0, completion: 0, total: 0 },
             timestamp: new Date(),
             duration: Date.now() - startTime
           }
         };
       } else {
-        // Get the properly rounded expected value for the correction
-        const expectedValue = comparison.roundedComputedValue !== undefined 
-          ? formatNumber(comparison.roundedComputedValue)
+        // Determine the expected value for the correction
+        const expectedValue = comparisonDetails.roundedComputedValue !== undefined
+          ? formatNumber(comparisonDetails.roundedComputedValue)
           : leftFormatted;
           
         return {
           statement: input.statement,
           status: 'verified_false',
-          explanation: `The statement is incorrect. ${leftExpression} equals ${leftFormatted}, not ${rightSideOriginal}. ${comparison.reason}`,
+          explanation: `The statement is incorrect. ${leftExpression} equals ${leftFormatted}, not ${rightFormatted}. ${comparisonDetails.reason || ''}`.trim(),
           verificationDetails: {
-            mathJsExpression: leftExpression,
+            mathJsExpression: formattedStatement,
             computedValue: leftFormatted,
             steps: [
               { expression: leftExpression, result: leftFormatted },
@@ -552,15 +632,15 @@ IMPORTANT:
           },
           errorDetails: {
             errorType: 'calculation',
-            severity: 'major',
-            conciseCorrection: `${rightSideOriginal} → ${expectedValue}`,
+            severity: comparisonDetails.severity || 'major',
+            conciseCorrection: `${rightFormatted} → ${expectedValue}`,
             expectedValue: expectedValue,
-            actualValue: rightSideOriginal
+            actualValue: rightFormatted
           },
           llmInteraction: {
             model: 'direct-evaluation',
             prompt: input.statement,
-            response: `Direct MathJS evaluation found error: ${leftExpression} = ${leftFormatted}, not ${rightSideOriginal}`,
+            response: `Direct evaluation found error: ${comparisonDetails.method || 'comparison'}`,
             tokensUsed: { prompt: 0, completion: 0, total: 0 },
             timestamp: new Date(),
             duration: Date.now() - startTime
@@ -852,6 +932,23 @@ Respond with a JSON object containing:
   }
 
   private compareEqualityValues(leftValue: any, rightValue: any): ComparisonResult {
+    // Check if both values are Units (MathJS Unit objects)
+    if (typeof leftValue === 'object' && typeof rightValue === 'object' && 
+        leftValue !== null && rightValue !== null) {
+      // Use MathJS equal function for unit comparison
+      try {
+        const isEqual = equal(leftValue, rightValue);
+        return {
+          isEqual,
+          reason: isEqual ? 'Unit values are equal' : 'Unit values are not equal',
+          statedValue: this.formatValue(rightValue),
+          computedValue: leftValue  // Keep as object for now
+        };
+      } catch (e) {
+        // If equal() fails, fall through to numeric comparison
+      }
+    }
+    
     // Convert values to numbers for comparison
     const leftNumber = typeof leftValue === 'number' ? leftValue : parseFloat(String(leftValue));
     const rightNumber = typeof rightValue === 'number' ? rightValue : parseFloat(String(rightValue));
@@ -887,6 +984,197 @@ Respond with a JSON object containing:
     } else {
       return format(result);
     }
+  }
+  
+  /**
+   * Format a value for display, handling both numbers and MathJS Unit objects
+   * @param value - The value to format (number, Unit, or other)
+   * @returns Formatted string representation
+   */
+  private formatValue(value: any): string {
+    if (value === undefined || value === null) {
+      return String(value);
+    }
+    
+    // Check if it's a number
+    if (typeof value === 'number') {
+      return formatNumber(value);
+    }
+    
+    // Check if it's a MathJS Unit or other object with toString
+    if (typeof value === 'object') {
+      // Use MathJS format if available, otherwise toString
+      try {
+        return format(value);
+      } catch {
+        // Fall back to toString if format fails
+        if (typeof value.toString === 'function') {
+          return value.toString();
+        }
+      }
+    }
+    
+    // Default: convert to string
+    return String(value);
+  }
+  
+  /**
+   * Determine the evaluation strategy based on value types
+   * @param leftValue - Left side value
+   * @param rightValue - Right side value
+   * @returns Strategy: 'units', 'numbers', or 'mixed'
+   */
+  private determineEvaluationStrategy(leftValue: any, rightValue: any): 'units' | 'numbers' | 'mixed' {
+    const leftIsNumber = typeof leftValue === 'number';
+    const rightIsNumber = typeof rightValue === 'number';
+    const leftIsUnit = typeof leftValue === 'object' && leftValue !== null && 
+                       leftValue.constructor?.name === 'Unit';
+    const rightIsUnit = typeof rightValue === 'object' && rightValue !== null && 
+                        rightValue.constructor?.name === 'Unit';
+    
+    if (leftIsUnit || rightIsUnit) {
+      return 'units';
+    }
+    
+    if (leftIsNumber && rightIsNumber) {
+      return 'numbers';
+    }
+    
+    return 'mixed';
+  }
+  
+  /**
+   * Compare numeric values with approximation and severity levels
+   * @param leftValue - Computed value (left side of equation)
+   * @param rightValue - Stated value (right side of equation)
+   * @param originalStatement - Original statement for context
+   * @returns Comparison result with severity and approximation quality
+   */
+  private compareNumericValuesWithApproximation(
+    leftValue: number,
+    rightValue: number,
+    originalStatement: string
+  ): ComparisonResult & { 
+    severity?: 'minor' | 'major' | 'critical',
+    approximationQuality?: 'exact' | 'good' | 'acceptable' | 'poor' | 'warning',
+    shouldWarn?: boolean
+  } {
+    // Extract the right side's original text for precision detection
+    const rightSideOriginal = originalStatement.split(/[=≈≅]/)[1]?.trim() || String(rightValue);
+    
+    // Use our existing comparison logic
+    const comparison = compareNumericValues(rightSideOriginal, leftValue, {
+      allowApproximation: true,
+      useRelativeTolerance: false,
+      absoluteTolerance: 1e-10
+    });
+    
+    // Calculate difference metrics
+    const absoluteDiff = Math.abs(leftValue - rightValue);
+    const relativeDiff = leftValue !== 0 ? absoluteDiff / Math.abs(leftValue) : absoluteDiff;
+    
+    // Special handling for mathematical constants
+    const isConstant = originalStatement.toLowerCase().includes('pi') || 
+                      originalStatement.includes('π') ||
+                      originalStatement.toLowerCase().includes('e');
+    
+    // Determine approximation quality and warning status
+    let approximationQuality: 'exact' | 'good' | 'acceptable' | 'poor' | 'warning' = 'exact';
+    let shouldWarn = false;
+    
+    if (absoluteDiff === 0) {
+      approximationQuality = 'exact';
+    } else if (comparison.isEqual) {
+      // It matched with approximation rules, but check if it's too rough
+      
+      // Special handling for constants with very low precision
+      const decimalPlaces = countDecimalPlaces(rightSideOriginal);
+      const isVeryLowPrecision = decimalPlaces <= 1;
+      
+      if (relativeDiff < 0.0001) {
+        approximationQuality = 'exact';  // Less than 0.01% difference
+      } else if (relativeDiff < 0.001) {
+        approximationQuality = 'good';  // Less than 0.1% difference
+      } else if (relativeDiff < 0.005) {
+        approximationQuality = 'acceptable';  // Less than 0.5% difference
+      } else if (decimalPlaces === 0) {
+        // When explicitly using 0 decimal places (integers), accept it
+        approximationQuality = 'acceptable';
+      } else if (decimalPlaces === 1) {
+        // Single decimal place approximations should warn if >0.5% off
+        approximationQuality = 'warning';
+        shouldWarn = true;
+      } else if (relativeDiff > 0.01) {
+        // For any calculation with >1% error, warn
+        approximationQuality = 'warning';
+        shouldWarn = true;
+      } else {
+        approximationQuality = 'acceptable';
+      }
+    }
+    
+    // Enhanced severity detection for errors
+    if (!comparison.isEqual) {
+      let severity: 'minor' | 'major' | 'critical' = 'major';
+      
+      // Special cases for common approximations that should be warnings
+      if (isConstant) {
+        // For mathematical constants, be more lenient
+        if (relativeDiff < 0.05) {  // Less than 5% for constants
+          severity = 'minor';  // This would make π = 3.1 a warning
+        } else if (relativeDiff < 0.15) {  // Less than 15%
+          severity = 'major';
+        } else {
+          severity = 'critical';  // π = 3.0 would be critical (>15% off)
+        }
+      } else {
+        // For regular calculations
+        if (relativeDiff < 0.001) {
+          // Less than 0.1% difference - probably a rounding issue
+          severity = 'minor';
+        } else if (relativeDiff < 0.05) {
+          // Less than 5% difference
+          severity = 'major';
+        } else {
+          // 5% or more difference
+          severity = 'critical';
+        }
+      }
+      
+      // Adjust reason to include approximation context
+      const enhancedReason = comparison.reason + 
+        (severity === 'minor' ? ' (close approximation)' : 
+         severity === 'major' ? ' (significant difference)' :
+         ' (large error)');
+      
+      return {
+        ...comparison,
+        reason: enhancedReason,
+        severity,
+        approximationQuality: 'poor'
+      };
+    }
+    
+    // For equal cases, enhance the reason with approximation quality
+    if (approximationQuality !== 'exact' && comparison.isEqual) {
+      const enhancedReason = comparison.reason + 
+        (approximationQuality === 'good' ? ' (good approximation)' : 
+         approximationQuality === 'warning' ? ' (rough approximation - consider using more precision)' :
+         ' (acceptable approximation)');
+      
+      return {
+        ...comparison,
+        reason: enhancedReason,
+        approximationQuality,
+        shouldWarn
+      };
+    }
+    
+    return {
+      ...comparison,
+      approximationQuality,
+      shouldWarn
+    };
   }
 }
 

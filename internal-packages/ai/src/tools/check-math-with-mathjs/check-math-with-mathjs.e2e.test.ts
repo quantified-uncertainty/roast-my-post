@@ -536,4 +536,186 @@ describeIfApiKey("CheckMathWithMathJsTool Integration", () => {
       API_TIMEOUT * 2
     );
   });
+
+  describe("Approximation Handling", () => {
+    it(
+      "should correctly handle reasonable approximations",
+      async () => {
+        const testCases: TestCase[] = [
+          {
+            name: "accept 2-decimal approximation of 10/3",
+            input: { statement: "The result of 10/3 is 3.33" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toMatch(/reasonable approximation|rounded|correct/i);
+            }
+          },
+          {
+            name: "accept pi approximation to 2 decimals",
+            input: { statement: "π = 3.14" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toMatch(/approximation|rounded/i);
+            }
+          },
+          {
+            name: "accept sqrt(2) approximation to 3 decimals",
+            input: { statement: "√2 = 1.414" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toBeTruthy();
+            }
+          },
+          {
+            name: "reject poor pi approximation",
+            input: { statement: "π = 3.0" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_false");
+              expect(result.explanation).toMatch(/incorrect|false|not.*equal/i);
+              expect(result.errorDetails?.errorType).toBe("calculation");
+            }
+          },
+          {
+            name: "accept percentage approximation",
+            input: { statement: "33.3% of 100 is 33.3" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toBeTruthy();
+            }
+          },
+          {
+            name: "accept division with minor rounding",
+            input: { statement: "100 ÷ 7 = 14.29" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toBeTruthy();
+            }
+          }
+        ];
+
+        const batchResult = await runTestBatch(testCases, mockContext);
+        
+        if (batchResult.failed > 0) {
+          const errorMessages = batchResult.errors.map(
+            err => `${err.testName}: ${err.error}`
+          ).join('\n');
+          throw new Error(`${batchResult.failed} test(s) failed:\n${errorMessages}`);
+        }
+        
+        expect(batchResult.passed).toBe(testCases.length);
+      },
+      API_TIMEOUT * 2
+    );
+  });
+
+  describe("Edge Cases and Special Values", () => {
+    it(
+      "should handle division by zero and other edge cases",
+      async () => {
+        const testCases: TestCase[] = [
+          {
+            name: "division by zero is not infinity",
+            input: { statement: "5 divided by 0 equals infinity" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_false");
+              expect(result.explanation).toMatch(/undefined|not.*infinity|incorrect/i);
+              expect(result.errorDetails?.errorType).toBe("conceptual");
+            }
+          },
+          {
+            name: "0/0 is undefined",
+            input: { statement: "0 / 0 = 1" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_false");
+              expect(result.explanation).toMatch(/undefined|not defined|cannot/i);
+            }
+          },
+          {
+            name: "large number calculation",
+            input: { statement: "1 million × 1 thousand = 1 billion" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toBeTruthy();
+            }
+          },
+          {
+            name: "zero multiplication property",
+            input: { statement: "0 × 999999 = 0" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toBeTruthy();
+            }
+          },
+          {
+            name: "negative number operations",
+            input: { statement: "-5 + 3 = -2" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toBeTruthy();
+            }
+          }
+        ];
+
+        const batchResult = await runTestBatch(testCases, mockContext);
+        
+        if (batchResult.failed > 0) {
+          const errorMessages = batchResult.errors.map(
+            err => `${err.testName}: ${err.error}`
+          ).join('\n');
+          throw new Error(`${batchResult.failed} test(s) failed:\n${errorMessages}`);
+        }
+        
+        expect(batchResult.passed).toBe(testCases.length);
+      },
+      API_TIMEOUT * 2
+    );
+  });
+
+  describe("Unit Conversion Error Types", () => {
+    it(
+      "should correctly classify unit conversion errors",
+      async () => {
+        const testCases: TestCase[] = [
+          {
+            name: "incorrect weight conversion gets unit error",
+            input: { statement: "1 kilogram equals 2 pounds" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_false");
+              expect(result.errorDetails?.errorType).toBe("unit");
+              expect(result.explanation).toMatch(/2\.2|conversion/i);
+            }
+          },
+          {
+            name: "incorrect length conversion gets unit error",
+            input: { statement: "1 mile equals 1.5 kilometers" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_false");
+              expect(result.errorDetails?.errorType).toBe("unit");
+              expect(result.explanation).toMatch(/1\.6|conversion/i);
+            }
+          },
+          {
+            name: "correct unit conversion",
+            input: { statement: "1 kilometer equals 1000 meters" },
+            expectations: (result) => {
+              expect(result.status).toBe("verified_true");
+              expect(result.explanation).toBeTruthy();
+            }
+          }
+        ];
+
+        const batchResult = await runTestBatch(testCases, mockContext);
+        
+        if (batchResult.failed > 0) {
+          const errorMessages = batchResult.errors.map(
+            err => `${err.testName}: ${err.error}`
+          ).join('\n');
+          throw new Error(`${batchResult.failed} test(s) failed:\n${errorMessages}`);
+        }
+        
+        expect(batchResult.passed).toBe(testCases.length);
+      },
+      API_TIMEOUT * 2
+    );
+  });
 });

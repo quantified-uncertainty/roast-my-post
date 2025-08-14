@@ -195,8 +195,15 @@ export function formatForMathJS(expression: string): string {
   formatted = formatted.replace(/÷/g, '/');
   formatted = formatted.replace(/−/g, '-');  // en dash
   formatted = formatted.replace(/–/g, '-');  // em dash
-  formatted = formatted.replace(/√/g, 'sqrt');
   formatted = formatted.replace(/∞/g, 'Infinity');
+  
+  // Handle square root symbol properly
+  // First handle √(expression) format
+  formatted = formatted.replace(/√\(([^)]+)\)/g, 'sqrt($1)');
+  // Then handle √number format (e.g., √2, √16)
+  formatted = formatted.replace(/√([0-9.]+)/g, 'sqrt($1)');
+  // Handle coefficient√number format (e.g., 2√3 meaning 2*sqrt(3))
+  formatted = formatted.replace(/([0-9.]+)√([0-9.]+)/g, '$1*sqrt($2)');
   
   // Convert single = to == for equality (MathJS uses == for comparison)
   // But be careful not to convert == to ===
