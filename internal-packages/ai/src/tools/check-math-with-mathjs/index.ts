@@ -518,7 +518,8 @@ IMPORTANT:
           } else {
             // Fallback: try using MathJS equal function
             try {
-              isEqual = equal(equalityCheck.leftValue, equalityCheck.rightValue);
+              const equalResult = equal(equalityCheck.leftValue, equalityCheck.rightValue);
+              isEqual = Boolean(equalResult);
               comparisonDetails = {
                 method: 'MathJS equal() function',
                 reason: isEqual ? 'Unit values are equal' : 'Unit values are not equal'
@@ -937,7 +938,8 @@ Respond with a JSON object containing:
         leftValue !== null && rightValue !== null) {
       // Use MathJS equal function for unit comparison
       try {
-        const isEqual = equal(leftValue, rightValue);
+        const equalResult = equal(leftValue, rightValue);
+        const isEqual = Boolean(equalResult);
         return {
           isEqual,
           reason: isEqual ? 'Unit values are equal' : 'Unit values are not equal',

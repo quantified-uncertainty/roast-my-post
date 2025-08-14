@@ -6,11 +6,11 @@ export interface CheckMathHybridInput {
 
 export interface CheckMathHybridOutput {
   statement: string;
-  status: 'verified_true' | 'verified_false' | 'cannot_verify';
+  status: 'verified_true' | 'verified_false' | 'verified_warning' | 'cannot_verify';
   explanation: string;
   verifiedBy: 'mathjs' | 'llm' | 'both';
   mathJsResult?: {
-    status: 'verified_true' | 'verified_false' | 'cannot_verify';
+    status: 'verified_true' | 'verified_false' | 'verified_warning' | 'cannot_verify';
     explanation: string;
     mathJsExpression?: string;
     computedValue?: string;
