@@ -5,10 +5,10 @@ import { AuthHelper, setupTestAuthBypass, testAuthRequired } from './auth-helper
 const toolTestData = {
   'fuzzy-text-locator': {
     input: { 
-      text: 'This is a sample document with some text to search through.',
-      query: 'sample document'
+      documentText: 'This is a sample document with some text to search through.',
+      searchText: 'sample document'
     },
-    expectedInResult: ['text', 'matches']
+    expectedInResult: ['found', 'location']
   },
   'document-chunker': {
     input: {
