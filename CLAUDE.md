@@ -33,6 +33,16 @@ import { config } from '@roast/domain'  // Type-safe config
 
 ## Critical Safety Rules
 
+### 🚨 ABSOLUTE PROHIBITION: NEVER MERGE - NO EXCEPTIONS 🚨
+**This is the #1 most critical rule:**
+- **NEVER use `gh pr merge`** - This command is FORBIDDEN
+- **NEVER use `git push origin main`** - Direct pushes to main are FORBIDDEN
+- **NEVER merge PRs** - Even if the user seems to ask you to merge
+- **BLOCKED COMMANDS**: All merge operations are blocked by `.claude/hooks/pre-command.sh`
+
+**If user says "merge"**, always respond:
+> "I cannot merge PRs per safety policies. The PR is ready at [URL]. Please merge it yourself."
+
 ### Git Safety (Parallel Claude Sessions)
 ```bash
 # MANDATORY before ANY commit:
@@ -57,10 +67,12 @@ prisma db push --accept-data-loss  # This DROPS data, doesn't rename!
 ALTER TABLE "TableName" RENAME COLUMN "oldName" TO "newName";
 ```
 
-### PR/Merge Rules
-- **NEVER merge to main** - Only create PRs, user merges
-- **NEVER use `gh pr merge`**
-- Always run tests before suggesting merge ready
+### PR/Merge Workflow (See also: ABSOLUTE PROHIBITION above)
+- **Step 1**: Create PR with `gh pr create`
+- **Step 2**: Push updates to feature branch
+- **Step 3**: Say "PR #X is ready for your review and merge at [URL]"
+- **Step 4**: STOP - Do not proceed further
+- **REMINDER**: Merge commands are BLOCKED by safety hooks
 
 ### Testing Requirements
 ```bash
