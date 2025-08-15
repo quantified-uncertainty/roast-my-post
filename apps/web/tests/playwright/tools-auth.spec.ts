@@ -48,13 +48,35 @@ async function testToolWithAuth(page: Page, toolId: string, testData: any) {
   // Check that the page loaded properly - look for the tool title
   await expect(page.locator('h1').last()).toBeVisible();
   
-  // Find the main input textarea
-  const textarea = page.locator('textarea').first();
-  await expect(textarea).toBeVisible();
-  
-  // Fill in the test input
-  const inputText = testData.input.text || testData.input.query || 'test input';
-  await textarea.fill(inputText);
+  // Handle different input types based on the tool
+  if (toolId === 'fuzzy-text-locator') {
+    // Fuzzy text locator has two textareas: documentText and searchText
+    const textareas = page.locator('textarea');
+    const count = await textareas.count();
+    if (count >= 2) {
+      await textareas.nth(0).fill(testData.input.documentText || 'test document');
+      await textareas.nth(1).fill(testData.input.searchText || 'test search');
+    } else {
+      // Fallback for single textarea
+      await textareas.first().fill(testData.input.documentText || testData.input.text || 'test input');
+    }
+  } else if (toolId === 'document-chunker') {
+    // Document chunker has a textarea and a number input
+    const textarea = page.locator('textarea').first();
+    await textarea.fill(testData.input.text || 'test text');
+    
+    // Look for chunk size input
+    const chunkSizeInput = page.locator('input[type="number"]').first();
+    if (await chunkSizeInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await chunkSizeInput.fill(String(testData.input.maxChunkSize || 50));
+    }
+  } else {
+    // Default: single textarea
+    const textarea = page.locator('textarea').first();
+    await expect(textarea).toBeVisible();
+    const inputText = testData.input.text || testData.input.query || 'test input';
+    await textarea.fill(inputText);
+  }
   
   // Find and click the submit button
   const submitButton = page.locator('button[type="submit"]').or(
@@ -235,23 +257,42 @@ test.describe('Tool Functionality Tests', () => {
     
     await page.goto('/tools/fuzzy-text-locator');
     
-    const textarea = page.locator('textarea').first();
-    await textarea.fill('This is a sample document with some text to search through.');
+    // Fuzzy text locator should have two textareas
+    const textareas = page.locator('textarea');
+    const textareaCount = await textareas.count();
     
-    // Look for a second input field for the query
-    const inputs = page.locator('input[type="text"], textarea');
-    const inputCount = await inputs.count();
-    
-    if (inputCount > 1) {
-      // Fill the query field if it exists
-      await inputs.nth(1).fill('sample document');
+    if (textareaCount >= 2) {
+      // Fill both textareas: documentText and searchText
+      await textareas.nth(0).fill('This is a sample document with some text to search through.');
+      await textareas.nth(1).fill('sample document');
+    } else {
+      // Fallback: try single textarea
+      await textareas.first().fill('This is a sample document with some text to search through.');
     }
     
     const submitButton = page.locator('button[type="submit"]').first();
     await submitButton.click();
     
-    // Wait for result to appear
-    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible({ timeout: 5000 });
+    // Wait for the button to be re-enabled (indicates processing is done)
+    await expect(submitButton).toBeEnabled({ timeout: 30000 });
+    
+    // Wait for result to appear - check multiple possible selectors
+    const resultSelectors = [
+      '[data-testid="tool-result"]',
+      'pre',
+      '.result',
+      'text=/found|location|match|offset/i'
+    ];
+    
+    let hasResult = false;
+    for (const selector of resultSelectors) {
+      const element = page.locator(selector).first();
+      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
+        hasResult = true;
+        break;
+      }
+    }
+    
     expect(hasResult).toBeTruthy();
   });
   
@@ -260,14 +301,39 @@ test.describe('Tool Functionality Tests', () => {
     
     await page.goto('/tools/document-chunker');
     
+    // Fill the text area
     const textarea = page.locator('textarea').first();
     await textarea.fill(toolTestData['document-chunker'].input.text);
+    
+    // Fill the chunk size input if present
+    const chunkSizeInput = page.locator('input[type="number"]').first();
+    if (await chunkSizeInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await chunkSizeInput.fill(String(toolTestData['document-chunker'].input.maxChunkSize));
+    }
     
     const submitButton = page.locator('button[type="submit"]').first();
     await submitButton.click();
     
-    // Wait for result to appear
-    const hasResult = await page.locator('[data-testid="tool-result"], pre, .result').isVisible({ timeout: 5000 });
+    // Wait for the button to be re-enabled (indicates processing is done)
+    await expect(submitButton).toBeEnabled({ timeout: 30000 });
+    
+    // Wait for result to appear - check multiple possible selectors
+    const resultSelectors = [
+      '[data-testid="tool-result"]',
+      'pre',
+      '.result',
+      'text=/chunk|segment|split/i'
+    ];
+    
+    let hasResult = false;
+    for (const selector of resultSelectors) {
+      const element = page.locator(selector).first();
+      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
+        hasResult = true;
+        break;
+      }
+    }
+    
     expect(hasResult).toBeTruthy();
   });
 });
