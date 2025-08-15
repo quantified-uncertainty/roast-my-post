@@ -29,6 +29,7 @@ export async function analyzeLinkDocument(
   tasks: TaskResult[];
   jobLogString?: string;
 }> {
+  console.log("document", document);
   // Create plugin manager with only link analysis plugin
   const manager = new PluginManager({
     pluginSelection: {
@@ -36,11 +37,12 @@ export async function analyzeLinkDocument(
     },
   });
 
+  console.log("result", manager);
   // Delegate to plugin system
   const result = await manager.analyzeDocument(document.content, {
     targetHighlights,
   });
-
+  console.log("result", result);
 
   // The highlights from the plugin are already valid Comment objects
   // Just pass them through directly since the plugin handles all validation
