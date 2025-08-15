@@ -180,6 +180,7 @@ model Agent {
   updatedAt        DateTime         @updatedAt
   submittedById    String
   ephemeralBatchId String?          @unique
+  isSystemManaged  Boolean          @default(false)
   ephemeralBatch   AgentEvalBatch?  @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
   submittedBy      User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
   evalBatches      AgentEvalBatch[]
