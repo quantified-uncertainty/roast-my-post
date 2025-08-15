@@ -17,6 +17,9 @@ import {
 import { CommentBuilder } from "../../utils/CommentBuilder";
 
 export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
+  // Static property to bypass routing - link analysis should always run
+  static readonly alwaysRun = true;
+
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;

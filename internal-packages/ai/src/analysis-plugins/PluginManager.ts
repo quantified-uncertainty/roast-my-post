@@ -180,25 +180,54 @@ export class PluginManager {
         context: { totalChunks: chunks.length },
       });
 
-      // Route chunks to appropriate plugins
+      // Separate plugins into those that always run and those that need routing
+      const alwaysRunPlugins: SimpleAnalysisPlugin[] = [];
+      const routedPlugins: SimpleAnalysisPlugin[] = [];
+      
+      for (const plugin of plugins) {
+        // Check if the plugin class has the alwaysRun static property
+        const pluginClass = (plugin as any).constructor;
+        if (pluginClass.alwaysRun === true) {
+          alwaysRunPlugins.push(plugin);
+          this.pluginLogger.log({
+            level: "info",
+            plugin: "PluginManager",
+            phase: "routing",
+            message: `Plugin ${plugin.name()} will run on all chunks (alwaysRun=true)`,
+          });
+        } else {
+          routedPlugins.push(plugin);
+        }
+      }
+
+      // Route chunks to appropriate plugins (only for non-alwaysRun plugins)
       this.pluginLogger.log({
         level: "info",
         plugin: "PluginManager",
         phase: "routing",
-        message: `Starting chunk routing to determine which plugins should process each chunk`,
+        message: `Starting chunk routing for ${routedPlugins.length} plugins (${alwaysRunPlugins.length} plugins will run on all chunks)`,
       });
 
-      const router = new ChunkRouter(plugins);
-      const routingResult = await router.routeChunks(chunks);
-      let totalCost = routingResult.totalCost;
+      let totalCost = 0;
+      const routingResult = routedPlugins.length > 0 
+        ? await new ChunkRouter(routedPlugins).routeChunks(chunks)
+        : { routingDecisions: new Map<string, string[]>(), totalCost: 0 };
+      totalCost += routingResult.totalCost;
 
       // Create plugin-specific chunk lists based on routing decisions
       const chunksPerPlugin = new Map<string, typeof chunks>();
+      
+      // Initialize empty arrays for all plugins
       for (const plugin of plugins) {
         chunksPerPlugin.set(plugin.name(), []);
       }
+      
+      // Assign all chunks to alwaysRun plugins
+      for (const plugin of alwaysRunPlugins) {
+        chunksPerPlugin.set(plugin.name(), [...chunks]);
+      }
 
-      // Populate chunk lists based on routing decisions
+      // Populate chunk lists based on routing decisions for routed plugins
       for (const [chunkId, pluginNames] of routingResult.routingDecisions) {
         const chunk = chunks.find(c => c.id === chunkId);
         if (chunk) {

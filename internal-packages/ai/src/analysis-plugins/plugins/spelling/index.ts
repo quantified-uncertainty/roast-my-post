@@ -26,6 +26,9 @@ export interface SpellingErrorWithLocation {
 }
 
 export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
+  // Static property to bypass routing - spelling check should always run
+  static readonly alwaysRun = true;
+
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;

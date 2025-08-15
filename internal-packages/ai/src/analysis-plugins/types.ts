@@ -132,3 +132,12 @@ export interface SimpleAnalysisPlugin {
   getDebugInfo?(): Record<string, unknown>;
   getCost(): number;
 }
+
+// Plugin constructor interface with static properties
+export interface PluginConstructor {
+  new (): SimpleAnalysisPlugin;
+  
+  // Static property to indicate if plugin should bypass routing
+  // If true, plugin will receive all chunks regardless of routing decisions
+  readonly alwaysRun?: boolean;
+}
