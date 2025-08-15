@@ -8,7 +8,6 @@ import {
   generateLinkAnalysisAndSummary,
   type LinkAnalysis 
 } from "../../../tools/link-validator";
-import { generateMarkdownPrepend } from "@roast/domain";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,
@@ -18,10 +17,6 @@ import {
 import { CommentBuilder } from "../../utils/CommentBuilder";
 
 export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
-  private title?: string;
-  private author?: string;
-  private platforms?: string[];
-  private publishedDate?: string;
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;
@@ -70,23 +65,10 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
     this.chunks = [];
   }
 
-  async analyze(chunks: TextChunk[], documentText: string, documentMetadata?: {
-    title?: string;
-    author?: string;
-    platforms?: string[];
-    publishedDate?: string;
-  }): Promise<AnalysisResult> {
+  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     this.processingStartTime = Date.now();
     this.documentText = documentText;
     this.chunks = chunks;
-    
-    // Store metadata if provided
-    if (documentMetadata) {
-      this.title = documentMetadata.title;
-      this.author = documentMetadata.author;
-      this.platforms = documentMetadata.platforms;
-      this.publishedDate = documentMetadata.publishedDate;
-    }
     
     if (this.hasRun) {
       return this.getResults();
@@ -324,7 +306,7 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
     // Use the generateLinkAnalysisAndSummary function for consistency
     const { analysis, summary, grade } = generateLinkAnalysisAndSummary(
       this.linkAnalysisResults,
-      this.title || "Document"
+      "Document"
     );
     
     this.summary = summary;

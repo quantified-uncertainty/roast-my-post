@@ -185,12 +185,7 @@ describe("LinkAnalysisPlugin", () => {
         )
       ];
 
-      const result = await plugin.analyze(chunks, text, {
-        title: "Test Document",
-        author: "Test Author",
-        platforms: ["Test Platform"],
-        publishedDate: "2024-01-01"
-      });
+      const result = await plugin.analyze(chunks, text);
       
       // The analysis should reference the document title
       expect(result.analysis).toContain("Link Quality Analysis");

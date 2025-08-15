@@ -3,7 +3,7 @@ export { analyzeDocument } from "./analyzeDocument";
 
 // Analysis workflows
 export { generateLinkAnalysis } from "./linkAnalysis";
-export { analyzeLinkDocument } from "./linkAnalysis/pluginWrapper";
+export { analyzeLinkDocument } from "./linkAnalysis";
 export { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 export { extractHighlightsFromAnalysis } from "./highlightExtraction";
 
