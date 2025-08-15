@@ -7,7 +7,7 @@ export { analyzeDocument } from "./documentAnalysis/analyzeDocument";
 
 // Analysis workflows
 export { generateLinkAnalysis } from "./documentAnalysis/linkAnalysis";
-export { analyzeLinkDocument } from "./documentAnalysis/linkAnalysis/linkAnalysisWorkflow";
+export { analyzeLinkDocument } from "./documentAnalysis/linkAnalysis/pluginWrapper";
 export { generateComprehensiveAnalysis } from "./documentAnalysis/comprehensiveAnalysis";
 export { extractHighlightsFromAnalysis } from "./documentAnalysis/highlightExtraction";
 export { analyzeSpellingGrammar } from "./documentAnalysis/spellingGrammar";

@@ -1,4 +1,4 @@
-import { analyzeLinkDocument } from "../linkAnalysisWorkflow";
+import { analyzeLinkDocument } from "../pluginWrapper";
 import type { Agent, Document } from "@roast/ai";
 
 // This is an integration test - it makes real HTTP requests to validate URLs

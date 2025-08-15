@@ -27,6 +27,7 @@ import { MathPlugin } from "./plugins/math";
 import { SpellingPlugin } from "./plugins/spelling";
 import { FactCheckPlugin } from "./plugins/fact-check";
 import { ForecastPlugin } from "./plugins/forecast";
+import { LinkPlugin } from "./plugins/link-analysis";
 
 export interface PluginManagerConfig {
   sessionManager?: HeliconeSessionManager;
@@ -597,6 +598,7 @@ export class PluginManager {
       [PluginType.SPELLING, new SpellingPlugin()],
       [PluginType.FACT_CHECK, new FactCheckPlugin()],
       [PluginType.FORECAST, new ForecastPlugin()],
+      [PluginType.LINK_ANALYSIS, new LinkPlugin()],
     ]);
     
     logger.info(`Initialized all ${this.allPlugins.size} plugins`);
