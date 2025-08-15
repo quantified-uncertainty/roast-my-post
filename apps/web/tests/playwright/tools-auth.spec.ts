@@ -345,21 +345,29 @@ test.describe('Tool Error Handling', () => {
     
     await page.goto('/tools/fuzzy-text-locator');
     
-    // Try to submit without input
+    // Check if submit button is disabled without input
     const submitButton = page.locator('button[type="submit"]').first();
-    await submitButton.click();
+    const isDisabled = await submitButton.isDisabled();
     
-    // Should show error message or validation
-    const errorMessage = await page.locator('[data-testid="tool-error"], text=required, text=enter').isVisible({ timeout: 2000 }).catch(() => false);
-    
-    if (!errorMessage) {
-      // Check if form validation prevented submission
-      const formValidation = await page.evaluate(() => {
-        const form = document.querySelector('form');
-        return form ? !form.checkValidity() : false;
-      });
+    if (isDisabled) {
+      // Good - button is properly disabled without input
+      expect(isDisabled).toBeTruthy();
+    } else {
+      // Button is enabled, try to click and check for error
+      await submitButton.click();
       
-      expect(formValidation || errorMessage).toBeTruthy();
+      // Should show error message
+      const errorMessage = await page.locator('[data-testid="tool-error"], text=required, text=enter').isVisible({ timeout: 2000 }).catch(() => false);
+      
+      if (!errorMessage) {
+        // Check if form validation prevented submission
+        const formValidation = await page.evaluate(() => {
+          const form = document.querySelector('form');
+          return form ? !form.checkValidity() : false;
+        });
+        
+        expect(formValidation || errorMessage).toBeTruthy();
+      }
     }
   });
 });
