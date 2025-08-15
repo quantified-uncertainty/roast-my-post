@@ -5,8 +5,11 @@
  * It's used when agentInfo.extendedCapabilityId === "simple-link-verifier"
  */
 
-import { aiCommentsToDbComments } from "../typeAdapters";
-import type { Agent, Comment as AiComment, Document } from "@roast/ai";
+import type {
+  Agent,
+  Comment as AiComment,
+  Document,
+} from "@roast/ai";
 import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
 import { PluginManager } from "@roast/ai/server";
 
@@ -15,7 +18,7 @@ import type { TaskResult } from "../shared/types";
 export async function analyzeLinkDocument(
   document: Document,
   agentInfo: Agent,
-  targetHighlights: number = 5
+  targetHighlights: number = 50
 ): Promise<{
   thinking: string;
   analysis: string;
@@ -38,55 +41,17 @@ export async function analyzeLinkDocument(
     targetHighlights,
   });
 
-  // Filter AI comments and convert to database comments
-  const validAiComments = result.highlights.filter(
-    (h): h is AiComment =>
-      !!(
-        h.description &&
-        h.highlight &&
-        typeof h.highlight?.isValid === "boolean"
-      )
-  );
 
+  // The highlights from the plugin are already valid Comment objects
+  // Just pass them through directly since the plugin handles all validation
   return {
     thinking: result.thinking,
     analysis: result.analysis,
     summary: result.summary,
     grade: result.grade,
     selfCritique: undefined, // Link analysis doesn't generate self-critique
-    highlights: aiCommentsToDbComments(validAiComments) as any,
+    highlights: result.highlights as AiComment[],
     tasks: result.tasks,
     jobLogString: result.jobLogString,
-  };
-}
-
-/**
- * Generate link analysis - for backward compatibility
- * This is used by existing code that expects the old return format
- */
-export async function generateLinkAnalysis(
-  document: Document,
-  agentInfo: Agent
-): Promise<{ 
-  task: TaskResult; 
-  outputs: { thinking: string }; 
-  linkAnalysisResults: any[] 
-}> {
-  const result = await analyzeLinkDocument(document, agentInfo);
-  
-  // Extract link results from the plugin manager's debug info if needed
-  // For now, return empty array as the actual results are in the comments
-  return {
-    task: result.tasks[0] || {
-      name: "generateLinkAnalysis",
-      modelName: "none",
-      priceInDollars: 0,
-      timeInSeconds: 0,
-      log: "Link analysis completed",
-    },
-    outputs: {
-      thinking: result.thinking,
-    },
-    linkAnalysisResults: [], // The actual results are in the highlights/comments
   };
 }

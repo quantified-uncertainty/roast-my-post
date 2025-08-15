@@ -2,6 +2,8 @@
  * Core types for the plugin-based document analysis system
  */
 
+import type { Comment } from "../shared/types";
+
 export interface TextChunk {
   id: string;
   text: string;
@@ -18,7 +20,7 @@ export interface TextChunk {
       totalLines: number; // Number of lines in the chunk
     };
   };
-  
+
   // Helper methods
   getContext(position: number, windowSize?: number): string;
   getLineNumber(charOffset: number): number | null; // Get line number for a character offset within the chunk
@@ -26,7 +28,7 @@ export interface TextChunk {
 
 export interface Finding {
   type: string;
-  severity: 'low' | 'medium' | 'high' | 'info';
+  severity: "low" | "medium" | "high" | "info";
   message: string;
   location?: {
     start: number;
@@ -43,21 +45,21 @@ export interface Finding {
 }
 
 // Finding with guaranteed location information
-export interface LocatedFinding extends Omit<Finding, 'locationHint'> {
+export interface LocatedFinding extends Omit<Finding, "locationHint"> {
   locationHint: {
-    lineNumber: number;        // Always required
-    lineText: string;          // Always required
-    matchText: string;         // Always required
-    startLineNumber?: number;  // For multi-line findings
-    endLineNumber?: number;    // For multi-line findings
+    lineNumber: number; // Always required
+    lineText: string; // Always required
+    matchText: string; // Always required
+    startLineNumber?: number; // For multi-line findings
+    endLineNumber?: number; // For multi-line findings
   };
 }
 
 // New finding system types
 export interface HighlightHint {
-  searchText: string;      // The text to search for
-  lineNumber?: number;     // Optional line number hint
-  chunkId: string;         // Which chunk this came from
+  searchText: string; // The text to search for
+  lineNumber?: number; // Optional line number hint
+  chunkId: string; // Which chunk this came from
 }
 
 // Base interface for finding data
@@ -76,23 +78,20 @@ export interface InvestigatedFinding {
   id: string;
   type: string;
   data: FindingData;
-  severity: 'low' | 'medium' | 'high' | 'info';
+  severity: "low" | "medium" | "high" | "info";
   message: string;
   highlightHint: HighlightHint;
 }
 
-
-import type { Comment } from '../shared/types';
-
 // LLM-related types for analysis plugins
 export interface LLMMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
 export interface LLMUsage {
   prompt_tokens: number;
-  completion_tokens: number;  
+  completion_tokens: number;
   total_tokens: number;
   input_tokens: number;
   output_tokens: number;
@@ -124,10 +123,11 @@ export interface SimpleAnalysisPlugin {
   name(): string;
   promptForWhenToUse(): string;
   routingExamples?(): RoutingExample[];
-  
+  runOnAllChunks?: boolean;
+
   // Core workflow - single method that handles everything
   analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult>;
-  
+
   // For testing/debugging - expose internal state
   getDebugInfo?(): Record<string, unknown>;
   getCost(): number;
@@ -136,8 +136,4 @@ export interface SimpleAnalysisPlugin {
 // Plugin constructor interface with static properties
 export interface PluginConstructor {
   new (): SimpleAnalysisPlugin;
-  
-  // Static property to indicate if plugin should bypass routing
-  // If true, plugin will receive all chunks regardless of routing decisions
-  readonly alwaysRun?: boolean;
 }

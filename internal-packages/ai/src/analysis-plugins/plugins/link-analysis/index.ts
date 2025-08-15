@@ -1,8 +1,5 @@
 import { logger } from "../../../shared/logger";
-import type {
-  Comment,
-  ToolChainResult,
-} from "../../../shared/types";
+import type { Comment } from "../../../shared/types";
 import {
   generateLinkAnalysisAndSummary,
   generateLinkHighlights,
@@ -12,16 +9,16 @@ import {
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,
-  RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
 
 export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
   // Static property to bypass routing - link analysis should always run
-  static readonly alwaysRun = true;
+  static readonly runOnAllChunks = true;
+  // Instance property for PluginManager to check
+  readonly runOnAllChunks = true;
 
   private documentText: string;
-  private chunks: TextChunk[];
   private hasRun = false;
   private comments: Comment[] = [];
   private summary: string = "";
@@ -36,60 +33,38 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
   }
 
   promptForWhenToUse(): string {
-    return `Call this when there are links or URLs in the document. This includes:
-- HTTP/HTTPS URLs
-- References to external sources
-- Citations with links
-- Any web addresses or online resources`;
+    // This plugin always runs on all chunks
+    return "Link analysis automatically runs on all documents";
   }
 
-  routingExamples(): RoutingExample[] {
-    return [
-      {
-        chunkText:
-          "According to [this study](https://example.com/study), the results show...",
-        shouldProcess: true,
-        reason: "Contains a URL that should be validated",
-      },
-      {
-        chunkText:
-          "The report can be found at https://www.example.org/report.pdf",
-        shouldProcess: true,
-        reason: "Contains a direct URL",
-      },
-      {
-        chunkText: "The study found significant results in the population.",
-        shouldProcess: false,
-        reason: "No URLs or links present",
-      },
-    ];
+  routingExamples(): never[] {
+    // Not used for always-run plugins
+    return [];
   }
 
   constructor() {
     this.documentText = "";
-    this.chunks = [];
   }
 
   async analyze(
-    chunks: TextChunk[],
+    _chunks: TextChunk[],
     documentText: string
   ): Promise<AnalysisResult> {
     this.processingStartTime = Date.now();
     this.documentText = documentText;
-    this.chunks = chunks;
 
     if (this.hasRun) {
       return this.getResults();
     }
 
     try {
-      logger.info("LinkAnalysisPlugin: Starting analysis");
+      logger.info("LinkAnalysisPlugin: Starting analysis", {
+        documentLength: documentText?.length || 0,
+        hasDocument: !!documentText,
+      });
 
-      // Extract and validate links
-      await this.extractAndValidateLinks();
-
-      // Create comments for ALL links (not just broken ones)
-      await this.createCommentsForAllLinks();
+      // Extract, validate links and create comments in one step
+      await this.extractValidateAndComment();
 
       // Generate analysis summary with grade
       this.generateAnalysisWithGrade();
@@ -110,7 +85,7 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
     }
   }
 
-  private async extractAndValidateLinks(): Promise<void> {
+  private async extractValidateAndComment(): Promise<void> {
     const startTime = Date.now();
 
     try {
@@ -118,7 +93,7 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
       const toolResult = await linkValidator.run(
         {
           text: this.documentText,
-          maxUrls: 20,
+          maxUrls: 50,
         },
         {
           logger,
@@ -159,6 +134,20 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
       logger.info(
         `LinkAnalysisPlugin: Validated ${this.extractedUrls.length} URLs in ${timeInSeconds}s`
       );
+
+      // Create comments for all links
+      // Use the generateLinkHighlights function to create standardized comments
+      const highlights = generateLinkHighlights(
+        this.linkAnalysisResults,
+        this.extractedUrls,
+        this.documentText,
+        50 // Report up to 50 link issues
+      );
+
+      // Convert highlights to our comment format
+      this.comments = highlights.map((highlight) =>
+        this.convertHighlightToComment(highlight)
+      );
     } catch (error) {
       logger.error("LinkAnalysisPlugin: Link extraction failed:", {
         error: error instanceof Error ? error.message : String(error),
@@ -167,173 +156,9 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
     }
   }
 
-  private async createCommentsForAllLinks(): Promise<void> {
-    // Use the generateLinkHighlights function to create standardized comments
-    const highlights = generateLinkHighlights(
-      this.linkAnalysisResults,
-      this.extractedUrls,
-      this.documentText,
-      50 // Report up to 50 link issues
-    );
-
-    // Convert highlights to our comment format
-    this.comments = highlights.map((highlight) =>
-      this.convertHighlightToComment(highlight)
-    );
-  }
-
   private convertHighlightToComment(highlight: Comment): Comment {
     // The highlight from generateLinkHighlights is already a proper Comment
     return highlight;
-  }
-
-  private async createComments(): Promise<void> {
-    const commentPromises: Promise<Comment | null>[] = [];
-
-    // Create comments for each link
-    for (const linkResult of this.linkAnalysisResults) {
-      commentPromises.push(this.createLinkComment(linkResult));
-    }
-
-    const comments = await Promise.all(commentPromises);
-    this.comments = comments.filter(
-      (comment): comment is Comment => comment !== null
-    );
-
-    logger.debug(
-      `LinkAnalysisPlugin: Created ${this.comments.length} comments`
-    );
-  }
-
-  private async createLinkComment(
-    linkResult: LinkAnalysis
-  ): Promise<Comment | null> {
-    // Find the position of the URL in the document
-    const startOffset = this.documentText.indexOf(linkResult.url);
-    if (startOffset === -1) {
-      logger.warn(
-        `LinkAnalysisPlugin: URL not found in document: ${linkResult.url}`
-      );
-      return null;
-    }
-
-    const endOffset = startOffset + linkResult.url.length;
-
-    // Determine the issue and message
-    let header: string;
-    let level: "error" | "warning" | "info" | "success";
-    let description: string;
-    let grade: number;
-
-    if (linkResult.accessError) {
-      header = `Broken link: ${linkResult.url}`;
-      level = "error";
-      description = this.formatBrokenLinkMessage(linkResult);
-      grade = 0;
-    } else if (linkResult.finalUrl && linkResult.finalUrl !== linkResult.url) {
-      header = `Link redirects`;
-      level = "warning";
-      description = `This link redirects to: ${linkResult.finalUrl}`;
-      grade = 75;
-    } else {
-      // Link is working fine
-      header = `Link verified`;
-      level = "success";
-      description = `✅ Link successfully verified: ${linkResult.url}`;
-      grade = 100;
-    }
-
-    // Build tool chain
-    const toolChain: ToolChainResult[] = [
-      {
-        toolName: "link-validator",
-        stage: "verification",
-        timestamp: linkResult.timestamp
-          ? linkResult.timestamp.toISOString()
-          : new Date().toISOString(),
-        result: linkResult,
-      },
-    ];
-
-    // Find which chunk contains this URL
-    const chunkId = this.findChunkContainingText(linkResult.url);
-
-    const comment: Comment = {
-      description,
-      grade,
-      highlight: {
-        startOffset,
-        endOffset,
-        quotedText: linkResult.url,
-        isValid: true,
-      },
-    };
-
-    return comment;
-  }
-
-  private findChunkContainingText(text: string): string | null {
-    for (const chunk of this.chunks) {
-      if (chunk.text.includes(text)) {
-        return chunk.id;
-      }
-    }
-    return null;
-  }
-
-  private formatBrokenLinkMessage(linkResult: LinkAnalysis): string {
-    const error = linkResult.accessError;
-    if (!error) return "Link appears to be broken";
-
-    let message = `**Link Status:** Broken\n\n`;
-
-    switch (error.type) {
-      case "NotFound":
-        message += `The page was not found (404 error).`;
-        break;
-      case "ServerError":
-        message += `The server returned an error (${error.statusCode || "5xx"}).`;
-        break;
-      case "Timeout":
-        message += `The link timed out and could not be accessed.`;
-        break;
-      case "NetworkError":
-        message += `A network error occurred while trying to access this link.`;
-        break;
-      case "Forbidden":
-        message += `Access to this link is forbidden (403 error).`;
-        break;
-      case "RateLimited":
-        message += `The link is rate limited and cannot be accessed right now.`;
-        break;
-      case "Unknown":
-        message += error.message || `The link could not be accessed.`;
-        break;
-      default:
-        message += `The link could not be accessed.`;
-    }
-
-    message += `\n\n**Recommendation:** Verify the URL is correct or find an alternative source.`;
-
-    return message;
-  }
-
-  private buildObservation(linkResult: LinkAnalysis): string {
-    if (linkResult.accessError) {
-      return `Link verification failed: ${linkResult.accessError.type}`;
-    } else if (linkResult.finalUrl && linkResult.finalUrl !== linkResult.url) {
-      return `Link redirects to a different URL`;
-    }
-    return "Link verified";
-  }
-
-  private buildSignificance(linkResult: LinkAnalysis): string | undefined {
-    if (linkResult.accessError) {
-      return "Broken links reduce document credibility and prevent readers from accessing cited sources";
-    } else if (linkResult.finalUrl && linkResult.finalUrl !== linkResult.url) {
-      return "Redirected links may indicate outdated references that should be updated";
-    }
-    return undefined;
   }
 
   private generateAnalysisWithGrade(): void {
