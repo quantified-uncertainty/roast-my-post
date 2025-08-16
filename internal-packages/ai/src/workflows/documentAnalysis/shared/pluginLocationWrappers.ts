@@ -210,12 +210,3 @@ export async function findHighlightLocation(
   
   return null;
 }
-
-// Generic wrapper that returns the full TextLocation with all metadata
-export async function findTextLocationWithMetadata(
-  searchText: string,
-  documentText: string,
-  options: TextLocationOptions = {}
-) {
-  return await findTextLocation(searchText, documentText, options);
-}
