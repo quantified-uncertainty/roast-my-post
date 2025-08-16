@@ -1,9 +1,10 @@
 import { logger } from "../../../shared/logger";
-import type { Comment } from "../../../shared/types";
 import {
   generateLinkAnalysisAndSummary,
   generateLinkHighlights,
   linkValidator,
+  type LinkAnalysis,
+  type LinkValidatorOutput,
 } from "../../../tools/link-validator";
 import { TextChunk } from "../../TextChunk";
 import { AnalysisResult, SimpleAnalysisPlugin } from "../../types";
@@ -48,7 +49,7 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
       );
 
       // Convert tool results to our format
-      const linkAnalysisResults = (toolResult?.validations || []).map((v: any) => ({
+      const linkAnalysisResults: LinkAnalysis[] = (toolResult?.validations || []).map((v) => ({
         url: v.url,
         finalUrl: v.finalUrl,
         timestamp: v.timestamp,

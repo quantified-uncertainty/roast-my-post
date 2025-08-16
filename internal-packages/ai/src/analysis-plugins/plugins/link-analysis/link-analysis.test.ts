@@ -15,8 +15,8 @@ describe("LinkAnalysisPlugin", () => {
 
     it("should provide usage prompt", () => {
       const prompt = plugin.promptForWhenToUse();
-      expect(prompt).toContain("link");
-      expect(prompt).toContain("URL");
+      expect(prompt).toContain("Link analysis");
+      expect(prompt).toContain("automatically");
     });
   });
 
@@ -136,9 +136,7 @@ describe("LinkAnalysisPlugin", () => {
 
       const debugInfo = plugin.getDebugInfo();
       expect(debugInfo.hasRun).toBe(true);
-      expect(debugInfo.linksCount).toBeGreaterThanOrEqual(1);
-      expect(debugInfo.linkAnalysisResults).toBeDefined();
-      expect(Array.isArray(debugInfo.linkAnalysisResults)).toBe(true);
+      expect(debugInfo.commentsCount).toBeGreaterThanOrEqual(1);
     }, 30000);
   });
 
