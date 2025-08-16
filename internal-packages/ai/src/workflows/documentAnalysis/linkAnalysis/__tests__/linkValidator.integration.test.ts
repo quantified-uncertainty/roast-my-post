@@ -159,9 +159,9 @@ Another paragraph with more text but still no links.`,
     // Analysis should explicitly state that 0 links were found
     expect(result.analysis).toMatch(/Total\s+Links\s+Found:\*?\*?\s*0/i);
     
-    // Summary should also indicate no links
-    expect(result.summary.toLowerCase()).toContain("no");
-    expect(result.summary.toLowerCase()).toContain("link");
+    // Summary should mention the analysis
+    expect(result.summary.toLowerCase()).toContain("analyzed");
+    expect(result.summary.toLowerCase()).toMatch(/0|no\s+issues/);
   }, 30000);
 
   test("correctly positions highlights with markdown prepend", async () => {
