@@ -1,18 +1,9 @@
 /**
- * Link Analysis workflow for document analysis
- *
- * This is now a simple wrapper around the plugin system.
- * It's used when agentInfo.extendedCapabilityId === "simple-link-verifier"
+ * Link Analysis workflow - now using unified approach
  */
 
-import type {
-  Agent,
-  Comment as AiComment,
-  Document,
-} from "@roast/ai";
-import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
-import { PluginManager } from "@roast/ai/server";
-
+import type { Agent, Comment as AiComment, Document } from "@roast/ai";
+import { analyzeDocumentUnified, WORKFLOW_PRESETS } from "../unified";
 import type { TaskResult } from "../shared/types";
 
 export async function analyzeLinkDocument(
@@ -29,59 +20,8 @@ export async function analyzeLinkDocument(
   tasks: TaskResult[];
   jobLogString?: string;
 }> {
-  // Create plugin manager with only link analysis plugin
-  const manager = new PluginManager({
-    pluginSelection: {
-      include: [PluginType.LINK_ANALYSIS], // Only use link analysis plugin
-    },
-  });
-
-  // Delegate to plugin system
-  const result = await manager.analyzeDocument(document.content, {
+  return analyzeDocumentUnified(document, agentInfo, {
     targetHighlights,
+    plugins: WORKFLOW_PRESETS.LINK_ANALYSIS,
   });
-
-  // The highlights from the plugin are already valid Comment objects
-  // Just pass them through directly since the plugin handles all validation
-  return {
-    thinking: result.thinking,
-    analysis: result.analysis,
-    summary: result.summary,
-    grade: result.grade,
-    selfCritique: undefined, // Link analysis doesn't generate self-critique
-    highlights: result.highlights as AiComment[],
-    tasks: result.tasks,
-    jobLogString: result.jobLogString,
-  };
-}
-
-/**
- * Generate link analysis - for backward compatibility
- * This is used by existing code that expects the old return format
- */
-export async function generateLinkAnalysis(
-  document: Document,
-  agentInfo: Agent
-): Promise<{ 
-  task: TaskResult; 
-  outputs: { thinking: string }; 
-  linkAnalysisResults: any[] 
-}> {
-  const result = await analyzeLinkDocument(document, agentInfo);
-  
-  // Extract link results from the plugin manager's debug info if needed
-  // For now, return empty array as the actual results are in the comments
-  return {
-    task: result.tasks[0] || {
-      name: "generateLinkAnalysis",
-      modelName: "none",
-      priceInDollars: 0,
-      timeInSeconds: 0,
-      log: "Link analysis completed",
-    },
-    outputs: {
-      thinking: result.thinking,
-    },
-    linkAnalysisResults: [], // The actual results are in the highlights/comments
-  };
 }
