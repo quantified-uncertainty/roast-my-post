@@ -41,9 +41,7 @@ export interface SpellingErrorWithLocation {
 }
 
 export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
-  // Static property to bypass routing - spelling check should always run
-  static readonly runOnAllChunks = true;
-  // Instance property for PluginManager to check
+  // Property to bypass routing - spelling check should always run on all chunks
   readonly runOnAllChunks = true;
 
   private documentText: string;
@@ -64,15 +62,13 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     return "SPELLING";
   }
 
-  // No routing methods needed since runOnAllChunks = true
+  // Routing methods (not used since runOnAllChunks = true)
   promptForWhenToUse(): string {
-    // This plugin always runs on all chunks
     return "Spelling and grammar checking automatically runs on all documents";
   }
 
   routingExamples(): never[] {
-    // Not used for always-run plugins
-    return [];
+    return []; // Not used for always-run plugins
   }
 
   constructor() {
@@ -326,34 +322,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           ? "Affects readability and professionalism"
           : undefined,
     });
-  }
-
-  private calculateImportance(error: SpellingGrammarError): number {
-    // Combine importance and confidence to determine final priority
-    // If we're not confident about an error, reduce its priority
-    const baseScore = error.importance;
-    const confidence = error.confidence || 100; // Default to 100 if not provided
-
-    // Apply confidence as a multiplier (0.5 to 1.0 range)
-    // Low confidence (0-50) reduces score by up to 50%
-    // High confidence (50-100) has minimal impact
-    const confidenceMultiplier = 0.5 + confidence / 200;
-    const adjustedScore = baseScore * confidenceMultiplier;
-
-    // Map adjusted score (0-100) to comment importance (1-10)
-    // Based on test expectations:
-    // 10 -> 2, 30 -> 4, 60 -> 6, 90 -> 9
-    if (adjustedScore < 20) {
-      return 2; // trivial errors get importance 2
-    } else if (adjustedScore < 40) {
-      return 4; // minor errors get importance 4
-    } else if (adjustedScore < 70) {
-      return 6; // major errors get importance 6
-    } else if (adjustedScore < 100) {
-      return 9; // critical errors get importance 9
-    } else {
-      return 10; // maximum importance
-    }
   }
 
   private detectConventions(): void {

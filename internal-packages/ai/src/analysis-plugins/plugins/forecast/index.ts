@@ -360,7 +360,6 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
   private totalCost: number = 0;
   private extractedForecasts: ExtractedForecast[] = [];
   private processingStartTime: number = 0;
-  static readonly runOnAllChunks = false;
 
   name(): string {
     return "FORECAST";
