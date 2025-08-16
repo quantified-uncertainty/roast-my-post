@@ -9,6 +9,7 @@ import { MathPlugin } from '../plugins/math';
 import { SpellingPlugin } from '../plugins/spelling';
 import { FactCheckPlugin } from '../plugins/fact-check';
 import { ForecastPlugin } from '../plugins/forecast';
+import { LinkAnalysisPlugin } from '../plugins/link-analysis';
 import type { SimpleAnalysisPlugin, RoutingExample } from '../types';
 
 describe('Plugin Interface Consistency Tests', () => {
@@ -17,6 +18,7 @@ describe('Plugin Interface Consistency Tests', () => {
     new SpellingPlugin(),
     new FactCheckPlugin(),
     new ForecastPlugin(),
+    new LinkAnalysisPlugin(),
   ];
 
   describe('Basic Interface Compliance', () => {
@@ -37,7 +39,18 @@ describe('Plugin Interface Consistency Tests', () => {
 
         it('should have routing examples', () => {
           const examples = plugin.routingExamples?.();
-          if (examples) {
+          
+          // Plugins with runOnAllChunks don't need routing examples
+          const hasRunOnAllChunks = 'runOnAllChunks' in plugin && plugin.runOnAllChunks === true;
+          
+          if (hasRunOnAllChunks) {
+            // For always-run plugins, routing examples should be empty or not needed
+            if (examples) {
+              expect(Array.isArray(examples)).toBe(true);
+              expect(examples.length).toBe(0);
+            }
+          } else if (examples) {
+            // For routed plugins, validate routing examples
             expect(Array.isArray(examples)).toBe(true);
             expect(examples.length).toBeGreaterThan(0);
             
@@ -83,7 +96,7 @@ describe('Plugin Interface Consistency Tests', () => {
     });
 
     it('should follow naming conventions', () => {
-      const expectedNames = ['MATH', 'SPELLING', 'FACT_CHECK', 'FORECAST'];
+      const expectedNames = ['MATH', 'SPELLING', 'FACT_CHECK', 'FORECAST', 'LINK_ANALYSIS'];
       const actualNames = plugins.map(p => p.name()).sort();
       expect(actualNames).toEqual(expectedNames.sort());
     });
@@ -91,7 +104,10 @@ describe('Plugin Interface Consistency Tests', () => {
 
   describe('Routing Examples Quality', () => {
     plugins.forEach(plugin => {
-      if (plugin.routingExamples) {
+      // Skip plugins with runOnAllChunks since they don't use routing
+      const hasRunOnAllChunks = 'runOnAllChunks' in plugin && plugin.runOnAllChunks === true;
+      
+      if (plugin.routingExamples && !hasRunOnAllChunks) {
         describe(`${plugin.name()} routing examples`, () => {
           const examplesFn = plugin.routingExamples;
           const examples = examplesFn ? examplesFn() : [];
@@ -141,12 +157,18 @@ describe('Plugin Interface Consistency Tests', () => {
 
     it('Spelling plugin should have text-relevant examples', () => {
       const spellingPlugin = plugins.find(p => p.name() === 'SPELLING');
-      if (spellingPlugin?.routingExamples) {
+      // SpellingPlugin now uses runOnAllChunks, so it doesn't need routing examples
+      const hasRunOnAllChunks = spellingPlugin && 'runOnAllChunks' in spellingPlugin && spellingPlugin.runOnAllChunks === true;
+      
+      if (spellingPlugin?.routingExamples && !hasRunOnAllChunks) {
         const examples = spellingPlugin.routingExamples() || [];
         const textExamples = examples.filter(e => 
           e.chunkText.split(' ').length > 3 // Has multiple words
         );
         expect(textExamples.length).toBeGreaterThan(0);
+      } else if (hasRunOnAllChunks) {
+        // Plugin runs on all chunks, so routing examples not needed
+        expect(hasRunOnAllChunks).toBe(true);
       }
     });
 
@@ -160,6 +182,19 @@ describe('Plugin Interface Consistency Tests', () => {
         expect(futureExamples.length).toBeGreaterThan(0);
       }
     });
+
+    it('Link Analysis plugin should bypass routing', () => {
+      const linkPlugin = plugins.find(p => p.name() === 'LINK_ANALYSIS');
+      // LinkAnalysisPlugin uses runOnAllChunks, so it doesn't need routing examples
+      const hasRunOnAllChunks = linkPlugin && 'runOnAllChunks' in linkPlugin && linkPlugin.runOnAllChunks === true;
+      expect(hasRunOnAllChunks).toBe(true);
+      
+      if (linkPlugin?.routingExamples) {
+        const examples = linkPlugin.routingExamples() || [];
+        // Should have empty routing examples since it runs on all chunks
+        expect(examples.length).toBe(0);
+      }
+    });
   });
 
   describe('Interface Contract Validation', () => {
@@ -168,6 +203,7 @@ describe('Plugin Interface Consistency Tests', () => {
       expect(() => new SpellingPlugin()).not.toThrow();
       expect(() => new FactCheckPlugin()).not.toThrow();
       expect(() => new ForecastPlugin()).not.toThrow();
+      expect(() => new LinkAnalysisPlugin()).not.toThrow();
     });
 
     it('should return consistent initial cost values', () => {
@@ -199,7 +235,8 @@ describe('Plugin Interface Consistency Tests', () => {
                           (pluginName.includes('fact') && prompt.toLowerCase().includes('fact')) ||
                           (pluginName.includes('math') && prompt.toLowerCase().includes('math')) ||
                           (pluginName.includes('spell') && prompt.toLowerCase().includes('spell')) ||
-                          (pluginName.includes('forecast') && prompt.toLowerCase().includes('forecast'));
+                          (pluginName.includes('forecast') && prompt.toLowerCase().includes('forecast')) ||
+                          (pluginName.includes('link') && prompt.toLowerCase().includes('link'));
         
         expect(isRelevant).toBe(true);
       });
@@ -207,7 +244,10 @@ describe('Plugin Interface Consistency Tests', () => {
 
     it('should have routing examples that match their prompts', () => {
       plugins.forEach(plugin => {
-        if (plugin.routingExamples) {
+        // Skip plugins with runOnAllChunks since they don't use routing
+        const hasRunOnAllChunks = 'runOnAllChunks' in plugin && plugin.runOnAllChunks === true;
+        
+        if (plugin.routingExamples && !hasRunOnAllChunks) {
           const prompt = plugin.promptForWhenToUse().toLowerCase();
           const examples = plugin.routingExamples() || [];
           

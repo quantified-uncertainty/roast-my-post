@@ -214,7 +214,3 @@ export {
   type TextLocation,
   type TextLocationOptions
 } from './core';
-
-// Backward compatibility aliases for plugins
-export type SimpleLocationOptions = TextLocationOptions;
-export type EnhancedLocationOptions = TextLocationOptions;

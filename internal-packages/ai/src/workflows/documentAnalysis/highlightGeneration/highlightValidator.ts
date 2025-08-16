@@ -2,7 +2,7 @@ import type { Comment } from "@roast/ai";
 import { logger } from "../../../utils/logger";
 import {
   LineBasedLocator,
-  type LineSnippetHighlight,
+  type LineBasedLocation,
 } from "@roast/ai/text-location/line-based";
 import type { LineBasedHighlight, RawLLMHighlight } from "./types";
 
@@ -52,7 +52,12 @@ export async function validateAndConvertHighlights(
       }
 
       // Let LineBasedLocator handle the conversion
-      const highlightResult = locator.createHighlight(highlight.highlight);
+      const highlightResult = locator.lineLocationToOffset(highlight.highlight);
+      if (highlightResult && !highlightResult.prefix) {
+        // Add prefix (up to 30 chars before highlight)
+        const prefixStart = Math.max(0, highlightResult.startOffset - 30);
+        highlightResult.prefix = documentContent.substring(prefixStart, highlightResult.startOffset);
+      }
 
       if (highlightResult && highlightResult.quotedText && highlightResult.quotedText.length > 0) {
         // Validate the highlight by checking if the quoted text matches the document content

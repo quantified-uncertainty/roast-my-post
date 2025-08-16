@@ -1,11 +1,11 @@
 import type { Comment } from "@roast/ai";
 import type { LLMUsage } from "@roast/ai";
-import type { LineSnippetHighlight } from "@roast/ai/text-location/line-based";
+import type { LineBasedLocation } from "@roast/ai/text-location/line-based";
 
 // Response from Anthropic API
 export interface RawLLMHighlight {
   description: string;
-  highlight: LineSnippetHighlight;
+  highlight: LineBasedLocation;
   importance?: number;
   grade?: number;
 }
@@ -15,7 +15,7 @@ export interface LineBasedHighlight {
   description: string;
   importance: number;
   grade?: number;
-  highlight: LineSnippetHighlight;
+  highlight: LineBasedLocation;
 }
 
 // Anthropic API response structure

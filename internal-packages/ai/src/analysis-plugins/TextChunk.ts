@@ -4,7 +4,7 @@
 
 import { TextChunk as ITextChunk } from './types';
 import { LocationUtils } from '../utils/LocationUtils';
-import { findTextLocation, type SimpleLocationOptions, type EnhancedLocationOptions } from '../tools/fuzzy-text-locator';
+import { findTextLocation, type TextLocationOptions } from '../tools/fuzzy-text-locator';
 import { logger } from '../shared/logger';
 
 export interface DocumentLocation {
@@ -83,7 +83,7 @@ export class TextChunk implements ITextChunk {
    */
   async findText(
     searchText: string,
-    options: SimpleLocationOptions = {}
+    options: TextLocationOptions = {}
   ): Promise<DocumentLocation | null> {
     logger.debug('🔍 Text search in chunk', {
       searchTextLength: searchText.length,
@@ -133,7 +133,7 @@ export class TextChunk implements ITextChunk {
    */
   async findTextAbsolute(
     searchText: string,
-    options: EnhancedLocationOptions & { documentText?: string } = {}
+    options: TextLocationOptions & { documentText?: string } = {}
   ): Promise<DocumentLocation | null> {
     // Find within chunk
     const chunkLocation = await this.findText(searchText, options);

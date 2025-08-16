@@ -72,13 +72,6 @@ export function createAnthropicClient(additionalHeaders?: Record<string, string>
   });
 }
 
-// Legacy export for backwards compatibility (but don't initialize at import time)
-export const anthropic = {
-  messages: {
-    create: (params: Anthropic.MessageCreateParams) => createAnthropicClient().messages.create(params)
-  }
-};
-
 // Lazy OpenAI client factory via OpenRouter for search tasks
 export function createOpenAIClient(): OpenAI {
   validateOpenRouterKey();
@@ -93,13 +86,6 @@ export function createOpenAIClient(): OpenAI {
     },
   });
 }
-
-// Legacy export for backwards compatibility  
-export const openai = {
-  get chat() {
-    return createOpenAIClient().chat;
-  }
-};
 
 export const DEFAULT_TEMPERATURE = 0.1; // Lower temperature for more deterministic results
 export const DEFAULT_TIMEOUT = 300000; // 5 minutes default timeout for LLM requests

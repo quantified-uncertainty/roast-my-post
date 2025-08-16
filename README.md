@@ -82,10 +82,12 @@ HELICONE_CACHE_BUCKET_MAX_SIZE=1000  # Max cache entries per bucket
 
 Prompt caching can significantly reduce API costs for repeated similar requests.
 
-4. Set up the database:
+4. Set up the database and system agents:
 ```bash
-pnpm run db:push
+pnpm run db:setup
 ```
+
+This will push the database schema and synchronize system-managed agents (spelling/grammar checker, math checker, fact checker).
 
 5. Start the development server:
 ```bash

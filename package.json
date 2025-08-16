@@ -30,6 +30,8 @@
     "db:migrate:reset": "pnpm --filter @roast/db run db:migrate:reset:safe",
     "db:deploy": "pnpm --filter @roast/db run db:migrate:deploy",
     "db:studio": "pnpm --filter @roast/db db:studio",
+    "db:sync:agents": "pnpm --filter @roast/db run sync:agents",
+    "db:setup": "pnpm run db:push && pnpm run db:sync:agents",
     "process-jobs": "pnpm --filter @roast/web run process-jobs",
     "process-jobs-adaptive": "pnpm --filter @roast/web run process-jobs-adaptive",
     "test:manual": "dotenv -e apps/web/.env.local -- node scripts/run-integration-tests.js",

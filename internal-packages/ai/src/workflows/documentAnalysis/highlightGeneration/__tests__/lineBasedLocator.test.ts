@@ -40,7 +40,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
   test("creates single-line highlight correctly", () => {
     const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = locator.createHighlight({
+    const highlight = locator.lineLocationToOffset({
       startLineIndex: 0,
       startCharacters: "Cross",
       endLineIndex: 0,
@@ -57,7 +57,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
   test("creates multi-line highlight correctly", () => {
     const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = locator.createHighlight({
+    const highlight = locator.lineLocationToOffset({
       startLineIndex: 4,
       startCharacters: "> Andre",
       endLineIndex: 8,
@@ -91,7 +91,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
     // Process highlights manually like the validator does
     const processedComments = [];
     for (const comment of lineComments) {
-      const result = locator.createHighlight(comment.highlight);
+      const result = locator.lineLocationToOffset(comment.highlight);
       if (result) {
         processedComments.push({
           description: comment.description,
@@ -118,7 +118,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
   test("handles invalid line indices gracefully", () => {
     const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = locator.createHighlight({
+    const highlight = locator.lineLocationToOffset({
       startLineIndex: 999,
       startCharacters: "nonexistent",
       endLineIndex: 999,
@@ -131,7 +131,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
   test("handles invalid character snippets gracefully", () => {
     const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = locator.createHighlight({
+    const highlight = locator.lineLocationToOffset({
       startLineIndex: 0,
       startCharacters: "NONEXISTENT",
       endLineIndex: 0,
