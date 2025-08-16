@@ -8,6 +8,8 @@ import { analyzeLinkDocument } from "./linkAnalysis";
 import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
 import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
+import { analyzeDocumentUnified } from "./unified";
+import { PluginType } from "../../analysis-plugins/types/plugin-types";
 import type { TaskResult } from "./shared/types";
 
 export async function analyzeDocument(
@@ -26,15 +28,27 @@ export async function analyzeDocument(
   tasks: TaskResult[];
   jobLogString?: string; // Include job log string for Job.logs field
 }> {
-  // Choose workflow based on agent's extended capability
+  // Use plugin-based routing if pluginIds are specified
+  if (agentInfo.pluginIds && agentInfo.pluginIds.length > 0) {
+    logger.info(`Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${agentInfo.pluginIds.join(', ')}`);
+    return await analyzeDocumentUnified(document, agentInfo, {
+      targetHighlights,
+      jobId,
+      plugins: {
+        include: agentInfo.pluginIds
+      }
+    });
+  }
+
+  // Fallback to legacy extendedCapabilityId mapping for backward compatibility
   if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
-    logger.info(`Using link analysis workflow for agent ${agentInfo.name}`);
+    logger.info(`Using legacy link analysis workflow for agent ${agentInfo.name}`);
     return await analyzeLinkDocument(document, agentInfo, targetHighlights);
   }
   
   // Use dedicated spelling/grammar workflow for spelling-grammar agents
   if (agentInfo.extendedCapabilityId === "spelling-grammar") {
-    logger.info(`Using dedicated spelling/grammar workflow for agent ${agentInfo.name}`);
+    logger.info(`Using legacy spelling/grammar workflow for agent ${agentInfo.name}`);
     const result = await analyzeSpellingGrammar(document, agentInfo, {
       targetHighlights,
       jobId
@@ -43,7 +57,7 @@ export async function analyzeDocument(
   }
   
   if (agentInfo.extendedCapabilityId === "multi-epistemic-eval") {
-    logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
+    logger.info(`Using legacy multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
     const result = await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
       jobId
