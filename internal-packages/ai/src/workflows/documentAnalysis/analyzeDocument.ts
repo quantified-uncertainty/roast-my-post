@@ -30,14 +30,36 @@ export async function analyzeDocument(
 }> {
   // Use plugin-based routing if pluginIds are specified
   if (agentInfo.pluginIds && agentInfo.pluginIds.length > 0) {
-    logger.info(`Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${agentInfo.pluginIds.join(', ')}`);
-    return await analyzeDocumentUnified(document, agentInfo, {
-      targetHighlights,
-      jobId,
-      plugins: {
-        include: agentInfo.pluginIds
-      }
-    });
+    // Validate that all plugin IDs are valid PluginType entries
+    const validPlugins = agentInfo.pluginIds.filter((p): p is PluginType =>
+      Object.values(PluginType).includes(p as PluginType)
+    );
+    
+    // Log warning if any invalid plugins were filtered out
+    const invalidPlugins = agentInfo.pluginIds.filter(p => !validPlugins.includes(p));
+    if (invalidPlugins.length > 0) {
+      logger.warn(`Filtered out invalid plugin IDs for agent ${agentInfo.name}: ${invalidPlugins.join(', ')}`);
+    }
+    
+    // Only proceed if we have valid plugins
+    if (validPlugins.length > 0) {
+      // Sanitize plugin list for safe logging (limit length to prevent log injection)
+      const pluginListForLog = validPlugins
+        .map(String)
+        .join(', ')
+        .slice(0, 500);
+      logger.info(`Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${pluginListForLog}`);
+      
+      return await analyzeDocumentUnified(document, agentInfo, {
+        targetHighlights,
+        jobId,
+        plugins: {
+          include: validPlugins
+        }
+      });
+    } else {
+      logger.warn(`No valid plugins found for agent ${agentInfo.name}, falling back to legacy behavior`);
+    }
   }
 
   // Fallback to legacy extendedCapabilityId mapping for backward compatibility

@@ -115,6 +115,55 @@ describe("analyzeDocument with pluginIds", () => {
     });
   });
 
+  describe("Plugin validation", () => {
+    it("should filter out invalid plugin IDs and use only valid ones", async () => {
+      const mockAgent: Agent = {
+        id: "test-agent",
+        version: "1",
+        name: "Test Agent",
+        description: "Test agent with mixed valid/invalid plugins",
+        pluginIds: [PluginType.SPELLING, "INVALID_PLUGIN" as any, PluginType.MATH],
+        providesGrades: false
+      };
+
+      const { analyzeDocumentUnified } = require("../unified");
+      
+      await analyzeDocument(mockDocument, mockAgent);
+
+      // Should only pass valid plugins to unified workflow
+      expect(analyzeDocumentUnified).toHaveBeenCalledWith(mockDocument, mockAgent, {
+        targetHighlights: 5,
+        jobId: undefined,
+        plugins: {
+          include: [PluginType.SPELLING, PluginType.MATH]
+        }
+      });
+    });
+
+    it("should fall back to legacy when all plugin IDs are invalid", async () => {
+      const mockAgent: Agent = {
+        id: "test-agent",
+        version: "1",
+        name: "Test Agent",
+        description: "Test agent with all invalid plugins",
+        pluginIds: ["INVALID1" as any, "INVALID2" as any],
+        extendedCapabilityId: "simple-link-verifier",
+        providesGrades: false
+      };
+
+      const { analyzeDocumentUnified } = require("../unified");
+      const { analyzeLinkDocument } = require("../linkAnalysis");
+      
+      await analyzeDocument(mockDocument, mockAgent);
+
+      // Should not call unified workflow
+      expect(analyzeDocumentUnified).not.toHaveBeenCalled();
+      
+      // Should fall back to legacy workflow
+      expect(analyzeLinkDocument).toHaveBeenCalledWith(mockDocument, mockAgent, 5);
+    });
+  });
+
   describe("Backward compatibility", () => {
     it("should fall back to legacy extendedCapabilityId when no pluginIds", async () => {
       const mockAgent: Agent = {
