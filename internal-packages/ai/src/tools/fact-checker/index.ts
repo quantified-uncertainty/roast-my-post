@@ -108,21 +108,33 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
     context.logger.info(`[FactChecker] Verifying claim: "${input.claim}"`);
 
     // Search for evidence if requested
-    let researchResults = null;
+    let researchResults: PerplexityResearchData | undefined = undefined;
+    let perplexityFullOutput: any = undefined; // Keep full output for prompt building
     let researchNotes = undefined;
     
     if (input.searchForEvidence) {
       context.logger.info(`[FactChecker] Searching for evidence using Perplexity`);
       try {
-        researchResults = await perplexityResearchTool.execute({
+        perplexityFullOutput = await perplexityResearchTool.execute({
           query: input.claim,
           focusArea: 'general',
           maxSources: 8, // Increased to get more sources
           includeForecastingContext: false
         }, context);
         
-        researchNotes = `Research Summary: ${researchResults.summary}\n\nKey Findings:\n${researchResults.keyFindings.join('\n- ')}`;
-        context.logger.info(`[FactChecker] Found ${researchResults.sources.length} sources`);
+        // Convert Perplexity output to our expected format
+        researchResults = {
+          searchQuery: input.claim,
+          sources: perplexityFullOutput.sources.map((s: any) => ({
+            url: s.url,
+            title: s.title,
+            snippet: s.snippet
+          })),
+          searchResponse: perplexityFullOutput.summary
+        };
+        
+        researchNotes = `Research Summary: ${perplexityFullOutput.summary}\n\nKey Findings:\n${perplexityFullOutput.keyFindings.join('\n- ')}`;
+        context.logger.info(`[FactChecker] Found ${perplexityFullOutput.sources.length} sources`);
       } catch (error) {
         context.logger.warn(`[FactChecker] Perplexity research failed:`, { error: error instanceof Error ? error.message : String(error) });
         // Continue without research results
@@ -235,7 +247,7 @@ ${input.claim}
   </claim>
   
   ${input.context ? `<context>\n${input.context}\n  </context>\n  ` : ""}
-  ${researchResults ? `<research_evidence>\n${researchResults.summary}\n\nKey Findings:\n${researchResults.keyFindings.join('\n- ')}\n\nVerified Sources (use these exact URLs):\n${researchResults.sources.map(s => `- Title: ${s.title}\n  URL: ${s.url}\n  Snippet: ${s.snippet}`).join('\n\n')}\n  </research_evidence>\n  ` : ""}
+  ${perplexityFullOutput ? `<research_evidence>\n${perplexityFullOutput.summary}\n\nKey Findings:\n${perplexityFullOutput.keyFindings.join('\n- ')}\n\nVerified Sources (use these exact URLs):\n${perplexityFullOutput.sources.map((s: any) => `- Title: ${s.title}\n  URL: ${s.url}\n  Snippet: ${s.snippet}`).join('\n\n')}\n  </research_evidence>\n  ` : ""}
   <requirements>
     Verify the accuracy of this factual claim and provide a verdict with confidence level and evidence.${researchResults ? ' IMPORTANT: Use the research evidence above to support your analysis. You MUST include the verified source URLs from the research in your sources array - these are real, verified URLs that you can trust.' : ''}
   </requirements>

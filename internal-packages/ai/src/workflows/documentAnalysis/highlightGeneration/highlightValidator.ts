@@ -118,8 +118,6 @@ export async function validateAndConvertHighlights(
 /**
  * Creates error feedback for failed highlights
  */
-import type { LineBasedHighlight } from './types';
-
 export function createValidationErrorFeedback(
   error: unknown,
   failedHighlights: LineBasedHighlight[],

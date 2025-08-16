@@ -13,7 +13,7 @@ export type NetworkErrorCode = 'ECONNRESET' | 'ETIMEDOUT' | 'ENOTFOUND' | 'ECONN
 export interface ApiError extends Error {
   status?: number;
   code?: NetworkErrorCode | string;
-  headers?: Record<string, string>;
+  headers?: Headers | Record<string, string>;
   requestID?: string;
   error?: {
     type: string;
@@ -24,9 +24,9 @@ export interface ApiError extends Error {
 /**
  * Anthropic-specific error structure
  */
-export interface AnthropicError extends ApiError {
+export interface AnthropicError extends Omit<ApiError, 'error'> {
   status: number;
-  headers: Headers | Record<string, string>;
+  headers?: Headers | Record<string, string>;
   requestID: string;
   error: {
     type: 'error';

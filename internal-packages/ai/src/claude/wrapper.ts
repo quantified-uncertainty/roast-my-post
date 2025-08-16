@@ -177,7 +177,7 @@ export async function callClaude(
       break; // Success, exit retry loop
       
     } catch (error) {
-      lastError = error;
+      lastError = error instanceof Error ? error : new Error(String(error));
       
       // If error is not retryable, throw immediately
       if (!isRetryableError(error)) {

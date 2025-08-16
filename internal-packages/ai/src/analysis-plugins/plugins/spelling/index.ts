@@ -297,7 +297,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
         toolName: "detectLanguageConvention",
         stage: "extraction",
         timestamp: new Date(this.processingStartTime + 10).toISOString(),
-        result: this.languageConvention,
+        result: { ...this.languageConvention } as Record<string, unknown>,
       });
     }
 
@@ -306,7 +306,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       toolName: "checkSpellingGrammar",
       stage: "verification",
       timestamp: new Date().toISOString(),
-      result: error,
+      result: { ...error } as Record<string, unknown>,
     });
 
     // Keep formatted description for backwards compatibility

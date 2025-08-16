@@ -6,15 +6,7 @@
 /**
  * Logger argument types - supports structured logging
  */
-export type LoggerArgs = Array<
-  | string 
-  | number 
-  | boolean 
-  | Error 
-  | Record<string, unknown>
-  | undefined 
-  | null
->;
+export type LoggerArgs = Array<unknown>;
 
 export interface Logger {
   info: (message: string, ...args: LoggerArgs) => void;
