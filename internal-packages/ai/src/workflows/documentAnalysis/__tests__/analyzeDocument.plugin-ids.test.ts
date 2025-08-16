@@ -1,5 +1,5 @@
 /**
- * Test for new plugin IDs array functionality in analyzeDocument
+ * Test for plugin IDs array functionality in analyzeDocument
  */
 
 import { analyzeDocument } from "../analyzeDocument";
@@ -13,18 +13,6 @@ jest.mock("../unified", () => ({
     thinking: "Mock thinking from unified workflow",
     analysis: "Mock analysis from unified workflow", 
     summary: "Mock summary from unified workflow",
-    highlights: [],
-    tasks: [],
-    jobLogString: "Mock job log"
-  })
-}));
-
-// Mock legacy workflows for backward compatibility tests
-jest.mock("../linkAnalysis", () => ({
-  analyzeLinkDocument: jest.fn().mockResolvedValue({
-    thinking: "Mock thinking from link analysis",
-    analysis: "Mock analysis from link analysis",
-    summary: "Mock summary from link analysis", 
     highlights: [],
     tasks: [],
     jobLogString: "Mock job log"
@@ -96,22 +84,33 @@ describe("analyzeDocument with pluginIds", () => {
       });
     });
 
-    it("should handle empty pluginIds array by falling back to legacy logic", async () => {
+    it("should throw error when no pluginIds provided", async () => {
+      const mockAgent: Agent = {
+        id: "test-agent",
+        version: "1",
+        name: "Test Agent", 
+        description: "Test agent without plugin IDs",
+        providesGrades: false
+      };
+
+      await expect(analyzeDocument(mockDocument, mockAgent)).rejects.toThrow(
+        /Agent Test Agent has no valid plugins/
+      );
+    });
+
+    it("should throw error when pluginIds array is empty", async () => {
       const mockAgent: Agent = {
         id: "test-agent",
         version: "1",
         name: "Test Agent", 
         description: "Test agent with empty plugin IDs",
         pluginIds: [],
-        extendedCapabilityId: "simple-link-verifier",
         providesGrades: false
       };
 
-      const { analyzeLinkDocument } = require("../linkAnalysis");
-      
-      await analyzeDocument(mockDocument, mockAgent);
-
-      expect(analyzeLinkDocument).toHaveBeenCalledWith(mockDocument, mockAgent, 5);
+      await expect(analyzeDocument(mockDocument, mockAgent)).rejects.toThrow(
+        /Agent Test Agent has no valid plugins/
+      );
     });
   });
 
@@ -140,61 +139,34 @@ describe("analyzeDocument with pluginIds", () => {
       });
     });
 
-    it("should fall back to legacy when all plugin IDs are invalid", async () => {
+    it("should throw error when all plugin IDs are invalid", async () => {
       const mockAgent: Agent = {
         id: "test-agent",
         version: "1",
         name: "Test Agent",
         description: "Test agent with all invalid plugins",
         pluginIds: ["INVALID1" as any, "INVALID2" as any],
-        extendedCapabilityId: "simple-link-verifier",
         providesGrades: false
       };
 
-      const { analyzeDocumentUnified } = require("../unified");
-      const { analyzeLinkDocument } = require("../linkAnalysis");
-      
-      await analyzeDocument(mockDocument, mockAgent);
-
-      // Should not call unified workflow
-      expect(analyzeDocumentUnified).not.toHaveBeenCalled();
-      
-      // Should fall back to legacy workflow
-      expect(analyzeLinkDocument).toHaveBeenCalledWith(mockDocument, mockAgent, 5);
+      await expect(analyzeDocument(mockDocument, mockAgent)).rejects.toThrow(
+        /Agent Test Agent has no valid plugins/
+      );
     });
   });
 
-  describe("Backward compatibility", () => {
-    it("should fall back to legacy extendedCapabilityId when no pluginIds", async () => {
+  describe("Multiple plugin combinations", () => {
+    it("should handle epistemic verification plugins", async () => {
       const mockAgent: Agent = {
         id: "test-agent",
         version: "1",
-        name: "Test Agent",
-        description: "Test agent without plugin IDs",
-        extendedCapabilityId: "simple-link-verifier",
-        providesGrades: false
-      };
-
-      const { analyzeLinkDocument } = require("../linkAnalysis");
-      
-      await analyzeDocument(mockDocument, mockAgent);
-
-      expect(analyzeLinkDocument).toHaveBeenCalledWith(mockDocument, mockAgent, 5);
-    });
-
-    it("should prioritize pluginIds over extendedCapabilityId when both are present", async () => {
-      const mockAgent: Agent = {
-        id: "test-agent",
-        version: "1",
-        name: "Test Agent",
-        description: "Test agent with both pluginIds and extendedCapabilityId",
-        pluginIds: [PluginType.MATH],
-        extendedCapabilityId: "simple-link-verifier", // This should be ignored
+        name: "Epistemic Verification Agent",
+        description: "Test agent with multiple epistemic plugins",
+        pluginIds: [PluginType.FACT_CHECK, PluginType.MATH, PluginType.FORECAST],
         providesGrades: false
       };
 
       const { analyzeDocumentUnified } = require("../unified");
-      const { analyzeLinkDocument } = require("../linkAnalysis");
       
       await analyzeDocument(mockDocument, mockAgent);
 
@@ -202,12 +174,33 @@ describe("analyzeDocument with pluginIds", () => {
         targetHighlights: 5,
         jobId: undefined,
         plugins: {
-          include: [PluginType.MATH]
+          include: [PluginType.FACT_CHECK, PluginType.MATH, PluginType.FORECAST]
         }
       });
+    });
+
+    it("should handle all available plugins", async () => {
+      const allPlugins = Object.values(PluginType);
+      const mockAgent: Agent = {
+        id: "test-agent",
+        version: "1",
+        name: "All Plugins Agent",
+        description: "Test agent with all available plugins",
+        pluginIds: allPlugins,
+        providesGrades: false
+      };
+
+      const { analyzeDocumentUnified } = require("../unified");
       
-      // Legacy workflow should NOT be called
-      expect(analyzeLinkDocument).not.toHaveBeenCalled();
+      await analyzeDocument(mockDocument, mockAgent);
+
+      expect(analyzeDocumentUnified).toHaveBeenCalledWith(mockDocument, mockAgent, {
+        targetHighlights: 5,
+        jobId: undefined,
+        plugins: {
+          include: allPlugins
+        }
+      });
     });
   });
 });
