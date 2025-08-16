@@ -20,12 +20,89 @@ import { validateAndConvertHighlights } from "../highlightGeneration/highlightVa
 import type { LineBasedHighlight } from "../highlightGeneration/types";
 import { calculateLLMCost } from "../shared/costUtils";
 import { createLogDetails } from "../shared/llmUtils";
-import {
-  findHighlightLocation,
-  type HighlightLocation,
-} from "../shared/pluginLocationWrappers";
+import { findTextLocation, type TextLocationOptions } from '../../../tools/fuzzy-text-locator/core';
+import { getLineNumberAtPosition } from '../../../analysis-plugins/utils/textHelpers';
 import type { HighlightAnalysisOutputs, TaskResult } from "../shared/types";
 import { getHighlightExtractionPrompts } from "./prompts";
+
+// Local interface for highlight location (replacing wrapper)
+interface HighlightLocation {
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+  startLineIndex: number;
+  endLineIndex: number;
+  startCharacters: string;
+  endCharacters: string;
+}
+
+/**
+ * Local replacement for findHighlightLocation wrapper
+ */
+async function findHighlightLocation(
+  searchText: string,
+  documentText: string,
+  options: {
+    lineNumber?: number;
+    contextBefore?: string;
+    contextAfter?: string;
+  } = {}
+): Promise<HighlightLocation | null> {
+  let searchOptions: TextLocationOptions = {
+    caseSensitive: false,
+    normalizeQuotes: true,
+    maxTypos: 3,           // Allow up to 3 character differences
+    partialMatch: true,    // Allow partial matches for long text
+    pluginName: 'highlight'
+  };
+  
+  // If we have line information, construct context
+  if (options.lineNumber && (options.contextBefore || options.contextAfter)) {
+    const lines = documentText.split('\n');
+    const lineIndex = options.lineNumber - 1;
+    
+    if (lineIndex >= 0 && lineIndex < lines.length) {
+      const contextParts = [];
+      if (options.contextBefore) contextParts.push(options.contextBefore);
+      contextParts.push(lines[lineIndex]);
+      if (options.contextAfter) contextParts.push(options.contextAfter);
+      
+      searchOptions.llmContext = contextParts.join(' ');
+    }
+  }
+  
+  const result = await findTextLocation(searchText, documentText, searchOptions);
+  
+  if (result) {
+    // Calculate line-based information using existing utilities
+    const lines = documentText.split('\n');
+    const startLineNumber = getLineNumberAtPosition(documentText, result.startOffset);
+    const endLineNumber = getLineNumberAtPosition(documentText, result.endOffset);
+    const startLineIndex = startLineNumber - 1;
+    const endLineIndex = endLineNumber - 1;
+    
+    // Extract start and end characters
+    const startLine = lines[startLineIndex] || '';
+    const endLine = lines[endLineIndex] || '';
+    
+    const startCharacters = startLine.slice(0, 10).trim() || '...';
+    const endCharacters = endLine.length > 10 
+      ? endLine.slice(-10).trim()
+      : endLine.trim() || '...';
+    
+    return {
+      startOffset: result.startOffset,
+      endOffset: result.endOffset,
+      quotedText: result.quotedText,
+      startLineIndex,
+      endLineIndex,
+      startCharacters,
+      endCharacters
+    };
+  }
+  
+  return null;
+}
 
 /**
  * Extract and format highlights from the comprehensive analysis

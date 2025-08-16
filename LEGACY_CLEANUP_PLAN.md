@@ -175,17 +175,28 @@ Total estimated time: ~3 hours
 - [x] Phase 0: Initial cleanup complete
 - [x] Phase 1: Complete - Removed 485 lines of unused legacy text finders
 - [x] Phase 2: Complete - Migrated all type aliases and removed backward compatibility functions  
-- [ ] Phase 3: Ready to execute - Plugin location wrapper simplification
+- [x] Phase 3: Complete - Removed plugin location wrapper abstraction layers
 - [x] Phase 4: Complete - Removed all legacy client exports (no migration needed!)
 
-## Cleanup Results So Far
-- **Lines removed**: ~600+ lines
-- **Files deleted**: 2 (enhancedTextLocationFinder.ts, simpleTextLocationFinder.ts)
+## Cleanup Results (ALL PHASES COMPLETE!)
+- **Lines removed**: ~800+ lines
+- **Files deleted**: 3 (enhancedTextLocationFinder.ts, simpleTextLocationFinder.ts, pluginLocationWrappers.ts)
 - **Type aliases removed**: 4 (SimpleLocationOptions, EnhancedLocationOptions, LineSnippetHighlight)
 - **Backward compatibility functions removed**: 5 (createHighlight, convertOffsetToLineBased, generateLinkAnalysis, findTextLocationWithMetadata, improvedTokenEstimate)
 - **Legacy exports removed**: 2 (anthropic, openai objects)
 - **Legacy comments cleaned**: 2 test runner files
+- **Abstraction layers removed**: 1 (plugin location wrappers with 4 wrapper functions)
 - **Tests status**: All passing ✅
+
+## Phase 3 Details (Completed)
+- **Removed**: `pluginLocationWrappers.ts` (212 lines) - contained 4 wrapper functions:
+  - `findForecastLocation()` - unused forecast wrapper
+  - `findFactLocation()` - unused fact-check wrapper  
+  - `findSpellingErrorLocation()` - unused spelling wrapper
+  - `findHighlightLocation()` - used by highlight extraction
+- **Migrated**: `highlightExtraction/index.ts` to use `findTextLocation` directly
+- **Added**: Local `findHighlightLocation` function with same logic inline
+- **Benefit**: Removed unnecessary abstraction layer, improved maintainability
 
 ## Phase 4 Details (Completed)
 - Discovered that NO code was actually using the legacy `anthropic` and `openai` exports
