@@ -12,8 +12,8 @@ module.exports = {
   transform: {
     '^.+\\.ts$': ['ts-jest', { 
       useESM: true,
+      isolatedModules: true,
       tsconfig: {
-        moduleResolution: 'node',
         allowSyntheticDefaultImports: true,
         esModuleInterop: true
       }
@@ -32,7 +32,10 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   // Handle ES modules properly
   transformIgnorePatterns: [
-    'node_modules/(?!(nanoid)/)'
+    'node_modules/(?!(nanoid|@roast)/)'
   ],
   extensionsToTreatAsEsm: ['.ts'],
+  moduleNameMapper: {
+    '^nanoid$': '<rootDir>/../../node_modules/.pnpm/nanoid@3.3.11/node_modules/nanoid/index.cjs'
+  },
 };

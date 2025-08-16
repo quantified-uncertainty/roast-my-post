@@ -3,6 +3,7 @@ import { mathCheckerAgent } from './math-checker';
 import { factCheckerAgent } from './fact-checker';
 import { forecastCheckerAgent } from './forecast-checker';
 import { epistemicVerificationAgent } from './epistemic-verification';
+import { linkVerifierAgent } from './link-verifier';
 import { SystemAgentDefinition } from '../types';
 
 export const systemAgents: SystemAgentDefinition[] = [
@@ -11,6 +12,7 @@ export const systemAgents: SystemAgentDefinition[] = [
   factCheckerAgent,
   forecastCheckerAgent,
   epistemicVerificationAgent,
+  linkVerifierAgent,
 ];
 
 export {
@@ -19,4 +21,5 @@ export {
   factCheckerAgent,
   forecastCheckerAgent,
   epistemicVerificationAgent,
+  linkVerifierAgent,
 };

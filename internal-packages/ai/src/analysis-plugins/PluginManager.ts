@@ -630,15 +630,11 @@ export class PluginManager {
   }
 
   /**
-   * Initialize all plugins once
+   * Create fresh plugin instances for each analysis to avoid state pollution
    */
-  private initializeAllPlugins(): Map<PluginType, SimpleAnalysisPlugin> {
-    if (this.allPlugins) {
-      return this.allPlugins;
-    }
-
-    // Create all plugin instances once
-    this.allPlugins = new Map<PluginType, SimpleAnalysisPlugin>([
+  private createPluginInstances(): Map<PluginType, SimpleAnalysisPlugin> {
+    // Create new plugin instances for each analysis
+    const plugins = new Map<PluginType, SimpleAnalysisPlugin>([
       [PluginType.MATH, new MathPlugin()],
       [PluginType.SPELLING, new SpellingPlugin()],
       [PluginType.FACT_CHECK, new FactCheckPlugin()],
@@ -646,15 +642,15 @@ export class PluginManager {
       [PluginType.LINK_ANALYSIS, new LinkPlugin()],
     ]);
 
-    logger.info(`Initialized all ${this.allPlugins.size} plugins`);
-    return this.allPlugins;
+    logger.info(`Created fresh instances of ${plugins.size} plugins`);
+    return plugins;
   }
 
   /**
    * Get selected plugins based on configuration
    */
   private async getSelectedPlugins(): Promise<SimpleAnalysisPlugin[]> {
-    const allPlugins = this.initializeAllPlugins();
+    const allPlugins = this.createPluginInstances();
 
     // Default plugins if no selection specified
     const defaultPluginTypes = [
