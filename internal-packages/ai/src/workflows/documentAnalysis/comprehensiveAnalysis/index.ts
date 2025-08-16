@@ -48,8 +48,8 @@ export async function generateComprehensiveAnalysis(
   let validationResult: ComprehensiveAnalysisOutputs;
   let interaction;
 
-  // Build properties dynamically
-  const analysisProperties: any = {
+  // Build properties dynamically with proper typing
+  const analysisProperties: Record<string, unknown> = {
     summary: {
       type: "string",
       description: "Brief summary of your main findings and contributions",

@@ -66,11 +66,24 @@ export interface FactCheckerInput {
   searchForEvidence?: boolean;
 }
 
+import type { RichLLMInteraction } from '../../types';
+
+export interface PerplexityResearchData {
+  searchQuery: string;
+  sources: Array<{
+    url: string;
+    title?: string;
+    snippet?: string;
+    relevance?: number;
+  }>;
+  searchResponse?: string;
+}
+
 export interface FactCheckerOutput {
   result: FactCheckResult;
   researchNotes?: string;
-  perplexityData?: any; // Full Perplexity research results for debug
-  llmInteraction?: any;
+  perplexityData?: PerplexityResearchData; // Full Perplexity research results for debug
+  llmInteraction?: RichLLMInteraction;
 }
 
 export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {

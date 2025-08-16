@@ -118,9 +118,11 @@ export async function validateAndConvertHighlights(
 /**
  * Creates error feedback for failed highlights
  */
+import type { LineBasedHighlight } from './types';
+
 export function createValidationErrorFeedback(
   error: unknown,
-  failedHighlights: any[],
+  failedHighlights: LineBasedHighlight[],
   documentContent: string
 ): string {
   const errorMessage = error instanceof Error ? error.message : String(error);

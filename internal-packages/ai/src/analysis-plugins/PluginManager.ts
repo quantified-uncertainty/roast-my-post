@@ -599,7 +599,7 @@ export class PluginManager {
         jobLogString: pluginResults.jobLogString,
       };
     } catch (error) {
-      logger.error("Document analysis failed:", error);
+      logger.error("Document analysis failed:", error instanceof Error ? error : new Error(String(error)));
 
       // Return a graceful fallback result instead of throwing
       const errorMessage =

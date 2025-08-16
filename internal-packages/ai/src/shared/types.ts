@@ -4,6 +4,8 @@
  * of the web application's database schema
  */
 
+import type { ToolResult } from '../types/toolResults';
+
 /**
  * Tool result in the analysis chain
  */
@@ -11,7 +13,7 @@ export interface ToolChainResult {
   toolName: string;
   stage: 'extraction' | 'verification' | 'enhancement' | 'generation';
   timestamp: string;
-  result: any;  // Complete, unmodified tool output
+  result: ToolResult;  // Complete, unmodified tool output
 }
 
 /**
@@ -34,7 +36,7 @@ export interface CommentMetadata {
   verified?: boolean;
   
   // Additional quick access fields (plugin-specific)
-  [key: string]: any;
+  [key: string]: string | number | boolean | ToolChainResult[] | undefined;
 }
 
 /**

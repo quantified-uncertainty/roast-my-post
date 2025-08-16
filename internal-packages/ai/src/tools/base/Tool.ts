@@ -20,7 +20,7 @@ export interface ToolContext {
   logger: typeof defaultLogger;
 }
 
-export abstract class Tool<TInput = any, TOutput = any> {
+export abstract class Tool<TInput = unknown, TOutput = unknown> {
   abstract config: ToolConfig;
   abstract inputSchema: z.ZodSchema<TInput>;
   abstract outputSchema: z.ZodSchema<TOutput>;

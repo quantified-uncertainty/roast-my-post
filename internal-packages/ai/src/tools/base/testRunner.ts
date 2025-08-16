@@ -13,11 +13,11 @@ export interface TestCase<TInput, TExpected> {
   tags?: string[];
 }
 
-export interface TestResult {
+export interface TestResult<TOutput = unknown> {
   testId: string;
   passed: boolean;
-  actualOutput: any;
-  expectedOutput: any;
+  actualOutput: TOutput;
+  expectedOutput: TOutput;
   score: number; // 0-1 for fuzzy matches
   reasoning: string;
   error?: string;
@@ -32,9 +32,9 @@ export interface TestSuite<TInput, TExpected> {
 /**
  * Fuzzy match two outputs using LLM evaluation
  */
-export async function fuzzyMatch(
-  actual: any,
-  expected: any,
+export async function fuzzyMatch<T = unknown>(
+  actual: T,
+  expected: T,
   context: {
     testDescription: string;
     inputDescription: string;

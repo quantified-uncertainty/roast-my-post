@@ -3,11 +3,24 @@
  * Simple console-based logger that can be extended later
  */
 
+/**
+ * Logger argument types - supports structured logging
+ */
+export type LoggerArgs = Array<
+  | string 
+  | number 
+  | boolean 
+  | Error 
+  | Record<string, unknown>
+  | undefined 
+  | null
+>;
+
 export interface Logger {
-  info: (message: string, ...args: any[]) => void;
-  warn: (message: string, ...args: any[]) => void;
-  error: (message: string, ...args: any[]) => void;
-  debug: (message: string, ...args: any[]) => void;
+  info: (message: string, ...args: LoggerArgs) => void;
+  warn: (message: string, ...args: LoggerArgs) => void;
+  error: (message: string, ...args: LoggerArgs) => void;
+  debug: (message: string, ...args: LoggerArgs) => void;
 }
 
 export interface LogContext {
@@ -18,16 +31,16 @@ export interface LogContext {
 }
 
 export const logger: Logger = {
-  info: (message: string, ...args: any[]) => {
+  info: (message: string, ...args: LoggerArgs) => {
     console.log(`[AI-INFO] ${message}`, ...args);
   },
-  warn: (message: string, ...args: any[]) => {
+  warn: (message: string, ...args: LoggerArgs) => {
     console.warn(`[AI-WARN] ${message}`, ...args);
   },
-  error: (message: string, ...args: any[]) => {
+  error: (message: string, ...args: LoggerArgs) => {
     console.error(`[AI-ERROR] ${message}`, ...args);
   },
-  debug: (message: string, ...args: any[]) => {
+  debug: (message: string, ...args: LoggerArgs) => {
     if (process.env.NODE_ENV === 'development') {
       console.debug(`[AI-DEBUG] ${message}`, ...args);
     }
