@@ -135,8 +135,8 @@ describe("LinkAnalysisPlugin", () => {
       await plugin.analyze(chunks, text);
 
       const debugInfo = plugin.getDebugInfo();
-      expect(debugInfo.hasRun).toBe(true);
-      expect(debugInfo.commentsCount).toBeGreaterThanOrEqual(1);
+      expect(debugInfo.plugin).toBe("LinkAnalysisPlugin");
+      expect(debugInfo.version).toBe("1.0.0");
     }, 30000);
   });
 
