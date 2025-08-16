@@ -95,20 +95,5 @@ export const COMPREHENSIVE_ANALYSIS_TIMEOUT = parseInt(process.env.COMPREHENSIVE
 export const HIGHLIGHT_EXTRACTION_TIMEOUT = parseInt(process.env.HIGHLIGHT_EXTRACTION_TIMEOUT || '300000'); // 5 minutes
 export const SELF_CRITIQUE_TIMEOUT = parseInt(process.env.SELF_CRITIQUE_TIMEOUT || '180000'); // 3 minutes
 
-// Helper function to add timeout to Anthropic requests
-export async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number = DEFAULT_TIMEOUT,
-  errorMessage: string = "Request timed out"
-): Promise<T> {
-  let timeoutId: NodeJS.Timeout;
-  
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
-  });
-
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    // Clear the timeout when either promise resolves/rejects
-    clearTimeout(timeoutId);
-  });
-}
+// Re-export withTimeout from centralized utility for backward compatibility
+export { withTimeout } from '../utils/timeout';

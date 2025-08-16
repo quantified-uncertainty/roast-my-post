@@ -8,8 +8,8 @@ import {
 import {
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
   DEFAULT_TEMPERATURE,
-  withTimeout,
 } from "../../../types/openai";
+import { withTimeout } from "../../../utils/timeout";
 
 import { shouldIncludeGrade } from "../shared/agentContext";
 import { calculateLLMCost } from "../shared/costUtils";
@@ -108,8 +108,10 @@ export async function generateComprehensiveAnalysis(
         },
         enablePromptCaching: true, // Enable caching for comprehensive analysis system prompt and tools
       }),
-      COMPREHENSIVE_ANALYSIS_TIMEOUT,
-      `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`
+      {
+        timeoutMs: COMPREHENSIVE_ANALYSIS_TIMEOUT,
+        errorMessage: `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`
+      }
     );
 
     interaction = result.interaction;

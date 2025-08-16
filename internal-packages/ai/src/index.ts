@@ -98,9 +98,17 @@ export {
   DEFAULT_TEMPERATURE,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
-  SELF_CRITIQUE_TIMEOUT,
-  withTimeout
+  SELF_CRITIQUE_TIMEOUT
 } from './types/openai';
+
+// Export centralized timeout utilities
+export {
+  withTimeout,
+  createTimeoutWrapper,
+  TimeoutPresets,
+  Timeouts,
+  type TimeoutOptions
+} from './utils/timeout';
 
 // Shared utilities
 export * from './shared/logger';
@@ -114,7 +122,7 @@ export type {
 } from './shared/types';
 
 export {
-  DEFAULT_TIMEOUT,
+  DEFAULT_TIMEOUT, // Keep for backward compatibility
   getRandomElement,
   getPercentile,
   getPercentileNumber,

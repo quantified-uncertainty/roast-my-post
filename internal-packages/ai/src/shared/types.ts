@@ -98,24 +98,10 @@ export type LanguageConventionOption = 'US' | 'UK' | 'auto';
 export const DEFAULT_TIMEOUT = 60000; // 60 seconds
 
 /**
- * Wrap a promise with a timeout
+ * Re-export withTimeout from centralized utility for backward compatibility
+ * @deprecated Use import from '../utils/timeout' directly
  */
-export function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number = DEFAULT_TIMEOUT,
-  timeoutMessage = 'Operation timed out'
-): Promise<T> {
-  let timeoutId: NodeJS.Timeout;
-  
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
-  });
-
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    // Clear timeout when either promise resolves/rejects
-    clearTimeout(timeoutId);
-  });
-}
+export { withTimeout } from '../utils/timeout';
 
 /**
  * Safe array access utilities
