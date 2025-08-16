@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PluginType } from "../analysis-plugins/types/plugin-types";
 
 // Schema for agent owner
 export const AgentOwnerSchema = z.object({
@@ -19,6 +20,7 @@ export const AgentVersionSchema = z.object({
   selfCritiqueInstructions: z.string().optional(),
   providesGrades: z.boolean().default(false),
   extendedCapabilityId: z.string().optional(),
+  pluginIds: z.array(z.nativeEnum(PluginType)).optional(),
   readme: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -34,6 +36,7 @@ const BaseAgentSchema = z.object({
   selfCritiqueInstructions: z.string().optional(),
   providesGrades: z.boolean().default(false),
   extendedCapabilityId: z.string().optional(),
+  pluginIds: z.array(z.nativeEnum(PluginType)).optional(),
   readme: z.string().optional(),
 });
 

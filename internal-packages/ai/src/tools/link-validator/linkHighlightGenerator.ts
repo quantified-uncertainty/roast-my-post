@@ -177,17 +177,17 @@ export function generateLinkHighlights(
           case "NotFound":
             grade = 0;
             importance = 100;
-            description = `❌ Broken link\n\n${formatUrlForDisplay(url)} - Page not found (HTTP 404)`;
+            description = `❌ Broken link\n\n[${formatUrlForDisplay(url)}](${url}) - Page not found (HTTP 404)`;
             break;
           case "Forbidden":
             grade = 0;
             importance = 100;
-            description = `🚫 Access denied\n\n${formatUrlForDisplay(url)} - Access forbidden (HTTP 403)`;
+            description = `🚫 Access denied\n\n[${formatUrlForDisplay(url)}](${url}) - Access forbidden (HTTP 403)`;
             break;
           case "Timeout":
             grade = 0;
             importance = 100;
-            description = `⏱️ Link timeout\n\n${formatUrlForDisplay(url)} - Request timed out`;
+            description = `⏱️ Link timeout\n\n[${formatUrlForDisplay(url)}](${url}) - Request timed out`;
             break;
           default:
             grade = 0;
@@ -196,13 +196,13 @@ export function generateLinkHighlights(
               "message" in linkResult.accessError
                 ? linkResult.accessError.message
                 : "Unknown error";
-            description = `❌ Link error\n\n${formatUrlForDisplay(url)} - ${errorMsg}`;
+            description = `❌ Link error\n\n[${formatUrlForDisplay(url)}](${url}) - ${errorMsg}`;
         }
       } else {
         // URL is accessible - simple verification
         grade = 90;
         importance = 10;
-        description = `✅ Link verified\n\n${formatUrlForDisplay(url)} - Server responded successfully (HTTP 200)`;
+        description = `✅ Link verified\n\n[${formatUrlForDisplay(url)}](${url}) - Server responded successfully (HTTP 200)`;
       }
 
       highlights.push({

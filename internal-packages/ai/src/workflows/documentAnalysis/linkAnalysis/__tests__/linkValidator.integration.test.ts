@@ -156,8 +156,8 @@ Another paragraph with more text but still no links.`,
     expect(result.highlights).toHaveLength(0);
     expect(result.highlights.length).toBe(0);
     
-    // Analysis should explicitly state that 0 links were found
-    expect(result.analysis).toMatch(/Total\s+Links\s+Found:\*?\*?\s*0/i);
+    // Analysis should mention no links found (new plugin format)
+    expect(result.analysis.toLowerCase()).toMatch(/no\s+(external\s+)?links?\s+(were\s+)?found/i);
     
     // Summary should mention the analysis
     expect(result.summary.toLowerCase()).toContain("analyzed");

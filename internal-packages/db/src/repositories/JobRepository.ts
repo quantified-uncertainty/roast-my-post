@@ -62,6 +62,7 @@ export interface JobWithRelations extends JobEntity {
         selfCritiqueInstructions: string | null;
         providesGrades: boolean;
         extendedCapabilityId: string | null;
+        pluginIds: string[];
         version: number;
       }>;
     };
@@ -441,6 +442,7 @@ export class JobRepository implements JobRepositoryInterface {
             selfCritiqueInstructions: v.selfCritiqueInstructions,
             providesGrades: v.providesGrades,
             extendedCapabilityId: v.extendedCapabilityId,
+            pluginIds: v.pluginIds || [],
             version: v.version,
           })),
         },

@@ -153,7 +153,7 @@ export function OverviewTab({
                         <div className="flex-1">
                           <div className="text-sm font-medium text-gray-900">
                             <Link
-                              href={`/docs/${evaluation.documentId}/evaluations`}
+                              href={`/docs/${evaluation.documentId}/evals/${agent.id}`}
                               className="hover:text-blue-600"
                             >
                               {evaluation.documentTitle}

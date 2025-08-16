@@ -90,6 +90,39 @@ describe("Link Highlight Generation", () => {
     expect(highlights[0].highlight.quotedText).toBe("https://working.com");
   });
 
+  it("truncates URLs correctly in descriptions while preserving full URLs in links", () => {
+    const longUrl = "https://www.thinkglobalhealth.org/article/just-how-do-deaths-due-covid-19-stack-against-other-causes-globally";
+    const linkAnalysisResults: LinkAnalysis[] = [
+      {
+        url: longUrl,
+        timestamp: new Date(),
+        linkDetails: {
+          contentType: "text/html",
+          statusCode: 200
+        }
+      }
+    ];
+    const urls = [longUrl];
+    const content = `Check out [this article](${longUrl}) for more info.`;
+    
+    const highlights = generateLinkHighlights(linkAnalysisResults, urls, content, 5);
+    
+    expect(highlights).toHaveLength(1);
+    const highlight = highlights[0];
+    
+    // Header should be truncated
+    expect(highlight.header.length).toBeLessThan(longUrl.length);
+    expect(highlight.header).toContain("...");
+    
+    // Description should contain truncated display text but full URL as link
+    expect(highlight.description).toContain("✅ Link verified");
+    expect(highlight.description).toContain("[https://www.thinkglobalhealth.org/article/just-how-do-deat...]");
+    expect(highlight.description).toContain(`](${longUrl})`);
+    
+    // Full URL should be present for linking
+    expect(highlight.description).toContain(longUrl);
+  });
+
   it("respects targetHighlights limit", () => {
     const linkAnalysisResults: LinkAnalysis[] = [
       {

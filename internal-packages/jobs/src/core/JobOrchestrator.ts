@@ -218,6 +218,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
       providesGrades: agentVersion.providesGrades || false,
       extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
+      pluginIds: agentVersion.pluginIds as any || [], // Include pluginIds for workflow selection (cast needed for type compatibility)
     };
 
     return { documentForAnalysis, agent, documentVersion, agentVersion };

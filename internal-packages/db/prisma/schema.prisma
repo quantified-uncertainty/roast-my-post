@@ -198,6 +198,7 @@ model AgentVersion {
   createdAt                DateTime            @default(now())
   updatedAt                DateTime            @updatedAt
   extendedCapabilityId     String?
+  pluginIds                String[]            @default([])
   readme                   String?
   selfCritiqueInstructions String?
   primaryInstructions      String?

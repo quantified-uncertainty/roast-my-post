@@ -12,7 +12,6 @@ import type { AnalysisResult, SimpleAnalysisPlugin } from "../../types";
  * A minimal wrapper that validates URLs and generates comments for broken links
  */
 export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
-  static readonly runOnAllChunks = true;
   readonly runOnAllChunks = true;
 
   name = () => "LINK_ANALYSIS";

@@ -1,0 +1,200 @@
+name: Manual System Agent Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'Production'
+        type: choice
+        options:
+        - Production
+        - Staging
+      agent_ids:
+        description: 'Specific agent IDs to sync (comma-separated, leave empty for all)'
+        required: false
+        type: string
+      force_update:
+        description: 'Force update even if versions match'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Dry run (show what would be synced without making changes)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  manual-sync:
+    name: Manual Agent Sync
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Validate inputs
+        run: |
+          echo "## 🔍 Manual Sync Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Agent IDs**: ${{ github.event.inputs.agent_ids || 'All agents' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Force Update**: ${{ github.event.inputs.force_update }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry Run**: ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create backup (if not dry run)
+        if: github.event.inputs.dry_run != 'true'
+        uses: ./.github/workflows/database-backup.yml
+        with:
+          backup_prefix: 'manual-agent-sync'
+        secrets: inherit
+
+      - name: Preview changes (dry run)
+        if: github.event.inputs.dry_run == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "### 🧪 Dry Run - Preview of Changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Create dry-run script
+          cat > dry_run_sync.js << 'EOF'
+          const { PrismaClient } = require('@roast/db/generated');
+          const { systemAgents } = require('./system-agents/agents');
+          const prisma = new PrismaClient();
+          
+          async function main() {
+            const targetAgentIds = process.env.AGENT_IDS?.split(',').map(id => id.trim()).filter(Boolean);
+            const agentsToSync = targetAgentIds?.length 
+              ? systemAgents.filter(agent => targetAgentIds.includes(agent.id))
+              : systemAgents;
+            
+            console.log(`🎯 Would sync ${agentsToSync.length} agent(s)`);
+            console.log('');
+            
+            for (const agent of agentsToSync) {
+              console.log(`📋 Agent: ${agent.id}`);
+              
+              const existingAgent = await prisma.agent.findUnique({
+                where: { id: agent.id },
+                include: { versions: { orderBy: { version: 'desc' }, take: 1 } }
+              });
+              
+              if (existingAgent) {
+                const latestVersion = existingAgent.versions[0];
+                const contentChanged = 
+                  latestVersion?.name !== agent.name ||
+                  latestVersion?.description !== agent.description ||
+                  latestVersion?.primaryInstructions !== agent.primaryInstructions ||
+                  JSON.stringify(latestVersion?.pluginIds || []) !== JSON.stringify(agent.pluginIds || []);
+                
+                if (contentChanged || process.env.FORCE_UPDATE === 'true') {
+                  console.log(`  → Would UPDATE to version ${(latestVersion?.version || 0) + 1}`);
+                  console.log(`     Current: v${latestVersion?.version} - ${latestVersion?.name}`);
+                  console.log(`     New: v${(latestVersion?.version || 0) + 1} - ${agent.name}`);
+                } else {
+                  console.log(`  ✓ Already up to date (v${latestVersion?.version})`);
+                }
+              } else {
+                console.log(`  → Would CREATE new agent (v1)`);
+                console.log(`     Name: ${agent.name}`);
+              }
+              console.log('');
+            }
+          }
+          
+          main().catch(console.error).finally(() => prisma.$disconnect());
+          EOF
+          
+          cd internal-packages/db
+          AGENT_IDS="${{ github.event.inputs.agent_ids }}" \
+          FORCE_UPDATE="${{ github.event.inputs.force_update }}" \
+          node dry_run_sync.js >> $GITHUB_STEP_SUMMARY
+          
+          rm -f dry_run_sync.js
+
+      - name: Sync system agents (live run)
+        if: github.event.inputs.dry_run != 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "### 🚀 Live Agent Sync" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd internal-packages/db
+          
+          # If specific agents specified, modify the sync script temporarily
+          if [ -n "${{ github.event.inputs.agent_ids }}" ]; then
+            echo "Syncing specific agents: ${{ github.event.inputs.agent_ids }}"
+            
+            # Create filtered sync script
+            cat > filtered_sync.js << 'EOF'
+          const { PrismaClient } = require('./generated');
+          const { systemAgents } = require('./system-agents/agents');
+          const { syncAgent, getOrCreateSystemUser } = require('./system-agents/sync');
+          
+          async function main() {
+            const targetAgentIds = process.env.AGENT_IDS.split(',').map(id => id.trim()).filter(Boolean);
+            const agentsToSync = systemAgents.filter(agent => targetAgentIds.includes(agent.id));
+            
+            console.log(`🎯 Syncing ${agentsToSync.length} specific agent(s): ${targetAgentIds.join(', ')}`);
+            
+            const systemUserId = await getOrCreateSystemUser();
+            
+            for (const agent of agentsToSync) {
+              await syncAgent(agent, systemUserId);
+            }
+            
+            console.log(`✅ Completed syncing ${agentsToSync.length} agent(s)`);
+          }
+          
+          main().catch(console.error);
+          EOF
+            
+            AGENT_IDS="${{ github.event.inputs.agent_ids }}" node filtered_sync.js
+            rm -f filtered_sync.js
+          else
+            echo "Syncing all system agents"
+            pnpm sync:agents
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 📋 Manual Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            echo "### 🧪 Dry Run Completed" >> $GITHUB_STEP_SUMMARY
+            echo "No changes were made to the database. Review the preview above." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ job.status }}" == "success" ]; then
+            echo "### ✅ Manual sync completed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### Configuration Used:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Agent IDs**: ${{ github.event.inputs.agent_ids || 'All agents' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Force Update**: ${{ github.event.inputs.force_update }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Manual sync failed!" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs above for error details." >> $GITHUB_STEP_SUMMARY
+          fi

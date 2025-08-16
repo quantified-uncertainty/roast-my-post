@@ -397,7 +397,6 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   private extractedExpressions: ExtractedMathExpression[] = [];
   private hybridErrorWrappers: HybridMathErrorWrapper[] = [];
   private processingStartTime: number = 0;
-  static readonly runOnAllChunks = false;
 
   name(): string {
     return "MATH";
