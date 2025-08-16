@@ -15,8 +15,8 @@ export interface UnifiedAnalysisOptions {
   targetHighlights?: number;
   jobId?: string;
   plugins?: {
-    include?: PluginType[];
-    exclude?: PluginType[];
+    include?: readonly PluginType[];
+    exclude?: readonly PluginType[];
   };
 }
 
@@ -35,9 +35,13 @@ export async function analyzeDocumentUnified(
   jobLogString?: string;
 }> {
   // Create plugin manager with specified plugin selection
+  // Cast readonly arrays to mutable for PluginManager compatibility
   const manager = new PluginManager({
     jobId: options.jobId,
-    pluginSelection: options.plugins,
+    pluginSelection: options.plugins ? {
+      include: options.plugins.include ? [...options.plugins.include] : undefined,
+      exclude: options.plugins.exclude ? [...options.plugins.exclude] : undefined,
+    } : undefined,
   });
 
   // Delegate to plugin system
