@@ -3,7 +3,6 @@
  * Forecasting test runner
  */
 
-// Test the actual tool instead of legacy functions  
 import forecasterTool from './index';
 import { generateForecastWithAggregation } from './generator';
 import { runTestSuite, displayDetailedResults } from '../base/testRunner';

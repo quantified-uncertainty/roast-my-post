@@ -4,7 +4,7 @@ import type { Agent } from "../../types/agentSchema";
 import type { Comment } from "../../shared/types";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
-import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
+import { analyzeLinkDocument } from "./linkAnalysis";
 import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
 import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
