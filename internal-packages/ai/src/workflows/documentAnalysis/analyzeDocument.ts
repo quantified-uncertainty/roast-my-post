@@ -6,7 +6,7 @@ import { analyzeDocumentUnified } from "./unified";
 import { PluginType } from "../../analysis-plugins/types/plugin-types";
 import type { TaskResult } from "./shared/types";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
-import { extractHighlights } from "./highlightExtraction";
+import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateSelfCritique } from "./selfCritique";
 
 export async function analyzeDocument(
@@ -68,8 +68,9 @@ export async function analyzeDocument(
     tasks.push(comprehensiveAnalysisResult.task);
     
     // Step 2: Extract highlights from the analysis
-    const highlightExtractionResult = await extractHighlights(
+    const highlightExtractionResult = await extractHighlightsFromAnalysis(
       document,
+      agentInfo,
       comprehensiveAnalysisResult.outputs,
       targetHighlights
     );
@@ -79,9 +80,8 @@ export async function analyzeDocument(
     let selfCritique: string | undefined;
     if (agentInfo.selfCritiqueInstructions) {
       const selfCritiqueResult = await generateSelfCritique(
-        document,
-        agentInfo,
-        comprehensiveAnalysisResult.outputs
+        comprehensiveAnalysisResult.outputs,
+        agentInfo
       );
       selfCritique = selfCritiqueResult.outputs.selfCritique;
       tasks.push(selfCritiqueResult.task);
