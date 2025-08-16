@@ -49,20 +49,68 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
       );
 
       // Convert tool results to our format
-      const linkAnalysisResults: LinkAnalysis[] = (toolResult?.validations || []).map((v) => ({
-        url: v.url,
-        finalUrl: v.finalUrl,
-        timestamp: v.timestamp,
-        accessError: v.error ? {
-          type: v.error.type,
-          message: v.error.message,
-          statusCode: v.error.statusCode,
-        } : undefined,
-        linkDetails: v.details ? {
-          contentType: v.details.contentType,
-          statusCode: v.details.statusCode,
-        } : undefined,
-      }));
+      const linkAnalysisResults: LinkAnalysis[] = (toolResult?.validations || []).map((v) => {
+        // Build the proper AccessError based on the type
+        let accessError: LinkAnalysis['accessError'] = undefined;
+        if (v.error) {
+          switch (v.error.type) {
+            case 'NetworkError':
+              accessError = {
+                type: 'NetworkError' as const,
+                message: v.error.message || 'Network error occurred',
+                retryable: true,
+              };
+              break;
+            case 'NotFound':
+              accessError = {
+                type: 'NotFound' as const,
+                statusCode: 404 as const,
+              };
+              break;
+            case 'Forbidden':
+              accessError = {
+                type: 'Forbidden' as const,
+                statusCode: 403 as const,
+              };
+              break;
+            case 'Timeout':
+              accessError = {
+                type: 'Timeout' as const,
+                duration: 30000, // Default timeout
+              };
+              break;
+            case 'RateLimited':
+              accessError = {
+                type: 'RateLimited' as const,
+                resetTime: undefined,
+              };
+              break;
+            case 'ServerError':
+              accessError = {
+                type: 'ServerError' as const,
+                statusCode: v.error.statusCode || 500,
+              };
+              break;
+            default:
+              accessError = {
+                type: 'Unknown' as const,
+                message: v.error.message || 'Unknown error',
+              };
+              break;
+          }
+        }
+
+        return {
+          url: v.url,
+          finalUrl: v.finalUrl,
+          timestamp: v.timestamp,
+          accessError,
+          linkDetails: v.details ? {
+            contentType: v.details.contentType,
+            statusCode: v.details.statusCode,
+          } : undefined,
+        };
+      });
 
       // Generate comments using the tool's helper
       const comments = generateLinkHighlights(
