@@ -100,7 +100,7 @@ Its important too note that punctuation is also wrong heres an example.`,
     
     // Analysis should mention it's from plugins
     expect(result.analysis).toContain('plugin');
-  }, 30000); // 30 second timeout
+  }, 120000); // 2 minute timeout for API calls
   
   test('should use LLM workflow when no plugins configured', async () => {
     const document: Document = {
@@ -142,5 +142,5 @@ Its important too note that punctuation is also wrong heres an example.`,
     
     // LLM workflow creates different task names
     expect(result.tasks[0].name).toBe('generateComprehensiveAnalysis');
-  }, 30000);
+  }, 120000); // 2 minute timeout for API calls
 });

@@ -17,7 +17,7 @@ for (const envFile of envFiles) {
 }
 
 // Increase timeout for integration tests that make API calls
-jest.setTimeout(30000);
+jest.setTimeout(120000); // 2 minutes for tests that make real API calls
 
 // Suppress console logs during tests unless explicitly needed
 if (process.env.SUPPRESS_TEST_LOGS !== 'false') {
