@@ -29,7 +29,6 @@ export async function analyzeLinkDocument(
   tasks: TaskResult[];
   jobLogString?: string;
 }> {
-  console.log("document", document);
   // Create plugin manager with only link analysis plugin
   const manager = new PluginManager({
     pluginSelection: {
@@ -37,12 +36,10 @@ export async function analyzeLinkDocument(
     },
   });
 
-  console.log("result", manager);
   // Delegate to plugin system
   const result = await manager.analyzeDocument(document.content, {
     targetHighlights,
   });
-  console.log("result", result);
 
   // The highlights from the plugin are already valid Comment objects
   // Just pass them through directly since the plugin handles all validation
@@ -55,5 +52,36 @@ export async function analyzeLinkDocument(
     highlights: result.highlights as AiComment[],
     tasks: result.tasks,
     jobLogString: result.jobLogString,
+  };
+}
+
+/**
+ * Generate link analysis - for backward compatibility
+ * This is used by existing code that expects the old return format
+ */
+export async function generateLinkAnalysis(
+  document: Document,
+  agentInfo: Agent
+): Promise<{ 
+  task: TaskResult; 
+  outputs: { thinking: string }; 
+  linkAnalysisResults: any[] 
+}> {
+  const result = await analyzeLinkDocument(document, agentInfo);
+  
+  // Extract link results from the plugin manager's debug info if needed
+  // For now, return empty array as the actual results are in the comments
+  return {
+    task: result.tasks[0] || {
+      name: "generateLinkAnalysis",
+      modelName: "none",
+      priceInDollars: 0,
+      timeInSeconds: 0,
+      log: "Link analysis completed",
+    },
+    outputs: {
+      thinking: result.thinking,
+    },
+    linkAnalysisResults: [], // The actual results are in the highlights/comments
   };
 }
