@@ -1,10 +1,12 @@
 import { SystemAgentDefinition } from '../types';
+import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types';
 
 export const spellingGrammarAgent: SystemAgentDefinition = {
   id: 'system-spelling-grammar',
   name: 'Spelling & Grammar Checker',
   description: 'Advanced proofreading agent that detects and corrects spelling and grammar errors with US/UK convention support',
   providesGrades: true,
+  pluginIds: [PluginType.SPELLING],
   readme: `# Spelling & Grammar Checker
 
 A sophisticated proofreading agent that combines language convention detection with Claude-based error analysis. Features adjustable strictness levels and automatic US/UK English convention handling.

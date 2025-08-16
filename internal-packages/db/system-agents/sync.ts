@@ -55,7 +55,9 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
       latestVersion?.readme !== agent.readme ||
       latestVersion?.primaryInstructions !== agent.primaryInstructions ||
       latestVersion?.selfCritiqueInstructions !== agent.selfCritiqueInstructions ||
-      latestVersion?.providesGrades !== agent.providesGrades;
+      latestVersion?.providesGrades !== agent.providesGrades ||
+      JSON.stringify(latestVersion?.pluginIds || []) !== JSON.stringify(agent.pluginIds || []) ||
+      latestVersion?.extendedCapabilityId !== agent.extendedCapabilityId;
 
     if (contentChanged) {
       console.log(`  → Updating agent with new version ${(latestVersion?.version || 0) + 1}`);
@@ -70,6 +72,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
           primaryInstructions: agent.primaryInstructions,
           selfCritiqueInstructions: agent.selfCritiqueInstructions,
           providesGrades: agent.providesGrades,
+          pluginIds: agent.pluginIds || [],
           extendedCapabilityId: agent.extendedCapabilityId,
         }
       });
@@ -95,6 +98,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
             primaryInstructions: agent.primaryInstructions,
             selfCritiqueInstructions: agent.selfCritiqueInstructions,
             providesGrades: agent.providesGrades,
+            pluginIds: agent.pluginIds || [],
             extendedCapabilityId: agent.extendedCapabilityId,
           }
         }
