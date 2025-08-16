@@ -107,13 +107,13 @@ export class HybridMathErrorWrapper {
         toolName: "extractMath",
         stage: "extraction",
         timestamp: new Date(this.processingStartTime + 20).toISOString(),
-        result: { ...this.expression } as Record<string, unknown>,
+        result: this.expression as unknown as Record<string, unknown>,
       },
       {
         toolName: "check-math-hybrid",
         stage: "verification",
         timestamp: new Date().toISOString(),
-        result: { ...this.verificationResult } as Record<string, unknown>,
+        result: this.verificationResult as unknown as Record<string, unknown>,
       },
     ];
 
@@ -354,7 +354,7 @@ export class ExtractedMathExpression {
         toolName: "extractMath",
         stage: "extraction",
         timestamp: new Date().toISOString(),
-        result: { ...this.expression } as Record<string, unknown>,
+        result: this.expression as unknown as Record<string, unknown>,
       },
     ];
 
@@ -731,7 +731,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
         toolName: "extractMath",
         stage: "extraction",
         timestamp: new Date().toISOString(),
-        result: { ...extractedExpression.expression } as Record<string, unknown>,
+        result: extractedExpression.expression as unknown as Record<string, unknown>,
       },
       {
         toolName: "findLocation",
@@ -791,13 +791,13 @@ The analysis may still be valid, but the highlighting won't be precise.`,
         toolName: "extractMath",
         stage: "extraction",
         timestamp: new Date(this.processingStartTime + 20).toISOString(),
-        result: { ...hybridWrapper.expression } as Record<string, unknown>,
+        result: hybridWrapper.expression as unknown as Record<string, unknown>,
       },
       {
         toolName: "check-math-hybrid",
         stage: "verification",
         timestamp: new Date().toISOString(),
-        result: { ...hybridWrapper.verificationResult } as Record<string, unknown>,
+        result: hybridWrapper.verificationResult as unknown as Record<string, unknown>,
       },
     ];
 
@@ -840,7 +840,7 @@ This expression was detected but couldn't be verified automatically. This could 
         toolName: "extractMath",
         stage: "extraction",
         timestamp: new Date().toISOString(),
-        result: { ...extractedExpression.expression } as Record<string, unknown>,
+        result: extractedExpression.expression as unknown as Record<string, unknown>,
       },
       {
         toolName: "skipDecision",

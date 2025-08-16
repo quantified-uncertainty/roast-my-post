@@ -647,7 +647,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         : await executeFactCheck();
 
       fact.verification = result.result;
-      fact.factCheckerOutput = { ...result } as Record<string, unknown>; // Store full output including Perplexity data
+      fact.factCheckerOutput = result as unknown as Record<string, unknown>; // Store full output including Perplexity data
       this.llmInteractions.push(
         this.convertRichToLLMInteraction(result.llmInteraction)
       );

@@ -190,7 +190,7 @@ class ExtractedForecast {
         toolName: "generateProbabilityForecast",
         stage: "verification",
         timestamp: new Date().toISOString(),
-        result: { ...this.ourForecast } as Record<string, unknown>,
+        result: this.ourForecast as unknown as Record<string, unknown>,
       });
     }
 
