@@ -3,8 +3,9 @@ import {
   generateLinkAnalysisAndSummary,
   generateLinkHighlights,
   linkValidator,
+  validateUrls,
+  extractUrls,
   type LinkAnalysis,
-  type LinkValidatorOutput,
 } from "../../../tools/link-validator";
 import { TextChunk } from "../../TextChunk";
 import { AnalysisResult, SimpleAnalysisPlugin } from "../../types";
@@ -42,80 +43,33 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
     }
 
     try {
-      // Run link validator tool
-      const toolResult = await linkValidator.run(
-        { text: documentText, maxUrls: 50 },
-        { logger }
-      );
-
-      // Convert tool results to our format
-      const linkAnalysisResults: LinkAnalysis[] = (toolResult?.validations || []).map((v) => {
-        // Build the proper AccessError based on the type
-        let accessError: LinkAnalysis['accessError'] = undefined;
-        if (v.error) {
-          switch (v.error.type) {
-            case 'NetworkError':
-              accessError = {
-                type: 'NetworkError' as const,
-                message: v.error.message || 'Network error occurred',
-                retryable: true,
-              };
-              break;
-            case 'NotFound':
-              accessError = {
-                type: 'NotFound' as const,
-                statusCode: 404 as const,
-              };
-              break;
-            case 'Forbidden':
-              accessError = {
-                type: 'Forbidden' as const,
-                statusCode: 403 as const,
-              };
-              break;
-            case 'Timeout':
-              accessError = {
-                type: 'Timeout' as const,
-                duration: 30000, // Default timeout
-              };
-              break;
-            case 'RateLimited':
-              accessError = {
-                type: 'RateLimited' as const,
-                resetTime: undefined,
-              };
-              break;
-            case 'ServerError':
-              accessError = {
-                type: 'ServerError' as const,
-                statusCode: v.error.statusCode || 500,
-              };
-              break;
-            default:
-              accessError = {
-                type: 'Unknown' as const,
-                message: v.error.message || 'Unknown error',
-              };
-              break;
-          }
-        }
-
-        return {
-          url: v.url,
-          finalUrl: v.finalUrl,
-          timestamp: v.timestamp,
-          accessError,
-          linkDetails: v.details ? {
-            contentType: v.details.contentType,
-            statusCode: v.details.statusCode,
-          } : undefined,
+      // Extract URLs from the text
+      const urls = extractUrls(documentText, 50);
+      
+      // If no URLs found, return early with appropriate messaging
+      if (urls.length === 0) {
+        logger.info('LinkAnalysisPlugin: No URLs found in document');
+        this.result = {
+          summary: "No external links found in the document",
+          analysis: "# Link Analysis Report\n\nNo external links were found in this document.",
+          comments: [],
+          cost: 0,
+          grade: 100, // No broken links means perfect score
         };
-      });
+        return this.result;
+      }
+      
+      logger.info(`LinkAnalysisPlugin: Found ${urls.length} URLs, validating...`);
+      
+      // Validate URLs directly using the lower-level function
+      const linkAnalysisResults = await validateUrls(
+        urls.map(url => ({ url }))
+      );
 
       // Generate comments using the tool's helper
       const comments = generateLinkHighlights(
         linkAnalysisResults,
-        toolResult?.urls || [],
+        urls,
         documentText,
         50
       );
