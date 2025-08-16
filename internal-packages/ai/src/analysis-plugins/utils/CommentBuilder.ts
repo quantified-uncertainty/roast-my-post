@@ -1,4 +1,11 @@
 import type { Comment, DocumentLocation, ToolChainResult, CommentMetadata } from '../../shared/types';
+import type { 
+  MathExtractResult, 
+  ForecastExtractResult, 
+  ForecastResult, 
+  FactExtractResult, 
+  FactVerifyResult 
+} from "./types";
 
 export interface CommentBuildOptions {
   // Required
@@ -66,8 +73,8 @@ export class CommentBuilder {
         endOffset: options.location.endOffset ?? 0,
         quotedText: options.location.quotedText ?? '',
         isValid: true,
-        prefix: (options.location as any).prefix,
-        error: (options.location as any).error,
+        prefix: 'prefix' in options.location ? (options.location as any).prefix : undefined,
+        error: 'error' in options.location ? (options.location as any).error : undefined,
       },
       
       // Complete metadata (stored as JSON in DB)
@@ -228,14 +235,14 @@ export class CommentBuilder {
     return Math.min(10, Math.max(0, Math.round(base * confidenceMultiplier)));
   }
   
-  private static calculateMathImportance(llmResult?: any, extractResult?: any): number {
+  private static calculateMathImportance(llmResult?: unknown, extractResult?: MathExtractResult): number {
     const contextScore = extractResult?.contextImportanceScore || 50;
     const complexityScore = extractResult?.complexityScore || 20;
     const base = (contextScore + complexityScore) / 20;
     return Math.min(10, Math.max(0, Math.round(base)));
   }
   
-  private static calculateForecastQuality(extractResult?: any): number {
+  private static calculateForecastQuality(extractResult?: ForecastExtractResult): number {
     if (!extractResult) return 5;
     const scores = [
       extractResult.importanceScore,
@@ -246,13 +253,13 @@ export class CommentBuilder {
     return scores.length > 0 ? scores.reduce((a, b) => a + b) / scores.length : 5;
   }
   
-  private static calculateForecastImportance(extractResult?: any, forecastResult?: any): number {
+  private static calculateForecastImportance(extractResult?: ForecastExtractResult, forecastResult?: ForecastResult): number {
     const importanceScore = extractResult?.importanceScore || 50;
     const quality = this.calculateForecastQuality(extractResult);
     return Math.min(10, Math.max(0, Math.round((importanceScore + quality * 10) / 20)));
   }
   
-  private static calculateFactImportance(extractResult?: any, verifyResult?: any): number {
+  private static calculateFactImportance(extractResult?: FactExtractResult, verifyResult?: FactVerifyResult): number {
     const importanceScore = extractResult?.importanceScore || 50; 
     const isFalse = verifyResult?.verdict === 'false';
     const base = (importanceScore / 100) * 8;

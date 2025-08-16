@@ -1,6 +1,21 @@
 // Test setup file for Jest
 // Add any global test configuration here
 
+// Load environment variables from .env files
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Try to load from multiple .env files in order of precedence
+const envFiles = [
+  '.env.local',
+  '.env'
+];
+
+for (const envFile of envFiles) {
+  const envPath = path.resolve(__dirname, '../../../', envFile);
+  dotenv.config({ path: envPath });
+}
+
 // Increase timeout for integration tests that make API calls
 jest.setTimeout(30000);
 

@@ -29,6 +29,15 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { CommentBuilder } from "../../utils/CommentBuilder";
+import {
+  MAX_ERRORS_PER_CHUNK,
+  MIN_CONFIDENCE_THRESHOLD,
+  HIGH_IMPORTANCE_THRESHOLD,
+  LOG_TEXT_TRUNCATE_LENGTH,
+  CONVENTION_SAMPLE_SIZE,
+  LOW_CONFIDENCE_THRESHOLD,
+  LOW_CONSISTENCY_THRESHOLD
+} from "./constants";
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;
@@ -162,7 +171,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
         const result = await checkSpellingGrammarTool.execute(
           {
             text: chunk.text,
-            maxErrors: 20, // Limit errors per chunk
+            maxErrors: MAX_ERRORS_PER_CHUNK,
             convention: convention as LanguageConventionOption,
             strictness: this.strictness,
           },
@@ -193,10 +202,10 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
             continue;
           }
 
-          // Skip very low confidence errors (below 30%)
-          if (error.confidence && error.confidence < 30) {
+          // Skip very low confidence errors
+          if (error.confidence && error.confidence < MIN_CONFIDENCE_THRESHOLD) {
             logger.debug(
-              `SpellingAnalyzer: Skipping low-confidence error "${error.text.slice(0, 30)}..." (${error.confidence}% confidence)`
+              `SpellingAnalyzer: Skipping low-confidence error "${error.text.slice(0, LOG_TEXT_TRUNCATE_LENGTH)}..." (${error.confidence}% confidence)`
             );
             continue;
           }
@@ -210,12 +219,12 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
             if (comment) {
               this.comments.push(comment);
               logger.debug(
-                `SpellingAnalyzer: Created comment for error "${error.text.slice(0, 30)}..." in chunk ${chunk.id}`
+                `SpellingAnalyzer: Created comment for error "${error.text.slice(0, LOG_TEXT_TRUNCATE_LENGTH)}..." in chunk ${chunk.id}`
               );
             }
           } else {
             logger.warn(
-              `SpellingAnalyzer: Could not find location for error "${error.text.slice(0, 30)}..." in chunk ${chunk.id}`
+              `SpellingAnalyzer: Could not find location for error "${error.text.slice(0, LOG_TEXT_TRUNCATE_LENGTH)}..." in chunk ${chunk.id}`
             );
           }
 
@@ -318,7 +327,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       level: error.type === "grammar" ? "warning" : "info",
       observation: `${error.type === "spelling" ? "Misspelling" : "Grammar error"}: "${error.text}"`,
       significance:
-        error.importance >= 50
+        error.importance >= HIGH_IMPORTANCE_THRESHOLD
           ? "Affects readability and professionalism"
           : undefined,
     });
@@ -328,7 +337,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     logger.info("SpellingAnalyzer: Detecting language conventions");
 
     // Take a sample from the beginning for analysis
-    const sampleSize = Math.min(2000, this.documentText.length);
+    const sampleSize = Math.min(CONVENTION_SAMPLE_SIZE, this.documentText.length);
     const sample = this.documentText.slice(0, sampleSize);
 
     this.languageConvention = detectLanguageConvention(sample);
@@ -416,7 +425,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
         const severityIcon =
           error.error.importance > 75
             ? "🔴"
-            : error.error.importance > 50
+            : error.error.importance > HIGH_IMPORTANCE_THRESHOLD
               ? "🟡"
               : "🔵";
         analysis += `- ${severityIcon} **${error.error.type}**: "${error.error.text}"\n`;
@@ -462,12 +471,12 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     if (this.languageConvention) {
       analysis += `**🌍 Language Convention:**\n`;
       analysis += `- Detected: ${this.languageConvention.convention} English`;
-      if (this.languageConvention.confidence < 0.8) {
+      if (this.languageConvention.confidence < LOW_CONFIDENCE_THRESHOLD) {
         analysis += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
       }
       analysis += "\n";
 
-      if (this.languageConvention.consistency < 0.8) {
+      if (this.languageConvention.consistency < LOW_CONSISTENCY_THRESHOLD) {
         analysis += `- ⚠️ Mixed conventions detected (${Math.round(this.languageConvention.consistency * 100)}% consistency)\n`;
         analysis += `- Recommendation: Standardize to ${this.languageConvention.convention} English\n`;
       }
