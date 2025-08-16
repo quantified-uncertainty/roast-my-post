@@ -343,8 +343,10 @@ export class PluginManager {
 
             // Add timeout to prevent hanging
             const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
+            let timeoutId: NodeJS.Timeout;
+            
             const timeoutPromise = new Promise<never>((_, reject) => {
-              setTimeout(
+              timeoutId = setTimeout(
                 () =>
                   reject(
                     new Error(
@@ -374,7 +376,10 @@ export class PluginManager {
             const result = await Promise.race([
               executePlugin(),
               timeoutPromise,
-            ]);
+            ]).finally(() => {
+              // Clear timeout when either promise resolves/rejects
+              clearTimeout(timeoutId);
+            });
 
             const duration = Date.now() - startTime;
 

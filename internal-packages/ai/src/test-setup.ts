@@ -4,6 +4,7 @@
 // Load environment variables from .env files
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import { afterAll } from '@jest/globals';
 
 // Try to load from multiple .env files in order of precedence
 const envFiles = [
@@ -31,3 +32,14 @@ if (process.env.SUPPRESS_TEST_LOGS !== 'false') {
     error: console.error,
   };
 }
+
+// Clean up resources after all tests complete
+afterAll(async () => {
+  // Give time for any pending async operations to complete
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // Force garbage collection if available
+  if (global.gc) {
+    global.gc();
+  }
+});

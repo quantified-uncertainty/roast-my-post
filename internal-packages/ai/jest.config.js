@@ -38,4 +38,6 @@ module.exports = {
   moduleNameMapper: {
     '^nanoid$': '<rootDir>/../../node_modules/.pnpm/nanoid@3.3.11/node_modules/nanoid/index.cjs'
   },
+  // Detect what's keeping the process alive
+  detectOpenHandles: true,
 };

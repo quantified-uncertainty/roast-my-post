@@ -101,9 +101,14 @@ export async function withTimeout<T>(
   timeoutMs: number = DEFAULT_TIMEOUT,
   errorMessage: string = "Request timed out"
 ): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+  
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
+    timeoutId = setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
   });
 
-  return Promise.race([promise, timeoutPromise]);
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    // Clear the timeout when either promise resolves/rejects
+    clearTimeout(timeoutId);
+  });
 }

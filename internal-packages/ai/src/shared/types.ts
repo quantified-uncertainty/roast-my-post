@@ -105,12 +105,16 @@ export function withTimeout<T>(
   timeoutMs: number = DEFAULT_TIMEOUT,
   timeoutMessage = 'Operation timed out'
 ): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
-    ),
-  ]);
+  let timeoutId: NodeJS.Timeout;
+  
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    // Clear timeout when either promise resolves/rejects
+    clearTimeout(timeoutId);
+  });
 }
 
 /**

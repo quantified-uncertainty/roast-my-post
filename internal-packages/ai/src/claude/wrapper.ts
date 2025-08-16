@@ -148,8 +148,10 @@ export async function callClaude(
       // Add timeout to prevent hanging indefinitely
       const DEFAULT_CLAUDE_TIMEOUT_MS = 180000; // 3 minutes default (should handle most cases)
       const timeoutMs = options.timeout || DEFAULT_CLAUDE_TIMEOUT_MS;
+      let timeoutId: NodeJS.Timeout;
+      
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           reject(new Error(`Claude API call timed out after ${timeoutMs}ms`));
         }, timeoutMs);
       });
@@ -157,7 +159,10 @@ export async function callClaude(
       const result = await Promise.race([
         anthropic.messages.create(requestOptions),
         timeoutPromise
-      ]);
+      ]).finally(() => {
+        // Clear timeout when either promise resolves/rejects
+        clearTimeout(timeoutId);
+      });
       
       // Validate response structure
       if (!result || !result.content || !result.usage) {
