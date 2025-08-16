@@ -691,14 +691,9 @@ export class PluginManager {
       }
     }
 
-    // Then, add all always-run plugins that aren't already included
-    for (const [type, plugin] of allPlugins) {
-      if (plugin.runOnAllChunks === true && !selectedTypes.includes(type)) {
-        selectedPlugins.push(plugin);
-        selectedTypeNames.push(type);
-        logger.info(`Auto-including always-run plugin: ${type}`);
-      }
-    }
+    // Note: We don't automatically add runOnAllChunks plugins anymore
+    // They must be explicitly included in the selection
+    // runOnAllChunks only means they bypass routing, not selection
 
     logger.info(
       `Selected ${selectedPlugins.length} plugins: ${selectedTypeNames.join(", ")}`
