@@ -57,3 +57,4 @@ The agent provides:
 - **Predictive quality**: Are forecasts methodologically sound?
 - **Logical consistency**: Do the domains align coherently?
 - **Evidence integration**: How well are multiple evidence types combined?`
+};

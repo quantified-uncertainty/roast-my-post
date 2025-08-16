@@ -36,3 +36,4 @@ The agent analyzes mathematical content in documents by:
 - **Logic errors**: Flawed mathematical reasoning or invalid steps
 - **Notation errors**: Incorrect mathematical symbols or expressions
 - **Conceptual errors**: Misunderstanding of mathematical principles`
+};

@@ -37,3 +37,4 @@ The agent analyzes forecasting content by:
 - **Poor calibration**: Misaligned confidence and accuracy
 - **Insufficient evidence**: Predictions without adequate support
 - **Methodology flaws**: Inappropriate forecasting techniques`
+};
