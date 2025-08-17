@@ -33,7 +33,7 @@ export function MathCheckDisplay({ result, statement, variant = 'basic', classNa
   const status = getStatus();
   const isCorrect = status === 'verified_true' || status === 'verified';
   const isIncorrect = status === 'verified_false';
-  const isUnverifiable = status === 'cannot_verify';
+  const _isUnverifiable = status === 'cannot_verify';
 
   const statusConfig = {
     verified_true: {

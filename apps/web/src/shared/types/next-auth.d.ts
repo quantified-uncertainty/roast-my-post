@@ -1,5 +1,5 @@
 import { UserRole } from "@prisma/client";
-import NextAuth from "next-auth";
+// NextAuth import removed - not directly used, only for type augmentation
 
 declare module "next-auth" {
   interface Session {

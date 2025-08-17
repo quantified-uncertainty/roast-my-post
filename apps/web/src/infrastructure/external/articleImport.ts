@@ -391,7 +391,7 @@ export function convertToMarkdown(html: string): string {
       return node.nodeName === "SECTION" && 
              (node.className === "footnotes" || node.id === "footnotes");
     },
-    replacement: (content, node) => {
+    replacement: (content, _node) => {
       // Add a clear footnotes header if there isn't one already
       const hasHeader = content.trim().startsWith('#');
       if (!hasHeader) {
@@ -641,7 +641,7 @@ export function reorganizeFootnotes(content: string): string {
       .sort((a, b) => a[1].number - b[1].number);
     
     // Add footnotes in simple numbered format
-    for (const [ref, { content, number }] of sortedFootnotes) {
+    for (const [_ref, { content, number }] of sortedFootnotes) {
       mainContent.push(`${number}. ${content}`);
     }
     
@@ -858,7 +858,7 @@ async function processArticleFallback(url: string): Promise<ProcessedArticle> {
     const dom = createCleanDOM(html);
 
     logger.info('📝 Extracting metadata...');
-    const metadata = extractMetadataSimple(dom, url);
+    const _metadata = extractMetadataSimple(dom, url);
 
     logger.info('📄 Extracting content...');
     const contentHtml = extractContent(dom);

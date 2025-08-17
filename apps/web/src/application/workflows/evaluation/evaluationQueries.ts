@@ -1,6 +1,6 @@
 import { prisma } from "@/infrastructure/database/prisma";
 import { fullEvaluationInclude } from "@/infrastructure/database/prisma/evaluation-includes";
-import { serializePrismaResult, decimalToNumber } from "@/infrastructure/database/prisma-serializers";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 /**
  * Shared query pattern for getting evaluation data for display

@@ -37,7 +37,7 @@ const toolTestData = {
 
 // Helper function to test a tool with authentication
 async function testToolWithAuth(page: Page, toolId: string, testData: any) {
-  const authHelper = new AuthHelper(page);
+  const _authHelper = new AuthHelper(page);
   
   // Navigate to the tool page
   await page.goto(`/tools/${toolId}`);

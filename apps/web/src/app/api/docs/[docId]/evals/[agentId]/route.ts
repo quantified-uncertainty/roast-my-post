@@ -3,7 +3,6 @@ import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
 import { prisma } from "@roast/db";
-import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
@@ -14,7 +13,7 @@ const createEvaluationSchema = z.object({
 
 // GET endpoint is public - matches existing evaluation viewing patterns
 export async function GET(
-  req: NextRequest, 
+  _req: NextRequest, 
   context: { params: Promise<{ docId: string; agentId: string }> }
 ) {
   const params = await context.params;

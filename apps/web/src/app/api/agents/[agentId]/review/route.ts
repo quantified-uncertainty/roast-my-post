@@ -3,7 +3,7 @@ import { logger } from "@/infrastructure/logging/logger";
 
 import { getServices } from "@/application/services/ServiceFactory";
 
-export async function GET(request: Request, context: { params: Promise<{ agentId: string }> }) {
+export async function GET(_request: Request, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
   try {
     const { agentService } = getServices();

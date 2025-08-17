@@ -1,6 +1,6 @@
 // Type helpers for better type safety
 type DecimalLike = { toNumber: () => number; toString: () => string };
-type Serializable = string | number | boolean | null | undefined | Date | DecimalLike;
+type _Serializable = string | number | boolean | null | undefined | Date | DecimalLike;
 
 /**
  * Mapped type that converts Decimal fields to strings

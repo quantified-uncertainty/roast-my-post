@@ -63,7 +63,7 @@ describe("@roast/ai Package Integration in Web App", () => {
 
   it("should create plugin instances", () => {
     const pluginManager = new PluginManager();
-    const mathPlugin = new MathPlugin();
+    // MathPlugin instance creation is tested elsewhere
 
     // PluginManager doesn't have registerPlugin method - it uses plugins as constructor args
     expect(pluginManager).toBeDefined();

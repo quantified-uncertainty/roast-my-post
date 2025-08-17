@@ -12,7 +12,6 @@ import {
   ArrowDownTrayIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  DocumentTextIcon,
   BookOpenIcon,
   ChartBarIcon
 } from "@heroicons/react/24/outline";

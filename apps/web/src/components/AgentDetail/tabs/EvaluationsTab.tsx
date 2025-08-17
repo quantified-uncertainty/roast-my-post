@@ -11,7 +11,7 @@ import type {
   AgentEvaluation,
   BatchSummary,
 } from "../types";
-import { formatCost, formatDate, formatDateWithTime } from "../utils";
+import { formatDate, formatDateWithTime } from "../utils";
 
 interface EvaluationsTabProps {
   agent: Agent;
