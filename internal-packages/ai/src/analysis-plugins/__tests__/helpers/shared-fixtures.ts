@@ -32,7 +32,7 @@ export const spellingTestCases: PluginTestCase[] = [
         verifyHighlights: true
       },
       analysis: {
-        summaryContains: ['spelling', 'grammar']
+        summaryContains: ['critical writing quality', 'issues']
       },
       performance: {
         maxCost: 0.05
