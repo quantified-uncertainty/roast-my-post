@@ -8,8 +8,8 @@ vi.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequestSessionFirst: vi.fn(),
 }));
 
-vi.mock('@roast/ai', () => {
-  const actual = jest.requireActual('@roast/ai');
+vi.mock('@roast/ai', async () => {
+  const actual = await vi.importActual('@roast/ai');
   return {
     ...actual,
     AgentInputSchema: {
@@ -131,7 +131,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(undefined);
+    vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/agents', {
       method: 'PUT',
@@ -144,7 +144,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should validate request body', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
     const { AgentInputSchema } = require('@roast/ai');
     const { ZodError } = require('zod');
     
@@ -171,7 +171,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should require agentId for updates', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
     const { AgentInputSchema } = require('@roast/ai');
     AgentInputSchema.parse.mockReturnValueOnce({
       name: 'New Agent',
@@ -198,7 +198,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should update existing agent and create new version', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
     const { AgentInputSchema } = require('@roast/ai');
     const { Result } = require('@roast/domain');
     
@@ -250,7 +250,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should handle permission errors from AgentService', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
     const { AgentInputSchema } = require('@roast/ai');
     const { Result, ValidationError } = require('@roast/domain');
     
