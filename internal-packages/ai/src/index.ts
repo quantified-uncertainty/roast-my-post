@@ -80,6 +80,7 @@ export {
 
 // Analysis plugin types
 export type { Finding } from './analysis-plugins/types';
+export { PluginType } from './analysis-plugins/types/plugin-types';
 
 // Document and agent types (avoid conflicts with existing exports)
 export * from './types/agentSchema';
