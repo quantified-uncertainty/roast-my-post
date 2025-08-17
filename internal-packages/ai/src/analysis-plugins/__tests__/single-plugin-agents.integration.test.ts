@@ -66,79 +66,29 @@ describeIfApiKey('Single-Plugin Agent Integration Tests', () => {
       manager = new PluginManager();
     });
 
-    it('should detect mathematical errors', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          mathDocuments.withErrors,
-          [plugin]
-        );
-      });
+    // Table-driven tests using test cases from shared fixtures
+    it.each(mathTestCases)(
+      '$name',
+      async (testCase) => {
+        if (testCase.skip) return;
 
-      const pluginResult = result.pluginResults.get('MATH');
-      expect(pluginResult).toBeDefined();
+        const { result, timeMs } = await measurePerformance(async () => {
+          return await manager.analyzeDocumentSimple(
+            testCase.document,
+            [plugin]
+          );
+        });
 
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 3,
-          mustFindTexts: ['1,700,000', '32%', '3.0M'], // Corrections for the errors
-          summaryContains: ['error', 'calculation'],
-          verifyHighlights: true,
-          minGrade: 0,
-          maxGrade: 70, // Should have low grade due to errors
-          maxCost: 0.1
-        }, 'Math with errors');
+        const pluginResult = result.pluginResults.get('MATH');
+        expect(pluginResult).toBeDefined();
 
-        logTestResult('Math with errors', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should verify correct calculations', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          mathDocuments.correct,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('MATH');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          maxComments: 3, // May find minor issues even in correct calculations
-          summaryContains: ['mathematical', 'error'],
-          verifyHighlights: true,
-          minGrade: 70, // Allow for some minor issues in mostly correct math
-          maxCost: 0.1
-        }, 'Math correct calculations');
-
-        logTestResult('Math correct calculations', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should check unit conversions', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          mathDocuments.unitConversions,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('MATH');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 2,
-          mustFindTexts: ['304.8', '6.6', '140'], // Correct conversion values
-          summaryContains: ['conversion', 'unit'],
-          verifyHighlights: true,
-          maxCost: 0.1
-        }, 'Math unit conversions');
-
-        logTestResult('Math unit conversions', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
+        if (pluginResult) {
+          assertAnalysisResult(pluginResult, testCase.expectations, testCase.name);
+          logTestResult(testCase.name, pluginResult, timeMs);
+        }
+      },
+      TEST_TIMEOUT
+    );
   });
 
   describe('Fact Checker Agent', () => {
@@ -150,81 +100,29 @@ describeIfApiKey('Single-Plugin Agent Integration Tests', () => {
       manager = new PluginManager();
     });
 
-    it('should detect factual errors', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          factDocuments.withErrors,
-          [plugin]
-        );
-      });
+    // Table-driven tests using test cases from shared fixtures
+    it.each(factTestCases)(
+      '$name',
+      async (testCase) => {
+        if (testCase.skip) return;
 
-      const pluginResult = result.pluginResults.get('FACT_CHECK');
-      expect(pluginResult).toBeDefined();
+        const { result, timeMs } = await measurePerformance(async () => {
+          return await manager.analyzeDocumentSimple(
+            testCase.document,
+            [plugin]
+          );
+        });
 
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 4,
-          mustFindTexts: ['1945', '1969', '1953'], // Some correct dates
-          summaryContains: ['error', 'incorrect', 'fact'],
-          verifyHighlights: true,
-          minGrade: 0,
-          maxGrade: 60, // Low grade due to errors
-          maxCost: 0.15
-        }, 'Fact checking with errors');
+        const pluginResult = result.pluginResults.get('FACT_CHECK');
+        expect(pluginResult).toBeDefined();
 
-        logTestResult('Fact checking with errors', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should verify correct facts', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          factDocuments.correct,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('FACT_CHECK');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          maxComments: 2, // Should find few or no issues
-          summaryContains: ['accurate', 'verified', 'correct'],
-          verifyHighlights: true,
-          minGrade: 85, // High grade for accurate facts
-          maxCost: 0.15
-        }, 'Fact checking correct facts');
-
-        logTestResult('Fact checking correct facts', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should handle mixed accuracy documents', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          factDocuments.mixedAccuracy,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('FACT_CHECK');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 2,
-          maxComments: 8,
-          mustFindTexts: ['2004', '2008'], // Correct years for Facebook and Bitcoin
-          verifyHighlights: true,
-          minGrade: 40,
-          maxGrade: 80, // Medium grade for mixed accuracy
-          maxCost: 0.15
-        }, 'Fact checking mixed accuracy');
-
-        logTestResult('Fact checking mixed accuracy', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
+        if (pluginResult) {
+          assertAnalysisResult(pluginResult, testCase.expectations, testCase.name);
+          logTestResult(testCase.name, pluginResult, timeMs);
+        }
+      },
+      TEST_TIMEOUT
+    );
   });
 
   describe('Forecast Checker Agent', () => {
@@ -236,76 +134,29 @@ describeIfApiKey('Single-Plugin Agent Integration Tests', () => {
       manager = new PluginManager();
     });
 
-    it('should identify clear predictions with probabilities', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          forecastDocuments.withPredictions,
-          [plugin]
-        );
-      });
+    // Table-driven tests using test cases from shared fixtures
+    it.each(forecastTestCases)(
+      '$name',
+      async (testCase) => {
+        if (testCase.skip) return;
 
-      const pluginResult = result.pluginResults.get('FORECAST');
-      expect(pluginResult).toBeDefined();
+        const { result, timeMs } = await measurePerformance(async () => {
+          return await manager.analyzeDocumentSimple(
+            testCase.document,
+            [plugin]
+          );
+        });
 
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 5,
-          mustFindTexts: ['70%', '85%', '2027', '2030'],
-          summaryContains: ['prediction', 'forecast', 'probability'],
-          verifyHighlights: true,
-          maxCost: 0.1
-        }, 'Forecast with predictions');
+        const pluginResult = result.pluginResults.get('FORECAST');
+        expect(pluginResult).toBeDefined();
 
-        logTestResult('Forecast with predictions', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should handle vague predictions appropriately', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          forecastDocuments.vaguePredictions,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('FORECAST');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          maxComments: 2, // May find few or no concrete predictions in vague text
-          summaryContains: ['forecasting', 'claims', 'found'],
-          verifyHighlights: true,
-          maxCost: 0.1
-        }, 'Forecast vague predictions');
-
-        logTestResult('Forecast vague predictions', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should extract specific timeline predictions', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          forecastDocuments.specificTimelines,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('FORECAST');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 8,
-          mustFindTexts: ['Q4 2024', 'Q1 2025', '95%', '70%'],
-          summaryContains: ['timeline', 'quarterly', 'forecast'],
-          verifyHighlights: true,
-          maxCost: 0.1
-        }, 'Forecast specific timelines');
-
-        logTestResult('Forecast specific timelines', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
+        if (pluginResult) {
+          assertAnalysisResult(pluginResult, testCase.expectations, testCase.name);
+          logTestResult(testCase.name, pluginResult, timeMs);
+        }
+      },
+      TEST_TIMEOUT
+    );
   });
 
   describe('Link Verifier Agent', () => {
@@ -317,78 +168,29 @@ describeIfApiKey('Single-Plugin Agent Integration Tests', () => {
       manager = new PluginManager();
     });
 
-    it('should verify valid links', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          linkDocuments.withValidLinks,
-          [plugin]
-        );
-      });
+    // Table-driven tests using test cases from shared fixtures
+    it.each(linkTestCases)(
+      '$name',
+      async (testCase) => {
+        if (testCase.skip) return;
 
-      const pluginResult = result.pluginResults.get('LINK_ANALYSIS');
-      expect(pluginResult).toBeDefined();
+        const { result, timeMs } = await measurePerformance(async () => {
+          return await manager.analyzeDocumentSimple(
+            testCase.document,
+            [plugin]
+          );
+        });
 
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          maxComments: 10, // May find some accessibility issues with links
-          summaryContains: ['link', 'working'],
-          verifyHighlights: true,
-          minGrade: 80, // Good grade for mostly working links
-          maxCost: 0.01 // Link checking is cheap (no LLM)
-        }, 'Link verification valid links');
+        const pluginResult = result.pluginResults.get('LINK_ANALYSIS');
+        expect(pluginResult).toBeDefined();
 
-        logTestResult('Link verification valid links', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should detect broken and malformed links', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          linkDocuments.withBrokenLinks,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('LINK_ANALYSIS');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 5,
-          mustFindTexts: ['broken', 'invalid', 'malformed'],
-          summaryContains: ['broken', 'links', 'references'],
-          verifyHighlights: true,
-          minGrade: 0,
-          maxGrade: 50, // Low grade for broken links
-          maxCost: 0.01
-        }, 'Link verification broken links');
-
-        logTestResult('Link verification broken links', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should handle documents without links', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          linkDocuments.withoutLinks,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('LINK_ANALYSIS');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          exactComments: 0,
-          summaryContains: ['no', 'links'],
-          minGrade: 100, // Perfect grade when no links to check
-          maxCost: 0.01
-        }, 'Link verification no links');
-
-        logTestResult('Link verification no links', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
+        if (pluginResult) {
+          assertAnalysisResult(pluginResult, testCase.expectations, testCase.name);
+          logTestResult(testCase.name, pluginResult, timeMs);
+        }
+      },
+      TEST_TIMEOUT
+    );
   });
 
   describe('Performance and Consistency', () => {

@@ -229,7 +229,8 @@ function assertAnalysisResultNested(
 
   // Performance assertions
   if (expectations.performance) {
-    const { maxCost, maxTimeMs } = expectations.performance;
+    const { maxCost } = expectations.performance;
+    // Note: maxTimeMs is tracked at test level, not assertion level
 
     if (maxCost !== undefined) {
       expect(result.cost).toBeLessThanOrEqual(maxCost);
@@ -241,10 +242,10 @@ function assertAnalysisResultNested(
 /**
  * Helper to validate highlight positions
  */
-function assertValidHighlights(comments: Comment[], context: string): void {
+function assertValidHighlights(comments: Comment[], _context: string): void {
   const highlightedComments = comments.filter(c => c.highlight);
   
-  highlightedComments.forEach((comment, index) => {
+  highlightedComments.forEach((comment) => {
     const highlight = comment.highlight!;
     
     // Check valid positions
