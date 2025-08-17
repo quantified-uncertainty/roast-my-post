@@ -120,7 +120,7 @@ export async function validateAndConvertHighlights(
  */
 export function createValidationErrorFeedback(
   error: unknown,
-  failedHighlights: any[],
+  failedHighlights: LineBasedHighlight[],
   documentContent: string
 ): string {
   const errorMessage = error instanceof Error ? error.message : String(error);

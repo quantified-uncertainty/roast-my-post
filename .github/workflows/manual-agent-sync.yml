@@ -1,0 +1,28 @@
+name: Manual System Agent Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'Production'
+        type: choice
+        options:
+        - Production
+        - Staging
+      dry_run:
+        description: 'Dry run (show what would be synced without making changes)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  sync:
+    name: Manual Agent Sync
+    uses: ./.github/workflows/agent-sync-shared.yml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      dry_run: ${{ github.event.inputs.dry_run }}
+      backup_prefix: 'manual-agent-sync'
+    secrets: inherit

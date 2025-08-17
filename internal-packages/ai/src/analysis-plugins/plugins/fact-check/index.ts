@@ -32,7 +32,7 @@ export class VerifiedFact {
   public claim: ExtractedFactualClaim;
   private chunk: TextChunk;
   public verification?: FactCheckResult;
-  public factCheckerOutput?: unknown; // Store full fact-checker output including Perplexity data
+  public factCheckerOutput?: Record<string, unknown>; // Store full fact-checker output including Perplexity data
   private processingStartTime: number;
 
   constructor(
@@ -647,7 +647,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         : await executeFactCheck();
 
       fact.verification = result.result;
-      fact.factCheckerOutput = result; // Store full output including Perplexity data
+      fact.factCheckerOutput = result as unknown as Record<string, unknown>; // Store full output including Perplexity data
       this.llmInteractions.push(
         this.convertRichToLLMInteraction(result.llmInteraction)
       );

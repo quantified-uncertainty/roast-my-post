@@ -133,8 +133,8 @@ export default function JobsMonitorPage() {
                           </Link>
                         </div>
                         <div className="text-xs text-blue-600 hover:text-blue-800">
-                          <Link href={`/docs/${selectedJob.evaluation.document.id}/evaluations`}>
-                            View Evaluations →
+                          <Link href={`/docs/${selectedJob.evaluation.document.id}/evals/${selectedJob.evaluation.agent.id}`}>
+                            View Evaluation →
                           </Link>
                         </div>
                       </dd>

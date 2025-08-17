@@ -1743,7 +1743,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           if (agentIds && agentIds.length > 0) queryParams.set('agentIds', agentIds.join(','));
 
           const response = await authenticatedFetch(
-            `/api/docs/${documentId}/evaluations?${queryParams.toString()}`
+            `/api/documents/${documentId}/evaluations?${queryParams.toString()}`
           );
 
           if (!response.ok) {

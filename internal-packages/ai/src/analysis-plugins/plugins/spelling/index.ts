@@ -29,6 +29,15 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { CommentBuilder } from "../../utils/CommentBuilder";
+import {
+  MAX_ERRORS_PER_CHUNK,
+  MIN_CONFIDENCE_THRESHOLD,
+  HIGH_IMPORTANCE_THRESHOLD,
+  LOG_TEXT_TRUNCATE_LENGTH,
+  CONVENTION_SAMPLE_SIZE,
+  LOW_CONFIDENCE_THRESHOLD,
+  LOW_CONSISTENCY_THRESHOLD
+} from "./constants";
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;
@@ -41,9 +50,7 @@ export interface SpellingErrorWithLocation {
 }
 
 export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
-  // Static property to bypass routing - spelling check should always run
-  static readonly runOnAllChunks = true;
-  // Instance property for PluginManager to check
+  // Property to bypass routing - spelling check should always run on all chunks
   readonly runOnAllChunks = true;
 
   private documentText: string;
@@ -64,15 +71,13 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     return "SPELLING";
   }
 
-  // No routing methods needed since runOnAllChunks = true
+  // Routing methods (not used since runOnAllChunks = true)
   promptForWhenToUse(): string {
-    // This plugin always runs on all chunks
     return "Spelling and grammar checking automatically runs on all documents";
   }
 
   routingExamples(): never[] {
-    // Not used for always-run plugins
-    return [];
+    return []; // Not used for always-run plugins
   }
 
   constructor() {
@@ -166,7 +171,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
         const result = await checkSpellingGrammarTool.execute(
           {
             text: chunk.text,
-            maxErrors: 20, // Limit errors per chunk
+            maxErrors: MAX_ERRORS_PER_CHUNK,
             convention: convention as LanguageConventionOption,
             strictness: this.strictness,
           },
@@ -197,10 +202,10 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
             continue;
           }
 
-          // Skip very low confidence errors (below 30%)
-          if (error.confidence && error.confidence < 30) {
+          // Skip very low confidence errors
+          if (error.confidence && error.confidence < MIN_CONFIDENCE_THRESHOLD) {
             logger.debug(
-              `SpellingAnalyzer: Skipping low-confidence error "${error.text.slice(0, 30)}..." (${error.confidence}% confidence)`
+              `SpellingAnalyzer: Skipping low-confidence error "${error.text.slice(0, LOG_TEXT_TRUNCATE_LENGTH)}..." (${error.confidence}% confidence)`
             );
             continue;
           }
@@ -214,12 +219,12 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
             if (comment) {
               this.comments.push(comment);
               logger.debug(
-                `SpellingAnalyzer: Created comment for error "${error.text.slice(0, 30)}..." in chunk ${chunk.id}`
+                `SpellingAnalyzer: Created comment for error "${error.text.slice(0, LOG_TEXT_TRUNCATE_LENGTH)}..." in chunk ${chunk.id}`
               );
             }
           } else {
             logger.warn(
-              `SpellingAnalyzer: Could not find location for error "${error.text.slice(0, 30)}..." in chunk ${chunk.id}`
+              `SpellingAnalyzer: Could not find location for error "${error.text.slice(0, LOG_TEXT_TRUNCATE_LENGTH)}..." in chunk ${chunk.id}`
             );
           }
 
@@ -292,7 +297,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
         toolName: "detectLanguageConvention",
         stage: "extraction",
         timestamp: new Date(this.processingStartTime + 10).toISOString(),
-        result: this.languageConvention,
+        result: this.languageConvention as unknown as Record<string, unknown>,
       });
     }
 
@@ -301,7 +306,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       toolName: "checkSpellingGrammar",
       stage: "verification",
       timestamp: new Date().toISOString(),
-      result: error,
+      result: error as unknown as Record<string, unknown>,
     });
 
     // Keep formatted description for backwards compatibility
@@ -318,49 +323,21 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       description: formattedDescription,
 
       // Structured content
-      header: error.conciseCorrection || `${error.text} → ${error.correction}`,
+      header: error.conciseCorrection || `${error.text} → ${error.correction || "[suggestion needed]"}`,
       level: error.type === "grammar" ? "warning" : "info",
       observation: `${error.type === "spelling" ? "Misspelling" : "Grammar error"}: "${error.text}"`,
       significance:
-        error.importance >= 50
+        error.importance >= HIGH_IMPORTANCE_THRESHOLD
           ? "Affects readability and professionalism"
           : undefined,
     });
-  }
-
-  private calculateImportance(error: SpellingGrammarError): number {
-    // Combine importance and confidence to determine final priority
-    // If we're not confident about an error, reduce its priority
-    const baseScore = error.importance;
-    const confidence = error.confidence || 100; // Default to 100 if not provided
-
-    // Apply confidence as a multiplier (0.5 to 1.0 range)
-    // Low confidence (0-50) reduces score by up to 50%
-    // High confidence (50-100) has minimal impact
-    const confidenceMultiplier = 0.5 + confidence / 200;
-    const adjustedScore = baseScore * confidenceMultiplier;
-
-    // Map adjusted score (0-100) to comment importance (1-10)
-    // Based on test expectations:
-    // 10 -> 2, 30 -> 4, 60 -> 6, 90 -> 9
-    if (adjustedScore < 20) {
-      return 2; // trivial errors get importance 2
-    } else if (adjustedScore < 40) {
-      return 4; // minor errors get importance 4
-    } else if (adjustedScore < 70) {
-      return 6; // major errors get importance 6
-    } else if (adjustedScore < 100) {
-      return 9; // critical errors get importance 9
-    } else {
-      return 10; // maximum importance
-    }
   }
 
   private detectConventions(): void {
     logger.info("SpellingAnalyzer: Detecting language conventions");
 
     // Take a sample from the beginning for analysis
-    const sampleSize = Math.min(2000, this.documentText.length);
+    const sampleSize = Math.min(CONVENTION_SAMPLE_SIZE, this.documentText.length);
     const sample = this.documentText.slice(0, sampleSize);
 
     this.languageConvention = detectLanguageConvention(sample);
@@ -394,50 +371,53 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     }
 
     // Build impact-oriented analysis with template structure
-    let analysis = "";
+    const analysisLines: string[] = [];
 
     // Key Findings (prioritize by severity)
     if (totalErrors > 0) {
-      analysis += "**Key Findings:**\n";
+      analysisLines.push("**Key Findings:**");
       if (hasGradeResult) {
         const stats = this.gradeResult!.statistics;
         const grammarErrors = stats.errorsByType["grammar"] || 0;
         const spellingErrors = stats.errorsByType["spelling"] || 0;
 
         if (grammarErrors > 0) {
-          analysis += `- ${grammarErrors} grammar error${grammarErrors !== 1 ? "s" : ""} affecting readability\n`;
+          analysisLines.push(`- ${grammarErrors} grammar error${grammarErrors !== 1 ? "s" : ""} affecting readability`);
         }
         if (spellingErrors > 0) {
-          analysis += `- ${spellingErrors} spelling error${spellingErrors !== 1 ? "s" : ""} requiring correction\n`;
+          analysisLines.push(`- ${spellingErrors} spelling error${spellingErrors !== 1 ? "s" : ""} requiring correction`);
         }
         if (stats.errorsBySeverity.critical > 0) {
-          analysis += `- ${stats.errorsBySeverity.critical} critical issue${stats.errorsBySeverity.critical !== 1 ? "s" : ""} requiring immediate attention\n`;
+          analysisLines.push(`- ${stats.errorsBySeverity.critical} critical issue${stats.errorsBySeverity.critical !== 1 ? "s" : ""} requiring immediate attention`);
         }
       } else {
-        analysis += `- ${totalErrors} writing issue${totalErrors !== 1 ? "s" : ""} requiring attention\n`;
+        analysisLines.push(`- ${totalErrors} writing issue${totalErrors !== 1 ? "s" : ""} requiring attention`);
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Document Impact
     if (totalErrors > 0) {
-      analysis += "**Document Impact:**\n";
+      analysisLines.push("**Document Impact:**");
       if (hasGradeResult && grade < 60) {
-        analysis +=
-          "Critical writing quality issues may significantly impact document professionalism and credibility. Immediate review recommended.\n";
+        analysisLines.push(
+          "Critical writing quality issues may significantly impact document professionalism and credibility. Immediate review recommended."
+        );
       } else if (hasGradeResult && grade < 80) {
-        analysis +=
-          "Writing quality issues present but may not affect core comprehension. Review recommended for professional presentation.\n";
+        analysisLines.push(
+          "Writing quality issues present but may not affect core comprehension. Review recommended for professional presentation."
+        );
       } else {
-        analysis +=
-          "Minor writing quality issues detected. Overall document integrity maintained but corrections would improve professionalism.\n";
+        analysisLines.push(
+          "Minor writing quality issues detected. Overall document integrity maintained but corrections would improve professionalism."
+        );
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Specific Issues Found
     if (totalErrors > 0) {
-      analysis += "**🔍 Specific Issues Found:**\n\n";
+      analysisLines.push("**🔍 Specific Issues Found:**", "");
 
       // Show top errors by severity
       const sortedErrors = this.errors
@@ -448,24 +428,24 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
         const severityIcon =
           error.error.importance > 75
             ? "🔴"
-            : error.error.importance > 50
+            : error.error.importance > HIGH_IMPORTANCE_THRESHOLD
               ? "🟡"
               : "🔵";
-        analysis += `- ${severityIcon} **${error.error.type}**: "${error.error.text}"\n`;
-        analysis += `  - Suggested: "${error.error.correction}"\n`;
+        analysisLines.push(`- ${severityIcon} **${error.error.type}**: "${error.error.text}"`);
+        analysisLines.push(`  - Suggested: "${error.error.correction || "[no suggestion available]"}"`);
       }
 
       if (this.errors.length > 5) {
-        analysis += `  - ...and ${this.errors.length - 5} more issue${this.errors.length - 5 !== 1 ? "s" : ""}\n`;
+        analysisLines.push(`  - ...and ${this.errors.length - 5} more issue${this.errors.length - 5 !== 1 ? "s" : ""}`);
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Technical Details (collapsible)
-    analysis += "<details>\n<summary>Technical Details</summary>\n\n";
+    analysisLines.push("<details>", "<summary>Technical Details</summary>", "");
 
     // Quick summary with visual indicators
-    analysis += "**📊 Quick Summary:**\n";
+    analysisLines.push("**📊 Quick Summary:**");
     if (totalErrors > 0 && hasGradeResult) {
       const stats = this.gradeResult!.statistics;
       const indicators = [];
@@ -481,36 +461,40 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       if (spellingErrors > 0) {
         indicators.push(`🔵 ${spellingErrors} spelling`);
       }
-      analysis +=
-        indicators.join(" • ") +
-        `\n📊 Overall grade: ${grade}/100 (${this.gradeResult!.category})\n\n`;
+      analysisLines.push(
+        indicators.join(" • "),
+        `📊 Overall grade: ${grade}/100 (${this.gradeResult!.category})`,
+        ""
+      );
     } else if (totalErrors > 0) {
-      analysis += `🔍 ${totalErrors} issue${totalErrors !== 1 ? "s" : ""} found\n\n`;
+      analysisLines.push(`🔍 ${totalErrors} issue${totalErrors !== 1 ? "s" : ""} found`, "");
     } else {
-      analysis += "✅ No issues found\n\n";
+      analysisLines.push("✅ No issues found", "");
     }
 
     // Language convention results
     if (this.languageConvention) {
-      analysis += `**🌍 Language Convention:**\n`;
-      analysis += `- Detected: ${this.languageConvention.convention} English`;
-      if (this.languageConvention.confidence < 0.8) {
-        analysis += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
+      analysisLines.push(`**🌍 Language Convention:**`);
+      let conventionLine = `- Detected: ${this.languageConvention.convention} English`;
+      if (this.languageConvention.confidence < LOW_CONFIDENCE_THRESHOLD) {
+        conventionLine += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
       }
-      analysis += "\n";
+      analysisLines.push(conventionLine);
 
-      if (this.languageConvention.consistency < 0.8) {
-        analysis += `- ⚠️ Mixed conventions detected (${Math.round(this.languageConvention.consistency * 100)}% consistency)\n`;
-        analysis += `- Recommendation: Standardize to ${this.languageConvention.convention} English\n`;
+      if (this.languageConvention.consistency < LOW_CONSISTENCY_THRESHOLD) {
+        analysisLines.push(
+          `- ⚠️ Mixed conventions detected (${Math.round(this.languageConvention.consistency * 100)}% consistency)`,
+          `- Recommendation: Standardize to ${this.languageConvention.convention} English`
+        );
       }
 
       const examples = getConventionExamples(
         this.languageConvention.convention
       );
       if (examples.length > 0) {
-        analysis += `- Examples: ${examples.join(", ")}\n`;
+        analysisLines.push(`- Examples: ${examples.join(", ")}`);
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Detailed error breakdown
@@ -525,13 +509,15 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           },
         })
       );
-      analysis += `**📝 Detailed Error Analysis:**\n`;
-      analysis += generateDocumentSummary(toolErrors);
+      analysisLines.push(
+        `**📝 Detailed Error Analysis:**`,
+        generateDocumentSummary(toolErrors)
+      );
     }
 
-    analysis += "\n</details>";
+    analysisLines.push("", "</details>");
 
-    this.analysis = analysis;
+    this.analysis = analysisLines.join("\n");
     this.summary = summary;
   }
 

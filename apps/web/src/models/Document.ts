@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { generateId } from "@roast/db";
 
 import { prisma } from "@roast/db";
 import {
@@ -841,8 +841,8 @@ export class DocumentModel {
       throw new Error("Content must not exceed 50,000 words");
     }
 
-    // Generate a nanoid for the document id
-    const id = nanoid(16);
+    // Generate ID for the document
+    const id = generateId(16);
 
     // Parse the data for version creation
     const authors = data.authors.split(",").map((a) => a.trim());

@@ -13,3 +13,6 @@ export * from './repositories/JobRepository';
 // Browser-safe exports (types and enums only)
 // These are re-exported from a separate file to avoid pulling in Prisma client
 export * from './types';
+
+// Utility functions
+export { generateId } from './utils/generateId';

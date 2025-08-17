@@ -80,6 +80,7 @@ export {
 
 // Analysis plugin types
 export type { Finding } from './analysis-plugins/types';
+export { PluginType } from './analysis-plugins/types/plugin-types';
 
 // Document and agent types (avoid conflicts with existing exports)
 export * from './types/agentSchema';
@@ -96,11 +97,20 @@ export type {
 export * from './types/llmSchema';
 export {
   DEFAULT_TEMPERATURE,
+  DEFAULT_LLM_TIMEOUT,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
-  SELF_CRITIQUE_TIMEOUT,
-  withTimeout
+  SELF_CRITIQUE_TIMEOUT
 } from './types/openai';
+
+// Export centralized timeout utilities
+export {
+  withTimeout,
+  createTimeoutWrapper,
+  TimeoutPresets,
+  Timeouts,
+  type TimeoutOptions
+} from './utils/timeout';
 
 // Shared utilities
 export * from './shared/logger';
@@ -114,7 +124,7 @@ export type {
 } from './shared/types';
 
 export {
-  DEFAULT_TIMEOUT,
+  DEFAULT_GENERAL_TIMEOUT,
   getRandomElement,
   getPercentile,
   getPercentileNumber,

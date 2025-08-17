@@ -12,8 +12,8 @@ import {
 import {
   DEFAULT_TEMPERATURE,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
-  withTimeout,
 } from "../../../types/openai";
+import { withTimeout } from "../../../utils/timeout";
 
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
@@ -327,8 +327,10 @@ export async function extractHighlightsFromAnalysis(
         toolSchema,
         enablePromptCaching: true, // Enable caching for highlight extraction system prompt and tools
       }),
-      HIGHLIGHT_EXTRACTION_TIMEOUT,
-      `Anthropic API request timed out after ${HIGHLIGHT_EXTRACTION_TIMEOUT / 60000} minutes`
+      {
+        timeoutMs: HIGHLIGHT_EXTRACTION_TIMEOUT,
+        errorMessage: `Anthropic API request timed out after ${HIGHLIGHT_EXTRACTION_TIMEOUT / 60000} minutes`
+      }
     );
 
     interaction = result.interaction;

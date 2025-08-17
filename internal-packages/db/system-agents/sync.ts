@@ -49,13 +49,19 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
       .sort((a, b) => b.version - a.version)[0];
 
     // Check if content has changed
+    // Note: We need to handle undefined vs null comparison properly
+    // Database stores null, but TypeScript code may have undefined
+    const normalizeValue = (val: any) => val === undefined ? null : val;
+    
     const contentChanged = 
       latestVersion?.name !== agent.name ||
       latestVersion?.description !== agent.description ||
-      latestVersion?.readme !== agent.readme ||
-      latestVersion?.primaryInstructions !== agent.primaryInstructions ||
-      latestVersion?.selfCritiqueInstructions !== agent.selfCritiqueInstructions ||
-      latestVersion?.providesGrades !== agent.providesGrades;
+      normalizeValue(latestVersion?.readme) !== normalizeValue(agent.readme) ||
+      normalizeValue(latestVersion?.primaryInstructions) !== normalizeValue(agent.primaryInstructions) ||
+      normalizeValue(latestVersion?.selfCritiqueInstructions) !== normalizeValue(agent.selfCritiqueInstructions) ||
+      latestVersion?.providesGrades !== agent.providesGrades ||
+      JSON.stringify(latestVersion?.pluginIds || []) !== JSON.stringify(agent.pluginIds || []) ||
+      normalizeValue(latestVersion?.extendedCapabilityId) !== normalizeValue(agent.extendedCapabilityId);
 
     if (contentChanged) {
       console.log(`  → Updating agent with new version ${(latestVersion?.version || 0) + 1}`);
@@ -70,6 +76,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
           primaryInstructions: agent.primaryInstructions,
           selfCritiqueInstructions: agent.selfCritiqueInstructions,
           providesGrades: agent.providesGrades,
+          pluginIds: agent.pluginIds || [],
           extendedCapabilityId: agent.extendedCapabilityId,
         }
       });
@@ -95,6 +102,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
             primaryInstructions: agent.primaryInstructions,
             selfCritiqueInstructions: agent.selfCritiqueInstructions,
             providesGrades: agent.providesGrades,
+            pluginIds: agent.pluginIds || [],
             extendedCapabilityId: agent.extendedCapabilityId,
           }
         }

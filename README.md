@@ -211,7 +211,7 @@ The API now follows a clean, intuitive structure that matches web URLs:
 - `GET /api/docs/{docId}/evals/{agentId}` - Get specific evaluation with full details (public)
 - `POST /api/docs/{docId}/evals/{agentId}` - Create new evaluation (requires auth + ownership)
 - `POST /api/docs/{docId}/evals/{agentId}/rerun` - Re-run existing evaluation (requires auth + ownership)
-- `GET /api/docs/{docId}/evaluations` - List all evaluations for document (public)
+- `GET /api/documents/{docId}/evaluations` - List all evaluations for document (public)
 
 **Security Features:**
 - **Authentication**: Required for all write operations (PUT, POST)

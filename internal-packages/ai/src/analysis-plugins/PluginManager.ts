@@ -343,8 +343,10 @@ export class PluginManager {
 
             // Add timeout to prevent hanging
             const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
+            let timeoutId: NodeJS.Timeout;
+            
             const timeoutPromise = new Promise<never>((_, reject) => {
-              setTimeout(
+              timeoutId = setTimeout(
                 () =>
                   reject(
                     new Error(
@@ -374,7 +376,10 @@ export class PluginManager {
             const result = await Promise.race([
               executePlugin(),
               timeoutPromise,
-            ]);
+            ]).finally(() => {
+              // Clear timeout when either promise resolves/rejects
+              clearTimeout(timeoutId);
+            });
 
             const duration = Date.now() - startTime;
 
@@ -594,7 +599,7 @@ export class PluginManager {
         jobLogString: pluginResults.jobLogString,
       };
     } catch (error) {
-      logger.error("Document analysis failed:", error);
+      logger.error("Document analysis failed:", error instanceof Error ? error : new Error(String(error)));
 
       // Return a graceful fallback result instead of throwing
       const errorMessage =
@@ -630,15 +635,11 @@ export class PluginManager {
   }
 
   /**
-   * Initialize all plugins once
+   * Create fresh plugin instances for each analysis to avoid state pollution
    */
-  private initializeAllPlugins(): Map<PluginType, SimpleAnalysisPlugin> {
-    if (this.allPlugins) {
-      return this.allPlugins;
-    }
-
-    // Create all plugin instances once
-    this.allPlugins = new Map<PluginType, SimpleAnalysisPlugin>([
+  private createPluginInstances(): Map<PluginType, SimpleAnalysisPlugin> {
+    // Create new plugin instances for each analysis
+    const plugins = new Map<PluginType, SimpleAnalysisPlugin>([
       [PluginType.MATH, new MathPlugin()],
       [PluginType.SPELLING, new SpellingPlugin()],
       [PluginType.FACT_CHECK, new FactCheckPlugin()],
@@ -646,15 +647,15 @@ export class PluginManager {
       [PluginType.LINK_ANALYSIS, new LinkPlugin()],
     ]);
 
-    logger.info(`Initialized all ${this.allPlugins.size} plugins`);
-    return this.allPlugins;
+    logger.info(`Created fresh instances of ${plugins.size} plugins`);
+    return plugins;
   }
 
   /**
    * Get selected plugins based on configuration
    */
   private async getSelectedPlugins(): Promise<SimpleAnalysisPlugin[]> {
-    const allPlugins = this.initializeAllPlugins();
+    const allPlugins = this.createPluginInstances();
 
     // Default plugins if no selection specified
     const defaultPluginTypes = [
