@@ -1,17 +1,20 @@
 import { vi } from 'vitest';
+
+// Mock the auth module before any imports
+vi.mock('@/infrastructure/auth/auth', () => ({
+  auth: vi.fn(),
+}));
+vi.mock('@/infrastructure/logging/logger');
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createToolAPIHandler } from './createToolAPIHandler';
 import { Tool } from '@roast/ai';
 import { auth } from '@/infrastructure/auth/auth';
 import { logger } from '@/infrastructure/logging/logger';
 
-// Mock the auth module
-vi.mock('@/infrastructure/auth/auth');
-vi.mock('@/infrastructure/logging/logger');
-
 // Mock the AI logger
-vi.mock('@roast/ai', () => ({
-  ...jest.requireActual('@roast/ai'),
+vi.mock('@roast/ai', async () => ({
+  ...await vi.importActual('@roast/ai'),
   logger: {
     debug: vi.fn(),
     info: vi.fn(),

@@ -5,8 +5,8 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { NextRequest } from "next/server";
 
 // Mock dependencies - but use real generateId
-vi.mock("@roast/db", () => ({
-  ...jest.requireActual("@roast/db"),
+vi.mock("@roast/db", async () => ({
+  ...await vi.importActual("@roast/db"),
   prisma: {
     $transaction: vi.fn(),
     agentEvalBatch: {

@@ -8,6 +8,16 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/setupTests.vitest.ts'],
+    server: {
+      deps: {
+        inline: [
+          'next-auth',
+          'next-auth/providers/resend',
+          '@auth/prisma-adapter',
+          'server-only'
+        ]
+      }
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

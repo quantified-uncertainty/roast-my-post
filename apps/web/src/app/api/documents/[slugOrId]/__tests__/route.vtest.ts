@@ -19,8 +19,8 @@ vi.mock('@/infrastructure/logging/logger', () => ({
   },
 }));
 
-vi.mock('@roast/domain', () => {
-  const originalModule = jest.requireActual('@roast/domain');
+vi.mock('@roast/domain', async () => {
+  const originalModule = await vi.importActual('@roast/domain');
   return {
     ...originalModule,
     DocumentService: vi.fn().mockImplementation(() => ({

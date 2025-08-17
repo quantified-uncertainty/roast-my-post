@@ -1,10 +1,12 @@
+import { vi } from 'vitest';
+
 // Mock logger that doesn't output to console during tests
 export const logger = {
-  log: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
+  log: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
 };
 
 // For tests that need to verify logger was called
