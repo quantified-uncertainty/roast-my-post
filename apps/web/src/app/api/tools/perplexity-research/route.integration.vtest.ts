@@ -1,6 +1,8 @@
 import { vi } from 'vitest';
 import { POST } from './route';
 import { NextRequest } from 'next/server';
+import { auth } from '@/infrastructure/auth/auth';
+import { perplexityResearchTool } from '@roast/ai/server';
 
 // Mock the auth module
 vi.mock('@/infrastructure/auth/auth', () => ({
@@ -71,8 +73,7 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle authentication failures', async () => {
     // Override auth mock for this test
-    const { auth } = require('@/infrastructure/auth/auth');
-    auth.mockResolvedValueOnce(null);
+    vi.mocked(auth).mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
       method: 'POST',
@@ -91,8 +92,7 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle tool execution errors', async () => {
     // Override tool mock for this test
-    const { perplexityResearchTool } = require('@roast/ai/server');
-    perplexityResearchTool.execute.mockRejectedValueOnce(new Error('API request failed'));
+    vi.mocked(perplexityResearchTool.execute).mockRejectedValueOnce(new Error('API request failed'));
 
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
       method: 'POST',
