@@ -1,41 +1,42 @@
+import { vi } from 'vitest';
 // Mock functions that will be used in mocks
-const mockGetDocumentForReader = jest.fn();
-const mockUpdateDocument = jest.fn();
-const mockDeleteDocument = jest.fn();
-const mockAuthenticateRequest = jest.fn();
+const mockGetDocumentForReader = vi.fn();
+const mockUpdateDocument = vi.fn();
+const mockDeleteDocument = vi.fn();
+const mockAuthenticateRequest = vi.fn();
 
 // Mock modules BEFORE imports
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: () => mockAuthenticateRequest(),
 }));
 
-jest.mock('@/infrastructure/logging/logger', () => ({
+vi.mock('@/infrastructure/logging/logger', () => ({
   logger: {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
   },
 }));
 
-jest.mock('@roast/domain', () => {
+vi.mock('@roast/domain', () => {
   const originalModule = jest.requireActual('@roast/domain');
   return {
     ...originalModule,
-    DocumentService: jest.fn().mockImplementation(() => ({
+    DocumentService: vi.fn().mockImplementation(() => ({
       getDocumentForReader: (...args: any[]) => mockGetDocumentForReader(...args),
       updateDocument: (...args: any[]) => mockUpdateDocument(...args),
       deleteDocument: (...args: any[]) => mockDeleteDocument(...args),
     })),
-    EvaluationService: jest.fn().mockImplementation(() => ({})),
-    DocumentValidator: jest.fn().mockImplementation(() => ({})),
+    EvaluationService: vi.fn().mockImplementation(() => ({})),
+    DocumentValidator: vi.fn().mockImplementation(() => ({})),
   };
 });
 
-jest.mock('@roast/db', () => ({
-  DocumentRepository: jest.fn().mockImplementation(() => ({})),
-  EvaluationRepository: jest.fn().mockImplementation(() => ({})),
-  JobRepository: jest.fn().mockImplementation(() => ({})),
+vi.mock('@roast/db', () => ({
+  DocumentRepository: vi.fn().mockImplementation(() => ({})),
+  EvaluationRepository: vi.fn().mockImplementation(() => ({})),
+  JobRepository: vi.fn().mockImplementation(() => ({})),
 }));
 
 // Now import the routes AFTER mocks are set up
@@ -49,7 +50,7 @@ describe('GET /api/documents/[slugOrId]', () => {
   const mockSlug = 'test-document-slug';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should not require authentication', async () => {
@@ -177,7 +178,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {

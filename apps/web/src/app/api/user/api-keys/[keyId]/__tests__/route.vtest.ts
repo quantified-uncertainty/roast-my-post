@@ -1,20 +1,21 @@
+import { vi } from 'vitest';
 import { DELETE } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
 import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     apiKey: {
-      findFirst: jest.fn(),
-      delete: jest.fn(),
+      findFirst: vi.fn(),
+      delete: vi.fn(),
     },
   },
 }));
 
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequestSessionFirst: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequestSessionFirst: vi.fn(),
 }));
 
 describe('DELETE /api/user/api-keys/[keyId]', () => {
@@ -23,7 +24,7 @@ describe('DELETE /api/user/api-keys/[keyId]', () => {
   const mockKeyId = 'key-456';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {

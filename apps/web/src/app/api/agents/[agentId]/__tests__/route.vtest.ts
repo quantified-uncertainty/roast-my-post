@@ -1,9 +1,10 @@
+import { vi } from 'vitest';
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 
 // Mock the Result class to match expected interface
-jest.mock('@roast/domain', () => {
+vi.mock('@roast/domain', () => {
   const originalResult = {
     ok: (value: any) => ({
       isError: () => false,
@@ -38,19 +39,19 @@ jest.mock('@roast/domain', () => {
 
 // Create mock services object
 const mockAgentService = {
-  getAgentWithOwner: jest.fn(),
+  getAgentWithOwner: vi.fn(),
 };
 
 const mockServices = {
   agentService: mockAgentService,
 };
 
-jest.mock('@/application/services/ServiceFactory', () => ({
-  getServices: jest.fn(() => mockServices),
+vi.mock('@/application/services/ServiceFactory', () => ({
+  getServices: vi.fn(() => mockServices),
 }));
 
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: vi.fn(),
 }));
 
 describe('GET /api/agents/[agentId]', () => {
@@ -58,7 +59,7 @@ describe('GET /api/agents/[agentId]', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {

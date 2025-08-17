@@ -1,24 +1,25 @@
+import { vi } from 'vitest';
 import { PATCH } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
 import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     user: {
-      update: jest.fn(),
+      update: vi.fn(),
     },
   },
 }));
 
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequestSessionFirst: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequestSessionFirst: vi.fn(),
 }));
 
-jest.mock('@/infrastructure/logging/logger', () => ({
+vi.mock('@/infrastructure/logging/logger', () => ({
   logger: {
-    error: jest.fn(),
+    error: vi.fn(),
   },
 }));
 
@@ -32,7 +33,7 @@ describe('PATCH /api/user/profile', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {

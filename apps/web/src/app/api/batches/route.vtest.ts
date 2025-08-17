@@ -1,53 +1,54 @@
+import { vi } from 'vitest';
 import { POST } from "./route";
 import { prisma, generateId } from "@roast/db";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { NextRequest } from "next/server";
 
 // Mock dependencies - but use real generateId
-jest.mock("@roast/db", () => ({
+vi.mock("@roast/db", () => ({
   ...jest.requireActual("@roast/db"),
   prisma: {
-    $transaction: jest.fn(),
+    $transaction: vi.fn(),
     agentEvalBatch: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     agent: {
-      create: jest.fn(),
-      findUnique: jest.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
     },
     agentVersion: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     document: {
-      create: jest.fn(),
-      findMany: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
     },
     documentVersion: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     job: {
-      createMany: jest.fn(),
+      createMany: vi.fn(),
     },
   },
 }));
 
-jest.mock("@/infrastructure/auth/auth-helpers", () => ({
-  authenticateRequest: jest.fn(),
+vi.mock("@/infrastructure/auth/auth-helpers", () => ({
+  authenticateRequest: vi.fn(),
 }));
 
-jest.mock("@/infrastructure/logging/logger", () => ({
+vi.mock("@/infrastructure/logging/logger", () => ({
   logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
   },
 }));
 
-jest.mock("@/application/services/ServiceFactory", () => ({
-  getServices: jest.fn(() => ({
-    createTransactionalServices: jest.fn(() => ({
+vi.mock("@/application/services/ServiceFactory", () => ({
+  getServices: vi.fn(() => ({
+    createTransactionalServices: vi.fn(() => ({
       jobService: {
-        createJob: jest.fn().mockResolvedValue({ id: "job-123" }),
+        createJob: vi.fn().mockResolvedValue({ id: "job-123" }),
       },
     })),
   })),
@@ -62,7 +63,7 @@ describe("/api/batches POST", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     (authenticateRequest as jest.Mock).mockResolvedValue(mockUserId);
   });
 
@@ -138,21 +139,21 @@ describe("/api/batches POST", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         return callback({
           agent: {
-            findUnique: jest.fn().mockResolvedValue(mockAgent),
+            findUnique: vi.fn().mockResolvedValue(mockAgent),
           },
           agentEvalBatch: {
-            create: jest.fn().mockResolvedValue(mockBatch),
-            findUnique: jest.fn().mockResolvedValue(mockBatch),
+            create: vi.fn().mockResolvedValue(mockBatch),
+            findUnique: vi.fn().mockResolvedValue(mockBatch),
           },
           document: {
-            findMany: jest.fn().mockResolvedValue([]),
+            findMany: vi.fn().mockResolvedValue([]),
           },
           evaluation: {
-            findFirst: jest.fn().mockResolvedValue(null),
-            create: jest.fn().mockResolvedValue({ id: "eval-123" }),
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn().mockResolvedValue({ id: "eval-123" }),
           },
           job: {
-            createMany: jest.fn().mockResolvedValue({}),
+            createMany: vi.fn().mockResolvedValue({}),
           },
         });
       });
@@ -192,22 +193,22 @@ describe("/api/batches POST", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
-            create: jest.fn().mockResolvedValue({ id: "exp_agent_123" }),
-            update: jest.fn().mockResolvedValue({ id: "exp_agent_123", ephemeralBatchId: "batch-123" }),
+            create: vi.fn().mockResolvedValue({ id: "exp_agent_123" }),
+            update: vi.fn().mockResolvedValue({ id: "exp_agent_123", ephemeralBatchId: "batch-123" }),
           },
           agentVersion: {
-            create: jest.fn().mockResolvedValue({ id: "version-123" }),
+            create: vi.fn().mockResolvedValue({ id: "version-123" }),
           },
           agentEvalBatch: {
-            create: jest.fn().mockResolvedValue(mockBatch),
-            findUnique: jest.fn().mockResolvedValue(mockBatch),
+            create: vi.fn().mockResolvedValue(mockBatch),
+            findUnique: vi.fn().mockResolvedValue(mockBatch),
           },
           evaluation: {
-            findFirst: jest.fn().mockResolvedValue(null),
-            create: jest.fn().mockResolvedValue({ id: "eval-123" }),
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn().mockResolvedValue({ id: "eval-123" }),
           },
           job: {
-            createMany: jest.fn().mockResolvedValue({}),
+            createMany: vi.fn().mockResolvedValue({}),
           },
         };
         return callback(tx);
@@ -253,24 +254,24 @@ describe("/api/batches POST", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
+            findUnique: vi.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
           },
           agentEvalBatch: {
-            create: jest.fn().mockResolvedValue(mockBatch),
-            findUnique: jest.fn().mockResolvedValue(mockBatch),
+            create: vi.fn().mockResolvedValue(mockBatch),
+            findUnique: vi.fn().mockResolvedValue(mockBatch),
           },
           document: {
-            create: jest.fn().mockResolvedValue({ id: "doc-123" }),
+            create: vi.fn().mockResolvedValue({ id: "doc-123" }),
           },
           documentVersion: {
-            create: jest.fn().mockResolvedValue({ id: "version-123" }),
+            create: vi.fn().mockResolvedValue({ id: "version-123" }),
           },
           evaluation: {
-            findFirst: jest.fn().mockResolvedValue(null),
-            create: jest.fn().mockResolvedValue({ id: "eval-123" }),
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn().mockResolvedValue({ id: "eval-123" }),
           },
           job: {
-            createMany: jest.fn(),
+            createMany: vi.fn(),
           },
         };
         return callback(tx);
@@ -295,14 +296,14 @@ describe("/api/batches POST", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
+            findUnique: vi.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
           },
           agentEvalBatch: {
-            create: jest.fn().mockResolvedValue({ 
+            create: vi.fn().mockResolvedValue({ 
               id: "batch-123",
               isEphemeral: true,
             }),
-            findUnique: jest.fn().mockResolvedValue({ 
+            findUnique: vi.fn().mockResolvedValue({ 
               id: "batch-123",
               isEphemeral: true,
               agent: { id: "agent-123" },
@@ -310,20 +311,20 @@ describe("/api/batches POST", () => {
             }),
           },
           document: {
-            create: jest.fn().mockImplementation(({ data }) => ({
+            create: vi.fn().mockImplementation(({ data }) => ({
               id: `doc_${data.id.split('_')[2]}`,
               ...data,
             })),
           },
           documentVersion: {
-            create: jest.fn().mockResolvedValue({ id: "version-123" }),
+            create: vi.fn().mockResolvedValue({ id: "version-123" }),
           },
           evaluation: {
-            findFirst: jest.fn().mockResolvedValue(null),
-            create: jest.fn().mockResolvedValue({ id: "eval-123" }),
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn().mockResolvedValue({ id: "eval-123" }),
           },
           job: {
-            createMany: jest.fn(),
+            createMany: vi.fn(),
           },
         };
         return callback(tx);
@@ -353,14 +354,14 @@ describe("/api/batches POST", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
+            findUnique: vi.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
           },
           agentEvalBatch: {
-            create: jest.fn().mockImplementation(({ data }) => ({
+            create: vi.fn().mockImplementation(({ data }) => ({
               id: "batch-123",
               ...data,
             })),
-            findUnique: jest.fn().mockResolvedValue({
+            findUnique: vi.fn().mockResolvedValue({
               id: "batch-123",
               isEphemeral: true,
               trackingId: "exp_12345678",
@@ -403,7 +404,7 @@ describe("/api/batches POST", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         return callback({
           agent: {
-            findUnique: jest.fn().mockResolvedValue(null),
+            findUnique: vi.fn().mockResolvedValue(null),
           },
         });
       });

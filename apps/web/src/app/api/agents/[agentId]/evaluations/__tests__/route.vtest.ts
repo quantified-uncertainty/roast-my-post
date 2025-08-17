@@ -1,8 +1,9 @@
+import { vi } from 'vitest';
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 
 // Mock the Result class to match expected interface
-jest.mock('@roast/domain', () => {
+vi.mock('@roast/domain', () => {
   const originalResult = {
     ok: (value: any) => ({
       isError: () => false,
@@ -37,22 +38,22 @@ jest.mock('@roast/domain', () => {
 
 // Create mock services object
 const mockAgentService = {
-  getAgentEvaluations: jest.fn(),
+  getAgentEvaluations: vi.fn(),
 };
 
 const mockServices = {
   agentService: mockAgentService,
 };
 
-jest.mock('@/application/services/ServiceFactory', () => ({
-  getServices: jest.fn(() => mockServices),
+vi.mock('@/application/services/ServiceFactory', () => ({
+  getServices: vi.fn(() => mockServices),
 }));
 
 describe('GET /api/agents/[agentId]/evaluations', () => {
   const mockAgentId = 'agent-123';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should not require authentication', async () => {

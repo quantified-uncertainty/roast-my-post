@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { createToolAPIHandler } from './createToolAPIHandler';
 import { Tool } from '@roast/ai';
@@ -5,22 +6,22 @@ import { auth } from '@/infrastructure/auth/auth';
 import { logger } from '@/infrastructure/logging/logger';
 
 // Mock the auth module
-jest.mock('@/infrastructure/auth/auth');
-jest.mock('@/infrastructure/logging/logger');
+vi.mock('@/infrastructure/auth/auth');
+vi.mock('@/infrastructure/logging/logger');
 
 // Mock the AI logger
-jest.mock('@roast/ai', () => ({
+vi.mock('@roast/ai', () => ({
   ...jest.requireActual('@roast/ai'),
   logger: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn()
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
   }
 }));
 
 // Mock config module
-jest.mock('@roast/domain', () => ({
+vi.mock('@roast/domain', () => ({
   config: {
     env: {
       isDevelopment: true,
@@ -54,21 +55,21 @@ describe('createToolAPIHandler', () => {
     },
     inputSchema: {} as any,
     outputSchema: {} as any,
-    execute: jest.fn().mockResolvedValue({ result: 'success' }),
-    run: jest.fn(),
-    validateAccess: jest.fn().mockResolvedValue(true),
-    beforeExecute: jest.fn().mockResolvedValue(undefined),
-    afterExecute: jest.fn().mockResolvedValue(undefined),
-    getInputJsonSchema: jest.fn().mockReturnValue({ type: 'object', properties: {} }),
-    getOutputJsonSchema: jest.fn().mockReturnValue({ type: 'object', properties: {} })
+    execute: vi.fn().mockResolvedValue({ result: 'success' }),
+    run: vi.fn(),
+    validateAccess: vi.fn().mockResolvedValue(true),
+    beforeExecute: vi.fn().mockResolvedValue(undefined),
+    afterExecute: vi.fn().mockResolvedValue(undefined),
+    getInputJsonSchema: vi.fn().mockReturnValue({ type: 'object', properties: {} }),
+    getOutputJsonSchema: vi.fn().mockReturnValue({ type: 'object', properties: {} })
   };
 
   const mockRequest = (body: any) => ({
-    json: jest.fn().mockResolvedValue(body)
+    json: vi.fn().mockResolvedValue(body)
   }) as unknown as NextRequest;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset environment variables
     delete process.env.BYPASS_TOOL_AUTH;
   });
@@ -175,12 +176,12 @@ describe('createToolAPIHandler', () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       
       // Clear the module cache and re-mock auth before importing
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       jest.resetModules();
       
       // Re-mock auth module after reset
       jest.doMock('@/infrastructure/auth/auth', () => ({
-        auth: jest.fn().mockResolvedValue(null)
+        auth: vi.fn().mockResolvedValue(null)
       }));
       
       // Re-import to get the mocked version
@@ -205,7 +206,7 @@ describe('createToolAPIHandler', () => {
         config: mockTool.config,
         inputSchema: mockTool.inputSchema,
         outputSchema: mockTool.outputSchema,
-        execute: jest.fn().mockRejectedValue(new Error('Tool execution failed')),
+        execute: vi.fn().mockRejectedValue(new Error('Tool execution failed')),
         run: mockTool.run,
         validateAccess: mockTool.validateAccess,
         beforeExecute: mockTool.beforeExecute,
@@ -228,7 +229,7 @@ describe('createToolAPIHandler', () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       
       const badRequest = {
-        json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
+        json: vi.fn().mockRejectedValue(new Error('Invalid JSON'))
       } as unknown as NextRequest;
 
       const route = createToolAPIHandler(mockTool);

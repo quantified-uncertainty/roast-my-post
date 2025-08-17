@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 /**
  * Tests for EvaluationService
  */
@@ -7,26 +8,26 @@ import { prisma, EvaluationRepository } from '@roast/db';
 import { logger } from '@/infrastructure/logging/logger';
 
 // Mock Prisma
-jest.mock('@roast/db', () => ({
-  EvaluationRepository: jest.fn().mockImplementation(() => ({
-    checkDocumentAccess: jest.fn(),
-    checkAgentExists: jest.fn(),
-    createEvaluationWithJob: jest.fn(),
+vi.mock('@roast/db', () => ({
+  EvaluationRepository: vi.fn().mockImplementation(() => ({
+    checkDocumentAccess: vi.fn(),
+    checkAgentExists: vi.fn(),
+    createEvaluationWithJob: vi.fn(),
   })),
   prisma: {
-    $transaction: jest.fn(),
+    $transaction: vi.fn(),
     document: {
-      findFirst: jest.fn(),
+      findFirst: vi.fn(),
     },
     agent: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     evaluation: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
     job: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
   },
 }));
@@ -40,7 +41,7 @@ describe('EvaluationService', () => {
   beforeEach(() => {
     mockEvaluationRepository = new EvaluationRepository();
     service = new EvaluationService(mockEvaluationRepository, logger);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('createEvaluation', () => {

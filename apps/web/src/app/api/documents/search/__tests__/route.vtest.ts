@@ -1,23 +1,24 @@
+import { vi } from 'vitest';
 // Mock functions that will be used in mocks
-const mockGetRecentDocuments = jest.fn();
-const mockSearchDocuments = jest.fn();
-const mockAuthenticateRequest = jest.fn();
+const mockGetRecentDocuments = vi.fn();
+const mockSearchDocuments = vi.fn();
+const mockAuthenticateRequest = vi.fn();
 
 // Mock modules BEFORE imports
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: () => mockAuthenticateRequest(),
 }));
 
-jest.mock('@/infrastructure/logging/logger', () => ({
+vi.mock('@/infrastructure/logging/logger', () => ({
   logger: {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
   },
 }));
 
-jest.mock('@/application/services/ServiceFactory', () => ({
+vi.mock('@/application/services/ServiceFactory', () => ({
   getServices: () => ({
     documentService: {
       getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
@@ -35,7 +36,7 @@ describe('GET /api/documents/search', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {

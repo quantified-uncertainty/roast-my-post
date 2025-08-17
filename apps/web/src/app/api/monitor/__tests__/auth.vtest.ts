@@ -1,41 +1,42 @@
+import { vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET as getStats } from '../stats/route';
 import { GET as getEvaluations } from '../evaluations/route';
 import { GET as getJobs } from '../jobs/route';
 
 // Mock the auth helpers
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: vi.fn(),
 }));
 
-jest.mock('@/infrastructure/auth/auth', () => ({
-  auth: jest.fn(),
-  isAdmin: jest.fn(),
+vi.mock('@/infrastructure/auth/auth', () => ({
+  auth: vi.fn(),
+  isAdmin: vi.fn(),
 }));
 
-jest.mock('@/infrastructure/http/api-response-helpers', () => ({
+vi.mock('@/infrastructure/http/api-response-helpers', () => ({
   commonErrors: {
-    unauthorized: jest.fn(() => new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 })),
-    forbidden: jest.fn(() => new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 })),
-    serverError: jest.fn((message) => new Response(JSON.stringify({ error: message }), { status: 500 })),
+    unauthorized: vi.fn(() => new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 })),
+    forbidden: vi.fn(() => new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 })),
+    serverError: vi.fn((message) => new Response(JSON.stringify({ error: message }), { status: 500 })),
   },
 }));
 
-jest.mock('@/infrastructure/logging/logger', () => ({
+vi.mock('@/infrastructure/logging/logger', () => ({
   logger: {
-    error: jest.fn(),
+    error: vi.fn(),
   },
 }));
 
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
-    job: { groupBy: jest.fn(), findMany: jest.fn(), aggregate: jest.fn(), count: jest.fn() },
-    evaluation: { findMany: jest.fn(), count: jest.fn() },
-    evaluationComment: { count: jest.fn() },
-    evaluationVersion: { aggregate: jest.fn() },
-    document: { count: jest.fn() },
-    agent: { count: jest.fn() },
-    $transaction: jest.fn(),
+    job: { groupBy: vi.fn(), findMany: vi.fn(), aggregate: vi.fn(), count: vi.fn() },
+    evaluation: { findMany: vi.fn(), count: vi.fn() },
+    evaluationComment: { count: vi.fn() },
+    evaluationVersion: { aggregate: vi.fn() },
+    document: { count: vi.fn() },
+    agent: { count: vi.fn() },
+    $transaction: vi.fn(),
   },
   JobStatus: {
     PENDING: 'PENDING',
@@ -52,7 +53,7 @@ describe('Monitor Routes Authentication', () => {
   const mockRequest = new NextRequest('http://localhost:3000/api/monitor/test');
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('/api/monitor/stats', () => {

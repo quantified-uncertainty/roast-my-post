@@ -1,47 +1,48 @@
+import { vi } from 'vitest';
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
 import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     document: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     evaluation: {
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      count: jest.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      count: vi.fn(),
     },
     agent: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
     },
     job: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
-    $transaction: jest.fn(),
+    $transaction: vi.fn(),
   },
 }));
 
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: vi.fn(),
 }));
 
 // Mock the ServiceFactory 
 const mockJobService = {
-  createJob: jest.fn().mockResolvedValue({ id: "job-123", status: "PENDING" }),
+  createJob: vi.fn().mockResolvedValue({ id: "job-123", status: "PENDING" }),
 };
 
-const mockGetServices = jest.fn(() => ({
-  createTransactionalServices: jest.fn(() => ({
+const mockGetServices = vi.fn(() => ({
+  createTransactionalServices: vi.fn(() => ({
     jobService: mockJobService,
   })),
 }));
 
-jest.mock('@/application/services/ServiceFactory', () => ({
+vi.mock('@/application/services/ServiceFactory', () => ({
   getServices: mockGetServices,
 }));
 
@@ -50,7 +51,7 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {
@@ -217,7 +218,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockJobService.createJob.mockClear();
   });
 
@@ -265,8 +266,8 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
       const mockTx = {
         evaluation: {
-          findFirst: jest.fn().mockResolvedValueOnce(null),
-          create: jest.fn().mockResolvedValueOnce(mockEvaluation),
+          findFirst: vi.fn().mockResolvedValueOnce(null),
+          create: vi.fn().mockResolvedValueOnce(mockEvaluation),
         },
       };
       return await callback(mockTx);

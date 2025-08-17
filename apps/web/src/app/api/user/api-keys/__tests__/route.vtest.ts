@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
@@ -5,22 +6,22 @@ import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-help
 import { generateApiKey, hashApiKey } from '@/shared/utils/crypto';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     apiKey: {
-      findMany: jest.fn(),
-      create: jest.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
     },
   },
 }));
 
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequestSessionFirst: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequestSessionFirst: vi.fn(),
 }));
 
-jest.mock('@/shared/utils/crypto', () => ({
-  generateApiKey: jest.fn(),
-  hashApiKey: jest.fn(),
+vi.mock('@/shared/utils/crypto', () => ({
+  generateApiKey: vi.fn(),
+  hashApiKey: vi.fn(),
 }));
 
 describe('GET /api/user/api-keys', () => {
@@ -28,7 +29,7 @@ describe('GET /api/user/api-keys', () => {
   const mockUser = { id: mockUserId, email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {
@@ -90,7 +91,7 @@ describe('POST /api/user/api-keys', () => {
   const mockUser = { id: mockUserId, email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {

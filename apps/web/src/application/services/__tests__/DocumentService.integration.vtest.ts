@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
 import { prisma, DocumentRepository, EvaluationRepository } from '@roast/db';
 import { generateId } from '@roast/db';
@@ -428,7 +429,7 @@ describeIfDb('DocumentService Integration Tests', () => {
       const document = createResult.unwrap();
 
       // Mock the processArticle function
-      const processArticle = jest.fn().mockResolvedValue({
+      const processArticle = vi.fn().mockResolvedValue({
         title: 'Re-imported Title',
         content: 'Updated content from re-import. '.repeat(10),
         author: 'Updated Author',

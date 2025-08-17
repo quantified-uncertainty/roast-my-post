@@ -1,58 +1,59 @@
+import { vi } from 'vitest';
 import { GET, DELETE } from "./route";
 import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { NextRequest } from "next/server";
 
 // Mock dependencies
-jest.mock("@roast/db", () => ({
+vi.mock("@roast/db", () => ({
   prisma: {
     agentEvalBatch: {
-      findFirst: jest.fn(),
-      delete: jest.fn(),
+      findFirst: vi.fn(),
+      delete: vi.fn(),
     },
     evaluation: {
-      findMany: jest.fn(),
-      deleteMany: jest.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     evaluationVersion: {
-      deleteMany: jest.fn(),
+      deleteMany: vi.fn(),
     },
     evaluationComment: {
-      deleteMany: jest.fn(),
+      deleteMany: vi.fn(),
     },
     job: {
-      findMany: jest.fn(),
-      deleteMany: jest.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     document: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
-    $transaction: jest.fn(),
+    $transaction: vi.fn(),
   },
 }));
 
-jest.mock("@/shared/utils/batch-utils", () => ({
-  calculateJobStats: jest.fn((jobs) => ({
+vi.mock("@/shared/utils/batch-utils", () => ({
+  calculateJobStats: vi.fn((jobs) => ({
     total: jobs.length,
     completed: jobs.filter((j: any) => j.status === "COMPLETED").length,
     failed: jobs.filter((j: any) => j.status === "FAILED").length,
     running: jobs.filter((j: any) => j.status === "RUNNING").length,
     pending: jobs.filter((j: any) => j.status === "PENDING").length,
   })),
-  calculateSuccessRate: jest.fn((stats) => 
+  calculateSuccessRate: vi.fn((stats) => 
     stats.total > 0 ? (stats.completed / stats.total) * 100 : 0
   ),
 }));
 
-jest.mock("@/infrastructure/auth/auth-helpers", () => ({
-  authenticateRequest: jest.fn(),
+vi.mock("@/infrastructure/auth/auth-helpers", () => ({
+  authenticateRequest: vi.fn(),
 }));
 
-jest.mock("@/infrastructure/logging/logger", () => ({
+vi.mock("@/infrastructure/logging/logger", () => ({
   logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
   },
 }));
 
@@ -69,7 +70,7 @@ describe("/api/experiments/[trackingId] GET", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     (authenticateRequest as jest.Mock).mockResolvedValue(mockUserId);
   });
 
@@ -360,7 +361,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     (authenticateRequest as jest.Mock).mockResolvedValue(mockUserId);
   });
 
@@ -405,27 +406,27 @@ describe("/api/experiments/[trackingId] DELETE", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const mockTx = {
           job: {
-            findMany: jest.fn().mockResolvedValue(mockJobs),
-            deleteMany: jest.fn().mockResolvedValue({ count: 2 }),
+            findMany: vi.fn().mockResolvedValue(mockJobs),
+            deleteMany: vi.fn().mockResolvedValue({ count: 2 }),
           },
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ ephemeralBatchId: "batch-123" }),
+            findUnique: vi.fn().mockResolvedValue({ ephemeralBatchId: "batch-123" }),
           },
           document: {
-            findMany: jest.fn().mockResolvedValue(mockEphemeralDocuments),
+            findMany: vi.fn().mockResolvedValue(mockEphemeralDocuments),
           },
           evaluation: {
-            findMany: jest.fn().mockResolvedValue(mockEphemeralEvaluations),
-            deleteMany: jest.fn().mockResolvedValue({ count: 3 }),
+            findMany: vi.fn().mockResolvedValue(mockEphemeralEvaluations),
+            deleteMany: vi.fn().mockResolvedValue({ count: 3 }),
           },
           evaluationComment: {
-            deleteMany: jest.fn().mockResolvedValue({ count: 5 }),
+            deleteMany: vi.fn().mockResolvedValue({ count: 5 }),
           },
           evaluationVersion: {
-            deleteMany: jest.fn().mockResolvedValue({ count: 3 }),
+            deleteMany: vi.fn().mockResolvedValue({ count: 3 }),
           },
           agentEvalBatch: {
-            delete: jest.fn().mockResolvedValue(mockBatch),
+            delete: vi.fn().mockResolvedValue(mockBatch),
           },
         };
         return await callback(mockTx);
@@ -513,27 +514,27 @@ describe("/api/experiments/[trackingId] DELETE", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const mockTx = {
           job: {
-            findMany: jest.fn().mockResolvedValue(mockJobs),
-            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+            findMany: vi.fn().mockResolvedValue(mockJobs),
+            deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ ephemeralBatchId: null }), // Not ephemeral
+            findUnique: vi.fn().mockResolvedValue({ ephemeralBatchId: null }), // Not ephemeral
           },
           document: {
-            findMany: jest.fn().mockResolvedValue([]), // No ephemeral documents
+            findMany: vi.fn().mockResolvedValue([]), // No ephemeral documents
           },
           evaluation: {
-            findMany: jest.fn().mockResolvedValue([]), // No additional evaluations
-            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+            findMany: vi.fn().mockResolvedValue([]), // No additional evaluations
+            deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           evaluationComment: {
-            deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+            deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
           },
           evaluationVersion: {
-            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+            deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           agentEvalBatch: {
-            delete: jest.fn().mockResolvedValue(mockBatch),
+            delete: vi.fn().mockResolvedValue(mockBatch),
           },
         };
         return await callback(mockTx);

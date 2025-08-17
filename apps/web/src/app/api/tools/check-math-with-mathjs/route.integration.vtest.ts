@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 /**
  * Integration tests for the math verification tool API route
  * Tests both authenticated and bypass modes
@@ -8,8 +9,8 @@ import { POST } from './route';
 import { auth } from '@/infrastructure/auth/auth';
 
 // Mock dependencies
-jest.mock('@/infrastructure/auth/auth');
-jest.mock('@roast/domain', () => ({
+vi.mock('@/infrastructure/auth/auth');
+vi.mock('@roast/domain', () => ({
   config: {
     env: {
       isDevelopment: true,
@@ -29,20 +30,20 @@ jest.mock('@roast/domain', () => ({
       emailFrom: undefined
     }
   },
-  isDevelopment: jest.fn(() => true),
-  isTest: jest.fn(() => true),
-  isProduction: jest.fn(() => false)
+  isDevelopment: vi.fn(() => true),
+  isTest: vi.fn(() => true),
+  isProduction: vi.fn(() => false)
 }));
 
 // Mock the actual tool execution to avoid calling Claude
-jest.mock('@roast/ai/server', () => ({
+vi.mock('@roast/ai/server', () => ({
   checkMathWithMathJsTool: {
     config: {
       id: 'check-math-with-mathjs',
       name: 'Check Math with MathJS',
       path: '/tools/check-math-with-mathjs'
     },
-    execute: jest.fn().mockImplementation(async (input) => {
+    execute: vi.fn().mockImplementation(async (input) => {
       // Validate required fields like the real tool would
       if (!input.statement) {
         throw new Error('Statement is required');
@@ -75,7 +76,7 @@ describe('Math Verification Tool API Route', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env = { ...originalEnv };
     delete process.env.BYPASS_TOOL_AUTH;
   });

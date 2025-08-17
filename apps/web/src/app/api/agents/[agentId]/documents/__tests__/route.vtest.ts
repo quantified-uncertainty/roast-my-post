@@ -1,8 +1,9 @@
+import { vi } from 'vitest';
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 
 // Mock the Result class to match expected interface
-jest.mock('@roast/domain', () => {
+vi.mock('@roast/domain', () => {
   const originalResult = {
     ok: (value: any) => ({
       isError: () => false,
@@ -37,16 +38,16 @@ jest.mock('@roast/domain', () => {
 
 // Create mock services object
 const mockAgentService = {
-  getAgentWithOwner: jest.fn(),
-  getAgentDocuments: jest.fn(),
+  getAgentWithOwner: vi.fn(),
+  getAgentDocuments: vi.fn(),
 };
 
 const mockServices = {
   agentService: mockAgentService,
 };
 
-jest.mock('@/application/services/ServiceFactory', () => ({
-  getServices: jest.fn(() => mockServices),
+vi.mock('@/application/services/ServiceFactory', () => ({
+  getServices: vi.fn(() => mockServices),
 }));
 
 describe('GET /api/agents/[agentId]/documents', () => {
@@ -54,7 +55,7 @@ describe('GET /api/agents/[agentId]/documents', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return 404 for non-existent agent', async () => {

@@ -1,21 +1,22 @@
+import { vi } from 'vitest';
 import { POST } from './route';
 import { NextRequest } from 'next/server';
 
 // Mock the auth module
-jest.mock('@/infrastructure/auth/auth', () => ({
-  auth: jest.fn().mockResolvedValue({
+vi.mock('@/infrastructure/auth/auth', () => ({
+  auth: vi.fn().mockResolvedValue({
     user: { id: 'test-user-id', email: 'test@example.com' }
   })
 }));
 
 // Mock the perplexity research tool
-jest.mock('@roast/ai/server', () => ({
+vi.mock('@roast/ai/server', () => ({
   perplexityResearchTool: {
     config: {
       name: 'perplexity-research',
       description: 'Research using Perplexity'
     },
-    execute: jest.fn().mockResolvedValue({
+    execute: vi.fn().mockResolvedValue({
       summary: 'Test summary',
       keyFindings: ['Finding 1', 'Finding 2'],
       sources: [
@@ -26,18 +27,18 @@ jest.mock('@roast/ai/server', () => ({
 }));
 
 // Mock the logger
-jest.mock('@/infrastructure/logging/logger', () => ({
+vi.mock('@/infrastructure/logging/logger', () => ({
   logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn()
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn()
   }
 }));
 
 describe('Perplexity Research API Route', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.OPENROUTER_API_KEY = 'test-key';
     process.env.HELICONE_API_KEY = 'test-helicone-key';
   });

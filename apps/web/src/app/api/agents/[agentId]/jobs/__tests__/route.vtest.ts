@@ -1,15 +1,16 @@
+import { vi } from 'vitest';
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     agent: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     job: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
   },
 }));
@@ -19,7 +20,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return 404 for non-existent agent', async () => {

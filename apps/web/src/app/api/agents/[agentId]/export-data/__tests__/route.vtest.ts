@@ -1,22 +1,23 @@
+import { vi } from 'vitest';
 import { NextRequest } from "next/server";
 import { GET } from "../route";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { prisma } from "@roast/db";
 
 // Mock dependencies
-jest.mock("@/infrastructure/auth/auth-helpers");
-jest.mock("@roast/db", () => ({
+vi.mock("@/infrastructure/auth/auth-helpers");
+vi.mock("@roast/db", () => ({
   prisma: {
     agent: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     evaluationVersion: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     agentVersion: {
-      findFirst: jest.fn(),
+      findFirst: vi.fn(),
     },
-    $disconnect: jest.fn(),
+    $disconnect: vi.fn(),
   },
 }));
 
@@ -27,7 +28,7 @@ const mockPrismaAgentVersion = prisma.agentVersion as jest.Mocked<typeof prisma.
 
 describe("GET /api/agents/[agentId]/export-data", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should require authentication", async () => {

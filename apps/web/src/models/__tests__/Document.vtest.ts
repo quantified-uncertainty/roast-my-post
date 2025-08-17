@@ -1,38 +1,39 @@
+import { vi } from 'vitest';
 import { DocumentModel } from '../Document';
 import { prisma } from '@roast/db';
 
 // Mock Prisma
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     document: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      findMany: vi.fn(),
     },
     job: {
-      create: jest.fn(),
-      deleteMany: jest.fn(),
+      create: vi.fn(),
+      deleteMany: vi.fn(),
     },
     evaluation: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
-    $transaction: jest.fn(),
+    $transaction: vi.fn(),
   },
 }));
 
 // Mock DocumentValidationSchema
-jest.mock('@/shared/types/validationSchemas', () => ({
+vi.mock('@/shared/types/validationSchemas', () => ({
   DocumentValidationSchema: {
-    parse: jest.fn((data) => data),
+    parse: vi.fn((data) => data),
   },
 }));
 
 describe('DocumentModel', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getDocumentWithEvaluations', () => {
@@ -287,14 +288,14 @@ describe('DocumentModel', () => {
   describe('update', () => {
     const mockTransaction = {
       document: {
-        findUnique: jest.fn(),
-        update: jest.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn(),
       },
       evaluationVersion: {
-        updateMany: jest.fn(),
+        updateMany: vi.fn(),
       },
       job: {
-        createMany: jest.fn(),
+        createMany: vi.fn(),
       },
     };
 
@@ -424,7 +425,7 @@ describe('DocumentModel', () => {
   describe('getDocumentWithAllEvaluations', () => {
     it('should be equivalent to getDocumentWithEvaluations(docId, true)', async () => {
       const mockDoc = { id: 'test' };
-      const getDocumentWithEvaluationsSpy = jest.spyOn(DocumentModel, 'getDocumentWithEvaluations')
+      const getDocumentWithEvaluationsSpy = vi.spyOn(DocumentModel, 'getDocumentWithEvaluations')
         .mockResolvedValue(mockDoc as any);
 
       const result = await DocumentModel.getDocumentWithAllEvaluations('doc-123');

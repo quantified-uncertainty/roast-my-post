@@ -1,9 +1,10 @@
+import { vi } from 'vitest';
 import { jest } from "@jest/globals";
 import { JSDOM } from "jsdom";
 import axios from "axios";
 
 // Mock dependencies
-jest.mock("axios");
+vi.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 // Set environment variables before importing the module
@@ -21,7 +22,7 @@ import {
 } from './articleImport';
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 afterAll(() => {

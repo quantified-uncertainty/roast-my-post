@@ -1,21 +1,20 @@
-/**
- * @jest-environment jsdom
- */
+import { vi } from 'vitest';
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { GenericToolPage } from '../GenericToolPage';
 import { runToolWithAuth } from '../../utils/runToolWithAuth';
 
 // Mock dependencies
-jest.mock('../../utils/runToolWithAuth');
-jest.mock('@roast/ai', () => ({
+vi.mock('../../utils/runToolWithAuth');
+vi.mock('@roast/ai', () => ({
   toolSchemas: {
     'test-tool': {
       inputSchema: {},
       outputSchema: {}
     }
   },
-  getToolReadme: jest.fn(() => '# Test Tool README')
+  getToolReadme: vi.fn(() => '# Test Tool README')
 }));
 
 const mockRunToolWithAuth = runToolWithAuth as jest.MockedFunction<typeof runToolWithAuth>;
@@ -38,7 +37,7 @@ describe('GenericToolPage', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render the tool with basic fields', () => {
@@ -136,7 +135,7 @@ describe('GenericToolPage', () => {
   });
 
   it('should validate input before submission', async () => {
-    const validateInput = jest.fn((input) => {
+    const validateInput = vi.fn((input) => {
       if (!input.testField) return 'Field is required';
       if (input.testField.length < 5) return 'Field must be at least 5 characters';
       return true;

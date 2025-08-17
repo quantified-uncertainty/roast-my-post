@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
@@ -5,42 +6,42 @@ import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-help
 import { getServices } from '@/application/services/ServiceFactory';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     agent: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     document: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     agentEvalBatch: {
-      create: jest.fn(),
-      findUnique: jest.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
     },
     job: {
-      createMany: jest.fn(),
-      create: jest.fn(),
-      findMany: jest.fn(),
+      createMany: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }));
 
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequestSessionFirst: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequestSessionFirst: vi.fn(),
 }));
 
 // Mock the ServiceFactory to return mocked services
-jest.mock('@/application/services/ServiceFactory', () => ({
-  getServices: jest.fn(() => ({
+vi.mock('@/application/services/ServiceFactory', () => ({
+  getServices: vi.fn(() => ({
     jobService: {
-      createJob: jest.fn(),
+      createJob: vi.fn(),
     },
   })),
 }));
 
 // Mock crypto for UUID generation
-jest.mock('crypto', () => ({
-  randomUUID: jest.fn(() => 'mock-uuid'),
+vi.mock('crypto', () => ({
+  randomUUID: vi.fn(() => 'mock-uuid'),
 }));
 
 describe('POST /api/agents/[agentId]/eval-batch', () => {
@@ -48,7 +49,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication and agent ownership', async () => {

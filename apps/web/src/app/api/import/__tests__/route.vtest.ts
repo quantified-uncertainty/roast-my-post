@@ -1,18 +1,19 @@
+import { vi } from 'vitest';
 import { NextRequest } from "next/server";
 import { POST } from "../route";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { importDocumentService } from "@/application/services/documentImport";
 
 // Mock dependencies
-jest.mock("@/infrastructure/auth/auth-helpers");
-jest.mock("@/application/services/documentImport");
+vi.mock("@/infrastructure/auth/auth-helpers");
+vi.mock("@/application/services/documentImport");
 
 const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
 const mockImportDocumentService = importDocumentService as jest.MockedFunction<typeof importDocumentService>;
 
 describe("POST /api/import", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should require authentication", async () => {

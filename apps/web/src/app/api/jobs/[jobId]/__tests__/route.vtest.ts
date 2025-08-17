@@ -1,19 +1,20 @@
+import { vi } from 'vitest';
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
 import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 
 // Mock dependencies
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     job: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
   },
 }));
 
-jest.mock('@/infrastructure/auth/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: vi.fn(),
 }));
 
 describe('GET /api/jobs/[jobId]', () => {
@@ -21,7 +22,7 @@ describe('GET /api/jobs/[jobId]', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should require authentication', async () => {
