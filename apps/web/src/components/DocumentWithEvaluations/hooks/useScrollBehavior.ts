@@ -13,7 +13,7 @@ interface UseScrollBehaviorProps {
 
 export function useScrollBehavior({
   evaluationsSectionRef,
-  _isLargeMode,
+  isLargeMode,
 }: UseScrollBehaviorProps) {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [localIsLargeMode, setLocalIsLargeMode] = useState(true);

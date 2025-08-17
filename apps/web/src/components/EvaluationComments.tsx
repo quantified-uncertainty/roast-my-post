@@ -58,7 +58,7 @@ function getIconForLevel(level?: string | null) {
 
 export function EvaluationComments({
   comments,
-  _documentContent,
+  documentContent,
 }: EvaluationCommentsProps) {
   const [hoveredCommentIndex, setHoveredCommentIndex] = useState<number | null>(
     null

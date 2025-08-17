@@ -40,7 +40,7 @@ export function CommentsColumn({
   hoveredCommentId,
   onCommentHover,
   onCommentClick,
-  _showDebugComments = false,
+  showDebugComments = false,
   document: _document,
   evaluationState: _evaluationState,
   onEvaluationStateChange: _onEvaluationStateChange,

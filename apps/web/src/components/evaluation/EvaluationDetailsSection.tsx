@@ -49,7 +49,7 @@ export function EvaluationDetailsSection({
   createdAt,
   evaluationData,
   documentId,
-  _evaluationId,
+  evaluationId,
   isOnEvalPage = false
 }: EvaluationDetailsSectionProps) {
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
