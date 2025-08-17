@@ -137,6 +137,10 @@ jobs:
             pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
           fi
 
+      - name: Run Vitest tests (experimental)
+        run: |
+          pnpm --filter @roast/web run test:vitest || echo "Vitest tests are experimental and allowed to fail"
+
   # Integration tests (3-4 minutes) - parallel with other jobs  
   integration-tests:
     name: Integration Tests
