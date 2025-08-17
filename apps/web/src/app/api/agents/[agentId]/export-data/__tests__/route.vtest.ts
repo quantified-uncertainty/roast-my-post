@@ -1,11 +1,10 @@
 import { vi } from 'vitest';
-import { NextRequest } from "next/server";
-import { GET } from "../route";
-import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
-import { prisma } from "@roast/db";
 
-// Mock dependencies
-vi.mock("@/infrastructure/auth/auth-helpers");
+// Mock dependencies before imports
+vi.mock("@/infrastructure/auth/auth-helpers", () => ({
+  authenticateRequest: vi.fn(),
+}));
+vi.mock("@/infrastructure/logging/logger");
 vi.mock("@roast/db", () => ({
   prisma: {
     agent: {
@@ -21,10 +20,15 @@ vi.mock("@roast/db", () => ({
   },
 }));
 
-const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
-const mockPrismaAgent = prisma.agent as jest.Mocked<typeof prisma.agent>;
-const mockPrismaEvalVersion = prisma.evaluationVersion as jest.Mocked<typeof prisma.evaluationVersion>;
-const mockPrismaAgentVersion = prisma.agentVersion as jest.Mocked<typeof prisma.agentVersion>;
+import { NextRequest } from "next/server";
+import { GET } from "../route";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { prisma } from "@roast/db";
+
+const mockAuthenticateRequest = vi.mocked(authenticateRequest);
+const mockPrismaAgent = vi.mocked(prisma.agent);
+const mockPrismaEvalVersion = vi.mocked(prisma.evaluationVersion);
+const mockPrismaAgentVersion = vi.mocked(prisma.agentVersion);
 
 describe("GET /api/agents/[agentId]/export-data", () => {
   beforeEach(() => {

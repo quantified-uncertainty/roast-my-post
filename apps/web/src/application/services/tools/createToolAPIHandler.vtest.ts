@@ -79,7 +79,7 @@ describe('createToolAPIHandler', () => {
 
   describe('Authentication', () => {
     it('should require authentication when BYPASS_TOOL_AUTH is not set', async () => {
-      const mockAuth = auth as jest.Mock;
+      const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue(null);
 
       const route = createToolAPIHandler(mockTool);
@@ -93,7 +93,7 @@ describe('createToolAPIHandler', () => {
 
     it('should require authentication when BYPASS_TOOL_AUTH is false', async () => {
       process.env.BYPASS_TOOL_AUTH = 'false';
-      const mockAuth = auth as jest.Mock;
+      const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue(null);
 
       const route = createToolAPIHandler(mockTool);
@@ -107,7 +107,7 @@ describe('createToolAPIHandler', () => {
 
     it('should bypass authentication when BYPASS_TOOL_AUTH=true in development', async () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
-      const mockAuth = auth as jest.Mock;
+      const mockAuth = vi.mocked(auth);
 
       const route = createToolAPIHandler(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
@@ -123,8 +123,8 @@ describe('createToolAPIHandler', () => {
     });
 
     it('should use authenticated user ID when session exists', async () => {
-      const { logger: aiLogger } = require('@roast/ai');
-      const mockAuth = auth as jest.Mock;
+      const { logger: aiLogger } = await vi.importActual('@roast/ai') as any;
+      const mockAuth = vi.mocked(auth);
       mockAuth.mockResolvedValue({
         user: { id: 'user-123', email: 'test@example.com', role: 'USER' },
         expires: new Date().toISOString()
@@ -141,7 +141,12 @@ describe('createToolAPIHandler', () => {
         { test: 'data' },
         expect.objectContaining({
           userId: 'user-123',
-          logger: aiLogger
+          logger: expect.objectContaining({
+            debug: expect.any(Function),
+            info: expect.any(Function),
+            warn: expect.any(Function),
+            error: expect.any(Function)
+          })
         })
       );
     });
@@ -149,9 +154,8 @@ describe('createToolAPIHandler', () => {
 
   describe('Production Safety', () => {
     beforeEach(() => {
-      // Mock production environment
-      jest.resetModules();
-      jest.doMock('@roast/domain', () => ({
+      // Mock production environment with Vitest
+      vi.doMock('@roast/domain', () => ({
         config: {
           env: {
             isDevelopment: false,
@@ -180,10 +184,10 @@ describe('createToolAPIHandler', () => {
       
       // Clear the module cache and re-mock auth before importing
       vi.clearAllMocks();
-      jest.resetModules();
+      vi.resetModules();
       
       // Re-mock auth module after reset
-      jest.doMock('@/infrastructure/auth/auth', () => ({
+      vi.doMock('@/infrastructure/auth/auth', () => ({
         auth: vi.fn().mockResolvedValue(null)
       }));
       

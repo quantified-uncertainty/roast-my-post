@@ -48,6 +48,7 @@ vi.mock('@roast/db', () => ({
 
 import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 import { isAdmin } from '@/infrastructure/auth/auth';
+import { prisma } from '@roast/db';
 
 describe('Monitor Routes Authentication', () => {
   const mockRequest = new NextRequest('http://localhost:3000/api/monitor/test');
@@ -68,38 +69,37 @@ describe('Monitor Routes Authentication', () => {
     });
 
     it('should return data when authenticated', async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue('user-123');
-      (isAdmin as jest.Mock).mockResolvedValue(true);
+      vi.mocked(authenticateRequest).mockResolvedValue('user-123');
+      vi.mocked(isAdmin).mockResolvedValue(true);
       
       // Mock all the required database calls
-      const { prisma } = require('@roast/db');
       
       // Job stats grouped by status
-      prisma.job.groupBy.mockResolvedValue([
+      vi.mocked(prisma.job.groupBy).mockResolvedValue([
         { status: 'COMPLETED', _count: { id: 10 } },
         { status: 'FAILED', _count: { id: 2 } },
         { status: 'RUNNING', _count: { id: 1 } },
       ]);
       
       // Jobs created today
-      prisma.job.findMany.mockResolvedValue([]);
+      vi.mocked(prisma.job.findMany).mockResolvedValue([]);
       
       // Job aggregates
-      prisma.job.aggregate.mockResolvedValue({ 
+      vi.mocked(prisma.job.aggregate).mockResolvedValue({ 
         _avg: { durationInSeconds: 45.5 }, 
         _sum: { priceInDollars: 12.34 } 
       });
       
       // Counts
-      prisma.job.count.mockResolvedValue(0);
-      prisma.evaluation.count.mockResolvedValue(0);
-      prisma.evaluationComment.count.mockResolvedValue(0);
-      prisma.evaluationVersion.aggregate.mockResolvedValue({ _avg: { grade: 7.5 } });
-      prisma.document.count.mockResolvedValue(0);
-      prisma.agent.count.mockResolvedValue(0);
+      vi.mocked(prisma.job.count).mockResolvedValue(0);
+      vi.mocked(prisma.evaluation.count).mockResolvedValue(0);
+      vi.mocked(prisma.evaluationComment.count).mockResolvedValue(0);
+      vi.mocked(prisma.evaluationVersion.aggregate).mockResolvedValue({ _avg: { grade: 7.5 } });
+      vi.mocked(prisma.document.count).mockResolvedValue(0);
+      vi.mocked(prisma.agent.count).mockResolvedValue(0);
       
       // Transaction for recent counts
-      prisma.$transaction.mockResolvedValue([5, 3]);
+      vi.mocked(prisma.$transaction).mockResolvedValue([5, 3]);
       
       const response = await getStats(mockRequest);
       if (response.status !== 200) {

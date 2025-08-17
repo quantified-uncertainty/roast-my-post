@@ -2,6 +2,9 @@ import { vi } from 'vitest';
 import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
 import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
+import { AgentInputSchema } from '@roast/ai';
+import { Result, ValidationError } from '@roast/domain';
+import { ZodError } from 'zod';
 
 // Mock dependencies
 vi.mock('@/infrastructure/auth/auth-helpers', () => ({
@@ -84,7 +87,7 @@ describe('GET /api/agents', () => {
 
   it('should return all agents without authentication', async () => {
     // GET doesn't require authentication, it's public
-    const { Result } = require('@roast/domain');
+    // Use mocked Result from imports
 
     const mockAgents = [
       {
@@ -145,10 +148,10 @@ describe('PUT /api/agents', () => {
 
   it('should validate request body', async () => {
     vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
-    const { AgentInputSchema } = require('@roast/ai');
-    const { ZodError } = require('zod');
+    // Use mocked AgentInputSchema from imports
+    // Use ZodError from imports
     
-    AgentInputSchema.parse.mockImplementationOnce(() => {
+    vi.mocked(AgentInputSchema.parse).mockImplementationOnce(() => {
       throw new ZodError([
         {
           code: 'invalid_type',
@@ -172,8 +175,8 @@ describe('PUT /api/agents', () => {
 
   it('should require agentId for updates', async () => {
     vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
-    const { AgentInputSchema } = require('@roast/ai');
-    AgentInputSchema.parse.mockReturnValueOnce({
+    // Use mocked AgentInputSchema from imports
+    vi.mocked(AgentInputSchema.parse).mockReturnValueOnce({
       name: 'New Agent',
       description: 'A new agent',
       primaryInstructions: 'Instructions...',
@@ -199,10 +202,10 @@ describe('PUT /api/agents', () => {
 
   it('should update existing agent and create new version', async () => {
     vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
-    const { AgentInputSchema } = require('@roast/ai');
-    const { Result } = require('@roast/domain');
+    // Use mocked AgentInputSchema from imports
+    // Use mocked Result from imports
     
-    AgentInputSchema.parse.mockReturnValueOnce({
+    vi.mocked(AgentInputSchema.parse).mockReturnValueOnce({
       agentId: 'agent-123',
       name: 'Updated Name',
       primaryInstructions: 'New instructions...',
@@ -251,10 +254,10 @@ describe('PUT /api/agents', () => {
 
   it('should handle permission errors from AgentService', async () => {
     vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
-    const { AgentInputSchema } = require('@roast/ai');
-    const { Result, ValidationError } = require('@roast/domain');
+    // Use mocked AgentInputSchema from imports
+    // Use mocked Result and ValidationError from imports
     
-    AgentInputSchema.parse.mockReturnValueOnce({
+    vi.mocked(AgentInputSchema.parse).mockReturnValueOnce({
       agentId: 'agent-123',
       name: 'Updated Name',
     });
