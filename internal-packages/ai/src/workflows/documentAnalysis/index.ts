@@ -2,7 +2,6 @@
 export { analyzeDocument } from "./analyzeDocument";
 
 // Analysis workflows
-export { analyzeLinkDocument } from "./linkAnalysis";
 export { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 export { extractHighlightsFromAnalysis } from "./highlightExtraction";
 
