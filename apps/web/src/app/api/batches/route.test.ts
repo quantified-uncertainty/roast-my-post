@@ -28,6 +28,15 @@ jest.mock("@roast/db", () => ({
       createMany: jest.fn(),
     },
   },
+  generateId: jest.fn((length = 21) => {
+    // Generate a mock ID similar to what our real function would produce
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }),
 }));
 
 jest.mock("@/infrastructure/auth/auth-helpers", () => ({
