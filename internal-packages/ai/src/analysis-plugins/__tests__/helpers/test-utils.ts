@@ -89,8 +89,8 @@ export function assertAnalysisResult(
   if (expectations.verifyHighlights) {
     for (const comment of result.comments) {
       if (comment.highlight) {
-        expect(comment.highlight.start).toBeGreaterThanOrEqual(0);
-        expect(comment.highlight.end).toBeGreaterThan(comment.highlight.start);
+        expect(comment.highlight.startOffset).toBeGreaterThanOrEqual(0);
+        expect(comment.highlight.endOffset).toBeGreaterThan(comment.highlight.startOffset);
       }
     }
   }
