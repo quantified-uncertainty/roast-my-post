@@ -60,6 +60,12 @@ module.exports = {
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts", "<rootDir>/config/jest/setup.js"],
-  // Exclude Playwright tests from Jest
+  // Only match test files that are NOT Vitest tests
+  testMatch: [
+    "**/__tests__/**/*.(test|spec).[jt]s?(x)",
+    "**/?(*.)+(spec|test).[jt]s?(x)",
+    "!**/*.vitest.(test|spec).[jt]s?(x)"
+  ],
+  // Exclude Playwright tests and Vitest tests from Jest
   testPathIgnorePatterns: ["/node_modules/", "/tests/playwright/"],
 };
