@@ -19,7 +19,7 @@ const mockAuthenticateApiKey = authenticateApiKey as any;
 
 describe("auth-helpers", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("authenticateRequest", () => {

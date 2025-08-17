@@ -6,12 +6,12 @@ import { SubmitButton } from '../SubmitButton';
 
 describe('SubmitButton', () => {
   it('should render with default text', () => {
-    render(<SubmitButton onClick={vi.fn()} />);
+    render(<SubmitButton onClick={vi.fn()} isLoading={false} />);
     expect(screen.getByRole('button')).toHaveTextContent('Submit');
   });
 
   it('should render with custom text', () => {
-    render(<SubmitButton onClick={vi.fn()} text="Custom Text" />);
+    render(<SubmitButton onClick={vi.fn()} text="Custom Text" isLoading={false} />);
     expect(screen.getByRole('button')).toHaveTextContent('Custom Text');
   });
 
@@ -19,7 +19,7 @@ describe('SubmitButton', () => {
     const handleClick = vi.fn();
     const user = userEvent.setup();
     
-    render(<SubmitButton onClick={handleClick} />);
+    render(<SubmitButton onClick={handleClick} isLoading={false} />);
     await user.click(screen.getByRole('button'));
     
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -56,7 +56,7 @@ describe('SubmitButton', () => {
   });
 
   it('should have proper styling classes', () => {
-    render(<SubmitButton onClick={vi.fn()} />);
+    render(<SubmitButton onClick={vi.fn()} isLoading={false} />);
     const button = screen.getByRole('button');
     
     expect(button).toHaveClass('px-4');

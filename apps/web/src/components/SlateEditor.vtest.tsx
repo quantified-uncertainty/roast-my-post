@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 /**
  * SlateEditor component tests
@@ -18,8 +18,6 @@ import { vi } from 'vitest';
  * These changes ensure that highlights with offsets like 60, 64, and 80 in the same region all
  * work correctly, making the component more robust to different input formats.
  */
-
-import "../setupTests";
 
 import React from "react";
 import type { JSX } from "react";
@@ -148,10 +146,8 @@ vi.mock("slate", () => {
 
 vi.mock("unified", () => {
   type MockProcessor = {
-    use: jest.Mock<MockProcessor>;
-    processSync: jest.Mock<{
-      result: any[];
-    }>;
+    use: any;
+    processSync: any;
   };
 
   const mockProcessor: MockProcessor = {

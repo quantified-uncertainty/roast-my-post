@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { NextRequest } from "next/server";
 import { authenticateApiKey, authenticateApiKeySimple, AuthErrorType } from './auth-api';
 import { prisma } from "@roast/db";
@@ -22,7 +22,7 @@ vi.mock("@/shared/utils/crypto", () => ({
 
 describe("authenticateApiKey", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("detailed error handling", () => {
