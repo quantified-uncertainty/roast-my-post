@@ -4,13 +4,13 @@
  */
 
 import { prisma } from "@roast/db";
-import { nanoid } from "nanoid";
+import { generateId } from "@roast/db";
 
 // Skip in CI unless database is available
 const describeIfDb = process.env.DATABASE_URL ? describe : describe.skip;
 
 describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
-  const testUserId = `test_user_${nanoid(8)}`;
+  const testUserId = `test_user_${generateId(8)}`;
   let testUser: any;
 
   beforeAll(async () => {
@@ -33,10 +33,10 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
 
   it("should cascade delete all ephemeral resources when batch is deleted", async () => {
     // Create an ephemeral batch with all related resources
-    const batchId = `test_batch_${nanoid(8)}`;
-    const agentId = `test_agent_${nanoid(8)}`;
-    const docId1 = `test_doc_${nanoid(8)}`;
-    const docId2 = `test_doc_${nanoid(8)}`;
+    const batchId = `test_batch_${generateId(8)}`;
+    const agentId = `test_agent_${generateId(8)}`;
+    const docId1 = `test_doc_${generateId(8)}`;
+    const docId2 = `test_doc_${generateId(8)}`;
 
     // Create ephemeral agent
     const agent = await prisma.agent.create({
@@ -64,7 +64,7 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
         agentId: agentId,
         userId: testUserId,
         isEphemeral: true,
-        trackingId: `exp_${nanoid(8)}`,
+        trackingId: `exp_${generateId(8)}`,
         description: "Test ephemeral batch",
         expiresAt: new Date(Date.now() - 1000), // Already expired
       },
@@ -173,7 +173,7 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
 
   it("should not delete non-ephemeral resources", async () => {
     // Create a regular (non-ephemeral) agent
-    const regularAgentId = `regular_agent_${nanoid(8)}`;
+    const regularAgentId = `regular_agent_${generateId(8)}`;
     const regularAgent = await prisma.agent.create({
       data: {
         id: regularAgentId,
@@ -182,7 +182,7 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
     });
 
     // Create a regular document
-    const regularDocId = `regular_doc_${nanoid(8)}`;
+    const regularDocId = `regular_doc_${generateId(8)}`;
     const regularDoc = await prisma.document.create({
       data: {
         id: regularDocId,
@@ -193,7 +193,7 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
     });
 
     // Create an ephemeral batch that uses the regular agent
-    const batchId = `test_batch2_${nanoid(8)}`;
+    const batchId = `test_batch2_${generateId(8)}`;
     const batch = await prisma.agentEvalBatch.create({
       data: {
         id: batchId,
@@ -228,9 +228,9 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
 
   it("should handle partial ephemeral resources correctly", async () => {
     // Create batch with ephemeral agent but regular documents
-    const batchId = `test_batch3_${nanoid(8)}`;
-    const ephemeralAgentId = `eph_agent_${nanoid(8)}`;
-    const regularDocId = `regular_doc2_${nanoid(8)}`;
+    const batchId = `test_batch3_${generateId(8)}`;
+    const ephemeralAgentId = `eph_agent_${generateId(8)}`;
+    const regularDocId = `regular_doc2_${generateId(8)}`;
 
     // Create ephemeral agent
     const ephemeralAgent = await prisma.agent.create({

@@ -28,8 +28,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.13.0",
-    "nanoid": "^5.0.7"
+    "@prisma/client": "^6.13.0"
   },
   "devDependencies": {
     "dotenv-cli": "^10.0.0",

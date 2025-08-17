@@ -1,10 +1,11 @@
 import { POST } from "./route";
-import { prisma } from "@roast/db";
+import { prisma, generateId } from "@roast/db";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { NextRequest } from "next/server";
 
-// Mock dependencies
+// Mock dependencies - but use real generateId
 jest.mock("@roast/db", () => ({
+  ...jest.requireActual("@roast/db"),
   prisma: {
     $transaction: jest.fn(),
     agentEvalBatch: {

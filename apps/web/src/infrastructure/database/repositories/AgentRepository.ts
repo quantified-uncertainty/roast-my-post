@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { generateId } from "@roast/db";
 import { prisma } from "@roast/db";
 import type { Agent, AgentInput, AgentVersion } from "@roast/ai";
 import { AgentSchema, AgentVersionSchema } from "@roast/ai";
@@ -12,7 +12,7 @@ export class AgentRepository {
    */
   async createAgent(data: AgentInput, userId: string): Promise<Result<Agent, AppError>> {
     try {
-      const id = nanoid(16);
+      const id = generateId(16);
       const agent = await prisma.agent.create({
       data: {
         id,
