@@ -19,8 +19,8 @@ export default defineConfig({
       ],
     },
     include: [
-      'src/**/*.vitest.test.{ts,tsx}',
-      'src/**/*.vitest.spec.{ts,tsx}',
+      'src/**/*.vtest.{ts,tsx}',
+      'src/**/*.vspec.{ts,tsx}',
     ],
     exclude: [
       'node_modules',
