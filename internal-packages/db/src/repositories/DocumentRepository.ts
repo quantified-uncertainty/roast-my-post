@@ -7,7 +7,7 @@
  */
 
 import { prisma as defaultPrisma } from '../client';
-import { nanoid } from 'nanoid';
+import { generateId } from '../utils/generateId';
 import type { PrismaClient } from '../client';
 
 // Types defined in this package to avoid circular dependencies
@@ -297,7 +297,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Create a new document
    */
   async create(data: CreateDocumentData): Promise<DocumentEntity> {
-    const documentId = data.id || nanoid();
+    const documentId = data.id || generateId();
 
     const doc = await this.prisma.document.create({
       data: {

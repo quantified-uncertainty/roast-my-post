@@ -1,6 +1,6 @@
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
 import { prisma, DocumentRepository, EvaluationRepository } from '@roast/db';
-import { nanoid } from 'nanoid';
+import { generateId } from '@roast/db';
 import { logger } from '@/infrastructure/logging/logger';
 
 // Skip in CI unless database is available
@@ -13,11 +13,11 @@ describeIfDb('DocumentService Integration Tests', () => {
 
   beforeAll(async () => {
     // Create a test user
-    testUserId = `test-user-${nanoid()}`;
+    testUserId = `test-user-${generateId()}`;
     testUser = await prisma.user.create({
       data: {
         id: testUserId,
-        email: `test-${nanoid()}@example.com`,
+        email: `test-${generateId()}@example.com`,
         name: 'Test User',
       },
     });
@@ -129,7 +129,7 @@ describeIfDb('DocumentService Integration Tests', () => {
 
     it('should create document with agent IDs and create evaluations via EvaluationService', async () => {
       // Create test agents with versions
-      const agent1Id = `test-agent-1-${nanoid()}`;
+      const agent1Id = `test-agent-1-${generateId()}`;
       const agent1 = await prisma.agent.create({
         data: {
           id: agent1Id,
@@ -145,7 +145,7 @@ describeIfDb('DocumentService Integration Tests', () => {
         },
       });
 
-      const agent2Id = `test-agent-2-${nanoid()}`;
+      const agent2Id = `test-agent-2-${generateId()}`;
       const agent2 = await prisma.agent.create({
         data: {
           id: agent2Id,
@@ -283,11 +283,11 @@ describeIfDb('DocumentService Integration Tests', () => {
     });
 
     it('should reject update from non-owner', async () => {
-      const otherUserId = `other-user-${nanoid()}`;
+      const otherUserId = `other-user-${generateId()}`;
       await prisma.user.create({
         data: {
           id: otherUserId,
-          email: `other-${nanoid()}@example.com`,
+          email: `other-${generateId()}@example.com`,
           name: 'Other User',
         },
       });
@@ -338,11 +338,11 @@ describeIfDb('DocumentService Integration Tests', () => {
       const document = createResult.unwrap();
 
       // Create another user
-      const otherUserId = `other-user-${nanoid()}`;
+      const otherUserId = `other-user-${generateId()}`;
       await prisma.user.create({
         data: {
           id: otherUserId,
-          email: `other-${nanoid()}@example.com`,
+          email: `other-${generateId()}@example.com`,
           name: 'Other User',
         },
       });
