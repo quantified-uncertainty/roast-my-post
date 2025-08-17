@@ -8,8 +8,8 @@ import { importDocumentService } from "@/application/services/documentImport";
 vi.mock("@/infrastructure/auth/auth-helpers");
 vi.mock("@/application/services/documentImport");
 
-const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
-const mockImportDocumentService = importDocumentService as jest.MockedFunction<typeof importDocumentService>;
+const mockAuthenticateRequest = vi.mocked(authenticateRequest);
+const mockImportDocumentService = vi.mocked(importDocumentService);
 
 describe("POST /api/import", () => {
   beforeEach(() => {

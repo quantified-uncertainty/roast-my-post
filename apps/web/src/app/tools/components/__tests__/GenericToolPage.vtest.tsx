@@ -17,7 +17,7 @@ vi.mock('@roast/ai', () => ({
   getToolReadme: vi.fn(() => '# Test Tool README')
 }));
 
-const mockRunToolWithAuth = runToolWithAuth as jest.MockedFunction<typeof runToolWithAuth>;
+const mockRunToolWithAuth = runToolWithAuth as vi.MockedFunction<typeof runToolWithAuth>;
 
 describe('GenericToolPage', () => {
   const defaultProps = {

@@ -6,7 +6,7 @@ import { runToolWithAuth } from '../../utils/runToolWithAuth';
 
 // Mock the runToolWithAuth function
 vi.mock('../../utils/runToolWithAuth');
-const mockRunToolWithAuth = runToolWithAuth as jest.MockedFunction<typeof runToolWithAuth>;
+const mockRunToolWithAuth = runToolWithAuth as vi.MockedFunction<typeof runToolWithAuth>;
 
 describe('useToolExecution', () => {
   beforeEach(() => {
