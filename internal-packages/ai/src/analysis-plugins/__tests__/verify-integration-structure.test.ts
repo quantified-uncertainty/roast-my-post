@@ -4,7 +4,7 @@
 
 import { LinkPlugin } from '../plugins/link-analysis';
 import { PluginManager } from '../PluginManager';
-import { assertAnalysisResult, measurePerformance } from './helpers/test-utils';
+import { assertAnalysisResult, measurePerformance } from './helpers/test-helpers';
 import { linkDocuments } from './fixtures/link-documents';
 
 describe('Integration Test Structure Verification', () => {
