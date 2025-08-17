@@ -34,10 +34,17 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: '@', replacement: path.resolve(__dirname, './src') },
+      // @roast/ai subpaths - must come before the main @roast/ai
       { find: '@roast/ai/text-location/line-based', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/text-location/line-based/index.ts') },
+      { find: '@roast/ai/tools/fuzzy-text-locator/core', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/tools/fuzzy-text-locator/core.ts') },
+      { find: '@roast/ai/analysis-plugins/utils/textHelpers', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/analysis-plugins/utils/textHelpers.ts') },
+      { find: '@roast/ai/analysis-plugins/types/plugin-types', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/analysis-plugins/types/plugin-types.ts') },
+      { find: '@roast/ai/server', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/server.ts') },
+      // Main package paths
       { find: '@roast/ai', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/index.ts') },
       { find: '@roast/db', replacement: path.resolve(__dirname, '../../internal-packages/db/src/index.ts') },
       { find: '@roast/domain', replacement: path.resolve(__dirname, '../../internal-packages/domain/src/index.ts') },
+      // Mock paths
       { find: 'server-only', replacement: path.resolve(__dirname, './src/__mocks__/server-only.js') },
       { find: 'next-auth', replacement: path.resolve(__dirname, './src/__mocks__/next-auth.js') },
       { find: 'next-auth/providers/resend', replacement: path.resolve(__dirname, './src/__mocks__/next-auth/providers/resend.js') },
