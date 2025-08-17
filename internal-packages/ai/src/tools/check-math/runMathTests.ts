@@ -3,7 +3,6 @@
  * Math test runner for single-statement verification
  */
 
-// Test the actual tool instead of legacy functions
 import checkMathTool from './index';
 import type { CheckMathInput, CheckMathOutput } from './index';
 

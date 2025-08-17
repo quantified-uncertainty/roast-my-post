@@ -163,10 +163,3 @@ export const estimateTokens = TokenCounter.estimateTokensSync.bind(TokenCounter)
 export const estimateConversationTokens = TokenCounter.estimateConversationTokens.bind(TokenCounter);
 export const checkTokenLimits = TokenCounter.checkTokenLimits.bind(TokenCounter);
 
-/**
- * Legacy compatibility - improved version of the old /4 estimation
- * Drop-in replacement for Math.floor(text.length / 4)
- */
-export function improvedTokenEstimate(text: string): number {
-  return TokenCounter.estimateTokensSync(text);
-}

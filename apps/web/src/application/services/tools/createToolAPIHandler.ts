@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Tool } from '@roast/ai';
 import { logger } from '@/infrastructure/logging/logger';
+import { logger as aiLogger } from '@roast/ai';
 import { auth } from '@/infrastructure/auth/auth';
 import { config } from '@roast/domain';
 
@@ -61,9 +62,10 @@ export function createToolAPIHandler(tool: Tool<any, any>) {
       }
       
       // Execute the tool with user context
+      // Use AI package's logger to match expected interface
       const result = await tool.execute(data, {
         userId,
-        logger,
+        logger: aiLogger,
       });
 
       return NextResponse.json({

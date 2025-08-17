@@ -10,7 +10,7 @@ import {
   useRouter,
   useSearchParams,
 } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldError } from "react-hook-form";
 import { z } from "zod";
 
 import { agentFormFields } from "@/components/agent/agentFormFields";
@@ -256,7 +256,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
                 name={field.name}
                 label={field.label}
                 required={field.required}
-                error={errors[field.name]}
+                error={errors[field.name] as FieldError | undefined}
               >
                 {field.type === "select" ? (
                   <select

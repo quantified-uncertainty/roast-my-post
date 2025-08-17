@@ -8,6 +8,17 @@ import { logger } from '@/infrastructure/logging/logger';
 jest.mock('@/infrastructure/auth/auth');
 jest.mock('@/infrastructure/logging/logger');
 
+// Mock the AI logger
+jest.mock('@roast/ai', () => ({
+  ...jest.requireActual('@roast/ai'),
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn()
+  }
+}));
+
 // Mock config module
 jest.mock('@roast/domain', () => ({
   config: {
@@ -108,6 +119,7 @@ describe('createToolAPIHandler', () => {
     });
 
     it('should use authenticated user ID when session exists', async () => {
+      const { logger: aiLogger } = require('@roast/ai');
       const mockAuth = auth as jest.Mock;
       mockAuth.mockResolvedValue({
         user: { id: 'user-123', email: 'test@example.com', role: 'USER' },
@@ -125,7 +137,7 @@ describe('createToolAPIHandler', () => {
         { test: 'data' },
         expect.objectContaining({
           userId: 'user-123',
-          logger
+          logger: aiLogger
         })
       );
     });

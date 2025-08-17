@@ -141,9 +141,6 @@ importers:
       mathjs:
         specifier: ^14.6.0
         version: 14.6.0
-      nanoid:
-        specifier: ^5.1.5
-        version: 5.1.5
       next:
         specifier: 15.3.2
         version: 15.3.2(@babel/core@7.28.0)(@playwright/test@1.54.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -422,9 +419,6 @@ importers:
       '@prisma/client':
         specifier: ^6.13.0
         version: 6.13.0(prisma@6.13.0(typescript@5.9.2))(typescript@5.9.2)
-      nanoid:
-        specifier: ^5.0.7
-        version: 5.1.5
     devDependencies:
       dotenv-cli:
         specifier: ^10.0.0
@@ -432,6 +426,9 @@ importers:
       prisma:
         specifier: ^6.13.0
         version: 6.13.0(typescript@5.9.2)
+      tsx:
+        specifier: ^4.7.0
+        version: 4.20.3
       typescript:
         specifier: ^5
         version: 5.9.2
@@ -441,9 +438,6 @@ importers:
       '@roast/db':
         specifier: workspace:*
         version: link:../db
-      nanoid:
-        specifier: ^5.0.7
-        version: 5.1.5
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -4548,11 +4542,6 @@ packages:
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
-  nanoid@5.1.5:
-    resolution: {integrity: sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw==}
-    engines: {node: ^18 || >=20}
     hasBin: true
 
   napi-postinstall@0.3.2:
@@ -11236,8 +11225,6 @@ snapshots:
       thenify-all: 1.6.0
 
   nanoid@3.3.11: {}
-
-  nanoid@5.1.5: {}
 
   napi-postinstall@0.3.2: {}
 

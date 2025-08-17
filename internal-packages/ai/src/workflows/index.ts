@@ -6,12 +6,8 @@
 export { analyzeDocument } from "./documentAnalysis/analyzeDocument";
 
 // Analysis workflows
-export { generateLinkAnalysis } from "./documentAnalysis/linkAnalysis";
-export { analyzeLinkDocument } from "./documentAnalysis/linkAnalysis/linkAnalysisWorkflow";
 export { generateComprehensiveAnalysis } from "./documentAnalysis/comprehensiveAnalysis";
 export { extractHighlightsFromAnalysis } from "./documentAnalysis/highlightExtraction";
-export { analyzeSpellingGrammar } from "./documentAnalysis/spellingGrammar";
-export { analyzeWithMultiEpistemicEval } from "./documentAnalysis/multiEpistemicEval";
 export { generateSelfCritique } from "./documentAnalysis/selfCritique";
 
 // Export types

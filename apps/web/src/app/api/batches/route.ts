@@ -3,7 +3,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { z } from "zod";
-import { nanoid } from "nanoid";
+import { generateId } from "@roast/db";
 import { calculateJobStats } from "@/shared/utils/batch-utils";
 
 // Schema for ephemeral agent creation
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       if (data.ephemeralAgent) {
         const ephemeralAgent = await tx.agent.create({
           data: {
-            id: `exp_agent_${nanoid(12)}`,
+            id: `exp_agent_${generateId(12)}`,
             submittedById: userId,
             // Will link to batch after batch creation
           },
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
       // Generate trackingId if not provided but is ephemeral
       const trackingId = data.isEphemeral 
-        ? (data.trackingId || `exp_${nanoid(8)}`)
+        ? (data.trackingId || `exp_${generateId(8)}`)
         : data.trackingId;
 
       // Create the batch
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
           for (const doc of data.ephemeralDocuments.inline) {
             const document = await tx.document.create({
               data: {
-                id: `exp_doc_${nanoid(12)}`,
+                id: `exp_doc_${generateId(12)}`,
                 publishedDate: new Date(),
                 submittedById: userId,
                 ephemeralBatchId: batch.id,

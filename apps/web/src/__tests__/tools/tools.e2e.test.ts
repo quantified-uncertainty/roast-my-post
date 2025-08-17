@@ -11,12 +11,12 @@ import {
   extractFactualClaimsTool,
   checkSpellingGrammarTool,
 } from '@roast/ai/server';
-import { logger } from '@/infrastructure/logging/logger';
+import { logger as aiLogger } from '@roast/ai';
 
 // Test context
 const testContext = {
   userId: 'test-user',
-  logger
+  logger: aiLogger
 };
 
 describe('Tools End-to-End Tests', () => {

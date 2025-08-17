@@ -12,10 +12,11 @@ import type { JobService } from './JobService';
 import type { Logger, JobProcessingResult, Document } from '../types';
 import { 
   analyzeDocument,
-  type TaskResult
+  type TaskResult,
+  Agent,
+  PluginType,
+  ANALYSIS_MODEL
 } from '@roast/ai';
-import { Agent } from '@roast/ai';
-import { ANALYSIS_MODEL } from '@roast/ai';
 import {
   calculateApiCostInDollars,
   mapModelToCostModel,
@@ -218,6 +219,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
       providesGrades: agentVersion.providesGrades || false,
       extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
+      pluginIds: (agentVersion.pluginIds || []) as PluginType[], // Cast to PluginType[] since DB stores as strings
     };
 
     return { documentForAnalysis, agent, documentVersion, agentVersion };
@@ -373,7 +375,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
           header: comment.header || null,
           level: comment.level || null,
           source: comment.source || null,
-          metadata: comment.metadata as any || null,
+          metadata: comment.metadata || null,
           evaluationVersionId,
           highlightId: createdHighlight.id,
         },

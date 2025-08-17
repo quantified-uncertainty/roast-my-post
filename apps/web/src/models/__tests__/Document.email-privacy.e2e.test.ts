@@ -1,6 +1,6 @@
 import { prisma } from '@roast/db';
 import { DocumentModel } from '../Document';
-import { nanoid } from 'nanoid';
+import { generateId } from '@roast/db';
 
 describe('DocumentModel Integration Tests - Email Privacy', () => {
   let testUser: any;
@@ -16,7 +16,7 @@ describe('DocumentModel Integration Tests - Email Privacy', () => {
     });
 
     // Create test document
-    const docId = nanoid();
+    const docId = generateId();
     testDocument = await prisma.document.create({
       data: {
         id: docId,

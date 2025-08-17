@@ -2,13 +2,12 @@ import { logger } from "../../utils/logger";
 import type { Document } from "../../types/documents";
 import type { Agent } from "../../types/agentSchema";
 import type { Comment } from "../../shared/types";
-import { extractHighlightsFromAnalysis } from "./highlightExtraction";
-import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
-import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
-import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
-import { analyzeSpellingGrammar } from "./spellingGrammar";
-import { generateSelfCritique } from "./selfCritique";
+import { analyzeDocumentUnified } from "./unified";
+import { PluginType } from "../../analysis-plugins/types/plugin-types";
 import type { TaskResult } from "./shared/types";
+import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
+import { extractHighlightsFromAnalysis } from "./highlightExtraction";
+import { generateSelfCritique } from "./selfCritique";
 
 export async function analyzeDocument(
   document: Document,
@@ -26,98 +25,77 @@ export async function analyzeDocument(
   tasks: TaskResult[];
   jobLogString?: string; // Include job log string for Job.logs field
 }> {
-  // Choose workflow based on agent's extended capability
-  if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
-    logger.info(`Using link analysis workflow for agent ${agentInfo.name}`);
-    return await analyzeLinkDocument(document, agentInfo, targetHighlights);
-  }
-  
-  // Use dedicated spelling/grammar workflow for spelling-grammar agents
-  if (agentInfo.extendedCapabilityId === "spelling-grammar") {
-    logger.info(`Using dedicated spelling/grammar workflow for agent ${agentInfo.name}`);
-    const result = await analyzeSpellingGrammar(document, agentInfo, {
-      targetHighlights,
-      jobId
-    });
-    return { ...result, selfCritique: undefined } as any;
-  }
-  
-  if (agentInfo.extendedCapabilityId === "multi-epistemic-eval") {
-    logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
-    const result = await analyzeWithMultiEpistemicEval(document, agentInfo, {
-      targetHighlights,
-      jobId
-    });
-    return { ...result, selfCritique: undefined } as any;
-  }
-
-  logger.info(
-    `Using comprehensive analysis workflow for agent ${agentInfo.name}`
+  // Validate that all plugin IDs are valid PluginType entries
+  const validPlugins = (agentInfo.pluginIds || []).filter((p): p is PluginType =>
+    Object.values(PluginType).includes(p as PluginType)
   );
-
-  const tasks: TaskResult[] = [];
-
-  try {
-    // Step 1: Generate comprehensive analysis (includes everything)
-    logger.info(`Starting comprehensive analysis generation...`);
-    const analysisResult = await generateComprehensiveAnalysis(
+  
+  // Log warning if any invalid plugins were filtered out
+  const invalidPlugins = (agentInfo.pluginIds || []).filter(p => !validPlugins.includes(p));
+  if (invalidPlugins.length > 0) {
+    logger.warn(`Filtered out invalid plugin IDs for agent ${agentInfo.name}: ${invalidPlugins.join(', ')}`);
+  }
+  
+  // Decision point: Use plugins if any are configured, otherwise use LLM workflow
+  if (validPlugins.length > 0) {
+    // Sanitize plugin list for safe logging (limit length to prevent log injection)
+    const pluginListForLog = validPlugins
+      .map(String)
+      .join(', ')
+      .slice(0, 500);
+    logger.info(`Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${pluginListForLog}`);
+    
+    return await analyzeDocumentUnified(document, agentInfo, {
+      targetHighlights,
+      jobId,
+      plugins: {
+        include: validPlugins
+      }
+    });
+  } else {
+    // No plugins configured - use traditional LLM-based comprehensive analysis
+    logger.info(`Using LLM-based workflow for agent ${agentInfo.name} (no plugins configured)`);
+    
+    const tasks: TaskResult[] = [];
+    
+    // Step 1: Generate comprehensive analysis using the agent's primaryInstructions
+    const comprehensiveAnalysisResult = await generateComprehensiveAnalysis(
       document,
       agentInfo,
       targetWordCount,
       targetHighlights
     );
-    logger.info(
-      `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.highlightInsights.length}`
-    );
-    tasks.push(analysisResult.task);
-
-    // Step 2: Extract and format highlights from the analysis
-    logger.info(`Extracting highlights from analysis...`);
-    const highlightResult = await extractHighlightsFromAnalysis(
+    tasks.push(comprehensiveAnalysisResult.task);
+    
+    // Step 2: Extract highlights from the analysis
+    const highlightExtractionResult = await extractHighlightsFromAnalysis(
       document,
       agentInfo,
-      analysisResult.outputs,
+      comprehensiveAnalysisResult.outputs,
       targetHighlights
     );
-    logger.info(
-      `Extracted ${highlightResult.outputs.highlights.length} highlights`
-    );
-    tasks.push(highlightResult.task);
-
-    // Step 3: Generate self-critique if instructions are provided and randomly selected (10% chance)
+    tasks.push(highlightExtractionResult.task);
+    
+    // Step 3: Generate self-critique if configured
     let selfCritique: string | undefined;
     if (agentInfo.selfCritiqueInstructions) {
-      logger.info(`Generating self-critique...`);
-      const critiqueResult = await generateSelfCritique(
-        {
-          summary: analysisResult.outputs.summary,
-          analysis: analysisResult.outputs.analysis,
-          grade: analysisResult.outputs.grade,
-          highlights: highlightResult.outputs.highlights.map((c) => {
-            return {
-              title: c.description || c.highlight?.quotedText?.substring(0, 50) || "Highlight",
-              text: c.description || "No description",
-            };
-          }),
-        },
+      const selfCritiqueResult = await generateSelfCritique(
+        comprehensiveAnalysisResult.outputs,
         agentInfo
       );
-      logger.info(`Generated self-critique`);
-      selfCritique = critiqueResult.outputs.selfCritique;
-      tasks.push(critiqueResult.task);
+      selfCritique = selfCritiqueResult.outputs.selfCritique;
+      tasks.push(selfCritiqueResult.task);
     }
-
+    
     return {
-      thinking: "", // Keep thinking empty when using comprehensive analysis
-      analysis: analysisResult.outputs.analysis,
-      summary: analysisResult.outputs.summary,
-      grade: analysisResult.outputs.grade,
+      thinking: "", // LLM workflow doesn't provide thinking
+      analysis: comprehensiveAnalysisResult.outputs.analysis,
+      summary: comprehensiveAnalysisResult.outputs.summary,
+      grade: comprehensiveAnalysisResult.outputs.grade,
       selfCritique,
-      highlights: highlightResult.outputs.highlights,
+      highlights: highlightExtractionResult.outputs.highlights,
       tasks,
+      jobLogString: undefined, // LLM workflow doesn't generate job log strings
     };
-  } catch (error) {
-    logger.error(`Error in comprehensive analysis workflow:`, { error: error instanceof Error ? error.message : String(error) });
-    throw error;
   }
 }
