@@ -34,10 +34,16 @@ import {
 import { ChunkRouter } from "./utils/ChunkRouter";
 import { createChunksWithTool } from "./utils/createChunksWithTool";
 
+// Import core refactored components
+import { PluginRegistry, PluginRouter, PluginExecutor, IsolatedPluginExecutor, PluginFactory } from "./core";
+// Import plugin ID constants
+import { PLUGIN_IDS, type PluginId } from "./constants/plugin-ids";
+
 export interface PluginManagerConfig {
   sessionManager?: HeliconeSessionManager;
   jobId?: string; // For logging integration
   pluginSelection?: PluginSelection; // Optional plugin selection configuration
+  useIsolation?: boolean; // Enable plugin state isolation
 }
 
 export interface SimpleDocumentAnalysisResult {
@@ -83,13 +89,64 @@ export class PluginManager {
   private startTime: number = 0;
   private pluginLogger: PluginLogger;
   private pluginSelection?: PluginSelection;
-  private allPlugins?: Map<PluginType, SimpleAnalysisPlugin>;
+  
+  // New refactored components
+  private registry: PluginRegistry;
+  private router: PluginRouter;
+  private executor: PluginExecutor;
+  private useIsolation: boolean;
+  private isolatedExecutor?: IsolatedPluginExecutor;
+  private factory?: PluginFactory;
 
   constructor(config: PluginManagerConfig = {}) {
     // Use provided session manager, or fall back to global if available
     this.sessionManager = config.sessionManager || getGlobalSessionManager();
     this.pluginLogger = new PluginLogger(config.jobId);
     this.pluginSelection = config.pluginSelection;
+    this.useIsolation = config.useIsolation || false;
+    
+    // Initialize refactored components
+    this.registry = new PluginRegistry();
+    this.router = new PluginRouter();
+    this.executor = new PluginExecutor(this.pluginLogger, {
+      maxRetries: 2,
+      timeoutMs: 300000,
+      retryDelayMs: 1000,
+    });
+    
+    // Initialize isolation components if requested
+    if (this.useIsolation) {
+      this.factory = new PluginFactory();
+      this.isolatedExecutor = new IsolatedPluginExecutor(this.factory);
+      this.registerPluginsInFactory();
+    }
+    
+    // Register default plugins in the registry
+    this.registerDefaultPlugins();
+  }
+  
+  /**
+   * Register default plugins in the registry
+   */
+  private registerDefaultPlugins(): void {
+    this.registry.register(PluginType.MATH, MathPlugin);
+    this.registry.register(PluginType.SPELLING, SpellingPlugin);
+    this.registry.register(PluginType.FORECAST, ForecastPlugin);
+    this.registry.register(PluginType.LINK_ANALYSIS, LinkPlugin);
+    this.registry.register(PluginType.FACT_CHECK, FactCheckPlugin);
+  }
+  
+  /**
+   * Register plugins in the isolation factory
+   */
+  private registerPluginsInFactory(): void {
+    if (!this.factory) return;
+
+    this.factory.register(PLUGIN_IDS.MATH, MathPlugin);
+    this.factory.register(PLUGIN_IDS.SPELLING, SpellingPlugin);
+    this.factory.register(PLUGIN_IDS.FORECAST, ForecastPlugin);
+    this.factory.register(PLUGIN_IDS.LINK_ANALYSIS, LinkPlugin);
+    this.factory.register(PLUGIN_IDS.FACT_CHECK, FactCheckPlugin);
   }
 
   /**
@@ -185,85 +242,32 @@ export class PluginManager {
         context: { totalChunks: chunks.length },
       });
 
-      // Separate plugins into those that always run and those that need routing
-      const runOnAllChunksPlugins: SimpleAnalysisPlugin[] = [];
-      const routedPlugins: SimpleAnalysisPlugin[] = [];
-
-      for (const plugin of plugins) {
-        // Check if the plugin class has the runOnAllChunks static property
-        if (plugin.runOnAllChunks === true) {
-          runOnAllChunksPlugins.push(plugin);
-          this.pluginLogger.log({
-            level: "info",
-            plugin: "PluginManager",
-            phase: "routing",
-            message: `Plugin ${plugin.name()} will run on all chunks (runOnAllChunks=true)`,
-          });
-        } else {
-          routedPlugins.push(plugin);
-        }
-      }
-
-      // Route chunks to appropriate plugins (only for non-runOnAllChunks plugins)
+      // Use the new router component for cleaner routing logic
       this.pluginLogger.log({
         level: "info",
         plugin: "PluginManager",
         phase: "routing",
-        message: `Starting chunk routing for ${routedPlugins.length} plugins (${runOnAllChunksPlugins.length} plugins will run on all chunks)`,
+        message: `Starting chunk routing for ${plugins.length} plugins`,
       });
 
-      let totalCost = 0;
-      const routingResult =
-        routedPlugins.length > 0
-          ? await new ChunkRouter(routedPlugins).routeChunks(chunks)
-          : { routingDecisions: new Map<string, string[]>(), totalCost: 0 };
-      totalCost += routingResult.totalCost;
+      const routingResult = await this.router.route(plugins, chunks);
+      let totalCost = routingResult.totalCost;
 
-      // Create plugin-specific chunk lists based on routing decisions
+      // Convert routing decisions to the existing format for backward compatibility
       const chunksPerPlugin = new Map<string, typeof chunks>();
-
-      // Initialize empty arrays for all plugins
-      for (const plugin of plugins) {
-        chunksPerPlugin.set(plugin.name(), []);
-      }
-
-      // Assign all chunks to runOnAllChunks plugins
-      for (const plugin of runOnAllChunksPlugins) {
-        chunksPerPlugin.set(plugin.name(), [...chunks]);
-      }
-
-      // Populate chunk lists based on routing decisions for routed plugins
-      for (const [chunkId, pluginNames] of routingResult.routingDecisions) {
-        const chunk = chunks.find((c) => c.id === chunkId);
-        if (chunk) {
-          for (const pluginName of pluginNames) {
-            const pluginChunks = chunksPerPlugin.get(pluginName);
-            if (pluginChunks) {
-              pluginChunks.push(chunk);
-            }
-          }
-        } else {
-          // Log warning if chunk is not found
-          this.pluginLogger.log({
-            level: "warn",
-            plugin: "PluginManager",
-            phase: "routing",
-            message: `Chunk with ID ${chunkId} not found in chunks array`,
-          });
-        }
-      }
-
-      // Log routing results
-      for (const [pluginName, assignedChunks] of chunksPerPlugin) {
+      for (const [pluginName, decision] of routingResult.decisions) {
+        chunksPerPlugin.set(pluginName, decision.chunks);
+        
+        // Log routing result
         this.pluginLogger.log({
           level: "info",
-          plugin: "PluginManager",
+          plugin: "PluginManager", 
           phase: "routing",
-          message: `Plugin ${pluginName} assigned ${assignedChunks.length} chunks`,
+          message: `Plugin ${pluginName} assigned ${decision.chunks.length} chunks (${decision.reason})`,
           context: {
             pluginName,
-            chunkCount: assignedChunks.length,
-            chunkIds: assignedChunks.map((c) => c.id),
+            chunkCount: decision.chunks.length,
+            chunkIds: decision.chunks.map((c) => c.id),
           },
         });
       }
