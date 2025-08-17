@@ -27,4 +27,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/test',
 }));
 
+// Load Vitest mocks
+import './__mocks__/vitest-setup';
+
 // Add any other global setup needed for Vitest
