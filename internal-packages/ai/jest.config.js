@@ -10,7 +10,14 @@ module.exports = {
     '**/*.e2e.test.ts'
   ],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', { 
+      useESM: true,
+      isolatedModules: true,
+      tsconfig: {
+        allowSyntheticDefaultImports: true,
+        esModuleInterop: true
+      }
+    }],
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   collectCoverageFrom: [
@@ -22,5 +29,12 @@ module.exports = {
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**'
   ],
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts']
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  // Handle ES modules properly
+  transformIgnorePatterns: [
+    'node_modules/(?!(@roast)/)'
+  ],
+  extensionsToTreatAsEsm: ['.ts'],
+  // Detect what's keeping the process alive
+  detectOpenHandles: true,
 };

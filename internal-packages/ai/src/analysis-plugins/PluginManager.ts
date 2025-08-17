@@ -5,28 +5,34 @@
  * For legacy plugin support, see BasePlugin.ts which maintains backward compatibility.
  */
 
+import {
+  getGlobalSessionManager,
+  HeliconeSessionManager,
+} from "../helicone/simpleSessionManager";
+import { logger } from "../shared/logger";
 // Document and Comment types are passed as parameters to avoid circular dependencies
 // LLMInteraction type removed - was unused
 import type { Comment } from "../shared/types";
-import { HeliconeSessionManager, getGlobalSessionManager } from "../helicone/simpleSessionManager";
-import { logger } from "../shared/logger";
 import {
   type JobLogSummary,
   PluginLogger,
 } from "./PluginLogger";
+import { FactCheckPlugin } from "./plugins/fact-check";
+import { ForecastPlugin } from "./plugins/forecast";
+import { LinkPlugin } from "./plugins/link-analysis";
+// Import all plugins
+import { MathPlugin } from "./plugins/math";
+import { SpellingPlugin } from "./plugins/spelling";
 import {
   AnalysisResult,
   SimpleAnalysisPlugin,
 } from "./types";
-import { PluginType, type PluginSelection } from "./types/plugin-types";
-import { createChunksWithTool } from "./utils/createChunksWithTool";
+import {
+  type PluginSelection,
+  PluginType,
+} from "./types/plugin-types";
 import { ChunkRouter } from "./utils/ChunkRouter";
-
-// Import all plugins
-import { MathPlugin } from "./plugins/math";
-import { SpellingPlugin } from "./plugins/spelling";
-import { FactCheckPlugin } from "./plugins/fact-check";
-import { ForecastPlugin } from "./plugins/forecast";
+import { createChunksWithTool } from "./utils/createChunksWithTool";
 
 export interface PluginManagerConfig {
   sessionManager?: HeliconeSessionManager;
@@ -99,7 +105,7 @@ export class PluginManager {
     // Wrap in session tracking if available
     const runAnalysis = async () => {
       if (this.sessionManager) {
-        return this.sessionManager.withPath('/plugins', undefined, async () => {
+        return this.sessionManager.withPath("/plugins", undefined, async () => {
           return this._runPluginAnalysis(text, plugins);
         });
       } else {
@@ -114,7 +120,7 @@ export class PluginManager {
     text: string,
     plugins: SimpleAnalysisPlugin[]
   ): Promise<SimpleDocumentAnalysisResult> {
-      try {
+    try {
       // Log chunking phase
       this.pluginLogger.log({
         level: "info",
@@ -179,27 +185,56 @@ export class PluginManager {
         context: { totalChunks: chunks.length },
       });
 
-      // Route chunks to appropriate plugins
+      // Separate plugins into those that always run and those that need routing
+      const runOnAllChunksPlugins: SimpleAnalysisPlugin[] = [];
+      const routedPlugins: SimpleAnalysisPlugin[] = [];
+
+      for (const plugin of plugins) {
+        // Check if the plugin class has the runOnAllChunks static property
+        if (plugin.runOnAllChunks === true) {
+          runOnAllChunksPlugins.push(plugin);
+          this.pluginLogger.log({
+            level: "info",
+            plugin: "PluginManager",
+            phase: "routing",
+            message: `Plugin ${plugin.name()} will run on all chunks (runOnAllChunks=true)`,
+          });
+        } else {
+          routedPlugins.push(plugin);
+        }
+      }
+
+      // Route chunks to appropriate plugins (only for non-runOnAllChunks plugins)
       this.pluginLogger.log({
         level: "info",
         plugin: "PluginManager",
         phase: "routing",
-        message: `Starting chunk routing to determine which plugins should process each chunk`,
+        message: `Starting chunk routing for ${routedPlugins.length} plugins (${runOnAllChunksPlugins.length} plugins will run on all chunks)`,
       });
 
-      const router = new ChunkRouter(plugins);
-      const routingResult = await router.routeChunks(chunks);
-      let totalCost = routingResult.totalCost;
+      let totalCost = 0;
+      const routingResult =
+        routedPlugins.length > 0
+          ? await new ChunkRouter(routedPlugins).routeChunks(chunks)
+          : { routingDecisions: new Map<string, string[]>(), totalCost: 0 };
+      totalCost += routingResult.totalCost;
 
       // Create plugin-specific chunk lists based on routing decisions
       const chunksPerPlugin = new Map<string, typeof chunks>();
+
+      // Initialize empty arrays for all plugins
       for (const plugin of plugins) {
         chunksPerPlugin.set(plugin.name(), []);
       }
 
-      // Populate chunk lists based on routing decisions
+      // Assign all chunks to runOnAllChunks plugins
+      for (const plugin of runOnAllChunksPlugins) {
+        chunksPerPlugin.set(plugin.name(), [...chunks]);
+      }
+
+      // Populate chunk lists based on routing decisions for routed plugins
       for (const [chunkId, pluginNames] of routingResult.routingDecisions) {
-        const chunk = chunks.find(c => c.id === chunkId);
+        const chunk = chunks.find((c) => c.id === chunkId);
         if (chunk) {
           for (const pluginName of pluginNames) {
             const pluginChunks = chunksPerPlugin.get(pluginName);
@@ -225,10 +260,10 @@ export class PluginManager {
           plugin: "PluginManager",
           phase: "routing",
           message: `Plugin ${pluginName} assigned ${assignedChunks.length} chunks`,
-          context: { 
-            pluginName, 
+          context: {
+            pluginName,
             chunkCount: assignedChunks.length,
-            chunkIds: assignedChunks.map(c => c.id)
+            chunkIds: assignedChunks.map((c) => c.id),
           },
         });
       }
@@ -272,9 +307,16 @@ export class PluginManager {
 
             // Get the chunks assigned to this plugin
             const assignedChunks = chunksPerPlugin.get(pluginName) || [];
-            
-            // Skip plugin if no chunks were routed to it
-            if (assignedChunks.length === 0) {
+
+            // Check if this is an always-run plugin
+            const isrunOnAllChunks = plugin.runOnAllChunks === true;
+
+            logger.info(
+              `Plugin ${pluginName}: chunks=${assignedChunks.length}, runOnAllChunks=${isrunOnAllChunks}`
+            );
+
+            // Skip plugin if no chunks were routed to it (unless it's an always-run plugin)
+            if (assignedChunks.length === 0 && !isrunOnAllChunks) {
               pluginLoggerInstance.startPhase(
                 "skipped",
                 `Skipping ${pluginName} - no chunks routed to this plugin`
@@ -286,9 +328,9 @@ export class PluginManager {
                   summary: "No relevant content found for this plugin",
                   analysis: "",
                   comments: [],
-                  cost: 0
+                  cost: 0,
                 },
-                success: true
+                success: true,
               };
             }
 
@@ -301,8 +343,10 @@ export class PluginManager {
 
             // Add timeout to prevent hanging
             const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
+            let timeoutId: NodeJS.Timeout;
+            
             const timeoutPromise = new Promise<never>((_, reject) => {
-              setTimeout(
+              timeoutId = setTimeout(
                 () =>
                   reject(
                     new Error(
@@ -317,9 +361,13 @@ export class PluginManager {
             const executePlugin = async () => {
               if (this.sessionManager) {
                 // Use withPath instead of trackPlugin since we're already inside /plugins
-                return this.sessionManager.withPath(`/${pluginName}`, { plugin: pluginName }, async () => {
-                  return plugin.analyze(assignedChunks, text);
-                });
+                return this.sessionManager.withPath(
+                  `/${pluginName}`,
+                  { plugin: pluginName },
+                  async () => {
+                    return plugin.analyze(assignedChunks, text);
+                  }
+                );
               } else {
                 return plugin.analyze(assignedChunks, text);
               }
@@ -328,7 +376,10 @@ export class PluginManager {
             const result = await Promise.race([
               executePlugin(),
               timeoutPromise,
-            ]);
+            ]).finally(() => {
+              // Clear timeout when either promise resolves/rejects
+              clearTimeout(timeoutId);
+            });
 
             const duration = Date.now() - startTime;
 
@@ -458,10 +509,10 @@ export class PluginManager {
         logSummary,
         jobLogString,
       };
-      } finally {
-        // Cleanup if needed
-      }
+    } finally {
+      // Cleanup if needed
     }
+  }
 
   /**
    * High-level document analysis using all available plugins
@@ -548,7 +599,7 @@ export class PluginManager {
         jobLogString: pluginResults.jobLogString,
       };
     } catch (error) {
-      logger.error("Document analysis failed:", error);
+      logger.error("Document analysis failed:", error instanceof Error ? error : new Error(String(error)));
 
       // Return a graceful fallback result instead of throwing
       const errorMessage =
@@ -584,63 +635,70 @@ export class PluginManager {
   }
 
   /**
-   * Initialize all plugins once
+   * Create fresh plugin instances for each analysis to avoid state pollution
    */
-  private initializeAllPlugins(): Map<PluginType, SimpleAnalysisPlugin> {
-    if (this.allPlugins) {
-      return this.allPlugins;
-    }
-    
-    // Create all plugin instances once
-    this.allPlugins = new Map<PluginType, SimpleAnalysisPlugin>([
+  private createPluginInstances(): Map<PluginType, SimpleAnalysisPlugin> {
+    // Create new plugin instances for each analysis
+    const plugins = new Map<PluginType, SimpleAnalysisPlugin>([
       [PluginType.MATH, new MathPlugin()],
       [PluginType.SPELLING, new SpellingPlugin()],
       [PluginType.FACT_CHECK, new FactCheckPlugin()],
       [PluginType.FORECAST, new ForecastPlugin()],
+      [PluginType.LINK_ANALYSIS, new LinkPlugin()],
     ]);
-    
-    logger.info(`Initialized all ${this.allPlugins.size} plugins`);
-    return this.allPlugins;
+
+    logger.info(`Created fresh instances of ${plugins.size} plugins`);
+    return plugins;
   }
-  
+
   /**
    * Get selected plugins based on configuration
    */
   private async getSelectedPlugins(): Promise<SimpleAnalysisPlugin[]> {
-    const allPlugins = this.initializeAllPlugins();
-    
+    const allPlugins = this.createPluginInstances();
+
     // Default plugins if no selection specified
     const defaultPluginTypes = [
       PluginType.MATH,
       PluginType.FACT_CHECK,
       PluginType.FORECAST,
     ];
-    
+
     let selectedTypes: PluginType[];
-    
+
     if (this.pluginSelection?.include) {
       // Use explicitly included plugins
       selectedTypes = this.pluginSelection.include;
     } else if (this.pluginSelection?.exclude) {
       // Use defaults minus excluded plugins
       selectedTypes = defaultPluginTypes.filter(
-        type => !this.pluginSelection!.exclude!.includes(type)
+        (type) => !this.pluginSelection!.exclude!.includes(type)
       );
     } else {
       // Use all defaults
       selectedTypes = defaultPluginTypes;
     }
-    
+
     // Get the selected plugin instances
     const selectedPlugins: SimpleAnalysisPlugin[] = [];
+    const selectedTypeNames: string[] = [];
+
+    // First, add explicitly selected plugins
     for (const type of selectedTypes) {
       const plugin = allPlugins.get(type);
       if (plugin) {
         selectedPlugins.push(plugin);
+        selectedTypeNames.push(type);
       }
     }
-    
-    logger.info(`Selected ${selectedPlugins.length} plugins: ${selectedTypes.join(', ')}`);
+
+    // Note: We don't automatically add runOnAllChunks plugins anymore
+    // They must be explicitly included in the selection
+    // runOnAllChunks only means they bypass routing, not selection
+
+    logger.info(
+      `Selected ${selectedPlugins.length} plugins: ${selectedTypeNames.join(", ")}`
+    );
     return selectedPlugins;
   }
 
@@ -651,12 +709,14 @@ export class PluginManager {
     if (highlights.length <= 1) return highlights;
 
     // Filter out comments without highlights first
-    const withHighlights = highlights.filter(h => h.highlight && h.highlight.startOffset !== undefined);
+    const withHighlights = highlights.filter(
+      (h) => h.highlight && h.highlight.startOffset !== undefined
+    );
     if (withHighlights.length <= 1) return withHighlights;
 
     // Sort by start offset
     const sorted = [...withHighlights].sort(
-      (a, b) => (a.highlight!.startOffset!) - (b.highlight!.startOffset!)
+      (a, b) => a.highlight!.startOffset! - b.highlight!.startOffset!
     );
 
     const unique: Comment[] = [];

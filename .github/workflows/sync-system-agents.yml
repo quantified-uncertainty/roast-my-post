@@ -1,0 +1,19 @@
+name: Sync System Agents
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'internal-packages/db/system-agents/**'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync System Agents
+    uses: ./.github/workflows/agent-sync-shared.yml
+    with:
+      environment: 'Production'
+      backup_prefix: 'auto-agent-sync'
+      dry_run: false
+    secrets: inherit

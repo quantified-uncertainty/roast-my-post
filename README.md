@@ -82,10 +82,12 @@ HELICONE_CACHE_BUCKET_MAX_SIZE=1000  # Max cache entries per bucket
 
 Prompt caching can significantly reduce API costs for repeated similar requests.
 
-4. Set up the database:
+4. Set up the database and system agents:
 ```bash
-pnpm run db:push
+pnpm run db:setup
 ```
+
+This will push the database schema and synchronize system-managed agents (spelling/grammar checker, math checker, fact checker).
 
 5. Start the development server:
 ```bash
@@ -209,7 +211,7 @@ The API now follows a clean, intuitive structure that matches web URLs:
 - `GET /api/docs/{docId}/evals/{agentId}` - Get specific evaluation with full details (public)
 - `POST /api/docs/{docId}/evals/{agentId}` - Create new evaluation (requires auth + ownership)
 - `POST /api/docs/{docId}/evals/{agentId}/rerun` - Re-run existing evaluation (requires auth + ownership)
-- `GET /api/docs/{docId}/evaluations` - List all evaluations for document (public)
+- `GET /api/documents/{docId}/evaluations` - List all evaluations for document (public)
 
 **Security Features:**
 - **Authentication**: Required for all write operations (PUT, POST)

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { logger } from "@/infrastructure/logging/logger";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldError } from "react-hook-form";
 import { z } from "zod";
 import * as yaml from "js-yaml";
 
@@ -339,7 +339,7 @@ export default function NewAgentPage() {
                   name={field.name}
                   label={field.label}
                   required={field.required}
-                  error={errors[field.name]}
+                  error={errors[field.name] as FieldError | undefined}
                 >
                   {field.type === "select" ? (
                     <select

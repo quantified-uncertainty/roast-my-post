@@ -1,4 +1,19 @@
 import type { Comment, DocumentLocation, ToolChainResult, CommentMetadata } from '../../shared/types';
+import type { 
+  MathExtractResult, 
+  ForecastExtractResult, 
+  ForecastResult, 
+  FactExtractResult, 
+  FactVerifyResult 
+} from "./types";
+
+// Helper to safely access properties on unknown result objects
+function getResultProperty<T>(result: unknown, prop: string): T | undefined {
+  if (result && typeof result === 'object' && prop in result) {
+    return (result as Record<string, unknown>)[prop] as T;
+  }
+  return undefined;
+}
 
 export interface CommentBuildOptions {
   // Required
@@ -66,8 +81,8 @@ export class CommentBuilder {
         endOffset: options.location.endOffset ?? 0,
         quotedText: options.location.quotedText ?? '',
         isValid: true,
-        prefix: (options.location as any).prefix,
-        error: (options.location as any).error,
+        prefix: 'prefix' in options.location ? (options.location as any).prefix : undefined,
+        error: 'error' in options.location ? (options.location as any).error : undefined,
       },
       
       // Complete metadata (stored as JSON in DB)
@@ -95,8 +110,8 @@ export class CommentBuilder {
         const conventionResult = toolChain.find(t => t.toolName === 'detectLanguageConvention')?.result;
         return {
           ...baseFields,
-          errorType: spellResult?.type,
-          languageConvention: conventionResult?.convention
+          errorType: getResultProperty<string>(spellResult, 'type'),
+          languageConvention: getResultProperty<string>(conventionResult, 'convention')
         };
         
       case 'math':
@@ -105,8 +120,8 @@ export class CommentBuilder {
         return {
           ...baseFields,
           verificationMethod: hybridResult ? 'hybrid' : 'computational',
-          errorType: hybridResult?.llmResult?.errorType,
-          complexityScore: mathExtract?.complexityScore
+          errorType: getResultProperty<string>(getResultProperty<Record<string, unknown>>(hybridResult, 'llmResult'), 'errorType'),
+          complexityScore: getResultProperty<number>(mathExtract, 'complexityScore')
         };
         
       case 'forecast':
@@ -127,7 +142,7 @@ export class CommentBuilder {
           ...baseFields,
           verdict: factVerify?.verdict,
           wasResearched: !!factResearch,
-          hasSources: !!(factVerify?.sources?.length || factResearch?.sources?.length)
+          hasSources: !!(getResultProperty<unknown[]>(factVerify, 'sources')?.length || getResultProperty<unknown[]>(factResearch, 'sources')?.length)
         };
         
       default:
@@ -139,16 +154,18 @@ export class CommentBuilder {
   private static extractConfidence(toolChain: ToolChainResult[], plugin: string): number {
     switch (plugin) {
       case 'spelling':
-        return toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result?.confidence || 100;
+        const result = toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result;
+        return getResultProperty<number>(result, 'confidence') || 100;
       case 'math':
         const hybridMathResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
         // High confidence if MathJS verified, medium if LLM only
-        return hybridMathResult?.verifiedBy === 'mathjs' ? 95 : 80;
+        return getResultProperty<string>(hybridMathResult, 'verifiedBy') === 'mathjs' ? 95 : 80;
       case 'forecast':
         return 70; // Medium confidence for forecast analysis
       case 'fact-check':
         const verify = toolChain.find(t => t.toolName === 'verifyClaimWithLLM')?.result;
-        return verify?.confidence === 'high' ? 90 : verify?.confidence === 'medium' ? 70 : 50;
+        const confidence = getResultProperty<string>(verify, 'confidence');
+        return confidence === 'high' ? 90 : confidence === 'medium' ? 70 : 50;
       default:
         return 50;
     }
@@ -157,11 +174,12 @@ export class CommentBuilder {
   private static extractSeverity(toolChain: ToolChainResult[], plugin: string): 'critical' | 'high' | 'medium' | 'low' {
     switch (plugin) {
       case 'spelling':
-        const spellingImportance = toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result?.importance || 0;
+        const spellResult = toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result;
+        const spellingImportance = getResultProperty<number>(spellResult, 'importance') || 0;
         return spellingImportance >= 80 ? 'high' : spellingImportance >= 50 ? 'medium' : 'low';
       case 'math':
         const hybridSeverityResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
-        const mathSeverity = hybridSeverityResult?.llmResult?.severity;
+        const mathSeverity = getResultProperty<string>(getResultProperty<Record<string, unknown>>(hybridSeverityResult, 'llmResult'), 'severity');
         return mathSeverity === 'critical' ? 'critical' : 
                mathSeverity === 'major' ? 'high' : 
                mathSeverity === 'minor' ? 'medium' : 'low';
@@ -169,8 +187,10 @@ export class CommentBuilder {
         const quality = this.calculateForecastQuality(toolChain.find(t => t.toolName === 'extractForecastingClaims')?.result);
         return quality < 3 ? 'high' : quality < 5 ? 'medium' : 'low';
       case 'fact-check':
-        const verdict = toolChain.find(t => t.toolName === 'verifyClaimWithLLM')?.result?.verdict;
-        const factImportance = toolChain.find(t => t.toolName === 'extractCheckableClaims')?.result?.importanceScore || 0;
+        const verifyResult = toolChain.find(t => t.toolName === 'verifyClaimWithLLM')?.result;
+        const verdict = getResultProperty<string>(verifyResult, 'verdict');
+        const extractResult = toolChain.find(t => t.toolName === 'extractCheckableClaims')?.result;
+        const factImportance = getResultProperty<number>(extractResult, 'importanceScore') || 0;
         return verdict === 'false' && factImportance >= 8 ? 'critical' :
                verdict === 'false' ? 'high' :
                verdict === 'partially-true' ? 'medium' : 'low';
@@ -183,17 +203,21 @@ export class CommentBuilder {
     switch (plugin) {
       case 'spelling':
         const spell = toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result;
-        return spell?.conciseCorrection || `${spell?.text} → ${spell?.correction}`;
+        return getResultProperty<string>(spell, 'conciseCorrection') || 
+               `${getResultProperty<string>(spell, 'text')} → ${getResultProperty<string>(spell, 'correction')}`;
       case 'math':
         const mathExtractResult = toolChain.find(t => t.toolName === 'extractMath')?.result;
         const hybridVerifyResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
-        return hybridVerifyResult?.statement || `Math expression: ${mathExtractResult?.originalText}`;
+        return getResultProperty<string>(hybridVerifyResult, 'statement') || 
+               `Math expression: ${getResultProperty<string>(mathExtractResult, 'originalText')}`;
       case 'forecast':
         const forecast = toolChain.find(t => t.toolName === 'extractForecastingClaims')?.result;
-        return forecast?.rewrittenPredictionText || forecast?.originalText;
+        return getResultProperty<string>(forecast, 'rewrittenPredictionText') || 
+               getResultProperty<string>(forecast, 'originalText') || 'Forecast claim';
       case 'fact-check':
         const fact = toolChain.find(t => t.toolName === 'extractCheckableClaims')?.result;
-        return fact?.topic || fact?.claim;
+        return getResultProperty<string>(fact, 'topic') || 
+               getResultProperty<string>(fact, 'claim') || 'Fact claim';
       default:
         return 'Analysis result';
     }
@@ -228,14 +252,14 @@ export class CommentBuilder {
     return Math.min(10, Math.max(0, Math.round(base * confidenceMultiplier)));
   }
   
-  private static calculateMathImportance(llmResult?: any, extractResult?: any): number {
+  private static calculateMathImportance(llmResult?: unknown, extractResult?: MathExtractResult): number {
     const contextScore = extractResult?.contextImportanceScore || 50;
     const complexityScore = extractResult?.complexityScore || 20;
     const base = (contextScore + complexityScore) / 20;
     return Math.min(10, Math.max(0, Math.round(base)));
   }
   
-  private static calculateForecastQuality(extractResult?: any): number {
+  private static calculateForecastQuality(extractResult?: ForecastExtractResult): number {
     if (!extractResult) return 5;
     const scores = [
       extractResult.importanceScore,
@@ -246,13 +270,13 @@ export class CommentBuilder {
     return scores.length > 0 ? scores.reduce((a, b) => a + b) / scores.length : 5;
   }
   
-  private static calculateForecastImportance(extractResult?: any, forecastResult?: any): number {
+  private static calculateForecastImportance(extractResult?: ForecastExtractResult, forecastResult?: ForecastResult): number {
     const importanceScore = extractResult?.importanceScore || 50;
     const quality = this.calculateForecastQuality(extractResult);
     return Math.min(10, Math.max(0, Math.round((importanceScore + quality * 10) / 20)));
   }
   
-  private static calculateFactImportance(extractResult?: any, verifyResult?: any): number {
+  private static calculateFactImportance(extractResult?: FactExtractResult, verifyResult?: FactVerifyResult): number {
     const importanceScore = extractResult?.importanceScore || 50; 
     const isFalse = verifyResult?.verdict === 'false';
     const base = (importanceScore / 100) * 8;

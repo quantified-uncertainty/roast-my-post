@@ -25,7 +25,3 @@ export interface TextLocationOptions {
   llmContext?: string; // Context to help LLM understand the search
   pluginName?: string; // For tracking/logging purposes
 }
-
-// Keep old names as aliases for backward compatibility (to be removed later)
-export type SimpleLocationOptions = TextLocationOptions;
-export type EnhancedLocationOptions = TextLocationOptions;

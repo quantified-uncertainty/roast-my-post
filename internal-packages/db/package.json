@@ -23,16 +23,17 @@
     "db:migrate:reset:safe": "../../dev/scripts/safe-prisma.sh migrate reset",
     "db:migrate:deploy": "pnpm with-env prisma migrate deploy",
     "db:studio": "pnpm with-env prisma studio",
+    "sync:agents": "pnpm with-env tsx system-agents/sync.ts",
     "clean": "rm -rf generated .turbo dist",
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.13.0",
-    "nanoid": "^5.0.7"
+    "@prisma/client": "^6.13.0"
   },
   "devDependencies": {
     "dotenv-cli": "^10.0.0",
     "prisma": "^6.13.0",
+    "tsx": "^4.7.0",
     "typescript": "^5"
   },
   "engines": {

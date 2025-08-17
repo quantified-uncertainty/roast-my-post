@@ -3,9 +3,7 @@
  * Handles the actual Claude API calls and aggregation
  */
 
-import {
-  withTimeout,
-} from "../../shared/types";
+import { withTimeout } from "../../utils/timeout";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
@@ -109,8 +107,10 @@ ${options.question}
         required: ["probability", "reasoning"],
       }
     }),
-    FORECAST_TIMEOUT,
-    `Forecast generation timed out after ${FORECAST_TIMEOUT / 60000} minutes`
+    {
+      timeoutMs: FORECAST_TIMEOUT,
+      errorMessage: `Forecast generation timed out after ${FORECAST_TIMEOUT / 60000} minutes`
+    }
   );
 
   return { 

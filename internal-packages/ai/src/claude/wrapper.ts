@@ -46,18 +46,22 @@ function buildPromptString(
   return prompt.trim();
 }
 
-function isRetryableError(error: any): boolean {
-  // Check if this is an Anthropic API error
-  if (error?.status) {
+import { isApiError, type ApiError } from '../types/errors';
+
+function isRetryableError(error: unknown): boolean {
+  // Check if this is an API error with status code
+  if (isApiError(error)) {
     const status = error.status;
     // Retry on rate limits (429) and server errors (5xx)
-    return status === 429 || (status >= 500 && status < 600);
-  }
-  
-  // Check for network/timeout errors
-  if (error?.code) {
+    if (status) {
+      return status === 429 || (status >= 500 && status < 600);
+    }
+    
+    // Check for network/timeout errors
     const code = error.code;
-    return code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'ENOTFOUND';
+    if (code) {
+      return code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'ENOTFOUND';
+    }
   }
   
   return false;
@@ -98,7 +102,7 @@ export async function callClaude(
   
   // Make API call with manual retry logic for retryable errors only
   let response: Anthropic.Messages.Message;
-  let lastError: any = null;
+  let lastError: Error | null = null;
   const maxRetries = 3;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -109,7 +113,7 @@ export async function callClaude(
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
-      const requestOptions: any = {
+      const requestOptions: Anthropic.Messages.MessageCreateParams = {
         model,
         max_tokens: options.max_tokens || 4000,
         temperature: options.temperature ?? 0,
@@ -148,8 +152,10 @@ export async function callClaude(
       // Add timeout to prevent hanging indefinitely
       const DEFAULT_CLAUDE_TIMEOUT_MS = 180000; // 3 minutes default (should handle most cases)
       const timeoutMs = options.timeout || DEFAULT_CLAUDE_TIMEOUT_MS;
+      let timeoutId: NodeJS.Timeout;
+      
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           reject(new Error(`Claude API call timed out after ${timeoutMs}ms`));
         }, timeoutMs);
       });
@@ -157,7 +163,10 @@ export async function callClaude(
       const result = await Promise.race([
         anthropic.messages.create(requestOptions),
         timeoutPromise
-      ]);
+      ]).finally(() => {
+        // Clear timeout when either promise resolves/rejects
+        clearTimeout(timeoutId);
+      });
       
       // Validate response structure
       if (!result || !result.content || !result.usage) {
@@ -168,7 +177,7 @@ export async function callClaude(
       break; // Success, exit retry loop
       
     } catch (error) {
-      lastError = error;
+      lastError = error instanceof Error ? error : new Error(String(error));
       
       // If error is not retryable, throw immediately
       if (!isRetryableError(error)) {

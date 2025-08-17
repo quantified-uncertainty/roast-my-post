@@ -4,6 +4,8 @@
  * of the web application's database schema
  */
 
+import type { ToolResult } from '../types/toolResults';
+
 /**
  * Tool result in the analysis chain
  */
@@ -11,7 +13,7 @@ export interface ToolChainResult {
   toolName: string;
   stage: 'extraction' | 'verification' | 'enhancement' | 'generation';
   timestamp: string;
-  result: any;  // Complete, unmodified tool output
+  result: ToolResult;  // Complete, unmodified tool output
 }
 
 /**
@@ -34,7 +36,7 @@ export interface CommentMetadata {
   verified?: boolean;
   
   // Additional quick access fields (plugin-specific)
-  [key: string]: any;
+  [key: string]: string | number | boolean | ToolChainResult[] | undefined;
 }
 
 /**
@@ -95,23 +97,13 @@ export type LanguageConventionOption = 'US' | 'UK' | 'auto';
 /**
  * Timeout utilities
  */
-export const DEFAULT_TIMEOUT = 60000; // 60 seconds
+export const DEFAULT_GENERAL_TIMEOUT = 60000; // 60 seconds
 
 /**
- * Wrap a promise with a timeout
+ * Re-export withTimeout from centralized utility for backward compatibility
+ * @deprecated Use import from '../utils/timeout' directly
  */
-export function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number = DEFAULT_TIMEOUT,
-  timeoutMessage = 'Operation timed out'
-): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
-    ),
-  ]);
-}
+export { withTimeout } from '../utils/timeout';
 
 /**
  * Safe array access utilities

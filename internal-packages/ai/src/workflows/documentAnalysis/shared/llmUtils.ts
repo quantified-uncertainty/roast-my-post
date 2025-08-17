@@ -16,8 +16,8 @@ interface LogDetails {
       output_tokens: number;
     };
   };
-  context: Record<string, any>;
-  outputStats: Record<string, any>;
+  context: Record<string, unknown>;
+  outputStats: Record<string, unknown>;
   summary: string;
 }
 
@@ -29,8 +29,8 @@ export function createLogDetails(
   cost: number,
   inputTokens: number,
   outputTokens: number,
-  context: Record<string, any>,
-  outputStats: Record<string, any>,
+  context: Record<string, unknown>,
+  outputStats: Record<string, unknown>,
   summary: string
 ): LogDetails {
   return {

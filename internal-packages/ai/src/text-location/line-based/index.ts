@@ -19,9 +19,6 @@ export interface CharacterLocation {
   prefix?: string; // Optional context before the match
 }
 
-// Alias for backward compatibility with highlight system
-export type LineSnippetHighlight = LineBasedLocation;
-
 /**
  * Converts document text into lines with offset tracking
  */
@@ -394,30 +391,5 @@ export class LineBasedLocator {
         ? Math.max(...this.lines.map((line) => line.length))
         : 0,
     };
-  }
-  
-  /**
-   * Convert line-based location to character offsets with optional prefix
-   * This is an alias for lineLocationToOffset for backward compatibility
-   */
-  createHighlight(location: LineBasedLocation): CharacterLocation | null {
-    const result = this.lineLocationToOffset(location);
-    if (result && !result.prefix) {
-      // Add prefix (up to 30 chars before highlight)
-      const prefixStart = Math.max(0, result.startOffset - 30);
-      result.prefix = this.documentText.substring(prefixStart, result.startOffset);
-    }
-    return result;
-  }
-  
-  /**
-   * Alias for backward compatibility
-   */
-  convertOffsetToLineBased(highlight: {
-    startOffset: number;
-    endOffset: number;
-    quotedText: string;
-  }): LineBasedLocation {
-    return this.offsetToLineLocation(highlight.startOffset, highlight.endOffset);
   }
 }
