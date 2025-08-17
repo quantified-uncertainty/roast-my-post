@@ -1,6 +1,5 @@
-/**
- * @jest-environment jsdom
- */
+import { vi } from 'vitest';
+
 /**
  * SlateEditor component tests
  *
@@ -32,7 +31,7 @@ import SlateEditor from "./SlateEditor";
 // Mock the Slate editor implementation
 type DecorateFunction = (path: any) => any[];
 let capturedDecorateFn: DecorateFunction | null = null;
-jest.mock("slate-react", () => ({
+vi.mock("slate-react", () => ({
   Slate: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="slate-wrapper">{children}</div>
   ),
@@ -53,30 +52,30 @@ jest.mock("slate-react", () => ({
     return <div data-testid="slate-editable">{children}</div>;
   },
   ReactEditor: {
-    findPath: jest.fn(),
-    toDOMNode: jest.fn(),
+    findPath: vi.fn(),
+    toDOMNode: vi.fn(),
   },
   withReact: (editor: any) => editor,
 }));
 
-jest.mock("slate-history", () => ({
+vi.mock("slate-history", () => ({
   withHistory: (editor: any) => editor,
 }));
 
-jest.mock("slate", () => {
+vi.mock("slate", () => {
   const original = jest.requireActual("slate");
   const mockEditor = {
     children: [] as any[],
     operations: [],
     selection: null,
     marks: null,
-    onChange: jest.fn(),
-    apply: jest.fn(),
-    isInline: jest.fn((element) => {
+    onChange: vi.fn(),
+    apply: vi.fn(),
+    isInline: vi.fn((element) => {
       return element.type === "link" || element.type === "code";
     }),
-    isVoid: jest.fn(() => false),
-    normalizeNode: jest.fn(),
+    isVoid: vi.fn(() => false),
+    normalizeNode: vi.fn(),
     *[Symbol.iterator]() {
       for (const child of this.children) {
         yield child;
@@ -89,7 +88,7 @@ jest.mock("slate", () => {
     createEditor: () => mockEditor,
     Node: {
       ...original.Node,
-      string: jest.fn((node) => {
+      string: vi.fn((node) => {
         if (!node) return "";
         if (original.Text.isText(node)) {
           return node.text;
@@ -100,7 +99,7 @@ jest.mock("slate", () => {
         }
         return "";
       }),
-      parent: jest.fn((editor, path) => {
+      parent: vi.fn((editor, path) => {
         let current = { children: editor.children };
         for (let i = 0; i < path.length - 1; i++) {
           if (!current?.children?.[path[i]]) {
@@ -110,7 +109,7 @@ jest.mock("slate", () => {
         }
         return current;
       }),
-      nodes: jest.fn((editor, options) => {
+      nodes: vi.fn((editor, options) => {
         const nodes: [any, number[]][] = [];
         const traverse = (node: any, path: number[]) => {
           if (options?.match?.(node, path) ?? true) {
@@ -132,22 +131,22 @@ jest.mock("slate", () => {
     },
     Editor: {
       ...original.Editor,
-      nodes: jest.fn((editor, options) => original.Node.nodes(editor, options)),
-      isBlock: jest.fn(
+      nodes: vi.fn((editor, options) => original.Node.nodes(editor, options)),
+      isBlock: vi.fn(
         (editor, node) =>
           original.Element.isElement(node) && !editor.isInline(node)
       ),
     },
     Transforms: {
       ...original.Transforms,
-      select: jest.fn(),
+      select: vi.fn(),
     },
     Element: { ...original.Element },
     Text: { ...original.Text },
   };
 });
 
-jest.mock("unified", () => {
+vi.mock("unified", () => {
   type MockProcessor = {
     use: jest.Mock<MockProcessor>;
     processSync: jest.Mock<{
@@ -156,8 +155,8 @@ jest.mock("unified", () => {
   };
 
   const mockProcessor: MockProcessor = {
-    use: jest.fn(() => mockProcessor),
-    processSync: jest.fn((content: string) => {
+    use: vi.fn(() => mockProcessor),
+    processSync: vi.fn((content: string) => {
       // More comprehensive markdown conversion
       const lines = content.split("\n");
       const result = lines.map((line) => {
@@ -205,11 +204,11 @@ jest.mock("unified", () => {
       return { result };
     }),
   };
-  return { unified: jest.fn(() => mockProcessor) };
+  return { unified: vi.fn(() => mockProcessor) };
 });
 
 // Mock React's useEffect to run immediately for initialization
-jest.mock("react", () => {
+vi.mock("react", () => {
   const originalReact = jest.requireActual("react");
   return {
     ...originalReact,
@@ -225,7 +224,7 @@ describe("SlateEditor", () => {
     // Reset captured function before each test
     capturedDecorateFn = null;
     // Reset mocks if needed
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders without crashing", () => {
@@ -318,7 +317,7 @@ describe("SlateEditor", () => {
     ];
 
     // Reset captured function
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     capturedDecorateFn = null;
 
     const { unmount } = render(

@@ -22,6 +22,7 @@
     "test:ci-nocov": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.|playwright' --maxWorkers=3 --coverage=false",
     "test:vitest": "vitest run",
     "test:vitest:watch": "vitest",
+    "test:vitest:ui": "vitest --ui",
     "test:vitest:ci": "vitest run --coverage",
     "test:shard": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.|playwright' --maxWorkers=2",
     "test:debug": "TEST_DEBUG=true jest --config ./config/jest/jest.config.cjs",

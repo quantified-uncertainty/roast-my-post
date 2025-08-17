@@ -1,0 +1,127 @@
+import { vi } from 'vitest';
+import { NextRequest } from "next/server";
+import { authenticateRequest, authenticateRequestSessionFirst } from './auth-helpers';
+
+// Mock dependencies
+vi.mock("./auth", () => ({
+  auth: vi.fn(),
+}));
+
+vi.mock("./auth-api", () => ({
+  authenticateApiKey: vi.fn(),
+}));
+
+import { auth } from './auth';
+import { authenticateApiKey } from './auth-api';
+
+const mockAuth = auth as any;
+const mockAuthenticateApiKey = authenticateApiKey as any;
+
+describe("auth-helpers", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("authenticateRequest", () => {
+    it("should return userId when API key authentication succeeds", async () => {
+      const request = new NextRequest("http://localhost:3000");
+      mockAuthenticateApiKey.mockResolvedValue({
+        success: true,
+        userId: "api-user-id",
+        keyId: "key-id",
+      });
+
+      const result = await authenticateRequest(request);
+
+      expect(result).toBe("api-user-id");
+      expect(mockAuthenticateApiKey).toHaveBeenCalledWith(request);
+      expect(mockAuth).not.toHaveBeenCalled();
+    });
+
+    it("should fall back to session auth when API key fails", async () => {
+      const request = new NextRequest("http://localhost:3000");
+      mockAuthenticateApiKey.mockResolvedValue({
+        success: false,
+        error: {
+          type: "INVALID_KEY",
+          message: "Invalid key",
+          statusCode: 401,
+        },
+      });
+      mockAuth.mockResolvedValue({
+        user: { id: "session-user-id" },
+      });
+
+      const result = await authenticateRequest(request);
+
+      expect(result).toBe("session-user-id");
+      expect(mockAuthenticateApiKey).toHaveBeenCalledWith(request);
+      expect(mockAuth).toHaveBeenCalled();
+    });
+
+    it("should return undefined when both auth methods fail", async () => {
+      const request = new NextRequest("http://localhost:3000");
+      mockAuthenticateApiKey.mockResolvedValue({
+        success: false,
+        error: {
+          type: "INVALID_KEY",
+          message: "Invalid key",
+          statusCode: 401,
+        },
+      });
+      mockAuth.mockResolvedValue(null as any);
+
+      const result = await authenticateRequest(request);
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe("authenticateRequestSessionFirst", () => {
+    it("should return userId when session authentication succeeds", async () => {
+      const request = new NextRequest("http://localhost:3000");
+      mockAuth.mockResolvedValue({
+        user: { id: "session-user-id" },
+      });
+
+      const result = await authenticateRequestSessionFirst(request);
+
+      expect(result).toBe("session-user-id");
+      expect(mockAuth).toHaveBeenCalled();
+      expect(mockAuthenticateApiKey).not.toHaveBeenCalled();
+    });
+
+    it("should fall back to API key auth when session fails", async () => {
+      const request = new NextRequest("http://localhost:3000");
+      mockAuth.mockResolvedValue(null as any);
+      mockAuthenticateApiKey.mockResolvedValue({
+        success: true,
+        userId: "api-user-id",
+        keyId: "key-id",
+      });
+
+      const result = await authenticateRequestSessionFirst(request);
+
+      expect(result).toBe("api-user-id");
+      expect(mockAuth).toHaveBeenCalled();
+      expect(mockAuthenticateApiKey).toHaveBeenCalledWith(request);
+    });
+
+    it("should return undefined when both auth methods fail", async () => {
+      const request = new NextRequest("http://localhost:3000");
+      mockAuth.mockResolvedValue(null as any);
+      mockAuthenticateApiKey.mockResolvedValue({
+        success: false,
+        error: {
+          type: "INVALID_KEY",
+          message: "Invalid key",
+          statusCode: 401,
+        },
+      });
+
+      const result = await authenticateRequestSessionFirst(request);
+
+      expect(result).toBeUndefined();
+    });
+  });
+});
