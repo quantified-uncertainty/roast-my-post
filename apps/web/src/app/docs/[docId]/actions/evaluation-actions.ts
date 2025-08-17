@@ -30,8 +30,7 @@ export async function rerunEvaluation(
       session.user.id
     );
 
-    // Revalidate multiple pages that might be affected
-    revalidatePath(`/docs/${documentId}/evaluations`);
+    // Revalidate pages that might be affected
     revalidatePath(`/docs/${documentId}/evals/${agentId}`);
     revalidatePath(`/docs/${documentId}/evals/${agentId}/logs`);
 
@@ -71,8 +70,8 @@ export async function createOrRerunEvaluation(
       session.user.id
     );
 
-    // Revalidate the evaluations page
-    revalidatePath(`/docs/${documentId}/evaluations`);
+    // Revalidate the document page
+    revalidatePath(`/docs/${documentId}`);
 
     return { success: true };
   } catch (error) {
