@@ -88,7 +88,7 @@ export function createOpenAIClient(): OpenAI {
 }
 
 export const DEFAULT_TEMPERATURE = 0.1; // Lower temperature for more deterministic results
-export const DEFAULT_TIMEOUT = 300000; // 5 minutes default timeout for LLM requests
+export const DEFAULT_LLM_TIMEOUT = 300000; // 5 minutes default timeout for LLM requests
 
 // Configurable timeouts via environment variables
 export const COMPREHENSIVE_ANALYSIS_TIMEOUT = parseInt(process.env.COMPREHENSIVE_ANALYSIS_TIMEOUT || '600000'); // 10 minutes

@@ -97,7 +97,7 @@ export type LanguageConventionOption = 'US' | 'UK' | 'auto';
 /**
  * Timeout utilities
  */
-export const DEFAULT_TIMEOUT = 60000; // 60 seconds
+export const DEFAULT_GENERAL_TIMEOUT = 60000; // 60 seconds
 
 /**
  * Re-export withTimeout from centralized utility for backward compatibility

@@ -123,7 +123,7 @@ export type {
 } from './shared/types';
 
 export {
-  DEFAULT_TIMEOUT, // Keep for backward compatibility
+  DEFAULT_GENERAL_TIMEOUT,
   getRandomElement,
   getPercentile,
   getPercentileNumber,
