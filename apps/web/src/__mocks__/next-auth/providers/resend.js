@@ -1,2 +1,3 @@
 // Mock for next-auth resend provider
-module.exports = jest.fn();
+import { vi } from 'vitest';
+export default vi.fn();

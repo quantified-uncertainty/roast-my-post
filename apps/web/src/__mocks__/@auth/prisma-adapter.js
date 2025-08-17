@@ -1,4 +1,4 @@
 // Mock for @auth/prisma-adapter package
-module.exports = {
-  PrismaAdapter: jest.fn(),
-};
+import { vi } from 'vitest';
+
+export const PrismaAdapter = vi.fn();
