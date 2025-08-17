@@ -36,7 +36,7 @@ export default function EvaluationsClient({
   isOwner,
 }: EvaluationsClientProps) {
   const { reviews } = document;
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [_agents, setAgents] = useState<Agent[]>([]);
   const [agentsWithEvaluations, setAgentsWithEvaluations] = useState<
     AgentWithEvaluation[]
   >([]);

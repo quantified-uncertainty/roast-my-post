@@ -3,7 +3,7 @@
  * Wraps all API routes with error handling, logging, and validation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/infrastructure/auth/auth';
 import { 
@@ -170,7 +170,7 @@ async function checkRateLimit(
                    'unknown';
   
   const now = Date.now();
-  const windowStart = now - limits.windowMs;
+  const _windowStart = now - limits.windowMs;
   
   // Clean old entries
   for (const [key, value] of rateLimitStore.entries()) {

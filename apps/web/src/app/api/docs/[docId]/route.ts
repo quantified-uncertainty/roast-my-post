@@ -13,7 +13,7 @@ const updateDocumentSchema = z.object({
 });
 
 // GET endpoint is public - matches existing document API patterns
-export async function GET(req: NextRequest, context: { params: Promise<{ docId: string }> }) {
+export async function GET(_req: NextRequest, context: { params: Promise<{ docId: string }> }) {
   const params = await context.params;
   const { docId } = params;
 

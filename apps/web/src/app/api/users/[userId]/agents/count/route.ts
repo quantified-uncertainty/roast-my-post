@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { UserModel } from "@/models/User";
 
 export async function GET(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ userId: string }> }
 ) {
   try {

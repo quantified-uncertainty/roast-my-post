@@ -22,7 +22,7 @@ export function ExportTab({
   agent,
   exportBatchFilter,
   setExportBatchFilter,
-  batches,
+  _batches,
 }: ExportTabProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);

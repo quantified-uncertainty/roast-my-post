@@ -12,7 +12,6 @@ import {
   ArrowDownTrayIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  DocumentTextIcon,
   BookOpenIcon,
   ChartBarIcon
 } from "@heroicons/react/24/outline";
@@ -50,7 +49,7 @@ export function EvaluationDetailsSection({
   createdAt,
   evaluationData,
   documentId,
-  evaluationId,
+  _evaluationId,
   isOnEvalPage = false
 }: EvaluationDetailsSectionProps) {
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);

@@ -4,7 +4,7 @@ import { prisma } from "@/infrastructure/database/prisma";
 import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {

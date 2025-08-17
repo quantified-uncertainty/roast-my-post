@@ -18,12 +18,12 @@ interface JobsTabProps {
 export function JobsTab({
   jobs,
   jobsLoading,
-  selectedJob,
-  setSelectedJob,
+  _selectedJob,
+  _setSelectedJob,
   selectedBatchFilter,
   setSelectedBatchFilter,
-  batches,
-  fetchJobs,
+  _batches,
+  _fetchJobs,
 }: JobsTabProps) {
   return (
     <div className="w-full space-y-6">

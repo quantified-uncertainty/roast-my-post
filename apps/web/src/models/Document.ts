@@ -1,10 +1,8 @@
 import { nanoid } from "nanoid";
 
 import { prisma } from "@roast/db";
-import {
-  DocumentValidationSchema,
-} from "@/shared/types/validationSchemas";
-import type { Document, Evaluation } from "@/shared/types/databaseTypes";
+// Import removed - DocumentValidationSchema not used
+import type { Document } from "@/shared/types/databaseTypes";
 import { generateMarkdownPrepend } from "@roast/domain";
 import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";

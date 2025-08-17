@@ -5,7 +5,7 @@ import { logger } from '@/infrastructure/logging/logger';
 // import { cleanupExpiredBatches } from "../../../../../dev/scripts/maintenance/cleanup-expired-batches";
 
 // Mock implementation of cleanupExpiredBatches
-const cleanupExpiredBatches = jest.fn(async (exitOnComplete: boolean) => {
+const cleanupExpiredBatches = jest.fn(async (_exitOnComplete: boolean) => {
   const startTime = Date.now();
   
   try {
