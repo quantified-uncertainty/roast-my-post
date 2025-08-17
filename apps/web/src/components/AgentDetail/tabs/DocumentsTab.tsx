@@ -48,7 +48,7 @@ export function DocumentsTab({
                       <div>
                         <h4 className="text-lg font-medium text-gray-900">
                           <Link
-                            href={`/docs/${doc.id}/evaluations`}
+                            href={`/docs/${doc.id}/evals/${agent.id}`}
                             className="transition-colors hover:text-blue-600"
                           >
                             {doc.title}

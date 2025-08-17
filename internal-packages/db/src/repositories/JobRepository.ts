@@ -10,7 +10,7 @@ import { prisma as defaultPrisma } from '../client';
 import { JobStatus } from '../types';
 import type { Job } from '../types';
 import type { PrismaClient } from '../client';
-import { nanoid } from 'nanoid';
+import { generateId } from '../utils/generateId';
 
 // Domain types defined in this package to avoid circular dependencies
 export interface JobEntity {
@@ -62,6 +62,7 @@ export interface JobWithRelations extends JobEntity {
         selfCritiqueInstructions: string | null;
         providesGrades: boolean;
         extendedCapabilityId: string | null;
+        pluginIds: string[];
         version: number;
       }>;
     };
@@ -261,7 +262,7 @@ export class JobRepository implements JobRepositoryInterface {
   async create(data: CreateJobData): Promise<JobEntity> {
     const job = await this.prisma.job.create({
       data: {
-        id: nanoid(),
+        id: generateId(),
         status: data.status || JobStatus.PENDING,
         evaluationId: data.evaluationId,
         agentEvalBatchId: data.agentEvalBatchId,
@@ -278,7 +279,7 @@ export class JobRepository implements JobRepositoryInterface {
   async createRetry(data: CreateRetryJobData): Promise<JobEntity> {
     const job = await this.prisma.job.create({
       data: {
-        id: nanoid(),
+        id: generateId(),
         status: JobStatus.PENDING,
         evaluationId: data.evaluationId,
         originalJobId: data.originalJobId,
@@ -441,6 +442,7 @@ export class JobRepository implements JobRepositoryInterface {
             selfCritiqueInstructions: v.selfCritiqueInstructions,
             providesGrades: v.providesGrades,
             extendedCapabilityId: v.extendedCapabilityId,
+            pluginIds: v.pluginIds || [],
             version: v.version,
           })),
         },

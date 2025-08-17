@@ -1,18 +1,20 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
-import type { Agent } from "@roast/ai";
-import type { Document } from "@roast/ai";
+import type { Agent } from "../../../types/agentSchema";
+import type { Document } from "../../../types/documents";
 import { createTestDocument, adjustLineReferences, adjustLineReference, getPrependLineCount } from "../testUtils";
 
-// Mock the @roast/ai module
-jest.mock("@roast/ai", () => ({
+// Mock the claude wrapper module
+jest.mock("../../../claude/wrapper", () => ({
   callClaudeWithTool: jest.fn(),
   MODEL_CONFIG: {
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
   },
-  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
-  createHeliconeHeaders: jest.fn(() => ({})),
+}));
+
+// Mock the timeout utility
+jest.mock("../../../utils/timeout", () => ({
   withTimeout: jest.fn((promise) => promise),
 }));
 
@@ -22,12 +24,9 @@ jest.mock("../../../utils/costCalculator", () => ({
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));
 
-// Mock withTimeout from openai types
-// withTimeout is now mocked in the main @roast/ai mock
-import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
+import { callClaudeWithTool, MODEL_CONFIG } from "../../../claude/wrapper";
 import { setupClaudeToolMock } from "../../../testing";
-import type { ClaudeCallResult } from "@roast/ai";
-import { withTimeout } from "@roast/ai";
+import { withTimeout } from "../../../utils/timeout";
 
 describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
   const mockAgent: Agent = {

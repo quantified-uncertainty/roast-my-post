@@ -1,12 +1,14 @@
 import { logger } from "../../../utils/logger";
-import type { Agent } from "@roast/ai";
+import type { Agent } from "../../../types/agentSchema";
 import {
   callClaudeWithTool,
-  DEFAULT_TEMPERATURE,
   MODEL_CONFIG,
+} from "../../../claude/wrapper";
+import {
+  DEFAULT_TEMPERATURE,
   SELF_CRITIQUE_TIMEOUT,
-  withTimeout,
-} from "@roast/ai";
+} from "../../../types/openai";
+import { withTimeout } from "../../../utils/timeout";
 
 import { calculateLLMCost } from "../shared/costUtils";
 import { createLogDetails } from "../shared/llmUtils";
@@ -92,8 +94,10 @@ ${evaluationText}`;
           required: ["selfCritique"],
         },
       }),
-      SELF_CRITIQUE_TIMEOUT,
-      `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
+      {
+        timeoutMs: SELF_CRITIQUE_TIMEOUT,
+        errorMessage: `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
+      }
     );
 
     response = result.response;

@@ -72,13 +72,6 @@ export function createAnthropicClient(additionalHeaders?: Record<string, string>
   });
 }
 
-// Legacy export for backwards compatibility (but don't initialize at import time)
-export const anthropic = {
-  messages: {
-    create: (params: Anthropic.MessageCreateParams) => createAnthropicClient().messages.create(params)
-  }
-};
-
 // Lazy OpenAI client factory via OpenRouter for search tasks
 export function createOpenAIClient(): OpenAI {
   validateOpenRouterKey();
@@ -94,30 +87,13 @@ export function createOpenAIClient(): OpenAI {
   });
 }
 
-// Legacy export for backwards compatibility  
-export const openai = {
-  get chat() {
-    return createOpenAIClient().chat;
-  }
-};
-
 export const DEFAULT_TEMPERATURE = 0.1; // Lower temperature for more deterministic results
-export const DEFAULT_TIMEOUT = 300000; // 5 minutes default timeout for LLM requests
+export const DEFAULT_LLM_TIMEOUT = 300000; // 5 minutes default timeout for LLM requests
 
 // Configurable timeouts via environment variables
 export const COMPREHENSIVE_ANALYSIS_TIMEOUT = parseInt(process.env.COMPREHENSIVE_ANALYSIS_TIMEOUT || '600000'); // 10 minutes
 export const HIGHLIGHT_EXTRACTION_TIMEOUT = parseInt(process.env.HIGHLIGHT_EXTRACTION_TIMEOUT || '300000'); // 5 minutes
 export const SELF_CRITIQUE_TIMEOUT = parseInt(process.env.SELF_CRITIQUE_TIMEOUT || '180000'); // 3 minutes
 
-// Helper function to add timeout to Anthropic requests
-export async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number = DEFAULT_TIMEOUT,
-  errorMessage: string = "Request timed out"
-): Promise<T> {
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
-  });
-
-  return Promise.race([promise, timeoutPromise]);
-}
+// Re-export withTimeout from centralized utility for backward compatibility
+export { withTimeout } from '../utils/timeout';

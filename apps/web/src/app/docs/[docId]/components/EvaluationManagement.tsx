@@ -13,7 +13,7 @@ import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/
 import { GradeBadge } from "@/components/GradeBadge";
 import { StaleBadge } from "@/components/StaleBadge";
 import { formatDistanceToNow } from "date-fns";
-import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
+import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
 
 interface EvaluationManagementProps {
   docId: string;

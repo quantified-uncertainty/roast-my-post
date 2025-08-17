@@ -29,14 +29,19 @@ export async function withErrorBoundary<T>(
     // Create timeout promise if timeout is specified
     let result: T;
     if (timeout > 0) {
+      let timeoutId: NodeJS.Timeout;
+      
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error(`Operation '${name}' timed out after ${timeout}ms`)), timeout);
+        timeoutId = setTimeout(() => reject(new Error(`Operation '${name}' timed out after ${timeout}ms`)), timeout);
       });
       
       result = await Promise.race([
         operation(),
         timeoutPromise
-      ]);
+      ]).finally(() => {
+        // Clear timeout when either promise resolves/rejects
+        clearTimeout(timeoutId);
+      });
     } else {
       result = await operation();
     }

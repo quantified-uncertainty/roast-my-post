@@ -1,6 +1,6 @@
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
 import { prisma, DocumentRepository, EvaluationRepository } from '@roast/db';
-import { nanoid } from 'nanoid';
+import { generateId } from '@roast/db';
 import { logger } from '@/infrastructure/logging/logger';
 import { importDocumentService } from '../documentImport';
 
@@ -14,11 +14,11 @@ describeIfDb('Document markdownPrepend Integration Tests', () => {
 
   beforeAll(async () => {
     // Create a test user
-    testUserId = `test-user-${nanoid()}`;
+    testUserId = `test-user-${generateId()}`;
     testUser = await prisma.user.create({
       data: {
         id: testUserId,
-        email: `test-${nanoid()}@example.com`,
+        email: `test-${generateId()}@example.com`,
         name: 'Test User',
       },
     });

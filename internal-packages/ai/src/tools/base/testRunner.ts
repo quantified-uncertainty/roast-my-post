@@ -13,11 +13,11 @@ export interface TestCase<TInput, TExpected> {
   tags?: string[];
 }
 
-export interface TestResult {
+export interface TestResult<TOutput = unknown> {
   testId: string;
   passed: boolean;
-  actualOutput: any;
-  expectedOutput: any;
+  actualOutput: TOutput;
+  expectedOutput: TOutput;
   score: number; // 0-1 for fuzzy matches
   reasoning: string;
   error?: string;
@@ -32,9 +32,9 @@ export interface TestSuite<TInput, TExpected> {
 /**
  * Fuzzy match two outputs using LLM evaluation
  */
-export async function fuzzyMatch(
-  actual: any,
-  expected: any,
+export async function fuzzyMatch<T = unknown>(
+  actual: T,
+  expected: T,
   context: {
     testDescription: string;
     inputDescription: string;
@@ -141,12 +141,19 @@ export async function runTestCase<TInput, TExpected>(
   try {
     // Run the actual test function
     const startTime = Date.now();
+    let timeoutId: NodeJS.Timeout;
+    
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Test timeout')), options.timeout || 30000);
+    });
+    
     const actualOutput = await Promise.race([
       testFunction(testCase.input),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Test timeout')), options.timeout || 30000)
-      )
-    ]);
+      timeoutPromise
+    ]).finally(() => {
+      // Clear timeout when either promise resolves/rejects
+      clearTimeout(timeoutId);
+    });
     const duration = Date.now() - startTime;
     
     console.log(`   ⏱️  Completed in ${duration}ms`);
