@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi } from 'vitest';
 import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
 import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
@@ -8,8 +8,8 @@ vi.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequestSessionFirst: vi.fn(),
 }));
 
-vi.mock('@roast/ai', async () => {
-  const actual = await vi.importActual('@roast/ai');
+vi.mock('@roast/ai', () => {
+  const actual = jest.requireActual('@roast/ai');
   return {
     ...actual,
     AgentInputSchema: {
@@ -84,7 +84,7 @@ describe('GET /api/agents', () => {
 
   it('should return all agents without authentication', async () => {
     // GET doesn't require authentication, it's public
-    const { Result } = await import('@roast/domain');
+    const { Result } = require('@roast/domain');
 
     const mockAgents = [
       {
@@ -131,7 +131,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should require authentication', async () => {
-    vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(undefined);
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/agents', {
       method: 'PUT',
@@ -143,36 +143,139 @@ describe('PUT /api/agents', () => {
     expect(response.status).toBe(401);
   });
 
-  it('should update agent when authenticated and valid', async () => {
-    vi.mocked(authenticateRequestSessionFirst).mockResolvedValueOnce(mockUser.id);
-    const { Result } = await import('@roast/domain');
+  it('should validate request body', async () => {
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    const { AgentInputSchema } = require('@roast/ai');
+    const { ZodError } = require('zod');
+    
+    AgentInputSchema.parse.mockImplementationOnce(() => {
+      throw new ZodError([
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          received: 'undefined',
+          path: ['name'],
+          message: 'Required',
+        },
+      ]);
+    });
 
-    const agentData = {
-      id: 'agent-1',
-      name: 'Updated Agent',
-      version: '2',
-      description: 'Updated description',
+    const request = new NextRequest('http://localhost:3000/api/agents', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invalidField: 'value' }),
+    });
+    
+    const response = await PUT(request);
+    expect(response.status).toBe(400);
+  });
+
+  it('should require agentId for updates', async () => {
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    const { AgentInputSchema } = require('@roast/ai');
+    AgentInputSchema.parse.mockReturnValueOnce({
+      name: 'New Agent',
+      description: 'A new agent',
+      primaryInstructions: 'Instructions...',
+      // No agentId provided
+    });
+
+    const request = new NextRequest('http://localhost:3000/api/agents', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'New Agent',
+        description: 'A new agent',
+        primaryInstructions: 'Instructions...',
+      }),
+    });
+    
+    const response = await PUT(request);
+    expect(response.status).toBe(400);
+    
+    const data = await response.json();
+    expect(data.error).toBe('agentId is required for updates');
+  });
+
+  it('should update existing agent and create new version', async () => {
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    const { AgentInputSchema } = require('@roast/ai');
+    const { Result } = require('@roast/domain');
+    
+    AgentInputSchema.parse.mockReturnValueOnce({
+      agentId: 'agent-123',
+      name: 'Updated Name',
+      primaryInstructions: 'New instructions...',
+    });
+    
+    const updatedAgent = {
+      id: 'agent-123',
+      name: 'Updated Name',
+      version: 4,
     };
-
+    
     mockAgentService.updateAgent.mockResolvedValueOnce(
-      Result.ok(agentData)
+      Result.ok(updatedAgent)
     );
 
     const request = new NextRequest('http://localhost:3000/api/agents', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(agentData),
+      body: JSON.stringify({
+        agentId: 'agent-123',
+        name: 'Updated Name',
+        primaryInstructions: 'New instructions...',
+      }),
     });
-
-    const response = await PUT(request);
     
+    const response = await PUT(request);
     expect(response.status).toBe(200);
+    
     const data = await response.json();
-    expect(data).toEqual({ agent: agentData });
+    expect(data).toEqual({
+      success: true,
+      agent: updatedAgent,
+      message: 'Successfully created version 4 of agent agent-123',
+    });
     
     expect(mockAgentService.updateAgent).toHaveBeenCalledWith(
-      agentData,
+      'agent-123',
+      {
+        agentId: 'agent-123',
+        name: 'Updated Name',
+        primaryInstructions: 'New instructions...',
+      },
       mockUser.id
     );
+  });
+
+  it('should handle permission errors from AgentService', async () => {
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    const { AgentInputSchema } = require('@roast/ai');
+    const { Result, ValidationError } = require('@roast/domain');
+    
+    AgentInputSchema.parse.mockReturnValueOnce({
+      agentId: 'agent-123',
+      name: 'Updated Name',
+    });
+    
+    mockAgentService.updateAgent.mockResolvedValueOnce(
+      Result.fail(new ValidationError('You do not have permission to update this agent'))
+    );
+
+    const request = new NextRequest('http://localhost:3000/api/agents', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agentId: 'agent-123',
+        name: 'Updated Name',
+      }),
+    });
+    
+    const response = await PUT(request);
+    expect(response.status).toBe(403);
+    
+    const data = await response.json();
+    expect(data.error).toBe('You do not have permission to access this resource');
   });
 });

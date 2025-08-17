@@ -51,7 +51,7 @@ describe("@roast/ai Package Integration in Web App", () => {
 
   it("should access plugin configuration", () => {
     const mathPlugin = new MathPlugin();
-    expect(mathPlugin.name).toBe("math");
-    expect(mathPlugin.name).toBeDefined();
+    expect(mathPlugin.name()).toBe("MATH");
+    expect(mathPlugin.name()).toBeDefined();
   });
 });

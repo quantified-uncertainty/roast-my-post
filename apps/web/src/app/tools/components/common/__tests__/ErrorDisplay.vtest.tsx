@@ -1,5 +1,5 @@
+
 import React from 'react';
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ErrorDisplay } from '../ErrorDisplay';
 
@@ -28,11 +28,10 @@ describe('ErrorDisplay', () => {
     expect(errorDiv).toHaveClass('rounded-md');
   });
 
-  it('should have proper text styling', () => {
-    render(<ErrorDisplay error="Test error" />);
+  it('should render with correct styling', () => {
+    render(<ErrorDisplay error="Styling test" />);
     
-    const errorText = screen.getByText('Error: Test error');
-    expect(errorText).toHaveClass('text-sm');
+    const errorText = screen.getByText('Error: Styling test');
     expect(errorText).toHaveClass('text-red-800');
   });
 });

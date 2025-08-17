@@ -40,6 +40,7 @@ export default defineConfig({
       { find: '@roast/ai/analysis-plugins/utils/textHelpers', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/analysis-plugins/utils/textHelpers.ts') },
       { find: '@roast/ai/analysis-plugins/types/plugin-types', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/analysis-plugins/types/plugin-types.ts') },
       { find: '@roast/ai/server', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/server.ts') },
+      { find: '@roast/ai/tools/all-tools', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/tools/all-tools.ts') },
       // Main package paths
       { find: '@roast/ai', replacement: path.resolve(__dirname, '../../internal-packages/ai/src/index.ts') },
       { find: '@roast/db', replacement: path.resolve(__dirname, '../../internal-packages/db/src/index.ts') },

@@ -42,12 +42,24 @@ vi.mock('@auth/prisma-adapter', () => ({
 }));
 
 // Mock next/font/google
-vi.mock('next/font/google', () => ({
-  Inter: vi.fn(() => ({
-    className: 'inter-font',
-    style: { fontFamily: 'Inter' },
-  })),
-}));
+vi.mock('next/font/google', () => {
+  const createFontMock = (name: string) => ({
+    style: {
+      fontFamily: `'${name}', serif`,
+    },
+    className: `font-${name.toLowerCase()}`,
+    variable: `--font-${name.toLowerCase()}`,
+  });
+
+  return {
+    Inter: vi.fn(() => ({
+      className: 'inter-font',
+      style: { fontFamily: 'Inter' },
+    })),
+    Merriweather: vi.fn(() => createFontMock('Merriweather')),
+    Libre_Baskerville: vi.fn(() => createFontMock('Libre Baskerville')),
+  };
+});
 
 // Export for use in tests
 export default {};

@@ -60,8 +60,8 @@ vi.mock("slate-history", () => ({
   withHistory: (editor: any) => editor,
 }));
 
-vi.mock("slate", () => {
-  const original = jest.requireActual("slate");
+vi.mock("slate", async () => {
+  const original = await vi.importActual("slate") as any;
   const mockEditor = {
     children: [] as any[],
     operations: [],
@@ -204,8 +204,8 @@ vi.mock("unified", () => {
 });
 
 // Mock React's useEffect to run immediately for initialization
-vi.mock("react", () => {
-  const originalReact = jest.requireActual("react");
+vi.mock("react", async () => {
+  const originalReact = await vi.importActual("react");
   return {
     ...originalReact,
     // Ensure useEffect runs, but maybe not instantly if causing issues
