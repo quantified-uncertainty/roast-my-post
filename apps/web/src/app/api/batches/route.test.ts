@@ -1,10 +1,11 @@
 import { POST } from "./route";
-import { prisma } from "@roast/db";
+import { prisma, generateId } from "@roast/db";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { NextRequest } from "next/server";
 
-// Mock dependencies
+// Mock dependencies - but use real generateId
 jest.mock("@roast/db", () => ({
+  ...jest.requireActual("@roast/db"),
   prisma: {
     $transaction: jest.fn(),
     agentEvalBatch: {
@@ -28,15 +29,6 @@ jest.mock("@roast/db", () => ({
       createMany: jest.fn(),
     },
   },
-  generateId: jest.fn((length = 21) => {
-    // Generate a mock ID similar to what our real function would produce
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }),
 }));
 
 jest.mock("@/infrastructure/auth/auth-helpers", () => ({
