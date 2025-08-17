@@ -1,11 +1,10 @@
 import { vi } from 'vitest';
-import { jest } from "@jest/globals";
 import { JSDOM } from "jsdom";
 import axios from "axios";
 
 // Mock dependencies
 vi.mock("axios");
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedAxios = vi.mocked(axios);
 
 // Set environment variables before importing the module
 const originalFirecrawlKey = process.env.FIRECRAWL_KEY;

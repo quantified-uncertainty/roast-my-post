@@ -1,12 +1,18 @@
 import { vi } from 'vitest';
+
+// Mock dependencies before imports
+vi.mock("@/infrastructure/auth/auth-helpers", () => ({
+  authenticateRequest: vi.fn(),
+}));
+vi.mock("@/application/services/documentImport", () => ({
+  importDocumentService: vi.fn(),
+}));
+vi.mock("@/infrastructure/logging/logger");
+
 import { NextRequest } from "next/server";
 import { POST } from "../route";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { importDocumentService } from "@/application/services/documentImport";
-
-// Mock dependencies
-vi.mock("@/infrastructure/auth/auth-helpers");
-vi.mock("@/application/services/documentImport");
 
 const mockAuthenticateRequest = vi.mocked(authenticateRequest);
 const mockImportDocumentService = vi.mocked(importDocumentService);

@@ -1,3 +1,11 @@
 // Mock for next-auth resend provider
 import { vi } from 'vitest';
-export default vi.fn();
+
+const ResendProvider = vi.fn((options) => ({
+  id: 'resend',
+  type: 'email',
+  name: 'Resend',
+  ...options
+}));
+
+export default ResendProvider;
