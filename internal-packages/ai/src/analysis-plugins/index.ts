@@ -4,6 +4,12 @@ export * from './PluginLogger';
 export { TextChunk } from './TextChunk';
 export * from './types';
 
+// Core refactored components
+export * from './core';
+
+// Plugin constants
+export * from './constants/plugin-ids';
+
 // Plugin builders
 export * from './builders/FindingBuilder';
 
