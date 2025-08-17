@@ -5,17 +5,20 @@ import { ForecastPlugin } from '../plugins/forecast';
 import { LinkPlugin } from '../plugins/link-analysis';
 import { PluginManager } from '../PluginManager';
 import { TextChunk } from '../TextChunk';
-import { assertAnalysisResult, measurePerformance, logTestResult } from './helpers/test-utils';
-import { spellingDocuments } from './fixtures/spelling-documents';
-import { mathDocuments } from './fixtures/math-documents';
-import { factDocuments } from './fixtures/fact-documents';
-import { forecastDocuments } from './fixtures/forecast-documents';
-import { linkDocuments } from './fixtures/link-documents';
-
-// Skip these tests in CI or when no API key is available
-const describeIfApiKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.trim() !== '' 
-  ? describe 
-  : describe.skip;
+import { 
+  assertAnalysisResult, 
+  measurePerformance, 
+  logTestResult, 
+  describeIfApiKey 
+} from './helpers/test-helpers';
+import { 
+  spellingTestCases, 
+  mathTestCases, 
+  factTestCases, 
+  forecastTestCases, 
+  linkTestCases,
+  TestDocuments 
+} from './helpers/shared-fixtures';
 
 describeIfApiKey('Single-Plugin Agent Integration Tests', () => {
   const TEST_TIMEOUT = 60000; // 60 seconds per test
@@ -29,75 +32,29 @@ describeIfApiKey('Single-Plugin Agent Integration Tests', () => {
       manager = new PluginManager();
     });
 
-    it('should detect spelling and grammar errors', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          spellingDocuments.withErrors,
-          [plugin]
-        );
-      });
+    // Table-driven tests using test cases from shared fixtures
+    it.each(spellingTestCases)(
+      '$name',
+      async (testCase) => {
+        if (testCase.skip) return;
 
-      const pluginResult = result.pluginResults.get('SPELLING');
-      expect(pluginResult).toBeDefined();
+        const { result, timeMs } = await measurePerformance(async () => {
+          return await manager.analyzeDocumentSimple(
+            testCase.document,
+            [plugin]
+          );
+        });
 
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          minComments: 5,
-          maxComments: 20,
-          mustFindTexts: ['contians', 'grammer', 'identifyed', 'dont', 'embarassing'],
-          summaryContains: ['spelling', 'grammar'],
-          verifyHighlights: true,
-          maxCost: 0.05
-        }, 'Spelling with errors');
+        const pluginResult = result.pluginResults.get('SPELLING');
+        expect(pluginResult).toBeDefined();
 
-        logTestResult('Spelling with errors', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should handle clean documents without false positives', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          spellingDocuments.clean,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('SPELLING');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        assertAnalysisResult(pluginResult, {
-          maxComments: 3, // Allow for very minor suggestions
-          verifyHighlights: true,
-          maxCost: 0.05
-        }, 'Spelling clean document');
-
-        logTestResult('Spelling clean document', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
-
-    it('should handle mixed US/UK conventions appropriately', async () => {
-      const { result, timeMs } = await measurePerformance(async () => {
-        return await manager.analyzeDocumentSimple(
-          spellingDocuments.mixedConventions,
-          [plugin]
-        );
-      });
-
-      const pluginResult = result.pluginResults.get('SPELLING');
-      expect(pluginResult).toBeDefined();
-
-      if (pluginResult) {
-        // Should either accept both conventions or flag inconsistency
-        assertAnalysisResult(pluginResult, {
-          maxComments: 10, // Some tools might flag convention mixing
-          analysisContains: ['convention', 'spelling'],
-          verifyHighlights: true
-        }, 'Spelling mixed conventions');
-
-        logTestResult('Spelling mixed conventions', pluginResult, timeMs);
-      }
-    }, TEST_TIMEOUT);
+        if (pluginResult) {
+          assertAnalysisResult(pluginResult, testCase.expectations, testCase.name);
+          logTestResult(testCase.name, pluginResult, timeMs);
+        }
+      },
+      TEST_TIMEOUT
+    );
   });
 
   describe('Math Checker Agent', () => {

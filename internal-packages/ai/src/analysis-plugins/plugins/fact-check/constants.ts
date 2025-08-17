@@ -25,9 +25,12 @@ export const THRESHOLDS = {
 // Limits and counts
 export const LIMITS = {
   // Maximum facts to verify per analysis
+  // WARNING: Increased from 25 to 50 - this could double LLM costs
+  // Consider making this configurable or reverting if costs become an issue
   MAX_FACTS_TO_VERIFY: 50,
 
   // Maximum claims to extract per chunk
+  // WARNING: Increased from default - higher extraction limits increase costs
   MAX_CLAIMS_PER_CHUNK: 20,
 
   // Minimum key phrase length for fuzzy matching

@@ -323,7 +323,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       description: formattedDescription,
 
       // Structured content
-      header: error.conciseCorrection || `${error.text} → ${error.correction}`,
+      header: error.conciseCorrection || `${error.text} → ${error.correction || "[suggestion needed]"}`,
       level: error.type === "grammar" ? "warning" : "info",
       observation: `${error.type === "spelling" ? "Misspelling" : "Grammar error"}: "${error.text}"`,
       significance:
@@ -371,50 +371,53 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     }
 
     // Build impact-oriented analysis with template structure
-    let analysis = "";
+    const analysisLines: string[] = [];
 
     // Key Findings (prioritize by severity)
     if (totalErrors > 0) {
-      analysis += "**Key Findings:**\n";
+      analysisLines.push("**Key Findings:**");
       if (hasGradeResult) {
         const stats = this.gradeResult!.statistics;
         const grammarErrors = stats.errorsByType["grammar"] || 0;
         const spellingErrors = stats.errorsByType["spelling"] || 0;
 
         if (grammarErrors > 0) {
-          analysis += `- ${grammarErrors} grammar error${grammarErrors !== 1 ? "s" : ""} affecting readability\n`;
+          analysisLines.push(`- ${grammarErrors} grammar error${grammarErrors !== 1 ? "s" : ""} affecting readability`);
         }
         if (spellingErrors > 0) {
-          analysis += `- ${spellingErrors} spelling error${spellingErrors !== 1 ? "s" : ""} requiring correction\n`;
+          analysisLines.push(`- ${spellingErrors} spelling error${spellingErrors !== 1 ? "s" : ""} requiring correction`);
         }
         if (stats.errorsBySeverity.critical > 0) {
-          analysis += `- ${stats.errorsBySeverity.critical} critical issue${stats.errorsBySeverity.critical !== 1 ? "s" : ""} requiring immediate attention\n`;
+          analysisLines.push(`- ${stats.errorsBySeverity.critical} critical issue${stats.errorsBySeverity.critical !== 1 ? "s" : ""} requiring immediate attention`);
         }
       } else {
-        analysis += `- ${totalErrors} writing issue${totalErrors !== 1 ? "s" : ""} requiring attention\n`;
+        analysisLines.push(`- ${totalErrors} writing issue${totalErrors !== 1 ? "s" : ""} requiring attention`);
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Document Impact
     if (totalErrors > 0) {
-      analysis += "**Document Impact:**\n";
+      analysisLines.push("**Document Impact:**");
       if (hasGradeResult && grade < 60) {
-        analysis +=
-          "Critical writing quality issues may significantly impact document professionalism and credibility. Immediate review recommended.\n";
+        analysisLines.push(
+          "Critical writing quality issues may significantly impact document professionalism and credibility. Immediate review recommended."
+        );
       } else if (hasGradeResult && grade < 80) {
-        analysis +=
-          "Writing quality issues present but may not affect core comprehension. Review recommended for professional presentation.\n";
+        analysisLines.push(
+          "Writing quality issues present but may not affect core comprehension. Review recommended for professional presentation."
+        );
       } else {
-        analysis +=
-          "Minor writing quality issues detected. Overall document integrity maintained but corrections would improve professionalism.\n";
+        analysisLines.push(
+          "Minor writing quality issues detected. Overall document integrity maintained but corrections would improve professionalism."
+        );
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Specific Issues Found
     if (totalErrors > 0) {
-      analysis += "**🔍 Specific Issues Found:**\n\n";
+      analysisLines.push("**🔍 Specific Issues Found:**", "");
 
       // Show top errors by severity
       const sortedErrors = this.errors
@@ -428,21 +431,21 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
             : error.error.importance > HIGH_IMPORTANCE_THRESHOLD
               ? "🟡"
               : "🔵";
-        analysis += `- ${severityIcon} **${error.error.type}**: "${error.error.text}"\n`;
-        analysis += `  - Suggested: "${error.error.correction}"\n`;
+        analysisLines.push(`- ${severityIcon} **${error.error.type}**: "${error.error.text}"`);
+        analysisLines.push(`  - Suggested: "${error.error.correction || "[no suggestion available]"}"`);
       }
 
       if (this.errors.length > 5) {
-        analysis += `  - ...and ${this.errors.length - 5} more issue${this.errors.length - 5 !== 1 ? "s" : ""}\n`;
+        analysisLines.push(`  - ...and ${this.errors.length - 5} more issue${this.errors.length - 5 !== 1 ? "s" : ""}`);
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Technical Details (collapsible)
-    analysis += "<details>\n<summary>Technical Details</summary>\n\n";
+    analysisLines.push("<details>", "<summary>Technical Details</summary>", "");
 
     // Quick summary with visual indicators
-    analysis += "**📊 Quick Summary:**\n";
+    analysisLines.push("**📊 Quick Summary:**");
     if (totalErrors > 0 && hasGradeResult) {
       const stats = this.gradeResult!.statistics;
       const indicators = [];
@@ -458,36 +461,40 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       if (spellingErrors > 0) {
         indicators.push(`🔵 ${spellingErrors} spelling`);
       }
-      analysis +=
-        indicators.join(" • ") +
-        `\n📊 Overall grade: ${grade}/100 (${this.gradeResult!.category})\n\n`;
+      analysisLines.push(
+        indicators.join(" • "),
+        `📊 Overall grade: ${grade}/100 (${this.gradeResult!.category})`,
+        ""
+      );
     } else if (totalErrors > 0) {
-      analysis += `🔍 ${totalErrors} issue${totalErrors !== 1 ? "s" : ""} found\n\n`;
+      analysisLines.push(`🔍 ${totalErrors} issue${totalErrors !== 1 ? "s" : ""} found`, "");
     } else {
-      analysis += "✅ No issues found\n\n";
+      analysisLines.push("✅ No issues found", "");
     }
 
     // Language convention results
     if (this.languageConvention) {
-      analysis += `**🌍 Language Convention:**\n`;
-      analysis += `- Detected: ${this.languageConvention.convention} English`;
+      analysisLines.push(`**🌍 Language Convention:**`);
+      let conventionLine = `- Detected: ${this.languageConvention.convention} English`;
       if (this.languageConvention.confidence < LOW_CONFIDENCE_THRESHOLD) {
-        analysis += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
+        conventionLine += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
       }
-      analysis += "\n";
+      analysisLines.push(conventionLine);
 
       if (this.languageConvention.consistency < LOW_CONSISTENCY_THRESHOLD) {
-        analysis += `- ⚠️ Mixed conventions detected (${Math.round(this.languageConvention.consistency * 100)}% consistency)\n`;
-        analysis += `- Recommendation: Standardize to ${this.languageConvention.convention} English\n`;
+        analysisLines.push(
+          `- ⚠️ Mixed conventions detected (${Math.round(this.languageConvention.consistency * 100)}% consistency)`,
+          `- Recommendation: Standardize to ${this.languageConvention.convention} English`
+        );
       }
 
       const examples = getConventionExamples(
         this.languageConvention.convention
       );
       if (examples.length > 0) {
-        analysis += `- Examples: ${examples.join(", ")}\n`;
+        analysisLines.push(`- Examples: ${examples.join(", ")}`);
       }
-      analysis += "\n";
+      analysisLines.push("");
     }
 
     // Detailed error breakdown
@@ -502,13 +509,15 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           },
         })
       );
-      analysis += `**📝 Detailed Error Analysis:**\n`;
-      analysis += generateDocumentSummary(toolErrors);
+      analysisLines.push(
+        `**📝 Detailed Error Analysis:**`,
+        generateDocumentSummary(toolErrors)
+      );
     }
 
-    analysis += "\n</details>";
+    analysisLines.push("", "</details>");
 
-    this.analysis = analysis;
+    this.analysis = analysisLines.join("\n");
     this.summary = summary;
   }
 
