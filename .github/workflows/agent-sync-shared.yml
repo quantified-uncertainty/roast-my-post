@@ -8,15 +8,6 @@ on:
         required: false
         default: 'Production'
         type: string
-      agent_ids:
-        description: 'Specific agent IDs to sync (comma-separated, leave empty for all)'
-        required: false
-        type: string
-      force_update:
-        description: 'Force update even if versions match'
-        required: false
-        default: false
-        type: boolean
       dry_run:
         description: 'Dry run (show what would be synced without making changes)'
         required: false
@@ -27,11 +18,6 @@ on:
         required: false
         default: 'agent-sync'
         type: string
-      skip_backup:
-        description: 'Skip database backup'
-        required: false
-        default: false
-        type: boolean
     secrets:
       DATABASE_URL:
         required: true
@@ -39,7 +25,7 @@ on:
 jobs:
   backup:
     name: Backup Database
-    if: inputs.dry_run != true && inputs.skip_backup != true
+    if: inputs.dry_run != true
     uses: ./.github/workflows/database-backup.yml
     with:
       backup_prefix: ${{ inputs.backup_prefix }}
@@ -84,10 +70,8 @@ jobs:
           echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
           echo "| ------- | ----- |" >> $GITHUB_STEP_SUMMARY
           echo "| Environment | ${{ inputs.environment }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Agent IDs | ${{ inputs.agent_ids || 'All agents' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Force Update | ${{ inputs.force_update }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Dry Run | ${{ inputs.dry_run }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backup | ${{ inputs.skip_backup && 'Skipped' || needs.backup.outputs.backup_filename || 'Pending' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backup | ${{ needs.backup.outputs.backup_filename || 'N/A (dry run)' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Triggered by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow | ${{ github.workflow }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -96,7 +80,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          echo "## Current System Agents in Database" >> $GITHUB_STEP_SUMMARY
+          echo "## Current System Agents" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           cat > list_agents.js << 'EOF'
@@ -146,7 +130,6 @@ jobs:
 
       - name: Preview changes (dry run)
         if: inputs.dry_run == true
-        id: preview
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -159,21 +142,14 @@ jobs:
           const prisma = new PrismaClient();
           
           async function main() {
-            const targetAgentIds = process.env.AGENT_IDS?.split(',').map(id => id.trim()).filter(Boolean);
-            const forceUpdate = process.env.FORCE_UPDATE === 'true';
-            
-            const agentsToSync = targetAgentIds?.length 
-              ? systemAgents.filter(agent => targetAgentIds.includes(agent.id))
-              : systemAgents;
-            
-            console.log(`🎯 Would sync ${agentsToSync.length} agent(s)`);
+            console.log(`🎯 Would sync ${systemAgents.length} agent(s)`);
             console.log('');
             
             let updateCount = 0;
             let createCount = 0;
             let skipCount = 0;
             
-            for (const agent of agentsToSync) {
+            for (const agent of systemAgents) {
               console.log(`📋 Agent: ${agent.id}`);
               
               const existingAgent = await prisma.agent.findUnique({
@@ -190,7 +166,7 @@ jobs:
                   latestVersion?.selfCritiqueInstructions !== agent.selfCritiqueInstructions ||
                   JSON.stringify(latestVersion?.pluginIds || []) !== JSON.stringify(agent.pluginIds || []);
                 
-                if (contentChanged || forceUpdate) {
+                if (contentChanged) {
                   console.log(`  → Would UPDATE to version ${(latestVersion?.version || 0) + 1}`);
                   console.log(`     Current: v${latestVersion?.version} - ${latestVersion?.name}`);
                   console.log(`     New: v${(latestVersion?.version || 0) + 1} - ${agent.name}`);
@@ -209,21 +185,13 @@ jobs:
             
             console.log('---');
             console.log(`Summary: ${createCount} to create, ${updateCount} to update, ${skipCount} unchanged`);
-            
-            // Output for GitHub Actions
-            console.log(`::set-output name=create_count::${createCount}`);
-            console.log(`::set-output name=update_count::${updateCount}`);
-            console.log(`::set-output name=skip_count::${skipCount}`);
           }
           
           main().catch(console.error).finally(() => prisma.$disconnect());
           EOF
           
           cd internal-packages/db
-          AGENT_IDS="${{ inputs.agent_ids }}" \
-          FORCE_UPDATE="${{ inputs.force_update }}" \
           node dry_run_sync.js | tee -a $GITHUB_STEP_SUMMARY
-          
           rm -f dry_run_sync.js
 
       - name: Sync system agents (live run)
@@ -237,67 +205,17 @@ jobs:
           
           cd internal-packages/db
           
-          # Prepare environment variables
-          export AGENT_IDS="${{ inputs.agent_ids }}"
-          export FORCE_UPDATE="${{ inputs.force_update }}"
-          
-          # Run appropriate sync command
-          if [ -n "$AGENT_IDS" ]; then
-            echo "Syncing specific agents: $AGENT_IDS"
-            
-            # Create filtered sync script
-            cat > filtered_sync.ts << 'EOF'
-          import { PrismaClient } from './generated';
-          import { systemAgents } from './system-agents/agents';
-          import { syncSystemAgents } from './system-agents/sync';
-          
-          async function main() {
-            const targetAgentIds = process.env.AGENT_IDS!.split(',').map(id => id.trim()).filter(Boolean);
-            const agentsToSync = systemAgents.filter(agent => targetAgentIds.includes(agent.id));
-            
-            console.log(`🎯 Syncing ${agentsToSync.length} specific agent(s): ${targetAgentIds.join(', ')}`);
-            
-            // Use the existing sync function with filtered agents
-            const originalAgents = systemAgents;
-            Object.defineProperty(require('./system-agents/agents'), 'systemAgents', {
-              value: agentsToSync,
-              writable: true
-            });
-            
-            await syncSystemAgents();
-            
-            // Restore original agents
-            Object.defineProperty(require('./system-agents/agents'), 'systemAgents', {
-              value: originalAgents,
-              writable: true
-            });
-            
-            console.log(`✅ Completed syncing ${agentsToSync.length} agent(s)`);
-          }
-          
-          main().catch(err => {
-            console.error('Sync failed:', err);
-            process.exit(1);
-          });
-          EOF
-            
-            SYNC_OUTPUT=$(npx tsx filtered_sync.ts 2>&1)
-            SYNC_STATUS=$?
-            echo "$SYNC_OUTPUT"
-            rm -f filtered_sync.ts
-          else
-            echo "Syncing all system agents"
-            SYNC_OUTPUT=$(npx tsx system-agents/sync.ts 2>&1)
-            SYNC_STATUS=$?
-            echo "$SYNC_OUTPUT"
-          fi
+          echo "Syncing all system agents..."
+          SYNC_OUTPUT=$(npx tsx system-agents/sync.ts 2>&1)
+          SYNC_STATUS=$?
+          echo "$SYNC_OUTPUT"
           
           # Parse and report results
           if [ $SYNC_STATUS -eq 0 ]; then
             echo "✅ **Agent synchronization completed successfully!**" >> $GITHUB_STEP_SUMMARY
             
             # Extract counts from output
-            AGENT_COUNT=$(echo "$SYNC_OUTPUT" | grep -E "Synchronized|Completed syncing" | grep -o '[0-9]\+' | head -1)
+            AGENT_COUNT=$(echo "$SYNC_OUTPUT" | grep -E "Synchronized|synced" | grep -o '[0-9]\+' | head -1)
             echo "::set-output name=count::${AGENT_COUNT:-0}"
             echo "::set-output name=status::success"
             
@@ -339,15 +257,8 @@ jobs:
           const prisma = new PrismaClient();
           
           async function main() {
-            const targetAgentIds = process.env.AGENT_IDS?.split(',').map(id => id.trim()).filter(Boolean);
-            const expectedAgents = targetAgentIds?.length 
-              ? systemAgents.filter(agent => targetAgentIds.includes(agent.id))
-              : systemAgents;
-            
             const dbAgents = await prisma.agent.findMany({
-              where: targetAgentIds?.length 
-                ? { id: { in: targetAgentIds }, isSystemManaged: true }
-                : { isSystemManaged: true },
+              where: { isSystemManaged: true },
               include: {
                 versions: {
                   orderBy: { version: 'desc' },
@@ -356,11 +267,11 @@ jobs:
               }
             });
             
-            console.log(`✅ Expected ${expectedAgents.length} agent(s), found ${dbAgents.length} in database`);
+            console.log(`✅ Expected ${systemAgents.length} agent(s), found ${dbAgents.length} in database`);
             
             let allGood = true;
             
-            for (const expectedAgent of expectedAgents) {
+            for (const expectedAgent of systemAgents) {
               const dbAgent = dbAgents.find(a => a.id === expectedAgent.id);
               if (dbAgent) {
                 const version = dbAgent.versions[0];
@@ -371,6 +282,13 @@ jobs:
               }
             }
             
+            // Check for unexpected agents
+            for (const dbAgent of dbAgents) {
+              if (!systemAgents.find(a => a.id === dbAgent.id)) {
+                console.log(`⚠️  ${dbAgent.id}: In database but not in code definitions`);
+              }
+            }
+            
             process.exit(allGood ? 0 : 1);
           }
           
@@ -378,14 +296,14 @@ jobs:
           EOF
           
           cd internal-packages/db
-          AGENT_IDS="${{ inputs.agent_ids }}" node verify_agents.js | tee -a $GITHUB_STEP_SUMMARY
+          node verify_agents.js | tee -a $GITHUB_STEP_SUMMARY
           rm -f verify_agents.js
 
       - name: Final summary
         if: always()
         run: |
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📋 Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ inputs.dry_run }}" == "true" ]; then
@@ -393,12 +311,12 @@ jobs:
             echo "No changes were made to the database." >> $GITHUB_STEP_SUMMARY
           elif [ "${{ job.status }}" == "success" ]; then
             echo "### ✅ Agent sync completed successfully!" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ inputs.skip_backup }}" != "true" ]; then
+            if [ -n "${{ needs.backup.outputs.backup_filename }}" ]; then
               echo "- **Backup created**: \`${{ needs.backup.outputs.backup_filename }}\`" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "### ❌ Agent sync failed!" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ inputs.skip_backup }}" != "true" ] && [ -n "${{ needs.backup.outputs.backup_filename }}" ]; then
+            if [ -n "${{ needs.backup.outputs.backup_filename }}" ]; then
               echo "- **Backup available for restore**: \`${{ needs.backup.outputs.backup_filename }}\`" >> $GITHUB_STEP_SUMMARY
             fi
           fi

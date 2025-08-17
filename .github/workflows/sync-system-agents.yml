@@ -7,12 +7,6 @@ on:
     paths:
       - 'internal-packages/db/system-agents/**'
   workflow_dispatch:
-    inputs:
-      force_sync:
-        description: 'Force sync all agents (even if unchanged)'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   sync:
@@ -20,8 +14,6 @@ jobs:
     uses: ./.github/workflows/agent-sync-shared.yml
     with:
       environment: 'Production'
-      force_update: ${{ github.event.inputs.force_sync || false }}
       backup_prefix: 'auto-agent-sync'
-      skip_backup: false
       dry_run: false
     secrets: inherit
