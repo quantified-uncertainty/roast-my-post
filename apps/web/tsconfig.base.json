@@ -28,7 +28,7 @@
     },
 
     // Type definitions
-    "types": ["node", "jest", "@testing-library/jest-dom"]
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom", "vitest"]
   },
   "include": ["${configDir}/src/**/*"],
   "exclude": ["node_modules"]

@@ -22,6 +22,8 @@
   "ignorePatterns": [
     "**/*.test.ts",
     "**/*.test.tsx",
+    "**/*.vtest.ts",
+    "**/*.vtest.tsx",
     "**/jest.d.ts",
     "**/*.js",
     "node_modules/",

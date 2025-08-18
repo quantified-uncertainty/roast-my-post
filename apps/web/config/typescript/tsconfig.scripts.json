@@ -25,6 +25,10 @@
   "exclude": [
     "../../src/**/*.test.ts",
     "../../src/**/*.test.tsx",
+    "../../src/**/*.vtest.ts",
+    "../../src/**/*.vtest.tsx",
+    "../../src/**/*.vspec.ts",
+    "../../src/**/*.vspec.tsx",
     "../../node_modules"
   ]
 }

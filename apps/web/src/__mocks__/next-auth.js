@@ -1,22 +1,21 @@
 // Mock for next-auth package
+import { vi } from 'vitest';
+
 const mockHandlers = {
-  GET: jest.fn(),
-  POST: jest.fn(),
+  GET: vi.fn(),
+  POST: vi.fn(),
 };
 
-const mockSignIn = jest.fn();
-const mockSignOut = jest.fn();
+const mockSignIn = vi.fn();
+const mockSignOut = vi.fn();
 
-const NextAuth = jest.fn(() => ({
+const NextAuth = vi.fn(() => ({
   handlers: mockHandlers,
   signIn: mockSignIn,
   signOut: mockSignOut,
-  auth: jest.fn(),
+  auth: vi.fn(),
 }));
 
-module.exports = {
-  __esModule: true,
-  default: NextAuth,
-  NextAuth,
-  NextAuthConfig: {},
-};
+export default NextAuth;
+export { NextAuth };
+export const NextAuthConfig = {};
