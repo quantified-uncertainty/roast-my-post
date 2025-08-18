@@ -3,7 +3,7 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis";
 import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
-import type { Agent } from "@roast/ai";
+import type { Agent } from "../../../types/agentSchema";
 
 // This is an integration test - it makes real API calls
 // Increase timeout for network operations
@@ -19,7 +19,7 @@ describe("markdownPrepend Integration Tests", () => {
     providesGrades: false,
   };
 
-  test("comprehensive analysis workflow correctly handles markdownPrepend", async () => {
+  it("comprehensive analysis workflow correctly handles markdownPrepend", async () => {
     // Skip if no API key
     if (!process.env.ANTHROPIC_API_KEY) {
       console.log("Skipping test - ANTHROPIC_API_KEY not set");
@@ -106,7 +106,7 @@ And some more content on the final line.`;
     expect(comment2.highlight!.quotedText).toContain("https://example.com");
   }, 30000);
 
-  test("link analysis workflow correctly handles markdownPrepend", async () => {
+  it("link analysis workflow correctly handles markdownPrepend", async () => {
     // Skip if no API key
     if (!process.env.ANTHROPIC_API_KEY) {
       console.log("Skipping test - ANTHROPIC_API_KEY not set");
@@ -164,7 +164,7 @@ And some more content on the final line.`;
     }
   }, 30000);
 
-  test("highlight positions are consistent between analysis and display", async () => {
+  it("highlight positions are consistent between analysis and display", async () => {
     // This test verifies that the same content is used for:
     // 1. LLM analysis (with prepend)
     // 2. Comment extraction (with prepend)

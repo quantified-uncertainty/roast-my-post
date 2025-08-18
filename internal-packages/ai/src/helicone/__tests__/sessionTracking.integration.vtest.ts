@@ -47,7 +47,7 @@ describe('Helicone Session Tracking Integration', () => {
     vi.clearAllMocks();
   });
   
-  test('tracks correct session hierarchy for plugin analysis', async () => {
+  it('tracks correct session hierarchy for plugin analysis', async () => {
     // Create a job session manager
     const jobId = 'test-job-123';
     const sessionManager = HeliconeSessionManager.forJob(
@@ -131,7 +131,7 @@ The equation 2 + 2 = 5 is incorrect.
     });
   });
   
-  test('maintains separate paths for parallel plugin execution', async () => {
+  it('maintains separate paths for parallel plugin execution', async () => {
     const sessionManager = HeliconeSessionManager.forJob(
       'parallel-test-job',
       'Parallel Test Job',
@@ -168,7 +168,7 @@ The equation 2 + 2 = 5 is incorrect.
     ]));
   });
   
-  test('tracks tool calls within plugins correctly', async () => {
+  it('tracks tool calls within plugins correctly', async () => {
     const sessionManager = HeliconeSessionManager.forJob(
       'tool-test-job',
       'Tool Test Job',
@@ -197,7 +197,7 @@ The equation 2 + 2 = 5 is incorrect.
     expect(sessionIds[0]).toBe('tool-test-job');
   });
   
-  test('handles missing global session manager gracefully', async () => {
+  it('handles missing global session manager gracefully', async () => {
     // Don't set any global session manager
     setGlobalSessionManager(undefined);
     capturedApiCalls = [];

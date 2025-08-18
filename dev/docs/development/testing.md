@@ -182,7 +182,7 @@ By default, tests suppress console output to keep test logs clean. This prevents
 
 ### How It Works
 
-1. **Automatic Suppression**: The Jest setup file (`/config/jest/setup.js`) mocks console methods during tests
+1. **Automatic Suppression**: The Vitest setup file mocks console methods during tests
 2. **Debug Access**: `console.debug` remains available for debugging
 3. **Environment Control**: Set `SHOW_TEST_LOGS=true` to see all console output
 4. **Quiet Mode**: Use `--silent` flag for even cleaner output
@@ -219,7 +219,7 @@ describe('Error logging', () => {
   });
   
   test('logs errors correctly', () => {
-    const spy = jest.spyOn(console, 'error');
+    const spy = vi.spyOn(console, 'error');
     myFunction(); // Function that calls console.error
     expect(spy).toHaveBeenCalledWith('Expected error');
   });

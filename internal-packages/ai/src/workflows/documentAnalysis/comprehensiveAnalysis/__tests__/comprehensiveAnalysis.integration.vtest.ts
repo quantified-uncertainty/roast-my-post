@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { analyzeDocument } from "../../analyzeDocument";
-import type { Agent, Document } from "@roast/ai";
+import type { Agent } from "../../../../types/agentSchema";
+import type { Document } from "../../../../types/documents";
 
 // Skip these tests if no API key is available or if using dummy key
 const hasApiKey = !!process.env.ANTHROPIC_API_KEY && 
@@ -8,7 +9,7 @@ const hasApiKey = !!process.env.ANTHROPIC_API_KEY &&
 
 describe("Comprehensive Analysis Integration Test", () => {
   if (!hasApiKey) {
-    test.skip("requires ANTHROPIC_API_KEY to run", () => {});
+    it.skip("requires ANTHROPIC_API_KEY to run", () => {});
     return;
   }
   const mockAgent: Agent = {
@@ -20,7 +21,7 @@ describe("Comprehensive Analysis Integration Test", () => {
     providesGrades: true,
   };
 
-  test("generates analysis with highlights from highlightInsights", async () => {
+  it("generates analysis with highlights from highlightInsights", async () => {
     // Create a test document with clear sections
     const testDocument: Document = {
       id: "test-doc-comprehensive",
@@ -146,7 +147,7 @@ The conclusion summarizes the key points and suggests future directions.`,
     expect(taskNames).toContain("extractHighlightsFromAnalysis");
   });
 
-  test("handles edge case where highlightInsights are empty", async () => {
+  it("handles edge case where highlightInsights are empty", async () => {
     // Very minimal document that might not generate insights
     const minimalDoc: Document = {
       id: "minimal-doc",
@@ -183,7 +184,7 @@ Short content.`,
     console.log(`Minimal doc highlights: ${result.highlights.length}`);
   });
 
-  test("verifies line number to offset conversion with prepend", async () => {
+  it("verifies line number to offset conversion with prepend", async () => {
     // Document with specific content at known line numbers
     const lineNumberDoc: Document = {
       id: "line-test",

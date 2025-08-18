@@ -10,7 +10,7 @@ interface LogContext {
 
 class Logger {
   private isDevelopment = process.env.NODE_ENV !== "production";
-  private isTest = process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined;
+  private isTest = process.env.NODE_ENV === "test" || process.env.VITEST_WORKER_ID !== undefined;
 
   private log(level: LogLevel, message: string, context?: LogContext) {
     const timestamp = new Date().toISOString();
