@@ -31,7 +31,7 @@ describe('Tool Examples Integration Tests', () => {
     beforeAll(async () => {
       try {
         // Import examples from the tool's examples.ts file
-        const examplesModule = await import(`../${toolId}/examples`);
+        const examplesModule = await import(`../${toolId}/examples.ts`);
         examples = examplesModule.examples;
         
         // Get the tool from registry
@@ -191,7 +191,7 @@ describe('Tool Examples Integration Tests', () => {
       
       for (const toolId of toolsWithExamples) {
         try {
-          const { examples } = await import(`../${toolId}/examples`);
+          const { examples } = await import(`../${toolId}/examples.ts`);
           const format = Array.isArray(examples) 
             ? (typeof examples[0] === 'string' ? 'string[]' : 'object[]')
             : 'unknown';
@@ -209,7 +209,7 @@ describe('Tool Examples Integration Tests', () => {
     it('all tool examples should export with consistent name', async () => {
       for (const toolId of toolsWithExamples) {
         try {
-          const module = await import(`../${toolId}/examples`);
+          const module = await import(`../${toolId}/examples.ts`);
           expect(module).toHaveProperty('examples');
           expect(module.examples).toBeDefined();
         } catch (error) {

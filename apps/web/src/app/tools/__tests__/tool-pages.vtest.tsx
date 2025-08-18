@@ -42,7 +42,7 @@ describe('Tool UI Pages', () => {
   describe.each(toolsWithUI)('Tool Page: %s', (toolId) => {
     it(`should have a page file at /tools/${toolId}/page.tsx`, async () => {
       try {
-        const pageModule = await import(`../${toolId}/page`);
+        const pageModule = await import(`../${toolId}/page.tsx`);
         expect(pageModule).toBeDefined();
       } catch (error) {
         throw new Error(`Page file missing for ${toolId}`);
@@ -51,7 +51,7 @@ describe('Tool UI Pages', () => {
 
     it(`should export a default component`, async () => {
       try {
-        const pageModule = await import(`../${toolId}/page`);
+        const pageModule = await import(`../${toolId}/page.tsx`);
         expect(pageModule.default).toBeDefined();
         expect(typeof pageModule.default).toBe('function');
       } catch (error) {
@@ -63,7 +63,7 @@ describe('Tool UI Pages', () => {
   describe('Main Tools Page', () => {
     it('should have a main tools listing page', async () => {
       try {
-        const pageModule = await import('../page');
+        const pageModule = await import('../page.tsx');
         expect(pageModule.default).toBeDefined();
         expect(typeof pageModule.default).toBe('function');
       } catch (error) {
