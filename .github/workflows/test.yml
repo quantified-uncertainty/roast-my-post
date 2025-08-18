@@ -95,13 +95,15 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Cache Jest
+      - name: Cache Vitest
         uses: actions/cache@v4
         with:
-          path: /tmp/jest_*
-          key: ${{ runner.os }}-jest-${{ hashFiles('**/*.test.ts', '**/*.test.tsx') }}
+          path: |
+            node_modules/.vitest
+            **/node_modules/.vitest
+          key: ${{ runner.os }}-vitest-${{ hashFiles('**/*.vtest.ts', '**/*.vtest.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-jest-
+            ${{ runner.os }}-vitest-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -121,10 +123,10 @@ jobs:
         run: pnpm --filter @roast/db exec prisma migrate deploy
 
       - name: Run configuration validation tests
-        run: pnpm --filter @roast/web run test:ci --testMatch='**/*config*.test.ts'
+        run: pnpm --filter @roast/web run test:ci **/*config*.vtest.ts
 
       - name: Run script smoke tests
-        run: pnpm --filter @roast/web run test:ci --testMatch='**/*script*.test.ts'
+        run: pnpm --filter @roast/web run test:ci **/*script*.vtest.ts
 
       - name: Validate script runtime
         run: pnpm --filter @roast/web run test:scripts
@@ -134,12 +136,8 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             pnpm --filter @roast/web run test:ci-nocov
           else
-            pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
+            pnpm --filter @roast/web run test:ci --coverage --reporter=text-summary
           fi
-
-      - name: Run Vitest tests (experimental)
-        run: |
-          pnpm --filter @roast/web run test:vitest || echo "Vitest tests are experimental and allowed to fail"
 
   # Integration tests (3-4 minutes) - parallel with other jobs  
   integration-tests:
@@ -308,7 +306,7 @@ jobs:
         run: pnpm --filter @roast/db exec prisma migrate deploy
 
       - name: Run tests (shard ${{ matrix.shard }} of 4)
-        run: pnpm --filter @roast/web run test:shard --shard=${{ matrix.shard }}/4
+        run: pnpm --filter @roast/web run test:shard --shard ${{ matrix.shard }}/4
 
   # Final status check - required for branch protection
   ci-status:
