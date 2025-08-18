@@ -82,7 +82,7 @@ describe('Claude Wrapper Integration Tests', () => {
       
       // First call fails, second succeeds
       mockClient.messages.create
-        .mockImplementationOnce(() => Promise.reject(mockError)
+        .mockImplementationOnce(() => Promise.reject(mockError))
         .mockImplementationOnce(() => Promise.resolve({
           id: 'msg_retry',
           type: 'message',
@@ -92,7 +92,7 @@ describe('Claude Wrapper Integration Tests', () => {
           stop_reason: 'end_turn',
           stop_sequence: null,
           usage: { input_tokens: 20, output_tokens: 5 }
-        });
+        }));
 
       const result = await callClaude({
         messages: [{ role: 'user', content: 'Test retry' }]
@@ -113,7 +113,7 @@ describe('Claude Wrapper Integration Tests', () => {
         stop_reason: 'end_turn',
         stop_sequence: null,
         usage: { input_tokens: 15, output_tokens: 8 }
-      });
+      }));
 
       await callClaude({
         messages: [{ role: 'user', content: 'Test' }],

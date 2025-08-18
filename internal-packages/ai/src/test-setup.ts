@@ -30,7 +30,7 @@ if (process.env.SUPPRESS_TEST_LOGS !== 'false') {
   };
 }
 
-// Add mock helper methods to all vi.fn() calls for Jest compatibility
+// Add mock helper methods to all vi.fn() calls for Vitest compatibility
 const originalFn = vi.fn;
 const originalMocked = vi.mocked;
 
