@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { detectLanguageConventionTool } from './index';
 import { logger } from '../../shared/logger';
 

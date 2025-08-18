@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { PluginManager } from '../PluginManager';
 import { SimpleAnalysisPlugin, AnalysisResult, LLMInteraction } from '../types';
 import { TextChunk } from '../TextChunk';

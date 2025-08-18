@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateComprehensiveAnalysis } from "../index";
 import { extractHighlightsFromAnalysis } from "../../highlightExtraction";
 import type { Agent, Document, ComprehensiveAnalysisOutputs } from "../../../../types";
@@ -11,8 +12,8 @@ vi.mock("../../../../claude/wrapper", () => ({
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
   },
-  createHeliconeHeaders: jest.fn(() => ({})),
-  withTimeout: jest.fn((promise) => promise),
+  createHeliconeHeaders: vi.fn(() => ({})),
+  withTimeout: vi.fn((promise) => promise),
 }));
 
 describe("Comprehensive Analysis Unit Tests", () => {
@@ -38,14 +39,14 @@ describe("Comprehensive Analysis Unit Tests", () => {
     intendedAgents: ["test-agent-1"],
   };
 
-  let mockCallClaudeWithTool: anyedFunction<typeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     // Set up the mock helper
-    mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+    mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
     mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 

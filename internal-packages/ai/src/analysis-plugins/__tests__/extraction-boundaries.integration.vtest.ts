@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 /**
  * Test to verify that extraction tools respect their boundaries
  * and don't overlap with each other's domains

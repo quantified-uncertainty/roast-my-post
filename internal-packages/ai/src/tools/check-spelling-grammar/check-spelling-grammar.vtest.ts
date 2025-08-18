@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { checkSpellingGrammarTool } from './index';
 
 // Mock the Claude API call to test specific scenarios

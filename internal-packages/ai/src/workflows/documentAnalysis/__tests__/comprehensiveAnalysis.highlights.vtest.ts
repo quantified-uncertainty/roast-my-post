@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import type { Agent } from "../../../types/agentSchema";
@@ -15,13 +16,13 @@ vi.mock("../../../claude/wrapper", () => ({
 
 // Mock the timeout utility
 vi.mock("../../../utils/timeout", () => ({
-  withTimeout: jest.fn((promise) => promise),
+  withTimeout: vi.fn((promise) => promise),
 }));
 
 // Mock the cost calculator
 vi.mock("../../../utils/costCalculator", () => ({
-  calculateApiCost: jest.fn(() => 0.5),
-  mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
+  calculateApiCost: vi.fn(() => 0.5),
+  mapModelToCostModel: vi.fn(() => "claude-sonnet-test"),
 }));
 
 import { callClaudeWithTool, MODEL_CONFIG } from "../../../claude/wrapper";
@@ -38,14 +39,14 @@ describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
     providesGrades: false,
   };
 
-  let mockCallClaudeWithTool: anyedFunction<typeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     // Set up the mock helper
-    mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+    mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
     mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 

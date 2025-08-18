@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateMathComment, generateDocumentSummary } from './commentGeneration';
 import type { ExtractedMathExpression } from '../../../tools/extract-math-expressions';
 

@@ -1,8 +1,9 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // jest globals are available by default
 import { linkValidator } from "../index";
 
 // Mock fetch globally
-global.fetch = vi.fn() as anyedFunction<typeof fetch>;
+global.fetch = vi.fn() as anytypeof fetch>;
 
 describe("Link Validator Tool", () => {
   beforeEach(() => {
@@ -11,7 +12,7 @@ describe("Link Validator Tool", () => {
 
   it("validates accessible URLs", async () => {
     // Mock successful HEAD request
-    (global.fetch as anyedFunction<typeof fetch>).mockResolvedValue({
+    (global.fetch as anytypeof fetch>).mockResolvedValue({
       ok: true,
       status: 200,
       url: "https://react.dev/learn",
@@ -38,7 +39,7 @@ describe("Link Validator Tool", () => {
 
   it("detects broken URLs", async () => {
     // Mock 404 response
-    (global.fetch as anyedFunction<typeof fetch>).mockResolvedValue({
+    (global.fetch as anytypeof fetch>).mockResolvedValue({
       ok: false,
       status: 404,
       url: "https://example.com/broken",
@@ -65,7 +66,7 @@ describe("Link Validator Tool", () => {
 
   it("handles multiple URLs", async () => {
     // Mock different responses
-    (global.fetch as anyedFunction<typeof fetch>)
+    (global.fetch as anytypeof fetch>)
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -111,7 +112,7 @@ describe("Link Validator Tool", () => {
 
   it("respects maxUrls limit", async () => {
     // Mock successful responses
-    (global.fetch as anyedFunction<typeof fetch>).mockResolvedValue({
+    (global.fetch as anytypeof fetch>).mockResolvedValue({
       ok: true,
       status: 200,
       headers: { get: vi.fn().mockReturnValue("text/html") },

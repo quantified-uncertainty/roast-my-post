@@ -1,9 +1,10 @@
+import { vi } from 'vitest';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { RichLLMInteraction } from '../../types';
 import { ClaudeCallOptions, ClaudeCallResult } from '../wrapper';
 
 // Mock implementation of callClaude
-export const callClaude = jest.fn(async (
+export const callClaude = vi.fn(async (
   params: ClaudeCallOptions,
   interactions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult> => {
@@ -51,7 +52,7 @@ export const callClaude = jest.fn(async (
 });
 
 // Mock implementation of callClaudeWithTool
-export const callClaudeWithTool = jest.fn(async <T extends Record<string, any>>(
+export const callClaudeWithTool = vi.fn(async <T extends Record<string, any>>(
   params: {
     system?: string;
     messages: Anthropic.Messages.MessageParam[];

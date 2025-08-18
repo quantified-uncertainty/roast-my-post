@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { validateUrl, UrlValidationInput } from "./urlValidator";
 
 // Mock fetch globally
@@ -204,7 +205,7 @@ describe("urlValidator", () => {
         ok: false,
         status: 429,
         headers: {
-          get: jest.fn((header) => {
+          get: vi.fn((header) => {
             if (header === "x-ratelimit-reset") return "1700000000";
             return null;
           }),

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // jest globals are available by default
 import { checkMathHybridTool } from './index';
 import { checkMathWithMathJsTool } from '../check-math-with-mathjs';
@@ -10,8 +11,8 @@ import type { CheckMathOutput } from '../check-math/index';
 vi.mock('../check-math-with-mathjs');
 vi.mock('../check-math');
 
-const mockCheckMathWithMathJs = checkMathWithMathJsTool.execute as anyedFunction<typeof checkMathWithMathJsTool.execute>;
-const mockCheckMath = checkMathTool.execute as anyedFunction<typeof checkMathTool.execute>;
+const mockCheckMathWithMathJs = checkMathWithMathJsTool.execute as anytypeof checkMathWithMathJsTool.execute>;
+const mockCheckMath = checkMathTool.execute as anytypeof checkMathTool.execute>;
 
 // Helper to create mock llmInteraction
 const createMockLLMInteraction = () => ({

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { linkValidator } from "./index";
 
 describe("link-validator tool integration tests", () => {

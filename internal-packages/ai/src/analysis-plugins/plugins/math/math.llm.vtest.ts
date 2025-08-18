@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // Jest integration test file
 import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis";
@@ -6,7 +7,7 @@ import type { Agent } from "@roast/ai";
 
 // This is an integration test - it makes real API calls
 // Increase timeout for network operations
-jest.setTimeout(60000); // 60 seconds for API calls
+vi.setTimeout(60000); // 60 seconds for API calls
 
 describe("markdownPrepend Integration Tests", () => {
   const mockAgent: Agent = {

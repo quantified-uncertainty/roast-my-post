@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { z } from "zod";
 
 import { setupClaudeToolMock } from "../../claude/mockHelpers";
@@ -13,7 +14,7 @@ vi.mock("../../claude/wrapper", () => ({
 }));
 
 
-const mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<
+const mockCallClaudeWithTool = callClaudeWithTool as any
   typeof callClaudeWithTool
 >;
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { MathPlugin } from './index';
 import { TextChunk } from '../../TextChunk';
 import { checkMathHybridTool } from '../../../tools/check-math-hybrid';

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // jest globals are available by default
 import { findUrlPosition, generateLinkHighlights } from "../linkHighlightGenerator";
 import type { LinkAnalysis } from "../urlValidator";

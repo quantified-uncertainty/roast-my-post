@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { createLogDetails } from '../llmUtils';
 
 describe('llmUtils', () => {

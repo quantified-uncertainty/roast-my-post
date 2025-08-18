@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { analyzeWithMultiEpistemicEval } from '../multiEpistemicEval';
 import { MathPlugin } from '@roast/ai';
 import type { Document } from '@roast/ai';
@@ -5,13 +6,13 @@ import type { Agent } from '@roast/ai';
 
 // Mock only the external dependencies (LLM calls), not the internal components
 vi.mock('@roast/ai', () => ({
-  ...jest.requireActual('@roast/ai'), // Keep all actual exports
+  ...vi.importActual('@roast/ai'), // Keep all actual exports
   MODEL_CONFIG: {
     analysis: 'claude-sonnet-4-20250514',
     routing: 'claude-3-haiku-20240307',
     forecasting: 'claude-sonnet-4-20250514'
   },
-  createHeliconeHeaders: jest.fn(() => ({})),
+  createHeliconeHeaders: vi.fn(() => ({})),
   callClaude: vi.fn().mockImplementation(async (messages, options) => {
     // Simulate real Claude responses based on the prompt
     const lastMessage = messages[messages.length - 1].content;

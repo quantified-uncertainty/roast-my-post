@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateSelfCritique } from "../selfCritique";
 import type { Agent } from "@roast/ai";
 
@@ -18,9 +19,9 @@ vi.mock("@roast/ai", () => ({
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
   },
-  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
-  createHeliconeHeaders: jest.fn(() => ({})),
-  withTimeout: jest.fn((promise) => promise),
+  setupClaudeToolMock: vi.importActual("@roast/ai").setupClaudeToolMock,
+  createHeliconeHeaders: vi.fn(() => ({})),
+  withTimeout: vi.fn((promise) => promise),
 }));
 
 // Mock withTimeout - no need to mock the submodule since it's imported from main package
@@ -29,14 +30,14 @@ import { callClaudeWithTool } from "@roast/ai";
 import { setupClaudeToolMock } from "../../../testing";
 
 describe("Self-Critique", () => {
-  let mockCallClaudeWithTool: anyedFunction<typeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     // Set up the mock helper
-    mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+    mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
     mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 

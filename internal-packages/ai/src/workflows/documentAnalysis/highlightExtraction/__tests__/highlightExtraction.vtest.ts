@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { extractHighlightsFromAnalysis } from "../index";
 import type { Agent, Document } from "@roast/ai";
 import type { ComprehensiveAnalysisOutputs } from "../../comprehensiveAnalysis";

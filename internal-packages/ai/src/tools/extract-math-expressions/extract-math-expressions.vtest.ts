@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // jest globals are available by default
 import { extractMathExpressionsTool } from './index';
 import { logger } from '../../shared/logger';
@@ -6,12 +7,12 @@ import { setupClaudeToolMock } from '../../claude/mockHelpers';
 // Mock Claude wrapper
 vi.mock('@roast/ai', () => ({
   callClaudeWithTool: vi.fn(),
-  setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
+  setupClaudeToolMock: vi.importActual('@roast/ai').setupClaudeToolMock
 }));
 import { callClaudeWithTool } from '../../claude/wrapper';
 
 // Get the mocked function and setup helper
-const mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+const mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
 describe('ExtractMathExpressionsTool', () => {

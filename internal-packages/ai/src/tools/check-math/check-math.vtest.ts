@@ -1,19 +1,18 @@
-// jest globals are available by default
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import CheckMathTool from './index';
 import { logger } from '../../shared/logger';
 import { createMockLLMInteraction } from '../../claude/testUtils';
 import { setupClaudeToolMock } from '../../claude/mockHelpers';
 
 // Mock Claude wrapper
-vi.mock('@roast/ai', () => ({
+vi.mock('../../claude/wrapper', () => ({
   callClaudeWithTool: vi.fn(),
   MODEL_CONFIG: {
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
-  },
-  createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction,
-  setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
+  }
 }));
+
 import { callClaudeWithTool } from '../../claude/wrapper';
 
 describe('CheckMathTool', () => {
@@ -22,14 +21,14 @@ describe('CheckMathTool', () => {
     userId: 'test-user'
   };
 
-  let mockCallClaudeWithTool: anyedFunction<typeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: any;
   let mockToolResponse: ReturnType<typeof setupClaudeToolMock>['mockToolResponse'];
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     // Set up the mock helper
-    mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+    mockCallClaudeWithTool = vi.mocked(callClaudeWithTool);
     const mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
     mockToolResponse = mockHelper.mockToolResponse;
   });

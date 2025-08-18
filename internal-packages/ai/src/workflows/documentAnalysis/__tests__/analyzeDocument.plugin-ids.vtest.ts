@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 /**
  * Test for plugin IDs array functionality in analyzeDocument
  */

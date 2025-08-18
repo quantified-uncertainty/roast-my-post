@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { ExtractFactualClaimsTool } from './index';
 import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
@@ -21,7 +22,7 @@ describe('ExtractFactualClaimsTool', () => {
     } as any
   };
   
-  const mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+  const mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
 
   beforeEach(() => {
     vi.clearAllMocks();

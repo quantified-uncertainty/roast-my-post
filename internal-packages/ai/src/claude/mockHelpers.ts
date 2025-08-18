@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { RichLLMInteraction } from '../types';
 import { callClaudeWithTool } from './wrapper';
 
@@ -5,7 +6,7 @@ import { callClaudeWithTool } from './wrapper';
  * Helper to mock Claude tool responses in tests
  */
 export const setupClaudeToolMock = (
-  mockFunction: jest.MockedFunction<typeof callClaudeWithTool>
+  mockFunction: any
 ) => {
   return {
     mockToolResponse: <T extends Record<string, any>>(

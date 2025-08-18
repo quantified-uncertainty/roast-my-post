@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { SpellingPlugin } from '../plugins/spelling';
 import { MathPlugin } from '../plugins/math';
 import { FactCheckPlugin } from '../plugins/fact-check';

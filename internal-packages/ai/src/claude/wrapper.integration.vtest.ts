@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
 import { RichLLMInteraction } from '../types';
@@ -11,7 +12,7 @@ vi.mock('../utils/anthropic', () => ({
 import { createAnthropicClient } from '../utils/anthropic';
 
 describe('Claude Wrapper Integration Tests', () => {
-  const mockCreateAnthropicClient = createAnthropicClient as anyedFunction<typeof createAnthropicClient>;
+  const mockCreateAnthropicClient = createAnthropicClient as anytypeof createAnthropicClient>;
   let mockClient: any;
 
   beforeEach(() => {

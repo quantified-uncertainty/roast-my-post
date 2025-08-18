@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { createTestDocument, getPrependLineCount } from "../testUtils";
@@ -10,9 +11,9 @@ vi.mock("@roast/ai", () => ({
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
   },
-  createHeliconeHeaders: jest.fn(() => ({})),
-  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
-  withTimeout: jest.fn((promise) => promise),
+  createHeliconeHeaders: vi.fn(() => ({})),
+  setupClaudeToolMock: vi.importActual("@roast/ai").setupClaudeToolMock,
+  withTimeout: vi.fn((promise) => promise),
 }));
 
 // withTimeout is now mocked in the main @roast/ai mock above
@@ -22,8 +23,8 @@ import { setupClaudeToolMock } from "../../../testing";
 
 // Mock the cost calculator
 vi.mock("../../../utils/costCalculator", () => ({
-  calculateApiCost: jest.fn(() => 0.5),
-  mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
+  calculateApiCost: vi.fn(() => 0.5),
+  mapModelToCostModel: vi.fn(() => "claude-sonnet-test"),
 }));
 
 describe("markdownPrepend Edge Cases", () => {
@@ -36,14 +37,14 @@ describe("markdownPrepend Edge Cases", () => {
     providesGrades: false,
   };
 
-  let mockCallClaudeWithTool: anyedFunction<typeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     // Set up the mock helper
-    mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+    mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
     mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 

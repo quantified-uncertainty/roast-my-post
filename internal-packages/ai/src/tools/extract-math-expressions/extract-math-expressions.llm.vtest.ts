@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // jest globals are available by default
 import { extractMathExpressionsTool } from './index';
 import { logger } from '../../shared/logger';
@@ -12,7 +13,7 @@ describeIfApiKey('ExtractMathExpressionsTool LLM Integration', () => {
   };
 
   // Increase timeout for LLM tests
-  jest.setTimeout(30000);
+  vi.setTimeout(30000);
 
   describe('error extraction filtering', () => {
     it('should extract clear arithmetic errors', async () => {

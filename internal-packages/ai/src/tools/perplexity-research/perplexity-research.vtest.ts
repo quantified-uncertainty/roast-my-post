@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { PerplexityResearchTool } from './index';
 import { z } from 'zod';
 import { ToolContext } from '../base/Tool';

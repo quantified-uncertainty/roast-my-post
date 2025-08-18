@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { ChunkRouter } from './ChunkRouter';
 import { TextChunk } from '../TextChunk';
 import { SimpleAnalysisPlugin, AnalysisResult } from '../types';
@@ -8,7 +9,7 @@ vi.mock('../../claude/wrapper', () => ({
 }));
 
 import { callClaudeWithTool } from '../../claude/wrapper';
-const mockCallClaudeWithTool = callClaudeWithTool as anyedFunction<typeof callClaudeWithTool>;
+const mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
 
 // Mock plugin
 class MockPlugin implements SimpleAnalysisPlugin {

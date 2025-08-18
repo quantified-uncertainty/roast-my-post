@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { ForecastPlugin } from './index';
 import { MathPlugin } from '../math';
 import { PluginManager } from '../../PluginManager';

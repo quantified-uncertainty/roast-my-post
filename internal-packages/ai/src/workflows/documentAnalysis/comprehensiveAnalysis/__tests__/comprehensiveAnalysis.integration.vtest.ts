@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { analyzeDocument } from "../../analyzeDocument";
 import type { Agent, Document } from "@roast/ai";
 

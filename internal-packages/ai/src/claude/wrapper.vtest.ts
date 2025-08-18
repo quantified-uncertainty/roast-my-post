@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
 import { RichLLMInteraction } from '../types';
 
