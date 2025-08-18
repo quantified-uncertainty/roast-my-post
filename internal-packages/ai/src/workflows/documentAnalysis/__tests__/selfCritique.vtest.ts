@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateSelfCritique } from "../selfCritique";
-import type { Agent } from "@roast/ai";
+import type { Agent } from "../../../types/agentSchema";
 
 // Mock logger to avoid console output
 vi.mock("../../../utils/logger", () => ({
@@ -12,8 +12,8 @@ vi.mock("../../../utils/logger", () => ({
   }
 }));
 
-// Mock the @roast/ai module
-vi.mock("@roast/ai", () => ({
+// Mock the claude wrapper
+vi.mock("../../../claude/wrapper", () => ({
   callClaudeWithTool: vi.fn(),
   MODEL_CONFIG: {
     analysis: "claude-sonnet-test",
@@ -25,7 +25,7 @@ vi.mock("@roast/ai", () => ({
 
 // Mock withTimeout - no need to mock the submodule since it's imported from main package
 
-import { callClaudeWithTool } from "@roast/ai";
+import { callClaudeWithTool } from "../../../claude/wrapper";
 import { setupClaudeToolMock } from "../../../claude/mockHelpers";
 
 describe("Self-Critique", () => {

@@ -1,5 +1,5 @@
-import type { Agent } from "@roast/ai";
-import type { Document } from "@roast/ai";
+import type { Agent } from "../../../types/agentSchema";
+import type { Document } from "../../../types/documentSchema";
 
 export function getComprehensiveAnalysisPrompts(
   agentInfo: Agent,

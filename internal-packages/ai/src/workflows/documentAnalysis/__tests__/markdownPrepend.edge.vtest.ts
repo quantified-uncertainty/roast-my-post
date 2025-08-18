@@ -2,10 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } 
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { createTestDocument, getPrependLineCount } from "../testUtils";
-import type { Agent } from "@roast/ai";
+import type { Agent } from "../../../types/agentSchema";
 
-// Mock the @roast/ai module
-vi.mock("@roast/ai", () => ({
+// Mock the claude wrapper
+vi.mock("../../../claude/wrapper", () => ({
   callClaudeWithTool: vi.fn(),
   MODEL_CONFIG: {
     analysis: "claude-sonnet-test",
@@ -15,9 +15,9 @@ vi.mock("@roast/ai", () => ({
   withTimeout: vi.fn((promise) => promise),
 }));
 
-// withTimeout is now mocked in the main @roast/ai mock above
+// withTimeout is now mocked in the main mock above
 
-import { callClaudeWithTool } from "@roast/ai";
+import { callClaudeWithTool } from "../../../claude/wrapper";
 import { setupClaudeToolMock } from "../../../claude/mockHelpers";
 
 // Mock the cost calculator
