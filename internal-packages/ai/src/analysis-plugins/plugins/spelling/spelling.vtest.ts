@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-// Jest test file
+// Vitest test file
 import { SpellingAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 import { checkSpellingGrammarTool } from '../../../tools/check-spelling-grammar';

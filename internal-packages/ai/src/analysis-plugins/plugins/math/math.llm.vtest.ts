@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-// Jest integration test file
+// Vitest integration test file
 import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 // Test file uses real tool integration - no mocking needed for this import

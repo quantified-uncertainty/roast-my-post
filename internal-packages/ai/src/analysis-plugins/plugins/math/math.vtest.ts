@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-// Jest test file
+// Vitest test file
 import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 import { extractMathExpressionsTool } from '../../../tools/extract-math-expressions';

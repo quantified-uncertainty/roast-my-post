@@ -53,21 +53,21 @@
     "test": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV"],
       "outputLogs": "new-only"
     },
     "test:unit": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV"],
       "outputLogs": "new-only"
     },
     "test:integration": {
       "dependsOn": ["@roast/db#gen", "@roast/domain#build"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.integration.test.ts", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV", "DATABASE_URL"],
       "cache": false,
       "outputLogs": "full"
@@ -75,14 +75,14 @@
     "test:ci": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV"],
       "outputLogs": "new-only"
     },
     "test:ci-integration": {
       "dependsOn": ["@roast/db#gen", "@roast/domain#build"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.integration.test.ts", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV", "DATABASE_URL"],
       "cache": false,
       "outputLogs": "full"
@@ -90,14 +90,14 @@
     "test:ci-nocov": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": [],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV"],
       "outputLogs": "new-only"
     },
     "test:shard": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": [],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV"],
       "cache": false,
       "outputLogs": "new-only"
@@ -105,7 +105,7 @@
     "test:e2e": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.e2e.test.ts", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.e2e.test.ts", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV", "FIRECRAWL_KEY"],
       "cache": false,
       "outputLogs": "full"
@@ -113,7 +113,7 @@
     "test:llm": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.llm.test.ts", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.llm.test.ts", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV", "ANTHROPIC_API_KEY", "OPENAI_API_KEY"],
       "cache": false,
       "outputLogs": "full"
@@ -121,21 +121,21 @@
     "test:fast": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV", "DATABASE_URL"],
       "outputLogs": "new-only"
     },
     "test:without-llms": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/*.e2e.test.ts", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/*.e2e.test.ts", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV", "DATABASE_URL", "FIRECRAWL_KEY"],
       "outputLogs": "new-only"
     },
     "test:without-external": {
       "dependsOn": ["@roast/db#gen"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/jest.config.*"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/vitest.config.*"],
       "env": ["CI", "NODE_ENV", "DATABASE_URL"],
       "outputLogs": "new-only"
     },

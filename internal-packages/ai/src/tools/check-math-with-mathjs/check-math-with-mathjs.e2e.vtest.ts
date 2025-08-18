@@ -1,11 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { logger } from "../../shared/logger";
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@jest/globals";
 
 import { checkMathWithMathJsTool } from "./index";
 

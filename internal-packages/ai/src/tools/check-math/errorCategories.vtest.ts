@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-// jest globals are available by default
+// Vitest test file
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 import type { MathErrorType } from '../shared/math-schemas';
 

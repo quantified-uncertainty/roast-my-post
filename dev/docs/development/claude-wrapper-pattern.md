@@ -232,10 +232,10 @@ Mock the wrapper for unit tests:
 
 ```typescript
 // In your test file
-jest.mock('@roast/ai');
+vi.mock('@roast/ai');
 
 import { callClaude } from '@roast/ai';
-const mockCallClaude = callClaude as jest.MockedFunction<typeof callClaude>;
+const mockCallClaude = vi.mocked(callClaude);
 
 // In your test
 mockCallClaude.mockResolvedValue({
