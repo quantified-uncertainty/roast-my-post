@@ -20,6 +20,46 @@ vi.mock("../unified/index", () => ({
   }))
 }));
 
+// Mock the LLM workflow components
+vi.mock("../comprehensiveAnalysis", () => ({
+  generateComprehensiveAnalysis: vi.fn().mockImplementation(() => Promise.resolve({
+    outputs: {
+      thinking: "Mock LLM thinking",
+      analysis: "Mock LLM analysis",
+      summary: "Mock LLM summary",
+      grade: undefined
+    },
+    task: {
+      name: "comprehensiveAnalysis",
+      metadata: { logMessage: "Mock log" }
+    }
+  }))
+}));
+
+vi.mock("../highlightExtraction", () => ({
+  extractHighlightsFromAnalysis: vi.fn().mockImplementation(() => Promise.resolve({
+    outputs: {
+      highlights: []
+    },
+    task: {
+      name: "highlightExtraction",
+      metadata: { logMessage: "Mock log" }
+    }
+  }))
+}));
+
+vi.mock("../selfCritique", () => ({
+  generateSelfCritique: vi.fn().mockImplementation(() => Promise.resolve({
+    outputs: {
+      selfCritique: "Mock self critique"
+    },
+    task: {
+      name: "selfCritique",
+      metadata: { logMessage: "Mock log" }
+    }
+  }))
+}));
+
 import { analyzeDocumentUnified } from "../unified/index";
 
 describe("analyzeDocument with pluginIds", () => {
@@ -87,7 +127,7 @@ describe("analyzeDocument with pluginIds", () => {
       });
     });
 
-    it("should throw error when no pluginIds provided", async () => {
+    it("should fallback to LLM workflow when no pluginIds provided", async () => {
       const mockAgent: Agent = {
         id: "test-agent",
         version: "1",
@@ -96,12 +136,17 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      await expect(analyzeDocument(mockDocument, mockAgent)).rejects.toThrow(
-        /Agent Test Agent has no valid plugins/
-      );
+      const result = await analyzeDocument(mockDocument, mockAgent);
+      
+      // analyzeDocumentUnified should NOT have been called
+      expect(analyzeDocumentUnified).not.toHaveBeenCalled();
+      
+      // Should return a valid result from the LLM workflow
+      expect(result).toBeDefined();
+      expect(result.analysis).toBeDefined();
     });
 
-    it("should throw error when pluginIds array is empty", async () => {
+    it("should fallback to LLM workflow when pluginIds array is empty", async () => {
       const mockAgent: Agent = {
         id: "test-agent",
         version: "1",
@@ -111,9 +156,14 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      await expect(analyzeDocument(mockDocument, mockAgent)).rejects.toThrow(
-        /Agent Test Agent has no valid plugins/
-      );
+      const result = await analyzeDocument(mockDocument, mockAgent);
+      
+      // analyzeDocumentUnified should NOT have been called
+      expect(analyzeDocumentUnified).not.toHaveBeenCalled();
+      
+      // Should return a valid result from the LLM workflow
+      expect(result).toBeDefined();
+      expect(result.analysis).toBeDefined();
     });
   });
 
@@ -142,7 +192,7 @@ describe("analyzeDocument with pluginIds", () => {
       });
     });
 
-    it("should throw error when all plugin IDs are invalid", async () => {
+    it("should fallback to LLM workflow when all plugin IDs are invalid", async () => {
       const mockAgent: Agent = {
         id: "test-agent",
         version: "1",
@@ -152,9 +202,16 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      await expect(analyzeDocument(mockDocument, mockAgent)).rejects.toThrow(
-        /Agent Test Agent has no valid plugins/
-      );
+      // Should not call analyzeDocumentUnified when no valid plugins
+      const result = await analyzeDocument(mockDocument, mockAgent);
+      
+      // analyzeDocumentUnified should NOT have been called
+      expect(analyzeDocumentUnified).not.toHaveBeenCalled();
+      
+      // Should return a valid result from the LLM workflow
+      expect(result).toBeDefined();
+      expect(result.analysis).toBeDefined();
+      expect(result.summary).toBeDefined();
     });
   });
 
