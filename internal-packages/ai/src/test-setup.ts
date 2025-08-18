@@ -32,8 +32,10 @@ if (process.env.SUPPRESS_TEST_LOGS !== 'false') {
 
 // Add mock helper methods to all vi.fn() calls for Jest compatibility
 const originalFn = vi.fn;
-(vi as any).fn = (...args: any[]) => {
-  const mock = originalFn(...args);
+const originalMocked = vi.mocked;
+
+// Helper to add mock methods
+function addMockMethods(mock: any) {
   if (!mock.mockResolvedValueOnce) {
     mock.mockResolvedValueOnce = (value: any) => mock.mockImplementationOnce(() => Promise.resolve(value));
   }
@@ -47,6 +49,21 @@ const originalFn = vi.fn;
     mock.mockRejectedValue = (error: any) => mock.mockImplementation(() => Promise.reject(error));
   }
   return mock;
+}
+
+// Override vi.fn
+(vi as any).fn = (...args: any[]) => {
+  const mock = originalFn(...args);
+  return addMockMethods(mock);
+};
+
+// Override vi.mocked to add methods
+(vi as any).mocked = (item: any, ...args: any[]) => {
+  const mocked = originalMocked(item, ...args);
+  if (typeof mocked === 'function') {
+    addMockMethods(mocked);
+  }
+  return mocked;
 };
 
 // Clean up resources after all tests complete

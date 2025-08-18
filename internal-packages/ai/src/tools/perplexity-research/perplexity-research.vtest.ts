@@ -72,7 +72,7 @@ describe('PerplexityResearchTool', () => {
       };
       
       // Mock the query to return JSON response
-      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve({
         content: JSON.stringify(mockResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
       });
@@ -117,7 +117,7 @@ describe('PerplexityResearchTool', () => {
       };
       
       // Mock the query to return JSON response
-      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve({
         content: JSON.stringify(mockResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
       });
@@ -144,13 +144,13 @@ describe('PerplexityResearchTool', () => {
       const mockForecastContext = 'Based on current trends and expert predictions...';
       
       // Mock the research query to return JSON response
-      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve({
         content: JSON.stringify(mockResearchResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
       });
       
       // Mock the forecasting context query
-      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve({
         content: mockForecastContext,
         usage: { prompt_tokens: 30, completion_tokens: 80, total_tokens: 110 }
       });
@@ -207,7 +207,7 @@ describe('PerplexityResearchTool', () => {
       // Mock first query call (structured research) to fail, then second query call to succeed
       mockClient.query
         .mockImplementationOnce(() => Promise.reject(new Error('Structured research failed'))
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           content: 'This is a plain text response with some findings:\n- Finding 1\n- Finding 2\n- Finding 3',
           usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
         });

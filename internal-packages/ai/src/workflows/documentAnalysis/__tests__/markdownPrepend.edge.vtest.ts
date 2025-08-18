@@ -44,7 +44,7 @@ describe("markdownPrepend Edge Cases", () => {
     vi.clearAllMocks();
     
     // Set up the mock helper
-    mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
+    mockCallClaudeWithTool = callClaudeWithTool as any;
     mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 

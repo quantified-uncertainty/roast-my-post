@@ -11,8 +11,8 @@ import type { CheckMathOutput } from '../check-math/index';
 vi.mock('../check-math-with-mathjs');
 vi.mock('../check-math');
 
-const mockCheckMathWithMathJs = checkMathWithMathJsTool.execute as anytypeof checkMathWithMathJsTool.execute>;
-const mockCheckMath = checkMathTool.execute as anytypeof checkMathTool.execute>;
+const mockCheckMathWithMathJs = checkMathWithMathJsTool.execute as any;
+const mockCheckMath = checkMathTool.execute as any;
 
 // Helper to create mock llmInteraction
 const createMockLLMInteraction = () => ({
@@ -150,7 +150,7 @@ describe('CheckMathHybridTool', () => {
 
     it('should handle errors gracefully', async () => {
       // Mock MathJS throwing an error
-      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.reject(new Error('MathJS evaluation failed'));
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.reject(new Error('MathJS evaluation failed')));
 
       const result = await checkMathHybridTool.execute(
         { statement: '2 + 2 = 4' },

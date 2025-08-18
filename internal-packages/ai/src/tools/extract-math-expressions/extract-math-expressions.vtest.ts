@@ -12,7 +12,7 @@ vi.mock('@roast/ai', () => ({
 import { callClaudeWithTool } from '../../claude/wrapper';
 
 // Get the mocked function and setup helper
-const mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
+const mockCallClaudeWithTool = callClaudeWithTool as any;
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
 describe('ExtractMathExpressionsTool', () => {

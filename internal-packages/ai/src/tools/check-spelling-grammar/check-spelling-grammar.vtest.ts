@@ -9,7 +9,7 @@ vi.mock('@roast/ai', () => ({
 // Mock the language convention detection
 vi.mock('../detect-language-convention', () => ({
   detectLanguageConventionTool: {
-    execute: vi.fn().mockImplementation(() => Promise.resolve(({
+    execute: vi.fn().mockImplementation(() => Promise.resolve({
       convention: 'US',
       confidence: 0.8,
       consistency: 0.9
@@ -23,7 +23,7 @@ describe('CheckSpellingGrammarTool', () => {
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response - no errors for informal words
-    mockCallClaude.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaude.mockImplementationOnce(() => Promise.resolve({
       toolResult: {
         errors: [],
         totalErrorsFound: 0
@@ -59,7 +59,7 @@ describe('CheckSpellingGrammarTool', () => {
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response with spelling errors
-    mockCallClaude.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaude.mockImplementationOnce(() => Promise.resolve({
       toolResult: {
         errors: [
           {
@@ -118,7 +118,7 @@ describe('CheckSpellingGrammarTool', () => {
     const mockCallClaude = callClaudeWithTool as any;
 
     // For minimal strictness - only major errors
-    mockCallClaude.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaude.mockImplementationOnce(() => Promise.resolve({
       toolResult: {
         errors: [
           {
@@ -164,7 +164,7 @@ describe('CheckSpellingGrammarTool', () => {
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response with errors including case mismatches
-    mockCallClaude.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaude.mockImplementationOnce(() => Promise.resolve({
       toolResult: {
         errors: [
           {
@@ -238,7 +238,7 @@ describe('CheckSpellingGrammarTool', () => {
     const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
-    mockCallClaude.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaude.mockImplementationOnce(() => Promise.resolve({
       toolResult: {
         errors: [
           {
@@ -281,7 +281,7 @@ describe('CheckSpellingGrammarTool', () => {
     const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
-    mockCallClaude.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaude.mockImplementationOnce(() => Promise.resolve({
       toolResult: {
         errors: [
           {
@@ -326,7 +326,7 @@ describe('CheckSpellingGrammarTool', () => {
     const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
-    mockCallClaude.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaude.mockImplementationOnce(() => Promise.resolve({
       toolResult: {
         errors: [
           {

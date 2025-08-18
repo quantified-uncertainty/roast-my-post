@@ -252,7 +252,7 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
       const input = { text: "Some text with predictions" };
 
       // Mock malformed response (no tool use)
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
         response: {} as any,
         interaction: createMockLLMInteraction(),
         toolResult: {}

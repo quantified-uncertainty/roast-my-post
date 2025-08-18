@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } 
 import { linkValidator } from "../index";
 
 // Mock fetch globally
-global.fetch = vi.fn() as anytypeof fetch>;
+global.fetch = vi.fn() as any;
 
 describe("Link Validator Tool", () => {
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe("Link Validator Tool", () => {
 
   it("validates accessible URLs", async () => {
     // Mock successful HEAD request
-    (global.fetch as anytypeof fetch>).mockImplementation(() => Promise.resolve(({
+    (global.fetch as any).mockImplementation(() => Promise.resolve({
       ok: true,
       status: 200,
       url: "https://react.dev/learn",
@@ -39,7 +39,7 @@ describe("Link Validator Tool", () => {
 
   it("detects broken URLs", async () => {
     // Mock 404 response
-    (global.fetch as anytypeof fetch>).mockImplementation(() => Promise.resolve(({
+    (global.fetch as any).mockImplementation(() => Promise.resolve({
       ok: false,
       status: 404,
       url: "https://example.com/broken",
@@ -66,14 +66,14 @@ describe("Link Validator Tool", () => {
 
   it("handles multiple URLs", async () => {
     // Mock different responses
-    (global.fetch as anytypeof fetch>)
-      .mockImplementationOnce(() => Promise.resolve(({
+    (global.fetch as any)
+      .mockImplementationOnce(() => Promise.resolve({
         ok: true,
         status: 200,
         url: "https://working.com",
         headers: { get: vi.fn().mockReturnValue("text/html") },
       } as unknown as Response)
-      .mockImplementationOnce(() => Promise.resolve(({
+      .mockImplementationOnce(() => Promise.resolve({
         ok: false,
         status: 403,
         url: "https://forbidden.com",
@@ -112,7 +112,7 @@ describe("Link Validator Tool", () => {
 
   it("respects maxUrls limit", async () => {
     // Mock successful responses
-    (global.fetch as anytypeof fetch>).mockImplementation(() => Promise.resolve(({
+    (global.fetch as any).mockImplementation(() => Promise.resolve({
       ok: true,
       status: 200,
       headers: { get: vi.fn().mockReturnValue("text/html") },

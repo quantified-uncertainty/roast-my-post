@@ -12,7 +12,7 @@ vi.mock('../utils/anthropic', () => ({
 import { createAnthropicClient } from '../utils/anthropic';
 
 describe('Claude Wrapper Integration Tests', () => {
-  const mockCreateAnthropicClient = createAnthropicClient as anytypeof createAnthropicClient>;
+  const mockCreateAnthropicClient = createAnthropicClient as any;
   let mockClient: any;
 
   beforeEach(() => {
@@ -83,7 +83,7 @@ describe('Claude Wrapper Integration Tests', () => {
       // First call fails, second succeeds
       mockClient.messages.create
         .mockImplementationOnce(() => Promise.reject(mockError)
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           id: 'msg_retry',
           type: 'message',
           role: 'assistant',
@@ -104,7 +104,7 @@ describe('Claude Wrapper Integration Tests', () => {
     });
 
     it('should use custom model when specified', async () => {
-      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve({
         id: 'msg_custom',
         type: 'message',
         role: 'assistant',
@@ -147,7 +147,7 @@ describe('Claude Wrapper Integration Tests', () => {
         explanation: 'The answer to everything'
       };
 
-      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve({
         id: 'msg_tool',
         type: 'message',
         role: 'assistant',
@@ -196,7 +196,7 @@ describe('Claude Wrapper Integration Tests', () => {
     });
 
     it('should handle tool parsing errors', async () => {
-      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve({
         id: 'msg_bad',
         type: 'message',
         role: 'assistant',
@@ -216,7 +216,7 @@ describe('Claude Wrapper Integration Tests', () => {
     });
 
     it('should include system message when provided', async () => {
-      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve({
         id: 'msg_system',
         type: 'message',
         role: 'assistant',
@@ -269,7 +269,7 @@ describe('Claude Wrapper Integration Tests', () => {
     }, 10000); // Increase timeout to 10 seconds
 
     it('should handle malformed responses gracefully', async () => {
-      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(({
+      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve({
         // Missing required fields
         content: null,
         usage: null
@@ -292,7 +292,7 @@ describe('Claude Wrapper Integration Tests', () => {
       const interactions: RichLLMInteraction[] = [];
 
       for (const [index, response] of responses.entries()) {
-        mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(({
+        mockClient.messages.create.mockImplementationOnce(() => Promise.resolve({
           id: `msg_${index}`,
           type: 'message',
           role: 'assistant',

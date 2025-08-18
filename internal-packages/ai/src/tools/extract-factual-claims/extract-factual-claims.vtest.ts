@@ -22,7 +22,7 @@ describe('ExtractFactualClaimsTool', () => {
     } as any
   };
   
-  const mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
+  const mockCallClaudeWithTool = callClaudeWithTool as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -52,7 +52,7 @@ describe('ExtractFactualClaimsTool', () => {
       const validInput = { text: 'The Berlin Wall fell in 1989.' };
       
       // Mock extraction response
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
         response: {
           content: [{
             type: 'tool_use',
@@ -122,7 +122,7 @@ describe('ExtractFactualClaimsTool', () => {
       ];
       
       // Mock extraction response
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
         response: {
           content: [{
             type: 'tool_use',
@@ -159,7 +159,7 @@ describe('ExtractFactualClaimsTool', () => {
       };
       
       // Mock empty extraction response
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
         response: {
           content: [{
             type: 'tool_use',
@@ -209,7 +209,7 @@ describe('ExtractFactualClaimsTool', () => {
         }
       ];
       
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
         response: {
           content: [{
             type: 'tool_use',
@@ -260,7 +260,7 @@ describe('ExtractFactualClaimsTool', () => {
         }
       ];
       
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
         response: {
           content: [{
             type: 'tool_use',
@@ -294,7 +294,7 @@ describe('ExtractFactualClaimsTool', () => {
         text: 'Some text'
       };
       
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(new Error('API Error'));
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(new Error('API Error')));
       
       await expect(tool.execute({ ...input, minQualityThreshold: 50, maxClaims: 30 }, mockContext))
         .rejects.toThrow('API Error');

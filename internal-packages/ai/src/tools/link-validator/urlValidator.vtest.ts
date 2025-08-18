@@ -13,7 +13,7 @@ describe("urlValidator", () => {
 
     it("should validate an accessible URL", async () => {
       // Mock successful HEAD request
-      (global.fetch as any).mockImplementation(() => Promise.resolve(({
+      (global.fetch as any).mockImplementation(() => Promise.resolve({
         ok: true,
         status: 200,
         url: "https://react.dev/learn",
@@ -64,7 +64,7 @@ describe("urlValidator", () => {
 
     it("should handle 404 errors properly", async () => {
       // Mock 404 response
-      (global.fetch as any).mockImplementation(() => Promise.resolve(({
+      (global.fetch as any).mockImplementation(() => Promise.resolve({
         ok: false,
         status: 404,
         headers: {
@@ -88,7 +88,7 @@ describe("urlValidator", () => {
 
     it("should handle PDFs like any other accessible content", async () => {
       // Mock PDF response
-      (global.fetch as any).mockImplementation(() => Promise.resolve(({
+      (global.fetch as any).mockImplementation(() => Promise.resolve({
         ok: true,
         status: 200,
         url: "https://arxiv.org/pdf/1706.03762.pdf",
@@ -113,7 +113,7 @@ describe("urlValidator", () => {
 
     it("should handle redirects appropriately", async () => {
       // Mock redirect
-      (global.fetch as any).mockImplementation(() => Promise.resolve(({
+      (global.fetch as any).mockImplementation(() => Promise.resolve({
         ok: true,
         status: 200,
         url: "https://react.dev/learn", // Redirected URL
@@ -177,7 +177,7 @@ describe("urlValidator", () => {
 
     it("should handle 403 Forbidden errors", async () => {
       // Mock 403 response
-      (global.fetch as any).mockImplementation(() => Promise.resolve(({
+      (global.fetch as any).mockImplementation(() => Promise.resolve({
         ok: false,
         status: 403,
         headers: {
@@ -201,7 +201,7 @@ describe("urlValidator", () => {
 
     it("should handle rate limiting (429) errors", async () => {
       // Mock 429 response
-      (global.fetch as any).mockImplementation(() => Promise.resolve(({
+      (global.fetch as any).mockImplementation(() => Promise.resolve({
         ok: false,
         status: 429,
         headers: {
@@ -228,7 +228,7 @@ describe("urlValidator", () => {
 
     it("should handle server errors (5xx)", async () => {
       // Mock 500 response
-      (global.fetch as any).mockImplementation(() => Promise.resolve(({
+      (global.fetch as any).mockImplementation(() => Promise.resolve({
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
@@ -256,7 +256,7 @@ describe("urlValidator", () => {
       (global.fetch as any)
         .mockImplementationOnce(() => Promise.reject(new Error("Network error"))
         .mockImplementationOnce(() => Promise.reject(new Error("Network error"))
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           ok: true,
           status: 200,
           url: "https://example.com",

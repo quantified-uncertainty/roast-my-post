@@ -137,7 +137,7 @@ describe('ForecasterTool', () => {
     it('should call beforeExecute hook', async () => {
       const input = { question: 'Test?' };
       
-      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(({
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve({
         forecast: { probability: 50, description: 'Test', consensus: 'medium' },
         individual_forecasts: [],
         statistics: { mean: 50, std_dev: 0 },
@@ -155,7 +155,7 @@ describe('ForecasterTool', () => {
     it('should call afterExecute hook', async () => {
       const input = { question: 'Test?' };
       
-      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(({
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve({
         forecast: { probability: 75, description: 'Test', consensus: 'high' },
         individual_forecasts: [],
         statistics: { mean: 75, std_dev: 0 },

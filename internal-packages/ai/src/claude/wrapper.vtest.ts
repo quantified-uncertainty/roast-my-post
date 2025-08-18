@@ -67,10 +67,10 @@ describe('Claude Wrapper', () => {
       vi.mock('../utils/anthropic', () => ({
         createAnthropicClient: () => ({
           messages: {
-            create: vi.fn().mockImplementation(() => Promise.resolve(({
+            create: vi.fn().mockImplementation(() => Promise.resolve({
               content: [{ type: 'text', text: 'test' }],
               usage: { input_tokens: 10, output_tokens: 5 }
-            })
+            }))
           }
         }),
         ANALYSIS_MODEL: 'claude-3-sonnet-20241022'

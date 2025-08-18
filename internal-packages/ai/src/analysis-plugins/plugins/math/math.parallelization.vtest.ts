@@ -87,7 +87,7 @@ describe('Math Plugin Parallelization Tests', () => {
       // Mock the extract math expressions tool
       const extractMathExpressionsTool = require('../../../tools/extract-math-expressions').extractMathExpressionsTool;
       extractMathExpressionsTool.execute = vi.fn()
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           expressions: [{
             originalText: '2+2=4',
             expression: '2+2',
@@ -98,7 +98,7 @@ describe('Math Plugin Parallelization Tests', () => {
             hasError: false
           }]
         })
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           expressions: [{
             originalText: '3*3=9',
             expression: '3*3',
@@ -109,7 +109,7 @@ describe('Math Plugin Parallelization Tests', () => {
             hasError: false
           }]
         })
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           expressions: [{
             originalText: '10/2=5',
             expression: '10/2',
@@ -180,7 +180,7 @@ describe('Math Plugin Parallelization Tests', () => {
 
       // Mock extract to return multiple expressions from one chunk
       const extractMathExpressionsTool = require('../../../tools/extract-math-expressions').extractMathExpressionsTool;
-      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve(({
+      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve({
         expressions: [
           {
             originalText: '5+5=10',
@@ -214,7 +214,7 @@ describe('Math Plugin Parallelization Tests', () => {
 
       // Configure mock responses for each expression
       mockCheckMathHybrid.execute
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           statement: '5+5=10',
           status: 'verified_true',
           explanation: 'Correct: 5+5=10',
@@ -227,7 +227,7 @@ describe('Math Plugin Parallelization Tests', () => {
           },
           toolsUsed: ['mathjs']
         })
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           statement: '6*6=36',
           status: 'verified_true',
           explanation: 'Correct: 6*6=36',
@@ -240,7 +240,7 @@ describe('Math Plugin Parallelization Tests', () => {
           },
           toolsUsed: ['mathjs']
         })
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           statement: '100/4=25',
           status: 'verified_true',
           explanation: 'Correct: 100/4=25',
@@ -292,7 +292,7 @@ describe('Math Plugin Parallelization Tests', () => {
       const documentText = chunks[0].text;
 
       const extractMathExpressionsTool = require('../../../tools/extract-math-expressions').extractMathExpressionsTool;
-      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve(({
+      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve({
         expressions: [
           {
             originalText: '2+2=4',
@@ -393,7 +393,7 @@ describe('Math Plugin Parallelization Tests', () => {
       );
 
       const extractMathExpressionsTool = require('../../../tools/extract-math-expressions').extractMathExpressionsTool;
-      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve(({ expressions });
+      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve({ expressions });
 
       // Each check takes 50ms
       mockCheckMathHybrid.execute = vi.fn().mockImplementation(async () => {

@@ -125,10 +125,10 @@ describe('SpellingAnalyzerJob', () => {
 
       // Mock to return different errors for each chunk
       (checkSpellingGrammarTool.execute as any)
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           errors: [mockErrors[0]], // First chunk gets the spelling error
         })
-        .mockImplementationOnce(() => Promise.resolve(({
+        .mockImplementationOnce(() => Promise.resolve({
           errors: [mockErrors[1]], // Second chunk gets the grammar error
         });
 
@@ -136,7 +136,7 @@ describe('SpellingAnalyzerJob', () => {
         Object.assign(new TextChunk('This is thier house', 'chunk1', {
           position: { start: 0, end: 19 },
         }), {
-          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(({
+          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve({
             startOffset: 8,
             endOffset: 13,
             quotedText: 'thier'
@@ -145,7 +145,7 @@ describe('SpellingAnalyzerJob', () => {
         Object.assign(new TextChunk('They dont know', 'chunk2', {
           position: { start: 20, end: 34 },
         }), {
-          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(({
+          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve({
             startOffset: 25,
             endOffset: 29,
             quotedText: 'dont'
@@ -175,7 +175,7 @@ describe('SpellingAnalyzerJob', () => {
     });
 
     it('should handle empty document', async () => {
-      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve(({
+      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: [],
       });
 
@@ -203,7 +203,7 @@ describe('SpellingAnalyzerJob', () => {
     });
 
     it('should not run analysis twice', async () => {
-      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve(({
+      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: [],
       });
 
@@ -231,7 +231,7 @@ describe('SpellingAnalyzerJob', () => {
 
   describe('getDebugInfo', () => {
     it('should return debug information', async () => {
-      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve(({
+      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: [{
           text: "teh",
           correction: "the",
@@ -244,7 +244,7 @@ describe('SpellingAnalyzerJob', () => {
 
       const chunks = [
         Object.assign(new TextChunk('teh', 'chunk1', { position: { start: 0, end: 3 } }), {
-          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(({
+          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve({
             startOffset: 0,
             endOffset: 3,
             quotedText: 'teh'
@@ -276,7 +276,7 @@ describe('SpellingAnalyzerJob', () => {
         ]
       });
 
-      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve(({ errors: [] });
+      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({ errors: [] });
 
       const analyzer = new SpellingAnalyzerJob();
       const result = await analyzer.analyze(
@@ -299,7 +299,7 @@ describe('SpellingAnalyzerJob', () => {
         importance: 30,
       };
 
-      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve(({
+      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: [mockError],
       });
       
@@ -335,7 +335,7 @@ describe('SpellingAnalyzerJob', () => {
         { text: "recieve", correction: "receive", type: 'spelling' as const, importance: 25 },
       ];
 
-      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve(({
+      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: mockErrors,
       });
 
@@ -343,8 +343,8 @@ describe('SpellingAnalyzerJob', () => {
         new TextChunk('I will recieve teh package', 'chunk1', { position: { start: 0, end: 26 } }), 
         {
           findTextAbsolute: vi.fn()
-            .mockImplementationOnce(() => Promise.resolve(({ startOffset: 16, endOffset: 19, quotedText: 'teh' })
-            .mockImplementationOnce(() => Promise.resolve(({ startOffset: 7, endOffset: 14, quotedText: 'recieve' })
+            .mockImplementationOnce(() => Promise.resolve({ startOffset: 16, endOffset: 19, quotedText: 'teh' })
+            .mockImplementationOnce(() => Promise.resolve({ startOffset: 7, endOffset: 14, quotedText: 'recieve' })
         }
       );
 
@@ -368,7 +368,7 @@ describe('SpellingAnalyzerJob', () => {
       for (const testCase of testCases) {
         vi.clearAllMocks();
         
-        (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve(({
+        (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
           errors: [{
             text: "error",
             correction: "correct",
@@ -378,7 +378,7 @@ describe('SpellingAnalyzerJob', () => {
         });
 
         const chunk = Object.assign(new TextChunk('error', 'chunk1'), {
-          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(({
+          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve({
             startOffset: 0,
             endOffset: 5,
             quotedText: 'error'

@@ -9,7 +9,7 @@ vi.mock('../../claude/wrapper', () => ({
 }));
 
 import { callClaudeWithTool } from '../../claude/wrapper';
-const mockCallClaudeWithTool = callClaudeWithTool as anytypeof callClaudeWithTool>;
+const mockCallClaudeWithTool = callClaudeWithTool as any;
 
 // Mock plugin
 class MockPlugin implements SimpleAnalysisPlugin {
@@ -52,7 +52,7 @@ describe('ChunkRouter', () => {
 
   it('should route chunks to appropriate plugins based on content', async () => {
     // Mock the Claude API response for routing
-    mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
       response: {} as any,
       interaction: {} as any,
       toolResult: {
@@ -151,7 +151,7 @@ describe('ChunkRouter', () => {
   
   it('should handle plugins with no routing examples', async () => {
     // Mock the Claude API response
-    mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
+    mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
       response: {} as any,
       interaction: {} as any,
       toolResult: {
