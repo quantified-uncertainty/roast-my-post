@@ -74,7 +74,7 @@ describe('ChunkRouter', () => {
           }
         ]
       }
-    } as any);
+    } as any));
     // Create test plugins
     const mathPlugin = new MockPlugin(
       'MATH',

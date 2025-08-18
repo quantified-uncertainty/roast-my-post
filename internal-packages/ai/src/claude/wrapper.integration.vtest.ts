@@ -161,7 +161,7 @@ describe('Claude Wrapper Integration Tests', () => {
         stop_reason: 'tool_use',
         stop_sequence: null,
         usage: { input_tokens: 100, output_tokens: 50 }
-      });
+      }));
 
       const interactions: RichLLMInteraction[] = [];
       const result = await callClaudeWithTool<typeof mockToolResult>({
