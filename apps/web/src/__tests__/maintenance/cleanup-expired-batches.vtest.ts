@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, type MockedFunction } from 'vitest';
 import { prisma } from "@roast/db";
 import { logger } from '@/infrastructure/logging/logger';
 
@@ -127,8 +127,8 @@ describe("cleanupExpiredBatches", () => {
         },
       ];
 
-      (prisma.agentEvalBatch.findMany as vi.MockedFunction<any>).mockResolvedValue(expiredBatches);
-      (prisma.agentEvalBatch.delete as vi.MockedFunction<any>).mockResolvedValue({});
+      (prisma.agentEvalBatch.findMany as MockedFunction<any>).mockResolvedValue(expiredBatches);
+      (prisma.agentEvalBatch.delete as MockedFunction<any>).mockResolvedValue({});
 
       const result = await cleanupExpiredBatches(false);
       
@@ -197,8 +197,8 @@ describe("cleanupExpiredBatches", () => {
         },
       ];
 
-      (prisma.agentEvalBatch.findMany as vi.MockedFunction<any>).mockResolvedValue(expiredBatches);
-      (prisma.agentEvalBatch.delete as vi.MockedFunction<any>).mockResolvedValue({});
+      (prisma.agentEvalBatch.findMany as MockedFunction<any>).mockResolvedValue(expiredBatches);
+      (prisma.agentEvalBatch.delete as MockedFunction<any>).mockResolvedValue({});
 
       const result = await cleanupExpiredBatches(false);
       
@@ -221,7 +221,7 @@ describe("cleanupExpiredBatches", () => {
     });
 
     it("should handle empty results", async () => {
-      (prisma.agentEvalBatch.findMany as vi.MockedFunction<any>).mockResolvedValue([]);
+      (prisma.agentEvalBatch.findMany as MockedFunction<any>).mockResolvedValue([]);
 
       const result = await cleanupExpiredBatches(false);
       
@@ -259,8 +259,8 @@ describe("cleanupExpiredBatches", () => {
         },
       ];
 
-      (prisma.agentEvalBatch.findMany as vi.MockedFunction<any>).mockResolvedValue(expiredBatches);
-      (prisma.agentEvalBatch.delete as vi.MockedFunction<any>)
+      (prisma.agentEvalBatch.findMany as MockedFunction<any>).mockResolvedValue(expiredBatches);
+      (prisma.agentEvalBatch.delete as MockedFunction<any>)
         .mockRejectedValueOnce(new Error("Foreign key constraint"))
         .mockResolvedValueOnce({});
 
@@ -284,7 +284,7 @@ describe("cleanupExpiredBatches", () => {
     });
 
     it("should handle fatal errors", async () => {
-      (prisma.agentEvalBatch.findMany as vi.MockedFunction<any>).mockRejectedValue(
+      (prisma.agentEvalBatch.findMany as MockedFunction<any>).mockRejectedValue(
         new Error("Database connection failed")
       );
 
@@ -313,8 +313,8 @@ describe("cleanupExpiredBatches", () => {
         ],
       };
 
-      (prisma.agentEvalBatch.findMany as vi.MockedFunction<any>).mockResolvedValue([batchWithResources]);
-      (prisma.agentEvalBatch.delete as vi.MockedFunction<any>).mockResolvedValue({});
+      (prisma.agentEvalBatch.findMany as MockedFunction<any>).mockResolvedValue([batchWithResources]);
+      (prisma.agentEvalBatch.delete as MockedFunction<any>).mockResolvedValue({});
 
       const result = await cleanupExpiredBatches(false);
       
@@ -338,7 +338,7 @@ describe("cleanupExpiredBatches", () => {
 
   describe("Process Lifecycle", () => {
     it("should not disconnect from database when exitOnComplete is false", async () => {
-      (prisma.agentEvalBatch.findMany as vi.MockedFunction<any>).mockResolvedValue([]);
+      (prisma.agentEvalBatch.findMany as MockedFunction<any>).mockResolvedValue([]);
       
       await cleanupExpiredBatches(false);
 
