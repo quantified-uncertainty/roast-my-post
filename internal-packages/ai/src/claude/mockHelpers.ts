@@ -9,6 +9,9 @@ export const setupClaudeToolMock = (
   mockFunction: any
 ) => {
   // Ensure the mock has the necessary methods
+  if (!mockFunction.mockImplementationOnce) {
+    mockFunction.mockImplementationOnce = mockFunction.mockImplementation;
+  }
   if (!mockFunction.mockResolvedValueOnce) {
     mockFunction.mockResolvedValueOnce = (value: any) => 
       mockFunction.mockImplementationOnce(() => Promise.resolve(value));
