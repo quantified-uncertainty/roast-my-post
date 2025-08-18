@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } 
 import extractForecastingClaimsTool from '../../tools/extract-forecasting-claims';
 import extractFactualClaimsTool from '../../tools/extract-factual-claims';
 import extractMathExpressionsTool from '../../tools/extract-math-expressions';
+import { logger } from '../../shared/logger';
 
 // Check if we have an API key
 const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
@@ -15,7 +16,8 @@ describe('Extraction Tool Boundaries', () => {
   const mockContext = {
     isAuthenticated: true as const,
     isSelfRequest: false,
-    user: { email: "test@example.com" }
+    user: { email: "test@example.com" },
+    logger
   };
 
   // Skip these tests if no API key is available
