@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import {
-  LineBasedLocator,
-} from "@roast/ai/text-location/line-based";
+import { describe, expect, it } from "vitest";
+
+import { LineBasedLocator } from "@roast/ai/text-location/line-based";
+
 import type { LineBasedHighlight } from "../types";
 
 describe("LineBasedLocator (for highlight generation)", () => {
@@ -17,7 +17,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
 
 (Would be a crazy rug pull if, in fact, this did not happen and the dialogue was just pulled out of thin air).`;
 
-  test("creates line-based locator correctly", () => {
+  it("creates line-based locator correctly", () => {
     const locator = new LineBasedLocator(sampleContent);
     const stats = locator.getStats();
 
@@ -27,7 +27,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
     expect(stats.longestLine).toBeGreaterThan(0);
   });
 
-  test("gets numbered lines correctly", () => {
+  it("gets numbered lines correctly", () => {
     const locator = new LineBasedLocator(sampleContent);
     const numberedLines = locator.getNumberedLines();
 
@@ -38,7 +38,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
     );
   });
 
-  test("creates single-line highlight correctly", () => {
+  it("creates single-line highlight correctly", () => {
     const locator = new LineBasedLocator(sampleContent);
 
     const highlight = locator.lineLocationToOffset({
@@ -55,7 +55,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
     expect(highlight!.endOffset).toBeGreaterThan(highlight!.startOffset);
   });
 
-  test("creates multi-line highlight correctly", () => {
+  it("creates multi-line highlight correctly", () => {
     const locator = new LineBasedLocator(sampleContent);
 
     const highlight = locator.lineLocationToOffset({
@@ -72,7 +72,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
     expect(highlight!.endOffset).toBeGreaterThan(highlight!.startOffset);
   });
 
-  test("processes line comments correctly", () => {
+  it("processes line comments correctly", () => {
     const locator = new LineBasedLocator(sampleContent);
 
     const lineComments: LineBasedHighlight[] = [
@@ -116,7 +116,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
     expect(processedComments[0].highlight.quotedText).toContain("Crossposted");
   });
 
-  test("handles invalid line indices gracefully", () => {
+  it("handles invalid line indices gracefully", () => {
     const locator = new LineBasedLocator(sampleContent);
 
     const highlight = locator.lineLocationToOffset({
@@ -129,7 +129,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
     expect(highlight).toBeNull();
   });
 
-  test("handles invalid character snippets gracefully", () => {
+  it("handles invalid character snippets gracefully", () => {
     const locator = new LineBasedLocator(sampleContent);
 
     const highlight = locator.lineLocationToOffset({

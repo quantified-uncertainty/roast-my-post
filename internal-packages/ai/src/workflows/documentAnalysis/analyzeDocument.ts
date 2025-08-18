@@ -78,14 +78,16 @@ export async function analyzeDocument(
     
     // Step 3: Generate self-critique if configured
     let selfCritique: string | undefined;
-    if (agentInfo.includesSelfCritique) {
+    if (agentInfo.selfCritiqueInstructions) {
       const selfCritiqueResult = await generateSelfCritique(
         {
-          thinking: comprehensiveAnalysisResult.outputs.thinking,
           analysis: comprehensiveAnalysisResult.outputs.analysis,
           summary: comprehensiveAnalysisResult.outputs.summary,
           grade: comprehensiveAnalysisResult.outputs.grade,
-          comments: highlightExtractionResult.outputs.highlights
+          highlights: highlightExtractionResult.outputs.highlights.map(h => ({
+            title: h.header || "",
+            text: h.description
+          }))
         },
         agentInfo
       );
@@ -93,13 +95,13 @@ export async function analyzeDocument(
       selfCritique = selfCritiqueResult.outputs.selfCritique;
     }
     
-    // Create job log string from all task metadata
+    // Create job log string from all task logs
     const jobLogString = tasks
-      .map(task => `[${task.name}] ${task.metadata?.logMessage || 'No log message'}`)
+      .map(task => `[${task.name}] ${task.log}`)
       .join('\n');
     
     return {
-      thinking: comprehensiveAnalysisResult.outputs.thinking,
+      thinking: "", // LLM workflow doesn't generate thinking
       analysis: comprehensiveAnalysisResult.outputs.analysis,
       summary: comprehensiveAnalysisResult.outputs.summary,
       grade: comprehensiveAnalysisResult.outputs.grade,

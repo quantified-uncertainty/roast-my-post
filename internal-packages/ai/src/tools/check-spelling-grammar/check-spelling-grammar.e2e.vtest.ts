@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { logger } from "../../shared/logger";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { logger } from "../../shared/logger";
 import type {
   CheckSpellingGrammarInput,
   CheckSpellingGrammarOutput,
@@ -9,12 +9,12 @@ import { checkSpellingGrammarTool } from "./index";
 
 /**
  * E2E tests for the spelling/grammar checker.
- * 
+ *
  * These tests are intentionally flexible because:
  * 1. We use strict validation that only accepts exact text matches
  * 2. Claude's responses can vary (e.g., "teh" vs "Teh")
  * 3. The focus is on what should NOT be flagged
- * 
+ *
  * Important: The tool should NEVER flag:
  * - Informal/colloquial words (jankily, gonna, wanna, kinda)
  * - Technical jargon or domain-specific terms
@@ -123,30 +123,39 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             name: "simple typo - teh",
             input: { text: "I teh best way to learn is by doing." },
             expectations: (result) => {
-              console.log(`[teh test] Total errors found: ${result.errors.length}`);
-              console.log(`[teh test] Errors:`, result.errors.map(e => ({ 
-                text: e.text, 
-                correction: e.correction, 
-                type: e.type 
-              })));
-              
+              console.log(
+                `[teh test] Total errors found: ${result.errors.length}`
+              );
+              console.log(
+                `[teh test] Errors:`,
+                result.errors.map((e) => ({
+                  text: e.text,
+                  correction: e.correction,
+                  type: e.type,
+                }))
+              );
+
               expect(result.errors.length).toBeGreaterThan(0);
               // Look for error by correction instead of exact text (case-insensitive)
-              const error = result.errors.find((e) => 
-                e.correction?.toLowerCase() === "the" && 
-                e.text?.toLowerCase() === "teh"
+              const error = result.errors.find(
+                (e) =>
+                  e.correction?.toLowerCase() === "the" &&
+                  e.text?.toLowerCase() === "teh"
               );
-              
+
               if (!error) {
-                console.log(`[teh test] Could not find "teh->the" error. Available errors:`, 
-                  result.errors.map(e => `${e.text}->${e.correction}`)
+                console.log(
+                  `[teh test] Could not find "teh->the" error. Available errors:`,
+                  result.errors.map((e) => `${e.text}->${e.correction}`)
                 );
               }
-              
+
               expect(error).toBeDefined();
               expect(error?.type).toBe("spelling");
               if (error?.conciseCorrection) {
-                expect(error.conciseCorrection.toLowerCase()).toMatch(/teh\s*→\s*the/i);
+                expect(error.conciseCorrection.toLowerCase()).toMatch(
+                  /teh\s*→\s*the/i
+                );
               }
               expect(error?.importance).toBeLessThanOrEqual(30); // Slightly more flexible
             },
@@ -156,14 +165,17 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             input: { text: "I will recieve the package tomorrow." },
             expectations: (result) => {
               expect(result.errors.length).toBeGreaterThan(0);
-              const error = result.errors.find((e) => 
-                e.correction?.toLowerCase() === "receive" && 
-                e.text?.toLowerCase() === "recieve"
+              const error = result.errors.find(
+                (e) =>
+                  e.correction?.toLowerCase() === "receive" &&
+                  e.text?.toLowerCase() === "recieve"
               );
               expect(error).toBeDefined();
               expect(error?.type).toBe("spelling");
               if (error?.conciseCorrection) {
-                expect(error.conciseCorrection.toLowerCase()).toMatch(/recieve\s*→\s*receive/i);
+                expect(error.conciseCorrection.toLowerCase()).toMatch(
+                  /recieve\s*→\s*receive/i
+                );
               }
               expect(error?.importance).toBeLessThanOrEqual(35); // More flexible for common misspellings
             },
@@ -210,7 +222,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -281,18 +293,24 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             name: "verb tense error",
             input: { text: "Yesterday, I go to the park and play soccer." },
             expectations: (result) => {
-              console.log(`[verb tense test] Total errors found: ${result.errors.length}`);
-              console.log(`[verb tense test] Errors:`, result.errors.map(e => ({ 
-                text: e.text, 
-                correction: e.correction, 
-                type: e.type 
-              })));
-              
+              console.log(
+                `[verb tense test] Total errors found: ${result.errors.length}`
+              );
+              console.log(
+                `[verb tense test] Errors:`,
+                result.errors.map((e) => ({
+                  text: e.text,
+                  correction: e.correction,
+                  type: e.type,
+                }))
+              );
+
               // More flexible - at least 1 error expected
               expect(result.errors.length).toBeGreaterThanOrEqual(1);
-              const goError = result.errors.find((e) => 
-                e.text?.toLowerCase() === "go" || 
-                e.correction?.toLowerCase() === "went"
+              const goError = result.errors.find(
+                (e) =>
+                  e.text?.toLowerCase() === "go" ||
+                  e.correction?.toLowerCase() === "went"
               );
               const playError = result.errors.find((e) => e.text === "play");
               expect(goError).toBeDefined();
@@ -312,7 +330,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -376,7 +394,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -413,10 +431,15 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               strictness: "minimal" as const, // Be more lenient with technical terms
             },
             expectations: (result) => {
-              console.log(`[technical jargon test] Errors found:`, result.errors);
+              console.log(
+                `[technical jargon test] Errors found:`,
+                result.errors
+              );
               if (result.errors.length > 0) {
-                console.log(`[technical jargon test] Unexpected errors:`, 
-                  result.errors.map(e => `${e.text} (${e.type})`));
+                console.log(
+                  `[technical jargon test] Unexpected errors:`,
+                  result.errors.map((e) => `${e.text} (${e.type})`)
+                );
               }
               expect(result.errors.length).toBe(0);
             },
@@ -428,10 +451,17 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               strictness: "minimal" as const, // Ensure informal words aren't flagged
             },
             expectations: (result) => {
-              console.log(`[stylistic choices test] Errors found:`, result.errors);
+              console.log(
+                `[stylistic choices test] Errors found:`,
+                result.errors
+              );
               if (result.errors.length > 0) {
-                console.log(`[stylistic choices test] Unexpected errors:`, 
-                  result.errors.map(e => `${e.text} (${e.type}): ${e.correction}`));
+                console.log(
+                  `[stylistic choices test] Unexpected errors:`,
+                  result.errors.map(
+                    (e) => `${e.text} (${e.type}): ${e.correction}`
+                  )
+                );
               }
               // "jankily" is a valid word, not an error
               expect(result.errors.length).toBe(0);
@@ -464,10 +494,17 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               strictness: "minimal" as const, // Don't flag stylistic choices
             },
             expectations: (result) => {
-              console.log(`[rational reason test] Errors found:`, result.errors);
+              console.log(
+                `[rational reason test] Errors found:`,
+                result.errors
+              );
               if (result.errors.length > 0) {
-                console.log(`[rational reason test] Unexpected errors:`, 
-                  result.errors.map(e => `${e.text} (${e.type}): ${e.correction}`));
+                console.log(
+                  `[rational reason test] Unexpected errors:`,
+                  result.errors.map(
+                    (e) => `${e.text} (${e.type}): ${e.correction}`
+                  )
+                );
               }
               // "rational" is a valid word, not an error, even though it's used in an odd way.
               expect(result.errors.length).toBe(0);
@@ -482,7 +519,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -504,38 +541,50 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               context: "Academic paper abstract",
             },
             expectations: (result) => {
-              console.log(`[academic text test] Total errors found: ${result.errors.length}`);
-              console.log(`[academic text test] Errors:`, result.errors.map(e => ({ 
-                text: e.text, 
-                correction: e.correction, 
-                type: e.type 
-              })));
-              
+              console.log(
+                `[academic text test] Total errors found: ${result.errors.length}`
+              );
+              console.log(
+                `[academic text test] Errors:`,
+                result.errors.map((e) => ({
+                  text: e.text,
+                  correction: e.correction,
+                  type: e.type,
+                }))
+              );
+
               expect(result.errors.length).toBeGreaterThanOrEqual(3); // More flexible
-              
+
               // Check for spelling errors with case-insensitive matching
               const studentsError = result.errors.find(
-                (e) => e.text?.toLowerCase() === "studnets" || 
-                       e.correction?.toLowerCase() === "students"
+                (e) =>
+                  e.text?.toLowerCase() === "studnets" ||
+                  e.correction?.toLowerCase() === "students"
               );
               if (!studentsError) {
-                console.log(`[academic text test] Could not find studnets->students error`);
+                console.log(
+                  `[academic text test] Could not find studnets->students error`
+                );
               }
-              
+
               const mechanicsError = result.errors.find(
-                (e) => e.text?.toLowerCase() === "mecahnics" || 
-                       e.correction?.toLowerCase() === "mechanics"
+                (e) =>
+                  e.text?.toLowerCase() === "mecahnics" ||
+                  e.correction?.toLowerCase() === "mechanics"
               );
               if (!mechanicsError) {
-                console.log(`[academic text test] Could not find mecahnics->mechanics error`);
+                console.log(
+                  `[academic text test] Could not find mecahnics->mechanics error`
+                );
               }
 
               // Check for grammar error (have → has) - more flexible
-              const haveError = result.errors.find((e) => 
-                e.text?.toLowerCase() === "have" || 
-                e.correction?.toLowerCase() === "has"
+              const haveError = result.errors.find(
+                (e) =>
+                  e.text?.toLowerCase() === "have" ||
+                  e.correction?.toLowerCase() === "has"
               );
-              
+
               // At least some errors should be found
               expect(result.errors.length).toBeGreaterThan(0);
             },
@@ -585,7 +634,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -652,7 +701,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -683,23 +732,32 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             name: "grammar correction format",
             input: { text: "The dogs is barking loudly." },
             expectations: (result) => {
-              console.log(`[grammar correction test] Errors:`, result.errors.map(e => ({ 
-                text: e.text, 
-                correction: e.correction,
-                conciseCorrection: e.conciseCorrection
-              })));
-              
-              const error = result.errors.find((e) => 
-                e.text?.toLowerCase() === "is" || 
-                (e.correction?.toLowerCase() === "are" && e.type === "grammar")
+              console.log(
+                `[grammar correction test] Errors:`,
+                result.errors.map((e) => ({
+                  text: e.text,
+                  correction: e.correction,
+                  conciseCorrection: e.conciseCorrection,
+                }))
               );
-              
+
+              const error = result.errors.find(
+                (e) =>
+                  e.text?.toLowerCase() === "is" ||
+                  (e.correction?.toLowerCase() === "are" &&
+                    e.type === "grammar")
+              );
+
               if (!error) {
-                console.log(`[grammar correction test] Could not find is->are error`);
+                console.log(
+                  `[grammar correction test] Could not find is->are error`
+                );
               }
-              
+
               if (error?.conciseCorrection) {
-                expect(error.conciseCorrection.toLowerCase()).toMatch(/is\s*→\s*are/i);
+                expect(error.conciseCorrection.toLowerCase()).toMatch(
+                  /is\s*→\s*are/i
+                );
               }
             },
           },
@@ -726,7 +784,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -844,7 +902,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
@@ -865,23 +923,30 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               text: "the meeting is on monday. we will discuss the new project. john will present.",
             },
             expectations: (result) => {
-              console.log(`[sentence capitalization test] Total errors: ${result.errors.length}`);
-              console.log(`[sentence capitalization test] Errors:`, result.errors.map(e => ({ 
-                text: e.text, 
-                correction: e.correction,
-                type: e.type
-              })));
-              
+              console.log(
+                `[sentence capitalization test] Total errors: ${result.errors.length}`
+              );
+              console.log(
+                `[sentence capitalization test] Errors:`,
+                result.errors.map((e) => ({
+                  text: e.text,
+                  correction: e.correction,
+                  type: e.type,
+                }))
+              );
+
               // More flexible - at least some capitalization errors should be found
               expect(result.errors.length).toBeGreaterThanOrEqual(1);
-              
+
               // Look for any capitalization-related errors
-              const capitalizationErrors = result.errors.filter(e => 
-                e.type === "spelling" || e.type === "grammar"
+              const capitalizationErrors = result.errors.filter(
+                (e) => e.type === "spelling" || e.type === "grammar"
               );
-              
-              console.log(`[sentence capitalization test] Found ${capitalizationErrors.length} potential capitalization errors`);
-              
+
+              console.log(
+                `[sentence capitalization test] Found ${capitalizationErrors.length} potential capitalization errors`
+              );
+
               // At least one error should be found
               expect(capitalizationErrors.length).toBeGreaterThan(0);
             },
@@ -892,37 +957,58 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               text: "I visited paris in france last Summer. The eiffel tower was beautiful.",
             },
             expectations: (result) => {
-              console.log(`[proper noun test] Total errors: ${result.errors.length}`);
-              console.log(`[proper noun test] Errors:`, result.errors.map(e => ({ 
-                text: e.text, 
-                correction: e.correction,
-                type: e.type
-              })));
-              
+              console.log(
+                `[proper noun test] Total errors: ${result.errors.length}`
+              );
+              console.log(
+                `[proper noun test] Errors:`,
+                result.errors.map((e) => ({
+                  text: e.text,
+                  correction: e.correction,
+                  type: e.type,
+                }))
+              );
+
               // More flexible - at least some errors should be found
               expect(result.errors.length).toBeGreaterThanOrEqual(1);
-              
+
               // Look for specific corrections with case-insensitive matching
-              const parisError = result.errors.find((e) => 
-                e.text?.toLowerCase() === "paris" || 
-                e.correction?.toLowerCase() === "paris"
+              const parisError = result.errors.find(
+                (e) =>
+                  e.text?.toLowerCase() === "paris" ||
+                  e.correction?.toLowerCase() === "paris"
               );
-              const franceError = result.errors.find((e) => 
-                e.text?.toLowerCase() === "france" || 
-                e.correction?.toLowerCase() === "france"
+              const franceError = result.errors.find(
+                (e) =>
+                  e.text?.toLowerCase() === "france" ||
+                  e.correction?.toLowerCase() === "france"
               );
-              const eiffelError = result.errors.find((e) => 
-                e.text?.toLowerCase() === "eiffel" || 
-                e.correction?.toLowerCase() === "eiffel"
+              const eiffelError = result.errors.find(
+                (e) =>
+                  e.text?.toLowerCase() === "eiffel" ||
+                  e.correction?.toLowerCase() === "eiffel"
               );
-              
+
               // Log what was found
-              console.log(`[proper noun test] Found paris error:`, !!parisError);
-              console.log(`[proper noun test] Found france error:`, !!franceError);
-              console.log(`[proper noun test] Found eiffel error:`, !!eiffelError);
-              
+              console.log(
+                `[proper noun test] Found paris error:`,
+                !!parisError
+              );
+              console.log(
+                `[proper noun test] Found france error:`,
+                !!franceError
+              );
+              console.log(
+                `[proper noun test] Found eiffel error:`,
+                !!eiffelError
+              );
+
               // At least one proper noun error should be found
-              const properNounErrors = [parisError, franceError, eiffelError].filter(Boolean);
+              const properNounErrors = [
+                parisError,
+                franceError,
+                eiffelError,
+              ].filter(Boolean);
               expect(properNounErrors.length).toBeGreaterThan(0);
             },
           },
@@ -935,7 +1021,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             .map((err) => `${err.testName}: ${err.error}`)
             .join("\n");
           throw new Error(
-            `${batchResult.failed} test(s) failed:\n${errorMessages}`
+            `${batchResult.failed} it(s) failed:\n${errorMessages}`
           );
         }
 
