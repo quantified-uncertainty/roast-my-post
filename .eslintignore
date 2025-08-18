@@ -6,5 +6,5 @@ dist/
 coverage/
 **/*.test.ts
 **/*.test.tsx
-**/jest.d.ts
+**/vitest.d.ts
 **/*.js 

@@ -24,7 +24,7 @@
     "**/*.test.tsx",
     "**/*.vtest.ts",
     "**/*.vtest.tsx",
-    "**/jest.d.ts",
+    "**/vitest.d.ts",
     "**/*.js",
     "node_modules/",
     "claude/scripts/**/*.ts",

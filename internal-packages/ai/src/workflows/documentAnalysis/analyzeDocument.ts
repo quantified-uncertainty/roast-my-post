@@ -80,22 +80,35 @@ export async function analyzeDocument(
     let selfCritique: string | undefined;
     if (agentInfo.selfCritiqueInstructions) {
       const selfCritiqueResult = await generateSelfCritique(
-        comprehensiveAnalysisResult.outputs,
+        {
+          analysis: comprehensiveAnalysisResult.outputs.analysis,
+          summary: comprehensiveAnalysisResult.outputs.summary,
+          grade: comprehensiveAnalysisResult.outputs.grade,
+          highlights: highlightExtractionResult.outputs.highlights.map(h => ({
+            title: h.header || "",
+            text: h.description
+          }))
+        },
         agentInfo
       );
-      selfCritique = selfCritiqueResult.outputs.selfCritique;
       tasks.push(selfCritiqueResult.task);
+      selfCritique = selfCritiqueResult.outputs.selfCritique;
     }
     
+    // Create job log string from all task logs
+    const jobLogString = tasks
+      .map(task => `[${task.name}] ${task.log}`)
+      .join('\n');
+    
     return {
-      thinking: "", // LLM workflow doesn't provide thinking
+      thinking: "", // LLM workflow doesn't generate thinking
       analysis: comprehensiveAnalysisResult.outputs.analysis,
       summary: comprehensiveAnalysisResult.outputs.summary,
       grade: comprehensiveAnalysisResult.outputs.grade,
       selfCritique,
       highlights: highlightExtractionResult.outputs.highlights,
       tasks,
-      jobLogString: undefined, // LLM workflow doesn't generate job log strings
+      jobLogString
     };
   }
 }

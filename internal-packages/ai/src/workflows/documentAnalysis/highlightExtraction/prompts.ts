@@ -1,7 +1,7 @@
-import type { Agent } from "@roast/ai";
-import type { Document } from "@roast/ai";
+import type { Agent } from "../../../types/agentSchema";
+import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
-import { LineBasedLocator } from "@roast/ai/text-location/line-based";
+import { LineBasedLocator } from "../../../text-location/line-based";
 
 const documentInformationSection = (document: Document) => {
   // Document content already includes prepend from Job.ts

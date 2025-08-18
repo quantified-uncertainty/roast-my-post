@@ -19,7 +19,7 @@ coverage
 .nyc_output
 playwright-report
 playwright-tests
-jest.config*
+vitest.config*
 *.test.ts
 *.test.tsx
 *.spec.ts

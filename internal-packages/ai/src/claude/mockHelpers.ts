@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { RichLLMInteraction } from '../types';
 import { callClaudeWithTool } from './wrapper';
 
@@ -5,7 +6,7 @@ import { callClaudeWithTool } from './wrapper';
  * Helper to mock Claude tool responses in tests
  */
 export const setupClaudeToolMock = (
-  mockFunction: jest.MockedFunction<typeof callClaudeWithTool>
+  mockFunction: any
 ) => {
   return {
     mockToolResponse: <T extends Record<string, any>>(
@@ -18,7 +19,8 @@ export const setupClaudeToolMock = (
       const tokens = options.tokens || { input: 150, output: 75 };
       const model = options.model || 'claude-sonnet-4-20250514';
 
-      mockFunction.mockResolvedValueOnce({
+      // Use mockReturnValueOnce which works with vi.fn()
+      mockFunction.mockReturnValueOnce(Promise.resolve({
         response: {
           id: 'msg_test',
           type: 'message',
@@ -50,7 +52,7 @@ export const setupClaudeToolMock = (
           duration: 150
         },
         toolResult
-      });
+      }));
     }
   };
 };

@@ -60,7 +60,6 @@
     "@hono/node-server": "^1.17.1",
     "@types/glob": "^8.1.0",
     "@types/iarna__toml": "^2.0.5",
-    "@types/jest": "^29.5.14",
     "@types/uuid": "^10.0.0",
     "dotenv-cli": "^10.0.0",
     "hono": "^4.8.10",

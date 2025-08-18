@@ -10,9 +10,9 @@ export {
   HeliconeSessionManager,
   setGlobalSessionManager,
   getGlobalSessionManager,
-  getCurrentHeliconeHeaders,
-  type SimpleSessionConfig
+  getCurrentHeliconeHeaders
 } from './helicone/simpleSessionManager';
+export type { SimpleSessionConfig } from './helicone/simpleSessionManager';
 export * from './utils/tokenUtils';
 export * from './utils/anthropic';
 export * from './utils/retryUtils';

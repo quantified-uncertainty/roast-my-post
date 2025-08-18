@@ -7,11 +7,11 @@
     "start": "tsx server/index.ts",
     "dev": "tsx watch server/index.ts",
     "evaluate": "tsx scripts/run-evaluation.ts",
-    "test": "echo 'Evaluations package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:watch": "echo 'Evaluations package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:unit": "echo 'Evaluations package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:integration": "echo 'Evaluations package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:ci": "echo 'Evaluations package tests temporarily disabled during Vitest migration' && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run",
+    "test:integration": "vitest run",
+    "test:ci": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -24,9 +24,6 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.7.0",
-    "@types/jest": "^30.0.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.4.1"
+    "vitest": "^3.2.4"
   }
 }

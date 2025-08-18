@@ -11,8 +11,8 @@ Simply set the environment variable when running tests:
 # Run with LLM tests
 RUN_LLM_TESTS=true npm test comprehensive-search.test.ts
 
-# Or for Jest directly
-RUN_LLM_TESTS=true jest src/tools/fuzzy-text-locator/tests/comprehensive-search.test.ts
+# Or for Vitest directly
+RUN_LLM_TESTS=true vitest src/tools/fuzzy-text-locator/tests/comprehensive-search.vtest.ts
 ```
 
 ## Requirements

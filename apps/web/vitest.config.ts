@@ -8,6 +8,15 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/setupTests.vitest.ts'],
+    teardownTimeout: 10000,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: false,
+        isolate: true,
+        maxForks: 4,
+      },
+    },
     server: {
       deps: {
         inline: [
@@ -39,6 +48,7 @@ export default defineConfig({
       'coverage',
       '**/*.e2e.test.{ts,tsx}',
       '**/*.e2e.vtest.{ts,tsx}',
+      '**/*.llm.vtest.{ts,tsx}',
       '**/tests/playwright/**',
     ],
   },

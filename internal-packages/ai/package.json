@@ -2,16 +2,16 @@
   "name": "@roast/ai",
   "version": "0.1.0",
   "description": "Core AI utilities for RoastMyPost - Claude integration, Helicone tracking, and token management",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "default": "./dist/server.js"
+      "types": "./src/server.ts",
+      "default": "./src/server.ts"
     },
     "./tools/fuzzy-text-locator/core": {
       "types": "./dist/tools/fuzzy-text-locator/core.d.ts",
@@ -50,38 +50,20 @@
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --config .eslintrc.json --ext .ts,.tsx",
-    "test": "echo 'AI package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:watch": "echo 'AI package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:coverage": "echo 'AI package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:llm": "echo 'AI package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:unit": "echo 'AI package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:integration": "echo 'AI package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:ci": "echo 'AI package tests temporarily disabled during Vitest migration' && exit 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:llm": "vitest run --config vitest.config.llm.ts",
+    "test:unit": "vitest run",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
+    "test:e2e": "vitest run --config vitest.config.e2e.ts",
+    "test:all": "pnpm run test:unit && pnpm run test:integration",
+    "test:ci": "vitest run",
     "generate-schemas": "tsx scripts/generate-tool-schemas.ts",
     "generate-readmes": "tsx scripts/generate-tool-readmes.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
     "check-readmes": "pnpm --filter @roast/web test generated-readmes.vtest.ts",
     "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.54.0",
-    "@leeoniya/ufuzzy": "^1.0.18",
-    "mathjs": "^14.0.1",
-    "openai": "^4.77.0",
-    "tiktoken": "^1.0.17",
-    "uuid": "^11.1.0",
-    "zod": "^3.24.1",
-    "zod-to-json-schema": "^3.24.6"
-  },
-  "devDependencies": {
-    "@types/jest": "^29.5.0",
-    "@types/node": "^22.10.6",
-    "@types/uuid": "^10.0.0",
-    "eslint": "^8.57.1",
-    "jest": "^29.5.0",
-    "ts-jest": "^29.1.0",
-    "tsx": "^4.7.0",
-    "typescript": "^5.7.3"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -93,6 +75,14 @@
     "uuid": "^11.1.0",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.24.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.6",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^8.57.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "@roast/db": "workspace:*"

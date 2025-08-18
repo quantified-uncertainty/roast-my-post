@@ -182,7 +182,7 @@ class ConfigFactory {
             false
           ),
           testDebug: ConfigValidator.validateBoolean(
-            getEnvVar('JEST_DEBUG') || getEnvVar('TEST_DEBUG'),
+            getEnvVar('VITEST_DEBUG') || getEnvVar('TEST_DEBUG'),
             false
           ),
         },

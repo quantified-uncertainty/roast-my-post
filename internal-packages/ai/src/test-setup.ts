@@ -1,10 +1,10 @@
-// Test setup file for Jest
+// Test setup file for Vitest
 // Add any global test configuration here
 
 // Load environment variables from .env files
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { afterAll } from '@jest/globals';
+import { afterAll, vi } from 'vitest';
 
 // Try to load from multiple .env files in order of precedence
 const envFiles = [
@@ -17,21 +17,54 @@ for (const envFile of envFiles) {
   dotenv.config({ path: envPath });
 }
 
-// Increase timeout for integration tests that make API calls
-jest.setTimeout(120000); // 2 minutes for tests that make real API calls
-
 // Suppress console logs during tests unless explicitly needed
 if (process.env.SUPPRESS_TEST_LOGS !== 'false') {
   global.console = {
     ...console,
-    log: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
+    log: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
     // Keep error to see actual test failures
     error: console.error,
   };
 }
+
+// Add mock helper methods to all vi.fn() calls for Vitest compatibility
+const originalFn = vi.fn;
+const originalMocked = vi.mocked;
+
+// Helper to add mock methods
+function addMockMethods(mock: any) {
+  if (!mock.mockResolvedValueOnce) {
+    mock.mockResolvedValueOnce = (value: any) => mock.mockImplementationOnce(() => Promise.resolve(value));
+  }
+  if (!mock.mockRejectedValueOnce) {
+    mock.mockRejectedValueOnce = (error: any) => mock.mockImplementationOnce(() => Promise.reject(error));
+  }
+  if (!mock.mockResolvedValue) {
+    mock.mockResolvedValue = (value: any) => mock.mockImplementation(() => Promise.resolve(value));
+  }
+  if (!mock.mockRejectedValue) {
+    mock.mockRejectedValue = (error: any) => mock.mockImplementation(() => Promise.reject(error));
+  }
+  return mock;
+}
+
+// Override vi.fn
+(vi as any).fn = (...args: any[]) => {
+  const mock = originalFn(...args);
+  return addMockMethods(mock);
+};
+
+// Override vi.mocked to add methods
+(vi as any).mocked = (item: any, ...args: any[]) => {
+  const mocked = originalMocked(item, ...args);
+  if (typeof mocked === 'function') {
+    addMockMethods(mocked);
+  }
+  return mocked;
+};
 
 // Clean up resources after all tests complete
 afterAll(async () => {
@@ -42,4 +75,4 @@ afterAll(async () => {
   if (global.gc) {
     global.gc();
   }
-});
+}, 5000); // Add timeout to prevent hanging
