@@ -65,7 +65,7 @@ describe('CheckMathHybridTool', () => {
         llmInteraction: createMockLLMInteraction()
       };
 
-      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult));
 
       const result = await checkMathHybridTool.execute(
         { statement: '2 + 2 = 4' },
@@ -96,8 +96,8 @@ describe('CheckMathHybridTool', () => {
         reasoning: 'By the definition of limits, lim(x→∞) 1/x = 0',
       };
 
-      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
-      mockCheckMath.mockImplementationOnce(() => Promise.resolve(llmResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult));
+      mockCheckMath.mockImplementationOnce(() => Promise.resolve(llmResult));
 
       const result = await checkMathHybridTool.execute(
         { statement: 'The limit of 1/x as x approaches infinity is 0' },
@@ -133,7 +133,7 @@ describe('CheckMathHybridTool', () => {
         },
       };
 
-      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult));
 
       const result = await checkMathHybridTool.execute(
         { statement: '2 + 2 = 5' },
@@ -184,8 +184,8 @@ describe('CheckMathHybridTool', () => {
         },
       };
 
-      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
-      mockCheckMath.mockImplementationOnce(() => Promise.resolve(llmResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult));
+      mockCheckMath.mockImplementationOnce(() => Promise.resolve(llmResult));
 
       const result = await checkMathHybridTool.execute(
         { statement: 'The derivative of x^2 is 3x' },

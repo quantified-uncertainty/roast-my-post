@@ -14,7 +14,7 @@ vi.mock('../detect-language-convention', () => ({
       confidence: 0.8,
       consistency: 0.9
     })
-  }
+  })
 }));
 
 describe('CheckSpellingGrammarTool', () => {

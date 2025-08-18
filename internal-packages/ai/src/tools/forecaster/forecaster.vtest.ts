@@ -69,7 +69,7 @@ describe('ForecasterTool', () => {
         outliers_removed: []
       };
       
-      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(mockResponse);
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(mockResponse));
       
       const result = await tool.run(validInput, mockContext);
       
@@ -110,7 +110,7 @@ describe('ForecasterTool', () => {
         outliers_removed: []
       };
       
-      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(mockResponse);
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(mockResponse));
       
       const result = await tool.execute(input, mockContext);
       

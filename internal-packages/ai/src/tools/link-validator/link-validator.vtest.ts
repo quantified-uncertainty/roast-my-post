@@ -34,7 +34,7 @@ describe("link-validator tool", () => {
       },
     ];
 
-    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults);
+    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults));
 
     const input = {
       text: `
@@ -97,7 +97,7 @@ describe("link-validator tool", () => {
       },
     }));
 
-    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults);
+    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults));
 
     const input = {
       text: Array.from({ length: 10 }, (_, i) => 
@@ -152,7 +152,7 @@ describe("link-validator tool", () => {
       },
     ];
 
-    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults);
+    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults));
 
     const input = {
       text: `
@@ -194,7 +194,7 @@ describe("link-validator tool", () => {
       },
     ];
 
-    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults);
+    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults));
 
     const input = {
       text: "Visit https://old.example.com for more info",
@@ -221,7 +221,7 @@ describe("link-validator tool", () => {
       },
     ];
 
-    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults);
+    (validateUrls as any).mockImplementation(() => Promise.resolve(mockValidationResults));
 
     const input = {
       text: "Error link: https://example.com/error",

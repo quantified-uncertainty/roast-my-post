@@ -44,7 +44,7 @@ describe('Claude Wrapper Integration Tests', () => {
         }
       };
 
-      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(mockResponse);
+      mockClient.messages.create.mockImplementationOnce(() => Promise.resolve(mockResponse));
 
       const interactions: RichLLMInteraction[] = [];
       const result = await callClaude({

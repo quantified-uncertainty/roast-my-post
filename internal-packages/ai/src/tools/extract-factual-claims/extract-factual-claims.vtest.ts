@@ -85,7 +85,7 @@ describe('ExtractFactualClaimsTool', () => {
             truthProbability: 95
           }]
         }
-      });
+      }));
       
       const result = await tool.run(validInput, mockContext);
       

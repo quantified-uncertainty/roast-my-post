@@ -5,7 +5,7 @@ import { checkMathHybridTool } from '../../../tools/check-math-hybrid';
 
 // Mock the math checking tool
 vi.mock('../../../tools/check-math-hybrid');
-const mockCheckMathHybrid = checkMathHybridTool as anyed<typeof checkMathHybridTool>;
+const mockCheckMathHybrid = checkMathHybridTool as any<typeof checkMathHybridTool>;
 
 describe('Math Plugin Parallelization Tests', () => {
   let mathPlugin: MathPlugin;

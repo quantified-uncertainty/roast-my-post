@@ -75,7 +75,7 @@ describe('PerplexityResearchTool', () => {
       mockClient.query.mockImplementationOnce(() => Promise.resolve({
         content: JSON.stringify(mockResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
-      });
+      }));
       
       const result = await tool.run(validInput, mockContext);
       
@@ -120,7 +120,7 @@ describe('PerplexityResearchTool', () => {
       mockClient.query.mockImplementationOnce(() => Promise.resolve({
         content: JSON.stringify(mockResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
-      });
+      }));
       
       const result = await tool.execute(input, mockContext);
       

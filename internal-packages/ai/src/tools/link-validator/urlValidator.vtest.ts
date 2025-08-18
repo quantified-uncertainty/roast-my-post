@@ -20,7 +20,7 @@ describe("urlValidator", () => {
         headers: {
           get: vi.fn().mockReturnValue("text/html"),
         },
-      });
+      }));
 
       const input: UrlValidationInput = {
         url: "https://react.dev/learn",
@@ -45,7 +45,7 @@ describe("urlValidator", () => {
 
     it("should detect when a URL doesn't exist", async () => {
       // Mock failed HEAD request (domain not found)
-      (global.fetch as any).mockImplementation(() => Promise.reject(new Error("ENOTFOUND fake-domain-12345.com"));
+      (global.fetch as any).mockImplementation(() => Promise.reject(new Error("ENOTFOUND fake-domain-12345.com")));
 
       const input: UrlValidationInput = {
         url: "https://fake-domain-12345.com/article",
@@ -70,7 +70,7 @@ describe("urlValidator", () => {
         headers: {
           get: vi.fn().mockReturnValue("text/html"),
         },
-      });
+      }));
 
       const input: UrlValidationInput = {
         url: "https://example.com/nonexistent-page",
@@ -95,7 +95,7 @@ describe("urlValidator", () => {
         headers: {
           get: vi.fn().mockReturnValue("application/pdf"),
         },
-      });
+      }));
 
       const input: UrlValidationInput = {
         url: "https://arxiv.org/pdf/1706.03762.pdf",
