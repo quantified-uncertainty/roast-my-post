@@ -1,10 +1,11 @@
 import { type AgentInput } from "@roast/ai";
+import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
 
 export interface FormFieldConfig {
   name: keyof AgentInput;
   label: string;
   required?: boolean;
-  type: "text" | "textarea" | "select" | "checkbox";
+  type: "text" | "textarea" | "select" | "checkbox" | "multiselect";
   placeholder?: string;
   options?: { value: string; label: string }[];
   description?: string;
@@ -45,10 +46,23 @@ export const agentFormFields: FormFieldConfig[] = [
     description: "Check if this agent should provide grades (0-100) for documents",
   },
   {
+    name: "pluginIds",
+    label: "Analysis Plugins",
+    type: "multiselect",
+    options: [
+      { value: PluginType.MATH, label: "Math Analysis" },
+      { value: PluginType.SPELLING, label: "Spelling & Grammar" },
+      { value: PluginType.FACT_CHECK, label: "Fact Checking" },
+      { value: PluginType.FORECAST, label: "Forecast Analysis" },
+    ],
+    description: "Select which analysis plugins this agent should use. Leave empty to use legacy capability ID.",
+  },
+  {
     name: "extendedCapabilityId",
-    label: "Extended Capability ID",
+    label: "Extended Capability ID (Legacy)",
     type: "text",
-    placeholder: "ID for special agent capabilities (optional)",
+    placeholder: "ID for special agent capabilities (optional, used when no plugins selected)",
+    description: "Legacy system - use Analysis Plugins instead for new agents",
   },
   {
     name: "readme",

@@ -41,6 +41,7 @@ const OPTIONAL_FIELDS = [
   "primaryInstructions",
   "selfCritiqueInstructions",
   "providesGrades",
+  "pluginIds",
   "extendedCapabilityId",
   "readme",
 ];
@@ -64,6 +65,7 @@ export default function NewAgentPage() {
       description: "",
       primaryInstructions: "",
       providesGrades: false,
+      pluginIds: [],
       extendedCapabilityId: "",
     },
   });
@@ -353,6 +355,30 @@ export default function NewAgentPage() {
                         </option>
                       ))}
                     </select>
+                  ) : field.type === "multiselect" ? (
+                    <div className="space-y-2">
+                      {field.options?.map((option) => (
+                        <div key={option.value} className="flex items-start">
+                          <div className="flex items-center h-5">
+                            <input
+                              {...register(field.name)}
+                              type="checkbox"
+                              value={option.value}
+                              id={`${field.name}-${option.value}`}
+                              className="form-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div className="ml-3 text-sm">
+                            <label htmlFor={`${field.name}-${option.value}`} className="font-medium text-gray-700">
+                              {option.label}
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                      {field.description && (
+                        <p className="text-sm text-gray-500">{field.description}</p>
+                      )}
+                    </div>
                   ) : field.type === "textarea" ? (
                     <textarea
                       {...register(field.name)}
