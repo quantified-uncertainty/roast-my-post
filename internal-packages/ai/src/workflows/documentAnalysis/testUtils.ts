@@ -1,4 +1,4 @@
-import type { Document } from "@roast/ai";
+import type { Document } from "../../types/documentSchema";
 import { generateMarkdownPrepend, countPrependLines } from '@roast/domain';
 
 /**

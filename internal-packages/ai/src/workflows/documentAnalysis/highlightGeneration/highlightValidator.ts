@@ -1,9 +1,9 @@
-import type { Comment } from "@roast/ai";
+import type { Comment } from "../../../types/commentSchema";
 import { logger } from "../../../utils/logger";
 import {
   LineBasedLocator,
   type LineBasedLocation,
-} from "@roast/ai/text-location/line-based";
+} from "../../../text-location/line-based";
 import type { LineBasedHighlight, RawLLMHighlight } from "./types";
 
 /**

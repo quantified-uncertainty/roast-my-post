@@ -6,7 +6,7 @@
  * - AI layer: uses `undefined` for optional properties (TypeScript convention)
  */
 
-import type { Comment } from '@roast/ai';
+import type { Comment } from '../../types/commentSchema';
 
 /**
  * Database comment type (simplified for workflows)

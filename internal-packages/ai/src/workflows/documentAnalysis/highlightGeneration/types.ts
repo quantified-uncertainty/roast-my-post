@@ -1,6 +1,6 @@
-import type { Comment } from "@roast/ai";
-import type { LLMUsage } from "@roast/ai";
-import type { LineBasedLocation } from "@roast/ai/text-location/line-based";
+import type { Comment } from "../../../types/commentSchema";
+import type { LLMUsage } from "../../../types";
+import type { LineBasedLocation } from "../../../text-location/line-based";
 
 // Response from Anthropic API
 export interface RawLLMHighlight {
