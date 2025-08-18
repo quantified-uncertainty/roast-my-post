@@ -97,7 +97,7 @@ describe('Math Plugin Parallelization Tests', () => {
             errorSeverityScore: 30,
             hasError: false
           }]
-        })
+        }))
         .mockImplementationOnce(() => Promise.resolve({
           expressions: [{
             originalText: '3*3=9',
@@ -108,7 +108,7 @@ describe('Math Plugin Parallelization Tests', () => {
             errorSeverityScore: 35,
             hasError: false
           }]
-        })
+        }))
         .mockImplementationOnce(() => Promise.resolve({
           expressions: [{
             originalText: '10/2=5',
@@ -210,7 +210,7 @@ describe('Math Plugin Parallelization Tests', () => {
             hasError: false
           }
         ]
-      });
+      }));
 
       // Configure mock responses for each expression
       mockCheckMathHybrid.execute
@@ -252,7 +252,7 @@ describe('Math Plugin Parallelization Tests', () => {
             mathJsExpression: '100/4' 
           },
           toolsUsed: ['mathjs']
-        });
+        }));
 
       const result = await mathPlugin.analyze(chunks, documentText);
 
@@ -322,7 +322,7 @@ describe('Math Plugin Parallelization Tests', () => {
             hasError: false
           }
         ]
-      });
+      }));
 
       // Make the second expression throw an error
       let callCount = 0;

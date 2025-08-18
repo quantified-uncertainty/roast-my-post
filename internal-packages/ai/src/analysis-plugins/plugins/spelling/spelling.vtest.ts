@@ -140,7 +140,7 @@ describe('SpellingAnalyzerJob', () => {
             startOffset: 8,
             endOffset: 13,
             quotedText: 'thier'
-          })
+          }))
         }),
         Object.assign(new TextChunk('They dont know', 'chunk2', {
           position: { start: 20, end: 34 },
@@ -149,7 +149,7 @@ describe('SpellingAnalyzerJob', () => {
             startOffset: 25,
             endOffset: 29,
             quotedText: 'dont'
-          })
+          }))
         }),
       ];
 

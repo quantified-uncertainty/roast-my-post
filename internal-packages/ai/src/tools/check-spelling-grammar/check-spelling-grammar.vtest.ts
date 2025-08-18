@@ -134,7 +134,7 @@ describe('CheckSpellingGrammarTool', () => {
         ],
         totalErrorsFound: 5 // More errors found but filtered by importance
       }
-    });
+    }));
 
     const input = {
       text: "We dont have time for minor issues.",
@@ -198,7 +198,7 @@ describe('CheckSpellingGrammarTool', () => {
         ],
         totalErrorsFound: 3
       }
-    });
+    }));
 
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
@@ -253,7 +253,7 @@ describe('CheckSpellingGrammarTool', () => {
         ],
         totalErrorsFound: 1
       }
-    });
+    }));
 
     const input = {
       text: "This is a mistake in the text."
@@ -297,7 +297,7 @@ describe('CheckSpellingGrammarTool', () => {
         ],
         totalErrorsFound: 1
       }
-    });
+    }));
 
     const input = {
       text: "The team of engineers are working on the project."
@@ -354,7 +354,7 @@ describe('CheckSpellingGrammarTool', () => {
         ],
         totalErrorsFound: 2
       }
-    });
+    }));
 
     const input = {
       text: `This is teh first line.

@@ -226,7 +226,7 @@ describe('ExtractFactualClaimsTool', () => {
           duration: 1200
         },
         toolResult: { claims: mockClaims }
-      });
+      }));
       
       const result = await tool.execute(input, mockContext);
       
@@ -277,7 +277,7 @@ describe('ExtractFactualClaimsTool', () => {
           duration: 1200
         },
         toolResult: { claims: mockClaims }
-      });
+      }));
       
       const result = await tool.execute(input, mockContext);
       

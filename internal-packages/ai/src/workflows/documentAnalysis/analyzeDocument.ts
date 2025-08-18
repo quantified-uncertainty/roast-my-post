@@ -36,66 +36,24 @@ export async function analyzeDocument(
     logger.warn(`Filtered out invalid plugin IDs for agent ${agentInfo.name}: ${invalidPlugins.join(', ')}`);
   }
   
-  // Decision point: Use plugins if any are configured, otherwise use LLM workflow
-  if (validPlugins.length > 0) {
-    // Sanitize plugin list for safe logging (limit length to prevent log injection)
-    const pluginListForLog = validPlugins
-      .map(String)
-      .join(', ')
-      .slice(0, 500);
-    logger.info(`Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${pluginListForLog}`);
-    
-    return await analyzeDocumentUnified(document, agentInfo, {
-      targetHighlights,
-      jobId,
-      plugins: {
-        include: validPlugins
-      }
-    });
-  } else {
-    // No plugins configured - use traditional LLM-based comprehensive analysis
-    logger.info(`Using LLM-based workflow for agent ${agentInfo.name} (no plugins configured)`);
-    
-    const tasks: TaskResult[] = [];
-    
-    // Step 1: Generate comprehensive analysis using the agent's primaryInstructions
-    const comprehensiveAnalysisResult = await generateComprehensiveAnalysis(
-      document,
-      agentInfo,
-      targetWordCount,
-      targetHighlights
-    );
-    tasks.push(comprehensiveAnalysisResult.task);
-    
-    // Step 2: Extract highlights from the analysis
-    const highlightExtractionResult = await extractHighlightsFromAnalysis(
-      document,
-      agentInfo,
-      comprehensiveAnalysisResult.outputs,
-      targetHighlights
-    );
-    tasks.push(highlightExtractionResult.task);
-    
-    // Step 3: Generate self-critique if configured
-    let selfCritique: string | undefined;
-    if (agentInfo.selfCritiqueInstructions) {
-      const selfCritiqueResult = await generateSelfCritique(
-        comprehensiveAnalysisResult.outputs,
-        agentInfo
-      );
-      selfCritique = selfCritiqueResult.outputs.selfCritique;
-      tasks.push(selfCritiqueResult.task);
-    }
-    
-    return {
-      thinking: "", // LLM workflow doesn't provide thinking
-      analysis: comprehensiveAnalysisResult.outputs.analysis,
-      summary: comprehensiveAnalysisResult.outputs.summary,
-      grade: comprehensiveAnalysisResult.outputs.grade,
-      selfCritique,
-      highlights: highlightExtractionResult.outputs.highlights,
-      tasks,
-      jobLogString: undefined, // LLM workflow doesn't generate job log strings
-    };
+  // Validate that the agent has valid plugins
+  if (validPlugins.length === 0) {
+    throw new Error(`Agent ${agentInfo.name} has no valid plugins`);
   }
+
+  // Use plugin-based workflow
+  // Sanitize plugin list for safe logging (limit length to prevent log injection)
+  const pluginListForLog = validPlugins
+    .map(String)
+    .join(', ')
+    .slice(0, 500);
+  logger.info(`Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${pluginListForLog}`);
+  
+  return await analyzeDocumentUnified(document, agentInfo, {
+    targetHighlights,
+    jobId,
+    plugins: {
+      include: validPlugins
+    }
+  });
 }

@@ -119,14 +119,14 @@ describe('MathAnalyzerJob', () => {
             severity: 'major',
             conciseCorrection: '5 → 4'
           }
-        })
+        }))
         .mockImplementationOnce(() => Promise.resolve({
           statement: 'E = mc²',
           status: 'verified_true',
           explanation: 'This is the correct formula for mass-energy equivalence',
           verifiedBy: 'llm',
           toolsUsed: ['mathjs', 'llm']
-        });
+        }));
 
       const chunks: TextChunk[] = [
         Object.assign(new TextChunk('Basic math: 2 + 2 = 5', 'chunk1', {
@@ -136,7 +136,7 @@ describe('MathAnalyzerJob', () => {
             startOffset: 12,
             endOffset: 21,
             quotedText: '2 + 2 = 5'
-          })
+          }))
         }),
         Object.assign(new TextChunk('Physics formula: E = mc²', 'chunk2', {
           position: { start: 21, end: 45 },
@@ -145,7 +145,7 @@ describe('MathAnalyzerJob', () => {
             startOffset: 37,
             endOffset: 45,
             quotedText: 'E = mc²'
-          })
+          }))
         }),
       ];
 
@@ -168,7 +168,7 @@ describe('MathAnalyzerJob', () => {
     it('should handle empty document', async () => {
       (extractMathExpressionsTool.execute as any).mockImplementation(() => Promise.resolve({
         expressions: []
-      });
+      }));
 
       const analyzer = new MathAnalyzerJob();
       const chunks = [new TextChunk('No math here, just text.', 'chunk1')];
@@ -183,7 +183,7 @@ describe('MathAnalyzerJob', () => {
     it('should not run analysis twice', async () => {
       (extractMathExpressionsTool.execute as any).mockImplementation(() => Promise.resolve({
         expressions: []
-      });
+      }));
 
       const analyzer = new MathAnalyzerJob();
       const chunks = [new TextChunk('Test', 'chunk1')];
@@ -205,7 +205,7 @@ describe('MathAnalyzerJob', () => {
     it('should return cached results after analysis', async () => {
       (extractMathExpressionsTool.execute as any).mockImplementation(() => Promise.resolve({
         expressions: []
-      });
+      }));
 
       const analyzer = new MathAnalyzerJob();
       const chunks = [new TextChunk('Test', 'chunk1')];

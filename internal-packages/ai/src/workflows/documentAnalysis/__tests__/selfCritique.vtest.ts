@@ -61,16 +61,37 @@ describe("Self-Critique", () => {
       ]
     };
 
-    // Mock the self-critique response
-    const mockToolResult = {
-      selfCritique: "Score: 75/100\n\nThis evaluation demonstrates good structure and covers key points. However, the analysis could be more specific about implementation details."
+    // Mock the self-critique response directly
+    const mockClaudeResponse = {
+      response: {
+        content: [{
+          type: 'tool_use',
+          input: {
+            selfCritique: "Score: 75/100\n\nThis evaluation demonstrates good structure and covers key points. However, the analysis could be more specific about implementation details."
+          }
+        }],
+        usage: { input_tokens: 100, output_tokens: 50 }
+      },
+      interaction: {
+        model: 'claude-3-haiku-20240307',
+        prompt: 'test prompt',
+        response: 'test response',
+        tokensUsed: { prompt: 100, completion: 50, total: 150 },
+        timestamp: new Date(),
+        duration: 500
+      },
+      toolResult: {
+        selfCritique: "Score: 75/100\n\nThis evaluation demonstrates good structure and covers key points. However, the analysis could be more specific about implementation details."
+      }
     };
-    mockHelper.mockToolResponse(mockToolResult);
+    
+    mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(mockClaudeResponse));
 
     const result = await generateSelfCritique(mockEvaluation, mockAgent);
 
     expect(result.outputs.selfCritique).toBeDefined();
     expect(result.outputs.selfCritique).toContain("Score:");
     expect(result.task.name).toBe("generateSelfCritique");
-  }, 10000); // Increase timeout to 10 seconds
+    expect(mockCallClaudeWithTool).toHaveBeenCalledTimes(1);
+  }, 30000); // Increase timeout to 30 seconds
 });

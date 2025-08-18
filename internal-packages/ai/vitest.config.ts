@@ -14,6 +14,11 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.ts'],
     testTimeout: 30000,
     teardownTimeout: 10000,
+    server: {
+      deps: {
+        inline: [/.*export.*/]
+      }
+    },
     pool: 'forks',
     poolOptions: {
       forks: {
