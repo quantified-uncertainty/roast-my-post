@@ -19,7 +19,6 @@ vi.mock("@roast/ai", () => ({
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
   },
-  setupClaudeToolMock: vi.importActual("@roast/ai").setupClaudeToolMock,
   createHeliconeHeaders: vi.fn(() => ({})),
   withTimeout: vi.fn((promise) => promise),
 }));
@@ -27,7 +26,7 @@ vi.mock("@roast/ai", () => ({
 // Mock withTimeout - no need to mock the submodule since it's imported from main package
 
 import { callClaudeWithTool } from "@roast/ai";
-import { setupClaudeToolMock } from "../../../testing";
+import { setupClaudeToolMock } from "../../../claude/mockHelpers";
 
 describe("Self-Critique", () => {
   let mockCallClaudeWithTool: typeof callClaudeWithTool;

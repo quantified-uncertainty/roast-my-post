@@ -12,14 +12,13 @@ vi.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307"
   },
   createHeliconeHeaders: vi.fn(() => ({})),
-  setupClaudeToolMock: vi.importActual("@roast/ai").setupClaudeToolMock,
   withTimeout: vi.fn((promise) => promise),
 }));
 
 // withTimeout is now mocked in the main @roast/ai mock above
 
 import { callClaudeWithTool } from "@roast/ai";
-import { setupClaudeToolMock } from "../../../testing";
+import { setupClaudeToolMock } from "../../../claude/mockHelpers";
 
 // Mock the cost calculator
 vi.mock("../../../utils/costCalculator", () => ({

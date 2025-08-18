@@ -16,7 +16,12 @@ export default defineConfig({
     teardownTimeout: 10000,
     server: {
       deps: {
-        inline: [/.*export.*/]
+        inline: [
+          /.*export.*/,
+          /text-location/,
+          /src\/text-location/
+        ],
+        external: []
       }
     },
     pool: 'forks',

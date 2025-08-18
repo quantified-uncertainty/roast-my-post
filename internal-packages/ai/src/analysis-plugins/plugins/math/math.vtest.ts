@@ -230,7 +230,7 @@ describe('MathAnalyzerJob', () => {
           lineNumber: 1,
           surroundingContext: "Test: 1 + 1 = 2"
         }]
-      });
+      }));
 
       // Mock check-math-hybrid for the single expression
       (checkMathHybridTool.execute as any).mockImplementation(() => Promise.resolve({

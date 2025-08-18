@@ -72,13 +72,13 @@ describe("Link Validator Tool", () => {
         status: 200,
         url: "https://working.com",
         headers: { get: vi.fn().mockReturnValue("text/html") },
-      } as unknown as Response)
+      } as unknown as Response))
       .mockImplementationOnce(() => Promise.resolve({
         ok: false,
         status: 403,
         url: "https://forbidden.com",
         headers: { get: vi.fn().mockReturnValue("text/html") },
-      } as unknown as Response);
+      } as unknown as Response));
 
     const result = await linkValidator.run({
       text: "Visit https://working.com and https://forbidden.com",

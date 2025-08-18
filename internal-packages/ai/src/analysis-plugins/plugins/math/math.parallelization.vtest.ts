@@ -252,7 +252,7 @@ describe('Math Plugin Parallelization Tests', () => {
             mathJsExpression: '100/4' 
           },
           toolsUsed: ['mathjs']
-        }));
+        })));
 
       const result = await mathPlugin.analyze(chunks, documentText);
 

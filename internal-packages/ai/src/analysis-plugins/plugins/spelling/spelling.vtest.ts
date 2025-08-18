@@ -177,7 +177,7 @@ describe('SpellingAnalyzerJob', () => {
     it('should handle empty document', async () => {
       (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: [],
-      });
+      }));
 
       (grading.calculateGrade as any).mockReturnValue({
         grade: 100,
@@ -343,8 +343,8 @@ describe('SpellingAnalyzerJob', () => {
         new TextChunk('I will recieve teh package', 'chunk1', { position: { start: 0, end: 26 } }), 
         {
           findTextAbsolute: vi.fn()
-            .mockImplementationOnce(() => Promise.resolve({ startOffset: 16, endOffset: 19, quotedText: 'teh' })
-            .mockImplementationOnce(() => Promise.resolve({ startOffset: 7, endOffset: 14, quotedText: 'recieve' })
+            .mockImplementationOnce(() => Promise.resolve({ startOffset: 16, endOffset: 19, quotedText: 'teh' }))
+            .mockImplementationOnce(() => Promise.resolve({ startOffset: 7, endOffset: 14, quotedText: 'recieve' }))
         }
       );
 
