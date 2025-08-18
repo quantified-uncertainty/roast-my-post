@@ -19,7 +19,8 @@ export default defineConfig({
         inline: [
           /.*export.*/,
           /text-location/,
-          /src\/text-location/
+          /src\/text-location/,
+          /@roast\/domain/
         ],
         external: []
       }

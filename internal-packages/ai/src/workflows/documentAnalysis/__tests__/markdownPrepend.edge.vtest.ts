@@ -109,7 +109,6 @@ describe("markdownPrepend Edge Cases", () => {
     });
 
     test("handles highlight at exact boundary position", async () => {
-      const { anthropic } = require("@roast/ai");
       
       const documentContent = "First content line here.";
       const mockDocument = createTestDocument(documentContent, {
@@ -166,7 +165,6 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Empty and malformed prepend handling", () => {
     test("handles document with empty prepend gracefully", async () => {
-      const { anthropic } = require("@roast/ai");
       
       // Create document that explicitly has empty prepend
       const mockDocument = {
@@ -210,7 +208,6 @@ describe("markdownPrepend Edge Cases", () => {
       };
 
       // The system should handle this gracefully
-      const { anthropic } = require("@roast/ai");
       
       const mockAnalysisResponse = {
         content: [
@@ -237,7 +234,6 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Line number edge cases", () => {
     test("handles single line document", async () => {
-      const { anthropic } = require("@roast/ai");
       
       const singleLineDoc = createTestDocument("Single line only", {
         includePrepend: true
@@ -286,7 +282,6 @@ describe("markdownPrepend Edge Cases", () => {
     });
 
     test("handles out of bounds line references", async () => {
-      const { anthropic } = require("@roast/ai");
       
       const mockDocument = createTestDocument("Line 1\nLine 2", {
         includePrepend: true
@@ -336,7 +331,6 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Special characters in prepend", () => {
     test("handles markdown special characters in title", async () => {
-      const { anthropic } = require("@roast/ai");
       
       const specialDoc = createTestDocument("Content", {
         title: "**Bold** and _italic_ and [link](url)",
@@ -368,7 +362,6 @@ describe("markdownPrepend Edge Cases", () => {
     });
 
     test("handles unicode and emojis in prepend", async () => {
-      const { anthropic } = require("@roast/ai");
       
       const unicodeDoc = createTestDocument("Content", {
         title: "Test 测试 🚀 Document",
@@ -422,7 +415,6 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Performance with large prepends", () => {
     test("handles very large prepend efficiently", async () => {
-      const { anthropic } = require("@roast/ai");
       
       // Create a document with a very large title
       const largeDoc = createTestDocument("Content", {
