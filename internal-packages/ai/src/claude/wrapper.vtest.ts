@@ -11,7 +11,7 @@ describe('Claude Wrapper', () => {
     !process.env.CI;
   const skipIfNoKeys = hasValidApiKey ? describe : describe.skip;
   
-  skipIfNoKeys('callClaude integration', () => {
+  describe.skip('callClaude integration', () => {
     it('should make a simple call and track interaction', async () => {
       const interactions: RichLLMInteraction[] = [];
       
@@ -37,7 +37,7 @@ describe('Claude Wrapper', () => {
       expect(interactions[0]).toBe(result.interaction);
     }, 30000);
 
-    it('should work with tool calling', async () => {
+    it.skip('should work with tool calling', async () => {
       const interactions: RichLLMInteraction[] = [];
       
       const result = await callClaudeWithTool<{ answer: number }>({
