@@ -1,10 +1,10 @@
-// Test setup file for Jest
+// Test setup file for Vitest
 // Add any global test configuration here
 
 // Load environment variables from .env files
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { afterAll } from '@jest/globals';
+import { afterAll, vi } from 'vitest';
 
 // Try to load from multiple .env files in order of precedence
 const envFiles = [
@@ -17,17 +17,14 @@ for (const envFile of envFiles) {
   dotenv.config({ path: envPath });
 }
 
-// Increase timeout for integration tests that make API calls
-jest.setTimeout(120000); // 2 minutes for tests that make real API calls
-
 // Suppress console logs during tests unless explicitly needed
 if (process.env.SUPPRESS_TEST_LOGS !== 'false') {
   global.console = {
     ...console,
-    log: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
+    log: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
     // Keep error to see actual test failures
     error: console.error,
   };

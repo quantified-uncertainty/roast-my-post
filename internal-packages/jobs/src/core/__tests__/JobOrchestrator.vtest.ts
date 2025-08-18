@@ -28,6 +28,9 @@ vi.mock('@roast/db', () => ({
     task: {
       create: vi.fn(),
     },
+    evaluationHighlight: {
+      create: vi.fn(),
+    },
     evaluationComment: {
       create: vi.fn(),
     },
@@ -182,7 +185,7 @@ describe('JobOrchestrator', () => {
           highlight: {
             startOffset: 0,
             endOffset: 10,
-            quotedText: 'Test text',
+            quotedText: 'This is te',
           },
         },
       ];
@@ -193,12 +196,14 @@ describe('JobOrchestrator', () => {
 
       (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
       (prisma.evaluationVersion.create as any).mockResolvedValue({ id: 'eval-version-1' });
+      (prisma.evaluationHighlight.create as any).mockResolvedValue({ id: 'highlight-1' });
+      (prisma.evaluationComment.create as any).mockResolvedValue({ id: 'comment-1' });
 
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(true);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Generated 1 highlights'),
+        expect.stringContaining('Saved 1 highlights'),
         expect.objectContaining({
           evaluationId: 'eval-1',
           highlightCount: 1,
