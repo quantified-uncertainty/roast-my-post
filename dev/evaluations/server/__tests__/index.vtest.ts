@@ -1,13 +1,13 @@
-import { describe, expect, it, beforeEach, jest } from '@jest/globals';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { Hono } from 'hono';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 // Mock fs/promises
-jest.mock('fs/promises');
+vi.mock('fs/promises');
 
 // Mock the test cases
-jest.mock('../../data/check-spelling-grammar/test-cases', () => ({
+vi.mock('../../data/check-spelling-grammar/test-cases', () => ({
   testCases: [
     { id: 'test1', category: 'Grammar', name: 'Test 1' },
     { id: 'test2', category: 'Spelling', name: 'Test 2' },
@@ -15,7 +15,7 @@ jest.mock('../../data/check-spelling-grammar/test-cases', () => ({
   ]
 }));
 
-jest.mock('../../data/check-math-with-mathjs/test-cases', () => ({
+vi.mock('../../data/check-math-with-mathjs/test-cases', () => ({
   testCases: [
     { id: 'math1', category: 'Arithmetic', name: 'Math 1' },
     { id: 'math2', category: 'Algebra', name: 'Math 2' },
@@ -155,11 +155,11 @@ describe('Evaluation Dashboard', () => {
 
   describe('getResultFiles', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should return empty array when directory does not exist', async () => {
-      (fs.access as jest.Mock).mockRejectedValue(new Error('ENOENT'));
+      vi.mocked(fs.access).mockRejectedValue(new Error('ENOENT'));
 
       async function getResultFiles(dir: string, prefix: string = '') {
         try {
@@ -176,18 +176,18 @@ describe('Evaluation Dashboard', () => {
     });
 
     it('should filter JSON files with prefix', async () => {
-      (fs.access as jest.Mock).mockResolvedValue(undefined);
-      (fs.readdir as jest.Mock).mockResolvedValue([
+      vi.mocked(fs.access).mockResolvedValue(undefined);
+      vi.mocked(fs.readdir).mockResolvedValue([
         'math-evaluation-2025.json',
         'spelling-evaluation-2025.json',
         'math-test.json',
         'readme.md',
         'test.txt',
-      ]);
-      (fs.stat as jest.Mock).mockResolvedValue({
+      ] as any);
+      vi.mocked(fs.stat).mockResolvedValue({
         size: 1024,
         mtime: new Date('2025-01-15'),
-      });
+      } as any);
 
       async function getResultFiles(dir: string, prefix: string = '') {
         try {
@@ -214,12 +214,12 @@ describe('Evaluation Dashboard', () => {
         { size: 1500, mtime: new Date('2025-01-12') },
       ];
 
-      (fs.access as jest.Mock).mockResolvedValue(undefined);
-      (fs.readdir as jest.Mock).mockResolvedValue(mockFiles);
-      (fs.stat as jest.Mock)
-        .mockResolvedValueOnce(mockStats[0])
-        .mockResolvedValueOnce(mockStats[1])
-        .mockResolvedValueOnce(mockStats[2]);
+      vi.mocked(fs.access).mockResolvedValue(undefined);
+      vi.mocked(fs.readdir).mockResolvedValue(mockFiles as any);
+      vi.mocked(fs.stat)
+        .mockResolvedValueOnce(mockStats[0] as any)
+        .mockResolvedValueOnce(mockStats[1] as any)
+        .mockResolvedValueOnce(mockStats[2] as any);
 
       async function getResultFiles(dir: string, prefix: string = '') {
         try {

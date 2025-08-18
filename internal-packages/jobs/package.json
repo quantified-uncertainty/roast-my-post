@@ -16,12 +16,12 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'Jobs package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:watch": "echo 'Jobs package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:coverage": "echo 'Jobs package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:unit": "echo 'Jobs package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:integration": "echo 'Jobs package tests temporarily disabled during Vitest migration' && exit 0",
-    "test:ci": "echo 'Jobs package tests temporarily disabled during Vitest migration' && exit 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run",
+    "test:integration": "vitest run",
+    "test:ci": "vitest run",
     "process-job": "tsx src/cli/process-job.ts",
     "process-adaptive": "tsx src/cli/process-adaptive.ts"
   },
@@ -32,11 +32,9 @@
     "dotenv": "^17.2.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
     "@types/node": "^20.11.5",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.2",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^3.2.4"
   }
 }

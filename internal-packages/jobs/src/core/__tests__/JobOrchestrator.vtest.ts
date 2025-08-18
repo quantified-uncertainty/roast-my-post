@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobOrchestrator } from '../JobOrchestrator';
 import { JobService } from '../JobService';
 import { analyzeDocument } from '@roast/ai';
@@ -6,31 +7,31 @@ import { fetchJobCostWithRetry } from '@roast/ai';
 import type { Logger } from '../types';
 
 // Mock dependencies
-jest.mock('@roast/ai', () => ({
-  analyzeDocument: jest.fn(),
-  initializeAI: jest.fn(),
+vi.mock('@roast/ai', () => ({
+  analyzeDocument: vi.fn(),
+  initializeAI: vi.fn(),
   HeliconeSessionManager: {
-    forJob: jest.fn(() => ({
-      trackAnalysis: jest.fn((type, fn) => fn()),
+    forJob: vi.fn(() => ({
+      trackAnalysis: vi.fn((type, fn) => fn()),
     })),
   },
-  setGlobalSessionManager: jest.fn(),
-  fetchJobCostWithRetry: jest.fn(),
+  setGlobalSessionManager: vi.fn(),
+  fetchJobCostWithRetry: vi.fn(),
 }));
 
-jest.mock('@roast/db', () => ({
+vi.mock('@roast/db', () => ({
   prisma: {
     evaluationVersion: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
     task: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     evaluationComment: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
-    $disconnect: jest.fn(),
+    $disconnect: vi.fn(),
   },
   JobStatus: {
     PENDING: 'PENDING',
@@ -42,34 +43,34 @@ jest.mock('@roast/db', () => ({
 
 describe('JobOrchestrator', () => {
   let orchestrator: JobOrchestrator;
-  let mockJobService: jest.Mocked<JobService>;
-  let mockLogger: jest.Mocked<Logger>;
-  let mockAnalyzeDocument: jest.MockedFunction<typeof analyzeDocument>;
-  let mockFetchJobCost: jest.MockedFunction<typeof fetchJobCostWithRetry>;
+  let mockJobService: any;
+  let mockLogger: any;
+  let mockAnalyzeDocument: any;
+  let mockFetchJobCost: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create mock logger
     mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      debug: vi.fn(),
     };
 
     // Create mock job service
     mockJobService = {
-      claimNextPendingJob: jest.fn(),
-      markAsRunning: jest.fn(),
-      markAsCompleted: jest.fn(),
-      markAsFailed: jest.fn(),
-      createRetryJob: jest.fn(),
-      getJobWithRelations: jest.fn(),
+      claimNextPendingJob: vi.fn(),
+      markAsRunning: vi.fn(),
+      markAsCompleted: vi.fn(),
+      markAsFailed: vi.fn(),
+      createRetryJob: vi.fn(),
+      getJobWithRelations: vi.fn(),
     } as any;
 
-    mockAnalyzeDocument = analyzeDocument as jest.MockedFunction<typeof analyzeDocument>;
-    mockFetchJobCost = fetchJobCostWithRetry as jest.MockedFunction<typeof fetchJobCostWithRetry>;
+    mockAnalyzeDocument = analyzeDocument;
+    mockFetchJobCost = fetchJobCostWithRetry;
 
     orchestrator = new JobOrchestrator(mockJobService, mockLogger);
   });
@@ -94,8 +95,8 @@ describe('JobOrchestrator', () => {
       mockFetchJobCost.mockResolvedValue({ totalCostUSD: 0.5 });
       mockJobService.markAsCompleted.mockResolvedValue(mockJob);
 
-      (prisma.evaluationVersion.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.evaluationVersion.create as jest.Mock).mockResolvedValue({ id: 'eval-version-1' });
+      (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
+      (prisma.evaluationVersion.create as any).mockResolvedValue({ id: 'eval-version-1' });
 
       const result = await orchestrator.run();
 
@@ -137,8 +138,8 @@ describe('JobOrchestrator', () => {
       mockFetchJobCost.mockResolvedValue({ totalCostUSD: 0.75 });
       mockJobService.markAsCompleted.mockResolvedValue(mockJob);
 
-      (prisma.evaluationVersion.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.evaluationVersion.create as jest.Mock).mockResolvedValue({ id: 'eval-version-1' });
+      (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
+      (prisma.evaluationVersion.create as any).mockResolvedValue({ id: 'eval-version-1' });
 
       const result = await orchestrator.processJob(mockJob);
 
@@ -190,8 +191,8 @@ describe('JobOrchestrator', () => {
       mockFetchJobCost.mockResolvedValue(null);
       mockJobService.markAsCompleted.mockResolvedValue(mockJob);
 
-      (prisma.evaluationVersion.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.evaluationVersion.create as jest.Mock).mockResolvedValue({ id: 'eval-version-1' });
+      (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
+      (prisma.evaluationVersion.create as any).mockResolvedValue({ id: 'eval-version-1' });
 
       const result = await orchestrator.processJob(mockJob);
 
@@ -229,8 +230,8 @@ describe('JobOrchestrator', () => {
       mockFetchJobCost.mockResolvedValue(null);
       mockJobService.markAsCompleted.mockResolvedValue(mockJob);
 
-      (prisma.evaluationVersion.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.evaluationVersion.create as jest.Mock).mockResolvedValue({ id: 'eval-version-1' });
+      (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
+      (prisma.evaluationVersion.create as any).mockResolvedValue({ id: 'eval-version-1' });
 
       const result = await orchestrator.processJob(mockJob);
 
