@@ -20,6 +20,9 @@ vi.mock('../detect-language-convention', () => ({
 }));
 
 describe('CheckSpellingGrammarTool', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   it('should not flag informal/colloquial words as errors', async () => {
     const mockCallClaude = callClaudeWithTool as any;
 
