@@ -1,11 +1,10 @@
+import { vi } from 'vitest';
 import { processArticle } from './articleImport';
 
 // Skip these tests in CI or when running unit tests
 const describeIntegration = process.env.INTEGRATION_TESTS ? describe : describe.skip;
 
 describeIntegration("articleImport integration tests", () => {
-  // These tests make real network requests
-  jest.setTimeout(60000); // 60 second timeout for network requests
 
   it("should import EA Forum articles without excessive truncation", async () => {
     const url = "https://forum.effectivealtruism.org/posts/f3GqJJeKNKcABY9Fo/a-defense-of-mid-tier-ea-lw-writing";

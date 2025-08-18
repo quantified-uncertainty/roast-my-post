@@ -3,6 +3,7 @@
  * These tests verify that tools work correctly by testing their core logic
  */
 
+import { vi } from 'vitest';
 import { 
   checkMathTool,
   forecasterTool,
@@ -25,9 +26,6 @@ describe('Tools End-to-End Tests', () => {
       throw new Error('ANTHROPIC_API_KEY is required for e2e tests. Set it in your environment or .env.local file.');
     }
   });
-
-  // Set timeout for LLM calls
-  jest.setTimeout(120000);
 
   describe('Math Checker Tool', () => {
     it('should detect mathematical errors in statements', async () => {

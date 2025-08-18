@@ -1,8 +1,7 @@
+import { vi } from 'vitest';
 import { processArticle } from '@/infrastructure/external/articleImport';
 
 describe('Article Import End-to-End Tests', () => {
-  jest.setTimeout(30000); // 30 second timeout for network requests
-
   // Fail fast if required API keys are not available
   beforeAll(() => {
     if (!process.env.FIRECRAWL_KEY) {

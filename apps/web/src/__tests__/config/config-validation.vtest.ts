@@ -3,7 +3,7 @@
  * Ensures configuration loads correctly in various environments
  */
 
-import { describe, expect, it, beforeEach, afterEach } from '@jest/globals';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 
 describe('Configuration Validation', () => {
   let originalEnv: NodeJS.ProcessEnv;
@@ -20,7 +20,7 @@ describe('Configuration Validation', () => {
     Object.assign(process.env, originalEnv);
     
     // Clear the config cache by requiring fresh module
-    jest.resetModules();
+    vi.resetModules();
   });
 
   // Helper to set environment variables in a type-safe way
