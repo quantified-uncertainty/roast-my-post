@@ -22,14 +22,14 @@ describe('ForecastPlugin Integration', () => {
       analysis: '## Forecast Analysis\n\nPredictions found.',
       comments: [],
       cost: 0.001
-    });
+    }));
 
     vi.spyOn(mathPlugin, 'analyze').mockImplementation(() => Promise.resolve({
       summary: 'No mathematical expressions found.',
       analysis: 'No mathematical calculations or formulas were identified in this document.',
       comments: [],
       cost: 0.001
-    });
+    }));
 
     const result = await manager.analyzeDocumentSimple(
       mockDocumentText,
