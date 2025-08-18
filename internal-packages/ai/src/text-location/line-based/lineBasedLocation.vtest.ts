@@ -184,7 +184,7 @@ describe("LineBasedLocator", () => {
 
       expect(result).toEqual({
         startOffset: 10,
-        endOffset: 16,
+        endOffset: 14,
         quotedText: "it()",
         prefix: "Function: ",
       });
