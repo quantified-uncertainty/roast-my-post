@@ -39,7 +39,7 @@ describe("Comprehensive Analysis Unit Tests", () => {
     intendedAgents: ["test-agent-1"],
   };
 
-  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: typeof callClaudeWithTool;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
@@ -176,7 +176,7 @@ describe("Comprehensive Analysis Unit Tests", () => {
     it("should handle API errors gracefully", async () => {
       mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(
         new Error("API request failed")
-      );
+      ));
 
       await expect(
         generateComprehensiveAnalysis(mockDocument, mockAgent, 5, 2)

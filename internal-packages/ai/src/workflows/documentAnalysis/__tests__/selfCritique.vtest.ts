@@ -30,7 +30,7 @@ import { callClaudeWithTool } from "@roast/ai";
 import { setupClaudeToolMock } from "../../../testing";
 
 describe("Self-Critique", () => {
-  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: typeof callClaudeWithTool;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {

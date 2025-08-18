@@ -127,10 +127,10 @@ describe('SpellingAnalyzerJob', () => {
       (checkSpellingGrammarTool.execute as any)
         .mockImplementationOnce(() => Promise.resolve({
           errors: [mockErrors[0]], // First chunk gets the spelling error
-        })
+        }))
         .mockImplementationOnce(() => Promise.resolve({
           errors: [mockErrors[1]], // Second chunk gets the grammar error
-        });
+        }));
 
       const chunks: TextChunk[] = [
         Object.assign(new TextChunk('This is thier house', 'chunk1', {

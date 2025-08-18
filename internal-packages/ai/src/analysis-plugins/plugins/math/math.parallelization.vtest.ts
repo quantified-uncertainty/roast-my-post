@@ -5,7 +5,7 @@ import { checkMathHybridTool } from '../../../tools/check-math-hybrid';
 
 // Mock the math checking tool
 vi.mock('../../../tools/check-math-hybrid');
-const mockCheckMathHybrid = checkMathHybridTool as any<typeof checkMathHybridTool>;
+const mockCheckMathHybrid = checkMathHybridTool as any;
 
 describe('Math Plugin Parallelization Tests', () => {
   let mathPlugin: MathPlugin;
@@ -119,7 +119,7 @@ describe('Math Plugin Parallelization Tests', () => {
             errorSeverityScore: 40,
             hasError: false
           }]
-        });
+        }));
 
       // Run the analysis
       const startTime = Date.now();
@@ -393,7 +393,7 @@ describe('Math Plugin Parallelization Tests', () => {
       );
 
       const extractMathExpressionsTool = require('../../../tools/extract-math-expressions').extractMathExpressionsTool;
-      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve({ expressions });
+      extractMathExpressionsTool.execute = vi.fn().mockImplementation(() => Promise.resolve({ expressions }));
 
       // Each check takes 50ms
       mockCheckMathHybrid.execute = vi.fn().mockImplementation(async () => {

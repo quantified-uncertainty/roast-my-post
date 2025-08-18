@@ -120,7 +120,7 @@ describe("urlValidator", () => {
         headers: {
           get: vi.fn().mockReturnValue("text/html"),
         },
-      });
+      }));
 
       const input: UrlValidationInput = {
         url: "https://reactjs.org/docs",
@@ -140,7 +140,7 @@ describe("urlValidator", () => {
       // Mock timeout error
       const abortError = new Error("The operation was aborted");
       abortError.name = "AbortError";
-      (global.fetch as any).mockImplementation(() => Promise.reject(abortError);
+      (global.fetch as any).mockImplementation(() => Promise.reject(abortError));
 
       const input: UrlValidationInput = {
         url: "https://slow-website.com",
@@ -158,7 +158,7 @@ describe("urlValidator", () => {
 
     it("should handle SSL/TLS certificate errors", async () => {
       // Mock SSL error
-      (global.fetch as any).mockImplementation(() => Promise.reject(new Error("CERT_HAS_EXPIRED"));
+      (global.fetch as any).mockImplementation(() => Promise.reject(new Error("CERT_HAS_EXPIRED")));
 
       const input: UrlValidationInput = {
         url: "https://expired-cert.example.com",
@@ -183,7 +183,7 @@ describe("urlValidator", () => {
         headers: {
           get: vi.fn().mockReturnValue("text/html"),
         },
-      });
+      }));
 
       const input: UrlValidationInput = {
         url: "https://example.com/protected",
@@ -210,7 +210,7 @@ describe("urlValidator", () => {
             return null;
           }),
         },
-      });
+      }));
 
       const input: UrlValidationInput = {
         url: "https://api.example.com/endpoint",
@@ -235,7 +235,7 @@ describe("urlValidator", () => {
         headers: {
           get: vi.fn().mockReturnValue("text/html"),
         },
-      });
+      }));
 
       const input: UrlValidationInput = {
         url: "https://example.com/broken",
@@ -254,8 +254,8 @@ describe("urlValidator", () => {
     it("should try multiple strategies before giving up", async () => {
       // Mock failures for first two strategies, success on third
       (global.fetch as any)
-        .mockImplementationOnce(() => Promise.reject(new Error("Network error"))
-        .mockImplementationOnce(() => Promise.reject(new Error("Network error"))
+        .mockImplementationOnce(() => Promise.reject(new Error("Network error")))
+        .mockImplementationOnce(() => Promise.reject(new Error("Network error")))
         .mockImplementationOnce(() => Promise.resolve({
           ok: true,
           status: 200,
@@ -263,7 +263,7 @@ describe("urlValidator", () => {
           headers: {
             get: vi.fn().mockReturnValue("text/html"),
           },
-        });
+        }));
 
       const input: UrlValidationInput = {
         url: "https://example.com",

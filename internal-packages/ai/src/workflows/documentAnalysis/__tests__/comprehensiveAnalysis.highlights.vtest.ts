@@ -39,7 +39,7 @@ describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
     providesGrades: false,
   };
 
-  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: typeof callClaudeWithTool;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {

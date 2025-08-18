@@ -143,7 +143,7 @@ describe('ForecasterTool', () => {
         statistics: { mean: 50, std_dev: 0 },
         outliers_removed: [],
         llmInteractions: []
-      });
+      }));
       
       await tool.run(input, mockContext);
       
@@ -161,7 +161,7 @@ describe('ForecasterTool', () => {
         statistics: { mean: 75, std_dev: 0 },
         outliers_removed: [],
         llmInteractions: []
-      });
+      }));
       
       await tool.run(input, mockContext);
       
@@ -176,7 +176,7 @@ describe('ForecasterTool', () => {
       const input = { question: 'Test?' };
       const error = new Error('API error');
       
-      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.reject(error);
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.reject(error));
       
       await expect(tool.execute(input, mockContext))
         .rejects.toThrow('API error');

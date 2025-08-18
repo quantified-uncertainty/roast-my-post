@@ -13,8 +13,8 @@ vi.mock('../detect-language-convention', () => ({
       convention: 'US',
       confidence: 0.8,
       consistency: 0.9
-    })
-  })
+    }))
+  }
 }));
 
 describe('CheckSpellingGrammarTool', () => {
@@ -85,7 +85,7 @@ describe('CheckSpellingGrammarTool', () => {
         ],
         totalErrorsFound: 2
       }
-    });
+    }));
 
     const input = {
       text: "This is teh best approach. We will recieve the data tomorrow.",

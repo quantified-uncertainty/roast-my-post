@@ -9,7 +9,7 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 
 // Mock the unified workflow since we're testing routing logic
-vi.mock("../unified", () => ({
+vi.mock("../unified/index", () => ({
   analyzeDocumentUnified: vi.fn().mockImplementation(() => Promise.resolve({
     thinking: "Mock thinking from unified workflow",
     analysis: "Mock analysis from unified workflow", 
@@ -17,8 +17,10 @@ vi.mock("../unified", () => ({
     highlights: [],
     tasks: [],
     jobLogString: "Mock job log"
-  })
+  }))
 }));
+
+import { analyzeDocumentUnified } from "../unified/index";
 
 describe("analyzeDocument with pluginIds", () => {
   const mockDocument: Document = {
@@ -46,7 +48,7 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      const { analyzeDocumentUnified } = require("../unified");
+      // analyzeDocumentUnified is already mocked at the top of the file
       
       const result = await analyzeDocument(mockDocument, mockAgent, 500, 5, "test-job-id");
 
@@ -72,7 +74,7 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      const { analyzeDocumentUnified } = require("../unified");
+      // analyzeDocumentUnified is already mocked at the top of the file
       
       await analyzeDocument(mockDocument, mockAgent);
 
@@ -126,7 +128,7 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      const { analyzeDocumentUnified } = require("../unified");
+      // analyzeDocumentUnified is already mocked at the top of the file
       
       await analyzeDocument(mockDocument, mockAgent);
 
@@ -167,7 +169,7 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      const { analyzeDocumentUnified } = require("../unified");
+      // analyzeDocumentUnified is already mocked at the top of the file
       
       await analyzeDocument(mockDocument, mockAgent);
 
@@ -191,7 +193,7 @@ describe("analyzeDocument with pluginIds", () => {
         providesGrades: false
       };
 
-      const { analyzeDocumentUnified } = require("../unified");
+      // analyzeDocumentUnified is already mocked at the top of the file
       
       await analyzeDocument(mockDocument, mockAgent);
 

@@ -37,7 +37,7 @@ describe("markdownPrepend Edge Cases", () => {
     providesGrades: false,
   };
 
-  let mockCallClaudeWithTool: anytypeof callClaudeWithTool>;
+  let mockCallClaudeWithTool: typeof callClaudeWithTool;
   let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {

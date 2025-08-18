@@ -129,7 +129,7 @@ describe('Claude Wrapper Integration Tests', () => {
 
     it('should throw after max retries', async () => {
       const mockError = createMockClaudeError('Server error', 500);
-      mockClient.messages.create.mockImplementation(() => Promise.reject(mockError);
+      mockClient.messages.create.mockImplementation(() => Promise.reject(mockError));
 
       await expect(callClaude({
         messages: [{ role: 'user', content: 'Test' }]
@@ -273,7 +273,7 @@ describe('Claude Wrapper Integration Tests', () => {
         // Missing required fields
         content: null,
         usage: null
-      });
+      }));
 
       await expect(callClaude({
         messages: [{ role: 'user', content: 'Test' }]

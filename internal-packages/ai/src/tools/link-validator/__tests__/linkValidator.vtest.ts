@@ -19,7 +19,7 @@ describe("Link Validator Tool", () => {
       headers: {
         get: vi.fn().mockReturnValue("text/html"),
       },
-    } as unknown as Response);
+    } as unknown as Response));
 
     const result = await linkValidator.run({
       text: "Check out [React docs](https://react.dev/learn) for tutorials.",
@@ -46,7 +46,7 @@ describe("Link Validator Tool", () => {
       headers: {
         get: vi.fn().mockReturnValue("text/html"),
       },
-    } as unknown as Response);
+    } as unknown as Response));
 
     const result = await linkValidator.run({
       text: "Visit https://example.com/broken for more info.",

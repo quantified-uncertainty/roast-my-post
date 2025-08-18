@@ -100,10 +100,10 @@ describe('MathAnalyzerJob', () => {
       (extractMathExpressionsTool.execute as any)
         .mockImplementationOnce(() => Promise.resolve({
           expressions: [mockExpressions[0]]
-        })
+        }))
         .mockImplementationOnce(() => Promise.resolve({
           expressions: [mockExpressions[1]]
-        });
+        }));
 
       // Mock check-math-hybrid to verify the first expression as false
       (checkMathHybridTool.execute as any)
