@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { checkSpellingGrammarTool } from './index';
 
 // Mock the Claude API call to test specific scenarios
-vi.mock('@roast/ai', () => ({
+vi.mock('../../claude/wrapper', () => ({
   callClaudeWithTool: vi.fn()
 }));
 
-import { callClaudeWithTool } from '@roast/ai';
+import { checkSpellingGrammarTool } from './index';
+import { callClaudeWithTool } from '../../claude/wrapper';
 
 // Mock the language convention detection
 vi.mock('../detect-language-convention', () => ({

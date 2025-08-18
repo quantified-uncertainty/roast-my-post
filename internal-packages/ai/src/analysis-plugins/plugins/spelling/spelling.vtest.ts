@@ -248,7 +248,7 @@ describe('SpellingAnalyzerJob', () => {
             startOffset: 0,
             endOffset: 3,
             quotedText: 'teh'
-          })
+          }))
         })
       ];
       await analyzer.analyze(chunks, 'teh');
@@ -301,7 +301,7 @@ describe('SpellingAnalyzerJob', () => {
 
       (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: [mockError],
-      });
+      }));
       
       // Override the default grade mock for this test
       (grading.calculateGrade as any).mockReturnValue({
@@ -317,7 +317,7 @@ describe('SpellingAnalyzerJob', () => {
       });
 
       const chunk = Object.assign(new TextChunk('This text does not contain the error', 'chunk1'), {
-        findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(null) // Cannot find location
+        findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(null)) // Cannot find location
       });
 
       const analyzer = new SpellingAnalyzerJob();
@@ -337,7 +337,7 @@ describe('SpellingAnalyzerJob', () => {
 
       (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: mockErrors,
-      });
+      }));
 
       const chunk = Object.assign(
         new TextChunk('I will recieve teh package', 'chunk1', { position: { start: 0, end: 26 } }), 
@@ -375,14 +375,14 @@ describe('SpellingAnalyzerJob', () => {
             type: 'spelling' as const,
             importance: testCase.importance,
           }],
-        });
+        }));
 
         const chunk = Object.assign(new TextChunk('error', 'chunk1'), {
           findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve({
             startOffset: 0,
             endOffset: 5,
             quotedText: 'error'
-          })
+          }))
         });
 
         const analyzer = new SpellingAnalyzerJob();

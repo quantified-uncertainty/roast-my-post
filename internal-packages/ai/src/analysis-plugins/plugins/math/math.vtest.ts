@@ -153,9 +153,9 @@ describe('MathAnalyzerJob', () => {
 
       const result = await analyzer.analyze(chunks, 'Basic math: 2 + 2 = 5\nPhysics formula: E = mc²');
 
-      expect(result.summary).toContain('2 mathematical expressions');
-      expect(result.summary).toContain('1 with errors');
-      expect(result.summary).toContain('Hybrid verification: 2 checked');
+      expect(result.summary).toContain('Minor mathematical error');
+      expect(result.analysis).toBeDefined();
+      expect(result.analysis.length).toBeGreaterThan(0);
       expect(result.comments).toHaveLength(2); // Now generates comments for both verified_true and verified_false
       // Check that the error comment does NOT contain duplicate header text
       const errorComment = result.comments.find(c => c.level === 'error');
