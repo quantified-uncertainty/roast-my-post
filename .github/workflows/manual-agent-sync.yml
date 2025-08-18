@@ -23,6 +23,6 @@ jobs:
     uses: ./.github/workflows/agent-sync-shared.yml
     with:
       environment: ${{ github.event.inputs.environment }}
-      dry_run: ${{ github.event.inputs.dry_run }}
+      dry_run: ${{ github.event.inputs.dry_run == true && 'true' || 'false' }}
       backup_prefix: 'manual-agent-sync'
     secrets: inherit

@@ -11,8 +11,8 @@ on:
       dry_run:
         description: 'Dry run (show what would be synced without making changes)'
         required: false
-        default: false
-        type: boolean
+        default: 'false'
+        type: string
       backup_prefix:
         description: 'Prefix for backup filename'
         required: false

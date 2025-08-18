@@ -15,5 +15,5 @@ jobs:
     with:
       environment: 'Production'
       backup_prefix: 'auto-agent-sync'
-      dry_run: false
+      dry_run: 'false'
     secrets: inherit
