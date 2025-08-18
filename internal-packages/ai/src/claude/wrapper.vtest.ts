@@ -6,8 +6,10 @@ describe('Claude Wrapper', () => {
   // Skip if no API keys or in CI environment
   const hasValidApiKey = process.env.ANTHROPIC_API_KEY && 
     process.env.ANTHROPIC_API_KEY !== 'test-key' && 
+    process.env.ANTHROPIC_API_KEY !== 'test-api-key' &&
+    process.env.ANTHROPIC_API_KEY.length > 20 &&
     !process.env.CI;
-  const skipIfNoKeys = !hasValidApiKey ? describe.skip : describe;
+  const skipIfNoKeys = hasValidApiKey ? describe : describe.skip;
   
   skipIfNoKeys('callClaude integration', () => {
     it('should make a simple call and track interaction', async () => {

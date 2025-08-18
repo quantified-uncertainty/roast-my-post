@@ -71,7 +71,5 @@ describe('ForecastPlugin', () => {
     });
   });
 
-  describe('error handling', () => {
-    // Legacy methods have been removed entirely - no need to test them
-  });
+  // Legacy error handling tests removed - methods no longer exist
 });

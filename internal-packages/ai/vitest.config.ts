@@ -18,7 +18,7 @@ export default defineConfig({
     poolOptions: {
       forks: {
         singleFork: false,
-        isolate: false,  // Disable isolation for speed
+        isolate: true,  // Enable isolation to prevent test interference
         maxForks: 2,  // Reduce to 2 forks max
       },
     },
