@@ -6,21 +6,25 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.vtest.{ts,tsx}'],
-    exclude: ['**/*.llm.vtest.{ts,tsx}'],  // Exclude LLM tests by default
+    exclude: [
+      '**/*.llm.vtest.{ts,tsx}',
+      '**/*.integration.vtest.{ts,tsx}',
+      '**/*.e2e.vtest.{ts,tsx}',
+      '**/plugin-system-full-e2e.integration.vtest.ts',
+      '**/analyzeDocument.plugin-ids.vtest.ts',
+    ],
     setupFiles: ['./src/test-setup.ts'],
-    testTimeout: 30000,
-    teardownTimeout: 10000,
+    testTimeout: 5000,
+    teardownTimeout: 1000,
     pool: 'forks',
     poolOptions: {
       forks: {
-        singleFork: false,
-        isolate: false,  // Disable isolation for speed
-        maxForks: 2,  // Reduce to 2 forks max
+        maxForks: 8,
+        isolate: false,
       },
     },
-    maxConcurrency: 5,  // Limit concurrent tests per worker
     reporters: ['default'],
-    bail: 0,  // Don't stop on first failure
+    bail: 0,
   },
   resolve: {
     alias: {
