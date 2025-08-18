@@ -6,7 +6,11 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.vtest.{ts,tsx}'],
-    exclude: ['**/*.llm.vtest.{ts,tsx}'],  // Exclude LLM tests by default
+    exclude: [
+      '**/*.llm.vtest.{ts,tsx}',
+      '**/*.integration.vtest.{ts,tsx}',
+      '**/*.e2e.vtest.{ts,tsx}'
+    ],  // Exclude LLM, integration, and e2e tests by default
     setupFiles: ['./src/test-setup.ts'],
     testTimeout: 30000,
     teardownTimeout: 10000,
