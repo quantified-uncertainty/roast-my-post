@@ -37,7 +37,7 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(null);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
@@ -55,7 +55,7 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should validate request body', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(mockUserId);
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
@@ -73,7 +73,7 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should update user profile successfully', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(mockUserId);
     
     const updatedUser = {
       id: mockUserId,
@@ -82,7 +82,7 @@ describe('PATCH /api/user/profile', () => {
     };
     
     // Mock the user update
-    (prisma.user.update as jest.Mock).mockResolvedValueOnce(updatedUser);
+    (prisma.user.update as vi.MockedFunction<any>).mockResolvedValueOnce(updatedUser);
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
@@ -110,8 +110,8 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should handle database errors', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
-    (prisma.user.update as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(mockUserId);
+    (prisma.user.update as vi.MockedFunction<any>).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',

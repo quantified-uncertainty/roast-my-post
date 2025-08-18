@@ -33,7 +33,7 @@ describe('GET /api/user/api-keys', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(undefined);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys');
     const response = await GET(request);
@@ -44,7 +44,7 @@ describe('GET /api/user/api-keys', () => {
   });
 
   it('should return user API keys', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     const mockApiKeys = [
       {
@@ -63,7 +63,7 @@ describe('GET /api/user/api-keys', () => {
       },
     ];
     
-    (prisma.apiKey.findMany as jest.Mock).mockResolvedValueOnce(mockApiKeys);
+    (prisma.apiKey.findMany as vi.MockedFunction<any>).mockResolvedValueOnce(mockApiKeys);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys');
     const response = await GET(request);
@@ -95,7 +95,7 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(undefined);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys', {
       method: 'POST',
@@ -108,7 +108,7 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should validate request body', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys', {
       method: 'POST',
@@ -121,13 +121,13 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should create a new API key', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     const mockKey = 'rmp_1234567890abcdef'.padEnd(68, '0'); // rmp_ + 64 chars
     const mockHashedKey = 'hashed_key_value';
     
-    (generateApiKey as jest.Mock).mockReturnValueOnce(mockKey);
-    (hashApiKey as jest.Mock).mockReturnValueOnce(mockHashedKey);
+    (generateApiKey as vi.MockedFunction<any>).mockReturnValueOnce(mockKey);
+    (hashApiKey as vi.MockedFunction<any>).mockReturnValueOnce(mockHashedKey);
     
     const createdKey = {
       id: 'key-123',
@@ -137,7 +137,7 @@ describe('POST /api/user/api-keys', () => {
       expiresAt: null,
     };
     
-    (prisma.apiKey.create as jest.Mock).mockResolvedValueOnce(createdKey);
+    (prisma.apiKey.create as vi.MockedFunction<any>).mockResolvedValueOnce(createdKey);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys', {
       method: 'POST',
@@ -173,11 +173,11 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should create API key with expiration date', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequestSessionFirst as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     const mockExpiringKey = 'rmp_1234567890';
-    (generateApiKey as jest.Mock).mockReturnValueOnce(mockExpiringKey);
-    (hashApiKey as jest.Mock).mockReturnValueOnce('hashed_key');
+    (generateApiKey as vi.MockedFunction<any>).mockReturnValueOnce(mockExpiringKey);
+    (hashApiKey as vi.MockedFunction<any>).mockReturnValueOnce('hashed_key');
     
     const expiresAt = '2025-12-31T23:59:59Z';
     const createdKey = {
@@ -188,7 +188,7 @@ describe('POST /api/user/api-keys', () => {
       expiresAt: new Date(expiresAt).toISOString(),
     };
     
-    (prisma.apiKey.create as jest.Mock).mockResolvedValueOnce(createdKey);
+    (prisma.apiKey.create as vi.MockedFunction<any>).mockResolvedValueOnce(createdKey);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys', {
       method: 'POST',

@@ -26,7 +26,7 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
     const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
@@ -37,8 +37,8 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return 404 if job not found', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(null);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
     const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
@@ -49,10 +49,10 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return 403 if user does not own the job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     // First call for ownership check
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce({
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({
       evaluation: {
         document: {
           submittedById: 'other-user-id',
@@ -69,10 +69,10 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return job details for pending job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     // First call for ownership check
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce({
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({
       evaluation: {
         document: {
           submittedById: mockUser.id,
@@ -95,7 +95,7 @@ describe('GET /api/jobs/[jobId]', () => {
       tasks: null,
     };
     
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(mockJob);
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(mockJob);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
     const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
@@ -106,10 +106,10 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return job details for completed job with evaluation', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     // First call for ownership check
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce({
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({
       evaluation: {
         document: {
           submittedById: mockUser.id,
@@ -132,7 +132,7 @@ describe('GET /api/jobs/[jobId]', () => {
       tasks: null,
     };
     
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(mockJob);
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(mockJob);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
     const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
@@ -143,10 +143,10 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return job details for failed job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     // First call for ownership check
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce({
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({
       evaluation: {
         document: {
           submittedById: mockUser.id,
@@ -169,7 +169,7 @@ describe('GET /api/jobs/[jobId]', () => {
       tasks: null,
     };
     
-    (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(mockJob);
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(mockJob);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
     const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
@@ -180,8 +180,8 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.job.findUnique as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
+    (prisma.job.findUnique as vi.MockedFunction<any>).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
     const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });

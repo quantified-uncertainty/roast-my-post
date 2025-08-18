@@ -81,8 +81,8 @@ describe("authenticateApiKey", () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue(null);
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue(null);
       
       const result = await authenticateApiKey(request);
       
@@ -97,8 +97,8 @@ describe("authenticateApiKey", () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -121,8 +121,8 @@ describe("authenticateApiKey", () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -144,8 +144,8 @@ describe("authenticateApiKey", () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockRejectedValue(new Error("DB Error"));
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockRejectedValue(new Error("DB Error"));
       
       const result = await authenticateApiKey(request);
       
@@ -161,8 +161,8 @@ describe("authenticateApiKey", () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -170,7 +170,7 @@ describe("authenticateApiKey", () => {
         lastUsedAt: null,
         user: { id: "user123" },
       });
-      (prisma.apiKey.update as jest.Mock).mockResolvedValue({});
+      (prisma.apiKey.update as vi.MockedFunction<any>).mockResolvedValue({});
       
       const result = await authenticateApiKey(request);
       
@@ -186,8 +186,8 @@ describe("authenticateApiKey", () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -195,7 +195,7 @@ describe("authenticateApiKey", () => {
         lastUsedAt: twoHoursAgo,
         user: { id: "user123" },
       });
-      (prisma.apiKey.update as jest.Mock).mockResolvedValue({});
+      (prisma.apiKey.update as vi.MockedFunction<any>).mockResolvedValue({});
       
       await authenticateApiKey(request);
       
@@ -210,8 +210,8 @@ describe("authenticateApiKey", () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -259,8 +259,8 @@ describe("authenticateApiKey", () => {
           Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue(null);
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue(null);
       
       const result = await authenticateApiKeySimple(request);
       expect(result).toBeNull();
@@ -272,8 +272,8 @@ describe("authenticateApiKey", () => {
           Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -292,8 +292,8 @@ describe("authenticateApiKey", () => {
           Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -301,7 +301,7 @@ describe("authenticateApiKey", () => {
         lastUsedAt: null,
         user: { id: "user123" },
       });
-      (prisma.apiKey.update as jest.Mock).mockResolvedValue({});
+      (prisma.apiKey.update as vi.MockedFunction<any>).mockResolvedValue({});
       
       const result = await authenticateApiKeySimple(request);
       expect(result).toEqual({ userId: "user123" });
@@ -317,9 +317,9 @@ describe("authenticateApiKey", () => {
           Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockResolvedValue({
         id: "key123",
         userId: "user123",
         key: "hashed_key",
@@ -339,8 +339,8 @@ describe("authenticateApiKey", () => {
           Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
-      (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
-      (prisma.apiKey.findUnique as jest.Mock).mockRejectedValue(new Error("DB Error"));
+      (hashApiKey as vi.MockedFunction<any>).mockReturnValue("hashed_key");
+      (prisma.apiKey.findUnique as vi.MockedFunction<any>).mockRejectedValue(new Error("DB Error"));
       
       const result = await authenticateApiKeySimple(request);
       expect(result).toBeNull();

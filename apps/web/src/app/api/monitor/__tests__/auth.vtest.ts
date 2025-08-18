@@ -59,7 +59,7 @@ describe('Monitor Routes Authentication', () => {
 
   describe('/api/monitor/stats', () => {
     it('should return 401 when not authenticated', async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue(undefined);
+      vi.mocked(authenticateRequest).mockResolvedValue(undefined);
       
       const response = await getStats(mockRequest);
       expect(response.status).toBe(401);
@@ -124,7 +124,7 @@ describe('Monitor Routes Authentication', () => {
 
   describe('/api/monitor/evaluations', () => {
     it('should return 401 when not authenticated', async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue(undefined);
+      vi.mocked(authenticateRequest).mockResolvedValue(undefined);
       
       const response = await getEvaluations(mockRequest);
       expect(response.status).toBe(401);
@@ -136,7 +136,7 @@ describe('Monitor Routes Authentication', () => {
 
   describe('/api/monitor/jobs', () => {
     it('should return 401 when not authenticated', async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue(undefined);
+      vi.mocked(authenticateRequest).mockResolvedValue(undefined);
       
       const response = await getJobs(mockRequest);
       expect(response.status).toBe(401);

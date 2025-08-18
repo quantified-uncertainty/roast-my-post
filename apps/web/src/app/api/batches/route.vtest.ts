@@ -64,12 +64,12 @@ describe("/api/batches POST", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (authenticateRequest as jest.Mock).mockResolvedValue(mockUserId);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValue(mockUserId);
   });
 
   describe("Authentication", () => {
     it("should return 401 if not authenticated", async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue(null);
+      (authenticateRequest as vi.MockedFunction<any>).mockResolvedValue(null);
       
       const response = await POST(mockRequest({}));
       const data = await response.json();
@@ -136,7 +136,7 @@ describe("/api/batches POST", () => {
         },
       };
 
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         return callback({
           agent: {
             findUnique: vi.fn().mockResolvedValue(mockAgent),
@@ -190,7 +190,7 @@ describe("/api/batches POST", () => {
         },
       };
 
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         const tx = {
           agent: {
             create: vi.fn().mockResolvedValue({ id: "exp_agent_123" }),
@@ -251,7 +251,7 @@ describe("/api/batches POST", () => {
         },
       };
 
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         const tx = {
           agent: {
             findUnique: vi.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
@@ -293,7 +293,7 @@ describe("/api/batches POST", () => {
     });
 
     it("should create ephemeral documents from inline content", async () => {
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         const tx = {
           agent: {
             findUnique: vi.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
@@ -351,7 +351,7 @@ describe("/api/batches POST", () => {
     });
 
     it("should auto-generate trackingId if not provided", async () => {
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         const tx = {
           agent: {
             findUnique: vi.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
@@ -389,7 +389,7 @@ describe("/api/batches POST", () => {
 
   describe("Error Handling", () => {
     it("should handle transaction failures", async () => {
-      (prisma.$transaction as jest.Mock).mockRejectedValue(new Error("Database error"));
+      (prisma.$transaction as vi.MockedFunction<any>).mockRejectedValue(new Error("Database error"));
 
       const response = await POST(mockRequest({
         agentId: "agent-123",
@@ -401,7 +401,7 @@ describe("/api/batches POST", () => {
     });
 
     it("should handle agent not found", async () => {
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         return callback({
           agent: {
             findUnique: vi.fn().mockResolvedValue(null),

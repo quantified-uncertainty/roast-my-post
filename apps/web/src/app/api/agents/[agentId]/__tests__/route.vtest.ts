@@ -65,7 +65,7 @@ describe('GET /api/agents/[agentId]', () => {
   it('should require authentication', async () => {
     const { Result } = require('@roast/domain');
     
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(undefined);
     mockAgentService.getAgentWithOwner.mockResolvedValueOnce(Result.ok(null));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);
@@ -79,7 +79,7 @@ describe('GET /api/agents/[agentId]', () => {
   it('should return agent details when agent exists', async () => {
     const { Result } = require('@roast/domain');
     
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     const mockAgent = {
       id: mockAgentId,
@@ -117,7 +117,7 @@ describe('GET /api/agents/[agentId]', () => {
   it('should return 404 when agent not found', async () => {
     const { Result } = require('@roast/domain');
     
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     mockAgentService.getAgentWithOwner.mockResolvedValueOnce(Result.ok(null));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);
@@ -131,7 +131,7 @@ describe('GET /api/agents/[agentId]', () => {
   it('should handle archived agents', async () => {
     const { Result } = require('@roast/domain');
     
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     
     const archivedAgent = {
       id: mockAgentId,
@@ -165,7 +165,7 @@ describe('GET /api/agents/[agentId]', () => {
   it('should handle database errors', async () => {
     const { Result, AppError } = require('@roast/domain');
     
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     mockAgentService.getAgentWithOwner.mockResolvedValueOnce(Result.fail(new AppError('Database error', 'DB_ERROR')));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);

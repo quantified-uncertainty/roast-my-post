@@ -55,7 +55,7 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -64,8 +64,8 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should return 404 if document not found', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce(null);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
+    (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -75,8 +75,8 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should return evaluations for document', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce({ id: mockDocId });
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
+    (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ id: mockDocId });
     
     const mockEvaluations = [
       {
@@ -125,8 +125,8 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
       },
     ];
     
-    (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce(mockEvaluations);
-    (prisma.evaluation.count as jest.Mock).mockResolvedValueOnce(2);
+    (prisma.evaluation.findMany as vi.MockedFunction<any>).mockResolvedValueOnce(mockEvaluations);
+    (prisma.evaluation.count as vi.MockedFunction<any>).mockResolvedValueOnce(2);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -223,7 +223,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`, {
       method: 'POST',
@@ -236,7 +236,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should validate request body', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`, {
       method: 'POST',
@@ -249,8 +249,8 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should create evaluation job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce({ 
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
+    (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
       id: mockDocId,
     });
     
@@ -262,8 +262,8 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
       id: 'eval-123',
     };
     
-    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
-    (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(mockAgent);
+    (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
       const mockTx = {
         evaluation: {
           findFirst: vi.fn().mockResolvedValueOnce(null),

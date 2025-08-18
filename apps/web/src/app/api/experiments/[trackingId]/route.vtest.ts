@@ -71,12 +71,12 @@ describe("/api/experiments/[trackingId] GET", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (authenticateRequest as jest.Mock).mockResolvedValue(mockUserId);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValue(mockUserId);
   });
 
   describe("Authentication", () => {
     it("should return 401 if not authenticated", async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue(null);
+      (authenticateRequest as vi.MockedFunction<any>).mockResolvedValue(null);
       
       const response = await GET(mockRequest(), mockParams);
       const data = await response.json();
@@ -165,7 +165,7 @@ describe("/api/experiments/[trackingId] GET", () => {
         ],
       };
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
 
       const response = await GET(mockRequest(), mockParams);
       const data = await response.json();
@@ -201,7 +201,7 @@ describe("/api/experiments/[trackingId] GET", () => {
     });
 
     it("should return 404 if experiment not found", async () => {
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(null);
 
       const response = await GET(mockRequest(), mockParams);
       const data = await response.json();
@@ -230,7 +230,7 @@ describe("/api/experiments/[trackingId] GET", () => {
         jobs: [],
       };
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
 
       const response = await GET(mockRequest(), mockParams);
       const data = await response.json();
@@ -280,8 +280,8 @@ describe("/api/experiments/[trackingId] GET", () => {
         },
       ];
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
-      (prisma.evaluation.findMany as jest.Mock).mockResolvedValue(mockEvaluations);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
+      (prisma.evaluation.findMany as vi.MockedFunction<any>).mockResolvedValue(mockEvaluations);
 
       const requestWithResults = {
         url: "http://test.com?includeResults=true",
@@ -302,7 +302,7 @@ describe("/api/experiments/[trackingId] GET", () => {
 
   describe("Error Handling", () => {
     it("should handle database errors gracefully", async () => {
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockRejectedValue(
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockRejectedValue(
         new Error("Database connection error")
       );
 
@@ -336,7 +336,7 @@ describe("/api/experiments/[trackingId] GET", () => {
         jobs: [],
       };
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
 
       const response = await GET(mockRequest(), mockParams);
       const data = await response.json();
@@ -362,12 +362,12 @@ describe("/api/experiments/[trackingId] DELETE", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (authenticateRequest as jest.Mock).mockResolvedValue(mockUserId);
+    (authenticateRequest as vi.MockedFunction<any>).mockResolvedValue(mockUserId);
   });
 
   describe("Authentication", () => {
     it("should return 401 if not authenticated", async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue(null);
+      (authenticateRequest as vi.MockedFunction<any>).mockResolvedValue(null);
       
       const response = await DELETE(mockRequest(), mockParams);
       const data = await response.json();
@@ -403,7 +403,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
       ];
 
       // Mock the transaction function to call the callback
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         const mockTx = {
           job: {
             findMany: vi.fn().mockResolvedValue(mockJobs),
@@ -432,7 +432,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
         return await callback(mockTx);
       });
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
 
       const response = await DELETE(mockRequest(), mockParams);
       const data = await response.json();
@@ -445,7 +445,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
     });
 
     it("should return 404 if experiment not found", async () => {
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(null);
 
       const response = await DELETE(mockRequest(), mockParams);
       const data = await response.json();
@@ -463,7 +463,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
         jobs: [{ id: "job-1", status: "RUNNING" }] // Has running job
       };
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
 
       const response = await DELETE(mockRequest(), mockParams);
       const data = await response.json();
@@ -482,10 +482,10 @@ describe("/api/experiments/[trackingId] DELETE", () => {
         jobs: []
       };
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
 
       // Mock transaction to throw the specific foreign key error
-      (prisma.$transaction as jest.Mock).mockRejectedValue(
+      (prisma.$transaction as vi.MockedFunction<any>).mockRejectedValue(
         new Error("Foreign key constraint violated on the constraint: `EvaluationVersion_evaluationId_fkey`")
       );
 
@@ -511,7 +511,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
       ];
 
       // Mock the transaction function
-      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
         const mockTx = {
           job: {
             findMany: vi.fn().mockResolvedValue(mockJobs),
@@ -540,7 +540,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
         return await callback(mockTx);
       });
 
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockResolvedValue(mockBatch);
 
       const response = await DELETE(mockRequest(), mockParams);
       const data = await response.json();
@@ -552,7 +552,7 @@ describe("/api/experiments/[trackingId] DELETE", () => {
 
   describe("Error Handling", () => {
     it("should handle database errors gracefully", async () => {
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockRejectedValue(
+      (prisma.agentEvalBatch.findFirst as vi.MockedFunction<any>).mockRejectedValue(
         new Error("Database connection error")
       );
 

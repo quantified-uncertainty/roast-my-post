@@ -32,7 +32,7 @@ vi.mock('@roast/db', () => ({
   },
 }));
 
-const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockPrisma = vi.mocked(prisma);
 
 describe('EvaluationService', () => {
   let service: EvaluationService;

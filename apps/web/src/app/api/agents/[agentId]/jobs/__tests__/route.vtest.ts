@@ -24,7 +24,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
   });
 
   it('should return 404 for non-existent agent', async () => {
-    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(null);
+    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/jobs`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
@@ -35,7 +35,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
   });
 
   it('should return all jobs for agent', async () => {
-    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce({ 
+    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
       id: mockAgentId 
     });
     
@@ -100,7 +100,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
       },
     ];
     
-    (prisma.job.findMany as jest.Mock).mockResolvedValueOnce(mockJobs);
+    (prisma.job.findMany as vi.MockedFunction<any>).mockResolvedValueOnce(mockJobs);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/jobs`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
@@ -179,12 +179,12 @@ describe('GET /api/agents/[agentId]/jobs', () => {
   });
 
   it('should filter by batchId when provided', async () => {
-    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce({ 
+    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
       id: mockAgentId 
     });
     
     const batchId = 'batch-456';
-    (prisma.job.findMany as jest.Mock).mockResolvedValueOnce([]);
+    (prisma.job.findMany as vi.MockedFunction<any>).mockResolvedValueOnce([]);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/jobs?batchId=${batchId}`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
@@ -205,11 +205,11 @@ describe('GET /api/agents/[agentId]/jobs', () => {
   });
 
   it('should handle database errors', async () => {
-    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce({ 
+    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
       id: mockAgentId 
     });
     
-    (prisma.job.findMany as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (prisma.job.findMany as vi.MockedFunction<any>).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/jobs`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });

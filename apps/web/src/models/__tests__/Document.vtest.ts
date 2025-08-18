@@ -147,7 +147,7 @@ describe('DocumentModel', () => {
     };
 
     it('should use database filtering for stale evaluations by default (includeStale=false)', async () => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDbDoc);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDbDoc);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
@@ -174,7 +174,7 @@ describe('DocumentModel', () => {
     });
 
     it('should not filter evaluations when includeStale=true', async () => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDbDoc);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDbDoc);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123', true);
 
@@ -199,7 +199,7 @@ describe('DocumentModel', () => {
         ...mockDbDoc,
         evaluations: [],
       };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocWithoutEvals);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocWithoutEvals);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
@@ -213,7 +213,7 @@ describe('DocumentModel', () => {
         ...mockDbDoc,
         evaluations: [], // DB returns no evaluations when all are filtered
       };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocWithEmptyEvals);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocWithEmptyEvals);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
@@ -227,7 +227,7 @@ describe('DocumentModel', () => {
         ...mockDbDoc,
         evaluations: [], // DB returns no evaluations when all are stale
       };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocWithStaleEval);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocWithStaleEval);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
@@ -255,7 +255,7 @@ describe('DocumentModel', () => {
           },
         ],
       };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocMixedEvals);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocMixedEvals);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
@@ -265,7 +265,7 @@ describe('DocumentModel', () => {
     });
 
     it('should return null for non-existent document', async () => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(null);
 
       const result = await DocumentModel.getDocumentWithEvaluations('non-existent');
 
@@ -277,7 +277,7 @@ describe('DocumentModel', () => {
         ...mockDbDoc,
         versions: [],
       };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocNoVersions);
+      (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocNoVersions);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
@@ -300,7 +300,7 @@ describe('DocumentModel', () => {
     };
 
     beforeEach(() => {
-      (prisma.$transaction as jest.Mock).mockImplementation(async (fn) => {
+      (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (fn) => {
         return fn(mockTransaction);
       });
     });
