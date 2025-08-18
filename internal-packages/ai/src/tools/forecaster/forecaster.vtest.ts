@@ -69,7 +69,7 @@ describe('ForecasterTool', () => {
         outliers_removed: []
       };
       
-      (generateForecastWithAggregation as any).mockResolvedValueOnce(mockResponse);
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(mockResponse);
       
       const result = await tool.run(validInput, mockContext);
       
@@ -110,7 +110,7 @@ describe('ForecasterTool', () => {
         outliers_removed: []
       };
       
-      (generateForecastWithAggregation as any).mockResolvedValueOnce(mockResponse);
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(mockResponse);
       
       const result = await tool.execute(input, mockContext);
       
@@ -137,7 +137,7 @@ describe('ForecasterTool', () => {
     it('should call beforeExecute hook', async () => {
       const input = { question: 'Test?' };
       
-      (generateForecastWithAggregation as any).mockResolvedValueOnce({
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(({
         forecast: { probability: 50, description: 'Test', consensus: 'medium' },
         individual_forecasts: [],
         statistics: { mean: 50, std_dev: 0 },
@@ -155,7 +155,7 @@ describe('ForecasterTool', () => {
     it('should call afterExecute hook', async () => {
       const input = { question: 'Test?' };
       
-      (generateForecastWithAggregation as any).mockResolvedValueOnce({
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.resolve(({
         forecast: { probability: 75, description: 'Test', consensus: 'high' },
         individual_forecasts: [],
         statistics: { mean: 75, std_dev: 0 },
@@ -176,7 +176,7 @@ describe('ForecasterTool', () => {
       const input = { question: 'Test?' };
       const error = new Error('API error');
       
-      (generateForecastWithAggregation as any).mockRejectedValueOnce(error);
+      (generateForecastWithAggregation as any).mockImplementationOnce(() => Promise.reject(error);
       
       await expect(tool.execute(input, mockContext))
         .rejects.toThrow('API error');

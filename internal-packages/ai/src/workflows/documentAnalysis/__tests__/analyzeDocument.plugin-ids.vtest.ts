@@ -10,7 +10,7 @@ import type { Document } from "../../../types/documents";
 
 // Mock the unified workflow since we're testing routing logic
 vi.mock("../unified", () => ({
-  analyzeDocumentUnified: vi.fn().mockResolvedValue({
+  analyzeDocumentUnified: vi.fn().mockImplementation(() => Promise.resolve(({
     thinking: "Mock thinking from unified workflow",
     analysis: "Mock analysis from unified workflow", 
     summary: "Mock summary from unified workflow",

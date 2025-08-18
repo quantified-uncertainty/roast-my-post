@@ -67,7 +67,7 @@ describe('Claude Wrapper', () => {
       vi.mock('../utils/anthropic', () => ({
         createAnthropicClient: () => ({
           messages: {
-            create: vi.fn().mockResolvedValue({
+            create: vi.fn().mockImplementation(() => Promise.resolve(({
               content: [{ type: 'text', text: 'test' }],
               usage: { input_tokens: 10, output_tokens: 5 }
             })

@@ -52,7 +52,7 @@ describe('ChunkRouter', () => {
 
   it('should route chunks to appropriate plugins based on content', async () => {
     // Mock the Claude API response for routing
-    mockCallClaudeWithTool.mockResolvedValueOnce({
+    mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
       response: {} as any,
       interaction: {} as any,
       toolResult: {
@@ -151,7 +151,7 @@ describe('ChunkRouter', () => {
   
   it('should handle plugins with no routing examples', async () => {
     // Mock the Claude API response
-    mockCallClaudeWithTool.mockResolvedValueOnce({
+    mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
       response: {} as any,
       interaction: {} as any,
       toolResult: {

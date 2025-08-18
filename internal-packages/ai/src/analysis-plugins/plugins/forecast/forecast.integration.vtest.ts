@@ -17,14 +17,14 @@ describe('ForecastPlugin Integration', () => {
     `;
 
     // Mock the analyze methods to avoid actual API calls
-    vi.spyOn(forecastPlugin, 'analyze').mockResolvedValue({
+    vi.spyOn(forecastPlugin, 'analyze').mockImplementation(() => Promise.resolve(({
       summary: 'Found 3 predictions',
       analysis: '## Forecast Analysis\n\nPredictions found.',
       comments: [],
       cost: 0.001
     });
 
-    vi.spyOn(mathPlugin, 'analyze').mockResolvedValue({
+    vi.spyOn(mathPlugin, 'analyze').mockImplementation(() => Promise.resolve(({
       summary: 'No mathematical expressions found.',
       analysis: 'No mathematical calculations or formulas were identified in this document.',
       comments: [],

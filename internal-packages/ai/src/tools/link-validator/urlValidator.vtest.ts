@@ -13,7 +13,7 @@ describe("urlValidator", () => {
 
     it("should validate an accessible URL", async () => {
       // Mock successful HEAD request
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as any).mockImplementation(() => Promise.resolve(({
         ok: true,
         status: 200,
         url: "https://react.dev/learn",
@@ -45,7 +45,7 @@ describe("urlValidator", () => {
 
     it("should detect when a URL doesn't exist", async () => {
       // Mock failed HEAD request (domain not found)
-      (global.fetch as any).mockRejectedValue(new Error("ENOTFOUND fake-domain-12345.com"));
+      (global.fetch as any).mockImplementation(() => Promise.reject(new Error("ENOTFOUND fake-domain-12345.com"));
 
       const input: UrlValidationInput = {
         url: "https://fake-domain-12345.com/article",
@@ -64,7 +64,7 @@ describe("urlValidator", () => {
 
     it("should handle 404 errors properly", async () => {
       // Mock 404 response
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as any).mockImplementation(() => Promise.resolve(({
         ok: false,
         status: 404,
         headers: {
@@ -88,7 +88,7 @@ describe("urlValidator", () => {
 
     it("should handle PDFs like any other accessible content", async () => {
       // Mock PDF response
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as any).mockImplementation(() => Promise.resolve(({
         ok: true,
         status: 200,
         url: "https://arxiv.org/pdf/1706.03762.pdf",
@@ -113,7 +113,7 @@ describe("urlValidator", () => {
 
     it("should handle redirects appropriately", async () => {
       // Mock redirect
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as any).mockImplementation(() => Promise.resolve(({
         ok: true,
         status: 200,
         url: "https://react.dev/learn", // Redirected URL
@@ -140,7 +140,7 @@ describe("urlValidator", () => {
       // Mock timeout error
       const abortError = new Error("The operation was aborted");
       abortError.name = "AbortError";
-      (global.fetch as any).mockRejectedValue(abortError);
+      (global.fetch as any).mockImplementation(() => Promise.reject(abortError);
 
       const input: UrlValidationInput = {
         url: "https://slow-website.com",
@@ -158,7 +158,7 @@ describe("urlValidator", () => {
 
     it("should handle SSL/TLS certificate errors", async () => {
       // Mock SSL error
-      (global.fetch as any).mockRejectedValue(new Error("CERT_HAS_EXPIRED"));
+      (global.fetch as any).mockImplementation(() => Promise.reject(new Error("CERT_HAS_EXPIRED"));
 
       const input: UrlValidationInput = {
         url: "https://expired-cert.example.com",
@@ -177,7 +177,7 @@ describe("urlValidator", () => {
 
     it("should handle 403 Forbidden errors", async () => {
       // Mock 403 response
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as any).mockImplementation(() => Promise.resolve(({
         ok: false,
         status: 403,
         headers: {
@@ -201,7 +201,7 @@ describe("urlValidator", () => {
 
     it("should handle rate limiting (429) errors", async () => {
       // Mock 429 response
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as any).mockImplementation(() => Promise.resolve(({
         ok: false,
         status: 429,
         headers: {
@@ -228,7 +228,7 @@ describe("urlValidator", () => {
 
     it("should handle server errors (5xx)", async () => {
       // Mock 500 response
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as any).mockImplementation(() => Promise.resolve(({
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
@@ -254,9 +254,9 @@ describe("urlValidator", () => {
     it("should try multiple strategies before giving up", async () => {
       // Mock failures for first two strategies, success on third
       (global.fetch as any)
-        .mockRejectedValueOnce(new Error("Network error"))
-        .mockRejectedValueOnce(new Error("Network error"))
-        .mockResolvedValueOnce({
+        .mockImplementationOnce(() => Promise.reject(new Error("Network error"))
+        .mockImplementationOnce(() => Promise.reject(new Error("Network error"))
+        .mockImplementationOnce(() => Promise.resolve(({
           ok: true,
           status: 200,
           url: "https://example.com",

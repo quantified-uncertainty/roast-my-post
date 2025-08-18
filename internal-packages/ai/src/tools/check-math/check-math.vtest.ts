@@ -170,7 +170,7 @@ describe('CheckMathTool', () => {
 
     it('should handle API errors gracefully', async () => {
       // Mock API error
-      mockCallClaudeWithTool.mockRejectedValueOnce(new Error('API rate limit exceeded'));
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(new Error('API rate limit exceeded'));
 
       const input = {
         statement: '2 + 2 = 4'

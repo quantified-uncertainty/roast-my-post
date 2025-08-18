@@ -65,7 +65,7 @@ describe('CheckMathHybridTool', () => {
         llmInteraction: createMockLLMInteraction()
       };
 
-      mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
 
       const result = await checkMathHybridTool.execute(
         { statement: '2 + 2 = 4' },
@@ -96,8 +96,8 @@ describe('CheckMathHybridTool', () => {
         reasoning: 'By the definition of limits, lim(x→∞) 1/x = 0',
       };
 
-      mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
-      mockCheckMath.mockResolvedValueOnce(llmResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
+      mockCheckMath.mockImplementationOnce(() => Promise.resolve(llmResult);
 
       const result = await checkMathHybridTool.execute(
         { statement: 'The limit of 1/x as x approaches infinity is 0' },
@@ -133,7 +133,7 @@ describe('CheckMathHybridTool', () => {
         },
       };
 
-      mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
 
       const result = await checkMathHybridTool.execute(
         { statement: '2 + 2 = 5' },
@@ -150,7 +150,7 @@ describe('CheckMathHybridTool', () => {
 
     it('should handle errors gracefully', async () => {
       // Mock MathJS throwing an error
-      mockCheckMathWithMathJs.mockRejectedValueOnce(new Error('MathJS evaluation failed'));
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.reject(new Error('MathJS evaluation failed'));
 
       const result = await checkMathHybridTool.execute(
         { statement: '2 + 2 = 4' },
@@ -184,8 +184,8 @@ describe('CheckMathHybridTool', () => {
         },
       };
 
-      mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
-      mockCheckMath.mockResolvedValueOnce(llmResult);
+      mockCheckMathWithMathJs.mockImplementationOnce(() => Promise.resolve(mathJsResult);
+      mockCheckMath.mockImplementationOnce(() => Promise.resolve(llmResult);
 
       const result = await checkMathHybridTool.execute(
         { statement: 'The derivative of x^2 is 3x' },

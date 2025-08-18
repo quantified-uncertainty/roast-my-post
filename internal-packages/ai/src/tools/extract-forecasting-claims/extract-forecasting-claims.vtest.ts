@@ -241,7 +241,7 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
       const input = { text: "Some text with predictions" };
       const error = new Error("Anthropic API error");
 
-      mockCallClaudeWithTool.mockRejectedValueOnce(error);
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(error);
 
       await expect(tool.execute(input, mockContext)).rejects.toThrow(
         "Anthropic API error"
@@ -252,7 +252,7 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
       const input = { text: "Some text with predictions" };
 
       // Mock malformed response (no tool use)
-      mockCallClaudeWithTool.mockResolvedValueOnce({
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve(({
         response: {} as any,
         interaction: createMockLLMInteraction(),
         toolResult: {}

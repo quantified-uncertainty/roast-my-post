@@ -98,16 +98,16 @@ describe('MathAnalyzerJob', () => {
 
       // Mock extract-math-expressions to return expressions from each chunk
       (extractMathExpressionsTool.execute as any)
-        .mockResolvedValueOnce({
+        .mockImplementationOnce(() => Promise.resolve(({
           expressions: [mockExpressions[0]]
         })
-        .mockResolvedValueOnce({
+        .mockImplementationOnce(() => Promise.resolve(({
           expressions: [mockExpressions[1]]
         });
 
       // Mock check-math-hybrid to verify the first expression as false
       (checkMathHybridTool.execute as any)
-        .mockResolvedValueOnce({
+        .mockImplementationOnce(() => Promise.resolve(({
           statement: '2 + 2 = 5',
           status: 'verified_false',
           explanation: '2 + 2 equals 4, not 5',
@@ -120,7 +120,7 @@ describe('MathAnalyzerJob', () => {
             conciseCorrection: '5 → 4'
           }
         })
-        .mockResolvedValueOnce({
+        .mockImplementationOnce(() => Promise.resolve(({
           statement: 'E = mc²',
           status: 'verified_true',
           explanation: 'This is the correct formula for mass-energy equivalence',
@@ -132,7 +132,7 @@ describe('MathAnalyzerJob', () => {
         Object.assign(new TextChunk('Basic math: 2 + 2 = 5', 'chunk1', {
           position: { start: 0, end: 20 },
         }), {
-          findTextAbsolute: vi.fn().mockResolvedValue({
+          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(({
             startOffset: 12,
             endOffset: 21,
             quotedText: '2 + 2 = 5'
@@ -141,7 +141,7 @@ describe('MathAnalyzerJob', () => {
         Object.assign(new TextChunk('Physics formula: E = mc²', 'chunk2', {
           position: { start: 21, end: 45 },
         }), {
-          findTextAbsolute: vi.fn().mockResolvedValue({
+          findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(({
             startOffset: 37,
             endOffset: 45,
             quotedText: 'E = mc²'
@@ -166,7 +166,7 @@ describe('MathAnalyzerJob', () => {
     }, 10000); // Increase timeout
 
     it('should handle empty document', async () => {
-      (extractMathExpressionsTool.execute as any).mockResolvedValue({
+      (extractMathExpressionsTool.execute as any).mockImplementation(() => Promise.resolve(({
         expressions: []
       });
 
@@ -181,7 +181,7 @@ describe('MathAnalyzerJob', () => {
     });
 
     it('should not run analysis twice', async () => {
-      (extractMathExpressionsTool.execute as any).mockResolvedValue({
+      (extractMathExpressionsTool.execute as any).mockImplementation(() => Promise.resolve(({
         expressions: []
       });
 
@@ -203,7 +203,7 @@ describe('MathAnalyzerJob', () => {
     });
 
     it('should return cached results after analysis', async () => {
-      (extractMathExpressionsTool.execute as any).mockResolvedValue({
+      (extractMathExpressionsTool.execute as any).mockImplementation(() => Promise.resolve(({
         expressions: []
       });
 
@@ -219,7 +219,7 @@ describe('MathAnalyzerJob', () => {
 
   describe('getDebugInfo', () => {
     it('should return debug information', async () => {
-      (extractMathExpressionsTool.execute as any).mockResolvedValue({
+      (extractMathExpressionsTool.execute as any).mockImplementation(() => Promise.resolve(({
         expressions: [{
           originalText: "1 + 1 = 2",
           hasError: false,
@@ -233,7 +233,7 @@ describe('MathAnalyzerJob', () => {
       });
 
       // Mock check-math-hybrid for the single expression
-      (checkMathHybridTool.execute as any).mockResolvedValue({
+      (checkMathHybridTool.execute as any).mockImplementation(() => Promise.resolve(({
         statement: '1 + 1 = 2',
         status: 'verified_true',
         explanation: 'Correct',
@@ -243,7 +243,7 @@ describe('MathAnalyzerJob', () => {
 
       const analyzer = new MathAnalyzerJob();
       const chunks = [Object.assign(new TextChunk('Test: 1 + 1 = 2', 'chunk1'), {
-        findTextAbsolute: vi.fn().mockResolvedValue({
+        findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(({
           startOffset: 5,
           endOffset: 14,
           quotedText: '1 + 1 = 2'

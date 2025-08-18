@@ -72,7 +72,7 @@ describe('PerplexityResearchTool', () => {
       };
       
       // Mock the query to return JSON response
-      mockClient.query.mockResolvedValueOnce({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
         content: JSON.stringify(mockResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
       });
@@ -117,7 +117,7 @@ describe('PerplexityResearchTool', () => {
       };
       
       // Mock the query to return JSON response
-      mockClient.query.mockResolvedValueOnce({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
         content: JSON.stringify(mockResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
       });
@@ -144,13 +144,13 @@ describe('PerplexityResearchTool', () => {
       const mockForecastContext = 'Based on current trends and expert predictions...';
       
       // Mock the research query to return JSON response
-      mockClient.query.mockResolvedValueOnce({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
         content: JSON.stringify(mockResearchResponse),
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
       });
       
       // Mock the forecasting context query
-      mockClient.query.mockResolvedValueOnce({
+      mockClient.query.mockImplementationOnce(() => Promise.resolve(({
         content: mockForecastContext,
         usage: { prompt_tokens: 30, completion_tokens: 80, total_tokens: 110 }
       });
@@ -190,7 +190,7 @@ describe('PerplexityResearchTool', () => {
       const error = new Error('OpenRouter API error');
       
       // Mock the query method to reject for both structured and fallback calls
-      mockClient.query.mockRejectedValue(error);
+      mockClient.query.mockImplementation(() => Promise.reject(error);
       
       await expect(tool.execute(input, mockContext))
         .rejects.toThrow('OpenRouter API error');
@@ -206,8 +206,8 @@ describe('PerplexityResearchTool', () => {
       
       // Mock first query call (structured research) to fail, then second query call to succeed
       mockClient.query
-        .mockRejectedValueOnce(new Error('Structured research failed'))
-        .mockResolvedValueOnce({
+        .mockImplementationOnce(() => Promise.reject(new Error('Structured research failed'))
+        .mockImplementationOnce(() => Promise.resolve(({
           content: 'This is a plain text response with some findings:\n- Finding 1\n- Finding 2\n- Finding 3',
           usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
         });

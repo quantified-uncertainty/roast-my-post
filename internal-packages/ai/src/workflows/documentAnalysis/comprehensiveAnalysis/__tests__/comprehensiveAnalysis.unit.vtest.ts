@@ -174,7 +174,7 @@ describe("Comprehensive Analysis Unit Tests", () => {
     });
 
     it("should handle API errors gracefully", async () => {
-      mockCallClaudeWithTool.mockRejectedValueOnce(
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(
         new Error("API request failed")
       );
 

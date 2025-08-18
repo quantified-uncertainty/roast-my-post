@@ -12,7 +12,7 @@ describe("Link Validator Tool", () => {
 
   it("validates accessible URLs", async () => {
     // Mock successful HEAD request
-    (global.fetch as anytypeof fetch>).mockResolvedValue({
+    (global.fetch as anytypeof fetch>).mockImplementation(() => Promise.resolve(({
       ok: true,
       status: 200,
       url: "https://react.dev/learn",
@@ -39,7 +39,7 @@ describe("Link Validator Tool", () => {
 
   it("detects broken URLs", async () => {
     // Mock 404 response
-    (global.fetch as anytypeof fetch>).mockResolvedValue({
+    (global.fetch as anytypeof fetch>).mockImplementation(() => Promise.resolve(({
       ok: false,
       status: 404,
       url: "https://example.com/broken",
@@ -67,13 +67,13 @@ describe("Link Validator Tool", () => {
   it("handles multiple URLs", async () => {
     // Mock different responses
     (global.fetch as anytypeof fetch>)
-      .mockResolvedValueOnce({
+      .mockImplementationOnce(() => Promise.resolve(({
         ok: true,
         status: 200,
         url: "https://working.com",
         headers: { get: vi.fn().mockReturnValue("text/html") },
       } as unknown as Response)
-      .mockResolvedValueOnce({
+      .mockImplementationOnce(() => Promise.resolve(({
         ok: false,
         status: 403,
         url: "https://forbidden.com",
@@ -112,7 +112,7 @@ describe("Link Validator Tool", () => {
 
   it("respects maxUrls limit", async () => {
     // Mock successful responses
-    (global.fetch as anytypeof fetch>).mockResolvedValue({
+    (global.fetch as anytypeof fetch>).mockImplementation(() => Promise.resolve(({
       ok: true,
       status: 200,
       headers: { get: vi.fn().mockReturnValue("text/html") },
