@@ -1,5 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documentSchema";
+import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { LineBasedLocator } from "../../../text-location/line-based";
 

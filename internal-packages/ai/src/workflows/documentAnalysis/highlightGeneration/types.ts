@@ -1,4 +1,4 @@
-import type { Comment } from "../../../types/commentSchema";
+import type { Comment } from "../../../shared/types";
 import type { LLMUsage } from "../../../types";
 import type { LineBasedLocation } from "../../../text-location/line-based";
 

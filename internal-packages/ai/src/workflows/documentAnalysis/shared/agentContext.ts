@@ -1,5 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documentSchema";
+import type { Document } from "../../../types/documents";
 
 export function shouldIncludeGrade(agentInfo: Agent): boolean {
   return agentInfo.providesGrades ?? false;

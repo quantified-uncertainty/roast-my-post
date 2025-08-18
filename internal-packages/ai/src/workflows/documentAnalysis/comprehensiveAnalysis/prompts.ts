@@ -1,5 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documentSchema";
+import type { Document } from "../../../types/documents";
 
 export function getComprehensiveAnalysisPrompts(
   agentInfo: Agent,
@@ -46,7 +46,7 @@ ${agentInfo.providesGrades ? "\nInclude a grade (0-100) with justification based
   // Number the lines exactly like in highlight extraction
   const numberedContent = document.content
     .split("\n")
-    .map((line, i) => `${(i + 1).toString().padStart(4, " ")} ${line}`)
+    .map((line: string, i: number) => `${(i + 1).toString().padStart(4, " ")} ${line}`)
     .join("\n");
 
   const userMessage = `Document to process:

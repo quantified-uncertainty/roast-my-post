@@ -1,4 +1,4 @@
-import type { Comment } from "../../../types/commentSchema";
+import type { Comment } from "../../../shared/types";
 import { logger } from "../../../utils/logger";
 import {
   LineBasedLocator,
