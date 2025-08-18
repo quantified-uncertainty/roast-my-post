@@ -4,7 +4,7 @@ import { COMMENT_POSITIONING, TEXT_PROCESSING, LAYOUT, LIMITS } from '@/componen
 
 import type { Comment } from "@/shared/types/databaseTypes";
 
-interface CommentPosition {
+interface _CommentPosition {
   id: string;
   position: number;
 }

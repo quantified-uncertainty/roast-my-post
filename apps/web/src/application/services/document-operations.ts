@@ -4,7 +4,7 @@ import { logger } from "@/infrastructure/logging/logger";
 export async function updateDocumentWithAgents(
   documentId: string, 
   intendedAgentIds: string[], 
-  userId: string
+  _userId: string
 ) {
   // Verify document exists
   const document = await prisma.document.findUnique({

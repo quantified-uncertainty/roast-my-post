@@ -100,7 +100,7 @@ export function TestTab({
               }
 
               const result = await response.json();
-              const jobCount = result.batch?.jobCount || 0;
+              const _jobCount = result.batch?.jobCount || 0;
               
               // Reset form
               (e.target as HTMLFormElement).reset();

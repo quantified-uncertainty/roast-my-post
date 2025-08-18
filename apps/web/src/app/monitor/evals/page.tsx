@@ -269,7 +269,7 @@ export default function EvaluationsMonitorPage() {
                 analysis={selectedVersion.analysis}
                 thinking={selectedVersion.job?.llmThinking ?? undefined}
                 selfCritique={selectedVersion.selfCritique ?? undefined}
-                comments={selectedVersion.comments.map((comment, index) => ({
+                comments={selectedVersion.comments.map((comment, _index) => ({
                   id: comment.id,
                   description: comment.description,
                   importance: comment.importance ?? null,

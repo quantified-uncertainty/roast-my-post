@@ -37,7 +37,7 @@ export class AuthHelper {
    * Create a test session directly via API for faster testing
    * This bypasses the email flow for integration tests
    */
-  async createTestSession(userId: string = 'test-user-id') {
+  async createTestSession(_userId: string = 'test-user-id') {
     // This would typically involve:
     // 1. Creating a test user in the database
     // 2. Creating a valid session token

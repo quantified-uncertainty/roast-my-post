@@ -15,7 +15,7 @@ interface MarkdownComponentProps {
 }
 
 export const MARKDOWN_COMPONENTS = {
-  a: ({ node, ...props }: MarkdownComponentProps) => (
+  a: ({ node: _node, ...props }: MarkdownComponentProps) => (
     <a
       {...props}
       className="text-blue-600 hover:text-blue-800 hover:underline"

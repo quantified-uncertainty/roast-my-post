@@ -50,7 +50,7 @@ type CustomElement = {
 };
 
 // Helper function to normalize text by removing markdown formatting
-const normalizeText = (text: string): string => {
+const _normalizeText = (text: string): string => {
   return text
     .replace(/\*\*/g, "") // Remove bold markers
     .replace(/\*/g, "") // Remove single asterisk italic markers
@@ -379,7 +379,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const [initialized, setInitialized] = useState(false);
   const initRef = useRef(false);
   const [slateText, setSlateText] = useState("");
-  const renderedHighlightsRef = useRef(new Set<string>());
+  const _renderedHighlightsRef = useRef(new Set<string>());
 
   // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {

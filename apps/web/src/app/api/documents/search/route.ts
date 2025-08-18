@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
     const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = parseInt(searchParams.get("offset") || "0", 10);
-    const searchContent = searchParams.get("searchContent") === "true";
+    const _offset = parseInt(searchParams.get("offset") || "0", 10);
+    const _searchContent = searchParams.get("searchContent") === "true";
 
     // If no query, return recent documents
     if (!query || query.trim().length === 0) {
