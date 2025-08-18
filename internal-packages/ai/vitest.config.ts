@@ -6,17 +6,20 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.vtest.{ts,tsx}'],
+    exclude: ['**/*.llm.vtest.{ts,tsx}'],  // Exclude LLM tests by default
     setupFiles: ['./src/test-setup.ts'],
     testTimeout: 30000,
-    teardownTimeout: 1000,
-    pool: 'threads',
+    teardownTimeout: 10000,
+    pool: 'forks',
     poolOptions: {
-      threads: {
-        singleThread: true,
+      forks: {
+        singleFork: false,
         isolate: true,
+        maxForks: 4,
       },
     },
-    fileParallelism: false,
+    reporters: ['default'],
+    bail: 0,  // Don't stop on first failure
   },
   resolve: {
     alias: {

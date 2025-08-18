@@ -6,15 +6,15 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.vtest.{ts,tsx}'],
-    teardownTimeout: 1000,
-    pool: 'threads',
+    teardownTimeout: 10000,
+    pool: 'forks',
     poolOptions: {
-      threads: {
-        singleThread: true,
+      forks: {
+        singleFork: false,
         isolate: true,
+        maxForks: 4,
       },
     },
-    fileParallelism: false,
   },
   resolve: {
     alias: {

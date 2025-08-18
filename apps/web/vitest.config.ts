@@ -8,15 +8,15 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/setupTests.vitest.ts'],
-    teardownTimeout: 1000,
-    pool: 'threads',
+    teardownTimeout: 10000,
+    pool: 'forks',
     poolOptions: {
-      threads: {
-        singleThread: true,
+      forks: {
+        singleFork: false,
         isolate: true,
+        maxForks: 4,
       },
     },
-    fileParallelism: false,
     server: {
       deps: {
         inline: [
