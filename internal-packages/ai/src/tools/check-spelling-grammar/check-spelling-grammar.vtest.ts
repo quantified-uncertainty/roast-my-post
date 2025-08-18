@@ -6,6 +6,8 @@ vi.mock('@roast/ai', () => ({
   callClaudeWithTool: vi.fn()
 }));
 
+import { callClaudeWithTool } from '@roast/ai';
+
 // Mock the language convention detection
 vi.mock('../detect-language-convention', () => ({
   detectLanguageConventionTool: {
@@ -19,7 +21,6 @@ vi.mock('../detect-language-convention', () => ({
 
 describe('CheckSpellingGrammarTool', () => {
   it('should not flag informal/colloquial words as errors', async () => {
-    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response - no errors for informal words
@@ -55,7 +56,6 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should flag actual spelling errors', async () => {
-    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response with spelling errors
@@ -114,7 +114,6 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should respect strictness levels', async () => {
-    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // For minimal strictness - only major errors
@@ -160,7 +159,6 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should validate that error text exists in input', async () => {
-    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response with errors including case mismatches
@@ -235,7 +233,6 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should add position indices to errors', async () => {
-    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     mockCallClaude.mockImplementationOnce(() => Promise.resolve({
@@ -278,7 +275,6 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should include description for complex grammar errors', async () => {
-    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     mockCallClaude.mockImplementationOnce(() => Promise.resolve({
@@ -323,7 +319,6 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should include line numbers for multi-line text', async () => {
-    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     mockCallClaude.mockImplementationOnce(() => Promise.resolve({

@@ -8,7 +8,7 @@
 import { aiCommentsToDbComments } from "../typeAdapters";
 import type { Agent, Comment as AiComment, Document } from "@roast/ai";
 import { PluginType } from "../../../analysis-plugins/types/plugin-types";
-import { PluginManager } from "../../../analysis-plugins/server";
+import { PluginManager } from "../../../analysis-plugins/PluginManager";
 import type { TaskResult } from "../shared/types";
 
 export interface UnifiedAnalysisOptions {

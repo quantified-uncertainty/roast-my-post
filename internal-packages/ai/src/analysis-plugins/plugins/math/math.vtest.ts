@@ -239,7 +239,7 @@ describe('MathAnalyzerJob', () => {
         explanation: 'Correct',
         verifiedBy: 'mathjs',
         toolsUsed: ['mathjs']
-      });
+      }));
 
       const analyzer = new MathAnalyzerJob();
       const chunks = [Object.assign(new TextChunk('Test: 1 + 1 = 2', 'chunk1'), {
@@ -247,7 +247,7 @@ describe('MathAnalyzerJob', () => {
           startOffset: 5,
           endOffset: 14,
           quotedText: '1 + 1 = 2'
-        })
+        }))
       })];
 
       await analyzer.analyze(chunks, 'Test: 1 + 1 = 2');

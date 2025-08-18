@@ -116,7 +116,7 @@ describe("Link Validator Tool", () => {
       ok: true,
       status: 200,
       headers: { get: vi.fn().mockReturnValue("text/html") },
-    } as unknown as Response);
+    } as unknown as Response));
 
     const result = await linkValidator.run({
       text: "URLs: https://one.com https://two.com https://three.com https://four.com",

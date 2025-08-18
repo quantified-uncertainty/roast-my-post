@@ -205,7 +205,7 @@ describe('SpellingAnalyzerJob', () => {
     it('should not run analysis twice', async () => {
       (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({
         errors: [],
-      });
+      }));
 
       const analyzer = new SpellingAnalyzerJob();
 
@@ -238,7 +238,7 @@ describe('SpellingAnalyzerJob', () => {
           type: 'spelling' as const,
           importance: 20,
         }],
-      });
+      }));
 
       const analyzer = new SpellingAnalyzerJob();
 
@@ -276,7 +276,7 @@ describe('SpellingAnalyzerJob', () => {
         ]
       });
 
-      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({ errors: [] });
+      (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({ errors: [] }));
 
       const analyzer = new SpellingAnalyzerJob();
       const result = await analyzer.analyze(

@@ -226,7 +226,7 @@ describe('Math Plugin Parallelization Tests', () => {
             mathJsExpression: '5+5' 
           },
           toolsUsed: ['mathjs']
-        })
+        }))
         .mockImplementationOnce(() => Promise.resolve({
           statement: '6*6=36',
           status: 'verified_true',
@@ -239,7 +239,7 @@ describe('Math Plugin Parallelization Tests', () => {
             mathJsExpression: '6*6' 
           },
           toolsUsed: ['mathjs']
-        })
+        }))
         .mockImplementationOnce(() => Promise.resolve({
           statement: '100/4=25',
           status: 'verified_true',
@@ -252,7 +252,7 @@ describe('Math Plugin Parallelization Tests', () => {
             mathJsExpression: '100/4' 
           },
           toolsUsed: ['mathjs']
-        })));
+        }));
 
       const result = await mathPlugin.analyze(chunks, documentText);
 
