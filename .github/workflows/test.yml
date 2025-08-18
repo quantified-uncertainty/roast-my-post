@@ -123,7 +123,7 @@ jobs:
         run: pnpm --filter @roast/db exec prisma migrate deploy
 
       - name: Run configuration validation tests
-        run: pnpm --filter @roast/web run test:ci **/*config-validation*.vtest.ts
+        run: pnpm --filter @roast/web run test:ci **/*config*.vtest.ts
 
       - name: Run script smoke tests
         run: pnpm --filter @roast/web run test:ci **/*script-smoke*.vtest.ts
