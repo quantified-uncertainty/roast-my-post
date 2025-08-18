@@ -38,6 +38,7 @@ export default defineConfig({
       '.next',
       'coverage',
       '**/*.e2e.test.{ts,tsx}',
+      '**/*.e2e.vtest.{ts,tsx}',
       '**/tests/playwright/**',
     ],
   },
