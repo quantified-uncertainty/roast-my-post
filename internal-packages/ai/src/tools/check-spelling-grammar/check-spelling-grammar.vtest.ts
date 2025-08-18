@@ -28,7 +28,7 @@ describe('CheckSpellingGrammarTool', () => {
         errors: [],
         totalErrorsFound: 0
       }
-    });
+    }));
 
     const input = {
       text: "The implementation looks jankily put together, but it's gonna work. We kinda need to refactor it later.",
