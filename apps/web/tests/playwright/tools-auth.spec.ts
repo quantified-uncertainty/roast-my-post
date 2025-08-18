@@ -86,7 +86,10 @@ async function testToolWithAuth(page: Page, toolId: string, testData: any) {
   await submitButton.click();
   
   // Wait for the request to complete (look for loading state to end)
-  await expect(submitButton).not.toHaveText(/\.\.\./);
+  // Use longer timeout for extract-math-expressions which can be slow
+  const timeout = toolId === 'extract-math-expressions' ? 30000 : 15000;
+  // Wait for button to not show loading states (containing "...")
+  await expect(submitButton).not.toHaveText(/ing\.\.\./, { timeout });
   
   // Check that we got some result
   // Look for common result indicators
