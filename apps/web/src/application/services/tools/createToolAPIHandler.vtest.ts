@@ -80,7 +80,7 @@ describe('createToolAPIHandler', () => {
   describe('Authentication', () => {
     it('should require authentication when BYPASS_TOOL_AUTH is not set', async () => {
       const mockAuth = vi.mocked(auth);
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as any);
 
       const route = createToolAPIHandler(mockTool);
       const response = await route(mockRequest({ test: 'data' }));
@@ -94,7 +94,7 @@ describe('createToolAPIHandler', () => {
     it('should require authentication when BYPASS_TOOL_AUTH is false', async () => {
       process.env.BYPASS_TOOL_AUTH = 'false';
       const mockAuth = vi.mocked(auth);
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as any);
 
       const route = createToolAPIHandler(mockTool);
       const response = await route(mockRequest({ test: 'data' }));

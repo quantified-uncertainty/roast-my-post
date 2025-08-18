@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    typecheck: {
+      enabled: false, // Disable built-in typecheck to avoid conflicts
+    },
     setupFiles: ['./src/setupTests.vitest.ts'],
     server: {
       deps: {

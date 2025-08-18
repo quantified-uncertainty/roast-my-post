@@ -73,7 +73,7 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle authentication failures', async () => {
     // Override auth mock for this test
-    vi.mocked(auth).mockResolvedValueOnce(null);
+    vi.mocked(auth).mockResolvedValueOnce(null as any);
 
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
       method: 'POST',
