@@ -257,7 +257,7 @@ describe('ExtractMathExpressionsTool', () => {
   describe('error handling', () => {
     it('should handle LLM failures gracefully', async () => {
       const mockError = new Error('LLM service unavailable');
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(mockError));
+      mockCallClaudeWithTool.mockReturnValueOnce(Promise.reject(mockError));
 
       const input = {
         text: 'Some mathematical text'

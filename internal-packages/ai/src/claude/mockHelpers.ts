@@ -8,15 +8,6 @@ import { callClaudeWithTool } from './wrapper';
 export const setupClaudeToolMock = (
   mockFunction: any
 ) => {
-  // Ensure the mock has the necessary methods
-  if (!mockFunction.mockImplementationOnce) {
-    mockFunction.mockImplementationOnce = mockFunction.mockImplementation;
-  }
-  if (!mockFunction.mockResolvedValueOnce) {
-    mockFunction.mockResolvedValueOnce = (value: any) => 
-      mockFunction.mockImplementationOnce(() => Promise.resolve(value));
-  }
-  
   return {
     mockToolResponse: <T extends Record<string, any>>(
       toolResult: T,
@@ -28,7 +19,8 @@ export const setupClaudeToolMock = (
       const tokens = options.tokens || { input: 150, output: 75 };
       const model = options.model || 'claude-sonnet-4-20250514';
 
-      mockFunction.mockResolvedValueOnce({
+      // Use mockReturnValueOnce which works with vi.fn()
+      mockFunction.mockReturnValueOnce(Promise.resolve({
         response: {
           id: 'msg_test',
           type: 'message',

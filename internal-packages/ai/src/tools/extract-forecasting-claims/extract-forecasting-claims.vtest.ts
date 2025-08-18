@@ -239,7 +239,7 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
       const input = { text: "Some text with predictions" };
       const error = new Error("Anthropic API error");
 
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(error));
+      mockCallClaudeWithTool.mockReturnValueOnce(Promise.reject(error));
 
       await expect(tool.execute(input, mockContext)).rejects.toThrow(
         "Anthropic API error"
@@ -250,7 +250,7 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
       const input = { text: "Some text with predictions" };
 
       // Mock malformed response (no tool use)
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.resolve({
+      mockCallClaudeWithTool.mockReturnValueOnce(Promise.resolve({
         response: {} as any,
         interaction: createMockLLMInteraction(),
         toolResult: {}
@@ -289,12 +289,8 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
       const mockInteraction = createMockLLMInteraction();
 
       // Mock single-stage extraction and scoring
-      mockCallClaudeWithTool.mockImplementationOnce(
-        async (options, interactions) => {
-          if (interactions) {
-            interactions.push(mockInteraction);
-          }
-          return {
+      mockCallClaudeWithTool.mockReturnValueOnce(
+        Promise.resolve({
             response: {} as any,
             interaction: mockInteraction,
             toolResult: {
@@ -327,8 +323,7 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
                 },
               ],
             },
-          };
-        }
+        })
       );
 
       const result = await tool.execute(input, mockContext);
@@ -359,19 +354,14 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
       const mockInteraction = createMockLLMInteraction();
 
       // Mock empty extraction response
-      mockCallClaudeWithTool.mockImplementationOnce(
-        async (options, interactions) => {
-          if (interactions) {
-            interactions.push(mockInteraction);
-          }
-          return {
+      mockCallClaudeWithTool.mockReturnValueOnce(
+        Promise.resolve({
             response: {} as any,
             interaction: mockInteraction,
             toolResult: {
               forecasts: [],
             },
-          };
-        }
+        })
       );
 
       const result = await tool.execute(input, mockContext);
@@ -388,12 +378,8 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
       const mockInteraction = createMockLLMInteraction();
 
       // Mock extraction with 3 forecasts, only 1 scored high due to guidance
-      mockCallClaudeWithTool.mockImplementationOnce(
-        async (options, interactions) => {
-          if (interactions) {
-            interactions.push(mockInteraction);
-          }
-          return {
+      mockCallClaudeWithTool.mockReturnValueOnce(
+        Promise.resolve({
             response: {} as any,
             interaction: mockInteraction,
             toolResult: {
@@ -434,8 +420,7 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
                 },
               ],
             },
-          };
-        }
+        })
       );
 
       const result = await tool.execute(input, mockContext);
@@ -467,12 +452,8 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
       });
 
       // Mock extraction
-      mockCallClaudeWithTool.mockImplementationOnce(
-        async (options, interactions) => {
-          if (interactions) {
-            interactions.push(mockInteraction);
-          }
-          return {
+      mockCallClaudeWithTool.mockReturnValueOnce(
+        Promise.resolve({
             response: {} as any,
             interaction: mockInteraction,
             toolResult: {
@@ -492,8 +473,7 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
                 },
               ],
             },
-          };
-        }
+        })
       );
 
       const result = await tool.execute(input, mockContext);
