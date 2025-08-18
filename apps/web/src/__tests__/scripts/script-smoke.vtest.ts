@@ -3,7 +3,7 @@
  * Validates that scripts have been properly migrated to @roast/jobs package
  */
 
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 
