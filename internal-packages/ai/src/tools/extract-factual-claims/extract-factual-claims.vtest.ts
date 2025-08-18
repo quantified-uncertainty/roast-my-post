@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
 
 // Mock Claude wrapper
-vi.mock('@roast/ai', () => ({
+vi.mock('../../claude/wrapper', () => ({
   callClaudeWithTool: vi.fn()
 }));
 
@@ -22,7 +22,7 @@ describe('ExtractFactualClaimsTool', () => {
     } as any
   };
   
-  const mockCallClaudeWithTool = callClaudeWithTool as any;
+  const mockCallClaudeWithTool = vi.mocked(callClaudeWithTool);
 
   beforeEach(() => {
     vi.clearAllMocks();

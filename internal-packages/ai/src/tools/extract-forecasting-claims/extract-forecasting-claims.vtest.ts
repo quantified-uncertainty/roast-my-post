@@ -13,8 +13,7 @@ vi.mock("../../claude/wrapper", () => ({
   callClaudeWithTool: vi.fn(),
 }));
 
-
-const mockCallClaudeWithTool = callClaudeWithTool as any;
+const mockCallClaudeWithTool = vi.mocked(callClaudeWithTool);
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
 describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {

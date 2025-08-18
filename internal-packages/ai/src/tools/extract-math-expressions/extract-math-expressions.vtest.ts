@@ -5,14 +5,13 @@ import { logger } from '../../shared/logger';
 import { setupClaudeToolMock } from '../../claude/mockHelpers';
 
 // Mock Claude wrapper
-vi.mock('@roast/ai', () => ({
-  callClaudeWithTool: vi.fn(),
-  setupClaudeToolMock: vi.importActual('@roast/ai').setupClaudeToolMock
+vi.mock('../../claude/wrapper', () => ({
+  callClaudeWithTool: vi.fn()
 }));
 import { callClaudeWithTool } from '../../claude/wrapper';
 
 // Get the mocked function and setup helper
-const mockCallClaudeWithTool = callClaudeWithTool as any;
+const mockCallClaudeWithTool = vi.mocked(callClaudeWithTool);
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
 describe('ExtractMathExpressionsTool', () => {

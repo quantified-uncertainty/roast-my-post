@@ -52,7 +52,7 @@ export const setupClaudeToolMock = (
           duration: 150
         },
         toolResult
-      });
+      }));
     }
   };
 };
