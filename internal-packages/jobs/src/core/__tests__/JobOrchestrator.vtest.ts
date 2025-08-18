@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobOrchestrator } from '../JobOrchestrator';
 import { JobService } from '../JobService';
 import { analyzeDocument } from '@roast/ai';
-import { prisma } from '@roast/db';
+import { prisma, JobStatus } from '@roast/db';
 import { fetchJobCostWithRetry } from '@roast/ai';
-import type { Logger } from '../types';
+import type { Logger } from '../../types';
 
 // Mock dependencies
 vi.mock('@roast/ai', () => ({
@@ -249,8 +249,17 @@ describe('JobOrchestrator', () => {
   function createMockJob() {
     return {
       id: 'job-1',
+      status: JobStatus.PENDING,
+      evaluationId: 'eval-1',
       originalJobId: null,
+      agentEvalBatchId: null,
       attempts: 1,
+      createdAt: new Date('2024-01-01'),
+      startedAt: null,
+      completedAt: null,
+      error: null,
+      llmThinking: null,
+      priceInDollars: null,
       evaluation: {
         id: 'eval-1',
         document: {
@@ -260,8 +269,10 @@ describe('JobOrchestrator', () => {
             {
               id: 'doc-version-1',
               title: 'Test Document',
+              content: 'This is test content',
               fullContent: 'This is test content',
               authors: ['Test Author'],
+              version: 1,
               urls: ['https://example.com'],
               platforms: ['test'],
               intendedAgents: [],
@@ -285,7 +296,7 @@ describe('JobOrchestrator', () => {
           ],
         },
       },
-    };
+    } as any;
   }
 
   function createMockAnalysisResult() {
@@ -294,7 +305,7 @@ describe('JobOrchestrator', () => {
       analysis: 'Test analysis',
       grade: 'B',
       selfCritique: null,
-      highlights: [],
+      highlights: [] as any[],
       thinking: 'Test thinking',
       tasks: [
         {
