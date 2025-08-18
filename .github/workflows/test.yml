@@ -136,7 +136,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             pnpm --filter @roast/web run test:ci-nocov
           else
-            pnpm --filter @roast/web run test:ci --coverage --reporter=text-summary
+            pnpm --filter @roast/web run test:ci
           fi
 
   # Integration tests (3-4 minutes) - parallel with other jobs  
