@@ -6,7 +6,7 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "types": ["node", "jest"],
+    "types": ["node"],
     "target": "ES2022",
     "esModuleInterop": true,
     "isolatedModules": true
@@ -19,6 +19,8 @@
     "src/**/__mocks__/**/*",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
+    "src/**/*.vtest.ts",
+    "src/**/*.vtest.tsx",
     "src/**/mockHelpers.ts",
     "src/**/testUtils.ts",
     "src/test-setup.ts",
