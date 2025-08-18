@@ -8,6 +8,12 @@ import { callClaudeWithTool } from './wrapper';
 export const setupClaudeToolMock = (
   mockFunction: any
 ) => {
+  // Ensure the mock has the necessary methods
+  if (!mockFunction.mockResolvedValueOnce) {
+    mockFunction.mockResolvedValueOnce = (value: any) => 
+      mockFunction.mockImplementationOnce(() => Promise.resolve(value));
+  }
+  
   return {
     mockToolResponse: <T extends Record<string, any>>(
       toolResult: T,

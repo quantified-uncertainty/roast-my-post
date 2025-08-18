@@ -57,7 +57,7 @@ describe('@roast/ai Package Integration', () => {
     it('should export server-side tools', () => {
       expect(checkSpellingGrammarTool).toBeDefined();
       expect(checkSpellingGrammarTool.config).toBeDefined();
-      expect(checkSpellingGrammarTool.config.name).toBe('check-spelling-grammar');
+      expect(checkSpellingGrammarTool.config.name).toBe('Check Spelling & Grammar');
     });
   });
 
@@ -106,7 +106,7 @@ describe('Usage Examples', () => {
     };
 
     // Verify the tool has proper structure
-    expect(checkSpellingGrammarTool.config.name).toBe('check-spelling-grammar');
+    expect(checkSpellingGrammarTool.config.name).toBe('Check Spelling & Grammar');
     expect(checkSpellingGrammarTool.inputSchema).toBeDefined();
     expect(checkSpellingGrammarTool.outputSchema).toBeDefined();
   });

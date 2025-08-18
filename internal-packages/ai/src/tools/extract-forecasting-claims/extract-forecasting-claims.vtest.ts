@@ -14,9 +14,7 @@ vi.mock("../../claude/wrapper", () => ({
 }));
 
 
-const mockCallClaudeWithTool = callClaudeWithTool as any
-  typeof callClaudeWithTool
->;
+const mockCallClaudeWithTool = callClaudeWithTool as any;
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
 describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
@@ -241,7 +239,7 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
       const input = { text: "Some text with predictions" };
       const error = new Error("Anthropic API error");
 
-      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(error);
+      mockCallClaudeWithTool.mockImplementationOnce(() => Promise.reject(error));
 
       await expect(tool.execute(input, mockContext)).rejects.toThrow(
         "Anthropic API error"
@@ -256,7 +254,7 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
         response: {} as any,
         interaction: createMockLLMInteraction(),
         toolResult: {}
-      } as any);
+      } as any));
 
       const result = await tool.execute(input, mockContext);
 

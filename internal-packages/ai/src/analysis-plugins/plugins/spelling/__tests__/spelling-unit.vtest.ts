@@ -162,7 +162,7 @@ describe('SpellingPlugin Unit Test', () => {
   
   test('should have correct plugin metadata', () => {
     expect(plugin.name()).toBe('SPELLING');
-    expect(plugin.promptForWhenToUse()).toContain('spelling');
+    expect(plugin.promptForWhenToUse().toLowerCase()).toContain('spelling');
     expect(plugin.runOnAllChunks).toBe(true);
   });
 });
