@@ -133,11 +133,8 @@ jobs:
 
       - name: Run unit tests with coverage (PR builds skip coverage)
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            pnpm --filter @roast/web run test:ci-nocov
-          else
-            pnpm --filter @roast/web run test:ci
-          fi
+          # Always use test:ci-nocov since coverage is handled by sharded tests
+          pnpm --filter @roast/web run test:ci-nocov
 
   # Integration tests (3-4 minutes) - parallel with other jobs  
   integration-tests:
