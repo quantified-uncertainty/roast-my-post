@@ -12,6 +12,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  ARGOCD_SERVER: argo.k8s.quantifieduncertainty.org
+  ARGOCD_APP: roast-my-post
 
 jobs:
   build-and-push:
@@ -57,7 +59,7 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha
+            type=sha,prefix=sha-,format=long
 
       - name: Build and push Docker image (${{ matrix.name }})
         uses: docker/build-push-action@v5
@@ -123,6 +125,56 @@ jobs:
           docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} sh -c "
             pnpm tsx --version > /dev/null && echo '✓ tsx available for TypeScript execution'
           "
+
+  update-argocd:
+    name: Update ArgoCD Deployment
+    needs: build-and-push  # This waits for both matrix builds to complete
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+    
+    steps:
+      - name: Update ArgoCD image tags
+        env:
+          ARGOCD_SERVER: ${{ env.ARGOCD_SERVER }}
+          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+        run: |
+          set -e  # Exit on any error
+          
+          # Download ArgoCD CLI
+          echo "Downloading ArgoCD CLI..."
+          curl -sSL -o /usr/local/bin/argocd https://${ARGOCD_SERVER}/download/argocd-linux-amd64 || {
+            echo "Failed to download ArgoCD CLI"
+            exit 1
+          }
+          chmod +x /usr/local/bin/argocd
+          
+          # ArgoCD CLI uses ARGOCD_AUTH_TOKEN env var automatically, but needs --server flag
+          echo "Updating image tags to sha-${{ github.sha }}..."
+          /usr/local/bin/argocd app set ${ARGOCD_APP} \
+            --server ${ARGOCD_SERVER} \
+            --helm-set image.tag=sha-${{ github.sha }} \
+            --helm-set workerImage.tag=sha-${{ github.sha }}
+          
+          # Trigger sync (even though auto-sync is enabled, this ensures immediate deployment)
+          echo "Triggering application sync..."
+          /usr/local/bin/argocd app sync ${ARGOCD_APP} \
+            --server ${ARGOCD_SERVER}
+          
+          # Wait for sync to complete and verify health
+          echo "Waiting for deployment to complete (timeout: 5 minutes)..."
+          /usr/local/bin/argocd app wait ${ARGOCD_APP} \
+            --server ${ARGOCD_SERVER} \
+            --timeout 300 \
+            --health \
+            --sync
+          
+          # Get final status for the logs
+          echo "Deployment completed. Final status:"
+          /usr/local/bin/argocd app get ${ARGOCD_APP} \
+            --server ${ARGOCD_SERVER} \
+            --output json | \
+            jq -r '"Sync: " + .status.sync.status + ", Health: " + .status.health.status'
 
   security-scan:
     name: Security Scan
