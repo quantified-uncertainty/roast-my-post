@@ -4,6 +4,7 @@ import Script from "next/script";
 import ClientLayout from "../components/ClientLayout";
 import SessionProvider from "../components/SessionProvider";
 import { headers } from 'next/headers';
+import { Toaster } from "sonner";
 
 export default async function RootLayout({
   children,
@@ -28,6 +29,7 @@ export default async function RootLayout({
         </Script>
       </head>
       <body className="antialiased h-full" suppressHydrationWarning>
+      <Toaster />
         <SessionProvider>
           <ClientLayout>{children}</ClientLayout>
         </SessionProvider>

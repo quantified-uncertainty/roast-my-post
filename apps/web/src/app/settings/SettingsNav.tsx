@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
+import {
   KeyIcon,
   UserIcon,
   CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
+import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Profile", href: "/settings/profile", icon: UserIcon },
@@ -18,23 +19,27 @@ export function SettingsNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="px-3">
+    <nav className="space-y-1 px-3">
       {navigation.map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link
             key={item.name}
             href={item.href}
-            className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+            className={cn(
+              "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-gray-100 text-gray-900"
-                : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-            }`}
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            )}
           >
             <item.icon
-              className={`mr-3 h-5 w-5 ${
-                isActive ? "text-gray-500" : "text-gray-400 group-hover:text-gray-500"
-              }`}
+              className={cn(
+                "mr-3 h-4 w-4 transition-colors",
+                isActive
+                  ? "text-accent-foreground"
+                  : "text-muted-foreground group-hover:text-foreground"
+              )}
               aria-hidden="true"
             />
             {item.name}
