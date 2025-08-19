@@ -156,10 +156,10 @@ jobs:
             --helm-set image.tag=sha-${{ github.sha }} \
             --helm-set workerImage.tag=sha-${{ github.sha }}
           
-          # Trigger sync (even though auto-sync is enabled, this ensures immediate deployment)
-          echo "Triggering application sync..."
+          # Trigger sync (may fail if auto-sync already started)
+          echo "Triggering application sync (optional - may already be syncing)..."
           /usr/local/bin/argocd app sync ${ARGOCD_APP} \
-            --server ${ARGOCD_SERVER}
+            --server ${ARGOCD_SERVER} || echo "Sync already in progress or not needed"
           
           # Wait for sync to complete and verify health
           echo "Waiting for deployment to complete (timeout: 5 minutes)..."
