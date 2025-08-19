@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { analyzeWithMultiEpistemicEval } from '../multiEpistemicEval';
 import { MathPlugin } from '@roast/ai';
 import type { Document } from '@roast/ai';
 import type { Agent } from '@roast/ai';

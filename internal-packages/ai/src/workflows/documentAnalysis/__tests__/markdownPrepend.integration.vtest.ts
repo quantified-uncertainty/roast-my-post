@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
-import { analyzeLinkDocument } from "../linkAnalysis";
 import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
 import type { Agent } from "../../../types/agentSchema";
 
