@@ -5,8 +5,6 @@ import { prisma } from "@/infrastructure/database/prisma";
 
 import { ProfileForm } from "./ProfileForm";
 
-export const dynamic = 'force-dynamic';
-
 export default async function ProfilePage() {
   const session = await auth();
   const userId = session?.user?.id;
@@ -28,14 +26,5 @@ export default async function ProfilePage() {
     redirect("/api/auth/signin");
   }
 
-  return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">Profile</h1>
-      <div className="rounded-lg bg-white shadow">
-        <div className="p-6">
-          <ProfileForm user={user} />
-        </div>
-      </div>
-    </div>
-  );
+  return <ProfileForm user={user} />;
 }

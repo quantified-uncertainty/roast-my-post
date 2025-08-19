@@ -1,10 +1,8 @@
 "use client";
 
-import { Bot } from "lucide-react";
+import { Bot, FileText, Users, TrendingUp, Wrench, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 import AuthHeader from "./AuthHeader";
 import Footer from "./Footer";
@@ -16,44 +14,55 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isReaderPage = pathname?.includes('/reader');
+  const isReaderPage = pathname?.includes("/reader");
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <ProfileCheck />
       {/* Header (always visible at the top) */}
-      <header className="border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-8 py-3 flex-shrink-0">
+      <header className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Roast My Post</h1>
+          <Link
+            href="/"
+            className="text-2xl font-bold text-gray-900 transition-colors hover:text-gray-700"
+          >
+            Roast My Post
+          </Link>
           <div className="flex items-center justify-between space-x-6">
             <nav className="flex items-center space-x-6">
               <Link
                 href="/docs"
-                className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
               >
-                <DocumentTextIcon className="inline-block h-5 w-5 align-text-bottom" />
+                <FileText className="h-5 w-5" />
                 Documents
               </Link>
               <Link
                 href="/agents"
-                className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
               >
-                <Bot className="inline-block h-5 w-5 align-text-bottom" />
+                <Bot className="h-5 w-5" />
                 Agents
               </Link>
-              <Link href="/users" className="text-gray-600 hover:text-gray-900">
+              <Link
+                href="/users"
+                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
+              >
+                <Users className="h-5 w-5" />
                 Users
               </Link>
               <Link
                 href="/self-ranking"
-                className="text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
               >
+                <TrendingUp className="h-5 w-5" />
                 Self-Ranking
               </Link>
               <Link
                 href="/tools"
-                className="text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
               >
+                <Wrench className="h-5 w-5" />
                 Tools
               </Link>
               <AuthHeader />
@@ -67,7 +76,7 @@ export default function ClientLayout({
         {isReaderPage ? (
           children
         ) : (
-          <div className="min-h-full flex flex-col">
+          <div className="flex min-h-full flex-col">
             <div className="flex-1">{children}</div>
             <Footer />
           </div>
