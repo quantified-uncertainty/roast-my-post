@@ -31,7 +31,7 @@ on:
 
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       test-command: ${{ steps.build-command.outputs.command }}
       estimated-cost: ${{ steps.estimate.outputs.cost }}
@@ -86,7 +86,7 @@ jobs:
 
   run-tests:
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 45
     # PostgreSQL service container
     services:
@@ -256,7 +256,7 @@ jobs:
   cleanup:
     needs: [setup, run-tests]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Log test completion
         run: |
