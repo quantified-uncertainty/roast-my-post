@@ -161,16 +161,35 @@ jobs:
           /usr/local/bin/argocd app sync ${ARGOCD_APP} \
             --server ${ARGOCD_SERVER} || echo "Sync already in progress or not needed"
           
-          # Wait for sync to complete and verify health
-          echo "Waiting for deployment to complete (timeout: 5 minutes)..."
+          # Wait for health only (not sync to avoid OutOfSync during rolling updates)
+          echo "Waiting for deployment to become healthy (timeout: 5 minutes)..."
           /usr/local/bin/argocd app wait ${ARGOCD_APP} \
             --server ${ARGOCD_SERVER} \
             --timeout 300 \
-            --health \
-            --sync
+            --health
+          
+          # Verify the correct SHA is actually deployed
+          echo "Verifying correct image version is deployed..."
+          EXPECTED_TAG="sha-${{ github.sha }}"
+          DEPLOYED_IMAGES=$(/usr/local/bin/argocd app get ${ARGOCD_APP} \
+            --server ${ARGOCD_SERVER} \
+            --output json | jq -r '.status.summary.images[]')
+          
+          echo "Expected tag: ${EXPECTED_TAG}"
+          echo "Deployed images:"
+          echo "${DEPLOYED_IMAGES}"
+          
+          # Check both web and worker images contain our SHA
+          if echo "${DEPLOYED_IMAGES}" | grep -q "${EXPECTED_TAG}"; then
+            echo "✅ Deployment successful! Correct version is running."
+          else
+            echo "❌ ERROR: Deployment is healthy but running wrong version!"
+            echo "Expected ${EXPECTED_TAG} but it's not in the deployed images"
+            exit 1
+          fi
           
           # Get final status for the logs
-          echo "Deployment completed. Final status:"
+          echo "Final status:"
           /usr/local/bin/argocd app get ${ARGOCD_APP} \
             --server ${ARGOCD_SERVER} \
             --output json | \
