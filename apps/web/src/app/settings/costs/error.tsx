@@ -1,1 +1,5 @@
-export { default } from "@/components/global-error";
+"use client";
+
+import DefaultError from "@/components/global-error";
+
+export default DefaultError;

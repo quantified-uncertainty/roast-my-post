@@ -1,1 +1,5 @@
-export { default } from "@/components/global-loading";
+"use client";
+
+import DefaultLoading from "@/components/global-loading";
+
+export default DefaultLoading;
