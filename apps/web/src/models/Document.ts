@@ -924,7 +924,13 @@ export class DocumentModel {
           grade: latestEvalVersion?.grade ?? null,
           selfCritique: latestEvalVersion?.selfCritique || undefined,
           versions: [], // Not needed for listings
-          jobs: evaluation.jobs || [],
+          jobs: (evaluation.jobs || []).map((job: any) => ({
+            id: job.id,
+            status: job.status,
+            createdAt: job.createdAt,
+            // Convert Decimal to number to avoid serialization errors
+            priceInDollars: convertPriceToNumber(job.priceInDollars),
+          })),
           isStale,
         };
       }),
