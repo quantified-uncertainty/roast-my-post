@@ -59,11 +59,8 @@ export default function ToolsIndexPage() {
               
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {categoryTools.map(tool => {
-                  // Validate that tool path is correct - no fallback to hide config errors
-                  if (!tool.path || !tool.path.startsWith('/tools/')) {
-                    throw new Error(`Invalid tool path for ${tool.id}: expected '/tools/${tool.id}', got '${tool.path}'`);
-                  }
-                  const toolPath = tool.path;
+                  // Derive the tool path from the ID - don't rely on config
+                  const toolPath = `/tools/${tool.id}`;
                   const toolStatus = (tool.status as keyof typeof statusColors) || 'experimental';
                   
                   return (

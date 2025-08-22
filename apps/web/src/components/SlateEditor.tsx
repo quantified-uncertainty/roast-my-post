@@ -328,7 +328,7 @@ const renderLeaf = ({
           margin: "0 -1px",
           scrollMarginTop: `${LAYOUT.SCROLL_MARGIN_TOP}px`, // Add scroll margin to prevent the highlight from being hidden under the header
         }}
-        className={`group cursor-pointer transition-all duration-[${TIMING.HIGHLIGHT_TRANSITION}ms] ease-out hover:bg-opacity-60 ${
+        className={`group cursor-pointer transition-all duration-150 ease-out hover:bg-opacity-60 ${
           isActive ? "relative z-10" : ""
         }`}
         onClick={(e) => {

@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { validateUrl, UrlValidationInput } from "./urlValidator";
+import axios from 'axios';
 
 // Mock fetch globally
 global.fetch = vi.fn();
+
+// Mock axios
+vi.mock('axios');
 
 describe("urlValidator", () => {
   beforeEach(() => {
@@ -275,6 +279,173 @@ describe("urlValidator", () => {
       expect(result.accessError).toBeUndefined();
       expect(result.linkDetails).toBeDefined();
       expect(global.fetch).toHaveBeenCalledTimes(3);
+    });
+
+    describe("LessWrong and EA Forum URLs", () => {
+      it("should use GraphQL API for LessWrong URLs", async () => {
+        const mockAxios = vi.mocked(axios);
+        mockAxios.post.mockResolvedValueOnce({
+          data: {
+            data: {
+              post: {
+                result: {
+                  _id: 'testId123',
+                  title: 'Test Post',
+                  postedAt: '2024-01-01T00:00:00Z'
+                }
+              }
+            }
+          }
+        });
+
+        const input: UrlValidationInput = {
+          url: "https://www.lesswrong.com/posts/testId123/test-post",
+        };
+
+        const result = await validateUrl(input);
+
+        expect(mockAxios.post).toHaveBeenCalledWith(
+          "https://www.lesswrong.com/graphql",
+          expect.objectContaining({
+            query: expect.stringContaining('$postId'),
+            variables: { postId: 'testId123' }
+          }),
+          expect.any(Object)
+        );
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(result.accessError).toBeUndefined();
+        expect(result.linkDetails?.statusCode).toBe(200);
+      });
+
+      it("should use GraphQL API for EA Forum URLs", async () => {
+        const mockAxios = vi.mocked(axios);
+        mockAxios.post.mockResolvedValueOnce({
+          data: {
+            data: {
+              post: {
+                result: {
+                  _id: 'eaTestId',
+                  title: 'EA Test Post',
+                  postedAt: '2024-01-01T00:00:00Z'
+                }
+              }
+            }
+          }
+        });
+
+        const input: UrlValidationInput = {
+          url: "https://forum.effectivealtruism.org/posts/eaTestId/ea-test-post",
+        };
+
+        const result = await validateUrl(input);
+
+        expect(mockAxios.post).toHaveBeenCalledWith(
+          "https://forum.effectivealtruism.org/graphql",
+          expect.objectContaining({
+            query: expect.stringContaining('$postId'),
+            variables: { postId: 'eaTestId' }
+          }),
+          expect.any(Object)
+        );
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(result.accessError).toBeUndefined();
+        expect(result.linkDetails?.statusCode).toBe(200);
+      });
+
+      it("should handle invalid LessWrong post IDs", async () => {
+        const mockAxios = vi.mocked(axios);
+        mockAxios.post.mockResolvedValueOnce({
+          data: {
+            data: {
+              post: {
+                result: null
+              }
+            }
+          }
+        });
+
+        const input: UrlValidationInput = {
+          url: "https://www.lesswrong.com/posts/INVALID/invalid-post",
+        };
+
+        const result = await validateUrl(input);
+
+        expect(result.accessError).toEqual({
+          type: "NotFound",
+          statusCode: 404
+        });
+      });
+
+      it("should handle malformed LessWrong URLs", async () => {
+        const input: UrlValidationInput = {
+          url: "https://www.lesswrong.com/not-a-post-url",
+        };
+
+        const result = await validateUrl(input);
+
+        expect(result.accessError).toBeDefined();
+        expect(result.accessError?.type).toBe("Unknown");
+      });
+
+      it("should handle LessWrong API timeouts", async () => {
+        const mockAxios = vi.mocked(axios);
+        const error = new Error('timeout') as any;
+        error.code = 'ECONNABORTED';
+        error.isAxiosError = true;
+        mockAxios.post.mockRejectedValueOnce(error);
+        mockAxios.isAxiosError = vi.fn().mockReturnValue(true);
+
+        const input: UrlValidationInput = {
+          url: "https://www.lesswrong.com/posts/test/test",
+        };
+
+        const result = await validateUrl(input);
+
+        expect(result.accessError).toEqual({
+          type: "Timeout",
+          duration: 10000
+        });
+      });
+
+      it("should handle EA Forum API rate limiting", async () => {
+        const mockAxios = vi.mocked(axios);
+        const error = new Error('Rate limited') as any;
+        error.response = { status: 429 };
+        error.isAxiosError = true;
+        mockAxios.post.mockRejectedValueOnce(error);
+        mockAxios.isAxiosError = vi.fn().mockReturnValue(true);
+
+        const input: UrlValidationInput = {
+          url: "https://forum.effectivealtruism.org/posts/test/test",
+        };
+
+        const result = await validateUrl(input);
+
+        expect(result.accessError).toEqual({
+          type: "RateLimited"
+        });
+      });
+
+      it("should use regular fetch for non-LW/EA URLs", async () => {
+        (global.fetch as any).mockImplementation(() => Promise.resolve({
+          ok: true,
+          status: 200,
+          url: "https://example.com",
+          headers: {
+            get: vi.fn().mockReturnValue("text/html"),
+          },
+        }));
+
+        const input: UrlValidationInput = {
+          url: "https://example.com",
+        };
+
+        const result = await validateUrl(input);
+
+        expect(global.fetch).toHaveBeenCalled();
+        expect(axios.post).not.toHaveBeenCalled();
+        expect(result.accessError).toBeUndefined();
+      });
     });
   });
 });

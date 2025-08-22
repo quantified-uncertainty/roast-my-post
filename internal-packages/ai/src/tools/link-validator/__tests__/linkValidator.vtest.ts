@@ -91,7 +91,8 @@ describe("Link Validator Tool", () => {
     expect(result.validations).toHaveLength(2);
     expect(result.summary.totalLinks).toBe(2);
     expect(result.summary.workingLinks).toBe(1);
-    expect(result.summary.brokenLinks).toBe(1);
+    expect(result.summary.brokenLinks).toBe(0);  // 403 is now a warning, not an error
+    expect(result.summary.warningLinks).toBe(1);  // 403 is counted as warning
     expect(result.summary.errorBreakdown.Forbidden).toBe(1);
   });
 

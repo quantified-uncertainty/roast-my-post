@@ -46,11 +46,18 @@ export default function AgentsList({ agents }: AgentsListProps) {
                   {agent.description}
                 </p>
                 
-                {agent.providesGrades && (
-                  <div className="mt-2 inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
-                    ✓ Grades
-                  </div>
-                )}
+                <div className="mt-2 flex gap-2">
+                  {agent.isSystemManaged && (
+                    <div className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700">
+                      System
+                    </div>
+                  )}
+                  {agent.providesGrades && (
+                    <div className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
+                      ✓ Grades
+                    </div>
+                  )}
+                </div>
               </div>
             </Link>
           );

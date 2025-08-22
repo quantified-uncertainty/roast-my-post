@@ -46,6 +46,7 @@ export const AgentSchema = BaseAgentSchema.extend({
   version: z.string(),
   owner: AgentOwnerSchema.optional(),
   isOwner: z.boolean().optional(),
+  isSystemManaged: z.boolean().optional(),
   readme: z.string().optional(),
   ephemeralBatch: z.object({
     trackingId: z.string().nullable(),

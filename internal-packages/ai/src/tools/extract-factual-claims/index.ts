@@ -59,7 +59,7 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
     version: '2.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.01-0.03 per analysis (depends on text length)',
-    path: '/api/tools/extract-factual-claims',
+    path: '/tools/extract-factual-claims',
     status: 'stable' as const
   };
   

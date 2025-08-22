@@ -119,6 +119,15 @@ export const perplexityResearchTool = {
   }
 };
 
+export const linkValidatorTool = {
+  config: {
+    id: 'link-validator',
+    name: 'Link Validator',
+    path: '/tools/link-validator',
+    description: 'Extracts and validates all URLs from a text, checking their accessibility and returning detailed validation results'
+  }
+};
+
 // Tool metadata for the tools page
 const toolMetadata = [
   { ...checkMathTool.config, category: 'analysis', status: 'stable' },
@@ -133,7 +142,8 @@ const toolMetadata = [
   { ...checkSpellingGrammarTool.config, category: 'analysis', status: 'stable' },
   { ...extractMathExpressionsTool.config, category: 'analysis', status: 'beta' },
   { ...detectLanguageConventionTool.config, category: 'analysis', status: 'beta' },
-  { ...perplexityResearchTool.config, category: 'research', status: 'beta' }
+  { ...perplexityResearchTool.config, category: 'research', status: 'beta' },
+  { ...linkValidatorTool.config, category: 'analysis', status: 'stable' }
 ];
 
 // Tool registry for client-side use
@@ -151,6 +161,7 @@ export const toolRegistry = {
   'extract-math-expressions': extractMathExpressionsTool,
   'detect-language-convention': detectLanguageConventionTool,
   'perplexity-research': perplexityResearchTool,
+  'link-validator': linkValidatorTool,
   
   // Method to get metadata for tools page
   getMetadata: () => toolMetadata

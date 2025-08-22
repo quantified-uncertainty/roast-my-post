@@ -110,8 +110,8 @@ export function EvaluationView({
     <>
       {/* Header wrapper that collapses when hidden */}
       <div
-        className={`transition-all duration-[${TIMING.TRANSITION_DURATION}ms] ease-in-out ${
-          headerVisible ? `max-h-[${LAYOUT.HEADER_MAX_HEIGHT}px]` : "max-h-0 overflow-hidden"
+        className={`transition-all duration-300 ease-in-out ${
+          headerVisible ? "max-h-96" : "max-h-0 overflow-hidden"
         }`}
       >
         {/* Sticky Evaluation Cards Header Bar */}

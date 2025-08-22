@@ -8,10 +8,12 @@ export function extractUrls(content: string, maxUrls: number = 20): string[] {
   const seenUrls = new Set<string>();
   
   // First, extract from markdown links [text](url) - but exclude images ![alt](url)
-  // Use negative lookbehind to exclude ![alt](url) patterns
-  const markdownMatches = [...content.matchAll(/(?<!!)(\[([^\]]*)\]\(([^)]+)\))/gi)];
+  // More strict pattern that requires URLs to start with http:// or https:// or be relative paths
+  // This avoids false positives with math expressions like P[X](something)
+  const markdownLinkRegex = /(?<!!)\[([^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*)\]\(((?:https?:\/\/[^)\s]+|\/[^)\s]*|\.\/[^)\s]*|\.\.\/[^)\s]*|#[^)\s]*|[a-zA-Z][a-zA-Z0-9+.-]*:[^)\s]+))\)/gi;
+  const markdownMatches = [...content.matchAll(markdownLinkRegex)];
   markdownMatches.forEach(match => {
-    const url = match[3]; // Because of the capture group structure
+    const url = match[2]; // The URL is in the second capture group (first is link text)
     if (url && !url.startsWith('#') && url.length > 10 && !seenUrls.has(url)) {
       urlsWithPositions.push({ url, position: match.index || 0 });
       seenUrls.add(url);
@@ -27,7 +29,8 @@ export function extractUrls(content: string, maxUrls: number = 20): string[] {
   remainingContent = remainingContent.replace(imagePattern, '![REMOVED_IMAGE]');
   
   // Remove markdown links: [text](url) - replace with placeholder to avoid extracting the URL again
-  const linkPattern = /\[([^\]]*)\]\(([^)]+)\)/gi;
+  // Use the same strict pattern to only remove actual markdown links, not math expressions
+  const linkPattern = /\[([^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*)\]\(((?:https?:\/\/[^)\s]+|\/[^)\s]*|\.\/[^)\s]*|\.\.\/[^)\s]*|#[^)\s]*|[a-zA-Z][a-zA-Z0-9+.-]*:[^)\s]+))\)/gi;
   remainingContent = remainingContent.replace(linkPattern, '[REMOVED_LINK]');
   
   // Now extract standalone URLs from the remaining content

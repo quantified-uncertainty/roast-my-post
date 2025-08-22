@@ -3,11 +3,11 @@ import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types'
 
 export const factCheckerAgent: SystemAgentDefinition = {
   id: 'system-fact-checker',
-  name: 'Factual Accuracy Verifier',
+  name: 'Fact Checker',
   description: 'Verifies factual claims and statements for accuracy using current knowledge',
   providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.FACT_CHECK],
-  readme: `# Factual Accuracy Verifier
+  readme: `# Fact Checker
 
 An agent that identifies and verifies factual claims in documents, checking them against current knowledge and reliable sources. Provides detailed verdicts on claim accuracy with evidence-based reasoning.
 

@@ -3,11 +3,11 @@ import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types'
 
 export const forecastCheckerAgent: SystemAgentDefinition = {
   id: 'system-forecast-checker',
-  name: 'Forecast Analysis Verifier',
+  name: 'Forecast Checker',
   description: 'Analyzes predictions and forecasts for methodological soundness and logical consistency',
   providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.FORECAST],
-  readme: `# Forecast Analysis Verifier
+  readme: `# Forecast Checker
 
 An agent that evaluates predictions, forecasts, and future-oriented claims for methodological soundness, evidence quality, and logical consistency. Assesses both quantitative and qualitative forecasting approaches.
 

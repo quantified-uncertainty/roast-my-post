@@ -19,6 +19,7 @@ describe("link-validator tool", () => {
         url: "https://example.com/page1",
         finalUrl: "https://example.com/page1",
         timestamp: new Date(),
+        validationMethod: "HTTP Request" as const,
         linkDetails: {
           contentType: "text/html",
           statusCode: 200,
@@ -27,6 +28,7 @@ describe("link-validator tool", () => {
       {
         url: "https://example.com/broken",
         timestamp: new Date(),
+        validationMethod: "HTTP Request" as const,
         accessError: {
           type: "NotFound",
           statusCode: 404,
@@ -60,8 +62,12 @@ describe("link-validator tool", () => {
       totalLinks: 2,
       workingLinks: 1,
       brokenLinks: 1,
+      warningLinks: 0,
       errorBreakdown: {
         NotFound: 1,
+      },
+      methodsUsed: {
+        "HTTP Request": 2,
       },
     });
   });
@@ -81,7 +87,9 @@ describe("link-validator tool", () => {
       totalLinks: 0,
       workingLinks: 0,
       brokenLinks: 0,
+      warningLinks: 0,
       errorBreakdown: {},
+      methodsUsed: {},
     });
 
     expect(validateUrls).not.toHaveBeenCalled();
@@ -128,26 +136,31 @@ describe("link-validator tool", () => {
       {
         url: "https://example.com/working",
         timestamp: new Date(),
+        validationMethod: "HTTP Request" as const,
         linkDetails: { contentType: "text/html", statusCode: 200 },
       },
       {
         url: "https://example.com/notfound",
         timestamp: new Date(),
+        validationMethod: "HTTP Request" as const,
         accessError: { type: "NotFound", statusCode: 404 },
       },
       {
         url: "https://example.com/forbidden",
         timestamp: new Date(),
+        validationMethod: "HTTP Request" as const,
         accessError: { type: "Forbidden", statusCode: 403 },
       },
       {
         url: "https://example.com/timeout",
         timestamp: new Date(),
+        validationMethod: "HTTP Request" as const,
         accessError: { type: "Timeout", duration: 10000 },
       },
       {
         url: "https://example.com/network",
         timestamp: new Date(),
+        validationMethod: "HTTP Request" as const,
         accessError: { type: "NetworkError", message: "DNS error", retryable: false },
       },
     ];
@@ -171,12 +184,16 @@ describe("link-validator tool", () => {
     expect(result.summary).toEqual({
       totalLinks: 5,
       workingLinks: 1,
-      brokenLinks: 4,
+      brokenLinks: 3,  // 403 is now a warning, not an error
+      warningLinks: 1,  // 403 Forbidden is counted as warning
       errorBreakdown: {
         NotFound: 1,
         Forbidden: 1,
         Timeout: 1,
         NetworkError: 1,
+      },
+      methodsUsed: {
+        "HTTP Request": 5,
       },
     });
   });
