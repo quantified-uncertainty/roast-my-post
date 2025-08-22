@@ -109,6 +109,18 @@ async function checkLessWrongPost(url: string): Promise<{
       }
     );
 
+    // Check for GraphQL errors
+    if (response.data.errors && response.data.errors.length > 0) {
+      return {
+        accessible: false,
+        validationMethod: "LessWrong GraphQL API",
+        error: { 
+          type: "Unknown", 
+          message: `GraphQL error: ${response.data.errors[0].message || 'Unknown GraphQL error'}`
+        },
+      };
+    }
+
     if (response.data.data?.post?.result) {
       return {
         accessible: true,
@@ -218,6 +230,18 @@ async function checkEAForumPost(url: string): Promise<{
       }
     );
 
+    // Check for GraphQL errors
+    if (response.data.errors && response.data.errors.length > 0) {
+      return {
+        accessible: false,
+        validationMethod: "EA Forum GraphQL API",
+        error: { 
+          type: "Unknown", 
+          message: `GraphQL error: ${response.data.errors[0].message || 'Unknown GraphQL error'}`
+        },
+      };
+    }
+
     if (response.data.data?.post?.result) {
       return {
         accessible: true,
@@ -285,15 +309,49 @@ async function checkUrlAccess(url: string): Promise<{
   validationMethod?: "LessWrong GraphQL API" | "EA Forum GraphQL API" | "HTTP Request";
   error?: AccessError;
 }> {
-  // Check if this is a LessWrong URL
-  if (url.includes("lesswrong.com")) {
-    return checkLessWrongPost(url);
+  // Parse URL safely to check domain
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    // Check if this is a LessWrong URL
+    if (hostname === 'www.lesswrong.com' || hostname === 'lesswrong.com') {
+      const result = await checkLessWrongPost(url);
+      // If GraphQL API fails with network/server error, fallback to HTTP
+      if (result.error && (result.error.type === "NetworkError" || result.error.type === "ServerError")) {
+        console.warn('LessWrong GraphQL API failed, falling back to HTTP validation');
+        return checkUrlAccessHTTP(url);
+      }
+      return result;
+    }
+    
+    // Check if this is an EA Forum URL
+    if (hostname === 'forum.effectivealtruism.org' || hostname === 'www.forum.effectivealtruism.org') {
+      const result = await checkEAForumPost(url);
+      // If GraphQL API fails with network/server error, fallback to HTTP
+      if (result.error && (result.error.type === "NetworkError" || result.error.type === "ServerError")) {
+        console.warn('EA Forum GraphQL API failed, falling back to HTTP validation');
+        return checkUrlAccessHTTP(url);
+      }
+      return result;
+    }
+  } catch (error) {
+    // If URL parsing fails, fall through to standard HTTP validation
+    console.warn('Failed to parse URL for domain checking:', url);
   }
   
-  // Check if this is an EA Forum URL
-  if (url.includes("forum.effectivealtruism.org")) {
-    return checkEAForumPost(url);
-  }
+  return checkUrlAccessHTTP(url);
+}
+
+// Separate function for HTTP validation
+async function checkUrlAccessHTTP(url: string): Promise<{
+  accessible: boolean;
+  finalUrl?: string;
+  contentType?: string;
+  statusCode?: number;
+  validationMethod: "HTTP Request";
+  error?: AccessError;
+}> {
   
   const startTime = Date.now();
   

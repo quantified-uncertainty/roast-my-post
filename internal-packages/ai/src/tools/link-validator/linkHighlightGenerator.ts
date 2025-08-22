@@ -2,6 +2,23 @@ import type { Comment } from "../../shared/types";
 import type { LinkAnalysis } from "./urlValidator";
 
 /**
+ * Escape special Markdown characters in user-provided content
+ */
+function escapeMarkdown(text: string): string {
+  // Escape characters that could break Markdown formatting
+  return text
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/\[/g, '\\[')    // Escape square brackets
+    .replace(/\]/g, '\\]')    // Escape square brackets
+    .replace(/\*/g, '\\*')    // Escape asterisks
+    .replace(/_/g, '\\_')     // Escape underscores
+    .replace(/`/g, '\\`')     // Escape backticks
+    .replace(/>/g, '\\>')     // Escape greater-than (blockquote)
+    .replace(/#/g, '\\#')     // Escape hash (heading)
+    .replace(/\|/g, '\\|');   // Escape pipe (table)
+}
+
+/**
  * Truncate URL for display while keeping it clickable
  */
 export function formatUrlForDisplay(url: string, maxLength: number = 60): string {
@@ -205,7 +222,7 @@ export function generateLinkHighlights(
             importance = 100;
             const errorMsg =
               "message" in linkResult.accessError
-                ? linkResult.accessError.message
+                ? escapeMarkdown(linkResult.accessError.message)
                 : "Unknown error";
             description = `❌ Link error\n\n[${formatUrlForDisplay(url)}](${url}) - ${errorMsg}${methodNote}`;
         }
@@ -223,7 +240,7 @@ export function generateLinkHighlights(
         importance,
         grade,
         
-        // Required fields for new Comment interface  
+        // Required fields for Comment interface  
         header: url.length > 50 ? url.substring(0, 47) + '...' : url,
         level: grade > 0.7 ? 'success' : grade > 0.3 ? 'warning' : 'error',
         source: 'link-analysis',
