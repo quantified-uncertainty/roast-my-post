@@ -17,6 +17,8 @@ const outputSchema = z.object({
     finalUrl: z.string().optional(),
     timestamp: z.date(),
     accessible: z.boolean(),
+    severity: z.enum(["success", "warning", "error"]).describe("Severity of the validation result"),
+    validationMethod: z.enum(["LessWrong GraphQL API", "EA Forum GraphQL API", "HTTP Request"]).describe("Method used to validate the URL"),
     error: z.object({
       type: z.string(),
       message: z.string().optional(),
@@ -31,7 +33,9 @@ const outputSchema = z.object({
     totalLinks: z.number(),
     workingLinks: z.number(),
     brokenLinks: z.number(),
+    warningLinks: z.number(),
     errorBreakdown: z.record(z.string(), z.number()),
+    methodsUsed: z.record(z.string(), z.number()).describe("Count of validation methods used"),
   }).describe("Summary statistics of the link validation"),
 });
 
@@ -46,7 +50,7 @@ export class LinkValidatorTool extends Tool<LinkValidatorInput, LinkValidatorOut
     version: '1.0.0',
     category: 'analysis' as const,
     costEstimate: 'Free (no LLM usage)',
-    path: '/api/tools/link-validator',
+    path: '/tools/link-validator',
     status: 'stable' as const
   };
   
@@ -69,7 +73,9 @@ export class LinkValidatorTool extends Tool<LinkValidatorInput, LinkValidatorOut
           totalLinks: 0,
           workingLinks: 0,
           brokenLinks: 0,
+          warningLinks: 0,
           errorBreakdown: {},
+          methodsUsed: {},
         },
       };
     }
@@ -82,39 +88,64 @@ export class LinkValidatorTool extends Tool<LinkValidatorInput, LinkValidatorOut
     );
     
     // Transform LinkAnalysis results to our output format
-    const validations = validationResults.map((result: LinkAnalysis) => ({
-      url: result.url,
-      finalUrl: result.finalUrl,
-      timestamp: result.timestamp,
-      accessible: !result.accessError,
-      error: result.accessError ? {
-        type: result.accessError.type,
-        message: 'message' in result.accessError ? result.accessError.message : undefined,
-        statusCode: 'statusCode' in result.accessError ? result.accessError.statusCode : undefined,
-      } : undefined,
-      details: result.linkDetails ? {
-        contentType: result.linkDetails.contentType,
-        statusCode: result.linkDetails.statusCode,
-      } : undefined,
-    }));
+    const validations = validationResults.map((result: LinkAnalysis) => {
+      // Determine severity based on error type
+      let severity: "success" | "warning" | "error" = "success";
+      if (result.accessError) {
+        // Treat 403 Forbidden and rate limiting as warnings (site exists but blocks access)
+        if (result.accessError.type === "Forbidden" || result.accessError.type === "RateLimited") {
+          severity = "warning";
+        } else {
+          // Treat 404, network errors, timeouts as errors (site likely doesn't exist or is broken)
+          severity = "error";
+        }
+      }
+      
+      return {
+        url: result.url,
+        finalUrl: result.finalUrl,
+        timestamp: result.timestamp,
+        accessible: !result.accessError,
+        severity,
+        validationMethod: result.validationMethod,
+        error: result.accessError ? {
+          type: result.accessError.type,
+          message: 'message' in result.accessError ? result.accessError.message : undefined,
+          statusCode: 'statusCode' in result.accessError ? result.accessError.statusCode : undefined,
+        } : undefined,
+        details: result.linkDetails ? {
+          contentType: result.linkDetails.contentType,
+          statusCode: result.linkDetails.statusCode,
+        } : undefined,
+      };
+    });
     
     // Calculate summary statistics
     const errorBreakdown: Record<string, number> = {};
+    const methodsUsed: Record<string, number> = {};
     let workingLinks = 0;
     let brokenLinks = 0;
+    let warningLinks = 0;
     
     validations.forEach(validation => {
-      if (validation.accessible) {
+      if (validation.severity === "success") {
         workingLinks++;
+      } else if (validation.severity === "warning") {
+        warningLinks++;
+        if (validation.error) {
+          errorBreakdown[validation.error.type] = (errorBreakdown[validation.error.type] || 0) + 1;
+        }
       } else {
         brokenLinks++;
         if (validation.error) {
           errorBreakdown[validation.error.type] = (errorBreakdown[validation.error.type] || 0) + 1;
         }
       }
+      // Track validation methods used
+      methodsUsed[validation.validationMethod] = (methodsUsed[validation.validationMethod] || 0) + 1;
     });
     
-    context.logger.info(`[LinkValidatorTool] Validation complete: ${workingLinks} working, ${brokenLinks} broken`);
+    context.logger.info(`[LinkValidatorTool] Validation complete: ${workingLinks} working, ${warningLinks} warnings, ${brokenLinks} broken`);
     
     return {
       urls,
@@ -123,7 +154,9 @@ export class LinkValidatorTool extends Tool<LinkValidatorInput, LinkValidatorOut
         totalLinks: urls.length,
         workingLinks,
         brokenLinks,
+        warningLinks,
         errorBreakdown,
+        methodsUsed,
       },
     };
   }

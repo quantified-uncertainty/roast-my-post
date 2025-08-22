@@ -171,23 +171,34 @@ export function generateLinkHighlights(
       let importance: number;
       let description: string;
 
+      // Get validation method info
+      const validationMethod = linkResult.validationMethod || "HTTP Request";
+      const methodNote = validationMethod !== "HTTP Request" ? ` (verified via ${validationMethod})` : "";
+      
       if (linkResult.accessError) {
         // Handle different error types
         switch (linkResult.accessError.type) {
           case "NotFound":
             grade = 0;
             importance = 100;
-            description = `❌ Broken link\n\n[${formatUrlForDisplay(url)}](${url}) - Page not found (HTTP 404)`;
+            description = `❌ Broken link\n\n[${formatUrlForDisplay(url)}](${url}) - Page not found (HTTP 404)${methodNote}`;
             break;
           case "Forbidden":
-            grade = 0;
-            importance = 100;
-            description = `🚫 Access denied\n\n[${formatUrlForDisplay(url)}](${url}) - Access forbidden (HTTP 403)`;
+            // Treat 403 as a warning, not an error (site exists but blocks access)
+            grade = 50;
+            importance = 50;
+            description = `⚠️ Access restricted\n\n[${formatUrlForDisplay(url)}](${url}) - Site exists but blocks automated access (HTTP 403)${methodNote}`;
+            break;
+          case "RateLimited":
+            // Also treat rate limiting as a warning
+            grade = 50;
+            importance = 50;
+            description = `⚠️ Rate limited\n\n[${formatUrlForDisplay(url)}](${url}) - Site exists but temporarily rate limited${methodNote}`;
             break;
           case "Timeout":
             grade = 0;
             importance = 100;
-            description = `⏱️ Link timeout\n\n[${formatUrlForDisplay(url)}](${url}) - Request timed out`;
+            description = `⏱️ Link timeout\n\n[${formatUrlForDisplay(url)}](${url}) - Request timed out${methodNote}`;
             break;
           default:
             grade = 0;
@@ -196,13 +207,14 @@ export function generateLinkHighlights(
               "message" in linkResult.accessError
                 ? linkResult.accessError.message
                 : "Unknown error";
-            description = `❌ Link error\n\n[${formatUrlForDisplay(url)}](${url}) - ${errorMsg}`;
+            description = `❌ Link error\n\n[${formatUrlForDisplay(url)}](${url}) - ${errorMsg}${methodNote}`;
         }
       } else {
         // URL is accessible - simple verification
         grade = 90;
         importance = 10;
-        description = `✅ Link verified\n\n[${formatUrlForDisplay(url)}](${url}) - Server responded successfully (HTTP 200)`;
+        const statusCode = linkResult.linkDetails?.statusCode || 200;
+        description = `✅ Link verified\n\n[${formatUrlForDisplay(url)}](${url}) - Server responded successfully (HTTP ${statusCode})${methodNote}`;
       }
 
       highlights.push({

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import axios from "axios";
 
 // Access error types
 export const AccessErrorSchema = z.discriminatedUnion("type", [
@@ -41,6 +42,7 @@ export const LinkAnalysisSchema = z.object({
   url: z.string(),
   finalUrl: z.string().optional(),
   timestamp: z.date(),
+  validationMethod: z.enum(["LessWrong GraphQL API", "EA Forum GraphQL API", "HTTP Request"]),
   accessError: AccessErrorSchema.optional(),
   linkDetails: z.object({
     contentType: z.string(),
@@ -57,14 +59,242 @@ export const UrlValidationInputSchema = z.object({
 
 export type UrlValidationInput = z.infer<typeof UrlValidationInputSchema>;
 
+/**
+ * Check if a LessWrong post exists and is accessible
+ */
+async function checkLessWrongPost(url: string): Promise<{
+  accessible: boolean;
+  finalUrl?: string;
+  contentType?: string;
+  statusCode?: number;
+  validationMethod: "LessWrong GraphQL API";
+  error?: AccessError;
+}> {
+  try {
+    // Extract the post ID from the URL
+    const postId = url.split("/posts/")[1]?.split("/")[0];
+    if (!postId) {
+      return {
+        accessible: false,
+        validationMethod: "LessWrong GraphQL API",
+        error: { type: "Unknown", message: "Could not extract post ID from LessWrong URL" },
+      };
+    }
+
+    const query = `
+      query GetPost($postId: String!) {
+        post(input: { selector: { _id: $postId } }) {
+          result {
+            _id
+            title
+            postedAt
+          }
+        }
+      }
+    `;
+
+    const response = await axios.post(
+      "https://www.lesswrong.com/graphql",
+      { 
+        query,
+        variables: { postId }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        },
+        timeout: 10000, // 10 second timeout
+      }
+    );
+
+    if (response.data.data?.post?.result) {
+      return {
+        accessible: true,
+        finalUrl: url,
+        contentType: "text/html",
+        statusCode: 200,
+        validationMethod: "LessWrong GraphQL API",
+      };
+    } else {
+      return {
+        accessible: false,
+        validationMethod: "LessWrong GraphQL API",
+        error: { type: "NotFound", statusCode: 404 },
+      };
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        return {
+          accessible: false,
+          validationMethod: "LessWrong GraphQL API",
+          error: { type: "Timeout", duration: 10000 },
+        };
+      }
+      if (error.response?.status === 404) {
+        return {
+          accessible: false,
+          validationMethod: "LessWrong GraphQL API",
+          error: { type: "NotFound", statusCode: 404 },
+        };
+      }
+      if (error.response?.status === 429) {
+        return {
+          accessible: false,
+          validationMethod: "LessWrong GraphQL API",
+          error: { type: "RateLimited" },
+        };
+      }
+      if (error.response?.status && error.response.status >= 500) {
+        return {
+          accessible: false,
+          validationMethod: "LessWrong GraphQL API",
+          error: { type: "ServerError", statusCode: error.response.status },
+        };
+      }
+    }
+    
+    return {
+      accessible: false,
+      validationMethod: "LessWrong GraphQL API",
+      error: { 
+        type: "NetworkError", 
+        message: error instanceof Error ? error.message : "Unknown error accessing LessWrong API",
+        retryable: true,
+      },
+    };
+  }
+}
+
+/**
+ * Check if an EA Forum post exists and is accessible
+ */
+async function checkEAForumPost(url: string): Promise<{
+  accessible: boolean;
+  finalUrl?: string;
+  contentType?: string;
+  statusCode?: number;
+  validationMethod: "EA Forum GraphQL API";
+  error?: AccessError;
+}> {
+  try {
+    // Extract the post ID from the URL
+    const postId = url.split("/posts/")[1]?.split("/")[0];
+    if (!postId) {
+      return {
+        accessible: false,
+        validationMethod: "EA Forum GraphQL API",
+        error: { type: "Unknown", message: "Could not extract post ID from EA Forum URL" },
+      };
+    }
+
+    const query = `
+      query GetPost($postId: String!) {
+        post(input: { selector: { _id: $postId } }) {
+          result {
+            _id
+            title
+            postedAt
+          }
+        }
+      }
+    `;
+
+    const response = await axios.post(
+      "https://forum.effectivealtruism.org/graphql",
+      { 
+        query,
+        variables: { postId }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        },
+        timeout: 10000, // 10 second timeout
+      }
+    );
+
+    if (response.data.data?.post?.result) {
+      return {
+        accessible: true,
+        finalUrl: url,
+        contentType: "text/html",
+        statusCode: 200,
+        validationMethod: "EA Forum GraphQL API",
+      };
+    } else {
+      return {
+        accessible: false,
+        validationMethod: "EA Forum GraphQL API",
+        error: { type: "NotFound", statusCode: 404 },
+      };
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        return {
+          accessible: false,
+          validationMethod: "EA Forum GraphQL API",
+          error: { type: "Timeout", duration: 10000 },
+        };
+      }
+      if (error.response?.status === 404) {
+        return {
+          accessible: false,
+          validationMethod: "EA Forum GraphQL API",
+          error: { type: "NotFound", statusCode: 404 },
+        };
+      }
+      if (error.response?.status === 429) {
+        return {
+          accessible: false,
+          validationMethod: "EA Forum GraphQL API",
+          error: { type: "RateLimited" },
+        };
+      }
+      if (error.response?.status && error.response.status >= 500) {
+        return {
+          accessible: false,
+          validationMethod: "EA Forum GraphQL API",
+          error: { type: "ServerError", statusCode: error.response.status },
+        };
+      }
+    }
+    
+    return {
+      accessible: false,
+      validationMethod: "EA Forum GraphQL API",
+      error: { 
+        type: "NetworkError", 
+        message: error instanceof Error ? error.message : "Unknown error accessing EA Forum API",
+        retryable: true,
+      },
+    };
+  }
+}
 
 async function checkUrlAccess(url: string): Promise<{
   accessible: boolean;
   finalUrl?: string;
   contentType?: string;
   statusCode?: number;
+  validationMethod?: "LessWrong GraphQL API" | "EA Forum GraphQL API" | "HTTP Request";
   error?: AccessError;
 }> {
+  // Check if this is a LessWrong URL
+  if (url.includes("lesswrong.com")) {
+    return checkLessWrongPost(url);
+  }
+  
+  // Check if this is an EA Forum URL
+  if (url.includes("forum.effectivealtruism.org")) {
+    return checkEAForumPost(url);
+  }
+  
   const startTime = Date.now();
   
   // Try different strategies: HEAD first, then GET with different User-Agents
@@ -111,6 +341,7 @@ async function checkUrlAccess(url: string): Promise<{
       if (response.status === 404) {
         return {
           accessible: false,
+          validationMethod: "HTTP Request",
           error: { type: "NotFound", statusCode: 404 },
         };
       }
@@ -118,6 +349,7 @@ async function checkUrlAccess(url: string): Promise<{
       if (response.status === 403) {
         return {
           accessible: false,
+          validationMethod: "HTTP Request",
           error: { type: "Forbidden", statusCode: 403 },
         };
       }
@@ -126,6 +358,7 @@ async function checkUrlAccess(url: string): Promise<{
         const resetTime = response.headers.get("x-ratelimit-reset");
         return {
           accessible: false,
+          validationMethod: "HTTP Request",
           error: { 
             type: "RateLimited", 
             resetTime: resetTime ? parseInt(resetTime) : undefined 
@@ -136,6 +369,7 @@ async function checkUrlAccess(url: string): Promise<{
       if (response.status >= 500) {
         return {
           accessible: false,
+          validationMethod: "HTTP Request",
           error: { type: "ServerError", statusCode: response.status },
         };
       }
@@ -143,6 +377,7 @@ async function checkUrlAccess(url: string): Promise<{
       if (!response.ok) {
         return {
           accessible: false,
+          validationMethod: "HTTP Request",
           error: { 
             type: "Unknown", 
             message: `HTTP ${response.status}: ${response.statusText}` 
@@ -156,6 +391,7 @@ async function checkUrlAccess(url: string): Promise<{
         finalUrl: response.url,
         contentType,
         statusCode: response.status,
+        validationMethod: "HTTP Request",
       };
       
     } catch (error) {
@@ -177,6 +413,7 @@ async function checkUrlAccess(url: string): Promise<{
     if (lastError.name === "AbortError") {
       return {
         accessible: false,
+        validationMethod: "HTTP Request",
         error: { type: "Timeout", duration },
       };
     }
@@ -186,6 +423,7 @@ async function checkUrlAccess(url: string): Promise<{
         lastError.message.includes("ERR_NAME_NOT_RESOLVED")) {
       return {
         accessible: false,
+        validationMethod: "HTTP Request",
         error: { 
           type: "NetworkError", 
           message: "Domain not found or connection refused",
@@ -200,6 +438,7 @@ async function checkUrlAccess(url: string): Promise<{
         lastError.message.includes("TLS")) {
       return {
         accessible: false,
+        validationMethod: "HTTP Request",
         error: { 
           type: "NetworkError", 
           message: "SSL/TLS certificate error",
@@ -210,6 +449,7 @@ async function checkUrlAccess(url: string): Promise<{
     
     return {
       accessible: false,
+      validationMethod: "HTTP Request",
       error: { 
         type: "NetworkError", 
         message: lastError.message,
@@ -220,6 +460,7 @@ async function checkUrlAccess(url: string): Promise<{
   
   return {
     accessible: false,
+    validationMethod: "HTTP Request",
     error: { type: "Unknown", message: "All request methods failed" },
   };
 }
@@ -238,6 +479,7 @@ export async function validateUrl(
       url: input.url,
       finalUrl: accessCheck.finalUrl,
       timestamp,
+      validationMethod: accessCheck.validationMethod || "HTTP Request",
       accessError: accessCheck.error,
     };
   }
@@ -247,6 +489,7 @@ export async function validateUrl(
     url: input.url,
     finalUrl: accessCheck.finalUrl,
     timestamp,
+    validationMethod: accessCheck.validationMethod || "HTTP Request",
     linkDetails: {
       contentType: accessCheck.contentType!,
       statusCode: accessCheck.statusCode!,
