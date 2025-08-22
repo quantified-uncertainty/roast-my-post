@@ -59,6 +59,7 @@ export default async function UserAgentsPage({
         primaryInstructions: latestVersion.primaryInstructions || undefined,
         selfCritiqueInstructions: latestVersion.selfCritiqueInstructions || undefined,
         providesGrades: latestVersion.providesGrades ?? false,
+        isSystemManaged: agent.isSystemManaged ?? false,
       };
     });
 

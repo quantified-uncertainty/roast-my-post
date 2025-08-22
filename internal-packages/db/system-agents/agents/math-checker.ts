@@ -3,11 +3,11 @@ import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types'
 
 export const mathCheckerAgent: SystemAgentDefinition = {
   id: 'system-math-checker',
-  name: 'Mathematical Accuracy Checker',
+  name: 'Math Checker',
   description: 'Verifies mathematical statements, calculations, and formulas for correctness',
   providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.MATH],
-  readme: `# Mathematical Accuracy Checker
+  readme: `# Math Checker
 
 An agent that verifies mathematical statements, calculations, and formulas for accuracy. Combines computational verification with conceptual analysis to catch errors in arithmetic, algebra, statistics, and mathematical reasoning.
 

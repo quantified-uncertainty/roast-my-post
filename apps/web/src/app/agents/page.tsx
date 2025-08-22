@@ -34,6 +34,7 @@ export default async function AgentsPage() {
     primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,
     extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
     providesGrades: dbAgent.versions[0].providesGrades || false,
+    isSystemManaged: dbAgent.isSystemManaged || false,
   }));
 
   return (

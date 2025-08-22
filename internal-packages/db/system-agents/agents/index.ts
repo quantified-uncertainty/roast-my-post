@@ -2,8 +2,8 @@ import { spellingGrammarAgent } from './spelling-grammar';
 import { mathCheckerAgent } from './math-checker';
 import { factCheckerAgent } from './fact-checker';
 import { forecastCheckerAgent } from './forecast-checker';
-import { epistemicVerificationAgent } from './epistemic-verification';
-import { linkVerifierAgent } from './link-verifier';
+import { comprehensiveCheckerAgent } from './comprehensive-checker';
+import { linkCheckerAgent } from './link-checker';
 import { SystemAgentDefinition } from '../types';
 
 export const systemAgents: SystemAgentDefinition[] = [
@@ -11,8 +11,8 @@ export const systemAgents: SystemAgentDefinition[] = [
   mathCheckerAgent,
   factCheckerAgent,
   forecastCheckerAgent,
-  epistemicVerificationAgent,
-  linkVerifierAgent,
+  comprehensiveCheckerAgent,
+  linkCheckerAgent,
 ];
 
 export {
@@ -20,6 +20,6 @@ export {
   mathCheckerAgent,
   factCheckerAgent,
   forecastCheckerAgent,
-  epistemicVerificationAgent,
-  linkVerifierAgent,
+  comprehensiveCheckerAgent,
+  linkCheckerAgent,
 };

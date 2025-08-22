@@ -1,13 +1,13 @@
 import { SystemAgentDefinition } from '../types';
 import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types';
 
-export const linkVerifierAgent: SystemAgentDefinition = {
+export const linkCheckerAgent: SystemAgentDefinition = {
   id: 'system-link-verifier',
-  name: 'Link Verifier',
+  name: 'Link Checker',
   description: 'Validates external links in documents, checking for broken URLs, redirects, and accessibility issues',
   providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.LINK_ANALYSIS],
-  readme: `# Link Verifier
+  readme: `# Link Checker
 
 An automated link validation agent that checks all external URLs in documents for accessibility, validity, and potential issues. Provides detailed reporting on broken links, redirects, and connection problems.
 
