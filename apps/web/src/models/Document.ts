@@ -891,22 +891,10 @@ export class DocumentModel {
                 summary: true,
                 analysis: true,
                 selfCritique: true,
-                // Minimal comment data for count only
-                comments: {
+                // Only get comment count for document list - no need for actual comments or highlights
+                _count: {
                   select: {
-                    id: true,
-                    description: true,
-                    importance: true,
-                    grade: true,
-                    highlight: {
-                      select: {
-                        id: true,
-                        startOffset: true,
-                        endOffset: true,
-                        quotedText: true,
-                        isValid: true,
-                      },
-                    },
+                    comments: true,
                   },
                 },
                 documentVersion: {
@@ -974,21 +962,23 @@ export class DocumentModel {
             },
             createdAt: new Date(latestEvalVersion?.createdAt || evaluation.createdAt),
             priceInDollars: 0, // Not needed for listings
-            comments: latestEvalVersion?.comments?.map((comment: any) => ({
-              id: comment.id,
-              description: comment.description,
-              importance: comment.importance || null,
-              grade: comment.grade || null,
+            // Create empty comments array with proper length for count display
+            // The actual comment content is not needed for document listings
+            comments: Array(latestEvalVersion?._count?.comments || 0).fill({
+              id: '',
+              description: '',
+              importance: null,
+              grade: null,
               highlight: {
-                id: comment.highlight.id,
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                quotedText: comment.highlight.quotedText,
-                isValid: comment.highlight.isValid,
+                id: '',
+                startOffset: 0,
+                endOffset: 0,
+                quotedText: '',
+                isValid: true,
                 prefix: null,
                 error: null,
               },
-            })) || [],
+            }),
             thinking: "",
             summary: latestEvalVersion?.summary || "",
             analysis: latestEvalVersion?.analysis || "",
