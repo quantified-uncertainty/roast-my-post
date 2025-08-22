@@ -796,201 +796,165 @@ export class DocumentModel {
     return document as Document;
   }
 
+  /**
+   * Shared query configuration for document listings (optimized for performance)
+   * Only fetches comment counts instead of full comments/highlights
+   */
+  private static getDocumentListingInclude() {
+    return {
+      versions: {
+        orderBy: { version: "desc" as const },
+        take: 1,
+      },
+      evaluations: {
+        include: {
+          jobs: {
+            orderBy: {
+              createdAt: "desc" as const,
+            },
+            take: 1,
+          },
+          agent: {
+            include: {
+              versions: {
+                orderBy: {
+                  version: "desc" as const,
+                },
+                take: 1,
+              },
+            },
+          },
+          versions: {
+            select: {
+              id: true,
+              version: true,
+              createdAt: true,
+              grade: true,
+              summary: true,
+              analysis: true,
+              selfCritique: true,
+              // Only get comment count for listings - no need for actual comments or highlights
+              _count: {
+                select: {
+                  comments: true,
+                },
+              },
+              documentVersion: {
+                select: {
+                  version: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc" as const,
+            },
+            take: 1, // Limit to one version for performance
+          },
+        },
+      },
+    };
+  }
+
+  /**
+   * Formats a document from the database for listing views
+   * Uses comment counts instead of full comment data
+   */
+  private static formatDocumentForListing(dbDoc: any): Document {
+    const latestVersion = dbDoc.versions[0];
+    const currentDocumentVersion = latestVersion.version;
+
+    return {
+      id: dbDoc.id,
+      slug: dbDoc.id,
+      title: latestVersion.title,
+      content: getFullContent(latestVersion),
+      author: latestVersion.authors.join(", "),
+      publishedDate: dbDoc.publishedDate.toISOString(),
+      url: latestVersion.urls[0] || "",
+      importUrl: latestVersion.importUrl || undefined,
+      platforms: latestVersion.platforms,
+      intendedAgents: latestVersion.intendedAgents,
+      submittedById: dbDoc.submittedById,
+      submittedBy: dbDoc.submittedBy
+        ? {
+            id: dbDoc.submittedBy.id,
+            name: dbDoc.submittedBy.name,
+            email: null, // Explicitly set to null for privacy
+            image: dbDoc.submittedBy.image,
+          }
+        : undefined,
+      createdAt: dbDoc.createdAt,
+      updatedAt: dbDoc.updatedAt,
+      reviews: dbDoc.evaluations.map((evaluation: any) => {
+        const latestEvalVersion = evaluation.versions[0];
+        const isStale = latestEvalVersion && latestEvalVersion.documentVersion.version !== currentDocumentVersion;
+
+        return {
+          id: evaluation.id,
+          agentId: evaluation.agent.id,
+          agent: {
+            id: evaluation.agent.id,
+            name: evaluation.agent.versions[0].name,
+            version: evaluation.agent.versions[0].version.toString(),
+            description: evaluation.agent.versions[0].description,
+            primaryInstructions: evaluation.agent.versions[0].primaryInstructions,
+            selfCritiqueInstructions: evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
+          },
+          createdAt: new Date(latestEvalVersion?.createdAt || evaluation.createdAt),
+          priceInDollars: 0, // Not needed for listings
+          // Create empty comments array with proper length for count display
+          comments: Array(latestEvalVersion?._count?.comments || 0).fill({
+            id: '',
+            description: '',
+            importance: null,
+            grade: null,
+            highlight: {
+              id: '',
+              startOffset: 0,
+              endOffset: 0,
+              quotedText: '',
+              isValid: true,
+              prefix: null,
+              error: null,
+            },
+          }),
+          thinking: "",
+          summary: latestEvalVersion?.summary || "",
+          analysis: latestEvalVersion?.analysis || "",
+          grade: latestEvalVersion?.grade ?? null,
+          selfCritique: latestEvalVersion?.selfCritique || undefined,
+          versions: [], // Not needed for listings
+          jobs: evaluation.jobs || [],
+          isStale,
+        };
+      }),
+    } as Document;
+  }
+
   static async getUserDocumentsWithEvaluations(userId: string, limit: number = 50): Promise<Document[]> {
     const dbDocs = await prisma.document.findMany({
       where: { submittedById: userId },
       orderBy: { publishedDate: "desc" },
       take: limit,
       include: {
-        versions: true,
+        ...DocumentModel.getDocumentListingInclude(),
         submittedBy: {
           select: getPublicUserFields(),
-        },
-        evaluations: {
-          include: {
-            jobs: {
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-            agent: {
-              include: {
-                versions: {
-                  orderBy: {
-                    version: "desc",
-                  },
-                  take: 1,
-                },
-              },
-            },
-            versions: {
-              include: {
-                comments: {
-                  include: {
-                    highlight: {
-                      select: {
-                        id: true,
-                        startOffset: true,
-                        endOffset: true,
-                        prefix: true,
-                        quotedText: true,
-                        isValid: true,
-                        error: true,
-                      },
-                    },
-                  },
-                },
-                job: {
-                  include: {
-                    tasks: true,
-                  },
-                },
-                documentVersion: {
-                  select: {
-                    version: true,
-                  },
-                },
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-          },
         },
       },
     });
 
-    return dbDocs.map((dbDoc) => DocumentModel.formatDocumentFromDB(dbDoc));
+    return dbDocs.map((dbDoc) => DocumentModel.formatDocumentForListing(dbDoc));
   }
 
   static async getRecentDocumentsWithEvaluations(limit: number = 50): Promise<Document[]> {
     const dbDocs = await prisma.document.findMany({
       take: limit,
       orderBy: { publishedDate: "desc" },
-      include: {
-        versions: {
-          orderBy: { version: "desc" },
-          take: 1,
-        },
-        evaluations: {
-          include: {
-            agent: {
-              include: {
-                versions: {
-                  orderBy: { version: "desc" },
-                  take: 1,
-                },
-              },
-            },
-            versions: {
-              select: {
-                id: true,
-                version: true,
-                createdAt: true,
-                grade: true,
-                summary: true,
-                analysis: true,
-                selfCritique: true,
-                // Only get comment count for document list - no need for actual comments or highlights
-                _count: {
-                  select: {
-                    comments: true,
-                  },
-                },
-                documentVersion: {
-                  select: {
-                    version: true,
-                  },
-                },
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-              take: 1, // Limit to one version for performance in listings
-            },
-            jobs: {
-              select: {
-                id: true,
-                status: true,
-                createdAt: true,
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-              take: 1,
-            },
-          },
-        },
-      },
+      include: DocumentModel.getDocumentListingInclude(),
     });
 
-    // Simplified document formatting for listings
-    return dbDocs.map((dbDoc) => {
-      const latestVersion = dbDoc.versions[0];
-      const currentDocumentVersion = latestVersion.version;
-
-      return {
-        id: dbDoc.id,
-        slug: dbDoc.id,
-        title: latestVersion.title,
-        // Include prepend in content for display (matches what was used during analysis)
-        content: getFullContent(latestVersion),
-        author: latestVersion.authors.join(", "),
-        publishedDate: dbDoc.publishedDate.toISOString(),
-        url: latestVersion.urls[0] || "",
-        importUrl: latestVersion.importUrl || undefined,
-        platforms: latestVersion.platforms,
-        intendedAgents: latestVersion.intendedAgents,
-        submittedById: dbDoc.submittedById,
-        submittedBy: undefined, // Not needed for listings
-        createdAt: dbDoc.createdAt,
-        updatedAt: dbDoc.updatedAt,
-        reviews: dbDoc.evaluations.map((evaluation: any) => {
-          const latestEvalVersion = evaluation.versions[0];
-          const isStale = latestEvalVersion && latestEvalVersion.documentVersion.version !== currentDocumentVersion;
-
-          return {
-            id: evaluation.id,
-            agentId: evaluation.agent.id,
-            agent: {
-              id: evaluation.agent.id,
-              name: evaluation.agent.versions[0].name,
-              version: evaluation.agent.versions[0].version.toString(),
-              description: evaluation.agent.versions[0].description,
-              primaryInstructions: evaluation.agent.versions[0].primaryInstructions,
-              selfCritiqueInstructions: evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
-            },
-            createdAt: new Date(latestEvalVersion?.createdAt || evaluation.createdAt),
-            priceInDollars: 0, // Not needed for listings
-            // Create empty comments array with proper length for count display
-            // The actual comment content is not needed for document listings
-            comments: Array(latestEvalVersion?._count?.comments || 0).fill({
-              id: '',
-              description: '',
-              importance: null,
-              grade: null,
-              highlight: {
-                id: '',
-                startOffset: 0,
-                endOffset: 0,
-                quotedText: '',
-                isValid: true,
-                prefix: null,
-                error: null,
-              },
-            }),
-            thinking: "",
-            summary: latestEvalVersion?.summary || "",
-            analysis: latestEvalVersion?.analysis || "",
-            grade: latestEvalVersion?.grade ?? null,
-            selfCritique: latestEvalVersion?.selfCritique || undefined,
-            versions: [], // Not needed for listings
-            jobs: evaluation.jobs || [],
-            isStale,
-          };
-        }),
-      } as Document;
-    });
+    return dbDocs.map((dbDoc) => DocumentModel.formatDocumentForListing(dbDoc));
   }
 
   static async getAllDocumentsWithEvaluations(): Promise<Document[]> {
