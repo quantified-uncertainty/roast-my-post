@@ -62,7 +62,7 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
     version: '1.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.02 per extraction (1 Claude call)',
-    path: '/api/tools/extract-math-expressions',
+    path: '/tools/extract-math-expressions',
     status: 'stable' as const
   };
   

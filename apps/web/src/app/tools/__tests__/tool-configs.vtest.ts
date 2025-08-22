@@ -96,7 +96,8 @@ describe('Tool Configurations', () => {
         'check-math',
         'fact-checker',
         'fuzzy-text-locator',
-        'perplexity-research'
+        'perplexity-research',
+        'link-validator'
       ];
 
       majorToolIds.forEach(toolId => {
