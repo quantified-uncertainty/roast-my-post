@@ -126,6 +126,233 @@ type DocumentWithRelations = {
 
 export class DocumentModel {
   /**
+   * Gets a document with evaluation version metadata only (for version history views).
+   * This fetches all versions but without comments/highlights for performance.
+   * Use this when you need to show version history but don't need the actual comments.
+   * 
+   * @param docId - The document ID to fetch
+   * @param includeStale - Whether to include stale evaluations (default: false)
+   * @returns The document with evaluation version metadata
+   */
+  static async getDocumentWithEvaluationVersions(
+    docId: string,
+    includeStale: boolean = false
+  ): Promise<Document | null> {
+    const dbDoc = (await prisma.document.findUnique({
+      where: { id: docId },
+      include: {
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            // Explicitly exclude email for privacy
+          },
+        },
+        versions: {
+          orderBy: {
+            version: "desc",
+          },
+          take: 1,
+        },
+        evaluations: {
+          where: includeStale ? {} : {
+            // Only include evaluations that have at least one non-stale version
+            versions: {
+              some: {
+                isStale: false,
+              },
+            },
+          },
+          include: {
+            jobs: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+            agent: {
+              include: {
+                versions: {
+                  orderBy: {
+                    version: "desc",
+                  },
+                  take: 1,
+                },
+              },
+            },
+            versions: {
+              select: {
+                id: true,
+                version: true,
+                createdAt: true,
+                summary: true,
+                analysis: true,
+                grade: true,
+                selfCritique: true,
+                isStale: true,
+                // Only get comment count for version metadata
+                _count: {
+                  select: {
+                    comments: true,
+                  },
+                },
+                job: {
+                  select: {
+                    id: true,
+                    status: true,
+                    priceInDollars: true,
+                    durationInSeconds: true,
+                    llmThinking: true,
+                  },
+                },
+                documentVersion: {
+                  select: {
+                    version: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+          },
+        },
+      },
+    })) as unknown as DocumentWithRelations | null;
+
+    if (!dbDoc || !dbDoc.versions.length) {
+      return null;
+    }
+
+    const latestVersion = dbDoc.versions[0];
+    const currentDocumentVersion = latestVersion.version;
+
+    // Transform database document to frontend Document shape
+    const document: Document = {
+      id: dbDoc.id,
+      slug: dbDoc.id,
+      title: latestVersion.title,
+      content: getFullContent(latestVersion),
+      author: latestVersion.authors.join(", "),
+      publishedDate: dbDoc.publishedDate.toISOString(),
+      url: latestVersion.urls[0] || "",
+      importUrl: latestVersion.importUrl || undefined,
+      platforms: latestVersion.platforms,
+      intendedAgents: latestVersion.intendedAgents,
+      submittedById: dbDoc.submittedById,
+      submittedBy: dbDoc.submittedBy
+        ? {
+            id: dbDoc.submittedBy.id,
+            name: dbDoc.submittedBy.name,
+            email: null,
+            image: dbDoc.submittedBy.image,
+          }
+        : undefined,
+      createdAt: dbDoc.createdAt,
+      updatedAt: dbDoc.updatedAt,
+      reviews: dbDoc.evaluations.map((evaluation: any) => {
+        // Map all evaluation versions with basic metadata only
+        const evaluationVersions = evaluation.versions.map((version: any) => {
+          const isStale = version.documentVersion.version !== currentDocumentVersion;
+          
+          return {
+            id: version.id,
+            version: version.version || 1,
+            createdAt: new Date(version.createdAt),
+            job: version.job
+              ? {
+                  id: version.job.id,
+                  status: version.job.status,
+                  priceInDollars: convertPriceToNumber(version.job.priceInDollars) || 0,
+                  llmThinking: version.job.llmThinking || "",
+                  durationInSeconds: version.job.durationInSeconds || undefined,
+                }
+              : undefined,
+            // Create placeholder comments array with count only
+            comments: Array(version._count?.comments || 0).fill({
+              id: '',
+              description: '',
+              importance: null,
+              grade: null,
+              highlight: {
+                id: '',
+                startOffset: 0,
+                endOffset: 0,
+                quotedText: '',
+                isValid: true,
+                prefix: null,
+                error: null,
+              },
+            }),
+            summary: version.summary || "",
+            analysis: version.analysis || undefined,
+            grade: version.grade ?? null,
+            selfCritique: version.selfCritique || undefined,
+            documentVersion: {
+              version: version.documentVersion.version,
+            },
+            isStale,
+          };
+        });
+
+        // Use the first version for main evaluation data
+        const latestVersion = evaluation.versions[0];
+        const evaluationIsStale = latestVersion && latestVersion.documentVersion.version !== currentDocumentVersion;
+
+        return {
+          id: evaluation.id,
+          agentId: evaluation.agent.id,
+          agent: {
+            id: evaluation.agent.id,
+            name: evaluation.agent.versions[0].name,
+            version: evaluation.agent.versions[0].version.toString(),
+            description: evaluation.agent.versions[0].description,
+            primaryInstructions:
+              evaluation.agent.versions[0].primaryInstructions,
+            selfCritiqueInstructions:
+              evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
+          },
+          createdAt: new Date(
+            latestVersion?.createdAt || evaluation.createdAt
+          ),
+          priceInDollars: convertPriceToNumber(latestVersion?.job?.priceInDollars) || 0,
+          // Use count from latest version only
+          comments: Array(latestVersion?._count?.comments || 0).fill({
+            id: '',
+            description: '',
+            importance: null,
+            grade: null,
+            highlight: {
+              id: '',
+              startOffset: 0,
+              endOffset: 0,
+              quotedText: '',
+              isValid: true,
+              prefix: null,
+              error: null,
+            },
+          }),
+          thinking: latestVersion?.job?.llmThinking || "",
+          summary: latestVersion?.summary || "",
+          analysis: latestVersion?.analysis || "",
+          grade: latestVersion?.grade ?? null,
+          selfCritique: latestVersion?.selfCritique || undefined,
+          versions: evaluationVersions,
+          jobs: (evaluation.jobs || []).map((job: any) => ({
+            id: job.id,
+            status: job.status,
+            createdAt: job.createdAt,
+            priceInDollars: convertPriceToNumber(job.priceInDollars),
+          })),
+          isStale: evaluationIsStale,
+        };
+      }),
+    };
+
+    return document as Document;
+  }
+
+  /**
    * Retrieves a document with its evaluations, optionally filtering out stale evaluations.
    * 
    * @param docId - The unique identifier of the document
@@ -182,16 +409,7 @@ export class DocumentModel {
               },
             },
             versions: {
-              select: {
-                id: true,
-                version: true,
-                createdAt: true,
-                summary: true,
-                analysis: true,
-                grade: true,
-                selfCritique: true,
-                isStale: true,
-                // Only include comments for the first (latest) version
+              include: {
                 comments: {
                   include: {
                     highlight: {
@@ -221,7 +439,6 @@ export class DocumentModel {
               orderBy: {
                 createdAt: "desc",
               },
-              take: 1, // Only fetch the latest version with full data
             },
           },
         },
@@ -860,6 +1077,10 @@ export class DocumentModel {
    * Uses comment counts instead of full comment data
    */
   private static formatDocumentForListing(dbDoc: any): Document {
+    if (!dbDoc.versions || dbDoc.versions.length === 0) {
+      throw new Error(`Document ${dbDoc.id} has no versions`);
+    }
+    
     const latestVersion = dbDoc.versions[0];
     const currentDocumentVersion = latestVersion.version;
 
