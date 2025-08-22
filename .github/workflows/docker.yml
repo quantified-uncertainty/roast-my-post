@@ -173,6 +173,7 @@ jobs:
           EXPECTED_TAG="sha-${{ github.sha }}"
           DEPLOYED_IMAGES=$(/usr/local/bin/argocd app get ${ARGOCD_APP} \
             --server ${ARGOCD_SERVER} \
+            --refresh \
             --output json | jq -r '.status.summary.images[]')
           
           echo "Expected tag: ${EXPECTED_TAG}"
