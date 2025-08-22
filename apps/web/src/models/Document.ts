@@ -124,6 +124,220 @@ type DocumentWithRelations = {
   }>;
 };
 
+/**
+ * Query builders for different parts of the document query
+ */
+class DocumentQueryBuilder {
+  /**
+   * Base include for document versions (always need latest)
+   */
+  static documentVersions() {
+    return {
+      orderBy: { version: "desc" as const },
+      take: 1,
+    };
+  }
+
+  /**
+   * Base include for agent versions (always need latest)
+   */
+  static agentVersions() {
+    return {
+      orderBy: { version: "desc" as const },
+      take: 1,
+    };
+  }
+
+  /**
+   * Jobs query configuration
+   */
+  static jobs(options: { limit?: number } = {}) {
+    return {
+      orderBy: { createdAt: "desc" as const },
+      ...(options.limit && { take: options.limit }),
+    };
+  }
+
+  /**
+   * Comment configuration based on needs
+   */
+  static comments(mode: 'full' | 'count' | 'none') {
+    if (mode === 'none') return false;
+    if (mode === 'count') {
+      return {
+        _count: {
+          select: { comments: true },
+        },
+      };
+    }
+    return {
+      comments: {
+        include: {
+          highlight: {
+            select: {
+              id: true,
+              startOffset: true,
+              endOffset: true,
+              prefix: true,
+              quotedText: true,
+              isValid: true,
+              error: true,
+            },
+          },
+        },
+      },
+    };
+  }
+
+  /**
+   * Evaluation version configuration based on needs
+   */
+  static evaluationVersions(options: {
+    commentMode: 'full' | 'count' | 'none';
+    limit?: number;
+    includeJob?: boolean;
+  }) {
+    const base: any = {
+      orderBy: { createdAt: "desc" as const },
+      ...(options.limit && { take: options.limit }),
+    };
+
+    if (options.commentMode === 'full') {
+      return {
+        ...base,
+        include: {
+          ...this.comments('full'),
+          ...(options.includeJob && {
+            job: {
+              include: { tasks: true },
+            },
+          }),
+          documentVersion: {
+            select: { version: true },
+          },
+        },
+      };
+    } else if (options.commentMode === 'count') {
+      return {
+        ...base,
+        select: {
+          id: true,
+          version: true,
+          createdAt: true,
+          summary: true,
+          analysis: true,
+          grade: true,
+          selfCritique: true,
+          isStale: true,
+          ...this.comments('count'),
+          ...(options.includeJob && {
+            job: {
+              select: {
+                id: true,
+                status: true,
+                priceInDollars: true,
+                durationInSeconds: true,
+                llmThinking: true,
+              },
+            },
+          }),
+          documentVersion: {
+            select: { version: true },
+          },
+        },
+      };
+    } else {
+      return {
+        ...base,
+        select: {
+          id: true,
+          version: true,
+          createdAt: true,
+          summary: true,
+          analysis: true,
+          grade: true,
+          selfCritique: true,
+          isStale: true,
+          ...(options.includeJob && {
+            job: {
+              select: {
+                id: true,
+                status: true,
+              },
+            },
+          }),
+          documentVersion: {
+            select: { version: true },
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Build evaluation include based on needs
+   */
+  static evaluations(options: {
+    includeStale?: boolean;
+    versionCommentMode: 'full' | 'count' | 'none';
+    versionLimit?: number;
+    includeJobs?: boolean;
+    jobLimit?: number;
+  }) {
+    return {
+      where: options.includeStale ? {} : {
+        versions: {
+          some: { isStale: false },
+        },
+      },
+      include: {
+        ...(options.includeJobs && {
+          jobs: this.jobs({ limit: options.jobLimit }),
+        }),
+        agent: {
+          include: {
+            versions: this.agentVersions(),
+          },
+        },
+        versions: this.evaluationVersions({
+          commentMode: options.versionCommentMode,
+          limit: options.versionLimit,
+          includeJob: true,
+        }),
+      },
+    };
+  }
+
+  /**
+   * Build complete document query
+   */
+  static buildQuery(options: {
+    includeStale?: boolean;
+    includeSubmittedBy?: boolean;
+    evaluationOptions: {
+      versionCommentMode: 'full' | 'count' | 'none';
+      versionLimit?: number;
+      includeJobs?: boolean;
+      jobLimit?: number;
+    };
+  }) {
+    return {
+      include: {
+        ...(options.includeSubmittedBy && {
+          submittedBy: {
+            select: getPublicUserFields(),
+          },
+        }),
+        versions: this.documentVersions(),
+        evaluations: this.evaluations({
+          includeStale: options.includeStale,
+          ...options.evaluationOptions,
+        }),
+      },
+    };
+  }
+}
+
 export class DocumentModel {
   /**
    * Gets a document with evaluation version metadata only (for version history views).
@@ -140,84 +354,14 @@ export class DocumentModel {
   ): Promise<Document | null> {
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
-      include: {
-        submittedBy: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            // Explicitly exclude email for privacy
-          },
+      ...DocumentQueryBuilder.buildQuery({
+        includeStale,
+        includeSubmittedBy: true,
+        evaluationOptions: {
+          versionCommentMode: 'count',
+          includeJobs: true,
         },
-        versions: {
-          orderBy: {
-            version: "desc",
-          },
-          take: 1,
-        },
-        evaluations: {
-          where: includeStale ? {} : {
-            // Only include evaluations that have at least one non-stale version
-            versions: {
-              some: {
-                isStale: false,
-              },
-            },
-          },
-          include: {
-            jobs: {
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-            agent: {
-              include: {
-                versions: {
-                  orderBy: {
-                    version: "desc",
-                  },
-                  take: 1,
-                },
-              },
-            },
-            versions: {
-              select: {
-                id: true,
-                version: true,
-                createdAt: true,
-                summary: true,
-                analysis: true,
-                grade: true,
-                selfCritique: true,
-                isStale: true,
-                // Only get comment count for version metadata
-                _count: {
-                  select: {
-                    comments: true,
-                  },
-                },
-                job: {
-                  select: {
-                    id: true,
-                    status: true,
-                    priceInDollars: true,
-                    durationInSeconds: true,
-                    llmThinking: true,
-                  },
-                },
-                documentVersion: {
-                  select: {
-                    version: true,
-                  },
-                },
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-          },
-        },
-      },
+      }),
     })) as unknown as DocumentWithRelations | null;
 
     if (!dbDoc || !dbDoc.versions.length) {
@@ -374,75 +518,14 @@ export class DocumentModel {
   ): Promise<Document | null> {
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
-      include: {
-        versions: {
-          orderBy: {
-            version: "desc",
-          },
+      ...DocumentQueryBuilder.buildQuery({
+        includeStale,
+        includeSubmittedBy: true,
+        evaluationOptions: {
+          versionCommentMode: 'full',
+          includeJobs: true,
         },
-        submittedBy: {
-          select: getPublicUserFields(),
-        },
-        evaluations: {
-          where: includeStale ? {} : {
-            // Only include evaluations that have at least one non-stale version
-            versions: {
-              some: {
-                isStale: false,
-              },
-            },
-          },
-          include: {
-            jobs: {
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-            agent: {
-              include: {
-                versions: {
-                  orderBy: {
-                    version: "desc",
-                  },
-                  take: 1,
-                },
-              },
-            },
-            versions: {
-              include: {
-                comments: {
-                  include: {
-                    highlight: {
-                      select: {
-                        id: true,
-                        startOffset: true,
-                        endOffset: true,
-                        prefix: true,
-                        quotedText: true,
-                        isValid: true,
-                        error: true,
-                      },
-                    },
-                  },
-                },
-                job: {
-                  include: {
-                    tasks: true,
-                  },
-                },
-                documentVersion: {
-                  select: {
-                    version: true,
-                  },
-                },
-              },
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-          },
-        },
-      },
+      }),
     })) as unknown as DocumentWithRelations | null;
 
     if (!dbDoc || !dbDoc.versions.length) {
@@ -615,82 +698,15 @@ export class DocumentModel {
   ): Promise<Document | null> {
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
-      include: {
-        submittedBy: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            // Explicitly exclude email for privacy
-          },
+      ...DocumentQueryBuilder.buildQuery({
+        includeStale: false,
+        includeSubmittedBy: true,
+        evaluationOptions: {
+          versionCommentMode: 'full',
+          versionLimit: 1, // Only fetch latest version for reader
+          includeJobs: true,
         },
-        versions: {
-          orderBy: {
-            version: "desc",
-          },
-          take: 1,
-        },
-        evaluations: {
-          where: {
-            // Only include evaluations that have at least one non-stale version
-            versions: {
-              some: {
-                isStale: false,
-              },
-            },
-          },
-          include: {
-            jobs: {
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
-            agent: {
-              include: {
-                versions: {
-                  orderBy: {
-                    version: "desc",
-                  },
-                  take: 1,
-                },
-              },
-            },
-            versions: {
-              orderBy: {
-                createdAt: "desc",
-              },
-              take: 1, // Only fetch the latest version with its comments/highlights
-              include: {
-                comments: {
-                  include: {
-                    highlight: {
-                      select: {
-                        id: true,
-                        startOffset: true,
-                        endOffset: true,
-                        prefix: true,
-                        quotedText: true,
-                        isValid: true,
-                        error: true,
-                      },
-                    },
-                  },
-                },
-                job: {
-                  include: {
-                    tasks: true,
-                  },
-                },
-                documentVersion: {
-                  select: {
-                    version: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      }),
     })) as unknown as DocumentWithRelations | null;
 
     if (!dbDoc || !dbDoc.versions.length) {
@@ -1018,58 +1034,16 @@ export class DocumentModel {
    * Only fetches comment counts instead of full comments/highlights
    */
   private static getDocumentListingInclude() {
-    return {
-      versions: {
-        orderBy: { version: "desc" as const },
-        take: 1,
+    return DocumentQueryBuilder.buildQuery({
+      includeStale: false,
+      includeSubmittedBy: false,
+      evaluationOptions: {
+        versionCommentMode: 'count',
+        versionLimit: 1,
+        includeJobs: true,
+        jobLimit: 1,
       },
-      evaluations: {
-        include: {
-          jobs: {
-            orderBy: {
-              createdAt: "desc" as const,
-            },
-            take: 1,
-          },
-          agent: {
-            include: {
-              versions: {
-                orderBy: {
-                  version: "desc" as const,
-                },
-                take: 1,
-              },
-            },
-          },
-          versions: {
-            select: {
-              id: true,
-              version: true,
-              createdAt: true,
-              grade: true,
-              summary: true,
-              analysis: true,
-              selfCritique: true,
-              // Only get comment count for listings - no need for actual comments or highlights
-              _count: {
-                select: {
-                  comments: true,
-                },
-              },
-              documentVersion: {
-                select: {
-                  version: true,
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "desc" as const,
-            },
-            take: 1, // Limit to one version for performance
-          },
-        },
-      },
-    };
+    }).include;
   }
 
   /**
