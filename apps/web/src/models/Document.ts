@@ -184,19 +184,20 @@ class DocumentTransformer {
    */
   static createPlaceholderComments(count: number): any[] {
     return Array(count).fill({
-      id: '',
-      description: '',
+      id: 'placeholder',
+      description: 'placeholder',  // Non-empty so filterValidComments works
       importance: null,
       grade: null,
       highlight: {
-        id: '',
+        id: 'placeholder',
         startOffset: 0,
         endOffset: 0,
-        quotedText: '',
+        quotedText: 'placeholder',
         isValid: true,
         prefix: null,
         error: null,
       },
+      _isPlaceholder: true,  // Flag to identify placeholder comments
     });
   }
 
