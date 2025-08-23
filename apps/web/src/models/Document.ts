@@ -125,6 +125,209 @@ type DocumentWithRelations = {
 };
 
 /**
+ * Data transformation helpers for converting DB results to frontend format
+ */
+class DocumentTransformer {
+  /**
+   * Transform comment from DB format to frontend format
+   */
+  static transformComment(comment: any): any {
+    return {
+      id: comment.id,
+      description: comment.description,
+      importance: comment.importance,
+      grade: comment.grade,
+      highlight: {
+        id: comment.highlight.id,
+        startOffset: comment.highlight.startOffset,
+        endOffset: comment.highlight.endOffset,
+        quotedText: comment.highlight.quotedText,
+        isValid: comment.highlight.isValid,
+        prefix: comment.highlight.prefix,
+        error: comment.highlight.error,
+      },
+      header: getCommentProperty(comment, 'header', null),
+      level: getCommentProperty(comment, 'level', null),
+      source: getCommentProperty(comment, 'source', null),
+      metadata: getCommentProperty(comment, 'metadata', null),
+    };
+  }
+
+  /**
+   * Transform job from DB format to frontend format
+   */
+  static transformJob(job: any): any {
+    return {
+      id: job.id,
+      status: job.status,
+      priceInDollars: convertPriceToNumber(job.priceInDollars) || 0,
+      llmThinking: job.llmThinking || "",
+      durationInSeconds: job.durationInSeconds || undefined,
+      logs: job.logs || undefined,
+      ...(job.tasks && {
+        tasks: job.tasks.map((task: any) => ({
+          id: task.id,
+          name: task.name,
+          modelName: task.modelName,
+          priceInDollars: convertPriceToNumber(task.priceInDollars),
+          timeInSeconds: task.timeInSeconds,
+          log: task.log,
+          llmInteractions: 'llmInteractions' in task ? task.llmInteractions : undefined,
+          createdAt: task.createdAt,
+        })),
+      }),
+    };
+  }
+
+  /**
+   * Create placeholder comment array (for count-only mode)
+   */
+  static createPlaceholderComments(count: number): any[] {
+    return Array(count).fill({
+      id: 'placeholder',
+      description: 'placeholder',  // Non-empty so filterValidComments works
+      importance: null,
+      grade: null,
+      highlight: {
+        id: 'placeholder',
+        startOffset: 0,
+        endOffset: 0,
+        quotedText: 'placeholder',
+        isValid: true,
+        prefix: null,
+        error: null,
+      },
+      _isPlaceholder: true,  // Flag to identify placeholder comments
+    });
+  }
+
+  /**
+   * Transform agent from DB format to frontend format
+   */
+  static transformAgent(agent: any): any {
+    return {
+      id: agent.id,
+      name: agent.versions[0].name,
+      version: agent.versions[0].version.toString(),
+      description: agent.versions[0].description,
+      primaryInstructions: agent.versions[0].primaryInstructions,
+      selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
+    };
+  }
+
+  /**
+   * Transform evaluation version from DB format to frontend format
+   */
+  static transformEvaluationVersion(version: any, currentDocumentVersion: number): any {
+    const isStale = version.documentVersion?.version !== currentDocumentVersion;
+    
+    return {
+      id: version.id,
+      version: version.version || 1,
+      createdAt: new Date(version.createdAt),
+      job: version.job ? this.transformJob(version.job) : undefined,
+      comments: version.comments 
+        ? version.comments.map((comment: any) => this.transformComment(comment))
+        : version._count 
+        ? this.createPlaceholderComments(version._count.comments || 0)
+        : [],
+      summary: version.summary || "",
+      analysis: version.analysis || undefined,
+      grade: version.grade ?? null,
+      selfCritique: version.selfCritique || undefined,
+      documentVersion: {
+        version: version.documentVersion?.version,
+      },
+      isStale,
+    };
+  }
+
+  /**
+   * Transform evaluation from DB format to frontend format
+   */
+  static transformEvaluation(evaluation: any, currentDocumentVersion: number): any {
+    const latestVersion = evaluation.versions?.[0];
+    const evaluationVersions = evaluation.versions?.map((version: any) => 
+      this.transformEvaluationVersion(version, currentDocumentVersion)
+    ) || [];
+
+    return {
+      id: evaluation.id,
+      agentId: evaluation.agent.id,
+      agent: this.transformAgent(evaluation.agent),
+      createdAt: new Date(latestVersion?.createdAt || evaluation.createdAt),
+      priceInDollars: convertPriceToNumber(latestVersion?.job?.priceInDollars) || 0,
+      comments: latestVersion?.comments 
+        ? latestVersion.comments.map((comment: any) => this.transformComment(comment))
+        : latestVersion?._count 
+        ? this.createPlaceholderComments(latestVersion._count.comments || 0)
+        : [],
+      thinking: latestVersion?.job?.llmThinking || "",
+      summary: latestVersion?.summary || "",
+      analysis: latestVersion?.analysis || "",
+      grade: latestVersion?.grade ?? null,
+      selfCritique: latestVersion?.selfCritique || undefined,
+      versions: evaluationVersions,
+      jobs: (evaluation.jobs || []).map((job: any) => ({
+        id: job.id,
+        status: job.status,
+        createdAt: job.createdAt,
+        priceInDollars: convertPriceToNumber(job.priceInDollars),
+      })),
+      isStale: latestVersion && latestVersion.documentVersion?.version !== currentDocumentVersion,
+    };
+  }
+
+  /**
+   * Transform document metadata (non-evaluation parts) from DB format
+   */
+  static transformDocumentBase(dbDoc: any): Partial<Document> {
+    if (!dbDoc.versions || dbDoc.versions.length === 0) {
+      throw new Error(`Document ${dbDoc.id} has no versions`);
+    }
+
+    const latestVersion = dbDoc.versions[0];
+
+    return {
+      id: dbDoc.id,
+      slug: dbDoc.id,
+      title: latestVersion.title,
+      content: getFullContent(latestVersion),
+      author: latestVersion.authors.join(", "),
+      publishedDate: dbDoc.publishedDate.toISOString(),
+      url: latestVersion.urls[0] || "",
+      importUrl: latestVersion.importUrl || undefined,
+      platforms: latestVersion.platforms,
+      intendedAgents: latestVersion.intendedAgents,
+      submittedById: dbDoc.submittedById,
+      submittedBy: dbDoc.submittedBy ? {
+        id: dbDoc.submittedBy.id,
+        name: dbDoc.submittedBy.name,
+        email: null, // Explicitly null for privacy
+        image: dbDoc.submittedBy.image,
+      } : undefined,
+      createdAt: dbDoc.createdAt,
+      updatedAt: dbDoc.updatedAt,
+    };
+  }
+
+  /**
+   * Transform complete document from DB format to frontend format
+   */
+  static transformDocument(dbDoc: any): Document {
+    const latestVersion = dbDoc.versions[0];
+    const currentDocumentVersion = latestVersion.version;
+
+    return {
+      ...this.transformDocumentBase(dbDoc),
+      reviews: dbDoc.evaluations?.map((evaluation: any) => 
+        this.transformEvaluation(evaluation, currentDocumentVersion)
+      ) || [],
+    } as Document;
+  }
+}
+
+/**
  * Query builders for different parts of the document query
  */
 class DocumentQueryBuilder {
@@ -371,111 +574,27 @@ export class DocumentModel {
     const latestVersion = dbDoc.versions[0];
     const currentDocumentVersion = latestVersion.version;
 
-    // Transform database document to frontend Document shape
-    const document: Document = {
-      id: dbDoc.id,
-      slug: dbDoc.id,
-      title: latestVersion.title,
-      content: getFullContent(latestVersion),
-      author: latestVersion.authors.join(", "),
-      publishedDate: dbDoc.publishedDate.toISOString(),
-      url: latestVersion.urls[0] || "",
-      importUrl: latestVersion.importUrl || undefined,
-      platforms: latestVersion.platforms,
-      intendedAgents: latestVersion.intendedAgents,
-      submittedById: dbDoc.submittedById,
-      submittedBy: dbDoc.submittedBy
-        ? {
-            id: dbDoc.submittedBy.id,
-            name: dbDoc.submittedBy.name,
-            email: null,
-            image: dbDoc.submittedBy.image,
-          }
-        : undefined,
-      createdAt: dbDoc.createdAt,
-      updatedAt: dbDoc.updatedAt,
+    return {
+      ...DocumentTransformer.transformDocumentBase(dbDoc),
       reviews: dbDoc.evaluations.map((evaluation: any) => {
         // Map all evaluation versions with basic metadata only
-        const evaluationVersions = evaluation.versions.map((version: any) => {
-          const isStale = version.documentVersion.version !== currentDocumentVersion;
-          
-          return {
-            id: version.id,
-            version: version.version || 1,
-            createdAt: new Date(version.createdAt),
-            job: version.job
-              ? {
-                  id: version.job.id,
-                  status: version.job.status,
-                  priceInDollars: convertPriceToNumber(version.job.priceInDollars) || 0,
-                  llmThinking: version.job.llmThinking || "",
-                  durationInSeconds: version.job.durationInSeconds || undefined,
-                }
-              : undefined,
-            // Create placeholder comments array with count only
-            comments: Array(version._count?.comments || 0).fill({
-              id: '',
-              description: '',
-              importance: null,
-              grade: null,
-              highlight: {
-                id: '',
-                startOffset: 0,
-                endOffset: 0,
-                quotedText: '',
-                isValid: true,
-                prefix: null,
-                error: null,
-              },
-            }),
-            summary: version.summary || "",
-            analysis: version.analysis || undefined,
-            grade: version.grade ?? null,
-            selfCritique: version.selfCritique || undefined,
-            documentVersion: {
-              version: version.documentVersion.version,
-            },
-            isStale,
-          };
-        });
+        const evaluationVersions = evaluation.versions.map((version: any) => 
+          DocumentTransformer.transformEvaluationVersion(version, currentDocumentVersion)
+        );
 
         // Use the first version for main evaluation data
         const latestVersion = evaluation.versions[0];
-        const evaluationIsStale = latestVersion && latestVersion.documentVersion.version !== currentDocumentVersion;
 
         return {
           id: evaluation.id,
           agentId: evaluation.agent.id,
-          agent: {
-            id: evaluation.agent.id,
-            name: evaluation.agent.versions[0].name,
-            version: evaluation.agent.versions[0].version.toString(),
-            description: evaluation.agent.versions[0].description,
-            primaryInstructions:
-              evaluation.agent.versions[0].primaryInstructions,
-            selfCritiqueInstructions:
-              evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
-          },
-          createdAt: new Date(
-            latestVersion?.createdAt || evaluation.createdAt
-          ),
+          agent: DocumentTransformer.transformAgent(evaluation.agent),
+          createdAt: new Date(latestVersion?.createdAt || evaluation.createdAt),
           priceInDollars: convertPriceToNumber(latestVersion?.job?.priceInDollars) || 0,
           // Use count from latest version only
-          comments: Array(latestVersion?._count?.comments || 0).fill({
-            id: '',
-            description: '',
-            importance: null,
-            grade: null,
-            highlight: {
-              id: '',
-              startOffset: 0,
-              endOffset: 0,
-              quotedText: '',
-              isValid: true,
-              prefix: null,
-              error: null,
-            },
-          }),
+          comments: latestVersion?._count 
+            ? DocumentTransformer.createPlaceholderComments(latestVersion._count.comments || 0)
+            : [],
           thinking: latestVersion?.job?.llmThinking || "",
           summary: latestVersion?.summary || "",
           analysis: latestVersion?.analysis || "",
@@ -488,12 +607,10 @@ export class DocumentModel {
             createdAt: job.createdAt,
             priceInDollars: convertPriceToNumber(job.priceInDollars),
           })),
-          isStale: evaluationIsStale,
+          isStale: latestVersion && latestVersion.documentVersion.version !== currentDocumentVersion,
         };
       }),
-    };
-
-    return document as Document;
+    } as Document;
   }
 
   /**
@@ -535,155 +652,7 @@ export class DocumentModel {
     const latestVersion = dbDoc.versions[0];
     const currentDocumentVersion = latestVersion.version;
 
-    // Evaluations are already filtered at the database level based on isStale field
-
-    // Transform database document to frontend Document shape
-    const document: Document = {
-      id: dbDoc.id,
-      slug: dbDoc.id,
-      title: latestVersion.title,
-      // Include prepend in content for display (matches what was used during analysis)
-      content: getFullContent(latestVersion),
-      author: latestVersion.authors.join(", "),
-      publishedDate: dbDoc.publishedDate.toISOString(),
-      url: latestVersion.urls[0] || "", // Provide empty string as fallback
-      importUrl: latestVersion.importUrl || undefined,
-      platforms: latestVersion.platforms,
-      intendedAgents: latestVersion.intendedAgents,
-      submittedById: dbDoc.submittedById,
-      submittedBy: dbDoc.submittedBy
-        ? {
-            id: dbDoc.submittedBy.id,
-            name: dbDoc.submittedBy.name,
-            email: null,  // Explicitly set to null for privacy
-            image: dbDoc.submittedBy.image,
-          }
-        : undefined,
-      createdAt: dbDoc.createdAt,
-      updatedAt: dbDoc.updatedAt,
-      reviews: dbDoc.evaluations.map((evaluation: any) => {
-        // Map all evaluation versions
-        const evaluationVersions = evaluation.versions.map((version: any) => {
-          // Calculate if this version is stale
-          const isStale = version.documentVersion.version !== currentDocumentVersion;
-          
-          return {
-            id: version.id,
-            version: version.version || 1,
-            createdAt: new Date(version.createdAt),
-            job: version.job
-              ? {
-                  priceInDollars: convertPriceToNumber(version.job.priceInDollars) || 0,
-                  llmThinking: version.job.llmThinking || "",
-                  durationInSeconds: version.job.durationInSeconds || undefined,
-                  logs: version.job.logs || undefined,
-                  tasks: version.job.tasks.map((task: any) => ({
-                    id: task.id,
-                    name: task.name,
-                    modelName: task.modelName,
-                    priceInDollars: convertPriceToNumber(task.priceInDollars),
-                    timeInSeconds: task.timeInSeconds,
-                    log: task.log,
-                    llmInteractions: 'llmInteractions' in task ? task.llmInteractions : undefined,
-                    createdAt: task.createdAt,
-                  })),
-                }
-              : undefined,
-            comments: version.comments.map((comment: any) => ({
-              id: comment.id,
-              description: comment.description,
-              importance: comment.importance,
-              grade: comment.grade,
-              highlight: {
-                id: comment.highlight.id,
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                quotedText: comment.highlight.quotedText,
-                isValid: comment.highlight.isValid,
-                prefix: comment.highlight.prefix,
-                error: comment.highlight.error,
-              },
-              header: getCommentProperty(comment, 'header', null),
-              level: getCommentProperty(comment, 'level', null),
-              source: getCommentProperty(comment, 'source', null),
-              metadata: getCommentProperty(comment, 'metadata', null),
-            })),
-            summary: version.summary || "",
-            analysis: version.analysis || undefined,
-            grade: version.grade ?? null,
-            selfCritique: version.selfCritique || undefined,
-            documentVersion: {
-              version: version.documentVersion.version,
-            },
-            isStale,
-          };
-        });
-
-        // Map jobs for this evaluation
-        const jobs = (evaluation.jobs || []).map((job: any) => ({
-          id: job.id,
-          status: job.status,
-          createdAt: job.createdAt,
-        }));
-
-        // Calculate if the evaluation (latest version) is stale
-        // STALE should only be shown if:
-        // 1. There's an existing eval version
-        // 2. The eval version is for an older document version
-        const latestVersion = evaluation.versions[0];
-        const evaluationIsStale = latestVersion && latestVersion.documentVersion.version !== currentDocumentVersion;
-
-        return {
-          id: evaluation.id,
-          agentId: evaluation.agent.id,
-          agent: {
-            id: evaluation.agent.id,
-            name: evaluation.agent.versions[0].name,
-            version: evaluation.agent.versions[0].version.toString(),
-            description: evaluation.agent.versions[0].description,
-            primaryInstructions:
-              evaluation.agent.versions[0].primaryInstructions,
-            selfCritiqueInstructions:
-              evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
-          },
-          createdAt: new Date(
-            evaluation.versions[0]?.createdAt || evaluation.createdAt
-          ),
-          priceInDollars: convertPriceToNumber(evaluation.versions[0]?.job?.priceInDollars) || 0,
-          comments:
-            evaluation.versions[0]?.comments.map((comment: any) => ({
-              id: comment.id,
-              description: comment.description,
-              importance: comment.importance || null,
-              grade: comment.grade || null,
-              highlight: {
-                id: comment.highlight.id,
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                quotedText: comment.highlight.quotedText,
-                isValid: comment.highlight.isValid,
-                prefix: comment.highlight.prefix,
-                error: comment.highlight.error,
-              },
-              header: getCommentProperty(comment, 'header', null),
-              level: getCommentProperty(comment, 'level', null),
-              source: getCommentProperty(comment, 'source', null),
-              metadata: getCommentProperty(comment, 'metadata', null),
-            })) || [],
-          thinking: evaluation.versions[0]?.job?.llmThinking || "",
-          summary: evaluation.versions[0]?.summary || "",
-          analysis: evaluation.versions[0]?.analysis || "",
-          grade: evaluation.versions[0]?.grade ?? null,
-          selfCritique: evaluation.versions[0]?.selfCritique || undefined,
-          versions: evaluationVersions,
-          jobs,
-          isStale: evaluationIsStale,
-        };
-      }),
-    };
-
-    // Return the document (validation removed as it was incompatible with database schema)
-    return document as Document;
+    return DocumentTransformer.transformDocument(dbDoc);
   }
 
   /**
@@ -713,147 +682,7 @@ export class DocumentModel {
       return null;
     }
 
-    const latestVersion = dbDoc.versions[0];
-    const currentDocumentVersion = latestVersion.version;
-
-    // Transform database document to frontend Document shape
-    const document: Document = {
-      id: dbDoc.id,
-      slug: dbDoc.id,
-      title: latestVersion.title,
-      content: getFullContent(latestVersion),
-      author: latestVersion.authors.join(", "),
-      publishedDate: dbDoc.publishedDate.toISOString(),
-      url: latestVersion.urls[0] || "",
-      importUrl: latestVersion.importUrl || undefined,
-      platforms: latestVersion.platforms,
-      intendedAgents: latestVersion.intendedAgents,
-      submittedById: dbDoc.submittedById,
-      submittedBy: dbDoc.submittedBy
-        ? {
-            id: dbDoc.submittedBy.id,
-            name: dbDoc.submittedBy.name,
-            email: null,
-            image: dbDoc.submittedBy.image,
-          }
-        : undefined,
-      createdAt: dbDoc.createdAt,
-      updatedAt: dbDoc.updatedAt,
-      reviews: dbDoc.evaluations.map((evaluation: any) => {
-        const latestEvalVersion = evaluation.versions[0];
-        
-        // For reader view, we only have the latest version
-        const evaluationVersions = latestEvalVersion ? [{
-          id: latestEvalVersion.id,
-          version: latestEvalVersion.version || 1,
-          createdAt: new Date(latestEvalVersion.createdAt),
-          job: latestEvalVersion.job
-            ? {
-                id: latestEvalVersion.job.id,
-                status: latestEvalVersion.job.status,
-                priceInDollars: convertPriceToNumber(latestEvalVersion.job.priceInDollars) || 0,
-                llmThinking: latestEvalVersion.job.llmThinking || "",
-                durationInSeconds: latestEvalVersion.job.durationInSeconds || undefined,
-                logs: latestEvalVersion.job.logs || undefined,
-                tasks: latestEvalVersion.job.tasks.map((task: any) => ({
-                  id: task.id,
-                  name: task.name,
-                  modelName: task.modelName,
-                  priceInDollars: convertPriceToNumber(task.priceInDollars),
-                  timeInSeconds: task.timeInSeconds,
-                  log: task.log,
-                  llmInteractions: 'llmInteractions' in task ? task.llmInteractions : undefined,
-                  createdAt: task.createdAt,
-                })),
-              }
-            : undefined,
-          comments: latestEvalVersion.comments.map((comment: any) => ({
-            id: comment.id,
-            description: comment.description,
-            importance: comment.importance,
-            grade: comment.grade,
-            highlight: {
-              id: comment.highlight.id,
-              startOffset: comment.highlight.startOffset,
-              endOffset: comment.highlight.endOffset,
-              quotedText: comment.highlight.quotedText,
-              isValid: comment.highlight.isValid,
-              prefix: comment.highlight.prefix,
-              error: comment.highlight.error,
-            },
-            header: getCommentProperty(comment, 'header', null),
-            level: getCommentProperty(comment, 'level', null),
-            source: getCommentProperty(comment, 'source', null),
-            metadata: getCommentProperty(comment, 'metadata', null),
-          })),
-          summary: latestEvalVersion.summary || "",
-          analysis: latestEvalVersion.analysis || undefined,
-          grade: latestEvalVersion.grade ?? null,
-          selfCritique: latestEvalVersion.selfCritique || undefined,
-          documentVersion: {
-            version: latestEvalVersion.documentVersion.version,
-          },
-          isStale: latestEvalVersion.documentVersion.version !== currentDocumentVersion,
-        }] : [];
-
-        // Map jobs for this evaluation
-        const jobs = (evaluation.jobs || []).map((job: any) => ({
-          id: job.id,
-          status: job.status,
-          createdAt: job.createdAt,
-        }));
-
-        const evaluationIsStale = latestEvalVersion && latestEvalVersion.documentVersion.version !== currentDocumentVersion;
-
-        return {
-          id: evaluation.id,
-          agentId: evaluation.agent.id,
-          agent: {
-            id: evaluation.agent.id,
-            name: evaluation.agent.versions[0].name,
-            version: evaluation.agent.versions[0].version.toString(),
-            description: evaluation.agent.versions[0].description,
-            primaryInstructions:
-              evaluation.agent.versions[0].primaryInstructions,
-            selfCritiqueInstructions:
-              evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
-          },
-          createdAt: new Date(
-            latestEvalVersion?.createdAt || evaluation.createdAt
-          ),
-          priceInDollars: convertPriceToNumber(latestEvalVersion?.job?.priceInDollars) || 0,
-          comments: latestEvalVersion?.comments.map((comment: any) => ({
-            id: comment.id,
-            description: comment.description,
-            importance: comment.importance || null,
-            grade: comment.grade || null,
-            highlight: {
-              id: comment.highlight.id,
-              startOffset: comment.highlight.startOffset,
-              endOffset: comment.highlight.endOffset,
-              quotedText: comment.highlight.quotedText,
-              isValid: comment.highlight.isValid,
-              prefix: comment.highlight.prefix,
-              error: comment.highlight.error,
-            },
-            header: getCommentProperty(comment, 'header', null),
-            level: getCommentProperty(comment, 'level', null),
-            source: getCommentProperty(comment, 'source', null),
-            metadata: getCommentProperty(comment, 'metadata', null),
-          })) || [],
-          thinking: latestEvalVersion?.job?.llmThinking || "",
-          summary: latestEvalVersion?.summary || "",
-          analysis: latestEvalVersion?.analysis || "",
-          grade: latestEvalVersion?.grade ?? null,
-          selfCritique: latestEvalVersion?.selfCritique || undefined,
-          versions: evaluationVersions,
-          jobs,
-          isStale: evaluationIsStale,
-        };
-      }),
-    };
-
-    return document as Document;
+    return DocumentTransformer.transformDocument(dbDoc);
   }
 
   /**
@@ -880,153 +709,7 @@ export class DocumentModel {
    * @internal
    */
   static formatDocumentFromDB(dbDoc: any): Document {
-    if (!dbDoc.versions.length) {
-      throw new Error(`Document ${dbDoc.id} has no versions`);
-    }
-
-    const latestVersion = dbDoc.versions[0];
-    const currentDocumentVersion = latestVersion.version;
-
-    // Transform database document to frontend Document shape
-    const document: Document = {
-      id: dbDoc.id,
-      slug: dbDoc.id,
-      title: latestVersion.title,
-      // Include prepend in content for display (matches what was used during analysis)
-      content: getFullContent(latestVersion),
-      author: latestVersion.authors.join(", "),
-      publishedDate: dbDoc.publishedDate.toISOString(),
-      url: latestVersion.urls[0] || "", // Provide empty string as fallback
-      importUrl: latestVersion.importUrl || undefined,
-      platforms: latestVersion.platforms,
-      intendedAgents: latestVersion.intendedAgents,
-      submittedById: dbDoc.submittedById,
-      submittedBy: dbDoc.submittedBy
-        ? {
-            id: dbDoc.submittedBy.id,
-            name: dbDoc.submittedBy.name,
-            email: null,  // Explicitly set to null for privacy
-            image: dbDoc.submittedBy.image,
-          }
-        : undefined,
-      createdAt: dbDoc.createdAt,
-      updatedAt: dbDoc.updatedAt,
-      reviews: dbDoc.evaluations.map((evaluation: any) => {
-        // Map all evaluation versions
-        const evaluationVersions = evaluation.versions.map((version: any) => {
-          // Calculate if this version is stale
-          const isStale = version.documentVersion.version !== currentDocumentVersion;
-          
-          return {
-            id: version.id,
-            version: version.version || 1,
-            createdAt: new Date(version.createdAt),
-            job: version.job
-              ? {
-                  priceInDollars: convertPriceToNumber(version.job.priceInDollars) || 0,
-                  llmThinking: version.job.llmThinking || "",
-                  durationInSeconds: version.job.durationInSeconds || undefined,
-                  logs: version.job.logs || undefined,
-                  tasks: version.job.tasks?.map((task: any) => ({
-                    id: task.id,
-                    name: task.name,
-                    modelName: task.modelName,
-                    priceInDollars: convertPriceToNumber(task.priceInDollars),
-                    timeInSeconds: task.timeInSeconds,
-                    log: task.log,
-                    llmInteractions: task.llmInteractions ? JSON.parse(JSON.stringify(task.llmInteractions)) : undefined,
-                    createdAt: task.createdAt,
-                  })) || [],
-                }
-              : undefined,
-            comments: version.comments.map((comment: any) => ({
-              description: comment.description,
-              importance: comment.importance || undefined,
-              grade: comment.grade || undefined,
-              highlight: {
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                quotedText: comment.highlight.quotedText,
-                isValid: comment.highlight.isValid,
-              },
-              isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid
-                ? undefined
-                : "Invalid highlight",
-            })),
-            summary: version.summary || "",
-            analysis: version.analysis || undefined,
-            grade: version.grade ?? null,
-            selfCritique: version.selfCritique || undefined,
-            documentVersion: {
-              version: version.documentVersion.version,
-            },
-            isStale,
-          };
-        });
-
-        // Map jobs for this evaluation
-        const jobs = (evaluation.jobs || []).map((job: any) => ({
-          id: job.id,
-          status: job.status,
-          createdAt: job.createdAt,
-        }));
-
-        // Calculate if the evaluation (latest version) is stale
-        // STALE should only be shown if:
-        // 1. There's an existing eval version
-        // 2. The eval version is for an older document version
-        const latestVersion = evaluation.versions[0];
-        const evaluationIsStale = latestVersion && latestVersion.documentVersion.version !== currentDocumentVersion;
-
-        return {
-          id: evaluation.id,
-          agentId: evaluation.agent.id,
-          agent: {
-            id: evaluation.agent.id,
-            name: evaluation.agent.versions[0].name,
-            version: evaluation.agent.versions[0].version.toString(),
-            description: evaluation.agent.versions[0].description,
-            primaryInstructions:
-              evaluation.agent.versions[0].primaryInstructions || undefined,
-            selfCritiqueInstructions:
-              evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
-            providesGrades: evaluation.agent.versions[0].providesGrades || false,
-          },
-          createdAt: new Date(
-            evaluation.versions[0]?.createdAt || evaluation.createdAt
-          ),
-          priceInDollars: convertPriceToNumber(evaluation.versions[0]?.job?.priceInDollars) || 0,
-          comments:
-            evaluation.versions[0]?.comments.map((comment: any) => ({
-              description: comment.description,
-              importance: comment.importance || undefined,
-              grade: comment.grade || undefined,
-              highlight: {
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                quotedText: comment.highlight.quotedText,
-                isValid: comment.highlight.isValid,
-              },
-              isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid
-                ? undefined
-                : "Invalid highlight",
-            })) || [],
-          thinking: evaluation.versions[0]?.job?.llmThinking || "",
-          summary: evaluation.versions[0]?.summary || "",
-          analysis: evaluation.versions[0]?.analysis || "",
-          grade: evaluation.versions[0]?.grade ?? null,
-          selfCritique: evaluation.versions[0]?.selfCritique || undefined,
-          versions: evaluationVersions,
-          jobs,
-          isStale: evaluationIsStale,
-        };
-      }),
-    };
-
-    // Return the document (validation removed as it was incompatible with database schema)
-    return document as Document;
+    return DocumentTransformer.transformDocument(dbDoc);
   }
 
   /**
@@ -1059,27 +742,7 @@ export class DocumentModel {
     const currentDocumentVersion = latestVersion.version;
 
     return {
-      id: dbDoc.id,
-      slug: dbDoc.id,
-      title: latestVersion.title,
-      content: getFullContent(latestVersion),
-      author: latestVersion.authors.join(", "),
-      publishedDate: dbDoc.publishedDate.toISOString(),
-      url: latestVersion.urls[0] || "",
-      importUrl: latestVersion.importUrl || undefined,
-      platforms: latestVersion.platforms,
-      intendedAgents: latestVersion.intendedAgents,
-      submittedById: dbDoc.submittedById,
-      submittedBy: dbDoc.submittedBy
-        ? {
-            id: dbDoc.submittedBy.id,
-            name: dbDoc.submittedBy.name,
-            email: null, // Explicitly set to null for privacy
-            image: dbDoc.submittedBy.image,
-          }
-        : undefined,
-      createdAt: dbDoc.createdAt,
-      updatedAt: dbDoc.updatedAt,
+      ...DocumentTransformer.transformDocumentBase(dbDoc),
       reviews: dbDoc.evaluations.map((evaluation: any) => {
         const latestEvalVersion = evaluation.versions[0];
         const isStale = latestEvalVersion && latestEvalVersion.documentVersion.version !== currentDocumentVersion;
@@ -1087,32 +750,13 @@ export class DocumentModel {
         return {
           id: evaluation.id,
           agentId: evaluation.agent.id,
-          agent: {
-            id: evaluation.agent.id,
-            name: evaluation.agent.versions[0].name,
-            version: evaluation.agent.versions[0].version.toString(),
-            description: evaluation.agent.versions[0].description,
-            primaryInstructions: evaluation.agent.versions[0].primaryInstructions,
-            selfCritiqueInstructions: evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
-          },
+          agent: DocumentTransformer.transformAgent(evaluation.agent),
           createdAt: new Date(latestEvalVersion?.createdAt || evaluation.createdAt),
           priceInDollars: 0, // Not needed for listings
           // Create empty comments array with proper length for count display
-          comments: Array(latestEvalVersion?._count?.comments || 0).fill({
-            id: '',
-            description: '',
-            importance: null,
-            grade: null,
-            highlight: {
-              id: '',
-              startOffset: 0,
-              endOffset: 0,
-              quotedText: '',
-              isValid: true,
-              prefix: null,
-              error: null,
-            },
-          }),
+          comments: latestEvalVersion?._count?.comments 
+            ? DocumentTransformer.createPlaceholderComments(latestEvalVersion._count.comments)
+            : [],
           thinking: "",
           summary: latestEvalVersion?.summary || "",
           analysis: latestEvalVersion?.analysis || "",
