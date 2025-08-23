@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 
 interface Highlight {
   startOffset: number;  // Position in markdown
@@ -8,20 +8,64 @@ interface Highlight {
   color?: string;
 }
 
+interface CachedHighlight extends Highlight {
+  slateStart?: number;
+  slateEnd?: number;
+  mappedFrom?: string;
+}
+
+interface CacheEntry {
+  markdown: string;
+  slateText: string;
+  highlightKey: string;
+  mappedHighlights: CachedHighlight[];
+  failures: any[];
+}
+
 /**
  * Maps highlights from markdown positions to Slate text positions
- * by extracting context from markdown and finding it in Slate.
+ * with caching to improve performance.
  * 
- * This solves the position mismatch when markdown syntax is removed.
+ * The cache is keyed by:
+ * - markdown content
+ * - slateText content  
+ * - highlights (via a stable key)
+ * 
+ * This avoids recalculating positions on every render.
  */
-export function useMarkdownToSlateHighlights(
+export function useMarkdownToSlateHighlightsWithCache(
   markdown: string,
   slateText: string,
   highlights: Highlight[],
   contextWindow: number = 30
 ) {
+  // Create a stable key for the highlights array
+  const highlightKey = useMemo(() => {
+    return highlights
+      .map(h => `${h.startOffset}-${h.endOffset}-${h.tag}`)
+      .join('|');
+  }, [highlights]);
+
+  // Use a ref to persist cache across renders
+  const cacheRef = useRef<CacheEntry | null>(null);
+
   return useMemo(() => {
-    const mappedHighlights = [];
+    // Check if we can use cached results
+    if (
+      cacheRef.current &&
+      cacheRef.current.markdown === markdown &&
+      cacheRef.current.slateText === slateText &&
+      cacheRef.current.highlightKey === highlightKey
+    ) {
+      return {
+        mappedHighlights: cacheRef.current.mappedHighlights,
+        failures: cacheRef.current.failures,
+        fromCache: true
+      };
+    }
+
+    // Otherwise, calculate new mappings
+    const mappedHighlights: CachedHighlight[] = [];
     const failures = [];
     
     // Track which Slate positions have been used to avoid overlaps
@@ -29,6 +73,33 @@ export function useMarkdownToSlateHighlights(
     
     // Process all highlights (don't deduplicate by markdown position)
     for (const highlight of highlights) {
+      // Check if this highlight was already mapped in cache
+      const cachedHighlight = cacheRef.current?.mappedHighlights.find(
+        h => h.startOffset === highlight.startOffset && 
+            h.endOffset === highlight.endOffset &&
+            h.tag === highlight.tag
+      );
+
+      // If we have a valid cached position and the text hasn't changed, use it
+      if (
+        cachedHighlight?.slateStart !== undefined &&
+        cachedHighlight?.slateEnd !== undefined &&
+        cacheRef.current?.markdown === markdown &&
+        cacheRef.current?.slateText === slateText
+      ) {
+        const posKey = `${cachedHighlight.slateStart}-${cachedHighlight.slateEnd}`;
+        if (!usedSlatePositions.has(posKey)) {
+          usedSlatePositions.add(posKey);
+          mappedHighlights.push({
+            ...highlight,
+            startOffset: cachedHighlight.slateStart,
+            endOffset: cachedHighlight.slateEnd,
+            mappedFrom: 'cache'
+          });
+          continue;
+        }
+      }
+
       // Extract context from the MARKDOWN using the stored positions
       const prefix = markdown.substring(
         Math.max(0, highlight.startOffset - contextWindow),
@@ -58,12 +129,15 @@ export function useMarkdownToSlateHighlights(
         // Skip if this position has already been used
         if (!usedSlatePositions.has(posKey)) {
           usedSlatePositions.add(posKey);
-          mappedHighlights.push({
+          const mappedHighlight: CachedHighlight = {
             ...highlight,
+            slateStart: slatePosition.start,
+            slateEnd: slatePosition.end,
             startOffset: slatePosition.start,
             endOffset: slatePosition.end,
-            mappedFrom: 'markdown'
-          });
+            mappedFrom: 'calculated'
+          };
+          mappedHighlights.push(mappedHighlight);
         } else {
           failures.push({
             tag: highlight.tag,
@@ -80,8 +154,25 @@ export function useMarkdownToSlateHighlights(
       }
     }
     
-    return { mappedHighlights, failures };
-  }, [markdown, slateText, highlights, contextWindow]);
+    // Update cache
+    cacheRef.current = {
+      markdown,
+      slateText,
+      highlightKey,
+      mappedHighlights: mappedHighlights.map(h => ({
+        ...h,
+        slateStart: h.startOffset,
+        slateEnd: h.endOffset
+      })),
+      failures
+    };
+
+    return { 
+      mappedHighlights, 
+      failures,
+      fromCache: false
+    };
+  }, [markdown, slateText, highlightKey, contextWindow]);
 }
 
 function findTextInSlate(
@@ -178,21 +269,6 @@ function contextSimilarity(context1: string, context2: string): number {
   
   // Calculate character-based similarity
   return calculateSimilarity(norm1, norm2);
-}
-
-function contextMatches(context1: string, context2: string, threshold: number = 0.6): boolean {
-  const norm1 = normalizeForSearch(context1);
-  const norm2 = normalizeForSearch(context2);
-  
-  if (norm1 === norm2) return true;
-  
-  // Check if one ends with the start of the other (partial match)
-  if (norm1.endsWith(norm2.substring(0, Math.min(10, norm2.length)))) return true;
-  if (norm2.endsWith(norm1.substring(0, Math.min(10, norm1.length)))) return true;
-  
-  // Calculate similarity
-  const similarity = calculateSimilarity(norm1, norm2);
-  return similarity >= threshold;
 }
 
 function calculateSimilarity(str1: string, str2: string): number {

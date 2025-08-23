@@ -29,9 +29,7 @@ import { unified } from "unified";
 
 // Import our improved hooks for Phase 2
 import { useHighlightMapper } from "@/hooks/useHighlightMapper";
-import { useMarkdownASTMapper } from "@/hooks/useMarkdownASTMapper";
-import { useMarkdownASTMapperV2 } from "@/hooks/useMarkdownASTMapperV2";
-import { useMarkdownToSlateHighlights } from "@/hooks/useMarkdownToSlateHighlights";
+import { useMarkdownToSlateHighlightsWithCache } from "@/hooks/useMarkdownToSlateHighlightsWithCache";
 import { useSimplePlainTextOffsets } from "@/hooks/useSimplePlainTextOffsets";
 import { readerFontFamily } from "@/shared/constants/fonts";
 import CodeBlock from "./CodeBlock";
@@ -630,7 +628,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const prependLength = content.length - markdownWithoutPrepend.length;
   
   // Use context-based mapping when nofix=true (only when slateText is available)
-  const contextMapper = useMarkdownToSlateHighlights(
+  const contextMapper = useMarkdownToSlateHighlightsWithCache(
     markdownWithoutPrepend,
     slateText,
     disableHighlightFixes && slateText.length > 0 ? highlights.map(h => ({
@@ -645,6 +643,13 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   // Use different mappers based on whether fixes are disabled
   const diffMapper = useHighlightMapper(markdownWithoutPrepend, slateText);
   
+  // Log cache performance in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && contextMapper.fromCache !== undefined) {
+      console.log(`[SlateEditor] Highlight mapping ${contextMapper.fromCache ? 'from cache' : 'recalculated'}`);
+    }
+  }, [contextMapper.fromCache]);
+
   // For nofix mode, use the context-based mapped highlights
   // Only use highlights when we have slateText (client-side) or when not in nofix mode
   const highlightsToUse = disableHighlightFixes 
