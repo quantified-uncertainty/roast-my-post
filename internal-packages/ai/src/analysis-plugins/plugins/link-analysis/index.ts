@@ -2,7 +2,7 @@ import {
   generateLinkAnalysisAndSummary,
   generateLinkHighlights,
   validateUrls,
-  extractUrls,
+  extractUrlsWithPositions,
 } from "../../../tools/link-validator";
 import type { TextChunk } from "../../TextChunk";
 import type { AnalysisResult, SimpleAnalysisPlugin } from "../../types";
@@ -22,9 +22,9 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
 
   async analyze(_chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     try {
-      const urls = extractUrls(documentText, 50);
+      const extractedUrls = extractUrlsWithPositions(documentText, 50);
       
-      if (!urls.length) {
+      if (!extractedUrls.length) {
         return {
           summary: "No external links found in the document",
           analysis: "# Link Analysis Report\n\nNo external links were found in this document.",
@@ -34,13 +34,14 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
         };
       }
       
+      const urls = extractedUrls.map(e => e.url);
       const results = await validateUrls(urls.map(url => ({ url })));
       const { analysis, summary, grade } = generateLinkAnalysisAndSummary(results, "Document");
       
       return {
         summary,
         analysis,
-        comments: generateLinkHighlights(results, urls, documentText, 50),
+        comments: generateLinkHighlights(results, extractedUrls, documentText, 50),
         cost: 0,
         grade,
       };
