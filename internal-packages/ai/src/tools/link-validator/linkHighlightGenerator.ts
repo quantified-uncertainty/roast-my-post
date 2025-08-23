@@ -1,21 +1,21 @@
 import type { Comment } from "../../shared/types";
 import type { LinkAnalysis } from "./urlValidator";
+import type { ExtractedUrl } from "./urlExtractor";
 
 /**
  * Escape special Markdown characters in user-provided content
  */
 function escapeMarkdown(text: string): string {
-  // Escape characters that could break Markdown formatting
   return text
-    .replace(/\\/g, '\\\\')  // Escape backslashes first
-    .replace(/\[/g, '\\[')    // Escape square brackets
-    .replace(/\]/g, '\\]')    // Escape square brackets
-    .replace(/\*/g, '\\*')    // Escape asterisks
-    .replace(/_/g, '\\_')     // Escape underscores
-    .replace(/`/g, '\\`')     // Escape backticks
-    .replace(/>/g, '\\>')     // Escape greater-than (blockquote)
-    .replace(/#/g, '\\#')     // Escape hash (heading)
-    .replace(/\|/g, '\\|');   // Escape pipe (table)
+    .replace(/\\/g, '\\\\')  
+    .replace(/\[/g, '\\[')    
+    .replace(/\]/g, '\\]')    
+    .replace(/\*/g, '\\*')    
+    .replace(/_/g, '\\_')     
+    .replace(/`/g, '\\`')     
+    .replace(/>/g, '\\>')     
+    .replace(/#/g, '\\#')     
+    .replace(/\|/g, '\\|');   
 }
 
 /**
@@ -26,32 +26,29 @@ export function formatUrlForDisplay(url: string, maxLength: number = 60): string
     return url;
   }
   
-  // Try to keep the domain and some path
   try {
     const urlObj = new URL(url);
     const domain = urlObj.hostname;
     const path = urlObj.pathname + urlObj.search;
     
     if (domain.length + 10 >= maxLength) {
-      // Domain itself is too long, just truncate the whole URL
       return url.substring(0, maxLength - 3) + "...";
     }
     
-    // Calculate how much path we can show
-    const remainingLength = maxLength - domain.length - 10; // 10 for "https://" + "..."
+    const remainingLength = maxLength - domain.length - 10;
     const truncatedPath = path.length > remainingLength 
       ? path.substring(0, remainingLength) + "..."
       : path;
     
     return `${urlObj.protocol}//${domain}${truncatedPath}`;
   } catch {
-    // If URL parsing fails, just truncate normally
     return url.substring(0, maxLength - 3) + "...";
   }
 }
 
+
 /**
- * Finds the position of a URL in content, including markdown link boundaries
+ * Legacy function for backward compatibility
  */
 export function findUrlPosition(
   content: string,
@@ -62,209 +59,227 @@ export function findUrlPosition(
   quotedText: string;
   isValid: boolean;
 } | null {
-  // First, find the URL in the content
-  let urlIndex = content.indexOf(url);
-
-  if (urlIndex === -1) {
-    console.warn(`Could not find URL in content: ${url.substring(0, 50)}...`);
-    return null;
-  }
-
-  // Check if this URL is part of a markdown link [text](url)
-  // Look backwards from the URL to find if it's in markdown format
-  let startOffset = urlIndex;
-  let endOffset = urlIndex + url.length;
-  let quotedText = url;
-
-  // Check if URL is preceded by ]( - indicating it's part of a markdown link
-  if (urlIndex >= 2 && content.substring(urlIndex - 2, urlIndex) === "](") {
-    // Find the opening bracket of the markdown link
-    const beforeParens = content.substring(0, urlIndex - 2);
-    const openBracketIndex = beforeParens.lastIndexOf("[");
-
-    if (openBracketIndex !== -1) {
-      // Find the matching closing parenthesis for the markdown link
-      // We need to account for any parentheses that might be part of the URL itself
-      const afterUrlStart = urlIndex + url.length;
-      let parenCount = 0;
-      let closeParenIndex = -1;
-
-      // Count any unmatched opening parens in the URL
-      for (let i = 0; i < url.length; i++) {
-        if (url[i] === "(") parenCount++;
-        else if (url[i] === ")") parenCount--;
-      }
-
-      // Now look for the closing paren that matches the markdown syntax
-      // We need to find a closing paren when parenCount reaches -1
-      for (let i = afterUrlStart; i < content.length; i++) {
-        if (content[i] === ")") {
-          parenCount--;
-          if (parenCount === -1) {
-            closeParenIndex = i - afterUrlStart;
-            break;
-          }
-        } else if (content[i] === "(") {
-          parenCount++;
-        }
-      }
-
-      if (closeParenIndex !== -1) {
-        // This is a complete markdown link [text](url)
-        startOffset = openBracketIndex;
-        endOffset = afterUrlStart + closeParenIndex + 1;
-        quotedText = content.substring(startOffset, endOffset);
-      }
+  // Simple implementation for backward compatibility
+  const index = content.indexOf(url);
+  if (index === -1) return null;
+  
+  // Check if it's in a markdown link
+  if (index >= 2 && content.substring(index - 2, index) === "](") {
+    // Find the link text
+    const beforeParen = content.substring(0, index - 2);
+    const openBracket = beforeParen.lastIndexOf("[");
+    if (openBracket !== -1) {
+      return {
+        startOffset: openBracket + 1,
+        endOffset: index - 2,
+        quotedText: content.substring(openBracket + 1, index - 2),
+        isValid: true
+      };
     }
   }
-
+  
   return {
-    startOffset,
-    endOffset,
-    quotedText,
-    isValid: true,
+    startOffset: index,
+    endOffset: index + url.length,
+    quotedText: url,
+    isValid: true
   };
 }
 
 /**
- * Generates highlights (comments) from link analysis results
+ * Generates highlights from link analysis results using pre-calculated positions
  */
 export function generateLinkHighlights(
+  linkAnalysisResults: LinkAnalysis[],
+  extractedUrls: ExtractedUrl[],
+  fullContent: string,
+  targetHighlights?: number
+): Comment[] {
+  const highlights: Comment[] = [];
+  
+  // Create a map of URL to analysis result
+  const linkResultMap = new Map<string, LinkAnalysis>();
+  linkAnalysisResults.forEach((result) => {
+    linkResultMap.set(result.url, result);
+  });
+  
+  // Track processed positions to avoid duplicates
+  const processedPositions = new Set<string>();
+  
+  // Process each extracted URL
+  for (const extractedUrl of extractedUrls) {
+    const linkResult = linkResultMap.get(extractedUrl.url);
+    if (!linkResult) {
+      continue;
+    }
+    
+    // Use the positions directly from extractedUrl - they're already correct for the markdown
+    const position = {
+      startOffset: extractedUrl.highlightStartOffset,
+      endOffset: extractedUrl.highlightEndOffset,
+      quotedText: extractedUrl.highlightText
+    };
+    
+    // Create a unique key for this position
+    const positionKey = `${position.startOffset}-${position.endOffset}`;
+    if (processedPositions.has(positionKey)) {
+      continue;
+    }
+    
+    let grade: number;
+    let importance: number;
+    let description: string;
+    
+    // Get validation method info
+    const validationMethod = linkResult.validationMethod || "HTTP Request";
+    const methodNote = validationMethod !== "HTTP Request" ? ` (verified via ${validationMethod})` : "";
+    
+    if (linkResult.accessError) {
+      // Handle different error types
+      switch (linkResult.accessError.type) {
+        case "NotFound":
+          grade = 0;
+          importance = 100;
+          description = `❌ Broken link\n\n[${formatUrlForDisplay(extractedUrl.url)}](${extractedUrl.url}) - Page not found (HTTP 404)${methodNote}`;
+          break;
+        case "Forbidden":
+          grade = 50;
+          importance = 50;
+          description = `⚠️ Access restricted\n\n[${formatUrlForDisplay(extractedUrl.url)}](${extractedUrl.url}) - Site exists but blocks automated access (HTTP 403)${methodNote}`;
+          break;
+        case "RateLimited":
+          grade = 50;
+          importance = 50;
+          description = `⚠️ Rate limited\n\n[${formatUrlForDisplay(extractedUrl.url)}](${extractedUrl.url}) - Site exists but temporarily rate limited${methodNote}`;
+          break;
+        case "Timeout":
+          grade = 0;
+          importance = 100;
+          description = `⏱️ Link timeout\n\n[${formatUrlForDisplay(extractedUrl.url)}](${extractedUrl.url}) - Request timed out${methodNote}`;
+          break;
+        default:
+          grade = 0;
+          importance = 100;
+          const errorMsg =
+            "message" in linkResult.accessError
+              ? escapeMarkdown(linkResult.accessError.message)
+              : "Unknown error";
+          description = `❌ Link error\n\n[${formatUrlForDisplay(extractedUrl.url)}](${extractedUrl.url}) - ${errorMsg}${methodNote}`;
+      }
+    } else {
+      // URL is accessible
+      grade = 90;
+      importance = 10;
+      const statusCode = linkResult.linkDetails?.statusCode || 200;
+      description = `✅ Link verified\n\n[${formatUrlForDisplay(extractedUrl.url)}](${extractedUrl.url}) - Server responded successfully (HTTP ${statusCode})${methodNote}`;
+    }
+    
+    highlights.push({
+      description,
+      highlight: {
+        startOffset: position.startOffset,
+        endOffset: position.endOffset,
+        quotedText: position.quotedText,
+        isValid: true
+      },
+      importance,
+      grade,
+      
+      // Required fields for Comment interface  
+      header: extractedUrl.url.length > 50 ? extractedUrl.url.substring(0, 47) + '...' : extractedUrl.url,
+      level: grade > 70 ? 'success' : grade > 30 ? 'warning' : 'error',
+      source: 'link-analysis',
+      metadata: {
+        pluginName: 'link-analysis',
+        timestamp: new Date().toISOString(),
+        chunkId: 'unknown',
+        processingTimeMs: 0,
+        toolChain: [],
+        // Debugging information
+        url: extractedUrl.url,
+        isMarkdownLink: extractedUrl.isMarkdownLink,
+        linkText: extractedUrl.linkText,
+        originalPositions: {
+          urlStart: extractedUrl.urlStartOffset,
+          urlEnd: extractedUrl.urlEndOffset,
+          linkTextStart: extractedUrl.linkTextStartOffset,
+          linkTextEnd: extractedUrl.linkTextEndOffset,
+          highlightStart: extractedUrl.highlightStartOffset,
+          highlightEnd: extractedUrl.highlightEndOffset
+        },
+        validationResult: linkResult.accessError ? 'error' : 'success',
+        validationMethod: linkResult.validationMethod || 'HTTP Request',
+        statusCode: linkResult.linkDetails?.statusCode || linkResult.accessError?.statusCode,
+        errorType: linkResult.accessError?.type
+      }
+    });
+    
+    processedPositions.add(positionKey);
+  }
+  
+  // Sort by position in document
+  highlights.sort((a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0));
+  
+  // Limit if requested
+  if (targetHighlights && targetHighlights > 0) {
+    return highlights.slice(0, targetHighlights);
+  }
+  
+  return highlights;
+}
+
+/**
+ * Overload for backward compatibility - accepts URL strings
+ */
+export function generateLinkHighlightsLegacy(
   linkAnalysisResults: LinkAnalysis[],
   originalUrls: string[],
   fullContent: string,
   targetHighlights?: number
 ): Comment[] {
-  const highlights: Comment[] = [];
-
-  // Create a map of URL to analysis result for faster lookup
-  const linkResultMap = new Map<string, LinkAnalysis>();
-  linkAnalysisResults.forEach((result) => {
-    linkResultMap.set(result.url, result);
-  });
-
-  // Track positions we've already highlighted to avoid duplicates
-  const processedPositions = new Set<string>();
-
-  // Process all URLs in the order they appear in the document
-  for (const url of originalUrls) {
-    const urlPosition = findUrlPosition(fullContent, url);
-
-    if (!urlPosition) {
-      console.debug(`Could not find position for URL: ${url.substring(0, 50)}...`);
-      continue;
+  // Convert URL strings to ExtractedUrl format
+  // This is a simplified conversion for backward compatibility
+  const extractedUrls: ExtractedUrl[] = originalUrls.map(url => {
+    const urlIndex = fullContent.indexOf(url);
+    if (urlIndex === -1) {
+      return null;
     }
-
-    // Validate the position
-    if (urlPosition.startOffset < 0 || urlPosition.endOffset <= urlPosition.startOffset) {
-      console.warn(`Invalid position for URL ${url.substring(0, 50)}:`, {
-        startOffset: urlPosition.startOffset,
-        endOffset: urlPosition.endOffset
-      });
-      continue;
-    }
-
-    // Additional validation: ensure offsets are within content bounds
-    if (urlPosition.endOffset > fullContent.length) {
-      console.warn(`URL position exceeds content length for ${url.substring(0, 50)}:`, {
-        endOffset: urlPosition.endOffset,
-        contentLength: fullContent.length
-      });
-      continue;
-    }
-
-    // Create a unique key for this position to prevent duplicates
-    const positionKey = `${urlPosition.startOffset}-${urlPosition.endOffset}`;
-
-    // Skip if we've already processed this exact position
-    if (processedPositions.has(positionKey)) {
-      continue;
-    }
-
-    const linkResult = linkResultMap.get(url);
-
-    if (linkResult) {
-      let grade: number;
-      let importance: number;
-      let description: string;
-
-      // Get validation method info
-      const validationMethod = linkResult.validationMethod || "HTTP Request";
-      const methodNote = validationMethod !== "HTTP Request" ? ` (verified via ${validationMethod})` : "";
-      
-      if (linkResult.accessError) {
-        // Handle different error types
-        switch (linkResult.accessError.type) {
-          case "NotFound":
-            grade = 0;
-            importance = 100;
-            description = `❌ Broken link\n\n[${formatUrlForDisplay(url)}](${url}) - Page not found (HTTP 404)${methodNote}`;
-            break;
-          case "Forbidden":
-            // Treat 403 as a warning, not an error (site exists but blocks access)
-            grade = 50;
-            importance = 50;
-            description = `⚠️ Access restricted\n\n[${formatUrlForDisplay(url)}](${url}) - Site exists but blocks automated access (HTTP 403)${methodNote}`;
-            break;
-          case "RateLimited":
-            // Also treat rate limiting as a warning
-            grade = 50;
-            importance = 50;
-            description = `⚠️ Rate limited\n\n[${formatUrlForDisplay(url)}](${url}) - Site exists but temporarily rate limited${methodNote}`;
-            break;
-          case "Timeout":
-            grade = 0;
-            importance = 100;
-            description = `⏱️ Link timeout\n\n[${formatUrlForDisplay(url)}](${url}) - Request timed out${methodNote}`;
-            break;
-          default:
-            grade = 0;
-            importance = 100;
-            const errorMsg =
-              "message" in linkResult.accessError
-                ? escapeMarkdown(linkResult.accessError.message)
-                : "Unknown error";
-            description = `❌ Link error\n\n[${formatUrlForDisplay(url)}](${url}) - ${errorMsg}${methodNote}`;
-        }
-      } else {
-        // URL is accessible - simple verification
-        grade = 90;
-        importance = 10;
-        const statusCode = linkResult.linkDetails?.statusCode || 200;
-        description = `✅ Link verified\n\n[${formatUrlForDisplay(url)}](${url}) - Server responded successfully (HTTP ${statusCode})${methodNote}`;
+    
+    // Check if it's in a markdown link
+    const beforeUrl = fullContent.substring(Math.max(0, urlIndex - 2), urlIndex);
+    const isMarkdown = beforeUrl === "](";
+    
+    if (isMarkdown) {
+      // Find the link text
+      const beforeParen = fullContent.substring(0, urlIndex - 2);
+      const openBracket = beforeParen.lastIndexOf("[");
+      if (openBracket !== -1) {
+        const linkText = fullContent.substring(openBracket + 1, urlIndex - 2);
+        return {
+          url,
+          urlStartOffset: urlIndex,
+          urlEndOffset: urlIndex + url.length,
+          isMarkdownLink: true,
+          linkText,
+          linkTextStartOffset: openBracket + 1,
+          linkTextEndOffset: urlIndex - 2,
+          highlightStartOffset: openBracket + 1,
+          highlightEndOffset: urlIndex - 2,
+          highlightText: linkText
+        };
       }
-
-      highlights.push({
-        description,
-        highlight: urlPosition,
-        importance,
-        grade,
-        
-        // Required fields for Comment interface  
-        header: url.length > 50 ? url.substring(0, 47) + '...' : url,
-        level: grade > 0.7 ? 'success' : grade > 0.3 ? 'warning' : 'error',
-        source: 'link-analysis',
-        metadata: {
-          pluginName: 'link-analysis',
-          timestamp: new Date().toISOString(),
-          chunkId: 'unknown',
-          processingTimeMs: 0,
-          toolChain: []
-        }
-      });
-
-      // Mark this position as processed
-      processedPositions.add(positionKey);
     }
-  }
-
-  // Sort highlights by their position in the document to ensure top-to-bottom order
-  highlights.sort((a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0));
-
-  // Limit highlights if requested
-  if (targetHighlights && targetHighlights > 0) {
-    return highlights.slice(0, targetHighlights);
-  }
-
-  return highlights;
+    
+    return {
+      url,
+      urlStartOffset: urlIndex,
+      urlEndOffset: urlIndex + url.length,
+      isMarkdownLink: false,
+      highlightStartOffset: urlIndex,
+      highlightEndOffset: urlIndex + url.length,
+      highlightText: url
+    };
+  }).filter(item => item !== null) as ExtractedUrl[];
+  
+  return generateLinkHighlights(linkAnalysisResults, extractedUrls, fullContent, targetHighlights);
 }

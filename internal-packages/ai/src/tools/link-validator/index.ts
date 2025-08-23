@@ -169,10 +169,11 @@ export const linkValidator = new LinkValidatorTool();
 export default linkValidator;
 
 // Export utility functions for advanced usage
-export { extractUrls } from './urlExtractor';
+export { extractUrls, extractUrlsWithPositions, type ExtractedUrl } from './urlExtractor';
 export { validateUrl, validateUrls, type LinkAnalysis, type AccessError } from './urlValidator';
 export { 
-  generateLinkHighlights, 
+  generateLinkHighlights,
+  generateLinkHighlightsLegacy,
   findUrlPosition, 
   formatUrlForDisplay 
 } from './linkHighlightGenerator';

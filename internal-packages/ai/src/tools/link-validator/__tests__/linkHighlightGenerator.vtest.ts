@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // Vitest test file
-import { findUrlPosition, generateLinkHighlights } from "../linkHighlightGenerator";
+import { findUrlPosition, generateLinkHighlightsLegacy } from "../linkHighlightGenerator";
 import type { LinkAnalysis } from "../urlValidator";
 
 describe("URL Position Finding and Highlighting", () => {
@@ -19,9 +19,9 @@ describe("URL Position Finding and Highlighting", () => {
     const position = findUrlPosition(content, "https://react.dev");
     
     expect(position).not.toBeNull();
-    expect(position?.startOffset).toBe(10); // Start of [React docs](...)
-    expect(position?.endOffset).toBe(41); // End of (...)]
-    expect(position?.quotedText).toBe("[React docs](https://react.dev)");
+    expect(position?.startOffset).toBe(11); // Start of "React docs" text
+    expect(position?.endOffset).toBe(21); // End of "React docs" text
+    expect(position?.quotedText).toBe("React docs");
   });
 
   it("handles URLs with parentheses in markdown", () => {
@@ -29,7 +29,7 @@ describe("URL Position Finding and Highlighting", () => {
     const position = findUrlPosition(content, "https://en.wikipedia.org/wiki/AI_(disambiguation)");
     
     expect(position).not.toBeNull();
-    expect(position?.quotedText).toBe("[Wikipedia](https://en.wikipedia.org/wiki/AI_(disambiguation))");
+    expect(position?.quotedText).toBe("Wikipedia");
   });
 
   it("handles edge cases", () => {
@@ -61,13 +61,13 @@ describe("Link Highlight Generation", () => {
       }
     ];
     const urls = ["https://broken.com"];
-    const content = "Check out https://broken.com for info.";
+    const content = "Check out [this link](https://broken.com) for info.";
     
-    const highlights = generateLinkHighlights(linkAnalysisResults, urls, content, 5);
+    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 5);
     
     expect(highlights).toHaveLength(1);
     expect(highlights[0].description).toContain("Broken link");
-    expect(highlights[0].highlight.quotedText).toBe("https://broken.com");
+    expect(highlights[0].highlight.quotedText).toBe("this link");
   });
 
   it("generates comments for working links", () => {
@@ -82,13 +82,13 @@ describe("Link Highlight Generation", () => {
       }
     ];
     const urls = ["https://working.com"];
-    const content = "Visit https://working.com today.";
+    const content = "Visit [working site](https://working.com) today.";
     
-    const highlights = generateLinkHighlights(linkAnalysisResults, urls, content, 5);
+    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 5);
     
     expect(highlights).toHaveLength(1);
     expect(highlights[0].description).toContain("Link verified");
-    expect(highlights[0].highlight.quotedText).toBe("https://working.com");
+    expect(highlights[0].highlight.quotedText).toBe("working site");
   });
 
   it("truncates URLs correctly in descriptions while preserving full URLs in links", () => {
@@ -106,10 +106,13 @@ describe("Link Highlight Generation", () => {
     const urls = [longUrl];
     const content = `Check out [this article](${longUrl}) for more info.`;
     
-    const highlights = generateLinkHighlights(linkAnalysisResults, urls, content, 5);
+    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 5);
     
     expect(highlights).toHaveLength(1);
     const highlight = highlights[0];
+    
+    // Check that quoted text is correct
+    expect(highlight.highlight.quotedText).toBe("this article");
     
     // Header should be truncated
     expect(highlight.header.length).toBeLessThan(longUrl.length);
@@ -117,8 +120,8 @@ describe("Link Highlight Generation", () => {
     
     // Description should contain truncated display text but full URL as link
     expect(highlight.description).toContain("✅ Link verified");
-    expect(highlight.description).toContain("[https://www.thinkglobalhealth.org/article/just-how-do-deat...]");
-    expect(highlight.description).toContain(`](${longUrl})`);
+    expect(highlight.description).toContain("[https://www.thinkglobalhealth.org/article/just-how-do-deat...");
+    expect(highlight.description).toContain(longUrl);
     
     // Full URL should be present for linking
     expect(highlight.description).toContain(longUrl);
@@ -143,9 +146,9 @@ describe("Link Highlight Generation", () => {
       }
     ];
     const urls = ["https://one.com", "https://two.com", "https://three.com"];
-    const content = "Visit https://one.com and https://two.com and https://three.com";
+    const content = "Visit [first](https://one.com) and [second](https://two.com) and [third](https://three.com)";
     
-    const highlights = generateLinkHighlights(linkAnalysisResults, urls, content, 2);
+    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 2);
     
     expect(highlights).toHaveLength(2); // Limited to 2
   });
