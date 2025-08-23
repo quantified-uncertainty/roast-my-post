@@ -635,6 +635,35 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     }
   }, [contextMapper.fromCache]);
 
+  // Debug position mismatches in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && disableHighlightFixes && highlights.length > 0) {
+      console.group('🔍 Debug: nofix=true position analysis');
+      console.log('Content length:', content.length);
+      console.log('SlateText length:', slateText.length);
+      console.log('First 200 chars of content:', content.substring(0, 200));
+      console.log('First 200 chars of slateText:', slateText.substring(0, 200));
+      
+      highlights.slice(0, 3).forEach((h, i) => {
+        console.log(`\nHighlight ${i + 1}:`);
+        console.log('- quotedText:', h.quotedText);
+        console.log('- positions:', h.startOffset, '->', h.endOffset);
+        console.log('- length:', h.endOffset - h.startOffset);
+        
+        if (h.startOffset < content.length) {
+          const contentText = content.substring(h.startOffset, h.endOffset);
+          console.log('- content at position:', JSON.stringify(contentText));
+        }
+        
+        if (h.startOffset < slateText.length) {
+          const slateTextAtPos = slateText.substring(h.startOffset, h.endOffset);
+          console.log('- slateText at position:', JSON.stringify(slateTextAtPos));
+        }
+      });
+      console.groupEnd();
+    }
+  }, [disableHighlightFixes, highlights, content, slateText]);
+
   // When nofix=true: Use raw database positions (no mapping)
   // When nofix=false: Use context-based mapped highlights (smart mapping)
   const highlightsToUse = disableHighlightFixes 
@@ -642,8 +671,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     : (slateText.length > 0 ? contextMapper.mappedHighlights : []);
   
   // Choose which mapper to use based on disableHighlightFixes
+  // Even with nofix=true, we need to map markdown positions to Slate positions
   const { mdToSlateOffset, debug: mapperDebug } = disableHighlightFixes 
-    ? { mdToSlateOffset: new Map(), debug: { method: 'raw positions (nofix=true)' } }
+    ? { mdToSlateOffset: diffMapper.mdToSlateOffset, debug: { method: 'diff mapping (nofix=true)' } }
     : { mdToSlateOffset: diffMapper.mdToSlateOffset, debug: diffMapper.debug };
   
   const nodeOffsets = useSimplePlainTextOffsets(editor);
@@ -692,13 +722,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         const adjustedStartOffset = highlight.startOffset;
         const adjustedEndOffset = highlight.endOffset;
 
-        // Map markdown offsets to slate offsets (skip if using raw positions)
-        let slateStartOffset = disableHighlightFixes 
-          ? adjustedStartOffset  // Use raw database positions directly
-          : mdToSlateOffset.get(adjustedStartOffset);
-        let slateEndOffset = disableHighlightFixes
-          ? adjustedEndOffset    // Use raw database positions directly
-          : mdToSlateOffset.get(adjustedEndOffset);
+        // Map markdown offsets to slate offsets 
+        let slateStartOffset = mdToSlateOffset.get(adjustedStartOffset);
+        let slateEndOffset = mdToSlateOffset.get(adjustedEndOffset);
 
         // If direct mapping fails, try nearby offsets (unless fixes are disabled)
         if (slateStartOffset === undefined && !disableHighlightFixes) {
