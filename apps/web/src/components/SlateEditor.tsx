@@ -612,36 +612,22 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   }, [editor.children, extractPlainText, slateText.length]);
 
 
-  // Parse the markdown to detect and strip the prepend
-  const markdownWithoutPrepend = useMemo(() => {
-    // Look for the separator line (---) that marks the end of prepend
-    const separatorIndex = content.indexOf('\n---\n');
-    if (separatorIndex !== -1) {
-      // Skip past the separator and the following TWO newlines
-      // The prepend includes one extra newline after the separator
-      return content.substring(separatorIndex + 6); // +6 for "\n---\n\n"
-    }
-    return content;
-  }, [content]);
-  
-  // Calculate prepend length for offset adjustment
-  const prependLength = content.length - markdownWithoutPrepend.length;
-  
   // Use context-based mapping when nofix=true (only when slateText is available)
+  // Highlights are already positioned relative to the full document content including prepend
   const contextMapper = useMarkdownToSlateHighlightsWithCache(
-    markdownWithoutPrepend,
+    content, // Use full content, not stripped
     slateText,
     disableHighlightFixes && slateText.length > 0 ? highlights.map(h => ({
       ...h,
       quotedText: h.quotedText || "",
-      startOffset: Math.max(0, h.startOffset - prependLength),
-      endOffset: Math.max(0, h.endOffset - prependLength)
+      startOffset: h.startOffset, // Use original positions
+      endOffset: h.endOffset      // Use original positions
     })) : [],
     30 // context window
   );
   
-  // Use different mappers based on whether fixes are disabled
-  const diffMapper = useHighlightMapper(markdownWithoutPrepend, slateText);
+  // Use different mappers based on whether fixes are disabled  
+  const diffMapper = useHighlightMapper(content, slateText);
   
   // Log cache performance in development
   useEffect(() => {
@@ -703,13 +689,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
         const tag = highlight.tag || "";
 
-        // Adjust highlight offsets to account for prepend (unless already adjusted by context mapper)
-        const adjustedStartOffset = disableHighlightFixes 
-          ? highlight.startOffset  // Context mapper already provides Slate positions
-          : Math.max(0, highlight.startOffset - prependLength);
-        const adjustedEndOffset = disableHighlightFixes
-          ? highlight.endOffset    // Context mapper already provides Slate positions  
-          : Math.max(0, highlight.endOffset - prependLength);
+        // Use highlight positions directly - they already account for document structure
+        const adjustedStartOffset = highlight.startOffset;
+        const adjustedEndOffset = highlight.endOffset;
 
         // Map markdown offsets to slate offsets (skip if using context mapper)
         let slateStartOffset = disableHighlightFixes 
@@ -754,7 +736,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               originalEnd: highlight.endOffset,
               adjustedStart: adjustedStartOffset,
               adjustedEnd: adjustedEndOffset,
-              prependLength,
               slateStartOffset,
               slateEndOffset
             });
@@ -764,7 +745,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           const failedDebug = document.getElementById('slate-failed-mappings') || document.createElement('div');
           failedDebug.id = 'slate-failed-mappings';
           failedDebug.style.display = 'none';
-          const existing = failedDebug.textContent ? JSON.parse(failedDebug.textContent) : { failed: [], prependLength };
+          const existing = failedDebug.textContent ? JSON.parse(failedDebug.textContent) : { failed: [] };
           existing.failed.push({ 
             tag, 
             startOffset: highlight.startOffset, 
@@ -812,7 +793,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       return ranges;
     },
-    [highlightsToUse, activeTag, initialized, mdToSlateOffset, nodeOffsets, disableHighlightFixes, prependLength]
+    [highlightsToUse, activeTag, initialized, mdToSlateOffset, nodeOffsets, disableHighlightFixes]
   );
 
 
