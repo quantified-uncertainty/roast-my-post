@@ -31,7 +31,6 @@ export { linkValidator } from './link-validator';
 // Export link validator utilities and types
 export { 
   generateLinkHighlights,
-  generateLinkHighlightsLegacy,
   generateLinkAnalysisAndSummary,
   generateLinkAnalysisReport,
   generateNoLinksReport,

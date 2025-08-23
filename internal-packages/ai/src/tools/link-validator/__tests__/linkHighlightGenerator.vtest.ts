@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // Vitest test file
-import { findUrlPosition, generateLinkHighlightsLegacy } from "../linkHighlightGenerator";
+import { findUrlPosition, generateLinkHighlights } from "../linkHighlightGenerator";
+import { extractUrlsWithPositions } from "../urlExtractor";
 import type { LinkAnalysis } from "../urlValidator";
 
 describe("URL Position Finding and Highlighting", () => {
@@ -60,10 +61,10 @@ describe("Link Highlight Generation", () => {
         }
       }
     ];
-    const urls = ["https://broken.com"];
     const content = "Check out [this link](https://broken.com) for info.";
+    const extractedUrls = extractUrlsWithPositions(content);
     
-    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 5);
+    const highlights = generateLinkHighlights(linkAnalysisResults, extractedUrls, content, 5);
     
     expect(highlights).toHaveLength(1);
     expect(highlights[0].description).toContain("Broken link");
@@ -81,10 +82,10 @@ describe("Link Highlight Generation", () => {
         }
       }
     ];
-    const urls = ["https://working.com"];
     const content = "Visit [working site](https://working.com) today.";
+    const extractedUrls = extractUrlsWithPositions(content);
     
-    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 5);
+    const highlights = generateLinkHighlights(linkAnalysisResults, extractedUrls, content, 5);
     
     expect(highlights).toHaveLength(1);
     expect(highlights[0].description).toContain("Link verified");
@@ -103,10 +104,10 @@ describe("Link Highlight Generation", () => {
         }
       }
     ];
-    const urls = [longUrl];
     const content = `Check out [this article](${longUrl}) for more info.`;
+    const extractedUrls = extractUrlsWithPositions(content);
     
-    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 5);
+    const highlights = generateLinkHighlights(linkAnalysisResults, extractedUrls, content, 5);
     
     expect(highlights).toHaveLength(1);
     const highlight = highlights[0];
@@ -145,10 +146,10 @@ describe("Link Highlight Generation", () => {
         accessError: { type: "NotFound", statusCode: 404 }
       }
     ];
-    const urls = ["https://one.com", "https://two.com", "https://three.com"];
     const content = "Visit [first](https://one.com) and [second](https://two.com) and [third](https://three.com)";
+    const extractedUrls = extractUrlsWithPositions(content);
     
-    const highlights = generateLinkHighlightsLegacy(linkAnalysisResults, urls, content, 2);
+    const highlights = generateLinkHighlights(linkAnalysisResults, extractedUrls, content, 2);
     
     expect(highlights).toHaveLength(2); // Limited to 2
   });

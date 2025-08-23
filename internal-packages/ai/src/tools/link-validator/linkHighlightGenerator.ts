@@ -194,24 +194,25 @@ export function generateLinkHighlights(
         timestamp: new Date().toISOString(),
         chunkId: 'unknown',
         processingTimeMs: 0,
-        toolChain: [],
+        toolChain: [] as any,
         // Debugging information
         url: extractedUrl.url,
         isMarkdownLink: extractedUrl.isMarkdownLink,
         linkText: extractedUrl.linkText,
         originalPositions: {
-          urlStart: extractedUrl.urlStartOffset,
-          urlEnd: extractedUrl.urlEndOffset,
-          linkTextStart: extractedUrl.linkTextStartOffset,
-          linkTextEnd: extractedUrl.linkTextEndOffset,
-          highlightStart: extractedUrl.highlightStartOffset,
-          highlightEnd: extractedUrl.highlightEndOffset
+          urlStartOffset: extractedUrl.urlStartOffset,
+          urlEndOffset: extractedUrl.urlEndOffset,
+          linkTextStartOffset: extractedUrl.linkTextStartOffset,
+          linkTextEndOffset: extractedUrl.linkTextEndOffset,
+          highlightStartOffset: extractedUrl.highlightStartOffset,
+          highlightEndOffset: extractedUrl.highlightEndOffset
         },
         validationResult: linkResult.accessError ? 'error' : 'success',
         validationMethod: linkResult.validationMethod || 'HTTP Request',
-        statusCode: linkResult.linkDetails?.statusCode || linkResult.accessError?.statusCode,
+        statusCode: linkResult.linkDetails?.statusCode || 
+          (linkResult.accessError && 'statusCode' in linkResult.accessError ? linkResult.accessError.statusCode : undefined),
         errorType: linkResult.accessError?.type
-      }
+      } as any
     });
     
     processedPositions.add(positionKey);
@@ -228,58 +229,3 @@ export function generateLinkHighlights(
   return highlights;
 }
 
-/**
- * Overload for backward compatibility - accepts URL strings
- */
-export function generateLinkHighlightsLegacy(
-  linkAnalysisResults: LinkAnalysis[],
-  originalUrls: string[],
-  fullContent: string,
-  targetHighlights?: number
-): Comment[] {
-  // Convert URL strings to ExtractedUrl format
-  // This is a simplified conversion for backward compatibility
-  const extractedUrls: ExtractedUrl[] = originalUrls.map(url => {
-    const urlIndex = fullContent.indexOf(url);
-    if (urlIndex === -1) {
-      return null;
-    }
-    
-    // Check if it's in a markdown link
-    const beforeUrl = fullContent.substring(Math.max(0, urlIndex - 2), urlIndex);
-    const isMarkdown = beforeUrl === "](";
-    
-    if (isMarkdown) {
-      // Find the link text
-      const beforeParen = fullContent.substring(0, urlIndex - 2);
-      const openBracket = beforeParen.lastIndexOf("[");
-      if (openBracket !== -1) {
-        const linkText = fullContent.substring(openBracket + 1, urlIndex - 2);
-        return {
-          url,
-          urlStartOffset: urlIndex,
-          urlEndOffset: urlIndex + url.length,
-          isMarkdownLink: true,
-          linkText,
-          linkTextStartOffset: openBracket + 1,
-          linkTextEndOffset: urlIndex - 2,
-          highlightStartOffset: openBracket + 1,
-          highlightEndOffset: urlIndex - 2,
-          highlightText: linkText
-        };
-      }
-    }
-    
-    return {
-      url,
-      urlStartOffset: urlIndex,
-      urlEndOffset: urlIndex + url.length,
-      isMarkdownLink: false,
-      highlightStartOffset: urlIndex,
-      highlightEndOffset: urlIndex + url.length,
-      highlightText: url
-    };
-  }).filter(item => item !== null) as ExtractedUrl[];
-  
-  return generateLinkHighlights(linkAnalysisResults, extractedUrls, fullContent, targetHighlights);
-}

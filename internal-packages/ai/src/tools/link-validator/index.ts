@@ -173,7 +173,6 @@ export { extractUrls, extractUrlsWithPositions, type ExtractedUrl } from './urlE
 export { validateUrl, validateUrls, type LinkAnalysis, type AccessError } from './urlValidator';
 export { 
   generateLinkHighlights,
-  generateLinkHighlightsLegacy,
   findUrlPosition, 
   formatUrlForDisplay 
 } from './linkHighlightGenerator';

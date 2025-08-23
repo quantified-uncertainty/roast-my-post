@@ -24,7 +24,7 @@ export interface ExtractedUrl {
  */
 export function extractUrlsWithPositions(content: string, maxUrls: number = 50): ExtractedUrl[] {
   const extractedUrls: ExtractedUrl[] = [];
-  const seenUrls = new Set<string>();
+  const processedPositions = new Set<string>(); // Track position ranges to avoid duplicates at same location
   
   // First pass: Find all markdown links [text](url), excluding images ![text](url)
   // We need to find these first to know which URLs are part of markdown
@@ -54,16 +54,17 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
       continue;
     }
     
-    // Skip if we've already seen this URL
-    if (seenUrls.has(url)) {
-      continue;
-    }
-    
     // Calculate positions
     const linkTextStart = fullMatchStart + 1; // After '['
     const linkTextEnd = linkTextStart + linkText.length;
     const urlStart = linkTextEnd + 2; // After ']('
     const urlEnd = urlStart + url.length;
+    
+    // Create a unique key for this position to avoid exact duplicates
+    const positionKey = `${urlStart}-${urlEnd}`;
+    if (processedPositions.has(positionKey)) {
+      continue;
+    }
     
     extractedUrls.push({
       url,
@@ -79,7 +80,7 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
       highlightText: linkText
     });
     
-    seenUrls.add(url);
+    processedPositions.add(positionKey);
   }
   
   // Second pass: Find bare URLs (not in markdown links)
@@ -191,12 +192,13 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
         continue;
       }
       
-      // Skip if we've already seen this URL
-      if (seenUrls.has(cleanedUrl)) {
+      const cleanedUrlEnd = urlStart + cleanedUrl.length;
+      
+      // Check if we've already processed this exact position
+      const positionKey = `${urlStart}-${cleanedUrlEnd}`;
+      if (processedPositions.has(positionKey)) {
         continue;
       }
-      
-      const cleanedUrlEnd = urlStart + cleanedUrl.length;
       
       extractedUrls.push({
         url: cleanedUrl,
@@ -209,7 +211,7 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
         highlightText: cleanedUrl
       });
       
-      seenUrls.add(cleanedUrl);
+      processedPositions.add(positionKey);
     }
   }
   
@@ -222,9 +224,11 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
 
 /**
  * Legacy function for backward compatibility
- * Extracts just the URLs as strings
+ * Extracts just the URLs as strings (deduplicated)
  */
 export function extractUrls(content: string, maxUrls: number = 20): string[] {
   const extracted = extractUrlsWithPositions(content, maxUrls);
-  return extracted.map(item => item.url);
+  // Deduplicate URLs for backward compatibility
+  const uniqueUrls = Array.from(new Set(extracted.map(item => item.url)));
+  return uniqueUrls.slice(0, maxUrls);
 }
