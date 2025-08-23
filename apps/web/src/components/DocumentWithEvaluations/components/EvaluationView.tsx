@@ -24,6 +24,7 @@ export function EvaluationView({
   document,
   contentWithMetadataPrepend,
   showDebugComments = false,
+  disableHighlightFixes = false,
 }: EvaluationViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,6 +146,7 @@ export function EvaluationView({
               contentWithMetadataPrepend={contentWithMetadataPrepend}
               highlights={highlights}
               hoveredCommentId={evaluationState.hoveredCommentId}
+              disableHighlightFixes={disableHighlightFixes}
               onHighlightHover={(commentId) => {
                 onEvaluationStateChange({
                   ...evaluationState,

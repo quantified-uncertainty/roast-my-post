@@ -62,6 +62,10 @@ export default async function DocumentPage({
   // Parse debug parameter from query params
   const debugParam = resolvedSearchParams.debug;
   const showDebugComments = debugParam === 'true' || debugParam === '1';
+  
+  // Parse nofix parameter to disable highlight position auto-fixing
+  const nofixParam = resolvedSearchParams.nofix;
+  const disableHighlightFixes = nofixParam === 'true' || nofixParam === '1';
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gray-50">
@@ -72,6 +76,7 @@ export default async function DocumentPage({
             isOwner={isOwner}
             initialSelectedEvalIds={selectedEvalIds}
             showDebugComments={showDebugComments}
+            disableHighlightFixes={disableHighlightFixes}
           />
         </div>
       </div>

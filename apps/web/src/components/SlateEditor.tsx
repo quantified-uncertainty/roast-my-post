@@ -29,7 +29,10 @@ import { unified } from "unified";
 
 // Import our improved hooks for Phase 2
 import { useHighlightMapper } from "@/hooks/useHighlightMapper";
-import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
+import { useMarkdownASTMapper } from "@/hooks/useMarkdownASTMapper";
+import { useMarkdownASTMapperV2 } from "@/hooks/useMarkdownASTMapperV2";
+import { useMarkdownToSlateHighlights } from "@/hooks/useMarkdownToSlateHighlights";
+import { useSimplePlainTextOffsets } from "@/hooks/useSimplePlainTextOffsets";
 import { readerFontFamily } from "@/shared/constants/fonts";
 import CodeBlock from "./CodeBlock";
 import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
@@ -76,6 +79,7 @@ interface SlateEditorProps {
   onHighlightHover?: (tag: string | null) => void;
   activeTag?: string | null;
   hoveredTag?: string | null;
+  disableHighlightFixes?: boolean;
 }
 
 interface RenderElementProps {
@@ -374,6 +378,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   onHighlightHover,
   activeTag,
   hoveredTag,
+  disableHighlightFixes = false,
 }) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [initialized, setInitialized] = useState(false);
@@ -546,7 +551,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     }
   }, [content]);
 
-  // Extract plain text from nodes
+  // Extract plain text from nodes - without adding extra newlines
   const extractPlainText = useCallback((nodes: Node[]): string => {
     let text = "";
 
@@ -554,33 +559,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       if (Text.isText(node)) {
         text += node.text;
       } else if (Element.isElement(node)) {
-        // Handle block elements structure for better matching with markdown
-        if (
-          node.type &&
-          (node.type.startsWith("heading") ||
-            node.type === "paragraph" ||
-            node.type === "block-quote")
-        ) {
-          // Add paragraph breaks for these block types
-          if (text.length > 0 && !text.endsWith("\n\n")) {
-            text += "\n\n";
-          }
-        }
-
-        // Visit all children
+        // Just visit children without adding extra formatting
         node.children.forEach(visit);
-
-        // Add trailing breaks for block elements
-        if (
-          node.type &&
-          (node.type.startsWith("heading") ||
-            node.type === "paragraph" ||
-            node.type === "block-quote")
-        ) {
-          if (!text.endsWith("\n\n")) {
-            text += "\n\n";
-          }
-        }
       }
     };
 
@@ -588,9 +568,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     return text;
   }, []);
 
-  // Initialize editor
+  // Initialize editor (client-side only)
   useEffect(() => {
-    if (!initRef.current && value) {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
+    if (!initRef.current && value && value.length > 0) {
       editor.children = value;
       editor.onChange();
 
@@ -601,19 +584,88 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       initRef.current = true;
       setInitialized(true);
     }
-  }, [editor, value, content, extractPlainText]);
+  }, [editor, value, extractPlainText]);
+  
+  // Update slateText when editor content changes after initialization
+  useEffect(() => {
+    if (initialized && editor.children.length > 0) {
+      const plainText = extractPlainText(editor.children);
+      if (plainText !== slateText && plainText.length > 0) {
+        setSlateText(plainText);
+      }
+    }
+  }, [initialized, editor.children, extractPlainText, slateText]);
+  
+  // Fallback: Force text extraction after mount (client-side only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Wait a bit for the editor to be ready
+    const timer = setTimeout(() => {
+      if (editor.children && editor.children.length > 0 && slateText.length === 0) {
+        const plainText = extractPlainText(editor.children);
+        if (plainText.length > 0) {
+          setSlateText(plainText);
+        }
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [editor.children, extractPlainText, slateText.length]);
 
-  // Use our custom hooks for robust offset mapping
-  const { mdToSlateOffset } = useHighlightMapper(content, slateText);
-  const nodeOffsets = usePlainTextOffsets(editor);
 
-  // Decorate function to add highlights using our improved offset mapping
+  // Parse the markdown to detect and strip the prepend
+  const markdownWithoutPrepend = useMemo(() => {
+    // Look for the separator line (---) that marks the end of prepend
+    const separatorIndex = content.indexOf('\n---\n');
+    if (separatorIndex !== -1) {
+      // Skip past the separator and the following TWO newlines
+      // The prepend includes one extra newline after the separator
+      return content.substring(separatorIndex + 6); // +6 for "\n---\n\n"
+    }
+    return content;
+  }, [content]);
+  
+  // Calculate prepend length for offset adjustment
+  const prependLength = content.length - markdownWithoutPrepend.length;
+  
+  // Use context-based mapping when nofix=true (only when slateText is available)
+  const contextMapper = useMarkdownToSlateHighlights(
+    markdownWithoutPrepend,
+    slateText,
+    disableHighlightFixes && slateText.length > 0 ? highlights.map(h => ({
+      ...h,
+      quotedText: h.quotedText || "",
+      startOffset: Math.max(0, h.startOffset - prependLength),
+      endOffset: Math.max(0, h.endOffset - prependLength)
+    })) : [],
+    30 // context window
+  );
+  
+  // Use different mappers based on whether fixes are disabled
+  const diffMapper = useHighlightMapper(markdownWithoutPrepend, slateText);
+  
+  // For nofix mode, use the context-based mapped highlights
+  // Only use highlights when we have slateText (client-side) or when not in nofix mode
+  const highlightsToUse = disableHighlightFixes 
+    ? (slateText.length > 0 ? contextMapper.mappedHighlights : [])
+    : highlights;
+  
+  // Choose which mapper to use based on disableHighlightFixes
+  const { mdToSlateOffset, debug: mapperDebug } = disableHighlightFixes 
+    ? { mdToSlateOffset: new Map(), debug: { method: 'context-based' } }
+    : { mdToSlateOffset: diffMapper.mdToSlateOffset, debug: diffMapper.debug };
+  
+  const nodeOffsets = useSimplePlainTextOffsets(editor);
+  
+
+  // Decorate function to add highlights using improved offset mapping
   const decorate = useCallback(
     ([node, path]: [Node, number[]]) => {
       if (!Text.isText(node) || !initialized) {
         return [];
       }
-
+      
       // Check if this text node is within a code block
       const ancestors = Node.ancestors(editor, path);
       for (const [ancestor] of ancestors) {
@@ -629,7 +681,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       if (!nodeInfo) return [];
 
-      for (const highlight of highlights) {
+      for (const highlight of highlightsToUse) {
         if (
           highlight?.startOffset === undefined ||
           highlight?.endOffset === undefined ||
@@ -641,83 +693,83 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             endOffset: highlight?.endOffset,
             tag: highlight?.tag
           });
-          continue; // Skip invalid highlights
+          continue;
         }
 
         const tag = highlight.tag || "";
 
-        // Map markdown offsets to slate offsets using diff-match-patch
-        let slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
-        let slateEndOffset = mdToSlateOffset.get(highlight.endOffset);
+        // Adjust highlight offsets to account for prepend (unless already adjusted by context mapper)
+        const adjustedStartOffset = disableHighlightFixes 
+          ? highlight.startOffset  // Context mapper already provides Slate positions
+          : Math.max(0, highlight.startOffset - prependLength);
+        const adjustedEndOffset = disableHighlightFixes
+          ? highlight.endOffset    // Context mapper already provides Slate positions  
+          : Math.max(0, highlight.endOffset - prependLength);
 
-        // If direct mapping fails, try nearby offsets (more robust approach)
-        if (slateStartOffset === undefined) {
-          // Look for nearby offsets within a reasonable window (5 chars)
+        // Map markdown offsets to slate offsets (skip if using context mapper)
+        let slateStartOffset = disableHighlightFixes 
+          ? adjustedStartOffset  // Context mapper already gave us Slate positions
+          : mdToSlateOffset.get(adjustedStartOffset);
+        let slateEndOffset = disableHighlightFixes
+          ? adjustedEndOffset    // Context mapper already gave us Slate positions
+          : mdToSlateOffset.get(adjustedEndOffset);
+
+        // If direct mapping fails, try nearby offsets (unless fixes are disabled)
+        if (slateStartOffset === undefined && !disableHighlightFixes) {
           for (let i = 1; i <= 5; i++) {
-            if (mdToSlateOffset.get(highlight.startOffset - i) !== undefined) {
-              slateStartOffset = mdToSlateOffset.get(highlight.startOffset - i);
+            if (mdToSlateOffset.get(adjustedStartOffset - i) !== undefined) {
+              slateStartOffset = mdToSlateOffset.get(adjustedStartOffset - i);
               break;
             }
-            if (mdToSlateOffset.get(highlight.startOffset + i) !== undefined) {
-              slateStartOffset = mdToSlateOffset.get(highlight.startOffset + i);
+            if (mdToSlateOffset.get(adjustedStartOffset + i) !== undefined) {
+              slateStartOffset = mdToSlateOffset.get(adjustedStartOffset + i);
               break;
             }
           }
         }
 
-        if (slateEndOffset === undefined) {
-          // Look for nearby offsets within a reasonable window (5 chars)
+        if (slateEndOffset === undefined && !disableHighlightFixes) {
           for (let i = 1; i <= 5; i++) {
-            if (mdToSlateOffset.get(highlight.endOffset - i) !== undefined) {
-              slateEndOffset = mdToSlateOffset.get(highlight.endOffset - i);
+            if (mdToSlateOffset.get(adjustedEndOffset - i) !== undefined) {
+              slateEndOffset = mdToSlateOffset.get(adjustedEndOffset - i);
               break;
             }
-            if (mdToSlateOffset.get(highlight.endOffset + i) !== undefined) {
-              slateEndOffset = mdToSlateOffset.get(highlight.endOffset + i);
+            if (mdToSlateOffset.get(adjustedEndOffset + i) !== undefined) {
+              slateEndOffset = mdToSlateOffset.get(adjustedEndOffset + i);
               break;
             }
           }
         }
 
         if (slateStartOffset === undefined || slateEndOffset === undefined) {
-          // Fall back approach - but ONLY highlight if the node contains the expected offset range
-          const nodeText = node.text;
-          let highlightText = highlight.quotedText || "";
-          
-          // Calculate the node's position in the overall document
-          const nodeStartInDoc = nodeInfo.start;
-          const nodeEndInDoc = nodeInfo.end;
-          
-          // Check if this highlight's offsets fall within this node
-          if (highlight.startOffset >= nodeStartInDoc && highlight.startOffset < nodeEndInDoc) {
-            // Calculate relative position within this node
-            const relativeStart = highlight.startOffset - nodeStartInDoc;
-            const relativeEnd = Math.min(highlight.endOffset - nodeStartInDoc, nodeText.length);
-            
-            // Verify the text matches at this specific location
-            const textAtLocation = nodeText.substring(relativeStart, relativeEnd);
-            if (textAtLocation && highlightText && textAtLocation.includes(highlightText.substring(0, Math.min(highlightText.length, textAtLocation.length)))) {
-              ranges.push({
-                anchor: { path, offset: relativeStart },
-                focus: { path, offset: relativeEnd },
-                highlight: true,
-                tag,
-                color: highlight.color || "yellow-200",
-                isActive: tag === activeTag,
-              });
-              continue;
-            }
+          // Skip this highlight if we can't map the positions
+          if (!disableHighlightFixes) {
+            console.warn(`Failed to map highlight ${tag || 'unknown'} positions:`, {
+              originalStart: highlight.startOffset,
+              originalEnd: highlight.endOffset,
+              adjustedStart: adjustedStartOffset,
+              adjustedEnd: adjustedEndOffset,
+              prependLength,
+              slateStartOffset,
+              slateEndOffset
+            });
           }
-
-          // If we can't find it at the expected location, skip this highlight
-          console.warn(`Failed to render highlight ${highlight.tag} at expected location:`, {
-            startOffset: highlight.startOffset,
+          
+          // Add to DOM debug
+          const failedDebug = document.getElementById('slate-failed-mappings') || document.createElement('div');
+          failedDebug.id = 'slate-failed-mappings';
+          failedDebug.style.display = 'none';
+          const existing = failedDebug.textContent ? JSON.parse(failedDebug.textContent) : { failed: [], prependLength };
+          existing.failed.push({ 
+            tag, 
+            startOffset: highlight.startOffset, 
             endOffset: highlight.endOffset,
-            quotedText: highlight.quotedText?.substring(0, 50) + '...',
-            reason: 'Text not found at expected offset',
-            nodeTextPreview: node.text.substring(0, 100) + '...',
-            nodeInfo: nodeInfo
+            adjustedStart: adjustedStartOffset,
+            adjustedEnd: adjustedEndOffset
           });
+          failedDebug.textContent = JSON.stringify(existing);
+          if (!failedDebug.parentNode) document.body.appendChild(failedDebug);
+          
           continue;
         }
 
@@ -740,21 +792,22 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           );
 
           if (highlightStart < highlightEnd) {
-            ranges.push({
+            const range = {
               anchor: { path, offset: highlightStart },
               focus: { path, offset: highlightEnd },
               highlight: true,
               tag,
               color: highlight.color || "yellow-200",
               isActive: tag === activeTag,
-            });
+            };
+            ranges.push(range);
           }
         }
       }
 
       return ranges;
     },
-    [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets]
+    [highlightsToUse, activeTag, initialized, mdToSlateOffset, nodeOffsets, disableHighlightFixes, prependLength]
   );
 
 

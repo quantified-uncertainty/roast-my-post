@@ -22,6 +22,7 @@ interface DocumentContentProps {
   isFullWidth: boolean;
   onToggleFullWidth: () => void;
   contentRef: RefObject<HTMLDivElement | null>;
+  disableHighlightFixes?: boolean;
 }
 
 export function DocumentContent({
@@ -34,6 +35,7 @@ export function DocumentContent({
   isFullWidth,
   onToggleFullWidth,
   contentRef,
+  disableHighlightFixes = false,
 }: DocumentContentProps) {
   return (
     <div
@@ -67,6 +69,7 @@ export function DocumentContent({
           highlights={highlights}
           activeTag={hoveredCommentId}
           hoveredTag={hoveredCommentId}
+          disableHighlightFixes={disableHighlightFixes}
         />
       </article>
     </div>

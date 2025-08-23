@@ -5,6 +5,7 @@ export interface DocumentWithReviewsProps {
   isOwner?: boolean;
   initialSelectedEvalIds?: string[];
   showDebugComments?: boolean;
+  disableHighlightFixes?: boolean;
 }
 
 export interface EvaluationState {
@@ -24,6 +25,7 @@ export interface EvaluationViewProps {
   document: Document;
   contentWithMetadataPrepend: string;
   showDebugComments?: boolean;
+  disableHighlightFixes?: boolean;
 }
 
 export interface EvaluationSelectorModalProps {
