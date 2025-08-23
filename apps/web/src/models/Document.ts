@@ -733,7 +733,46 @@ export class DocumentModel {
    * Uses comment counts instead of full comment data
    */
   private static formatDocumentForListing(dbDoc: any): Document {
-    return DocumentTransformer.transformDocument(dbDoc);
+    if (!dbDoc.versions || dbDoc.versions.length === 0) {
+      throw new Error(`Document ${dbDoc.id} has no versions`);
+    }
+    
+    const latestVersion = dbDoc.versions[0];
+    const currentDocumentVersion = latestVersion.version;
+
+    return {
+      ...DocumentTransformer.transformDocumentBase(dbDoc),
+      reviews: dbDoc.evaluations.map((evaluation: any) => {
+        const latestEvalVersion = evaluation.versions[0];
+        const isStale = latestEvalVersion && latestEvalVersion.documentVersion.version !== currentDocumentVersion;
+
+        return {
+          id: evaluation.id,
+          agentId: evaluation.agent.id,
+          agent: DocumentTransformer.transformAgent(evaluation.agent),
+          createdAt: new Date(latestEvalVersion?.createdAt || evaluation.createdAt),
+          priceInDollars: 0, // Not needed for listings
+          // Create empty comments array with proper length for count display
+          comments: latestEvalVersion?._count?.comments 
+            ? DocumentTransformer.createPlaceholderComments(latestEvalVersion._count.comments)
+            : [],
+          thinking: "",
+          summary: latestEvalVersion?.summary || "",
+          analysis: latestEvalVersion?.analysis || "",
+          grade: latestEvalVersion?.grade ?? null,
+          selfCritique: latestEvalVersion?.selfCritique || undefined,
+          versions: [], // Not needed for listings
+          jobs: (evaluation.jobs || []).map((job: any) => ({
+            id: job.id,
+            status: job.status,
+            createdAt: job.createdAt,
+            // Convert Decimal to number to avoid serialization errors
+            priceInDollars: convertPriceToNumber(job.priceInDollars),
+          })),
+          isStale,
+        };
+      }),
+    } as Document;
   }
 
   static async getUserDocumentsWithEvaluations(userId: string, limit: number = 50): Promise<Document[]> {
