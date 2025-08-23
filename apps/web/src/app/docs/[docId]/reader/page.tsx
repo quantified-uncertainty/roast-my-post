@@ -23,7 +23,7 @@ export default async function DocumentPage({
     notFound();
   }
 
-  const document = await DocumentModel.getDocumentWithEvaluations(docId);
+  const document = await DocumentModel.getDocumentForReader(docId);
 
   if (!document) {
     return (
