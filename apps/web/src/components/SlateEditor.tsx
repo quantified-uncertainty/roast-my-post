@@ -612,12 +612,11 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   }, [editor.children, extractPlainText, slateText.length]);
 
 
-  // Use context-based mapping when nofix=true (only when slateText is available)
-  // Highlights are already positioned relative to the full document content including prepend
+  // Use context-based mapping only when nofix=false (smart mapping enabled)
   const contextMapper = useMarkdownToSlateHighlightsWithCache(
     content, // Use full content, not stripped
     slateText,
-    disableHighlightFixes && slateText.length > 0 ? highlights.map(h => ({
+    !disableHighlightFixes && slateText.length > 0 ? highlights.map(h => ({
       ...h,
       quotedText: h.quotedText || "",
       startOffset: h.startOffset, // Use original positions
@@ -636,15 +635,15 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     }
   }, [contextMapper.fromCache]);
 
-  // For nofix mode, use the context-based mapped highlights
-  // Only use highlights when we have slateText (client-side) or when not in nofix mode
+  // When nofix=true: Use raw database positions (no mapping)
+  // When nofix=false: Use context-based mapped highlights (smart mapping)
   const highlightsToUse = disableHighlightFixes 
-    ? (slateText.length > 0 ? contextMapper.mappedHighlights : [])
-    : highlights;
+    ? highlights  // Raw database positions when nofix=true
+    : (slateText.length > 0 ? contextMapper.mappedHighlights : []);
   
   // Choose which mapper to use based on disableHighlightFixes
   const { mdToSlateOffset, debug: mapperDebug } = disableHighlightFixes 
-    ? { mdToSlateOffset: new Map(), debug: { method: 'context-based' } }
+    ? { mdToSlateOffset: new Map(), debug: { method: 'raw positions (nofix=true)' } }
     : { mdToSlateOffset: diffMapper.mdToSlateOffset, debug: diffMapper.debug };
   
   const nodeOffsets = useSimplePlainTextOffsets(editor);
@@ -693,12 +692,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         const adjustedStartOffset = highlight.startOffset;
         const adjustedEndOffset = highlight.endOffset;
 
-        // Map markdown offsets to slate offsets (skip if using context mapper)
+        // Map markdown offsets to slate offsets (skip if using raw positions)
         let slateStartOffset = disableHighlightFixes 
-          ? adjustedStartOffset  // Context mapper already gave us Slate positions
+          ? adjustedStartOffset  // Use raw database positions directly
           : mdToSlateOffset.get(adjustedStartOffset);
         let slateEndOffset = disableHighlightFixes
-          ? adjustedEndOffset    // Context mapper already gave us Slate positions
+          ? adjustedEndOffset    // Use raw database positions directly
           : mdToSlateOffset.get(adjustedEndOffset);
 
         // If direct mapping fails, try nearby offsets (unless fixes are disabled)
