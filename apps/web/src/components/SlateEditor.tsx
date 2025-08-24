@@ -7,40 +7,51 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Image from 'next/image';
+import Image from "next/image";
 
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
-import { remarkToSlate } from "remark-slate-transformer";
-import {
-  createEditor,
-  Descendant,
-  Element,
-  Node,
-  Text,
-} from "slate";
+import { createEditor, Descendant, Element, Node, Text } from "slate";
 import { withHistory } from "slate-history";
-import {
-  Editable,
-  Slate,
-  withReact,
-} from "slate-react";
+import { Editable, Slate, withReact } from "slate-react";
+import type { RenderLeafProps as SlateRenderLeafProps } from "slate-react";
 import { unified } from "unified";
 
-// Import our improved hooks for Phase 2
-import { useHighlightMapper } from "@/hooks/useHighlightMapper";
-import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
+// We will map highlights directly via mdast offsets preserved on text leaves
 import { readerFontFamily } from "@/shared/constants/fonts";
 import CodeBlock from "./CodeBlock";
 import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
-import { LAYOUT, TEXT_PROCESSING, TIMING } from "@/components/DocumentWithEvaluations/constants";
+import {
+  LAYOUT,
+  TEXT_PROCESSING,
+} from "@/components/DocumentWithEvaluations/constants";
 
 // Define custom element types for Slate
-type CustomText = { text: string };
+type CustomText = {
+  text: string;
+  mdStart?: number;
+  mdEnd?: number;
+  strong?: boolean;
+  bold?: boolean;
+  emphasis?: boolean;
+  italic?: boolean;
+  code?: boolean;
+};
 type CustomElement = {
-  type: 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 
-        'heading-four' | 'heading-five' | 'heading-six' | 'block-quote' | 
-        'list-item' | 'link' | 'code' | 'image' | 'list';
+  type:
+    | "paragraph"
+    | "heading-one"
+    | "heading-two"
+    | "heading-three"
+    | "heading-four"
+    | "heading-five"
+    | "heading-six"
+    | "block-quote"
+    | "list-item"
+    | "link"
+    | "code"
+    | "image"
+    | "list";
   children?: (CustomElement | CustomText)[];
   url?: string;
   value?: string;
@@ -49,16 +60,220 @@ type CustomElement = {
   ordered?: boolean;
 };
 
-// Helper function to normalize text by removing markdown formatting
-const _normalizeText = (text: string): string => {
-  return text
-    .replace(/\*\*/g, "") // Remove bold markers
-    .replace(/\*/g, "") // Remove single asterisk italic markers
-    .replace(/\_/g, "") // Remove underscore italic markers
-    .replace(/\\\\/g, "\\") // Handle escaped backslashes
-    .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with just their text
-    .trim();
+// Minimal mdast types we need
+type MdPoint = { offset?: number };
+type MdPosition = { start?: MdPoint; end?: MdPoint };
+type MdNode = {
+  type: string;
+  value?: string;
+  children?: MdNode[];
+  position?: MdPosition;
+  depth?: number;
+  lang?: string;
+  language?: string;
+  meta?: string;
+  url?: string;
+  alt?: string;
+  ordered?: boolean;
+};
+
+type Marks = { strong?: boolean; emphasis?: boolean; code?: boolean };
+
+// Helper: safe access to mdast offset positions
+const getOffsets = (node: MdNode): { start?: number; end?: number } => {
+  const start = node?.position?.start?.offset;
+  const end = node?.position?.end?.offset;
+  return {
+    start: typeof start === "number" ? start : undefined,
+    end: typeof end === "number" ? end : undefined,
+  };
+};
+
+// Convert mdast to Slate while preserving per-leaf markdown offsets (mdStart/mdEnd)
+const mdastToSlateWithOffsets = (
+  tree: unknown,
+  markdown: string
+): Descendant[] => {
+  const root = tree as MdNode;
+  const toHeadingType = (depth: number): CustomElement["type"] => {
+    const map = [
+      "heading-one",
+      "heading-two",
+      "heading-three",
+      "heading-four",
+      "heading-five",
+      "heading-six",
+    ] as const;
+    return map[Math.max(1, Math.min(6, depth)) - 1] as CustomElement["type"];
+  };
+
+  const createText = (
+    value: string,
+    mdStart?: number,
+    mdEnd?: number,
+    marks?: Marks
+  ): CustomText => {
+    return {
+      text: value,
+      mdStart,
+      mdEnd,
+      strong: marks?.strong,
+      bold: marks?.strong,
+      emphasis: marks?.emphasis,
+      italic: marks?.emphasis,
+      code: marks?.code,
+    };
+  };
+
+  const sliceTextBetween = (start?: number, end?: number): string => {
+    if (
+      typeof start !== "number" ||
+      typeof end !== "number" ||
+      start < 0 ||
+      end > markdown.length ||
+      end < start
+    )
+      return "";
+    return markdown.slice(start, end);
+  };
+
+  const adjustInlineCodeOffsets = (
+    start?: number,
+    end?: number
+  ): { mdStart?: number; mdEnd?: number } => {
+    if (typeof start !== "number" || typeof end !== "number")
+      return { mdStart: start, mdEnd: end };
+    const raw = markdown.slice(start, end);
+    // Count leading and trailing backticks of same length
+    const leadingMatch = raw.match(/^`+/);
+    const trailingMatch = raw.match(/`+$/);
+    const ticks =
+      leadingMatch && trailingMatch
+        ? Math.min(leadingMatch[0].length, trailingMatch[0].length)
+        : 1;
+    const contentStart = start + ticks;
+    const contentEnd = end - ticks;
+    if (contentStart <= contentEnd)
+      return { mdStart: contentStart, mdEnd: contentEnd };
+    return { mdStart: start, mdEnd: end };
+  };
+
+  const visit = (
+    node: MdNode,
+    marks: Marks = {}
+  ): Descendant | Descendant[] => {
+    switch (node.type) {
+      case "root":
+        return (node.children || [])
+          .map((c: MdNode) => visit(c, marks))
+          .filter(Boolean) as Descendant[];
+      case "paragraph":
+        return {
+          type: "paragraph",
+          children: (node.children || [])
+            .map((c: MdNode) => visit(c, marks))
+            .flat() as Descendant[],
+        } as unknown as Descendant;
+      case "text": {
+        const { start, end } = getOffsets(node);
+        // mdast text node value is already the literal text content
+        return createText(
+          node.value || "",
+          start,
+          end,
+          marks
+        ) as unknown as Descendant;
+      }
+      case "strong":
+        return (node.children || [])
+          .map((c: MdNode) => visit(c, { ...marks, strong: true }))
+          .flat() as Descendant[];
+      case "emphasis":
+        return (node.children || [])
+          .map((c: MdNode) => visit(c, { ...marks, emphasis: true }))
+          .flat() as Descendant[];
+      case "inlineCode": {
+        const { start, end } = getOffsets(node);
+        const { mdStart, mdEnd } = adjustInlineCodeOffsets(start, end);
+        return createText(
+          node.value || sliceTextBetween(mdStart, mdEnd),
+          mdStart,
+          mdEnd,
+          { ...marks, code: true }
+        ) as unknown as Descendant;
+      }
+      case "code": {
+        return {
+          type: "code",
+          lang: node.lang || node.language || node.meta || "plain",
+          value: node.value || "",
+          children: [{ text: "" }],
+        } as unknown as Descendant;
+      }
+      case "heading":
+        return {
+          type: toHeadingType(node.depth || 1),
+          children: (node.children || [])
+            .map((c: MdNode) => visit(c, marks))
+            .flat() as Descendant[],
+        } as unknown as Descendant;
+      case "blockquote":
+        return {
+          type: "block-quote",
+          children: (node.children || [])
+            .map((c: MdNode) => visit(c, marks))
+            .flat() as Descendant[],
+        } as unknown as Descendant;
+      case "link":
+        return {
+          type: "link",
+          url: node.url,
+          children: (node.children || [])
+            .map((c: MdNode) => visit(c, marks))
+            .flat() as Descendant[],
+        } as unknown as Descendant;
+      case "list":
+        return {
+          type: "list",
+          ordered: node.ordered === true,
+          children: (node.children || [])
+            .map((c: MdNode) => visit(c, marks))
+            .flat() as Descendant[],
+        } as unknown as Descendant;
+      case "listItem":
+        return {
+          type: "list-item",
+          children: (node.children || [])
+            .map((c: MdNode) => visit(c, marks))
+            .flat() as Descendant[],
+        } as unknown as Descendant;
+      case "image":
+        return {
+          type: "image",
+          url: node.url,
+          alt: node.alt,
+          children: [{ text: "" }],
+        } as unknown as Descendant;
+      case "thematicBreak":
+        // Represent as an empty paragraph for simplicity
+        return {
+          type: "paragraph",
+          children: [{ text: "" }],
+        } as unknown as Descendant;
+      default:
+        if (Array.isArray(node.children)) {
+          return (node.children || [])
+            .map((c: MdNode) => visit(c, marks))
+            .flat() as Descendant[];
+        }
+        return { text: "" } as unknown as Descendant;
+    }
+  };
+
+  const children = visit(root);
+  return Array.isArray(children)
+    ? (children as Descendant[])
+    : [children as Descendant];
 };
 
 interface Highlight {
@@ -85,7 +300,12 @@ interface RenderElementProps {
   highlights?: Highlight[];
 }
 
-const renderElement = ({ attributes, children, element, highlights }: RenderElementProps) => {
+const renderElement = ({
+  attributes,
+  children,
+  element,
+  highlights,
+}: RenderElementProps) => {
   switch (element.type) {
     case "heading-one":
       return (
@@ -169,58 +389,68 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
     case "code":
       // Find which lines to highlight based on comment highlights
       const codeContent = element.value || "";
-      const codeLines = codeContent.split('\n');
+      const codeLines = codeContent.split("\n");
       const linesToHighlight: number[] = [];
-      
+
       // Track which highlights match this code block and their line positions
       const highlightPositions: Array<{ tag: string; lineNumber: number }> = [];
-      
+
       // Check each highlight to see if its quoted text appears in this code block
       if (highlights && Array.isArray(highlights)) {
         highlights.forEach((highlight: Highlight) => {
           if (highlight.quotedText) {
             // Search for the quoted text in the code block
             const quotedText = highlight.quotedText.trim();
-            
+
             // Skip if quoted text is too short or just punctuation
             if (quotedText.length < TEXT_PROCESSING.MIN_HIGHLIGHT_LENGTH) {
               return;
             }
-            
+
             // Check if the entire quoted text appears in the code block
             if (codeContent.includes(quotedText)) {
               // Find the first line that contains this quoted text
               const quotedStart = codeContent.indexOf(quotedText);
               let currentPos = 0;
               let firstMatchingLine = -1;
-              
+
               codeLines.forEach((line: string, index: number) => {
                 const lineStart = currentPos;
                 const lineEnd = currentPos + line.length;
-                
+
                 // Check if the quoted text starts in this line
-                if (quotedStart >= lineStart && quotedStart < lineEnd && firstMatchingLine === -1) {
+                if (
+                  quotedStart >= lineStart &&
+                  quotedStart < lineEnd &&
+                  firstMatchingLine === -1
+                ) {
                   firstMatchingLine = index + 1; // 1-indexed
                 }
-                
+
                 // Track all lines that contain part of this quoted text
-                if (quotedStart <= lineEnd && (quotedStart + quotedText.length) >= lineStart) {
+                if (
+                  quotedStart <= lineEnd &&
+                  quotedStart + quotedText.length >= lineStart
+                ) {
                   if (!linesToHighlight.includes(index + 1)) {
                     linesToHighlight.push(index + 1);
                   }
                 }
-                
+
                 currentPos = lineEnd + 1; // +1 for newline
               });
-              
+
               if (firstMatchingLine > 0) {
-                highlightPositions.push({ tag: highlight.tag, lineNumber: firstMatchingLine });
+                highlightPositions.push({
+                  tag: highlight.tag,
+                  lineNumber: firstMatchingLine,
+                });
               }
             }
           }
         });
       }
-      
+
       return (
         <CodeBlockErrorBoundary>
           <CodeBlock
@@ -234,10 +464,14 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
       );
     case "image":
       // Validate image URL before rendering
-      if (!element.url || typeof element.url !== 'string' || element.url.trim() === '') {
+      if (
+        !element.url ||
+        typeof element.url !== "string" ||
+        element.url.trim() === ""
+      ) {
         return (
           <div {...attributes} contentEditable={false} className="relative">
-            <div className="bg-gray-200 rounded p-4 text-gray-600">
+            <div className="rounded bg-gray-200 p-4 text-gray-600">
               [Invalid image URL]
             </div>
             {children}
@@ -266,6 +500,18 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
   }
 };
 
+type DecoratedLeaf = Text & {
+  highlight?: boolean;
+  tag?: string;
+  color?: string;
+  isActive?: boolean;
+  strong?: boolean;
+  bold?: boolean;
+  emphasis?: boolean;
+  italic?: boolean;
+  code?: boolean;
+};
+
 const renderLeaf = ({
   attributes,
   children,
@@ -274,7 +520,13 @@ const renderLeaf = ({
   hoveredTag,
   onHighlightClick,
   onHighlightHover,
-}: any) => {
+}: Omit<SlateRenderLeafProps, "leaf"> & {
+  leaf: DecoratedLeaf;
+  activeTag?: string | null;
+  hoveredTag?: string | null;
+  onHighlightClick?: (tag: string) => void;
+  onHighlightHover?: (tag: string | null) => void;
+}) => {
   // Create a new set of attributes to avoid modifying the original
   const leafAttributes = { ...attributes };
 
@@ -300,7 +552,7 @@ const renderLeaf = ({
     // Use leaf.isActive if available, otherwise fall back to tag comparison
     const isActive = leaf.isActive || leaf.tag === activeTag;
     const isHovered = leaf.tag === hoveredTag;
-    
+
     el = (
       <span
         {...leafAttributes}
@@ -309,17 +561,22 @@ const renderLeaf = ({
         style={{
           backgroundColor: (() => {
             // Handle color format - remove # if present
-            const color = leaf.color.startsWith('#') ? leaf.color.slice(1) : leaf.color;
-            const r = parseInt(color.slice(0, 2), 16) || 59;
-            const g = parseInt(color.slice(2, 4), 16) || 130;
-            const b = parseInt(color.slice(4, 6), 16) || 246;
-            return `rgba(${r}, ${g}, ${b}, ${isActive ? 0.8 : 0.3})`;
+            const rawColor = leaf.color ?? "3b82f6"; // default blue-500
+            const color = rawColor.startsWith("#")
+              ? rawColor.slice(1)
+              : rawColor;
+            const r = parseInt(color.slice(0, 2), 16);
+            const g = parseInt(color.slice(2, 4), 16);
+            const b = parseInt(color.slice(4, 6), 16);
+            const rr = Number.isFinite(r) ? r : 59;
+            const gg = Number.isFinite(g) ? g : 130;
+            const bb = Number.isFinite(b) ? b : 246;
+            return `rgba(${rr}, ${gg}, ${bb}, ${isActive ? 0.8 : 0.3})`;
           })(),
           borderRadius: "2px",
-          boxShadow:
-            isActive
-              ? "0 0 0 2px rgba(59, 130, 246, 0.5)"
-              : isHovered
+          boxShadow: isActive
+            ? "0 0 0 2px rgba(59, 130, 246, 0.5)"
+            : isHovered
               ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
               : "none",
           transform: isActive ? "scale(1.01)" : "scale(1)",
@@ -333,17 +590,17 @@ const renderLeaf = ({
         }`}
         onClick={(e) => {
           e.preventDefault();
-          onHighlightClick?.(leaf.tag);
+          onHighlightClick?.(leaf.tag || "");
         }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onHighlightClick?.(leaf.tag);
+            onHighlightClick?.(leaf.tag || "");
           }
         }}
         onMouseEnter={(e) => {
           e.preventDefault();
-          onHighlightHover?.(leaf.tag);
+          onHighlightHover?.(leaf.tag ?? null);
         }}
         onMouseLeave={(e) => {
           e.preventDefault();
@@ -378,234 +635,37 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [initialized, setInitialized] = useState(false);
   const initRef = useRef(false);
-  const [slateText, setSlateText] = useState("");
   const _renderedHighlightsRef = useRef(new Set<string>());
 
-  // Convert markdown to Slate nodes using remark-slate-transformer
+  // Convert markdown to Slate with md offsets preserved on leaves
   const value = useMemo(() => {
     try {
-      // Create a processor with remark-parse and remark-gfm for markdown support
-      const processor = unified()
-        .use(remarkParse)
-        .use(remarkGfm) // Add GitHub-Flavored Markdown support (includes footnotes)
-        // @ts-expect-error - remarkToSlate types are not fully compatible
-        .use(remarkToSlate, {
-          // Configure node types for proper formatting
-          nodeTypes: {
-            emphasis: "emphasis",
-            strong: "strong",
-            inlineCode: "inlineCode",
-            code: "code",
-            codeBlock: "code",
-            link: "link",
-            paragraph: "paragraph",
-            heading: "heading",
-            list: "list",
-            listItem: "listItem",
-            blockquote: "block-quote",
-          },
-        });
-
-      // Process the markdown content
-      const result = processor.processSync(content);
-      let nodes = result.result as Descendant[];
-
-
-      // Apply a custom processor for handling markdown formatting
-      const processNode = (node: any): any => {
-        // Handle leaf text nodes
-        if (typeof node?.text === "string") {
-          return node;
-        }
-
-        // Process the node based on its type
-        switch (node?.type) {
-          case "heading":
-            return {
-              ...node,
-              type: `heading-${
-                ["one", "two", "three", "four", "five", "six"][
-                  node.depth - 1
-                ] || "one"
-              }`,
-              children: node.children.map(processNode),
-            };
-
-          case "list":
-            return {
-              ...node,
-              type: "list",
-              ordered: node.ordered === true,
-              children: node.children.map(processNode),
-            };
-
-          case "listItem":
-            return {
-              ...node,
-              type: "list-item",
-              children: node.children.map(processNode),
-            };
-
-          case "link":
-            return {
-              ...node,
-              type: "link",
-              url: node.url,
-              children: node.children.map(processNode),
-            };
-
-          case "code":
-          case "code-block":
-          case "codeBlock":
-            // Extract the code content from children if it's there
-            let codeValue = node.value || "";
-            if (!codeValue && node.children && node.children.length > 0) {
-              // Sometimes the code is in the children as text nodes
-              codeValue = node.children.map((child: any) => 
-                child.text || child.value || ""
-              ).join("");
-            }
-            
-            return {
-              ...node,
-              type: "code",
-              value: codeValue,
-              lang: node.lang || node.language || node.meta || "plain",
-              children: [{ text: "" }], // Code blocks need at least one child
-            };
-
-
-          default:
-            // Process any children of other node types
-            if (Array.isArray(node?.children)) {
-              return {
-                ...node,
-                children: node.children.map(processNode),
-              };
-            }
-            return node;
-        }
-      };
-
-      // Process all nodes in the tree and filter out nulls
-      nodes = nodes.map(processNode).filter(node => node !== null);
-      
-      // Validate and fix nodes to ensure they have proper text content
-      const validateNode = (node: any): any => {
-        // If it's a text node, ensure it has the correct structure
-        if (typeof node === 'string') {
-          return { text: node };
-        }
-        
-        if (node && typeof node.text === 'string') {
-          return node;
-        }
-        
-        // If it's an element, ensure it has children
-        if (node && typeof node === 'object') {
-          if (!node.children || !Array.isArray(node.children)) {
-            // If no children, create a text node
-            return {
-              ...node,
-              children: [{ text: '' }]
-            };
-          }
-          
-          // Recursively validate children, ensuring they're not empty
-          const validatedChildren = node.children
-            .map(validateNode)
-            .filter((child: any) => child !== null && child !== undefined);
-          
-          // If no valid children remain, add an empty text node
-          if (validatedChildren.length === 0) {
-            validatedChildren.push({ text: '' });
-          }
-          
-          return {
-            ...node,
-            children: validatedChildren
-          };
-        }
-        
-        // Fallback for invalid nodes
-        return { text: '' };
-      };
-      
-      nodes = nodes.map(validateNode);
+      const processor = unified().use(remarkParse).use(remarkGfm);
+      // Parse to mdast (positions included by default)
+      const tree = (
+        processor as unknown as { parse: (input: string) => unknown }
+      ).parse(content);
+      const nodes = mdastToSlateWithOffsets(tree, content);
       return nodes as Descendant[];
     } catch (_error) {
-      // Error parsing markdown - return empty document
-      // Return a simple default node if parsing fails
       return [
         {
           type: "paragraph",
           children: [{ text: content }],
-          url: undefined,
         },
       ] as unknown as Descendant[];
     }
   }, [content]);
-
-  // Extract plain text from nodes
-  const extractPlainText = useCallback((nodes: Node[]): string => {
-    let text = "";
-
-    const visit = (node: Node) => {
-      if (Text.isText(node)) {
-        text += node.text;
-      } else if (Element.isElement(node)) {
-        // Handle block elements structure for better matching with markdown
-        if (
-          node.type &&
-          (node.type.startsWith("heading") ||
-            node.type === "paragraph" ||
-            node.type === "block-quote")
-        ) {
-          // Add paragraph breaks for these block types
-          if (text.length > 0 && !text.endsWith("\n\n")) {
-            text += "\n\n";
-          }
-        }
-
-        // Visit all children
-        node.children.forEach(visit);
-
-        // Add trailing breaks for block elements
-        if (
-          node.type &&
-          (node.type.startsWith("heading") ||
-            node.type === "paragraph" ||
-            node.type === "block-quote")
-        ) {
-          if (!text.endsWith("\n\n")) {
-            text += "\n\n";
-          }
-        }
-      }
-    };
-
-    nodes.forEach(visit);
-    return text;
-  }, []);
 
   // Initialize editor
   useEffect(() => {
     if (!initRef.current && value) {
       editor.children = value;
       editor.onChange();
-
-      // Extract plain text for offset mapping
-      const plainText = extractPlainText(editor.children);
-      setSlateText(plainText);
-
       initRef.current = true;
       setInitialized(true);
     }
-  }, [editor, value, content, extractPlainText]);
-
-  // Use our custom hooks for robust offset mapping
-  const { mdToSlateOffset } = useHighlightMapper(content, slateText);
-  const nodeOffsets = usePlainTextOffsets(editor);
+  }, [editor, value, content]);
 
   // Decorate function to add highlights using our improved offset mapping
   const decorate = useCallback(
@@ -617,17 +677,28 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       // Check if this text node is within a code block
       const ancestors = Node.ancestors(editor, path);
       for (const [ancestor] of ancestors) {
-        if (Element.isElement(ancestor) && (ancestor as CustomElement).type === 'code') {
+        if (
+          Element.isElement(ancestor) &&
+          (ancestor as CustomElement).type === "code"
+        ) {
           // Skip highlighting within code blocks
           return [];
         }
       }
 
-      const ranges: any[] = [];
-      const pathKey = path.join(".");
-      const nodeInfo = nodeOffsets.get(pathKey);
-
-      if (!nodeInfo) return [];
+      type HighlightRange = {
+        anchor: { path: number[]; offset: number };
+        focus: { path: number[]; offset: number };
+        highlight: true;
+        tag: string;
+        color: string;
+        isActive: boolean;
+      };
+      const ranges: HighlightRange[] = [];
+      const leafWithMd = node as unknown as CustomText;
+      const mdStart = leafWithMd.mdStart as number | undefined;
+      const mdEnd = leafWithMd.mdEnd as number | undefined;
+      if (typeof mdStart !== "number" || typeof mdEnd !== "number") return [];
 
       for (const highlight of highlights) {
         if (
@@ -639,110 +710,24 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           console.warn(`Skipping invalid highlight ${highlight.tag}:`, {
             startOffset: highlight?.startOffset,
             endOffset: highlight?.endOffset,
-            tag: highlight?.tag
+            tag: highlight?.tag,
           });
           continue; // Skip invalid highlights
         }
 
         const tag = highlight.tag || "";
 
-        // Map markdown offsets to slate offsets using diff-match-patch
-        let slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
-        let slateEndOffset = mdToSlateOffset.get(highlight.endOffset);
-
-        // If direct mapping fails, try nearby offsets (more robust approach)
-        if (slateStartOffset === undefined) {
-          // Look for nearby offsets within a reasonable window (5 chars)
-          for (let i = 1; i <= 5; i++) {
-            if (mdToSlateOffset.get(highlight.startOffset - i) !== undefined) {
-              slateStartOffset = mdToSlateOffset.get(highlight.startOffset - i);
-              break;
-            }
-            if (mdToSlateOffset.get(highlight.startOffset + i) !== undefined) {
-              slateStartOffset = mdToSlateOffset.get(highlight.startOffset + i);
-              break;
-            }
-          }
-        }
-
-        if (slateEndOffset === undefined) {
-          // Look for nearby offsets within a reasonable window (5 chars)
-          for (let i = 1; i <= 5; i++) {
-            if (mdToSlateOffset.get(highlight.endOffset - i) !== undefined) {
-              slateEndOffset = mdToSlateOffset.get(highlight.endOffset - i);
-              break;
-            }
-            if (mdToSlateOffset.get(highlight.endOffset + i) !== undefined) {
-              slateEndOffset = mdToSlateOffset.get(highlight.endOffset + i);
-              break;
-            }
-          }
-        }
-
-        if (slateStartOffset === undefined || slateEndOffset === undefined) {
-          // Fall back approach - but ONLY highlight if the node contains the expected offset range
-          const nodeText = node.text;
-          let highlightText = highlight.quotedText || "";
-          
-          // Calculate the node's position in the overall document
-          const nodeStartInDoc = nodeInfo.start;
-          const nodeEndInDoc = nodeInfo.end;
-          
-          // Check if this highlight's offsets fall within this node
-          if (highlight.startOffset >= nodeStartInDoc && highlight.startOffset < nodeEndInDoc) {
-            // Calculate relative position within this node
-            const relativeStart = highlight.startOffset - nodeStartInDoc;
-            const relativeEnd = Math.min(highlight.endOffset - nodeStartInDoc, nodeText.length);
-            
-            // Verify the text matches at this specific location
-            const textAtLocation = nodeText.substring(relativeStart, relativeEnd);
-            if (textAtLocation && highlightText && textAtLocation.includes(highlightText.substring(0, Math.min(highlightText.length, textAtLocation.length)))) {
-              ranges.push({
-                anchor: { path, offset: relativeStart },
-                focus: { path, offset: relativeEnd },
-                highlight: true,
-                tag,
-                color: highlight.color || "yellow-200",
-                isActive: tag === activeTag,
-              });
-              continue;
-            }
-          }
-
-          // If we can't find it at the expected location, skip this highlight
-          console.warn(`Failed to render highlight ${highlight.tag} at expected location:`, {
-            startOffset: highlight.startOffset,
-            endOffset: highlight.endOffset,
-            quotedText: highlight.quotedText?.substring(0, 50) + '...',
-            reason: 'Text not found at expected offset',
-            nodeTextPreview: node.text.substring(0, 100) + '...',
-            nodeInfo: nodeInfo
-          });
-          continue;
-        }
-
-        // Check if this node overlaps with the highlight
-        const nodeStartOffset = nodeInfo.start;
-        const nodeEndOffset = nodeInfo.end;
-
-        if (
-          slateEndOffset > nodeStartOffset &&
-          slateStartOffset < nodeEndOffset
-        ) {
-          // Calculate the local offsets within this text node
-          const highlightStart = Math.max(
-            0,
-            slateStartOffset - nodeStartOffset
-          );
-          const highlightEnd = Math.min(
+        // If this Text leaf overlaps with highlight in markdown offsets
+        if (highlight.endOffset > mdStart && highlight.startOffset < mdEnd) {
+          const relativeStart = Math.max(0, highlight.startOffset - mdStart);
+          const relativeEnd = Math.min(
             node.text.length,
-            slateEndOffset - nodeStartOffset
+            highlight.endOffset - mdStart
           );
-
-          if (highlightStart < highlightEnd) {
+          if (relativeStart < relativeEnd) {
             ranges.push({
-              anchor: { path, offset: highlightStart },
-              focus: { path, offset: highlightEnd },
+              anchor: { path, offset: relativeStart },
+              focus: { path, offset: relativeEnd },
               highlight: true,
               tag,
               color: highlight.color || "yellow-200",
@@ -754,9 +739,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       return ranges;
     },
-    [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets]
+    [highlights, activeTag, initialized, editor]
   );
-
 
   if (!initialized) {
     return <div>Loading...</div>;
