@@ -43,6 +43,60 @@ export const MARKDOWN_COMPONENTS = {
       {children}
     </summary>
   ),
+  
+  // Table components
+  table: ({ children, ...props }: MarkdownComponentProps) => (
+    <div className="my-6 w-full overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200 border border-gray-200" {...props}>
+        {children}
+      </table>
+    </div>
+  ),
+  
+  thead: ({ children, ...props }: MarkdownComponentProps) => (
+    <thead className="bg-gray-50" {...props}>
+      {children}
+    </thead>
+  ),
+  
+  tbody: ({ children, ...props }: MarkdownComponentProps) => (
+    <tbody className="divide-y divide-gray-200 bg-white" {...props}>
+      {children}
+    </tbody>
+  ),
+  
+  tr: ({ children, ...props }: MarkdownComponentProps) => (
+    <tr className="hover:bg-gray-50 transition-colors" {...props}>
+      {children}
+    </tr>
+  ),
+  
+  th: ({ children, align, ...props }: MarkdownComponentProps) => (
+    <th 
+      className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
+        align === 'center' ? 'text-center' : 
+        align === 'right' ? 'text-right' : 
+        'text-left'
+      }`}
+      {...props}
+    >
+      {children}
+    </th>
+  ),
+  
+  td: ({ children, align, rowSpan, ...props }: MarkdownComponentProps) => (
+    <td 
+      className={`px-4 py-3 text-sm text-gray-900 align-top ${
+        align === 'center' ? 'text-center' : 
+        align === 'right' ? 'text-right' : 
+        'text-left'
+      }`}
+      rowSpan={rowSpan}
+      {...props}
+    >
+      {children}
+    </td>
+  ),
 };
 
 export const INLINE_MARKDOWN_COMPONENTS = {
