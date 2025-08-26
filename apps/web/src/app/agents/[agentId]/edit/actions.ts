@@ -18,7 +18,7 @@ const agentUpdateSchema = agentSchema.extend({
 // Setup next-safe-action
 const actionClient = createSafeActionClient();
 
-// Server action for updating an agent (now includes deprecation status)
+// Server action for updating an agent including deprecation status
 export const updateAgent = actionClient
   .schema(agentUpdateSchema)
   .action(async (data): Promise<AgentResponse> => {
