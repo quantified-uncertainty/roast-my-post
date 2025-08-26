@@ -26,18 +26,21 @@ export default async function AgentsPage() {
   });
 
   // Convert dbAgents to frontend Agent shape
-  const agents = dbAgents.map((dbAgent) => ({
-    id: dbAgent.id,
-    name: dbAgent.versions[0].name,
-    version: dbAgent.versions[0].version.toString(),
-    description: dbAgent.versions[0].description,
-    primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,
-    extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
-    providesGrades: dbAgent.versions[0].providesGrades || false,
-    isSystemManaged: dbAgent.isSystemManaged || false,
-    isRecommended: dbAgent.isRecommended || false,
-    isDeprecated: dbAgent.isDeprecated || false,
-  }));
+  const agents = dbAgents.map((dbAgent) => {
+    const latestVersion = dbAgent.versions[0];
+    return {
+      id: dbAgent.id,
+      name: latestVersion.name,
+      version: latestVersion.version.toString(),
+      description: latestVersion.description,
+      primaryInstructions: latestVersion.primaryInstructions || undefined,
+      extendedCapabilityId: latestVersion.extendedCapabilityId || undefined,
+      providesGrades: latestVersion.providesGrades || false,
+      isSystemManaged: dbAgent.isSystemManaged,
+      isRecommended: dbAgent.isRecommended,
+      isDeprecated: dbAgent.isDeprecated,
+    };
+  });
 
   // Sort agents: recommended first, then regular, then deprecated
   agents.sort((a, b) => {
