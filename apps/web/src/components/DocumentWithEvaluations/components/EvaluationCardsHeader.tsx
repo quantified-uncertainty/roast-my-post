@@ -10,10 +10,11 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { GradeBadge } from "../../GradeBadge";
-import { StatusBadge, type EvaluationStatus } from "../../StatusBadge";
+import { StatusBadge } from "../../StatusBadge";
 import type { Document } from "@/shared/types/databaseTypes";
 import type { EvaluationState } from "../types";
 import { TRANSITION_DURATION, TRANSITION_DURATION_SLOW, CARDS_GRID_MAX_HEIGHT } from "../constants";
+import { getEvaluationStatus, getStatusDisplayText } from "@/shared/utils/evaluationStatus";
 
 interface EvaluationCardsHeaderProps {
   document: Document;
@@ -239,20 +240,9 @@ export function EvaluationCardsHeader({
                 review.agentId
               );
               
-              // Determine the evaluation status
-              const mostRecentJob = review.jobs?.[0];
-              let evaluationStatus: EvaluationStatus = "completed";
-              if (!mostRecentJob) {
-                evaluationStatus = "not_started";
-              } else if (mostRecentJob.status === "PENDING") {
-                evaluationStatus = "pending";
-              } else if (mostRecentJob.status === "RUNNING") {
-                evaluationStatus = "running";
-              } else if (mostRecentJob.status === "FAILED") {
-                evaluationStatus = "failed";
-              }
-              
-              const isComplete = evaluationStatus === "completed";
+              // Determine the evaluation status using shared utility
+              const { status: evaluationStatus, isRerunning, hasCompletedVersion } = getEvaluationStatus(review);
+              const isComplete = hasCompletedVersion || evaluationStatus === "completed";
               const hasComments = review.comments && review.comments.length > 0;
               
               const summary = review.summary || "No summary available";
@@ -261,20 +251,21 @@ export function EvaluationCardsHeader({
                   ? summary.substring(0, 300) + "..."
                   : summary;
               
-              // Status-specific content
+              // Status-specific content using shared utility
               const getStatusContent = () => {
-                switch (evaluationStatus) {
-                  case "pending":
-                    return "Queued • Waiting to start...";
-                  case "running":
-                    return "Processing • This may take a few moments...";
-                  case "failed":
-                    return "Evaluation failed • Click to retry";
-                  case "not_started":
-                    return review.agent.description || "Not yet evaluated";
-                  default:
-                    return truncatedSummary;
+                if (isRerunning && (evaluationStatus === "pending" || evaluationStatus === "running")) {
+                  // Show summary from completed version while rerunning
+                  return truncatedSummary;
                 }
+                
+                const statusText = getStatusDisplayText(evaluationStatus, isRerunning, truncatedSummary);
+                if (evaluationStatus === "not_started" && !statusText) {
+                  return review.agent.description || "Not yet evaluated";
+                }
+                if (evaluationStatus === "failed") {
+                  return statusText + " • Click to retry";
+                }
+                return statusText || truncatedSummary;
               };
               
               return (
@@ -303,6 +294,13 @@ export function EvaluationCardsHeader({
                       <span className="text-sm font-semibold text-gray-700">
                         {review.agent.name}
                       </span>
+                      {isRerunning && (
+                        <StatusBadge
+                          status={evaluationStatus}
+                          size="xs"
+                          showText={true}
+                        />
+                      )}
                     </div>
                     {/* Comments Switch - only show if complete and has comments */}
                     {isComplete && hasComments ? (

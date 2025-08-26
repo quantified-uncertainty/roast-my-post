@@ -13,8 +13,11 @@ import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/
 import { GradeBadge } from "@/components/GradeBadge";
 import { StaleBadge } from "@/components/StaleBadge";
 import { AgentBadges } from "@/components/AgentBadges";
+import { StatusBadge } from "@/components/StatusBadge";
 import { formatDistanceToNow } from "date-fns";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
+import { getEvaluationStatus } from "@/shared/utils/evaluationStatus";
+import { getStatusTextColor } from "@/shared/constants/statusColors";
 
 interface EvaluationManagementProps {
   docId: string;
@@ -116,7 +119,8 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
               const totalJobs = evaluation.jobs?.length || 0;
               const successRate = totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0;
 
-              // Get latest job status
+              // Get evaluation status using shared utility
+              const { status: evaluationStatus, isRerunning } = getEvaluationStatus(evaluation);
               const latestJobStatus = evaluation.jobs?.[0]?.status || 
                 latestVersion?.job?.status || "COMPLETED";
 
@@ -250,18 +254,14 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                                 </Link>
                               </>
                             )}
-                            {latestJobStatus && (
+                            {(evaluationStatus !== "completed" || isRerunning) && (
                               <>
                                 <span>•</span>
-                                <span className={`font-medium ${
-                                  latestJobStatus === "COMPLETED" ? "text-green-600" : 
-                                  latestJobStatus === "FAILED" ? "text-red-600" : 
-                                  latestJobStatus === "RUNNING" ? "text-orange-600" : "text-amber-600"
-                                }`}>
-                                  {latestJobStatus === "COMPLETED" ? "Completed" : 
-                                   latestJobStatus === "FAILED" ? "Failed" : 
-                                   latestJobStatus === "RUNNING" ? "Processing" : "Pending"}
-                                </span>
+                                <StatusBadge
+                                  status={evaluationStatus}
+                                  size="xs"
+                                  showText={true}
+                                />
                               </>
                             )}
                           </p>

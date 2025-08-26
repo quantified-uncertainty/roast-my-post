@@ -1,4 +1,5 @@
 import React from "react";
+import { STATUS_COLORS } from "@/shared/constants/statusColors";
 
 export type EvaluationStatus = "pending" | "running" | "completed" | "failed" | "not_started";
 
@@ -24,41 +25,41 @@ export function StatusBadge({
 
   const statusConfig = {
     pending: {
-      bgColor: "bg-yellow-100",
-      textColor: "text-yellow-700",
-      borderColor: "border-yellow-200",
+      bgColor: STATUS_COLORS.pending.bg,
+      textColor: STATUS_COLORS.pending.text,
+      borderColor: STATUS_COLORS.pending.border,
       icon: "•",
       text: "Pending",
       animation: "",
     },
     running: {
-      bgColor: "bg-blue-100",
-      textColor: "text-blue-700",
-      borderColor: "border-blue-200",
+      bgColor: STATUS_COLORS.running.bg,
+      textColor: STATUS_COLORS.running.text,
+      borderColor: STATUS_COLORS.running.border,
       icon: "",
       text: "Running",
       animation: "animate-pulse",
     },
     completed: {
-      bgColor: "bg-green-100",
-      textColor: "text-green-700",
-      borderColor: "border-green-200",
+      bgColor: STATUS_COLORS.completed.bg,
+      textColor: STATUS_COLORS.completed.text,
+      borderColor: STATUS_COLORS.completed.border,
       icon: "✓",
       text: "Completed",
       animation: "",
     },
     failed: {
-      bgColor: "bg-red-100",
-      textColor: "text-red-700",
-      borderColor: "border-red-200",
+      bgColor: STATUS_COLORS.failed.bg,
+      textColor: STATUS_COLORS.failed.text,
+      borderColor: STATUS_COLORS.failed.border,
       icon: "✗",
       text: "Failed",
       animation: "",
     },
     not_started: {
-      bgColor: "bg-gray-100",
-      textColor: "text-gray-600",
-      borderColor: "border-gray-200",
+      bgColor: STATUS_COLORS.not_started.bg,
+      textColor: STATUS_COLORS.not_started.text,
+      borderColor: STATUS_COLORS.not_started.border,
       icon: "•",
       text: "Not Started",
       animation: "",
