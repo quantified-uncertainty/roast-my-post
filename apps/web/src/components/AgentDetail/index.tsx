@@ -177,14 +177,31 @@ export default function AgentDetail({
               </>
             )}
           </p>
-          {agent.providesGrades && (
-            <div className="mt-2 inline-flex items-center rounded-md bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-              <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Provides Grades
-            </div>
-          )}
+          <div className="mt-2 flex gap-2">
+            {agent.isDeprecated && (
+              <div className="inline-flex items-center rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-800">
+                ⚠ Deprecated
+              </div>
+            )}
+            {agent.isRecommended && (
+              <div className="inline-flex items-center rounded-md bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800">
+                ★ Recommended
+              </div>
+            )}
+            {agent.isSystemManaged && (
+              <div className="inline-flex items-center rounded-md bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+                System
+              </div>
+            )}
+            {agent.providesGrades && (
+              <div className="inline-flex items-center rounded-md bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Provides Grades
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

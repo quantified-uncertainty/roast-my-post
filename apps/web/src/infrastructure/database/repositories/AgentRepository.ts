@@ -55,6 +55,9 @@ export class AgentRepository {
       providesGrades: agent.versions[0].providesGrades ?? false,
       extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
       readme: agent.versions[0].readme || undefined,
+      isSystemManaged: agent.isSystemManaged ?? false,
+      isRecommended: agent.isRecommended ?? false,
+      isDeprecated: agent.isDeprecated ?? false,
       owner: {
         id: agent.submittedById,
         name: agent.submittedBy.name || "Unknown",
@@ -129,6 +132,9 @@ export class AgentRepository {
       providesGrades: agent.versions[0].providesGrades ?? false,
       extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
       readme: agent.versions[0].readme || undefined,
+      isSystemManaged: agent.isSystemManaged ?? false,
+      isRecommended: agent.isRecommended ?? false,
+      isDeprecated: agent.isDeprecated ?? false,
       owner: {
         id: agent.submittedById,
         name: agent.submittedBy.name || "Unknown",
@@ -185,6 +191,9 @@ export class AgentRepository {
       providesGrades: dbAgent.versions[0].providesGrades ?? false,
       extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
       readme: dbAgent.versions[0].readme || undefined,
+      isSystemManaged: dbAgent.isSystemManaged ?? false,
+      isRecommended: dbAgent.isRecommended ?? false,
+      isDeprecated: dbAgent.isDeprecated ?? false,
       owner: {
         id: dbAgent.submittedById,
         name: dbAgent.submittedBy.name || "Unknown",

@@ -29,6 +29,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [importNotice, setImportNotice] = useState<string | null>(null);
+  const [isDeprecated, setIsDeprecated] = useState(false);
 
   const {
     register,
@@ -82,6 +83,9 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
         if (!data) {
           throw new Error("No data returned from API");
         }
+
+        // Set the deprecation status
+        setIsDeprecated(data.isDeprecated || false);
 
         // Convert the agent data to form format
         // When importing, use imported data preferentially for all fields
@@ -144,6 +148,15 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
       if (!updateResult?.data) {
         setFormError("root", { message: "Failed to update agent" });
         return;
+      }
+
+      // If deprecation checkbox was checked, update the agent's deprecation status
+      if (isDeprecated) {
+        await fetch(`/api/agents/${agentId}/deprecate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isDeprecated }),
+        });
       }
 
       if (updateResult.data.success) {
@@ -318,6 +331,27 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
               </FormField>
               )
             ))}
+
+            {/* Deprecation checkbox */}
+            <div className="flex items-start border-t pt-6">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  id="isDeprecated"
+                  checked={isDeprecated}
+                  onChange={(e) => setIsDeprecated(e.target.checked)}
+                  className="form-checkbox h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="isDeprecated" className="font-medium text-gray-700">
+                  Mark as Deprecated
+                </label>
+                <p className="text-gray-500">
+                  This will mark your agent as deprecated. Users will see a warning that this agent is no longer recommended for use.
+                </p>
+              </div>
+            </div>
 
             {errors.root && (
               <div className="rounded-md bg-red-50 p-4">

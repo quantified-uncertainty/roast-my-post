@@ -35,7 +35,18 @@ export default async function AgentsPage() {
     extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
     providesGrades: dbAgent.versions[0].providesGrades || false,
     isSystemManaged: dbAgent.isSystemManaged || false,
+    isRecommended: dbAgent.isRecommended || false,
+    isDeprecated: dbAgent.isDeprecated || false,
   }));
+
+  // Sort agents: recommended first, then regular, then deprecated
+  agents.sort((a, b) => {
+    if (a.isRecommended && !b.isRecommended) return -1;
+    if (!a.isRecommended && b.isRecommended) return 1;
+    if (a.isDeprecated && !b.isDeprecated) return 1;
+    if (!a.isDeprecated && b.isDeprecated) return -1;
+    return 0;
+  });
 
   return (
     <PageLayout>

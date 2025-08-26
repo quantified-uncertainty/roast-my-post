@@ -47,6 +47,16 @@ export default function AgentsList({ agents }: AgentsListProps) {
                 </p>
                 
                 <div className="mt-2 flex gap-2">
+                  {agent.isDeprecated && (
+                    <div className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-red-50 text-red-700">
+                      ⚠ Deprecated
+                    </div>
+                  )}
+                  {agent.isRecommended && (
+                    <div className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-yellow-50 text-yellow-700">
+                      ★ Recommended
+                    </div>
+                  )}
                   {agent.isSystemManaged && (
                     <div className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700">
                       System
