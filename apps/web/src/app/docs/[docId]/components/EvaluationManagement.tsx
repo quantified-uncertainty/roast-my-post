@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -12,6 +12,7 @@ import {
 import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
 import { GradeBadge } from "@/components/GradeBadge";
 import { StaleBadge } from "@/components/StaleBadge";
+import { AgentBadges } from "@/components/AgentBadges";
 import { formatDistanceToNow } from "date-fns";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
 
@@ -26,6 +27,19 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
   const router = useRouter();
   const [runningEvals, setRunningEvals] = useState<Set<string>>(new Set());
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
+  const [sortedAgents, setSortedAgents] = useState<any[]>([]);
+
+  // Sort available agents: recommended first, then regular, then deprecated
+  useEffect(() => {
+    const sorted = [...availableAgents].sort((a, b) => {
+      if (a.isRecommended && !b.isRecommended) return -1;
+      if (!a.isRecommended && b.isRecommended) return 1;
+      if (a.isDeprecated && !b.isDeprecated) return 1;
+      if (!a.isDeprecated && b.isDeprecated) return -1;
+      return 0;
+    });
+    setSortedAgents(sorted);
+  }, [availableAgents]);
 
   const handleRerun = async (agentId: string) => {
     setRunningEvals(prev => new Set([...prev, agentId]));
@@ -263,7 +277,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
       </div>
 
       {/* Add More Agents */}
-      {isOwner && availableAgents.length > 0 && (
+      {isOwner && sortedAgents.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">
             Add More Agents
@@ -273,7 +287,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {availableAgents.slice(0, 10).map((agent) => {
+            {sortedAgents.slice(0, 10).map((agent) => {
               const isRunning = runningAgents.has(agent.id);
 
               return (
@@ -286,12 +300,21 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                       <BeakerIcon className="h-4 w-4 text-gray-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <Link 
-                        href={`/agents/${agent.id}`}
-                        className="font-medium text-gray-900 hover:text-gray-700 truncate block"
-                      >
-                        {agent.name}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link 
+                          href={`/agents/${agent.id}`}
+                          className="font-medium text-gray-900 hover:text-gray-700 truncate"
+                        >
+                          {agent.name}
+                        </Link>
+                        <AgentBadges
+                          isDeprecated={agent.isDeprecated}
+                          isRecommended={agent.isRecommended}
+                          isSystemManaged={agent.isSystemManaged}
+                          providesGrades={agent.providesGrades}
+                          size="sm"
+                        />
+                      </div>
                       {agent.description && (
                         <p className="text-sm text-gray-500 line-clamp-2 mt-1">
                           {agent.description}
@@ -321,9 +344,9 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
             })}
           </div>
 
-          {availableAgents.length > 10 && (
+          {sortedAgents.length > 10 && (
             <p className="text-sm text-gray-500 text-center mt-4">
-              Showing 10 of {availableAgents.length} available agents
+              Showing 10 of {sortedAgents.length} available agents
             </p>
           )}
         </div>
