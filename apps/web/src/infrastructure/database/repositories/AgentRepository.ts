@@ -97,6 +97,7 @@ export class AgentRepository {
       where: { id: agentId },
       data: {
         updatedAt: new Date(),
+        isDeprecated: data.isDeprecated,
         versions: {
           create: {
             version: latestVersion + 1,

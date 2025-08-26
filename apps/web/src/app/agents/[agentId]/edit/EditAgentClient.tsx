@@ -18,7 +18,7 @@ import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import {
   type AgentInput,
-  AgentInputSchema as agentSchema,
+  AgentInputSchema,
 } from "@roast/ai";
 
 import { updateAgent } from "./actions";
@@ -135,13 +135,16 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
   const onSubmit = async (data: AgentInput) => {
     try {
-      const result = agentSchema.parse(data);
+      const dataWithDeprecation = {
+        ...data,
+        isDeprecated,
+      };
+      const result = AgentInputSchema.parse(dataWithDeprecation);
 
-      // Use updateAgent for editing, including deprecation status for atomic update
+      // Use updateAgent for editing
       const dataToSend = {
         ...result,
         agentId,
-        isDeprecated, // Include deprecation status in the main update
       };
 
       const updateResult = await updateAgent(dataToSend);

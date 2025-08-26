@@ -4,26 +4,21 @@ import { createSafeActionClient } from "next-safe-action";
 import { z } from "zod";
 
 import { auth } from "@/infrastructure/auth/auth";
-import { AgentInputSchema as agentSchema } from "@roast/ai";
+import { AgentInputSchema } from "@roast/ai";
 import { getServices } from "@/application/services/ServiceFactory";
 import type { AgentResponse } from "@roast/ai";
 import { ValidationError } from "@roast/domain";
 import { prisma } from "@/infrastructure/database/prisma";
 
-// Extend the agent schema to include deprecation status
-const agentUpdateSchema = agentSchema.extend({
-  isDeprecated: z.boolean().optional(),
-});
-
 // Setup next-safe-action
 const actionClient = createSafeActionClient();
 
-// Server action for updating an agent including deprecation status
+// Server action for updating an agent
 export const updateAgent = actionClient
-  .schema(agentUpdateSchema)
+  .schema(AgentInputSchema)
   .action(async (data): Promise<AgentResponse> => {
     try {
-      const { isDeprecated, ...agentData } = data.parsedInput;
+      const agentData = data.parsedInput;
       const agentId = agentData.agentId;
 
       if (!agentId) {
@@ -50,15 +45,7 @@ export const updateAgent = actionClient
         throw new Error("You can only update agents you own");
       }
 
-      // Update deprecation status if provided
-      if (isDeprecated !== undefined) {
-        await prisma.agent.update({
-          where: { id: agentId },
-          data: { isDeprecated }
-        });
-      }
-
-      // Update the agent version using the service
+      // Update the agent using the service
       const { agentService } = getServices();
       const result = await agentService.updateAgent(
         agentId,

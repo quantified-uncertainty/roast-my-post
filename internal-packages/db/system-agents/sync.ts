@@ -44,20 +44,13 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
       return;
     }
 
-    // Check for agent-level field changes (fields on Agent model, not AgentVersion)
-    const agentFieldsChanged = 
-      existingAgent.isRecommended !== (agent.isRecommended || false);
-
-    if (agentFieldsChanged) {
-      console.log(`  → Updating agent-level fields`);
-      await prisma.agent.update({
-        where: { id: agent.id },
-        data: { 
-          isRecommended: agent.isRecommended || false,
-          // Add other agent-level fields here as needed
-        }
-      });
-    }
+    // Always update agent-level fields
+    await prisma.agent.update({
+      where: { id: agent.id },
+      data: { 
+        isRecommended: agent.isRecommended || false,
+      }
+    });
 
     // Get the latest version
     const latestVersion = existingAgent.versions
