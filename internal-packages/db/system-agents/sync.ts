@@ -44,12 +44,18 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
       return;
     }
 
-    // Update isRecommended flag if it has changed
-    if (existingAgent.isRecommended !== (agent.isRecommended || false)) {
-      console.log(`  → Updating isRecommended flag to ${agent.isRecommended || false}`);
+    // Check for agent-level field changes (fields on Agent model, not AgentVersion)
+    const agentFieldsChanged = 
+      existingAgent.isRecommended !== (agent.isRecommended || false);
+
+    if (agentFieldsChanged) {
+      console.log(`  → Updating agent-level fields`);
       await prisma.agent.update({
         where: { id: agent.id },
-        data: { isRecommended: agent.isRecommended || false }
+        data: { 
+          isRecommended: agent.isRecommended || false,
+          // Add other agent-level fields here as needed
+        }
       });
     }
 
