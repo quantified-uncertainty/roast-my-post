@@ -182,7 +182,6 @@ export function ManagementEvaluationCard({
                     <span>•</span>
                     <StatusBadge
                       status={evaluationStatus}
-                      size="xs"
                       showText={true}
                     />
                   </>

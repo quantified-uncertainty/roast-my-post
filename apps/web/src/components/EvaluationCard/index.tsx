@@ -105,7 +105,6 @@ export function EvaluationCard({
           {isRerunning && (
             <StatusBadge
               status={evaluationStatus}
-              size="xs"
               showText={true}
             />
           )}
@@ -141,7 +140,6 @@ export function EvaluationCard({
         ) : (
           <StatusBadge
             status={evaluationStatus}
-            size="xs"
           />
         )}
       </div>

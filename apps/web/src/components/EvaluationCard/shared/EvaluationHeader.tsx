@@ -39,7 +39,7 @@ export function EvaluationHeader({
       <span className="text-sm font-semibold text-gray-700">{agentName}</span>
       {isStale && isComplete && <StaleBadge size="sm" />}
       {isRerunning && (
-        <StatusBadge status={evaluationStatus} size="xs" showText={true} />
+        <StatusBadge status={evaluationStatus} showText={true} />
       )}
       {children}
     </div>

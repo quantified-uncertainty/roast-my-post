@@ -86,7 +86,7 @@ export function EvaluationCard({
             onChange={onToggle}
           />
         ) : (
-          <StatusBadge status={evaluationStatus} size="xs" />
+          <StatusBadge status={evaluationStatus} />
         )}
       </div>
       {/* Summary or Status Message */}
