@@ -375,23 +375,21 @@ export function EvaluationCardsHeader({
                       </span>
                     )}
                     <div className="flex items-center gap-4">
+                      <a
+                        href={`/docs/${document.id}/evals/${review.agentId}`}
+                        className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
+                        rel="noopener noreferrer"
+                      >
+                        <CommandLineIcon className="mr-1 h-4 w-4" />
+                        Details
+                      </a>
                       {isComplete && (
-                        <>
-                          <a
-                            href={`/docs/${document.id}/evals/${review.agentId}`}
-                            className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
-                            rel="noopener noreferrer"
-                          >
-                            <CommandLineIcon className="mr-1 h-4 w-4" />
-                            Details
-                          </a>
-                          <a
-                            href={`/docs/${document.id}/evals/${review.agentId}/versions`}
-                            className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
-                          >
-                            v{review.versions?.[0]?.version || "1"}
-                          </a>
-                        </>
+                        <a
+                          href={`/docs/${document.id}/evals/${review.agentId}/versions`}
+                          className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
+                        >
+                          v{review.versions?.[0]?.version || "1"}
+                        </a>
                       )}
                     </div>
                   </div>

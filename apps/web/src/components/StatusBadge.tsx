@@ -24,18 +24,18 @@ export function StatusBadge({
 
   const statusConfig = {
     pending: {
-      bgColor: "bg-blue-100",
-      textColor: "text-blue-700",
-      borderColor: "border-blue-200",
-      icon: "⏳",
+      bgColor: "bg-yellow-100",
+      textColor: "text-yellow-700",
+      borderColor: "border-yellow-200",
+      icon: "•",
       text: "Pending",
       animation: "",
     },
     running: {
-      bgColor: "bg-amber-100",
-      textColor: "text-amber-700",
-      borderColor: "border-amber-200",
-      icon: "🔄",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-700",
+      borderColor: "border-blue-200",
+      icon: "",
       text: "Running",
       animation: "animate-pulse",
     },
@@ -59,7 +59,7 @@ export function StatusBadge({
       bgColor: "bg-gray-100",
       textColor: "text-gray-600",
       borderColor: "border-gray-200",
-      icon: "○",
+      icon: "•",
       text: "Not Started",
       animation: "",
     },
@@ -96,9 +96,9 @@ export function StatusBadge({
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           ></path>
         </svg>
-      ) : (
+      ) : config.icon ? (
         <span className="text-xs">{config.icon}</span>
-      )}
+      ) : null}
       {showText && <span>{config.text}</span>}
     </span>
   );
