@@ -18,6 +18,7 @@ import {
 import { createDocument } from "./actions";
 import { importDocument } from "../import/actions";
 import { type DocumentInput, documentSchema } from "./schema";
+import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 
 interface FormFieldConfig {
   name: keyof DocumentInput;
@@ -103,15 +104,8 @@ export default function NewDocumentPage() {
         const fetchedAgents = data.agents || [];
         
         // Sort agents: recommended first, then regular, then deprecated
-        fetchedAgents.sort((a: Agent, b: Agent) => {
-          if (a.isRecommended && !b.isRecommended) return -1;
-          if (!a.isRecommended && b.isRecommended) return 1;
-          if (a.isDeprecated && !b.isDeprecated) return 1;
-          if (!a.isDeprecated && b.isDeprecated) return -1;
-          return 0;
-        });
-        
-        setAgents(fetchedAgents);
+        const sortedAgents = sortAgentsByBadgeStatus<Agent>(fetchedAgents);
+        setAgents(sortedAgents);
         // Start with no agents selected
         // Users can manually select which evaluations they want to run
       } catch (error) {

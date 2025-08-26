@@ -18,6 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
 import { getEvaluationStatus } from "@/shared/utils/evaluationStatus";
 import { getStatusTextColor } from "@/shared/constants/statusColors";
+import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 
 interface EvaluationManagementProps {
   docId: string;
@@ -34,13 +35,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
 
   // Sort available agents: recommended first, then regular, then deprecated
   useEffect(() => {
-    const sorted = [...availableAgents].sort((a, b) => {
-      if (a.isRecommended && !b.isRecommended) return -1;
-      if (!a.isRecommended && b.isRecommended) return 1;
-      if (a.isDeprecated && !b.isDeprecated) return 1;
-      if (!a.isDeprecated && b.isDeprecated) return -1;
-      return 0;
-    });
+    const sorted = sortAgentsByBadgeStatus(availableAgents);
     setSortedAgents(sorted);
   }, [availableAgents]);
 
