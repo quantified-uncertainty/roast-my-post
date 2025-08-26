@@ -482,17 +482,26 @@ class DocumentQueryBuilder {
    */
   static evaluations(options: {
     includeStale?: boolean;
+    includePending?: boolean;
     versionCommentMode: 'full' | 'count' | 'none';
     versionLimit?: number;
     includeJobs?: boolean;
     jobLimit?: number;
   }) {
+    // If includePending is true, include all evaluations (even without versions)
+    // Otherwise, only include evaluations with non-stale versions
+    const whereClause = options.includePending 
+      ? {} 
+      : options.includeStale 
+        ? {} 
+        : {
+            versions: {
+              some: { isStale: false },
+            },
+          };
+    
     return {
-      where: options.includeStale ? {} : {
-        versions: {
-          some: { isStale: false },
-        },
-      },
+      where: whereClause,
       include: {
         ...(options.includeJobs && {
           jobs: this.jobs({ limit: options.jobLimit }),
@@ -516,6 +525,7 @@ class DocumentQueryBuilder {
    */
   static buildQuery(options: {
     includeStale?: boolean;
+    includePending?: boolean;
     includeSubmittedBy?: boolean;
     evaluationOptions: {
       versionCommentMode: 'full' | 'count' | 'none';
@@ -534,6 +544,7 @@ class DocumentQueryBuilder {
         versions: this.documentVersions(),
         evaluations: this.evaluations({
           includeStale: options.includeStale,
+          includePending: options.includePending,
           ...options.evaluationOptions,
         }),
       },
@@ -559,6 +570,7 @@ export class DocumentModel {
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
         includeStale,
+        includePending: true, // Include pending evaluations
         includeSubmittedBy: true,
         evaluationOptions: {
           versionCommentMode: 'count',
@@ -637,6 +649,7 @@ export class DocumentModel {
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
         includeStale,
+        includePending: true, // Always include pending evaluations
         includeSubmittedBy: true,
         evaluationOptions: {
           versionCommentMode: 'full',
@@ -669,6 +682,7 @@ export class DocumentModel {
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
         includeStale: false,
+        includePending: true, // Include evaluations that are pending/running
         includeSubmittedBy: true,
         evaluationOptions: {
           versionCommentMode: 'full',
