@@ -29,7 +29,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [importNotice, setImportNotice] = useState<string | null>(null);
-  const [isDeprecated, setIsDeprecated] = useState(false);
 
   const {
     register,
@@ -47,6 +46,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
       pluginIds: [],
       extendedCapabilityId: "",
       readme: "",
+      isDeprecated: false,
     }
   });
 
@@ -84,9 +84,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           throw new Error("No data returned from API");
         }
 
-        // Set the deprecation status
-        setIsDeprecated(data.isDeprecated || false);
-
         // Convert the agent data to form format
         // When importing, use imported data preferentially for all fields
         const resetData = {
@@ -112,6 +109,9 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           readme: importedData
             ? (importedData.readme ?? "")
             : data.readme || "",
+          isDeprecated: importedData
+            ? (importedData.isDeprecated ?? false)
+            : data.isDeprecated || false,
         };
 
         reset(resetData);
@@ -135,11 +135,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
   const onSubmit = async (data: AgentInput) => {
     try {
-      const dataWithDeprecation = {
-        ...data,
-        isDeprecated,
-      };
-      const result = AgentInputSchema.parse(dataWithDeprecation);
+      const result = AgentInputSchema.parse(data);
 
       // Use updateAgent for editing
       const dataToSend = {
@@ -331,10 +327,9 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
             <div className="flex items-start border-t pt-6">
               <div className="flex items-center h-5">
                 <input
+                  {...register("isDeprecated")}
                   type="checkbox"
                   id="isDeprecated"
-                  checked={isDeprecated}
-                  onChange={(e) => setIsDeprecated(e.target.checked)}
                   className="form-checkbox h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                 />
               </div>
