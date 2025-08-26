@@ -44,6 +44,15 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
       return;
     }
 
+    // Update isRecommended flag if it has changed
+    if (existingAgent.isRecommended !== (agent.isRecommended || false)) {
+      console.log(`  → Updating isRecommended flag to ${agent.isRecommended || false}`);
+      await prisma.agent.update({
+        where: { id: agent.id },
+        data: { isRecommended: agent.isRecommended || false }
+      });
+    }
+
     // Get the latest version
     const latestVersion = existingAgent.versions
       .sort((a, b) => b.version - a.version)[0];
@@ -93,6 +102,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
         id: agent.id,
         submittedById: userId,
         isSystemManaged: true,
+        isRecommended: agent.isRecommended || false,
         versions: {
           create: {
             version: 1,
