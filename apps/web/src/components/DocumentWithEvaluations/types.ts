@@ -20,10 +20,13 @@ export interface EvaluationSelectorProps {
 
 export interface EvaluationViewProps {
   evaluationState: EvaluationState;
-  onEvaluationStateChange: (newState: EvaluationState) => void;
+  onEvaluationStateChange?: (newState: EvaluationState) => void;
   document: Document;
   contentWithMetadataPrepend: string;
   showDebugComments?: boolean;
+  isOwner?: boolean;
+  onRerun?: (agentId: string) => void;
+  runningEvals?: Set<string>;
 }
 
 export interface EvaluationSelectorModalProps {

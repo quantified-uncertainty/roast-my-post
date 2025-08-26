@@ -1,19 +1,23 @@
 /**
- * Shared evaluation card component that can be used in both 
+ * Shared evaluation card component that can be used in both
  * reader view and document management page for consistency
  */
 
 import Link from "next/link";
-import { 
-  ArrowPathIcon, 
+
+import {
+  getEvaluationStatus,
+  getStatusDisplayText,
+} from "@/shared/utils/evaluationStatus";
+import {
+  ArrowPathIcon,
+  ChevronDownIcon,
   CommandLineIcon,
-  ChatBubbleLeftIcon,
-  ChevronDownIcon
 } from "@heroicons/react/24/outline";
+
 import { GradeBadge } from "../GradeBadge";
-import { StatusBadge } from "../StatusBadge";
 import { StaleBadge } from "../StaleBadge";
-import { getEvaluationStatus, getStatusDisplayText } from "@/shared/utils/evaluationStatus";
+import { StatusBadge } from "../StatusBadge";
 
 export interface EvaluationCardProps {
   evaluation: {
@@ -31,7 +35,7 @@ export interface EvaluationCardProps {
     isStale?: boolean;
   };
   documentId: string;
-  variant?: 'compact' | 'full';
+  variant?: "compact" | "full";
   isActive?: boolean;
   onToggleActive?: () => void;
   onRerun?: () => void;
@@ -42,28 +46,40 @@ export interface EvaluationCardProps {
 export function EvaluationCard({
   evaluation,
   documentId,
-  variant = 'compact',
+  variant = "compact",
   isActive = false,
   onToggleActive,
   onRerun,
   isRunning = false,
   showCommentToggle = true,
 }: EvaluationCardProps) {
-  const { status: evaluationStatus, isRerunning, hasCompletedVersion } = getEvaluationStatus(evaluation);
+  const {
+    latestEvaluationStatus: evaluationStatus,
+    isRerunning,
+    hasCompletedVersion,
+  } = getEvaluationStatus(evaluation);
   const isComplete = hasCompletedVersion || evaluationStatus === "completed";
   const hasComments = evaluation.comments && evaluation.comments.length > 0;
   const isStale = evaluation.isStale || false;
 
   const summary = evaluation.summary || "No summary available";
-  const truncatedSummary = summary.length > 300 ? summary.substring(0, 300) + "..." : summary;
+  const truncatedSummary =
+    summary.length > 300 ? summary.substring(0, 300) + "..." : summary;
 
   // Get status-specific content
   const getStatusContent = () => {
-    if (isRerunning && (evaluationStatus === "pending" || evaluationStatus === "running")) {
+    if (
+      isRerunning &&
+      (evaluationStatus === "pending" || evaluationStatus === "running")
+    ) {
       return truncatedSummary;
     }
-    
-    const statusText = getStatusDisplayText(evaluationStatus, isRerunning, truncatedSummary);
+
+    const statusText = getStatusDisplayText(
+      evaluationStatus,
+      isRerunning,
+      truncatedSummary
+    );
     if (evaluationStatus === "not_started" && !statusText) {
       return evaluation.agent.description || "Not yet evaluated";
     }
@@ -73,7 +89,7 @@ export function EvaluationCard({
     return statusText || truncatedSummary;
   };
 
-  if (variant === 'full') {
+  if (variant === "full") {
     // Full variant for document management page
     // TODO: Implement full variant matching EvaluationManagement style
     return null;
@@ -89,24 +105,22 @@ export function EvaluationCard({
       {/* Header Row */}
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-2">
-          {isComplete && evaluation.grade !== undefined && evaluation.grade !== null && !isRerunning && (
-            <GradeBadge
-              grade={evaluation.grade}
-              variant="grayscale"
-              size="xs"
-            />
-          )}
+          {isComplete &&
+            evaluation.grade !== undefined &&
+            evaluation.grade !== null &&
+            !isRerunning && (
+              <GradeBadge
+                grade={evaluation.grade}
+                variant="grayscale"
+                size="xs"
+              />
+            )}
           <span className="text-sm font-semibold text-gray-700">
             {evaluation.agent.name}
           </span>
-          {isStale && isComplete && (
-            <StaleBadge size="sm" />
-          )}
+          {isStale && isComplete && <StaleBadge size="sm" />}
           {isRerunning && (
-            <StatusBadge
-              status={evaluationStatus}
-              showText={true}
-            />
+            <StatusBadge status={evaluationStatus} showText={true} />
           )}
         </div>
         {/* Comments Switch - only show if complete and has comments */}
@@ -138,16 +152,16 @@ export function EvaluationCard({
             </span>
           </label>
         ) : (
-          <StatusBadge
-            status={evaluationStatus}
-          />
+          <StatusBadge status={evaluationStatus} />
         )}
       </div>
 
       {/* Summary or Status Message */}
-      <div className={`mb-3 min-h-[40px] text-sm ${
-        isComplete ? "text-gray-700" : "text-gray-500 italic"
-      }`}>
+      <div
+        className={`mb-3 min-h-[40px] text-sm ${
+          isComplete ? "text-gray-700" : "italic text-gray-500"
+        }`}
+      >
         {getStatusContent()}
       </div>
 
@@ -159,9 +173,11 @@ export function EvaluationCard({
             className="flex items-center text-xs font-medium text-purple-600 hover:underline"
             onClick={(e) => {
               e.preventDefault();
-              const element = window.document.getElementById(`eval-${evaluation.agentId}`);
+              const element = window.document.getElementById(
+                `eval-${evaluation.agentId}`
+              );
               if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                element.scrollIntoView({ behavior: "smooth", block: "start" });
               }
             }}
           >
@@ -174,8 +190,10 @@ export function EvaluationCard({
             onClick={onRerun}
             disabled={isRunning}
           >
-            <ArrowPathIcon className={`mr-1 h-3 w-3 ${isRunning ? 'animate-spin' : ''}`} />
-            {isRunning ? 'Retrying...' : 'Retry'}
+            <ArrowPathIcon
+              className={`mr-1 h-3 w-3 ${isRunning ? "animate-spin" : ""}`}
+            />
+            {isRunning ? "Retrying..." : "Retry"}
           </button>
         ) : (
           <span className="text-xs text-gray-400">

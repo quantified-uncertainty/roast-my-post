@@ -24,6 +24,9 @@ export function EvaluationView({
   document,
   contentWithMetadataPrepend,
   showDebugComments = false,
+  isOwner = false,
+  onRerun,
+  runningEvals = new Set(),
 }: EvaluationViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -124,6 +127,9 @@ export function EvaluationView({
             onToggleMode={() => setIsLargeMode((v) => !v)}
             showDebugComments={localShowDebugComments}
             onToggleDebugComments={handleToggleDebugComments}
+            isOwner={isOwner}
+            onRerun={onRerun}
+            runningEvals={runningEvals}
           />
         </div>
       </div>
@@ -146,13 +152,13 @@ export function EvaluationView({
               highlights={highlights}
               hoveredCommentId={evaluationState.hoveredCommentId}
               onHighlightHover={(commentId) => {
-                onEvaluationStateChange({
+                onEvaluationStateChange?.({
                   ...evaluationState,
                   hoveredCommentId: commentId,
                 });
               }}
               onHighlightClick={(commentId) => {
-                onEvaluationStateChange({
+                onEvaluationStateChange?.({
                   ...evaluationState,
                   expandedCommentId: commentId,
                 });
@@ -169,13 +175,13 @@ export function EvaluationView({
                 selectedCommentId={evaluationState.expandedCommentId}
                 hoveredCommentId={evaluationState.hoveredCommentId}
                 onCommentHover={(commentId) =>
-                  onEvaluationStateChange({
+                  onEvaluationStateChange?.({
                     ...evaluationState,
                     hoveredCommentId: commentId,
                   })
                 }
                 onCommentClick={(commentId) => {
-                  onEvaluationStateChange({
+                  onEvaluationStateChange?.({
                     ...evaluationState,
                     expandedCommentId: commentId,
                   });

@@ -1,19 +1,28 @@
 "use client";
 
-import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { 
+import Link from "next/link";
+
+import {
+  EvaluationActions,
+} from "@/components/EvaluationCard/shared/EvaluationActions";
+import {
+  EvaluationHeader,
+} from "@/components/EvaluationCard/shared/EvaluationHeader";
+import {
+  EvaluationStats,
+} from "@/components/EvaluationCard/shared/EvaluationStats";
+import { GradeBadge } from "@/components/GradeBadge";
+import { StatusBadge } from "@/components/StatusBadge";
+import type { Evaluation } from "@/shared/types/databaseTypes";
+import { getEvaluationStatus } from "@/shared/utils/evaluationStatus";
+import {
+  ChatBubbleLeftIcon as ChatBubbleLeftIconSolid,
+} from "@heroicons/react/20/solid";
+import {
   BeakerIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
-import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
-import { GradeBadge } from "@/components/GradeBadge";
-import { StatusBadge } from "@/components/StatusBadge";
-import { EvaluationHeader } from "@/components/EvaluationCard/shared/EvaluationHeader";
-import { EvaluationStats } from "@/components/EvaluationCard/shared/EvaluationStats";
-import { EvaluationActions } from "@/components/EvaluationCard/shared/EvaluationActions";
-import { getEvaluationStatus } from "@/shared/utils/evaluationStatus";
-import type { Evaluation } from "@/shared/types/databaseTypes";
 
 interface ManagementEvaluationCardProps {
   docId: string;
@@ -37,50 +46,57 @@ export function ManagementEvaluationCard({
   const latestGrade = latestVersion?.grade;
   const versionCount = evaluation.versions?.length || 0;
   const isStale = evaluation.isStale || false;
-  
+
   // Calculate stats
-  const totalCost = evaluation.versions?.reduce((sum: number, v) => {
-    const price = v.job?.priceInDollars;
-    if (!price) return sum;
-    const priceNum = typeof price === 'string' ? parseFloat(price) : Number(price);
-    return sum + priceNum;
-  }, 0) || 0;
-  
-  const avgDuration = versionCount > 0 && evaluation.versions
-    ? evaluation.versions.reduce((sum: number, v) => 
-        sum + (v.job?.durationInSeconds || 0), 0) / versionCount
-    : 0;
-  
+  const totalCost =
+    evaluation.versions?.reduce((sum: number, v) => {
+      const price = v.job?.priceInDollars;
+      if (!price) return sum;
+      const priceNum =
+        typeof price === "string" ? parseFloat(price) : Number(price);
+      return sum + priceNum;
+    }, 0) || 0;
+
+  const avgDuration =
+    versionCount > 0 && evaluation.versions
+      ? evaluation.versions.reduce(
+          (sum: number, v) => sum + (v.job?.durationInSeconds || 0),
+          0
+        ) / versionCount
+      : 0;
+
   // Calculate success rate
-  const completedJobs = evaluation.jobs?.filter((job) => job.status === "COMPLETED").length || 0;
+  const completedJobs =
+    evaluation.jobs?.filter((job) => job.status === "COMPLETED").length || 0;
   const totalJobs = evaluation.jobs?.length || 0;
   const successRate = totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0;
 
   // Get evaluation status using shared utility
-  const { status: evaluationStatus, isRerunning } = getEvaluationStatus(evaluation);
-  const latestJobStatus = evaluation.jobs?.[0]?.status || 
-    latestVersion?.job?.status || "COMPLETED";
+  const { latestEvaluationStatus: evaluationStatus, isRerunning } =
+    getEvaluationStatus(evaluation);
+  const latestJobStatus =
+    evaluation.jobs?.[0]?.status || latestVersion?.job?.status || "COMPLETED";
 
   // Get summary and comment count
   const latestSummary = latestVersion?.summary || "";
   const commentCount = latestVersion?.comments?.length || 0;
-  
+
   // Calculate word count from analysis
-  const analysisWordCount = latestVersion?.analysis 
-    ? latestVersion.analysis.trim().split(/\s+/).length 
+  const analysisWordCount = latestVersion?.analysis
+    ? latestVersion.analysis.trim().split(/\s+/).length
     : 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       {/* Header section */}
       <div className="px-5 py-4">
         <div className="flex items-center justify-between">
           {/* Left side - Agent info */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="p-1.5">
-              <BeakerIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+              <BeakerIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <EvaluationHeader
                 agentName={evaluation.agent.name}
                 grade={latestGrade}
@@ -89,7 +105,7 @@ export function ManagementEvaluationCard({
                 evaluationStatus={evaluationStatus}
                 showGrade={false}
               >
-                <Link 
+                <Link
                   href={`/agents/${agentId}`}
                   className="ml-1 text-gray-400 hover:text-gray-600"
                 >
@@ -116,7 +132,11 @@ export function ManagementEvaluationCard({
               documentId={docId}
               agentId={agentId}
               onRerun={isOwner ? () => onRerun(agentId) : undefined}
-              isRunning={isRunning || latestJobStatus === "PENDING" || latestJobStatus === "RUNNING"}
+              isRunning={
+                isRunning ||
+                latestJobStatus === "PENDING" ||
+                latestJobStatus === "RUNNING"
+              }
               showRerun={isOwner}
               showDetails={true}
               detailsStyle="button"
@@ -128,25 +148,27 @@ export function ManagementEvaluationCard({
 
       {/* Recent Eval section */}
       {latestVersion && (
-        <div className="bg-gray-50 px-5 py-4 border-t border-gray-100">
-          <div className="flex gap-4 items-start">
+        <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
+          <div className="flex items-start gap-4">
             {/* Grade badge */}
             <div className="flex-shrink-0">
               {latestGrade !== null && latestGrade !== undefined ? (
                 <GradeBadge grade={latestGrade} variant="grayscale" size="md" />
               ) : (
-                <div className="bg-gray-100 rounded px-3 py-1">
-                  <span className="text-gray-400 text-sm font-semibold">N/A</span>
+                <div className="rounded bg-gray-100 px-3 py-1">
+                  <span className="text-sm font-semibold text-gray-400">
+                    N/A
+                  </span>
                 </div>
               )}
             </div>
-            
+
             {/* Summary and metadata */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-700 line-clamp-2">
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-2 text-sm text-gray-700">
                 {latestSummary || "No summary available for this evaluation."}
               </p>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+              <p className="mt-1 flex items-center gap-2 text-sm text-gray-500">
                 {commentCount > 0 && (
                   <>
                     <span className="flex items-center gap-1">
@@ -165,7 +187,12 @@ export function ManagementEvaluationCard({
                     <span>•</span>
                   </>
                 )}
-                <span>{formatDistanceToNow(new Date(latestVersion?.createdAt || Date.now()), { addSuffix: true })}</span>
+                <span>
+                  {formatDistanceToNow(
+                    new Date(latestVersion?.createdAt || Date.now()),
+                    { addSuffix: true }
+                  )}
+                </span>
                 {latestVersion?.job && (
                   <>
                     <span>•</span>
@@ -180,10 +207,7 @@ export function ManagementEvaluationCard({
                 {(evaluationStatus !== "completed" || isRerunning) && (
                   <>
                     <span>•</span>
-                    <StatusBadge
-                      status={evaluationStatus}
-                      showText={true}
-                    />
+                    <StatusBadge status={evaluationStatus} showText={true} />
                   </>
                 )}
               </p>

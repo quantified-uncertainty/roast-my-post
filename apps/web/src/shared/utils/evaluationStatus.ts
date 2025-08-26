@@ -1,14 +1,14 @@
 import type { EvaluationStatus } from "@/components/StatusBadge";
 
 interface EvaluationStatusInfo {
-  status: EvaluationStatus;
+  latestEvaluationStatus: EvaluationStatus;
   isRerunning: boolean;
   hasCompletedVersion: boolean;
 }
 
 interface EvaluationData {
   jobs?: Array<{ status: string; createdAt: Date }>;
-  versions?: Array<{ 
+  versions?: Array<{
     job?: { status: string };
     createdAt?: Date;
   }>;
@@ -18,17 +18,19 @@ interface EvaluationData {
  * Determine the evaluation status based on jobs and versions
  * This is shared logic used across the application for consistent status determination
  */
-export function getEvaluationStatus(evaluation: EvaluationData): EvaluationStatusInfo {
+export function getEvaluationStatus(
+  evaluation: EvaluationData
+): EvaluationStatusInfo {
   const mostRecentJob = evaluation.jobs?.[0];
   const hasCompletedVersion = !!(
-    evaluation.versions && 
-    evaluation.versions.length > 0 && 
+    evaluation.versions &&
+    evaluation.versions.length > 0 &&
     evaluation.versions[0]?.job?.status === "COMPLETED"
   );
-  
+
   let status: EvaluationStatus = "not_started";
   let isRerunning = false;
-  
+
   if (!mostRecentJob && !hasCompletedVersion) {
     status = "not_started";
   } else if (mostRecentJob) {
@@ -46,11 +48,11 @@ export function getEvaluationStatus(evaluation: EvaluationData): EvaluationStatu
   } else if (hasCompletedVersion) {
     status = "completed";
   }
-  
+
   return {
-    status,
+    latestEvaluationStatus: status,
     isRerunning,
-    hasCompletedVersion
+    hasCompletedVersion,
   };
 }
 
@@ -58,14 +60,14 @@ export function getEvaluationStatus(evaluation: EvaluationData): EvaluationStatu
  * Get the display text for a status
  */
 export function getStatusDisplayText(
-  status: EvaluationStatus, 
+  status: EvaluationStatus,
   isRerunning: boolean,
   defaultText?: string
 ): string {
   if (isRerunning && (status === "pending" || status === "running")) {
     return defaultText || "";
   }
-  
+
   switch (status) {
     case "pending":
       return "Queued • Waiting to start...";
@@ -83,7 +85,9 @@ export function getStatusDisplayText(
 /**
  * Map job status strings to our evaluation status types
  */
-export function mapJobStatusToEvaluationStatus(jobStatus: string): EvaluationStatus {
+export function mapJobStatusToEvaluationStatus(
+  jobStatus: string
+): EvaluationStatus {
   switch (jobStatus) {
     case "PENDING":
       return "pending";
