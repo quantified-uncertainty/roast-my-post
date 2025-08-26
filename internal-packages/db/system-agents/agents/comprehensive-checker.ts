@@ -9,6 +9,7 @@ export const comprehensiveCheckerAgent: SystemAgentDefinition = {
   description:
     "Combines all verification tools except Spelling & Grammar: Link Checker, Fact Checker, Math Checker, and Forecast Checker for thorough content validation",
   providesGrades: false, // Plugin-based agents don't provide grades
+  isRecommended: true, // This is a recommended agent for comprehensive validation
   pluginIds: [
     PluginType.LINK_ANALYSIS,
     PluginType.FACT_CHECK,

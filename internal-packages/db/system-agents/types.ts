@@ -10,6 +10,7 @@ export interface SystemAgentDefinition {
   providesGrades: boolean;
   pluginIds?: PluginType[];
   extendedCapabilityId?: string;
+  isRecommended?: boolean;
 }
 
 export interface SystemAgentConfig {

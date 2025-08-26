@@ -4,6 +4,7 @@ import { Bot } from "lucide-react";
 import Link from "next/link";
 
 import type { Agent } from "@roast/ai";
+import { AgentBadges } from "./AgentBadges";
 
 interface AgentsListProps {
   agents: Agent[];
@@ -47,16 +48,13 @@ export default function AgentsList({ agents }: AgentsListProps) {
                 </p>
                 
                 <div className="mt-2 flex gap-2">
-                  {agent.isSystemManaged && (
-                    <div className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700">
-                      System
-                    </div>
-                  )}
-                  {agent.providesGrades && (
-                    <div className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
-                      ✓ Grades
-                    </div>
-                  )}
+                  <AgentBadges
+                    isDeprecated={agent.isDeprecated}
+                    isRecommended={agent.isRecommended}
+                    isSystemManaged={agent.isSystemManaged}
+                    providesGrades={agent.providesGrades}
+                    size="sm"
+                  />
                 </div>
               </div>
             </Link>

@@ -38,6 +38,8 @@ const BaseAgentSchema = z.object({
   extendedCapabilityId: z.string().optional(),
   pluginIds: z.array(z.nativeEnum(PluginType)).optional(),
   readme: z.string().optional(),
+  isDeprecated: z.boolean().optional(),
+  isRecommended: z.boolean().optional(),
 });
 
 // Schema for the complete agent
@@ -47,7 +49,6 @@ export const AgentSchema = BaseAgentSchema.extend({
   owner: AgentOwnerSchema.optional(),
   isOwner: z.boolean().optional(),
   isSystemManaged: z.boolean().optional(),
-  readme: z.string().optional(),
   ephemeralBatch: z.object({
     trackingId: z.string().nullable(),
     isEphemeral: z.boolean(),

@@ -44,6 +44,14 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
       return;
     }
 
+    // Always update agent-level fields
+    await prisma.agent.update({
+      where: { id: agent.id },
+      data: { 
+        isRecommended: agent.isRecommended || false,
+      }
+    });
+
     // Get the latest version
     const latestVersion = existingAgent.versions
       .sort((a, b) => b.version - a.version)[0];
@@ -93,6 +101,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
         id: agent.id,
         submittedById: userId,
         isSystemManaged: true,
+        isRecommended: agent.isRecommended || false,
         versions: {
           create: {
             version: 1,
