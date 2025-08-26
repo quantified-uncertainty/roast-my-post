@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Agent Deprecation Feature', () => {
-  // Skip if no auth is available in test environment
-  test.skip(({ browserName }) => {
-    return process.env.BYPASS_TOOL_AUTH !== 'true' && !process.env.TEST_USER_SESSION;
-  }, 'Requires authentication setup');
+// These tests require a running dev server on port 3000
+// Run with: pnpm --filter @roast/web dev
+// Then: pnpm --filter @roast/web run test:playwright agent-deprecation
+test.describe.skip('Agent Deprecation Feature', () => {
+  // Skip by default since they need manual server setup
+  // Remove .skip when running locally with dev server
 
   test('should display deprecation badge on agent list', async ({ page }) => {
     // Navigate to agents page
