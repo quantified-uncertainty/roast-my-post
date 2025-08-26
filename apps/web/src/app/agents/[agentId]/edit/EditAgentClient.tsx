@@ -137,26 +137,18 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
     try {
       const result = agentSchema.parse(data);
 
-      // Use updateAgent for editing, passing both parsedInput and rawInput
+      // Use updateAgent for editing, including deprecation status for atomic update
       const dataToSend = {
         ...result,
         agentId,
+        isDeprecated, // Include deprecation status in the main update
       };
 
-      const updateResult = await updateAgent(dataToSend);
+      const updateResult = await updateAgent(dataToSend as any);
 
       if (!updateResult?.data) {
         setFormError("root", { message: "Failed to update agent" });
         return;
-      }
-
-      // If deprecation checkbox was checked, update the agent's deprecation status
-      if (isDeprecated) {
-        await fetch(`/api/agents/${agentId}/deprecate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isDeprecated }),
-        });
       }
 
       if (updateResult.data.success) {

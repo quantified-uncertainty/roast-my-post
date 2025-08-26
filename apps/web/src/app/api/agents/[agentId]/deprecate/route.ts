@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { logger } from "@/infrastructure/logging/logger";
+
+// Validation schema for the request body
+const deprecateRequestSchema = z.object({
+  isDeprecated: z.boolean()
+});
 
 export async function POST(
   request: NextRequest, 
@@ -19,7 +25,27 @@ export async function POST(
       );
     }
 
-    const { isDeprecated } = await request.json();
+    // Parse and validate the request body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
+    // Validate the request body shape
+    const parseResult = deprecateRequestSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: "Invalid request: isDeprecated must be a boolean" },
+        { status: 400 }
+      );
+    }
+
+    const { isDeprecated } = parseResult.data;
     const agentId = params.agentId;
 
     // Check if user owns this agent
