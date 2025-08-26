@@ -144,7 +144,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
         isDeprecated, // Include deprecation status in the main update
       };
 
-      const updateResult = await updateAgent(dataToSend as any);
+      const updateResult = await updateAgent(dataToSend);
 
       if (!updateResult?.data) {
         setFormError("root", { message: "Failed to update agent" });

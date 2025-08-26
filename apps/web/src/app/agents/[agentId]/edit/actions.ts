@@ -36,50 +36,49 @@ export const updateAgent = actionClient
         throw new Error("User must be logged in to update an agent");
       }
 
-      // Start a transaction to ensure atomic updates
-      const updatedAgent = await prisma.$transaction(async (tx) => {
-        // First, check if user owns this agent (for deprecation update)
-        const agent = await tx.agent.findUnique({
-          where: { id: agentId },
-          select: { submittedById: true }
-        });
-
-        if (!agent) {
-          throw new Error("Agent not found");
-        }
-
-        // Update deprecation status if provided and user owns the agent
-        if (isDeprecated !== undefined) {
-          if (agent.submittedById !== session.user.id) {
-            throw new Error("You can only change deprecation status for agents you own");
-          }
-          
-          await tx.agent.update({
-            where: { id: agentId },
-            data: { isDeprecated }
-          });
-        }
-
-        // Now update the agent version using the service
-        const { agentService } = getServices();
-        const result = await agentService.updateAgent(
-          agentId,
-          agentData,
-          session.user.id
-        );
-
-        if (result.isError()) {
-          const error = result.error();
-          throw new Error(
-            error instanceof ValidationError 
-              ? error.message 
-              : "Failed to update agent"
-          );
-        }
-
-        return result.unwrap();
+      // Check if user owns this agent
+      const agent = await prisma.agent.findUnique({
+        where: { id: agentId },
+        select: { submittedById: true }
       });
 
+      if (!agent) {
+        throw new Error("Agent not found");
+      }
+
+      if (agent.submittedById !== session.user.id) {
+        throw new Error("You can only update agents you own");
+      }
+
+      // Update deprecation status if provided
+      if (isDeprecated !== undefined) {
+        await prisma.agent.update({
+          where: { id: agentId },
+          data: { isDeprecated }
+        });
+      }
+
+      // Update the agent version using the service
+      const { agentService } = getServices();
+      const result = await agentService.updateAgent(
+        agentId,
+        agentData,
+        session.user.id
+      );
+
+      if (result.isError()) {
+        const error = result.error();
+        const errorMessage = error instanceof ValidationError 
+          ? error.message 
+          : "Failed to update agent";
+        
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
+      const updatedAgent = result.unwrap();
       return {
         success: true,
         agent: updatedAgent,
