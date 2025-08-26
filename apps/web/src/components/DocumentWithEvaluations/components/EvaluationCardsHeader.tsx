@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { GradeBadge } from "../../GradeBadge";
 import { StatusBadge } from "../../StatusBadge";
+import { StaleBadge } from "../../StaleBadge";
 import type { Document } from "@/shared/types/databaseTypes";
 import type { EvaluationState } from "../types";
 import { TRANSITION_DURATION, TRANSITION_DURATION_SLOW, CARDS_GRID_MAX_HEIGHT } from "../constants";
@@ -244,6 +245,7 @@ export function EvaluationCardsHeader({
               const { status: evaluationStatus, isRerunning, hasCompletedVersion } = getEvaluationStatus(review);
               const isComplete = hasCompletedVersion || evaluationStatus === "completed";
               const hasComments = review.comments && review.comments.length > 0;
+              const isStale = review.isStale || false;
               
               const summary = review.summary || "No summary available";
               const truncatedSummary =
@@ -278,22 +280,19 @@ export function EvaluationCardsHeader({
                   {/* Header Row */}
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      {isComplete && review.grade !== undefined ? (
+                      {isComplete && review.grade !== undefined && !isRerunning && (
                         <GradeBadge
                           grade={review.grade}
                           variant="grayscale"
                           size="xs"
                         />
-                      ) : (
-                        <StatusBadge
-                          status={evaluationStatus}
-                          size="xs"
-                          showText={false}
-                        />
                       )}
                       <span className="text-sm font-semibold text-gray-700">
                         {review.agent.name}
                       </span>
+                      {isStale && isComplete && (
+                        <StaleBadge size="sm" />
+                      )}
                       {isRerunning && (
                         <StatusBadge
                           status={evaluationStatus}

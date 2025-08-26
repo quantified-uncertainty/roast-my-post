@@ -10,9 +10,9 @@ export const STATUS_COLORS = {
     border: "border-amber-200",
   },
   running: {
-    bg: "bg-orange-100",
-    text: "text-orange-600",
-    border: "border-orange-200",
+    bg: "bg-blue-100",
+    text: "text-blue-600",
+    border: "border-blue-200",
   },
   completed: {
     bg: "bg-green-100",
