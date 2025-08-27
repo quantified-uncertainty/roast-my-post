@@ -103,7 +103,17 @@ export class PerplexityClient {
           total_tokens: completion.usage.total_tokens
         } : undefined
       };
-    } catch (error) {
+    } catch (error: any) {
+      // Check for 401 specifically
+      if (error?.status === 401 || error?.response?.status === 401) {
+        throw new Error('OPENROUTER_API_KEY is invalid (401 Unauthorized)');
+      }
+      
+      // Check for other auth errors
+      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+        throw new Error('OPENROUTER_API_KEY is invalid (401 Unauthorized)');
+      }
+      
       console.error('Perplexity query error:', error);
       throw error;
     }

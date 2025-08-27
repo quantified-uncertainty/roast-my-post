@@ -100,11 +100,104 @@ export function validateStartupConfig(): ValidationResult {
 }
 
 /**
+ * Test OpenRouter API key by making a simple request
+ */
+async function validateOpenRouterKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://roastmypost.org',
+        'X-Title': 'RoastMyPost Validation',
+      },
+    });
+    
+    if (response.status === 401) {
+      return { valid: false, error: 'Invalid API key (401 Unauthorized)' };
+    }
+    
+    if (response.status === 403) {
+      return { valid: false, error: 'API key lacks permissions (403 Forbidden)' };
+    }
+    
+    if (!response.ok) {
+      return { valid: false, error: `API returned ${response.status}: ${response.statusText}` };
+    }
+    
+    return { valid: true };
+  } catch (error) {
+    return { 
+      valid: false, 
+      error: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    };
+  }
+}
+
+/**
+ * Test Anthropic API key
+ */
+async function validateAnthropicKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
+  // For Anthropic, we can't easily test without making a real API call
+  // But we can at least check the format
+  if (!apiKey.startsWith('sk-ant-api03-')) {
+    return { valid: false, error: 'Invalid Anthropic API key format' };
+  }
+  // Could add a minimal API call here if needed
+  return { valid: true };
+}
+
+/**
  * Run startup validation and handle the results
  * Call this from your app initialization
  */
-export function runStartupValidation() {
+export async function runStartupValidation() {
   const result = validateStartupConfig();
+  
+  // Test API keys if they exist
+  const apiValidations: Promise<void>[] = [];
+  
+  // Test OpenRouter key if present
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (openRouterKey && openRouterKey !== 'your_openrouter_api_key_here' && openRouterKey !== 'dummy-key-for-ci') {
+    apiValidations.push(
+      validateOpenRouterKey(openRouterKey).then(({ valid, error }) => {
+        if (!valid) {
+          const message = `OpenRouter API key validation failed: ${error}`;
+          if (result.errors.indexOf(message) === -1) {
+            result.errors.push(message);
+          }
+          result.isValid = false;
+          console.error(`  ❌ ${message}`);
+        } else {
+          console.log('  ✅ OpenRouter API key validated successfully');
+        }
+      })
+    );
+  }
+  
+  // Test Anthropic key if present
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey && anthropicKey !== 'sk-ant-api03-xxxxx') {
+    apiValidations.push(
+      validateAnthropicKey(anthropicKey).then(({ valid, error }) => {
+        if (!valid) {
+          const message = `Anthropic API key validation failed: ${error}`;
+          if (result.errors.indexOf(message) === -1) {
+            result.errors.push(message);
+          }
+          result.isValid = false;
+          console.error(`  ❌ ${message}`);
+        }
+      })
+    );
+  }
+  
+  // Wait for all API validations
+  if (apiValidations.length > 0) {
+    console.log('🔍 Validating API keys...');
+    await Promise.all(apiValidations);
+  }
   
   if (!result.isValid) {
     console.error('🚨 Application startup validation failed:');
@@ -112,10 +205,10 @@ export function runStartupValidation() {
     
     if (process.env.NODE_ENV === 'production') {
       // In production, fail fast
-      throw new Error(`Application cannot start: Missing required configuration:\n${result.errors.join('\n')}`);
+      throw new Error(`Application cannot start: Configuration validation failed:\n${result.errors.join('\n')}`);
     } else {
       // In development, show warnings but continue
-      console.warn('⚠️  Running in development mode with missing configuration');
+      console.warn('⚠️  Running in development mode with invalid configuration');
     }
   }
   
@@ -126,7 +219,7 @@ export function runStartupValidation() {
   
   // Log successful validation
   if (result.isValid && result.warnings.length === 0) {
-    console.log('✅ All required services configured correctly');
+    console.log('✅ All required services configured and validated');
   }
   
   return result;
