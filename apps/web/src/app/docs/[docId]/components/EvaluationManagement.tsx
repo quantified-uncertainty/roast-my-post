@@ -9,7 +9,8 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { AgentBadges } from "@/components/AgentBadges";
-import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
+import { createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
+import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
 import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 import { ManagementEvaluationCard } from "./ManagementEvaluationCard";
 import type { Evaluation } from "@/shared/types/databaseTypes";
@@ -33,7 +34,7 @@ interface EvaluationManagementProps {
 
 export function EvaluationManagement({ docId, evaluations, availableAgents, isOwner }: EvaluationManagementProps) {
   const router = useRouter();
-  const [runningEvals, setRunningEvals] = useState<Set<string>>(new Set());
+  const { handleRerun, runningEvals } = useEvaluationRerun({ documentId: docId });
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
   const [sortedAgents, setSortedAgents] = useState<Agent[]>([]);
 
@@ -42,22 +43,6 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
     const sorted = sortAgentsByBadgeStatus(availableAgents);
     setSortedAgents(sorted);
   }, [availableAgents]);
-
-  const handleRerun = async (agentId: string) => {
-    setRunningEvals(prev => new Set([...prev, agentId]));
-    try {
-      await rerunEvaluation(agentId, docId);
-      router.refresh();
-    } catch (error) {
-      console.error('Failed to rerun evaluation:', error);
-    } finally {
-      setRunningEvals(prev => {
-        const next = new Set(prev);
-        next.delete(agentId);
-        return next;
-      });
-    }
-  };
 
   const handleAddAgent = async (agentId: string) => {
     setRunningAgents(prev => new Set([...prev, agentId]));

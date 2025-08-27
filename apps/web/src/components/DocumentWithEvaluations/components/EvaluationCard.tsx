@@ -3,8 +3,9 @@
 import type { Evaluation } from "@/shared/types/databaseTypes";
 import {
   getEvaluationStatus,
-  getStatusDisplayText,
+  getEvaluationStatusContent,
 } from "@/shared/utils/evaluationStatus";
+import { truncateSummary } from "@/shared/utils/text";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 import { CommentToggle } from "../../EvaluationCard/shared/CommentToggle";
@@ -38,33 +39,15 @@ export function EvaluationCard({
   const isStale = review.isStale || false;
 
   const summary = review.summary || "No summary available";
-  const truncatedSummary =
-    summary.length > 300 ? summary.substring(0, 300) + "..." : summary;
+  const truncatedSummary = truncateSummary(summary);
 
-  // Status-specific content using shared utility
-  const getStatusContent = () => {
-    if (
-      isRerunning &&
-      (latestEvaluationStatus === "pending" ||
-        latestEvaluationStatus === "running")
-    ) {
-      // Show summary from completed version while rerunning
-      return truncatedSummary;
-    }
-
-    const statusText = getStatusDisplayText(
-      latestEvaluationStatus,
-      isRerunning,
-      truncatedSummary
-    );
-    if (latestEvaluationStatus === "not_started" && !statusText) {
-      return review.agent.description || "Not yet evaluated";
-    }
-    if (latestEvaluationStatus === "failed") {
-      return statusText + " • Click to retry";
-    }
-    return statusText || truncatedSummary;
-  };
+  // Use shared utility for status content
+  const statusContent = getEvaluationStatusContent(
+    latestEvaluationStatus,
+    isRerunning,
+    truncatedSummary,
+    review.agent.description
+  );
 
   return (
     <div
@@ -99,7 +82,7 @@ export function EvaluationCard({
           hasCompletedVersion ? "text-gray-700" : "italic text-gray-500"
         }`}
       >
-        {getStatusContent()}
+        {statusContent}
       </div>
       {/* Footer */}
       <div className="mt-auto flex flex-row items-center justify-between">

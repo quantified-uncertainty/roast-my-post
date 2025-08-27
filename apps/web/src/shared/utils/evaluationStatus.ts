@@ -57,6 +57,34 @@ export function getEvaluationStatus(
 }
 
 /**
+ * Get the content to display for an evaluation based on its status
+ * This consolidates the duplicate logic from EvaluationCard components
+ */
+export function getEvaluationStatusContent(
+  status: EvaluationStatus,
+  isRerunning: boolean,
+  summary: string,
+  agentDescription?: string
+): string {
+  // Show summary if rerunning with pending/running status  
+  if (isRerunning && (status === "pending" || status === "running")) {
+    return summary;
+  }
+
+  const statusText = getStatusDisplayText(status, isRerunning, summary);
+  
+  if (status === "not_started" && !statusText) {
+    return agentDescription || "Not yet evaluated";
+  }
+  
+  if (status === "failed") {
+    return (statusText || "Evaluation failed") + " • Click to retry";
+  }
+  
+  return statusText || summary;
+}
+
+/**
  * Get the display text for a status
  */
 export function getStatusDisplayText(

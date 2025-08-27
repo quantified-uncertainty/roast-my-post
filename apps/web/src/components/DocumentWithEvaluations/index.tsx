@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 import { HEADER_HEIGHT_PX } from "@/shared/utils/ui/constants";
 import { clearTruncationCache, getTruncationCacheSize } from "@/shared/utils/ui/commentPositioning";
-import { rerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
+import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
 
 import { EvaluationView } from "./components";
 import { EmptyEvaluationsView } from "./components/EmptyEvaluationsView";
@@ -17,9 +16,12 @@ export function DocumentWithEvaluations({
   initialSelectedEvalIds,
   showDebugComments = false,
 }: DocumentWithReviewsProps) {
-  const router = useRouter();
   const hasEvaluations = document.reviews && document.reviews.length > 0;
-  const [runningEvals, setRunningEvals] = useState<Set<string>>(new Set());
+  
+  // Use the shared hook for evaluation reruns
+  const { handleRerun, runningEvals } = useEvaluationRerun({
+    documentId: document.id,
+  });
   
   // Check if any evaluations have pending/running jobs (only check most recent job per evaluation)
   const hasPendingJobs = useMemo(() => {
@@ -81,29 +83,6 @@ export function DocumentWithEvaluations({
     };
   }, []);
 
-  // Handler for rerunning evaluations
-  const handleRerun = async (agentId: string) => {
-    if (!isOwner) return;
-    
-    setRunningEvals(prev => new Set([...prev, agentId]));
-    try {
-      const result = await rerunEvaluation(agentId, document.id);
-      if (result.success) {
-        router.refresh();
-      } else {
-        console.error('Failed to rerun evaluation:', result.error);
-      }
-    } catch (error) {
-      console.error('Failed to rerun evaluation:', error);
-    } finally {
-      setRunningEvals(prev => {
-        const next = new Set(prev);
-        next.delete(agentId);
-        return next;
-      });
-    }
-  };
-
   return (
     <div
       className="flex h-full flex-col"
@@ -117,7 +96,7 @@ export function DocumentWithEvaluations({
           contentWithMetadataPrepend={document.content}
           showDebugComments={showDebugComments}
           isOwner={isOwner}
-          onRerun={handleRerun}
+          onRerun={isOwner ? handleRerun : undefined}
           runningEvals={runningEvals}
         />
       ) : (

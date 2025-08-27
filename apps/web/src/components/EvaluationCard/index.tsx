@@ -7,8 +7,9 @@ import Link from "next/link";
 
 import {
   getEvaluationStatus,
-  getStatusDisplayText,
+  getEvaluationStatusContent,
 } from "@/shared/utils/evaluationStatus";
+import { truncateSummary } from "@/shared/utils/text";
 import {
   ArrowPathIcon,
   ChevronDownIcon,
@@ -63,31 +64,15 @@ export function EvaluationCard({
   const isStale = evaluation.isStale || false;
 
   const summary = evaluation.summary || "No summary available";
-  const truncatedSummary =
-    summary.length > 300 ? summary.substring(0, 300) + "..." : summary;
+  const truncatedSummary = truncateSummary(summary);
 
-  // Get status-specific content
-  const getStatusContent = () => {
-    if (
-      isRerunning &&
-      (evaluationStatus === "pending" || evaluationStatus === "running")
-    ) {
-      return truncatedSummary;
-    }
-
-    const statusText = getStatusDisplayText(
-      evaluationStatus,
-      isRerunning,
-      truncatedSummary
-    );
-    if (evaluationStatus === "not_started" && !statusText) {
-      return evaluation.agent.description || "Not yet evaluated";
-    }
-    if (evaluationStatus === "failed") {
-      return statusText + " • Click to retry";
-    }
-    return statusText || truncatedSummary;
-  };
+  // Use shared utility for status content
+  const statusContent = getEvaluationStatusContent(
+    evaluationStatus,
+    isRerunning,
+    truncatedSummary,
+    evaluation.agent.description
+  );
 
   if (variant === "full") {
     // Full variant for document management page
@@ -162,7 +147,7 @@ export function EvaluationCard({
           isComplete ? "text-gray-700" : "italic text-gray-500"
         }`}
       >
-        {getStatusContent()}
+        {statusContent}
       </div>
 
       {/* Footer */}
