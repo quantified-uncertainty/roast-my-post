@@ -14,7 +14,7 @@ export default defineConfig({
       forks: {
         singleFork: false,
         isolate: true,
-        maxForks: 4,
+        maxForks: 2, // Reduced from 4 to prevent system overload
       },
     },
     server: {
