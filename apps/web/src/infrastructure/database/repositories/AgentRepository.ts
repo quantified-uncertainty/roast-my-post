@@ -371,7 +371,16 @@ export class AgentRepository {
   /**
    * Gets all non-ephemeral agents with basic information
    */
-  async getAllAgents(): Promise<Result<Array<{ id: string; name: string; version: string; description: string }>, AppError>> {
+  async getAllAgents(): Promise<Result<Array<{ 
+    id: string; 
+    name: string; 
+    version: string; 
+    description: string;
+    isRecommended: boolean;
+    isDeprecated: boolean;
+    isSystemManaged: boolean;
+    providesGrades: boolean;
+  }>, AppError>> {
     try {
       const dbAgents = await prisma.agent.findMany({
       where: {
@@ -392,6 +401,10 @@ export class AgentRepository {
       name: dbAgent.versions[0].name,
       version: dbAgent.versions[0].version.toString(),
       description: dbAgent.versions[0].description,
+      isRecommended: dbAgent.isRecommended,
+      isDeprecated: dbAgent.isDeprecated,
+      isSystemManaged: dbAgent.isSystemManaged,
+      providesGrades: dbAgent.versions[0].providesGrades || false,
     }));
 
     return Result.ok(agents);

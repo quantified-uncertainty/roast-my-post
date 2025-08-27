@@ -255,7 +255,16 @@ export class AgentService {
   /**
    * Gets all non-ephemeral agents
    */
-  async getAllAgents(): Promise<Result<Array<{ id: string; name: string; version: string; description: string }>, AppError>> {
+  async getAllAgents(): Promise<Result<Array<{ 
+    id: string; 
+    name: string; 
+    version: string; 
+    description: string;
+    isRecommended: boolean;
+    isDeprecated: boolean;
+    isSystemManaged: boolean;
+    providesGrades: boolean;
+  }>, AppError>> {
     try {
       this.logger.debug('Fetching all agents');
 

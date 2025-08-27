@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 
 import { HEADER_HEIGHT_PX } from "@/shared/utils/ui/constants";
 import { clearTruncationCache, getTruncationCacheSize } from "@/shared/utils/ui/commentPositioning";
+import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
 
 import { EvaluationView } from "./components";
 import { EmptyEvaluationsView } from "./components/EmptyEvaluationsView";
@@ -17,7 +18,12 @@ export function DocumentWithEvaluations({
 }: DocumentWithReviewsProps) {
   const hasEvaluations = document.reviews && document.reviews.length > 0;
   
-  // Check if any evaluations have pending/running jobs (only check most recent job per evaluation)
+  // Use the shared hook for evaluation reruns
+  const { handleRerun, runningEvals } = useEvaluationRerun({
+    documentId: document.id,
+  });
+  
+  // Check if evaluations have pending or running jobs based on their latest job status
   const hasPendingJobs = useMemo(() => {
     return document.reviews.some(review => {
       const mostRecentJob = review.jobs?.[0]; // Jobs are ordered by createdAt desc
@@ -25,7 +31,7 @@ export function DocumentWithEvaluations({
     });
   }, [document.reviews]);
 
-  // Get failed jobs (only most recent job per evaluation, for owner view)
+  // Get failed jobs from latest evaluation job for owner view
   const failedJobs = useMemo(() => {
     if (!isOwner) return []; // Only calculate for owners
     
@@ -89,6 +95,9 @@ export function DocumentWithEvaluations({
           document={document}
           contentWithMetadataPrepend={document.content}
           showDebugComments={showDebugComments}
+          isOwner={isOwner}
+          onRerun={isOwner ? handleRerun : undefined}
+          runningEvals={runningEvals}
         />
       ) : (
         <EmptyEvaluationsView

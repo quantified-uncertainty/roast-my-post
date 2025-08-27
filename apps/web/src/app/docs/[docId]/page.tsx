@@ -47,6 +47,10 @@ async function getAvailableAgents(docId: string) {
     name: agent.versions[0]?.name || "Unknown Agent",
     description: agent.versions[0]?.description || undefined,
     purpose: undefined,
+    isRecommended: agent.isRecommended,
+    isDeprecated: agent.isDeprecated,
+    isSystemManaged: agent.isSystemManaged,
+    providesGrades: agent.versions[0]?.providesGrades || false,
   }));
 }
 

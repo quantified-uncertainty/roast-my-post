@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
+import { AgentBadges } from "@/components/AgentBadges";
 import { 
   LinkIcon, 
   DocumentTextIcon,
@@ -17,6 +18,7 @@ import {
 import { createDocument } from "./actions";
 import { importDocument } from "../import/actions";
 import { type DocumentInput, documentSchema } from "./schema";
+import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 
 interface FormFieldConfig {
   name: keyof DocumentInput;
@@ -59,6 +61,10 @@ interface Agent {
   id: string;
   name: string;
   description: string;
+  isRecommended?: boolean;
+  isDeprecated?: boolean;
+  isSystemManaged?: boolean;
+  providesGrades?: boolean;
 }
 
 export default function NewDocumentPage() {
@@ -95,7 +101,11 @@ export default function NewDocumentPage() {
         const response = await fetch("/api/agents");
         if (!response.ok) throw new Error("Failed to fetch agents");
         const data = await response.json();
-        setAgents(data.agents || []);
+        const fetchedAgents = data.agents || [];
+        
+        // Sort agents: recommended first, then regular, then deprecated
+        const sortedAgents = sortAgentsByBadgeStatus<Agent>(fetchedAgents);
+        setAgents(sortedAgents);
         // Start with no agents selected
         // Users can manually select which evaluations they want to run
       } catch (error) {
@@ -255,7 +265,16 @@ export default function NewDocumentPage() {
                           className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900">{agent.name}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{agent.name}</span>
+                            <AgentBadges
+                              isDeprecated={agent.isDeprecated}
+                              isRecommended={agent.isRecommended}
+                              isSystemManaged={agent.isSystemManaged}
+                              providesGrades={agent.providesGrades}
+                              size="sm"
+                            />
+                          </div>
                           <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
                         </div>
                         {selectedAgentIds.includes(agent.id) && (
@@ -383,7 +402,16 @@ export default function NewDocumentPage() {
                             className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900">{agent.name}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900">{agent.name}</span>
+                              <AgentBadges
+                                isDeprecated={agent.isDeprecated}
+                                isRecommended={agent.isRecommended}
+                                isSystemManaged={agent.isSystemManaged}
+                                providesGrades={agent.providesGrades}
+                                size="sm"
+                              />
+                            </div>
                             <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
                           </div>
                           {selectedAgentIds.includes(agent.id) && (

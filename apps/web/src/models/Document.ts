@@ -482,17 +482,28 @@ class DocumentQueryBuilder {
    */
   static evaluations(options: {
     includeStale?: boolean;
+    includePending?: boolean;
     versionCommentMode: 'full' | 'count' | 'none';
     versionLimit?: number;
     includeJobs?: boolean;
     jobLimit?: number;
   }) {
-    return {
-      where: options.includeStale ? {} : {
+    // Build where clause based on includeStale setting
+    // When includeStale is false, filter out evaluations that only have stale versions
+    // includePending allows evaluations without versions (pending/running jobs)
+    let whereClause: any = {};
+    
+    if (!options.includeStale) {
+      // Filter to only include evaluations with at least one non-stale version
+      whereClause = {
         versions: {
           some: { isStale: false },
         },
-      },
+      };
+    }
+    
+    return {
+      where: whereClause,
       include: {
         ...(options.includeJobs && {
           jobs: this.jobs({ limit: options.jobLimit }),
@@ -516,6 +527,7 @@ class DocumentQueryBuilder {
    */
   static buildQuery(options: {
     includeStale?: boolean;
+    includePending?: boolean;
     includeSubmittedBy?: boolean;
     evaluationOptions: {
       versionCommentMode: 'full' | 'count' | 'none';
@@ -534,6 +546,7 @@ class DocumentQueryBuilder {
         versions: this.documentVersions(),
         evaluations: this.evaluations({
           includeStale: options.includeStale,
+          includePending: options.includePending,
           ...options.evaluationOptions,
         }),
       },
@@ -559,6 +572,7 @@ export class DocumentModel {
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
         includeStale,
+        includePending: true, // Include pending evaluations
         includeSubmittedBy: true,
         evaluationOptions: {
           versionCommentMode: 'count',
@@ -637,6 +651,7 @@ export class DocumentModel {
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
         includeStale,
+        includePending: true, // Always include pending evaluations
         includeSubmittedBy: true,
         evaluationOptions: {
           versionCommentMode: 'full',
@@ -669,6 +684,7 @@ export class DocumentModel {
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
         includeStale: false,
+        includePending: true, // Include evaluations that are pending/running
         includeSubmittedBy: true,
         evaluationOptions: {
           versionCommentMode: 'full',
@@ -1011,7 +1027,7 @@ export class DocumentModel {
       throw new Error("Evaluation not found");
     }
 
-    // Create a new job for this evaluation
+    // Create job for evaluation re-run
     const { jobService } = getServices();
     await jobService.createJob(evaluation.id);
 
@@ -1040,7 +1056,7 @@ export class DocumentModel {
     });
 
     if (!evaluation) {
-      // Create a new evaluation record
+      // Create evaluation record with initial job
       evaluation = await prisma.evaluation.create({
         data: {
           documentId,
@@ -1050,7 +1066,7 @@ export class DocumentModel {
       });
     }
 
-    // Create a new job for this evaluation
+    // Create job for evaluation re-run
     const { jobService } = getServices();
     await jobService.createJob(evaluation.id);
 
@@ -1131,7 +1147,7 @@ export class DocumentModel {
         : [];
       const urls = data.urls ? data.urls.split(",").map((u) => u.trim()) : [];
 
-      // Generate markdownPrepend for the new version
+      // Generate markdownPrepend for document version
       const markdownPrepend = generateMarkdownPrepend({
         title: data.title,
         author: authors[0],
@@ -1139,7 +1155,7 @@ export class DocumentModel {
         publishedDate: document.publishedDate?.toISOString()
       });
 
-      // Update the document by creating a new version
+      // Update document with versioned content
       const updatedDocument = await tx.document.update({
         where: { id: docId },
         data: {

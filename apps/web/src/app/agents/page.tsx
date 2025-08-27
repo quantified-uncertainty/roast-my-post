@@ -3,6 +3,7 @@ import Link from "next/link";
 import AgentsList from "@/components/AgentsList";
 import { prisma } from "@/infrastructure/database/prisma";
 import { PageLayout } from "@/components/PageLayout";
+import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 
 export const dynamic = 'force-dynamic';
 
@@ -43,13 +44,7 @@ export default async function AgentsPage() {
   });
 
   // Sort agents: recommended first, then regular, then deprecated
-  agents.sort((a, b) => {
-    if (a.isRecommended && !b.isRecommended) return -1;
-    if (!a.isRecommended && b.isRecommended) return 1;
-    if (a.isDeprecated && !b.isDeprecated) return 1;
-    if (!a.isDeprecated && b.isDeprecated) return -1;
-    return 0;
-  });
+  const sortedAgents = sortAgentsByBadgeStatus(agents);
 
   return (
     <PageLayout>
@@ -62,7 +57,7 @@ export default async function AgentsPage() {
             New Agent
           </Link>
         </div>
-        <AgentsList agents={agents} />
+        <AgentsList agents={sortedAgents} />
       </div>
     </PageLayout>
   );
