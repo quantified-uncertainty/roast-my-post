@@ -13,8 +13,6 @@ env:
   AUTH_SECRET: test-secret-for-ci-only
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || 'dummy-key-for-ci' }}
   OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'dummy-key-for-ci' }}
-  # Prisma optimization - use alternative mirror for better reliability
-  PRISMA_ENGINES_MIRROR: https://binaries.prisma.sh
 
 jobs:
   # Quick static checks (2-3 minutes) - runs first to fail fast
@@ -43,21 +41,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Cache Prisma binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/prisma
-          key: ${{ runner.os }}-prisma-${{ hashFiles('**/prisma/schema.prisma') }}
-          restore-keys: |
-            ${{ runner.os }}-prisma-
-
       - name: Install dependencies
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_wait_seconds: 30
-          command: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
@@ -120,21 +105,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vitest-
 
-      - name: Cache Prisma binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/prisma
-          key: ${{ runner.os }}-prisma-${{ hashFiles('**/prisma/schema.prisma') }}
-          restore-keys: |
-            ${{ runner.os }}-prisma-
-
       - name: Install dependencies
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_wait_seconds: 30
-          command: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
@@ -199,21 +171,8 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Cache Prisma binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/prisma
-          key: ${{ runner.os }}-prisma-${{ hashFiles('**/prisma/schema.prisma') }}
-          restore-keys: |
-            ${{ runner.os }}-prisma-
-
       - name: Install dependencies
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_wait_seconds: 30
-          command: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
@@ -263,21 +222,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
-      - name: Cache Prisma binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/prisma
-          key: ${{ runner.os }}-prisma-${{ hashFiles('**/prisma/schema.prisma') }}
-          restore-keys: |
-            ${{ runner.os }}-prisma-
-
       - name: Install dependencies
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_wait_seconds: 30
-          command: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
@@ -339,21 +285,8 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Cache Prisma binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/prisma
-          key: ${{ runner.os }}-prisma-${{ hashFiles('**/prisma/schema.prisma') }}
-          restore-keys: |
-            ${{ runner.os }}-prisma-
-
       - name: Install dependencies
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_wait_seconds: 30
-          command: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm --filter @roast/db run gen
