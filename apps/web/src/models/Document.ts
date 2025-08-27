@@ -488,17 +488,19 @@ class DocumentQueryBuilder {
     includeJobs?: boolean;
     jobLimit?: number;
   }) {
-    // If includePending is true, include all evaluations (even without versions)
-    // Otherwise, only include evaluations with non-stale versions
-    const whereClause = options.includePending 
-      ? {} 
-      : options.includeStale 
-        ? {} 
-        : {
-            versions: {
-              some: { isStale: false },
-            },
-          };
+    // Build where clause based on includeStale setting
+    // When includeStale is false, filter out evaluations that only have stale versions
+    // includePending allows evaluations without versions (pending/running jobs)
+    let whereClause: any = {};
+    
+    if (!options.includeStale) {
+      // Filter to only include evaluations with at least one non-stale version
+      whereClause = {
+        versions: {
+          some: { isStale: false },
+        },
+      };
+    }
     
     return {
       where: whereClause,
