@@ -22,7 +22,7 @@ export function sortAgentsByBadgeStatus<T extends SortableAgent>(agents: T[]): T
     [
       // First sort by recommendation status (true first)
       (agent) => !agent.isRecommended,
-      // Then by deprecation status (false first, so non-deprecated come before deprecated)
+      // Sort by deprecation status (non-deprecated agents prioritized)
       (agent) => agent.isDeprecated,
       // Finally alphabetically by name
       (agent) => agent.name?.toLowerCase() || ''

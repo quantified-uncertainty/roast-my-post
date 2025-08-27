@@ -1027,7 +1027,7 @@ export class DocumentModel {
       throw new Error("Evaluation not found");
     }
 
-    // Create a new job for this evaluation
+    // Create job for evaluation re-run
     const { jobService } = getServices();
     await jobService.createJob(evaluation.id);
 
@@ -1056,7 +1056,7 @@ export class DocumentModel {
     });
 
     if (!evaluation) {
-      // Create a new evaluation record
+      // Create evaluation record with initial job
       evaluation = await prisma.evaluation.create({
         data: {
           documentId,
@@ -1066,7 +1066,7 @@ export class DocumentModel {
       });
     }
 
-    // Create a new job for this evaluation
+    // Create job for evaluation re-run
     const { jobService } = getServices();
     await jobService.createJob(evaluation.id);
 
@@ -1147,7 +1147,7 @@ export class DocumentModel {
         : [];
       const urls = data.urls ? data.urls.split(",").map((u) => u.trim()) : [];
 
-      // Generate markdownPrepend for the new version
+      // Generate markdownPrepend for document version
       const markdownPrepend = generateMarkdownPrepend({
         title: data.title,
         author: authors[0],
@@ -1155,7 +1155,7 @@ export class DocumentModel {
         publishedDate: document.publishedDate?.toISOString()
       });
 
-      // Update the document by creating a new version
+      // Update document with versioned content
       const updatedDocument = await tx.document.update({
         where: { id: docId },
         data: {

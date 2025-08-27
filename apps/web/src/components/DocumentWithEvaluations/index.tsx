@@ -23,7 +23,7 @@ export function DocumentWithEvaluations({
     documentId: document.id,
   });
   
-  // Check if any evaluations have pending/running jobs (only check most recent job per evaluation)
+  // Check if evaluations have pending or running jobs based on their latest job status
   const hasPendingJobs = useMemo(() => {
     return document.reviews.some(review => {
       const mostRecentJob = review.jobs?.[0]; // Jobs are ordered by createdAt desc
@@ -31,7 +31,7 @@ export function DocumentWithEvaluations({
     });
   }, [document.reviews]);
 
-  // Get failed jobs (only most recent job per evaluation, for owner view)
+  // Get failed jobs from latest evaluation job for owner view
   const failedJobs = useMemo(() => {
     if (!isOwner) return []; // Only calculate for owners
     
