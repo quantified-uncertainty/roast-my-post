@@ -155,17 +155,17 @@ describe('DocumentModel', () => {
       expect(result?.reviews).toHaveLength(1);
       
       // Verify that the query was called with proper where clause for filtering
+      // When includeStale=false and includePending=true (default for getDocumentWithEvaluations)
       expect(prisma.document.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'doc-123' },
           include: expect.objectContaining({
             evaluations: expect.objectContaining({
               where: {
-                versions: {
-                  some: {
-                    isStale: false,
-                  },
-                },
+                OR: [
+                  { versions: { none: {} } }, // Include pending evaluations
+                  { versions: { some: { isStale: false } } }, // Include non-stale evaluations
+                ],
               },
             }),
           }),
