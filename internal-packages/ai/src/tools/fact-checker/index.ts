@@ -114,6 +114,15 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
     
     if (input.searchForEvidence) {
       context.logger.info(`[FactChecker] Searching for evidence using Perplexity`);
+      
+      // Fail fast if web search is requested but not available
+      const openRouterKey = process.env.OPENROUTER_API_KEY;
+      if (!openRouterKey || openRouterKey === 'your_openrouter_api_key_here' || openRouterKey === 'dummy-key-for-ci') {
+        const errorMessage = "Requires OPENROUTER_API_KEY";
+        context.logger.error(`[FactChecker] ${errorMessage}`);
+        throw new Error(errorMessage);
+      }
+      
       try {
         perplexityFullOutput = await perplexityResearchTool.execute({
           query: input.claim,
@@ -136,8 +145,9 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
         researchNotes = `Research Summary: ${perplexityFullOutput.summary}\n\nKey Findings:\n${perplexityFullOutput.keyFindings.join('\n- ')}`;
         context.logger.info(`[FactChecker] Found ${perplexityFullOutput.sources.length} sources`);
       } catch (error) {
-        context.logger.warn(`[FactChecker] Perplexity research failed:`, { error: error instanceof Error ? error.message : String(error) });
-        // Continue without research results
+        // Re-throw the error to fail fast
+        context.logger.error(`[FactChecker] Perplexity research failed:`, { error: error instanceof Error ? error.message : String(error) });
+        throw error;
       }
     }
 

@@ -21,10 +21,7 @@ export class PerplexityClient {
     const key = apiKey || process.env.OPENROUTER_API_KEY || '';
     
     if (!key || key === 'your_openrouter_api_key_here') {
-      throw new Error(
-        'OpenRouter API key is required for Perplexity integration. ' +
-        'Please set OPENROUTER_API_KEY in your .env.local file with a valid API key from https://openrouter.ai/'
-      );
+      throw new Error('Requires OPENROUTER_API_KEY');
     }
     
     const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;

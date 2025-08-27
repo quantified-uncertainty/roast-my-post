@@ -37,6 +37,11 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm"],
+  
+  // Enable instrumentation for startup validation
+  experimental: {
+    instrumentationHook: true,
+  },
   // Monorepo file tracing (moved from experimental in Next.js 15)
   outputFileTracingRoot: require('path').join(__dirname, '../../'),
   // Explicitly include Prisma engines in serverless bundle (Next.js 15 renamed from serverComponentsExternalPackages)
