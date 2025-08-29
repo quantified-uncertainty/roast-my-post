@@ -8,7 +8,8 @@ import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";
 import { getServices } from "@/application/services/ServiceFactory";
 import { 
-  documentVersionForListingArgs, 
+  documentVersionForListingArgs,
+  documentFilters, 
   serializeDocumentVersion,
   type SerializedDocumentVersionForListing 
 } from "./Document.types";
@@ -899,7 +900,7 @@ export class DocumentModel {
   /**
    * Get document versions for listing pages (optimized for DocumentsResults component)
    * This method returns serialized data ready for client components
-   * Uses Prisma-generated types for type safety
+   * Uses satisfies operator for zero-runtime-cost type safety
    */
   static async getDocumentVersionsForListing(options?: {
     userId?: string;
@@ -909,19 +910,21 @@ export class DocumentModel {
   }): Promise<SerializedDocumentVersionForListing[]> {
     const { userId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
 
-    // Build where clause
-    const whereClause: any = {};
+    // Compose where conditions using type-safe filters
+    const whereConditions = [];
     
     if (userId) {
-      whereClause.document = { submittedById: userId };
+      whereConditions.push(documentFilters.byUser(userId));
     }
     
     if (searchQuery?.trim() && searchQuery.trim().length >= 2) {
-      whereClause.searchableText = {
-        contains: searchQuery.trim().toLowerCase(),
-        mode: "insensitive",
-      };
+      whereConditions.push(documentFilters.searchQuery(searchQuery.trim()));
     }
+
+    // Combine conditions with AND logic
+    const whereClause = whereConditions.length > 0
+      ? { AND: whereConditions }
+      : {};
 
     // Execute query using the centralized args definition
     const rawDocuments = await prisma.documentVersion.findMany({

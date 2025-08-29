@@ -1,10 +1,11 @@
 import { Prisma } from "@roast/db";
 
 /**
- * Define the shape of our document listing query using Prisma validator
- * This ensures type safety and single source of truth for the query structure
+ * Define the shape of our document listing query using satisfies operator
+ * This provides compile-time type safety with ZERO runtime overhead
+ * Unlike Prisma.validator, satisfies is purely a TypeScript compile-time feature
  */
-export const documentVersionForListingArgs = Prisma.validator<Prisma.DocumentVersionDefaultArgs>()({
+export const documentVersionForListingArgs = {
   include: {
     document: {
       include: {
@@ -13,13 +14,13 @@ export const documentVersionForListingArgs = Prisma.validator<Prisma.DocumentVer
             agent: {
               include: {
                 versions: {
-                  orderBy: { version: "desc" },
+                  orderBy: { version: "desc" as const },
                   take: 1,
                 },
               },
             },
             versions: {
-              orderBy: { version: "desc" },
+              orderBy: { version: "desc" as const },
               take: 1,
               include: {
                 comments: {
@@ -35,12 +36,37 @@ export const documentVersionForListingArgs = Prisma.validator<Prisma.DocumentVer
       },
     },
   },
-});
+} satisfies Prisma.DocumentVersionDefaultArgs;
 
 /**
- * Type generated from the Prisma query - this is what we get from the database
+ * Type generated from the query args - this is what we get from the database
+ * Using typeof to extract the type from our satisfies-validated object
  */
 export type DocumentVersionForListing = Prisma.DocumentVersionGetPayload<typeof documentVersionForListingArgs>;
+
+
+/**
+ * Common where conditions for filtering documents
+ * These can be composed together for complex queries
+ */
+export const documentFilters = {
+  published: {
+    document: {
+      publishedDate: { lte: new Date() },
+    },
+  } satisfies Prisma.DocumentVersionWhereInput,
+  
+  byUser: (userId: string) => ({
+    document: { submittedById: userId },
+  } satisfies Prisma.DocumentVersionWhereInput),
+  
+  searchQuery: (query: string) => ({
+    searchableText: {
+      contains: query.toLowerCase(),
+      mode: "insensitive" as const,
+    },
+  } satisfies Prisma.DocumentVersionWhereInput),
+} as const;
 
 /**
  * Simplified serialized type for client components
