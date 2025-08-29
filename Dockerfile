@@ -13,6 +13,11 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
+# Generate Prisma client with correct binary target for Alpine Linux
+RUN cd internal-packages/db && \
+    npx prisma generate --schema=./prisma/schema.prisma && \
+    cd ../..
+
 # Build workspace packages that need dist files (in dependency order)
 RUN pnpm --filter @roast/db run build && \
     pnpm --filter @roast/domain run build && \
@@ -33,13 +38,16 @@ RUN pnpm deploy --filter=@roast/web --prod /prod/web
 # Copy the built Next.js app (.next directory) that pnpm deploy doesn't include
 RUN cp -r /usr/src/app/apps/web/.next /prod/web/.next
 
+# Ensure Prisma generated files are included (pnpm deploy might miss them)
+RUN mkdir -p /prod/web/node_modules/@roast/db/generated && \
+    cp -r /usr/src/app/internal-packages/db/generated/* /prod/web/node_modules/@roast/db/generated/ || true
+
 # Production stage
 FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/@roast/db/generated/libquery_engine-linux-musl*.so.node
 
 # Install runtime dependencies and enable corepack
 RUN apk add --no-cache libc6-compat
@@ -52,11 +60,11 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy deployed web app (includes built app and pruned dependencies)
 COPY --from=builder --chown=nextjs:nodejs /prod/web ./
 
-# Create Prisma client directory and symlink to the engine files from @roast/db
-RUN mkdir -p .prisma/client generated && \
-    ENGINE_FILE=$(ls /app/node_modules/@roast/db/generated/libquery_engine-linux-musl*.so.node | head -1) && \
-    ln -sf "$ENGINE_FILE" .prisma/client/ && \
-    ln -sf "$ENGINE_FILE" generated/
+# Set exact path to Prisma query engine to avoid wildcard resolution issues
+ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/@roast/db/generated/libquery_engine-linux-musl-openssl-3.0.x.so.node
+
+# Ensure Prisma binary is available and executable
+RUN chmod +x node_modules/@roast/db/generated/libquery_engine-linux-musl-openssl-3.0.x.so.node || true
 
 USER nextjs
 
