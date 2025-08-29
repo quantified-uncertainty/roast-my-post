@@ -170,7 +170,7 @@ export default function DocumentsResults({
 
                   return (
                     <Link
-                      key={document.document.id}
+                      key={document.id}
                       href={`/docs/${document.document.id}/reader`}
                       className="block"
                     >
@@ -322,7 +322,7 @@ export default function DocumentsResults({
                   </TableHeader>
                   <TableBody>
                     {documents.map((document) => (
-                      <TableRow key={document.document.id}>
+                      <TableRow key={document.id}>
                         <TableCell className="max-w-[300px]">
                           <Link
                             href={`/docs/${document.document.id}/reader`}
