@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -30,40 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Prisma } from "@roast/db";
-
-type DocumentVersionWithInclude = Prisma.DocumentVersionGetPayload<{
-  include: {
-    document: {
-      include: {
-        evaluations: {
-          include: {
-            agent: {
-              include: {
-                versions: {
-                  orderBy: { version: "desc" };
-                  take: 1;
-                };
-              };
-            };
-            versions: {
-              orderBy: { version: "desc" };
-              take: 1;
-              include: {
-                comments: {
-                  include: {
-                    highlight: true;
-                  };
-                };
-                job: true;
-              };
-            };
-          };
-        };
-      };
-    };
-  };
-}>;
 
 // Type definition that matches the serialized Prisma query structure
 interface DocumentVersionWithIncludes {
