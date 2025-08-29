@@ -1,19 +1,22 @@
 import { Suspense } from "react";
-import DocumentsClient from "./DocumentsClient";
+import SearchBar from "./SearchBar";
+import DocumentsResults from "./DocumentsResults";
 import { prisma, Prisma } from "@roast/db";
+import { PageLayout } from "@/components/PageLayout";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const dynamic = "force-dynamic";
 
 interface DocumentsPageProps {
-  searchParams: {
-    q?: string;
-  };
+  searchParams: Promise<{
+    search?: string;
+  }>;
 }
 
 export default async function DocumentsPage({
   searchParams,
 }: DocumentsPageProps) {
-  const searchQuery = searchParams.q || "";
+  const searchQuery = (await searchParams).search || "";
 
   // Initialize where statement
   let whereStatement: Prisma.DocumentVersionWhereInput = {};
@@ -131,13 +134,23 @@ export default async function DocumentsPage({
   const totalCount = rawDocuments.length;
 
   return (
-    <Suspense>
-      <DocumentsClient
-        documents={documents}
-        searchQuery={searchQuery}
-        totalCount={totalCount}
-        hasSearched={!!searchQuery.trim() && searchQuery.trim().length >= 2}
-      />
-    </Suspense>
+    <>
+      <SearchBar searchQuery={searchQuery} showNewButton={true} />
+
+      <Suspense
+        fallback={
+          <PageLayout>
+            <Skeleton className="h-full w-full" />
+          </PageLayout>
+        }
+      >
+        <DocumentsResults
+          documents={documents}
+          searchQuery={searchQuery}
+          totalCount={totalCount}
+          hasSearched={!!searchQuery.trim() && searchQuery.trim().length >= 2}
+        />
+      </Suspense>
+    </>
   );
 }
