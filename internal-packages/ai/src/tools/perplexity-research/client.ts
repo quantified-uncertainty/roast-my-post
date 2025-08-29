@@ -105,15 +105,28 @@ export class PerplexityClient {
         'User-Agent': `RoastMyPost-Tools-${environment}/1.0.0`,
       };
       
-      // Debug logging
-      console.log('[PerplexityClient] Request details:', {
-        model,
-        environment,
-        baseURL: this.client.baseURL,
-        hasApiKey: !!this.client.apiKey,
-        apiKeyPrefix: this.client.apiKey?.substring(0, 10),
-        headers: enhancedHeaders
-      });
+      // Combine default headers with enhanced headers
+      const appTitle = `RoastMyPost Tools - ${environment}`;
+      const referer = process.env.NODE_ENV === 'production' ? 'https://roastmypost.org' : 'http://localhost:3000';
+      
+      const finalHeaders = {
+        ...enhancedHeaders,
+        'HTTP-Referer': referer,
+        'X-Title': appTitle,
+      };
+      
+      // Debug logging only in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[PerplexityClient] Request details:', {
+          model,
+          environment,
+          baseURL: this.client.baseURL,
+          hasApiKey: !!this.client.apiKey,
+          apiKeyPrefix: this.client.apiKey?.substring(0, 10),
+          appTitle,
+          headers: finalHeaders
+        });
+      }
       
       const completion = await this.client.chat.completions.create({
         model,
@@ -122,7 +135,7 @@ export class PerplexityClient {
         temperature,
         stream: false
       }, {
-        headers: enhancedHeaders
+        headers: finalHeaders
       });
       
       if (!completion.choices || completion.choices.length === 0) {
@@ -138,22 +151,29 @@ export class PerplexityClient {
         } : undefined
       };
     } catch (error: any) {
-      console.error('Perplexity query error:', {
+      // Log error details (verbose in dev, minimal in prod)
+      const errorLog = {
         message: error.message,
         status: error.status,
-        response: error.response?.data,
-        headers: error.response?.headers,
-        fullError: error
-      });
+        model,
+      };
       
-      // Add specific error messages for common issues
+      if (process.env.NODE_ENV !== 'production') {
+        Object.assign(errorLog, {
+          response: error.response?.data,
+          headers: error.response?.headers,
+        });
+      }
+      
+      console.error('[PerplexityClient] Request failed:', errorLog);
+      
+      // Simplify error messages
       if (error.status === 401 || error.message?.includes('401')) {
-        throw new Error(
-          'Authentication failed with OpenRouter. Please check:\n' +
-          '1. Your OPENROUTER_API_KEY is valid\n' +
-          '2. You have credits/balance in your OpenRouter account\n' +
-          '3. The perplexity/sonar model is enabled for your account'
-        );
+        throw new Error('OpenRouter authentication failed. Check API key and credits.');
+      }
+      
+      if (error.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
       }
       
       throw error;
