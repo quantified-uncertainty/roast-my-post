@@ -27,9 +27,9 @@ export default async function UserDocumentsPage({
     notFound();
   }
 
-  // Use the centralized method from DocumentModel
+  // Get documents for listing view
   // For user pages, we want unique documents only (latest version per document)
-  const documents = await DocumentModel.getDocumentVersionsForListing({
+  const documents = await DocumentModel.getDocumentListings({
     userId,
     limit: 50,
     latestVersionOnly: true,

@@ -18,8 +18,8 @@ export default async function DocumentsPage({
 }: DocumentsPageProps) {
   const searchQuery = (await searchParams).search || "";
 
-  // Use the centralized method from DocumentModel
-  const documents = await DocumentModel.getDocumentVersionsForListing({
+  // Get documents for listing view
+  const documents = await DocumentModel.getDocumentListings({
     searchQuery,
     limit: 50,
   });

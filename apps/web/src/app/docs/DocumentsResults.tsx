@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { PageLayout } from "@/components/PageLayout";
 import { GradeBadge } from "@/components/GradeBadge";
-import { getValidCommentCount } from "@/shared/utils/ui/commentUtils";
 import {
   formatWordCount,
   getWordCountInfo,
@@ -23,10 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { SerializedDocumentVersionForListing } from "@/models/Document.types";
+import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
 
 interface DocumentsResultsProps {
-  documents: SerializedDocumentVersionForListing[];
+  documents: SerializedDocumentListing[];
   searchQuery: string;
   totalCount: number;
   hasSearched: boolean;
@@ -45,7 +44,7 @@ export default function DocumentsResults({
         .flatMap(
           (doc) =>
             doc.document?.evaluations?.map(
-              (evaluation) => evaluation.agent.versions[0]?.name
+              (evaluation) => evaluation.agent.name
             ) || []
         )
         .filter(Boolean)
@@ -100,9 +99,7 @@ export default function DocumentsResults({
                         const agentId = evaluation.agentId;
                         acc[agentId] =
                           (acc[agentId] || 0) +
-                          getValidCommentCount(
-                            (evaluation.versions[0]?.comments as any) || []
-                          );
+                          (evaluation.latestVersion?.commentCount || 0);
                         return acc;
                       },
                       {} as Record<string, number>
@@ -199,17 +196,16 @@ export default function DocumentsResults({
                                   );
                                 // Just check if grade exists in the evaluation
                                 const hasGrade =
-                                  evaluation?.versions[0]?.grade !== null &&
-                                  evaluation?.versions[0]?.grade !== undefined;
-                                const grade = evaluation?.versions[0]?.grade;
+                                  evaluation?.latestVersion?.grade !== null &&
+                                  evaluation?.latestVersion?.grade !== undefined;
+                                const grade = evaluation?.latestVersion?.grade;
 
                                 return (
                                   <div
                                     key={agentId}
                                     className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
                                   >
-                                    {evaluation?.agent.versions[0]?.name ||
-                                      "Unknown Agent"}
+                                    {evaluation?.agent.name || "Unknown Agent"}
                                     {hasGrade && (
                                       <GradeBadge
                                         grade={grade ?? null}
@@ -312,14 +308,14 @@ export default function DocumentsResults({
                         {evaluators.map((evaluator) => {
                           const evaluation =
                             document.document?.evaluations?.find(
-                              (r) => r.agent.versions[0]?.name === evaluator
+                              (r) => r.agent.name === evaluator
                             );
                           return (
                             <TableCell key={evaluator}>
-                              {evaluation?.versions[0]?.grade !== undefined && (
+                              {evaluation?.latestVersion?.grade !== undefined && (
                                 <GradeBadge
                                   grade={
-                                    evaluation.versions[0].grade as
+                                    evaluation.latestVersion.grade as
                                       | number
                                       | null
                                   }
@@ -331,10 +327,7 @@ export default function DocumentsResults({
                                 <span className="ml-2 text-gray-500">
                                   <ChatBubbleLeftIcon className="inline h-3 w-3 text-gray-400" />
                                   <span className="ml-1">
-                                    {getValidCommentCount(
-                                      (evaluation.versions[0]
-                                        ?.comments as any) || []
-                                    )}
+                                    {evaluation.latestVersion?.commentCount || 0}
                                   </span>
                                 </span>
                               )}
