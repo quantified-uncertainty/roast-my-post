@@ -28,9 +28,11 @@ export default async function UserDocumentsPage({
   }
 
   // Use the centralized method from DocumentModel
+  // For user pages, we want unique documents only (latest version per document)
   const documents = await DocumentModel.getDocumentVersionsForListing({
     userId,
     limit: 50,
+    latestVersionOnly: true,
   });
 
   return (

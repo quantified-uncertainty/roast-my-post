@@ -899,8 +899,9 @@ export class DocumentModel {
     userId?: string;
     searchQuery?: string;
     limit?: number;
+    latestVersionOnly?: boolean;
   }) {
-    const { userId, searchQuery, limit = 50 } = options || {};
+    const { userId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
 
     // Build where clause
     const whereClause: any = {};
@@ -919,6 +920,7 @@ export class DocumentModel {
     // Execute query with consistent structure
     const rawDocuments = await prisma.documentVersion.findMany({
       where: whereClause,
+      distinct: latestVersionOnly ? ['documentId'] : undefined,
       include: {
         document: {
           include: {
@@ -1004,7 +1006,7 @@ export class DocumentModel {
             })),
             job: version.job
               ? {
-                  priceInDollars: version.job.priceInDollars
+                  priceInDollars: version.job.priceInDollars !== null && version.job.priceInDollars !== undefined
                     ? Number(version.job.priceInDollars)
                     : null,
                   llmThinking: version.job.llmThinking,
