@@ -23,70 +23,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-// Type definition that matches the serialized Prisma query structure
-interface DocumentVersionWithIncludes {
-  id: string;
-  title: string;
-  authors: string[];
-  content: string;
-  urls: string[];
-  platforms: string[];
-  intendedAgents: string[];
-  importUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-  document: {
-    id: string;
-    publishedDate: string;
-    createdAt: string;
-    updatedAt: string;
-    submittedById: string;
-    evaluations: Array<{
-      id: string;
-      agentId: string;
-      createdAt: string;
-      agent: {
-        id: string;
-        versions: Array<{
-          id: string;
-          name: string;
-          description: string;
-          providesGrades: boolean;
-        }>;
-      };
-      versions: Array<{
-        id: string;
-        grade: number | null;
-        comments: Array<{
-          id: string;
-          description: string;
-          importance: number | null;
-          grade: number | null;
-          highlight: {
-            id: string;
-            startOffset: number;
-            endOffset: number;
-            prefix: string | null;
-            quotedText: string;
-            isValid: boolean;
-            error: string | null;
-          };
-        }>;
-        job?: {
-          priceInDollars: number | null;
-          llmThinking: string | null;
-        } | null;
-        summary: string | null;
-        analysis: string | null;
-        selfCritique: string | null;
-      }>;
-    }>;
-  };
-}
+import type { SerializedDocumentVersionForListing } from "@/models/Document.types";
 
 interface DocumentsResultsProps {
-  documents: DocumentVersionWithIncludes[];
+  documents: SerializedDocumentVersionForListing[];
   searchQuery: string;
   totalCount: number;
   hasSearched: boolean;

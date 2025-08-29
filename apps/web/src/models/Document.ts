@@ -7,6 +7,11 @@ import { generateMarkdownPrepend } from "@roast/domain";
 import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";
 import { getServices } from "@/application/services/ServiceFactory";
+import { 
+  documentVersionForListingArgs, 
+  serializeDocumentVersion,
+  type SerializedDocumentVersionForListing 
+} from "./Document.types";
 
 // Helper function to safely convert Decimal to number
 function convertPriceToNumber(price: unknown): number {
@@ -894,13 +899,14 @@ export class DocumentModel {
   /**
    * Get document versions for listing pages (optimized for DocumentsResults component)
    * This method returns serialized data ready for client components
+   * Uses Prisma-generated types for type safety
    */
   static async getDocumentVersionsForListing(options?: {
     userId?: string;
     searchQuery?: string;
     limit?: number;
     latestVersionOnly?: boolean;
-  }) {
+  }): Promise<SerializedDocumentVersionForListing[]> {
     const { userId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
 
     // Build where clause
@@ -917,108 +923,17 @@ export class DocumentModel {
       };
     }
 
-    // Execute query with consistent structure
+    // Execute query using the centralized args definition
     const rawDocuments = await prisma.documentVersion.findMany({
       where: whereClause,
       distinct: latestVersionOnly ? ['documentId'] : undefined,
-      include: {
-        document: {
-          include: {
-            evaluations: {
-              include: {
-                agent: {
-                  include: {
-                    versions: {
-                      orderBy: { version: "desc" },
-                      take: 1,
-                    },
-                  },
-                },
-                versions: {
-                  orderBy: { version: "desc" },
-                  take: 1,
-                  include: {
-                    comments: {
-                      include: {
-                        highlight: true,
-                      },
-                    },
-                    job: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      ...documentVersionForListingArgs,
       orderBy: { createdAt: "desc" },
       take: limit,
     });
 
-    // Serialize to plain objects for client component
-    return rawDocuments.map((doc) => ({
-      id: doc.id,
-      title: doc.title,
-      authors: doc.authors,
-      content: doc.content,
-      urls: doc.urls,
-      platforms: doc.platforms,
-      intendedAgents: doc.intendedAgents,
-      importUrl: doc.importUrl,
-      createdAt: doc.createdAt.toISOString(),
-      updatedAt: doc.updatedAt.toISOString(),
-      document: {
-        id: doc.document.id,
-        publishedDate: doc.document.publishedDate.toISOString(),
-        createdAt: doc.document.createdAt.toISOString(),
-        updatedAt: doc.document.updatedAt.toISOString(),
-        submittedById: doc.document.submittedById,
-        evaluations: doc.document.evaluations.map((evaluation) => ({
-          id: evaluation.id,
-          agentId: evaluation.agentId,
-          createdAt: evaluation.createdAt.toISOString(),
-          agent: {
-            id: evaluation.agent.id,
-            versions: evaluation.agent.versions.map((version) => ({
-              id: version.id,
-              name: version.name,
-              description: version.description,
-              providesGrades: version.providesGrades,
-            })),
-          },
-          versions: evaluation.versions.map((version) => ({
-            id: version.id,
-            grade: version.grade,
-            comments: version.comments.map((comment) => ({
-              id: comment.id,
-              description: comment.description,
-              importance: comment.importance,
-              grade: comment.grade,
-              highlight: {
-                id: comment.highlight.id,
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                prefix: comment.highlight.prefix,
-                quotedText: comment.highlight.quotedText,
-                isValid: comment.highlight.isValid,
-                error: comment.highlight.error,
-              },
-            })),
-            job: version.job
-              ? {
-                  priceInDollars: version.job.priceInDollars !== null && version.job.priceInDollars !== undefined
-                    ? Number(version.job.priceInDollars)
-                    : null,
-                  llmThinking: version.job.llmThinking,
-                }
-              : null,
-            summary: version.summary,
-            analysis: version.analysis,
-            selfCritique: version.selfCritique,
-          })),
-        })),
-      },
-    }));
+    // Use the centralized serialization function
+    return rawDocuments.map(serializeDocumentVersion);
   }
 
   static async create(data: {
