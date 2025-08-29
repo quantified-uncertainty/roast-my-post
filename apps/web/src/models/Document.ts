@@ -925,12 +925,17 @@ export class DocumentModel {
       ? { AND: whereConditions }
       : {};
 
+    // For distinct queries, we need to order by documentId first to ensure deterministic results
+    const orderBy = latestVersionOnly 
+      ? [{ documentId: "asc" as const }, { createdAt: "desc" as const }]
+      : { createdAt: "desc" as const };
+
     // Execute query for listing views
     const rawDocuments = await prisma.documentVersion.findMany({
       where: whereClause,
       distinct: latestVersionOnly ? ['documentId'] : undefined,
       select: documentListingSelect,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       take: limit,
     });
 
