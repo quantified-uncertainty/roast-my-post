@@ -7,12 +7,12 @@ import { generateMarkdownPrepend } from "@roast/domain";
 import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";
 import { getServices } from "@/application/services/ServiceFactory";
-import { 
-  documentVersionForListingArgs,
-  documentFilters, 
-  serializeDocumentVersion,
-  type SerializedDocumentVersionForListing 
-} from "./Document.types";
+import {
+  documentListingSelect,
+  documentListingFilters,
+  serializeDocumentListing,
+  type SerializedDocumentListing
+} from "./DocumentListing.types";
 
 // Helper function to safely convert Decimal to number
 function convertPriceToNumber(price: unknown): number {
@@ -898,27 +898,26 @@ export class DocumentModel {
   }
 
   /**
-   * Get document versions for listing pages (optimized for DocumentsResults component)
-   * This method returns serialized data ready for client components
-   * Uses satisfies operator for zero-runtime-cost type safety
+   * Get documents for listing pages
+   * Only fetches data needed for display in document lists
    */
-  static async getDocumentVersionsForListing(options?: {
+  static async getDocumentListings(options?: {
     userId?: string;
     searchQuery?: string;
     limit?: number;
     latestVersionOnly?: boolean;
-  }): Promise<SerializedDocumentVersionForListing[]> {
+  }): Promise<SerializedDocumentListing[]> {
     const { userId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
 
     // Compose where conditions using type-safe filters
     const whereConditions = [];
     
     if (userId) {
-      whereConditions.push(documentFilters.byUser(userId));
+      whereConditions.push(documentListingFilters.byUser(userId));
     }
     
     if (searchQuery?.trim() && searchQuery.trim().length >= 2) {
-      whereConditions.push(documentFilters.searchQuery(searchQuery.trim()));
+      whereConditions.push(documentListingFilters.searchQuery(searchQuery.trim()));
     }
 
     // Combine conditions with AND logic
@@ -926,18 +925,23 @@ export class DocumentModel {
       ? { AND: whereConditions }
       : {};
 
-    // Execute query using the centralized args definition
+    // For distinct queries, we need to order by documentId first to ensure deterministic results
+    const orderBy = latestVersionOnly 
+      ? [{ documentId: "asc" as const }, { createdAt: "desc" as const }]
+      : { createdAt: "desc" as const };
+
+    // Execute query for listing views
     const rawDocuments = await prisma.documentVersion.findMany({
       where: whereClause,
       distinct: latestVersionOnly ? ['documentId'] : undefined,
-      ...documentVersionForListingArgs,
-      orderBy: { createdAt: "desc" },
+      select: documentListingSelect,
+      orderBy,
       take: limit,
     });
 
-    // Use the centralized serialization function
-    return rawDocuments.map(serializeDocumentVersion);
+    return rawDocuments.map(serializeDocumentListing);
   }
+
 
   static async create(data: {
     title: string;

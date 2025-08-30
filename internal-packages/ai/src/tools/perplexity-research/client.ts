@@ -29,6 +29,14 @@ export class PerplexityClient {
     
     const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
     
+    // Determine environment for better tracking
+    const isProduction = process.env.NODE_ENV === 'production';
+    const environment = isProduction ? 'Prod' : 'Dev';
+    const appTitle = `RoastMyPost Tools - ${environment}`;
+    // OpenRouter primarily uses HTTP-Referer for the "App" column
+    // But X-Title might also influence the display
+    const referer = isProduction ? 'https://roastmypost.org' : 'http://localhost:3000';
+    
     // Use Helicone proxy if available, otherwise direct OpenRouter
     if (heliconeKey) {
       this.client = new OpenAI({
@@ -36,8 +44,9 @@ export class PerplexityClient {
         apiKey: key,
         defaultHeaders: {
           'Helicone-Auth': `Bearer ${heliconeKey}`,
-          'HTTP-Referer': 'https://roastmypost.org',
-          'X-Title': 'RoastMyPost Tools',
+          'HTTP-Referer': referer,
+          'X-Title': appTitle,
+          'X-Environment': environment,
         }
       });
     } else {
@@ -45,8 +54,9 @@ export class PerplexityClient {
         baseURL: 'https://openrouter.ai/api/v1',
         apiKey: key,
         defaultHeaders: {
-          'HTTP-Referer': 'https://roastmypost.org',
-          'X-Title': 'RoastMyPost Tools',
+          'HTTP-Referer': referer,
+          'X-Title': appTitle,
+          'X-Environment': environment,
         }
       });
     }
@@ -84,6 +94,40 @@ export class PerplexityClient {
       // Get current session headers for tracking
       const sessionHeaders = getCurrentHeliconeHeaders();
       
+      // Add additional metadata headers
+      const environment = process.env.NODE_ENV === 'production' ? 'Prod' : 'Dev';
+      const enhancedHeaders = {
+        ...sessionHeaders,
+        'X-Request-Source': `perplexity-research-${environment.toLowerCase()}`,
+        'X-Tool-Version': '1.0.0',
+        'X-Request-Time': new Date().toISOString(),
+        // Some providers use User-Agent for additional context
+        'User-Agent': `RoastMyPost-Tools-${environment}/1.0.0`,
+      };
+      
+      // Combine default headers with enhanced headers
+      const appTitle = `RoastMyPost Tools - ${environment}`;
+      const referer = process.env.NODE_ENV === 'production' ? 'https://roastmypost.org' : 'http://localhost:3000';
+      
+      const finalHeaders = {
+        ...enhancedHeaders,
+        'HTTP-Referer': referer,
+        'X-Title': appTitle,
+      };
+      
+      // Debug logging only in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[PerplexityClient] Request details:', {
+          model,
+          environment,
+          baseURL: this.client.baseURL,
+          hasApiKey: !!this.client.apiKey,
+          apiKeyPrefix: this.client.apiKey?.substring(0, 10),
+          appTitle,
+          headers: finalHeaders
+        });
+      }
+      
       const completion = await this.client.chat.completions.create({
         model,
         messages,
@@ -91,7 +135,7 @@ export class PerplexityClient {
         temperature,
         stream: false
       }, {
-        headers: sessionHeaders
+        headers: finalHeaders
       });
       
       if (!completion.choices || completion.choices.length === 0) {
@@ -106,8 +150,32 @@ export class PerplexityClient {
           total_tokens: completion.usage.total_tokens
         } : undefined
       };
-    } catch (error) {
-      console.error('Perplexity query error:', error);
+    } catch (error: any) {
+      // Log error details (verbose in dev, minimal in prod)
+      const errorLog = {
+        message: error.message,
+        status: error.status,
+        model,
+      };
+      
+      if (process.env.NODE_ENV !== 'production') {
+        Object.assign(errorLog, {
+          response: error.response?.data,
+          headers: error.response?.headers,
+        });
+      }
+      
+      console.error('[PerplexityClient] Request failed:', errorLog);
+      
+      // Simplify error messages
+      if (error.status === 401 || error.message?.includes('401')) {
+        throw new Error('OpenRouter authentication failed. Check API key and credits.');
+      }
+      
+      if (error.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+      
       throw error;
     }
   }

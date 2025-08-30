@@ -21,8 +21,8 @@ export default async function DocumentsPage({
   const session = await auth();
   const isLoggedIn = !!session?.user;
 
-  // Use the centralized method from DocumentModel
-  const documents = await DocumentModel.getDocumentVersionsForListing({
+  // Get documents for listing view
+  const documents = await DocumentModel.getDocumentListings({
     searchQuery,
     limit: 50,
   });
