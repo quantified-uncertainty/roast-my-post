@@ -112,7 +112,7 @@ export default async function AgentLayout({
       </div>
 
       {/* Tab Navigation */}
-      <TabNavigation agentId={agentId} isOwner={isOwner} isAdmin={isAdmin} />
+      <TabNavigation agentId={agentId} isOwner={isOwner || false} isAdmin={isAdmin} />
 
       {/* Content */}
       <div className="mt-8">

@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { getServices } from "@/application/services/ServiceFactory";
 import { auth } from "@/infrastructure/auth/auth";
 import { DetailsTab } from "@/components/AgentDetail/tabs";
@@ -17,6 +18,10 @@ export default async function AgentDetailsPage({
   );
   
   const agent = result.unwrap();
+
+  if (!agent) {
+    return notFound();
+  }
 
   return <DetailsTab agent={agent} />;
 }

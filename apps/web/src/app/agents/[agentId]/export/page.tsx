@@ -19,7 +19,12 @@ export default async function AgentExportPage({
   );
   
   const agent = result.unwrap();
-  const isOwner = agent?.isOwner || false;
+  
+  if (!agent) {
+    redirect(`/agents/${resolvedParams.agentId}`);
+  }
+  
+  const isOwner = agent.isOwner || false;
 
   // Redirect if not authorized
   if (!isOwner && !isAdmin) {

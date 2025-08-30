@@ -17,7 +17,12 @@ export default async function AgentBatchesPage({
   );
   
   const agent = result.unwrap();
-  const isOwner = agent?.isOwner || false;
+  
+  if (!agent) {
+    redirect(`/agents/${resolvedParams.agentId}`);
+  }
+  
+  const isOwner = agent.isOwner || false;
 
   // Redirect if not owner
   if (!isOwner) {
