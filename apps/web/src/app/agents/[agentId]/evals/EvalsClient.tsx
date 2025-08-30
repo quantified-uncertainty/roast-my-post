@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EvaluationsTab } from "@/components/AgentDetail/tabs";
 import type { Agent } from "@roast/ai";
 import type {
@@ -34,7 +34,8 @@ export default function EvalsClient({
       const response = await fetch(`/api/agents/${_agentId}/evaluations${params}`);
       if (response.ok) {
         const data = await response.json();
-        setEvaluations(data);
+        // API returns { evaluations: [...] }
+        setEvaluations(data.evaluations || []);
       }
     } catch (error) {
       console.error("Failed to fetch evaluations:", error);
@@ -42,6 +43,14 @@ export default function EvalsClient({
       setEvalsLoading(false);
     }
   };
+
+  // Fetch evaluations on mount if no initial evaluations provided
+  useEffect(() => {
+    if (initialEvaluations.length === 0) {
+      fetchEvaluations();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <EvaluationsTab

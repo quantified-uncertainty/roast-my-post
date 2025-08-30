@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { getServices } from "@/application/services/ServiceFactory";
-import { AgentDetailLayout } from "@/components/AgentDetail/AgentDetailLayout";
+import { AgentDetailLayout } from "@/components/AgentDetail/Layout";
 
 export default async function AgentLayout({
   children,
