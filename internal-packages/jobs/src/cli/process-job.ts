@@ -6,7 +6,7 @@ import { findWorkspaceRoot, loadWebAppEnvironment } from '../utils/workspace';
 const workspaceRoot = findWorkspaceRoot(__dirname);
 loadWebAppEnvironment(workspaceRoot);
 
-import { JobRepository } from '@roast/db';
+import { JobRepository } from '@roast/db/cli';
 import { JobService } from '../core/JobService';
 import { JobOrchestrator } from '../core/JobOrchestrator';
 import { initializeAI } from '@roast/ai';

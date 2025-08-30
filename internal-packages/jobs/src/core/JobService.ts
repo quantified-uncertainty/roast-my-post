@@ -12,8 +12,8 @@ import type {
   JobWithRelations, 
   CreateJobData, 
   UpdateJobStatusData 
-} from '@roast/db';
-import { JobStatus } from '@roast/db';
+} from '@roast/db/cli';
+import { JobStatus } from '@roast/db/cli';
 import type { Logger, CompletionData } from '../types';
 
 export interface JobServiceInterface {
