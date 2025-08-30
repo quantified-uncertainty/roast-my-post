@@ -186,37 +186,36 @@ describe('Tool Examples Integration Tests', () => {
   });
 
   describe('Example consistency across tools', () => {
-    it('all tools should have examples in consistent format', async () => {
-      const toolFormats: Record<string, string> = {};
+    it('all tools should have examples in centralized configuration', async () => {
+      const { toolExamples } = await import('../utils/toolExamples');
       
-      for (const toolId of toolsWithExamples) {
-        try {
-          const { examples } = await import(`../${toolId}/examples.ts`);
-          const format = Array.isArray(examples) 
-            ? (typeof examples[0] === 'string' ? 'string[]' : 'object[]')
-            : 'unknown';
-          toolFormats[toolId] = format;
-        } catch {
-          toolFormats[toolId] = 'missing';
+      // Check that we have examples configured
+      expect(Object.keys(toolExamples).length).toBeGreaterThan(0);
+      
+      // Check that examples have consistent structure
+      for (const [toolId, examples] of Object.entries(toolExamples)) {
+        expect(Array.isArray(examples)).toBe(true);
+        
+        for (const example of examples) {
+          expect(example).toHaveProperty('label');
+          expect(example).toHaveProperty('values');
+          expect(typeof example.label).toBe('string');
+          expect(typeof example.values).toBe('object');
         }
       }
-      
-      // Most tools should use string[] format
-      const stringArrayTools = Object.values(toolFormats).filter(f => f === 'string[]').length;
-      expect(stringArrayTools).toBeGreaterThan(toolsWithExamples.length * 0.8);
     });
 
-    it('all tool examples should export with consistent name', async () => {
-      for (const toolId of toolsWithExamples) {
-        try {
-          const module = await import(`../${toolId}/examples.ts`);
-          expect(module).toHaveProperty('examples');
-          expect(module.examples).toBeDefined();
-        } catch (error) {
-          // Tool might not have examples file yet
-          console.warn(`Tool ${toolId} missing examples file`);
-        }
-      }
+    it('centralized examples should be accessible', async () => {
+      const { toolExamples } = await import('../utils/toolExamples');
+      
+      // Just verify the import works and we have some examples
+      expect(toolExamples).toBeDefined();
+      expect(typeof toolExamples).toBe('object');
+      
+      // Check a few known tools have examples
+      const knownTools = ['check-math', 'fuzzy-text-locator', 'fact-checker'];
+      const availableTools = knownTools.filter(tool => tool in toolExamples);
+      expect(availableTools.length).toBeGreaterThan(0);
     });
   });
 });
