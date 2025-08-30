@@ -18,7 +18,7 @@ import {
 
 import { createDocument } from "./actions";
 import { importDocument } from "../import/actions";
-import { type DocumentInput, documentSchema } from "./schema";
+import { type DocumentInput, documentSchema, CONTENT_MIN_CHARS, CONTENT_MAX_WORDS } from "./schema";
 import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 
 interface FormFieldConfig {
@@ -105,8 +105,8 @@ export default function NewDocumentClient() {
   const wordCount = content?.trim() ? content.trim().split(/\s+/).length : 0;
   
   // Validation states
-  const hasMinChars = charCount >= 30;
-  const hasMaxWords = wordCount <= 50000;
+  const hasMinChars = charCount >= CONTENT_MIN_CHARS;
+  const hasMaxWords = wordCount <= CONTENT_MAX_WORDS;
 
   // Fetch available agents
   useEffect(() => {
@@ -364,13 +364,35 @@ export default function NewDocumentClient() {
                   required
                   error={errors.content}
                 >
-                  <textarea
-                    {...methods.register("content")}
-                    id="content"
-                    rows={15}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.content ? "border-red-500" : ""}`}
-                    placeholder="Document content in Markdown format"
-                  />
+                  <div className="space-y-2">
+                    <textarea
+                      {...methods.register("content")}
+                      id="content"
+                      rows={15}
+                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.content ? "border-red-500" : ""}`}
+                      placeholder="Document content in Markdown format"
+                    />
+                    <div className="flex justify-between text-sm">
+                      <div className="space-x-4">
+                        <span className={`${!hasMinChars && charCount > 0 ? "text-red-600" : "text-gray-500"}`}>
+                          {charCount} characters {!hasMinChars && charCount > 0 && `(min: ${CONTENT_MIN_CHARS})`}
+                        </span>
+                        <span className={`${!hasMaxWords && wordCount > 0 ? "text-red-600" : "text-gray-500"}`}>
+                          {wordCount.toLocaleString()} words {!hasMaxWords && `(max: ${CONTENT_MAX_WORDS.toLocaleString()})`}
+                        </span>
+                      </div>
+                      {content && (
+                        <div>
+                          {!hasMinChars && (
+                            <span className="text-red-600">Need {CONTENT_MIN_CHARS - charCount} more characters</span>
+                          )}
+                          {hasMinChars && hasMaxWords && (
+                            <span className="text-green-600">✓ Valid length</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </FormField>
 
                 {formFields.map((field) => (
