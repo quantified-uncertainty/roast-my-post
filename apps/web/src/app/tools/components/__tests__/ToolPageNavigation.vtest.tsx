@@ -1,7 +1,7 @@
 import { vi, describe, it, expect } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { ToolBreadcrumbs } from '../ToolBreadcrumbs';
+import { ToolPageNavigation } from '../ToolPageNavigation';
 
 // Mock Next.js Link component
 vi.mock('next/link', () => ({
@@ -10,10 +10,10 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-describe('ToolBreadcrumbs', () => {
+describe('ToolPageNavigation', () => {
   it('should render breadcrumbs for docs page', () => {
     render(
-      <ToolBreadcrumbs 
+      <ToolPageNavigation 
         toolId="test-tool" 
         toolName="Test Tool" 
         currentPage="docs" 
@@ -27,7 +27,7 @@ describe('ToolBreadcrumbs', () => {
 
   it('should render breadcrumbs for try page', () => {
     render(
-      <ToolBreadcrumbs 
+      <ToolPageNavigation 
         toolId="test-tool" 
         toolName="Test Tool" 
         currentPage="try" 
@@ -41,7 +41,7 @@ describe('ToolBreadcrumbs', () => {
 
   it('should have correct links', () => {
     render(
-      <ToolBreadcrumbs 
+      <ToolPageNavigation 
         toolId="test-tool" 
         toolName="Test Tool" 
         currentPage="try" 

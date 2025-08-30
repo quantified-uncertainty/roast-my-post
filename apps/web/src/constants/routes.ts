@@ -69,6 +69,21 @@ export const ROUTES = {
     DOCUMENTS: '/monitor/documents',
   },
 
+  // API routes
+  API: {
+    AGENTS: {
+      LIST: '/api/agents',
+      DETAIL: (agentId: string) => `/api/agents/${agentId}`,
+      JOBS: (agentId: string) => `/api/agents/${agentId}/jobs`,
+      BATCHES: (agentId: string) => `/api/agents/${agentId}/batches`,
+      EVALUATIONS: (agentId: string) => `/api/agents/${agentId}/evaluations`,
+    },
+    DOCS: {
+      LIST: '/api/docs',
+      DETAIL: (docId: string) => `/api/docs/${docId}`,
+    },
+  },
+
   // Other routes
   HOME: '/',
   ABOUT: '/about',

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { BatchesTab } from "@/components/AgentDetail/tabs";
+import { ROUTES } from "@/constants/routes";
 import type { Agent } from "@roast/ai";
 import type { BatchSummary } from "@/components/AgentDetail/types";
 
@@ -20,14 +21,14 @@ export default function BatchesPage() {
     const fetchData = async () => {
       try {
         // Fetch agent data
-        const agentResponse = await fetch(`/api/agents/${agentId}`);
+        const agentResponse = await fetch(ROUTES.API.AGENTS.DETAIL(agentId));
         if (agentResponse.ok) {
           const agentData = await agentResponse.json();
           setAgent(agentData);
         }
 
         // Fetch batches
-        const batchesResponse = await fetch(`/api/agents/${agentId}/batches`);
+        const batchesResponse = await fetch(ROUTES.API.AGENTS.BATCHES(agentId));
         if (batchesResponse.ok) {
           const batchesData = await batchesResponse.json();
           setBatches(batchesData);
@@ -49,23 +50,23 @@ export default function BatchesPage() {
   };
 
   const setSelectedBatchFilter = (batchId: string | null) => {
-    // Navigate to the appropriate tab with batch filter
+    // Navigate to jobs tab with batch filter
     if (batchId) {
-      router.push(`/agents/${agentId}/evals?batchId=${batchId}`);
+      router.push(`${ROUTES.AGENTS.JOBS(agentId)}?batchId=${batchId}`);
     }
   };
 
   const setEvalsBatchFilter = (batchId: string | null) => {
     // Navigate to evals tab with batch filter
     if (batchId) {
-      router.push(`/agents/${agentId}/evals?batchId=${batchId}`);
+      router.push(`${ROUTES.AGENTS.EVALS(agentId)}?batchId=${batchId}`);
     }
   };
 
   const setExportBatchFilter = (batchId: string | null) => {
     // Navigate to export tab with batch filter
     if (batchId) {
-      router.push(`/agents/${agentId}/export?batchId=${batchId}`);
+      router.push(`${ROUTES.AGENTS.EXPORT(agentId)}?batchId=${batchId}`);
     }
   };
 

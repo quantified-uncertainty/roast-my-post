@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { JobsTab } from "@/components/AgentDetail/tabs";
+import { ROUTES } from "@/constants/routes";
 import type { Agent } from "@roast/ai";
 import type { Job, BatchSummary } from "@/components/AgentDetail/types";
 
@@ -21,21 +22,21 @@ export default function JobsPage() {
     const fetchData = async () => {
       try {
         // Fetch agent data
-        const agentResponse = await fetch(`/api/agents/${agentId}`);
+        const agentResponse = await fetch(ROUTES.API.AGENTS.DETAIL(agentId));
         if (agentResponse.ok) {
           const agentData = await agentResponse.json();
           setAgent(agentData);
         }
 
         // Fetch jobs
-        const jobsResponse = await fetch(`/api/agents/${agentId}/jobs`);
+        const jobsResponse = await fetch(ROUTES.API.AGENTS.JOBS(agentId));
         if (jobsResponse.ok) {
           const jobsData = await jobsResponse.json();
           setJobs(jobsData.jobs || []);
         }
 
         // Fetch batches
-        const batchesResponse = await fetch(`/api/agents/${agentId}/batches`);
+        const batchesResponse = await fetch(ROUTES.API.AGENTS.BATCHES(agentId));
         if (batchesResponse.ok) {
           const batchesData = await batchesResponse.json();
           setBatches(batchesData.batches || []);
@@ -55,7 +56,7 @@ export default function JobsPage() {
   const fetchJobs = async () => {
     setJobsLoading(true);
     try {
-      const response = await fetch(`/api/agents/${agentId}/jobs`);
+      const response = await fetch(ROUTES.API.AGENTS.JOBS(agentId));
       if (response.ok) {
         const data = await response.json();
         setJobs(data.jobs || []);
