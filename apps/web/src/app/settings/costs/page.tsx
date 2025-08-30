@@ -2,6 +2,7 @@ import { auth } from "@/infrastructure/auth/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@roast/db";
 import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
+import { ROUTES } from "@/constants/routes";
 import { CostsCard } from "./CostsCard";
 
 async function getDailySpending(
@@ -105,7 +106,7 @@ export default async function CostsPage() {
   const userId = session?.user?.id;
 
   if (!userId) {
-    redirect("/api/auth/signin");
+    redirect(ROUTES.AUTH.SIGNIN);
   }
 
   let spendingData;

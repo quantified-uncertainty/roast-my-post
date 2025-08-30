@@ -69,7 +69,7 @@ interface Agent {
   providesGrades?: boolean;
 }
 
-export default function NewDocumentClient() {
+export default function CreateDocumentForm() {
   const [mode, setMode] = useState<"import" | "manual">("import");
   const [importUrl, setImportUrl] = useState("");
   const [isImporting, setIsImporting] = useState(false);

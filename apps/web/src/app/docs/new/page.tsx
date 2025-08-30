@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
-import NewDocumentClient from "./NewDocumentClient";
+import { ROUTES } from "@/constants/routes";
+import CreateDocumentForm from "./CreateDocumentForm";
 
 export default async function NewDocumentPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect("/api/auth/signin");
+    redirect(ROUTES.AUTH.SIGNIN);
   }
 
-  return <NewDocumentClient />;
+  return <CreateDocumentForm />;
 }

@@ -40,6 +40,28 @@ import {
   exportAgentAsYaml,
 } from "./utils";
 
+interface TabButtonProps {
+  tabName: string;
+  activeTab: string;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}
+
+function TabButton({ tabName, activeTab, onClick, icon, label }: TabButtonProps) {
+  const isActive = activeTab === tabName;
+  const buttonClassName = isActive
+    ? "inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium border-blue-500 text-blue-600"
+    : "inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700";
+  
+  return (
+    <button onClick={onClick} className={buttonClassName}>
+      {icon}
+      {label}
+    </button>
+  );
+}
+
 export default function AgentDetail({
   agent,
   isOwner = false,
@@ -254,99 +276,71 @@ export default function AgentDetail({
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
-          <button
+          <TabButton
+            tabName="overview"
+            activeTab={activeTab}
             onClick={() => setActiveTab("overview")}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "overview"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <User className="mr-2 h-5 w-5" />
-            Overview
-          </button>
-          <button
+            icon={<User className="mr-2 h-5 w-5" />}
+            label="Overview"
+          />
+          <TabButton
+            tabName="details"
+            activeTab={activeTab}
             onClick={() => setActiveTab("details")}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "details"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <FileText className="mr-2 h-5 w-5" />
-            Details
-          </button>
-          <button
+            icon={<FileText className="mr-2 h-5 w-5" />}
+            label="Details"
+          />
+          <TabButton
+            tabName="evals"
+            activeTab={activeTab}
             onClick={() => {
               setActiveTab("evals");
               setEvalsBatchFilter(null);
             }}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "evals"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <BarChart3 className="mr-2 h-5 w-5" />
-            Evals
-          </button>
+            icon={<BarChart3 className="mr-2 h-5 w-5" />}
+            label="Evals"
+          />
           {(isOwner || isAdmin) && (
-            <button
+            <TabButton
+              tabName="jobs"
+              activeTab={activeTab}
               onClick={() => {
                 setActiveTab("jobs");
                 setSelectedBatchFilter(null);
               }}
-              className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === "jobs"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              <Clock className="mr-2 h-5 w-5" />
-              Jobs
-            </button>
+              icon={<Clock className="mr-2 h-5 w-5" />}
+              label="Jobs"
+            />
           )}
           {isOwner && (
             <>
-              <button
+              <TabButton
+                tabName="test"
+                activeTab={activeTab}
                 onClick={() => setActiveTab("test")}
-                className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-                  activeTab === "test"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
-              >
-                <Play className="mr-2 h-5 w-5" />
-                Test
-              </button>
-              <button
+                icon={<Play className="mr-2 h-5 w-5" />}
+                label="Test"
+              />
+              <TabButton
+                tabName="batches"
+                activeTab={activeTab}
                 onClick={() => setActiveTab("batches")}
-                className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-                  activeTab === "batches"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
-              >
-                <BarChart3 className="mr-2 h-5 w-5" />
-                Batch Tests
-              </button>
+                icon={<BarChart3 className="mr-2 h-5 w-5" />}
+                label="Batch Tests"
+              />
             </>
           )}
           {(isOwner || isAdmin) && (
-            <button
+            <TabButton
+              tabName="export"
+              activeTab={activeTab}
               onClick={() => {
                 setActiveTab("export");
                 setExportBatchFilter(null);
               }}
-              className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === "export"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              <FileDown className="mr-2 h-5 w-5" />
-              Export
-            </button>
+              icon={<FileDown className="mr-2 h-5 w-5" />}
+              label="Export"
+            />
           )}
         </nav>
       </div>

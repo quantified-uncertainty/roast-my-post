@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
+import { ROUTES } from "@/constants/routes";
 import { ApiKeysCard } from "./ApiKeysCard";
 
 export default async function ApiKeysPage() {
@@ -8,7 +9,7 @@ export default async function ApiKeysPage() {
   const userId = session?.user?.id;
 
   if (!userId) {
-    redirect("/api/auth/signin");
+    redirect(ROUTES.AUTH.SIGNIN);
   }
 
   const apiKeys = await prisma.apiKey.findMany({
