@@ -7,6 +7,12 @@ import { generateMarkdownPrepend } from "@roast/domain";
 import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";
 import { getServices } from "@/application/services/ServiceFactory";
+import {
+  documentListingSelect,
+  documentListingFilters,
+  serializeDocumentListing,
+  type SerializedDocumentListing
+} from "./DocumentListing.types";
 
 // Helper function to safely convert Decimal to number
 function convertPriceToNumber(price: unknown): number {
@@ -890,6 +896,52 @@ export class DocumentModel {
 
     return dbDocs.map((dbDoc) => DocumentModel.formatDocumentFromDB(dbDoc));
   }
+
+  /**
+   * Get documents for listing pages
+   * Only fetches data needed for display in document lists
+   */
+  static async getDocumentListings(options?: {
+    userId?: string;
+    searchQuery?: string;
+    limit?: number;
+    latestVersionOnly?: boolean;
+  }): Promise<SerializedDocumentListing[]> {
+    const { userId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
+
+    // Compose where conditions using type-safe filters
+    const whereConditions = [];
+    
+    if (userId) {
+      whereConditions.push(documentListingFilters.byUser(userId));
+    }
+    
+    if (searchQuery?.trim() && searchQuery.trim().length >= 2) {
+      whereConditions.push(documentListingFilters.searchQuery(searchQuery.trim()));
+    }
+
+    // Combine conditions with AND logic
+    const whereClause = whereConditions.length > 0
+      ? { AND: whereConditions }
+      : {};
+
+    // For distinct queries, we need to order by documentId first to ensure deterministic results
+    const orderBy = latestVersionOnly 
+      ? [{ documentId: "asc" as const }, { createdAt: "desc" as const }]
+      : { createdAt: "desc" as const };
+
+    // Execute query for listing views
+    const rawDocuments = await prisma.documentVersion.findMany({
+      where: whereClause,
+      distinct: latestVersionOnly ? ['documentId'] : undefined,
+      select: documentListingSelect,
+      orderBy,
+      take: limit,
+    });
+
+    return rawDocuments.map(serializeDocumentListing);
+  }
+
 
   static async create(data: {
     title: string;

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/infrastructure/database/prisma";
-import DocumentsClient from "@/app/docs/DocumentsClient";
+import { prisma } from "@roast/db";
+import DocumentsResults from "@/app/docs/DocumentsResults";
 import { DocumentModel } from "@/models/Document";
 import { USER_DISPLAY } from "@/shared/constants/constants";
 
@@ -27,8 +27,13 @@ export default async function UserDocumentsPage({
     notFound();
   }
 
-  // Get documents for this user efficiently
-  const userDocuments = await DocumentModel.getUserDocumentsWithEvaluations(userId);
+  // Get documents for listing view
+  // For user pages, we want unique documents only (latest version per document)
+  const documents = await DocumentModel.getDocumentListings({
+    userId,
+    limit: 50,
+    latestVersionOnly: true,
+  });
 
   return (
     <div className="min-h-screen bg-white">
@@ -41,15 +46,17 @@ export default async function UserDocumentsPage({
                   {user.name || USER_DISPLAY.GUEST_NAME}'s Documents
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  {userDocuments.length} document{userDocuments.length !== 1 ? 's' : ''} submitted
+                  {documents.length} document{documents.length !== 1 ? 's' : ''} submitted
                 </p>
               </div>
             </div>
           </div>
           
-          <DocumentsClient 
-            documents={userDocuments} 
-            showNewButton={false}
+          <DocumentsResults 
+            documents={documents} 
+            searchQuery=""
+            totalCount={documents.length}
+            hasSearched={false}
           />
         </div>
       </div>
