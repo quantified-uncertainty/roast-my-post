@@ -10,7 +10,7 @@ export default async function SettingsLayout({
   const session = await auth();
   
   if (!session?.user) {
-    redirect("/auth/signin");
+    redirect("/api/auth/signin");
   }
 
   return (

@@ -32,7 +32,15 @@ interface ValidationResult {
   hasRequiredFields: boolean;
   missingFields: string[];
   extraFields: string[];
-  parsedData?: any;
+  parsedData?: {
+    name?: string;
+    description?: string;
+    providesGrades?: boolean;
+    primaryInstructions?: string;
+    selfCritiqueInstructions?: string;
+    readme?: string;
+    [key: string]: unknown;
+  };
   warnings: string[];
 }
 
@@ -88,7 +96,7 @@ export default function NewAgentClient() {
         return;
       }
 
-      const parsedObj = parsed as Record<string, any>;
+      const parsedObj = parsed as Record<string, unknown>;
       const missingFields = REQUIRED_FIELDS.filter(
         (field) => !parsedObj[field]
       );
@@ -108,7 +116,7 @@ export default function NewAgentClient() {
       });
 
       // Check description length
-      if (parsedObj.description && parsedObj.description.length < 30) {
+      if (parsedObj.description && typeof parsedObj.description === 'string' && parsedObj.description.length < 30) {
         warnings.push("Description should be at least 30 characters");
       }
 
@@ -146,15 +154,15 @@ export default function NewAgentClient() {
     try {
       // Extract only the supported fields
       const agentData: AgentInput = {
-        name: validation.parsedData.name,
-        description: validation.parsedData.description,
-        providesGrades: validation.parsedData.providesGrades || false,
+        name: validation.parsedData?.name || '',
+        description: validation.parsedData?.description || '',
+        providesGrades: validation.parsedData?.providesGrades || false,
       };
 
       // Add optional fields if they exist
       OPTIONAL_FIELDS.forEach((field) => {
-        if (validation.parsedData[field] !== undefined) {
-          (agentData as any)[field] = validation.parsedData[field];
+        if (validation.parsedData && validation.parsedData[field] !== undefined) {
+          (agentData as Record<string, unknown>)[field] = validation.parsedData[field];
         }
       });
 

@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { ExportTab } from "@/components/AgentDetail/tabs";
 import type { Agent } from "@roast/ai";
 import type { BatchSummary } from "@/components/AgentDetail/types";
 
 export default function ExportPage() {
+  const params = useParams();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [exportBatchFilter, setExportBatchFilter] = useState<string | null>(null);
   const [batches, setBatches] = useState<BatchSummary[]>([]);
 
   // Get agent ID from URL
-  const agentId = window.location.pathname.split('/')[2];
+  const agentId = params.agentId as string;
 
   useEffect(() => {
     const fetchData = async () => {

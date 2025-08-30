@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   const session = await auth();
   
   if (!session?.user) {
-    redirect("/auth/signin");
+    redirect("/api/auth/signin");
   }
   
   const adminCheck = await isAdmin();

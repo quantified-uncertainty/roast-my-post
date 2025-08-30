@@ -83,7 +83,7 @@ export default function AuthHeader() {
       ) : (
         <div className="flex items-center space-x-4">
           <Button asChild variant="ghost">
-            <Link href="/auth/signin">Log In</Link>
+            <Link href="/api/auth/signin">Log In</Link>
           </Button>
           <Button asChild>
             <Link href="/signup">Sign Up</Link>

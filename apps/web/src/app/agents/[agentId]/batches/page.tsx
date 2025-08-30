@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { BatchesTab } from "@/components/AgentDetail/tabs";
 import type { Agent } from "@roast/ai";
 import type { BatchSummary } from "@/components/AgentDetail/types";
 
 export default function BatchesPage() {
   const router = useRouter();
+  const params = useParams();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [batches, setBatches] = useState<BatchSummary[]>([]);
   const [batchesLoading, setBatchesLoading] = useState(true);
 
   // Get agent ID from URL
-  const agentId = window.location.pathname.split('/')[2];
+  const agentId = params.agentId as string;
 
   useEffect(() => {
     const fetchData = async () => {

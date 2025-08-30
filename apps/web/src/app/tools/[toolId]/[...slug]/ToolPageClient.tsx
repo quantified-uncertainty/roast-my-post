@@ -20,6 +20,7 @@ import { GenericToolDocsPage } from '../../components/GenericToolDocsPage';
 import { GenericToolTryPage } from '../../components/GenericToolTryPage';
 import { MathCheckDisplay } from '../../components/results/MathCheckDisplay';
 import { toolExamples as exampleConfigs } from '../../utils/toolExamples';
+import { FieldConfig } from '../../components/types';
 
 // Map tool IDs to their icons
 const toolIcons: Record<string, React.ReactElement> = {
@@ -39,11 +40,19 @@ const toolIcons: Record<string, React.ReactElement> = {
   'perplexity-research': <CloudIcon className="h-8 w-8 text-slate-600" />,
 };
 
+// Types for tool results
+interface ToolResultExtra {
+  statement?: string;
+  [key: string]: unknown;
+}
+
+type ToolResult = Record<string, unknown>;
+
 // Tool-specific result renderers
-const toolResultRenderers: Record<string, (result: any, extra?: any) => React.ReactElement> = {
-  'check-math': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement} variant="basic" />,
-  'check-math-hybrid': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement} variant="hybrid" />,
-  'check-math-with-mathjs': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement} variant="mathjs" />,
+const toolResultRenderers: Record<string, (result: ToolResult, extra?: ToolResultExtra) => React.ReactElement> = {
+  'check-math': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="basic" />,
+  'check-math-hybrid': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="hybrid" />,
+  'check-math-with-mathjs': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="mathjs" />,
   // Add more custom renderers as needed
   // Default renderer for tools without custom display
   'default': (result) => (
@@ -83,8 +92,8 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
   const resultRenderer = toolResultRenderers[toolId] || toolResultRenderers.default;
   
   // Tool-specific field configurations
-  const getToolSpecificFieldConfig = (toolId: string, name: string, prop: any) => {
-    const toolSpecificConfigs: Record<string, Record<string, any>> = {
+  const getToolSpecificFieldConfig = (toolId: string, name: string, prop: unknown) => {
+    const toolSpecificConfigs: Record<string, Record<string, unknown>> = {
       'forecaster': {
         'question': {
           type: 'textarea',
@@ -317,12 +326,22 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
 
   // Build fields configuration based on tool input schema with tool-specific overrides
   const buildFields = () => {
-    const fields: any[] = [];
-    const schema = schemas.inputSchema as any;
+    interface SchemaProperty {
+      type?: string;
+      title?: string;
+      description?: string;
+      default?: unknown;
+      minimum?: number;
+      maximum?: number;
+      maxLength?: number;
+    }
+    
+    const fields: FieldConfig[] = [];
+    const schema = schemas.inputSchema as Record<string, unknown>;
     
     if (schema?.properties) {
-      Object.entries(schema.properties).forEach(([name, prop]: [string, any]) => {
-        const toolSpecific = getToolSpecificFieldConfig(toolId, name, prop);
+      Object.entries(schema.properties as Record<string, SchemaProperty>).forEach(([name, prop]) => {
+        const toolSpecific = getToolSpecificFieldConfig(toolId, name, prop) as Record<string, unknown>;
         
         // Determine base field type
         let baseType = 'text';
@@ -330,21 +349,21 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           baseType = 'number';
         } else if (prop.type === 'boolean') {
           baseType = 'checkbox';
-        } else if (prop.type === 'string' && (prop.maxLength > 100 || name.includes('text') || name.includes('Text'))) {
+        } else if (prop.type === 'string' && ((prop.maxLength && prop.maxLength > 100) || name.includes('text') || name.includes('Text'))) {
           baseType = 'textarea';
         }
 
         fields.push({
-          type: toolSpecific.type || baseType,
+          type: ((toolSpecific.type as string) || baseType) as 'text' | 'textarea' | 'select' | 'number' | 'checkbox',
           name,
           label: prop.title || name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1'),
-          placeholder: toolSpecific.placeholder || prop.description || `Enter ${name}...`,
-          required: schema.required?.includes(name),
-          rows: toolSpecific.rows || 3,
-          defaultValue: toolSpecific.defaultValue !== undefined ? toolSpecific.defaultValue : prop.default,
-          min: toolSpecific.min || prop.minimum,
-          max: toolSpecific.max || prop.maximum,
-          options: toolSpecific.options,
+          placeholder: (toolSpecific.placeholder as string) || prop.description || `Enter ${name}...`,
+          required: (schema.required as string[] | undefined)?.includes(name),
+          rows: (toolSpecific.rows as number) || 3,
+          defaultValue: toolSpecific.defaultValue !== undefined ? toolSpecific.defaultValue as (string | number | boolean) : prop.default as (string | number | boolean | undefined),
+          min: (toolSpecific.min as number) || prop.minimum,
+          max: (toolSpecific.max as number) || prop.maximum,
+          options: toolSpecific.options as Array<{ value: string; label: string }> | undefined,
         });
       });
     }
@@ -355,7 +374,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
   if (pageType === 'docs') {
     return (
       <GenericToolDocsPage
-        toolId={toolId as any}
+        toolId={toolId as ToolId}
         title={toolConfig.name}
         description={toolConfig.description}
         icon={icon}
@@ -368,25 +387,25 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
     
     return (
       <GenericToolTryPage
-        toolId={toolId as any}
+        toolId={toolId as ToolId}
         title={toolConfig.name}
         description={toolConfig.description}
         icon={icon}
         fields={fields}
         renderResult={(result) => {
           if (toolId.includes('check-math')) {
-            return resultRenderer(result, { statement: lastStatement });
+            return resultRenderer(result as ToolResult, { statement: lastStatement });
           }
-          return resultRenderer(result);
+          return resultRenderer(result as ToolResult);
         }}
         exampleInputs={examples.map(ex => ({
           label: ex.label,
           value: ex.values
         }))}
-        onBeforeSubmit={(input: any) => {
+        onBeforeSubmit={(input: Record<string, unknown>) => {
           // Store statement for math tools
           if (input.statement) {
-            setLastStatement(input.statement);
+            setLastStatement(input.statement as string);
           }
           return input;
         }}

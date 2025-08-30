@@ -17,7 +17,7 @@ interface EvalsClientProps {
 export default function EvalsClient({ 
   agent, 
   initialEvaluations = [],
-  agentId
+  agentId: _agentId
 }: EvalsClientProps) {
   const [evaluations, setEvaluations] = useState<AgentEvaluation[]>(initialEvaluations);
   const [evalsLoading, setEvalsLoading] = useState(false);
@@ -25,9 +25,9 @@ export default function EvalsClient({
   const [evalDetailsTab, setEvalDetailsTab] = useState<string>("analysis");
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [evalsBatchFilter, setEvalsBatchFilter] = useState<string | null>(null);
-  const [batches, setBatches] = useState<BatchSummary[]>([]);
+  const [batches, _setBatches] = useState<BatchSummary[]>([]);
 
-  const fetchEvaluations = async (batchId?: string) => {
+  const fetchEvaluations = async (_batchId?: string) => {
     setEvalsLoading(true);
     try {
       // For now, just set empty array

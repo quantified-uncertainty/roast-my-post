@@ -68,16 +68,19 @@ export function AgentDetailLayout({
   const handleExportYaml = () =>
     exportAgentAsYaml(agent, setExportType, setCopySuccess);
 
-  // Determine active tab from pathname
+  // Determine active tab from pathname using more robust segment matching
   const getActiveTab = () => {
-    if (pathname.endsWith('/overview')) return 'overview';
-    if (pathname.endsWith('/details')) return 'details';
-    if (pathname.endsWith('/evals')) return 'evals';
-    if (pathname.endsWith('/jobs')) return 'jobs';
-    if (pathname.endsWith('/test')) return 'test';
-    if (pathname.endsWith('/batches')) return 'batches';
-    if (pathname.endsWith('/export')) return 'export';
-    if (pathname.endsWith('/versions')) return 'versions';
+    // Split pathname and get the last segment
+    const segments = pathname.split('/').filter(Boolean);
+    const lastSegment = segments[segments.length - 1];
+    
+    // Check if the last segment is a known tab
+    const validTabs = ['overview', 'details', 'evals', 'jobs', 'test', 'batches', 'export', 'versions'];
+    if (validTabs.includes(lastSegment)) {
+      return lastSegment;
+    }
+    
+    // Default to overview if we're on the agent base path
     return 'overview';
   };
 

@@ -65,7 +65,7 @@ export function AuthenticatedToolPage({
           
           <div className="space-y-3">
             <Button asChild className="w-full">
-              <Link href="/auth/signin">Sign In</Link>
+              <Link href="/api/auth/signin">Sign In</Link>
             </Button>
             
             <p className="text-sm text-gray-500">

@@ -28,13 +28,13 @@ export interface AgentEvaluation {
   documentId: string;
   documentTitle: string;
   documentAuthor: string;
-  agentVersion: number;
+  agentVersion: number | string;
   agentVersionName?: string;
   evaluationVersion?: number | null;
-  summary?: string;
-  analysis?: string;
+  summary?: string | null;
+  analysis?: string | null;
   grade?: number | null;
-  selfCritique?: string;
+  selfCritique?: string | null;
   createdAt: string;
   jobStatus?: string;
   jobCreatedAt?: string;

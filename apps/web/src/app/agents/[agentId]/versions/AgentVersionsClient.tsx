@@ -110,7 +110,7 @@ export default function AgentVersionsClient({
                       <div>
                         <div className="font-medium text-gray-900">
                           Version {version.version}
-                          {version.version === agent.version && (
+                          {version.version.toString() === agent.version && (
                             <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                               Current
                             </span>
