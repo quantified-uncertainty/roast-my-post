@@ -165,13 +165,17 @@ export default function NewDocumentClient() {
       }
 
       if (error instanceof z.ZodError) {
+        let hasFieldError = false;
         error.errors.forEach((err) => {
-          if (err.path[0]) {
-            setError(err.path[0].toString() as keyof DocumentInput, {
-              message: err.message,
-            });
+          const field = typeof err.path?.[0] === "string" ? (err.path[0] as keyof DocumentInput) : undefined;
+          if (field) {
+            setError(field, { message: err.message });
+            hasFieldError = true;
           }
         });
+        if (!hasFieldError) {
+          setError("root", { message: "Please fix the validation errors." });
+        }
       } else {
         logger.error('Error submitting form:', error);
         setError("root", { message: "An unexpected error occurred" });
