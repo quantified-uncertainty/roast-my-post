@@ -1,8 +1,8 @@
 import { getServices } from "@/application/services/ServiceFactory";
 import { auth } from "@/infrastructure/auth/auth";
-import { OverviewTab } from "@/components/AgentDetail/tabs";
+import { DetailsTab } from "@/components/AgentDetail/tabs";
 
-export default async function AgentOverviewPage({
+export default async function AgentDetailsPage({
   params,
 }: {
   params: Promise<{ agentId: string }>;
@@ -17,10 +17,6 @@ export default async function AgentOverviewPage({
   );
   
   const agent = result.unwrap();
-  
-  // TODO: Fetch overview stats
-  const overviewStats = null;
-  const overviewLoading = false;
 
-  return <OverviewTab agent={agent} overviewStats={overviewStats} overviewLoading={overviewLoading} />;
+  return <DetailsTab agent={agent} />;
 }
