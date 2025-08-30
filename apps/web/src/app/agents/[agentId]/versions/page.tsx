@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { getServices } from "@/application/services/ServiceFactory";
+import AgentVersionsClient from "./AgentVersionsClient";
 
 export default async function VersionsPage({
   params,
@@ -25,14 +26,18 @@ export default async function VersionsPage({
     return notFound();
   }
 
+  // Fetch all versions of the agent using the service
+  const versionsResult = await agentService.getAgentVersions(resolvedParams.agentId);
+  const versions = versionsResult.isOk() ? versionsResult.unwrap() : [];
+  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+
+  const isOwner = agent.isOwner || false;
+
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold">Version History</h2>
-        <p className="text-gray-600">
-          This page shows the version history and changes for this agent over time.
-        </p>
-      </div>
-    </div>
+    <AgentVersionsClient 
+      agent={agent} 
+      versions={sortedVersions} 
+      isOwner={isOwner}
+    />
   );
 }
