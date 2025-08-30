@@ -53,6 +53,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
     "@roast/domain": "workspace:*",
@@ -92,6 +93,7 @@
     "tailwindcss-animate": "^1.0.7",
     "turndown": "^7.1.2",
     "unified": "^11.0.5",
+    "use-debounce": "^10.0.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {
