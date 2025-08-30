@@ -1,34 +1,89 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/infrastructure/auth/auth";
-import { getServices } from "@/application/services/ServiceFactory";
+"use client";
 
-export default async function AgentJobsPage({
-  params,
-}: {
-  params: Promise<{ agentId: string }>;
-}) {
-  const resolvedParams = await params;
-  const session = await auth();
-  const isAdmin = session?.user?.role === "ADMIN";
+import { useEffect, useState } from "react";
+import { JobsTab } from "@/components/AgentDetail/tabs";
+import type { Agent } from "@roast/ai";
+import type { Job, BatchSummary } from "@/components/AgentDetail/types";
 
-  const { agentService } = getServices();
-  const result = await agentService.getAgentWithOwner(
-    resolvedParams.agentId,
-    session?.user?.id
-  );
-  
-  const agent = result.unwrap();
-  
+export default function JobsPage() {
+  const [agent, setAgent] = useState<Agent | null>(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedBatchFilter, setSelectedBatchFilter] = useState<string | null>(null);
+  const [batches, setBatches] = useState<BatchSummary[]>([]);
+
+  // Get agent ID from URL
+  const agentId = window.location.pathname.split('/')[2];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch agent data
+        const agentResponse = await fetch(`/api/agents/${agentId}`);
+        if (agentResponse.ok) {
+          const agentData = await agentResponse.json();
+          setAgent(agentData);
+        }
+
+        // Fetch jobs
+        const jobsResponse = await fetch(`/api/agents/${agentId}/jobs`);
+        if (jobsResponse.ok) {
+          const jobsData = await jobsResponse.json();
+          setJobs(jobsData.jobs || []);
+        }
+
+        // Fetch batches
+        const batchesResponse = await fetch(`/api/agents/${agentId}/batches`);
+        if (batchesResponse.ok) {
+          const batchesData = await batchesResponse.json();
+          setBatches(batchesData.batches || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setJobsLoading(false);
+      }
+    };
+
+    if (agentId) {
+      fetchData();
+    }
+  }, [agentId]);
+
+  const fetchJobs = async () => {
+    setJobsLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agentId}/jobs`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobs(data.jobs || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch jobs:", error);
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
   if (!agent) {
-    redirect(`/agents/${resolvedParams.agentId}`);
-  }
-  
-  const isOwner = agent.isOwner || false;
-
-  // Redirect if not authorized
-  if (!isOwner && !isAdmin) {
-    redirect(`/agents/${resolvedParams.agentId}`);
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-lg text-gray-600">Loading agent data...</div>
+      </div>
+    );
   }
 
-  return <div>Jobs page - needs implementation</div>;
+  return (
+    <JobsTab
+      jobs={jobs}
+      jobsLoading={jobsLoading}
+      selectedJob={selectedJob}
+      setSelectedJob={setSelectedJob}
+      selectedBatchFilter={selectedBatchFilter}
+      setSelectedBatchFilter={setSelectedBatchFilter}
+      batches={batches}
+      fetchJobs={fetchJobs}
+    />
+  );
 }
