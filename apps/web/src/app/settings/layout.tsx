@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { SettingsNav } from "./SettingsNav";
+import { ROUTES } from "@/constants/routes";
 
 export default async function SettingsLayout({
   children,
@@ -10,7 +11,7 @@ export default async function SettingsLayout({
   const session = await auth();
   
   if (!session?.user) {
-    redirect("/api/auth/signin");
+    redirect(ROUTES.AUTH.SIGNIN);
   }
 
   return (

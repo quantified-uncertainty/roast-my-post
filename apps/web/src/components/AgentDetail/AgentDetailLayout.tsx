@@ -74,8 +74,13 @@ export function AgentDetailLayout({
     const segments = pathname.split('/').filter(Boolean);
     const lastSegment = segments[segments.length - 1];
     
+    // Check if the last segment is the agent ID (means we're on the overview page)
+    if (lastSegment === agent.id) {
+      return 'overview';
+    }
+    
     // Check if the last segment is a known tab
-    const validTabs = ['overview', 'details', 'evals', 'jobs', 'test', 'batches', 'export', 'versions'];
+    const validTabs = ['details', 'evals', 'jobs', 'test', 'batches', 'export', 'versions'];
     if (validTabs.includes(lastSegment)) {
       return lastSegment;
     }
@@ -219,7 +224,7 @@ export function AgentDetailLayout({
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           <Link
-            href={`/agents/${agent.id}/overview`}
+            href={`/agents/${agent.id}`}
             className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
               activeTab === "overview"
                 ? "border-blue-500 text-blue-600"

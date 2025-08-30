@@ -13,7 +13,7 @@ interface ToolPageProps {
 export default async function ToolPage({ params }: ToolPageProps) {
   const { toolId, slug } = await params;
   
-  // Check if tool exists in registry
+  // Check if tool exists in registry (excluding getMetadata which is a function)
   if (toolId === 'getMetadata' || !(toolId in toolRegistry)) {
     notFound();
   }

@@ -27,19 +27,15 @@ export default function EvalsClient({
   const [evalsBatchFilter, setEvalsBatchFilter] = useState<string | null>(null);
   const [batches, _setBatches] = useState<BatchSummary[]>([]);
 
-  const fetchEvaluations = async (_batchId?: string) => {
+  const fetchEvaluations = async (batchId?: string) => {
     setEvalsLoading(true);
     try {
-      // For now, just set empty array
-      setEvaluations([]);
-      
-      // In the future:
-      // const params = batchId ? `?batchId=${batchId}` : '';
-      // const response = await fetch(`/api/agents/${agentId}/evaluations${params}`);
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   setEvaluations(data);
-      // }
+      const params = batchId ? `?batchId=${batchId}` : '';
+      const response = await fetch(`/api/agents/${_agentId}/evaluations${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setEvaluations(data);
+      }
     } catch (error) {
       console.error("Failed to fetch evaluations:", error);
     } finally {
