@@ -344,7 +344,7 @@ test.describe('Tool End-to-End Validation', () => {
         test.setTimeout(validation.timeout + 20000); // Extra time for navigation and setup
 
         // Navigate to tool
-        await page.goto(`/tools/${toolId}`, { waitUntil: 'networkidle' });
+        await page.goto(`/tools/${toolId}/try`, { waitUntil: 'networkidle' });
         
         // Click the appropriate example button based on type
         let exampleButton;
@@ -357,9 +357,17 @@ test.describe('Tool End-to-End Validation', () => {
           // Descriptive text pattern - look for partial match
           const exampleText = (metadata as any).exampleText;
           if (exampleText) {
+            // First try exact match, then partial match
             exampleButton = page.locator('button').filter({ 
-              hasText: exampleText.substring(0, 30) // Match first part of text
+              hasText: exampleText
             }).first();
+            
+            // If exact match fails, try partial match
+            if (!(await exampleButton.isVisible({ timeout: 1000 }).catch(() => false))) {
+              exampleButton = page.locator('button').filter({ 
+                hasText: exampleText.substring(0, Math.min(20, exampleText.length))
+              }).first();
+            }
           } else {
             // Fallback: get all buttons and select by index
             const buttons = await page.locator('button').all();
@@ -377,11 +385,24 @@ test.describe('Tool End-to-End Validation', () => {
           const allButtons = await page.locator('button').all();
           let foundExample = false;
           
+          // Debug: log all button texts
+          console.log(`🔍 Debug: Found ${allButtons.length} buttons on page for ${toolId}:`);
+          for (let i = 0; i < allButtons.length; i++) {
+            const text = await allButtons[i].textContent();
+            console.log(`  Button ${i}: "${text}"`);
+          }
+          
           for (const btn of allButtons) {
             const text = await btn.textContent();
-            // Skip navigation buttons
-            if (text && !['Try', 'Documentation', metadata.buttonText].includes(text.trim())) {
+            // Skip navigation buttons (more flexible matching)
+            const skipTexts = ['Try', 'Documentation', 'Docs', metadata.buttonText, 'Sign in', 'Sign out'];
+            const shouldSkip = skipTexts.some(skipText => 
+              text && text.trim().toLowerCase().includes(skipText.toLowerCase())
+            );
+            
+            if (text && !shouldSkip && text.trim().length > 0) {
               // This is likely an example button
+              console.log(`🎯 Clicking example button: "${text.trim()}"`);
               await btn.click();
               foundExample = true;
               // Small delay for form to populate
@@ -479,7 +500,7 @@ test.describe('Tool End-to-End Validation', () => {
       test(`${toolId}: handles empty input gracefully`, async ({ page }) => {
         test.setTimeout(30000);
         
-        await page.goto(`/tools/${toolId}`, { waitUntil: 'networkidle' });
+        await page.goto(`/tools/${toolId}/try`, { waitUntil: 'networkidle' });
         
         // Try to submit without filling form
         const submitButton = page.locator('button').filter({ 
