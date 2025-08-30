@@ -139,7 +139,7 @@ export async function GET(
       })),
     };
 
-    return NextResponse.json({ stats });
+    return NextResponse.json(stats);
   } catch (error) {
     logger.error('Error fetching agent overview:', error);
     return NextResponse.json(

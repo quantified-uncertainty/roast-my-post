@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { getServices } from "@/application/services/ServiceFactory";
-import { OverviewTab } from "@/components/AgentDetail/tabs";
+import OverviewClient from "./OverviewClient";
 
 export default async function OverviewPage({
   params,
@@ -26,15 +26,5 @@ export default async function OverviewPage({
     return notFound();
   }
 
-  // For now, we'll pass null for overview stats since we don't have that endpoint yet
-  const overviewStats = null;
-  const overviewLoading = false;
-
-  return (
-    <OverviewTab
-      agent={agent}
-      overviewStats={overviewStats}
-      overviewLoading={overviewLoading}
-    />
-  );
+  return <OverviewClient agent={agent} agentId={resolvedParams.agentId} />;
 }
