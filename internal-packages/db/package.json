@@ -9,7 +9,8 @@
     ".": {
       "browser": "./browser.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./cli": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc --build",

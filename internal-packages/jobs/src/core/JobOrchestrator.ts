@@ -6,8 +6,8 @@
  * Now uses @roast/ai workflows directly instead of dependency injection.
  */
 
-import type { JobWithRelations, JobEntity } from '@roast/db';
-import { prisma } from '@roast/db';
+import type { JobWithRelations, JobEntity } from '@roast/db/cli';
+import { cliPrisma as prisma } from '@roast/db/cli';
 import type { JobService } from './JobService';
 import type { Logger, JobProcessingResult, Document } from '../types';
 import { 
