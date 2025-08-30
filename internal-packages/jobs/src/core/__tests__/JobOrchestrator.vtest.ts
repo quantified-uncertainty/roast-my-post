@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobOrchestrator } from '../JobOrchestrator';
 import { JobService } from '../JobService';
 import { analyzeDocument } from '@roast/ai';
-import { cliPrisma as prisma, JobStatus } from '@roast/db/cli';
+import { prisma, JobStatus } from '@roast/db';
 import { fetchJobCostWithRetry } from '@roast/ai';
 import type { Logger } from '../../types';
 
@@ -19,8 +19,8 @@ vi.mock('@roast/ai', () => ({
   fetchJobCostWithRetry: vi.fn(),
 }));
 
-vi.mock('@roast/db/cli', () => ({
-  cliPrisma: {
+vi.mock('@roast/db', () => ({
+  prisma: {
     evaluationVersion: {
       findFirst: vi.fn(),
       create: vi.fn(),

@@ -1,9 +1,6 @@
-// Server-only exports - Prisma client should never be imported in browser
+// Server-safe exports - Prisma client for server and CLI contexts
 export { prisma } from './client';
 export { ensureDbConnected, withDb } from './ensure-connected';
-
-// CLI-safe exports - Prisma client for CLI scripts and server contexts
-export { prisma as cliPrisma } from './cli-client';
 
 // Re-export Prisma types from client (which properly exports from generated)
 export { Prisma, type PrismaClient } from './client';

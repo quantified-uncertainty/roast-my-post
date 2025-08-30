@@ -11,10 +11,10 @@ import {
   spawn,
 } from "child_process";
 
-import { cliPrisma as prisma, JobStatus } from "@roast/db/cli";
+import { prisma, JobStatus } from "@roast/db";
 import { getAgentTimeout, formatTimeout } from "../config/agentTimeouts";
 import { config } from '@roast/domain';
-import { JobRepository } from '@roast/db/cli';
+import { JobRepository } from '@roast/db';
 import { JobService } from '../core/JobService';
 import { logger } from '../utils/logger';
 

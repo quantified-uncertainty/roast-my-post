@@ -6,10 +6,10 @@
  * Returns domain entities with minimal dependencies.
  */
 
-import { prisma as defaultPrisma } from '../cli-client';
+import { prisma as defaultPrisma } from '../client';
 import { JobStatus } from '../types';
 import type { Job } from '../types';
-import type { PrismaClient } from '../cli-client';
+import type { PrismaClient } from '../client';
 import { generateId } from '../utils/generateId';
 
 // Domain types defined in this package to avoid circular dependencies

@@ -6,29 +6,33 @@
 export const toolMetadata = {
   'check-math': {
     buttonText: 'Check Statement',
-    exampleButtonType: 'numbered' as const, // "Example 1", "Example 2", etc.
-    exampleIndex: 1, // Use middle example
+    exampleButtonType: 'descriptive' as const,
+    exampleIndex: 1,
+    exampleText: 'Multiplication',
   },
   'check-math-hybrid': {
     buttonText: 'Check Statement',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
-    exampleText: 'Find the slope of the line through points',
+    exampleText: 'Unit Conversion',
   },
   'check-math-with-mathjs': {
     buttonText: 'Verify Statement',
-    exampleButtonType: 'numbered' as const,
+    exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
+    exampleText: 'Unit Math',
   },
   'check-spelling-grammar': {
     buttonText: 'Check Text',
-    exampleButtonType: 'numbered' as const,
+    exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
+    exampleText: 'Subject-Verb Agreement',
   },
   'fact-checker': {
     buttonText: 'Check Facts',
-    exampleButtonType: 'numbered' as const,
+    exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
+    exampleText: 'False Statement',
   },
   'extract-factual-claims': {
     buttonText: 'Extract Claims',
@@ -76,8 +80,9 @@ export const toolMetadata = {
   },
   'forecaster': {
     buttonText: 'Generate Forecast',
-    exampleButtonType: 'numbered' as const,
+    exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
+    exampleText: 'Economic Prediction',
   }
 } as const;
 

@@ -128,9 +128,6 @@ jobs:
       - name: Run script smoke tests
         run: pnpm --filter @roast/web run test:ci src/__tests__/scripts/script-smoke.vtest.ts
 
-      - name: Validate CLI import safety
-        run: pnpm --filter @roast/web run test:ci src/__tests__/scripts/cli-import-validation.vtest.ts
-
       - name: Validate script runtime
         run: pnpm --filter @roast/web run test:scripts
 

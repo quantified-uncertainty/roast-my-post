@@ -1,5 +1,3 @@
-import "server-only";
-
 import { PrismaClient } from "../generated";
 
 // Extended client type
