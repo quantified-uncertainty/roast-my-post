@@ -53,7 +53,7 @@ const OPTIONAL_FIELDS = [
 ];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 
-export default function NewAgentClient() {
+export default function CreateAgentForm() {
   const router = useRouter();
   const [mode, setMode] = useState<"form" | "yaml">("form");
   const [yamlText, setYamlText] = useState("");

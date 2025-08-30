@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
-import NewAgentClient from "./NewAgentClient";
+import CreateAgentForm from "./CreateAgentForm";
 
 export default async function NewAgentPage() {
   const session = await auth();
@@ -9,5 +9,5 @@ export default async function NewAgentPage() {
     redirect("/api/auth/signin");
   }
 
-  return <NewAgentClient />;
+  return <CreateAgentForm />;
 }

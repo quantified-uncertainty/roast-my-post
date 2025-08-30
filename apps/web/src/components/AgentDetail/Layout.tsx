@@ -91,14 +91,36 @@ export function AgentDetailLayout({
 
   const activeTab = getActiveTab();
 
+  // Determine container styling based on active tab
+  // Using full class strings so Tailwind can detect them
+  const isWideView = activeTab === "jobs" || activeTab === "evals" || activeTab === "versions";
+  const containerClassName = isWideView
+    ? "w-full px-4 py-8 sm:px-6 lg:px-8"
+    : "mx-auto max-w-6xl p-8";
+
+  // Tab link component to reduce repetition
+  const TabLink = ({ href, tabName, icon, label }: { 
+    href: string; 
+    tabName: string; 
+    icon: React.ReactNode; 
+    label: string;
+  }) => {
+    const isActive = activeTab === tabName;
+    // Using full class strings for Tailwind to detect
+    const linkClassName = isActive
+      ? "inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium border-blue-500 text-blue-600"
+      : "inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700";
+    
+    return (
+      <Link href={href} className={linkClassName}>
+        {icon}
+        {label}
+      </Link>
+    );
+  };
+
   return (
-    <div
-      className={
-        activeTab === "jobs" || activeTab === "evals" || activeTab === "versions"
-          ? "w-full px-4 py-8 sm:px-6 lg:px-8"
-          : "mx-auto max-w-6xl p-8"
-      }
-    >
+    <div className={containerClassName}>
       {/* Success Notification */}
       {copySuccess && (
         <div className="fixed right-4 top-4 z-50 rounded-md bg-green-50 p-4 shadow-lg">
@@ -223,50 +245,30 @@ export function AgentDetailLayout({
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
-          <Link
+          <TabLink
             href={`/agents/${agent.id}`}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "overview"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <User className="mr-2 h-5 w-5" />
-            Overview
-          </Link>
-          <Link
+            tabName="overview"
+            icon={<User className="mr-2 h-5 w-5" />}
+            label="Overview"
+          />
+          <TabLink
             href={`/agents/${agent.id}/details`}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "details"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <FileText className="mr-2 h-5 w-5" />
-            Details
-          </Link>
-          <Link
+            tabName="details"
+            icon={<FileText className="mr-2 h-5 w-5" />}
+            label="Details"
+          />
+          <TabLink
             href={`/agents/${agent.id}/versions`}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "versions"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <Clock className="mr-2 h-5 w-5" />
-            Versions
-          </Link>
-          <Link
+            tabName="versions"
+            icon={<Clock className="mr-2 h-5 w-5" />}
+            label="Versions"
+          />
+          <TabLink
             href={`/agents/${agent.id}/evals`}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "evals"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <BarChart3 className="mr-2 h-5 w-5" />
-            Evals
-          </Link>
+            tabName="evals"
+            icon={<BarChart3 className="mr-2 h-5 w-5" />}
+            label="Evals"
+          />
           {(isOwner || isAdmin) && (
             <Link
               href={`/agents/${agent.id}/jobs`}
@@ -307,17 +309,12 @@ export function AgentDetailLayout({
             </>
           )}
           {(isOwner || isAdmin) && (
-            <Link
+            <TabLink
               href={`/agents/${agent.id}/export`}
-              className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-                activeTab === "export"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              <FileDown className="mr-2 h-5 w-5" />
-              Export
-            </Link>
+              tabName="export"
+              icon={<FileDown className="mr-2 h-5 w-5" />}
+              label="Export"
+            />
           )}
         </nav>
       </div>
