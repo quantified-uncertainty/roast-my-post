@@ -20,6 +20,7 @@ import { createDocument } from "./actions";
 import { importDocument } from "../import/actions";
 import { type DocumentInput, documentSchema, CONTENT_MIN_CHARS, CONTENT_MAX_WORDS } from "./schema";
 import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
+import { useContentValidation } from "./hooks/useContentValidation";
 
 interface FormFieldConfig {
   name: keyof DocumentInput;
@@ -97,16 +98,9 @@ export default function NewDocumentClient() {
     watch,
   } = methods;
   
-  // Watch content field for real-time character/word count
+  // Watch content field for real-time validation
   const content = watch("content");
-  
-  // Calculate character and word counts
-  const charCount = content?.length || 0;
-  const wordCount = content?.trim() ? content.trim().split(/\s+/).length : 0;
-  
-  // Validation states
-  const hasMinChars = charCount >= CONTENT_MIN_CHARS;
-  const hasMaxWords = wordCount <= CONTENT_MAX_WORDS;
+  const { charCount, wordCount, hasMinChars, hasMaxWords } = useContentValidation(content);
 
   // Fetch available agents
   useEffect(() => {

@@ -12,7 +12,8 @@ export const documentSchema = z.object({
     .min(CONTENT_MIN_CHARS, `Content must be at least ${CONTENT_MIN_CHARS} characters`)
     .refine((content) => {
       // Count words (split by whitespace)
-      const wordCount = content.trim().split(/\s+/).length;
+      const trimmed = content.trim();
+      const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
       return wordCount <= CONTENT_MAX_WORDS;
     }, `Content must not exceed ${CONTENT_MAX_WORDS.toLocaleString()} words`),
   urls: z.string().optional(),
