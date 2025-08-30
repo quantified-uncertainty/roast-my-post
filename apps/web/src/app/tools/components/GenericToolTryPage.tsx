@@ -1,37 +1,21 @@
 'use client';
 
 import { useState, FormEvent, ReactNode } from 'react';
-import { toolSchemas, getToolReadme } from '@roast/ai';
-import { TabbedToolPageLayout } from './TabbedToolPageLayout';
-import { ToolDocumentation } from './ToolDocumentation';
+import { toolSchemas } from '@roast/ai';
+import { ToolPageLayout } from './ToolPageLayout';
 import { ErrorDisplay, SubmitButton, TextAreaField } from './common';
 import { useToolExecution } from '../hooks/useToolExecution';
+import { AuthenticatedToolPage } from './AuthenticatedToolPage';
+import { FieldConfig } from './types';
 
-export interface FieldConfig {
-  type: 'text' | 'textarea' | 'select' | 'number' | 'checkbox';
-  name: string;
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-  rows?: number;
-  min?: number;
-  max?: number;
-  step?: number;
-  options?: Array<{ value: string; label: string }>;
-  defaultValue?: string | number | boolean;
-  helperText?: string;
-  examples?: string[];
-  className?: string;
-}
-
-export interface GenericToolPageProps<TInput = Record<string, any>, TOutput = unknown> {
+export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput = unknown> {
   toolId: keyof typeof toolSchemas;
   title: string;
   description: string;
   icon: ReactNode;
   fields: FieldConfig[];
   renderResult: (result: TOutput) => ReactNode;
-  exampleInputs?: Array<{ label: string; value: Partial<TInput> }>; // Multiple examples with labels
+  exampleInputs?: Array<{ label: string; value: Partial<TInput> }>;
   submitButtonText?: string;
   loadingText?: string;
   submitButtonClassName?: string;
@@ -43,27 +27,10 @@ export interface GenericToolPageProps<TInput = Record<string, any>, TOutput = un
 }
 
 /**
- * Generic tool page component for simple tools that follow a standard pattern
- * 
- * @example
- * ```tsx
- * export default function MyToolPage() {
- *   return (
- *     <GenericToolPage<MyInput, MyOutput>
- *       toolId="my-tool"
- *       title="My Tool"
- *       description="Tool description"
- *       icon={<Icon />}
- *       fields={[
- *         { type: 'textarea', name: 'text', label: 'Input Text', required: true }
- *       ]}
- *       renderResult={(result) => <MyResultComponent result={result} />}
- *     />
- *   );
- * }
- * ```
+ * Generic try page for tools
+ * Requires authentication to use
  */
-export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
+export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>({
   toolId,
   title,
   description,
@@ -79,10 +46,7 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
   onExecuteComplete,
   onBeforeSubmit,
   warning
-}: GenericToolPageProps<TInput, TOutput>) {
-  // Get schemas from centralized registry
-  const { inputSchema, outputSchema } = toolSchemas[toolId];
-  
+}: GenericToolTryPageProps<TInput, TOutput>) {
   // Initialize form state
   const getInitialValues = (): TInput => {
     const values: Record<string, string | number | boolean> = {};
@@ -124,7 +88,6 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
       if (field.required) {
         const value = formData[field.name];
         if (field.type === 'checkbox') {
-          // Checkbox doesn't need validation
           continue;
         } else if (!value || (typeof value === 'string' && !value.trim())) {
           return false;
@@ -273,72 +236,73 @@ export function GenericToolPage<TInput extends Record<string, any>, TOutput>({
     }
   };
   
-  // Try tab content
-  const tryContent = (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
-        {fields.map(renderField)}
-        
-        {/* Multiple examples with labels */}
-        {exampleInputs && exampleInputs.length > 0 && (
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Load example:</p>
-            <div className="flex flex-wrap gap-2">
-              {exampleInputs.map((example, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => loadExample(example.value)}
-                  disabled={isLoading}
-                  className="px-3 py-1 text-sm bg-gray-50 hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded border text-gray-700 transition-colors"
-                >
-                  {example.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        <SubmitButton
-          isLoading={isLoading}
-          disabled={!isFormValid()}
-          text={submitButtonText}
-          loadingText={loadingText}
-          className={submitButtonClassName}
-        />
-      </form>
-      
-      <ErrorDisplay error={error} />
-      
-      {result && (
-        <div className="mt-8" data-testid="tool-result">
-          {renderResult(result)}
-        </div>
-      )}
-    </div>
-  );
-  
-  // README content from generated file
-  const readmeContent = getToolReadme(toolId as string);
-  
-  // Docs tab content
-  const docsContent = (
-    <ToolDocumentation
-      toolId={toolId as string}
-      inputSchema={inputSchema}
-      outputSchema={outputSchema}
-      readmeContent={readmeContent}
-    />
-  );
-  
   return (
-    <TabbedToolPageLayout
-      title={title}
-      description={description}
-      icon={icon}
-      tryContent={tryContent}
-      docsContent={docsContent}
-      warning={warning}
-    />
+    <AuthenticatedToolPage toolName={title}>
+      <ToolPageLayout
+        title={title}
+        description={description}
+        icon={icon}
+        warning={warning}
+        toolId={toolId as string}
+      >
+        <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
+            {fields.map(renderField)}
+            
+            {/* Multiple examples with labels */}
+            {exampleInputs && exampleInputs.length > 0 && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium text-gray-700 mb-3">Load an example:</p>
+                <div className="space-y-2">
+                  {exampleInputs.map((example, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => loadExample(example.value)}
+                      disabled={isLoading}
+                      className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed rounded-lg border border-gray-200 transition-colors group"
+                      title={`Fills: ${Object.keys(example.value).join(', ')}`}
+                    >
+                      <div className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {example.label}
+                      </div>
+                      {(example as any).hint && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          {(example as any).hint}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1">
+                        <span>Fills:</span>
+                        {Object.keys(example.value).map((field, idx) => (
+                          <span key={field} className="bg-gray-200 px-1 rounded">
+                            {field}{idx < Object.keys(example.value).length - 1 ? ',' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <SubmitButton
+              isLoading={isLoading}
+              disabled={!isFormValid()}
+              text={submitButtonText}
+              loadingText={loadingText}
+              className={submitButtonClassName}
+            />
+          </form>
+          
+          <ErrorDisplay error={error} />
+          
+          {result && (
+            <div className="mt-8" data-testid="tool-result">
+              {renderResult(result)}
+            </div>
+          )}
+        </div>
+      </ToolPageLayout>
+    </AuthenticatedToolPage>
   );
 }

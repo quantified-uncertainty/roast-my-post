@@ -1,28 +1,31 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-interface TabbedToolPageLayoutProps {
+interface ToolPageLayoutProps {
   title: string;
   description: string;
   icon: ReactNode;
   warning?: string;
-  tryContent: ReactNode;
-  docsContent: ReactNode;
+  children: ReactNode;
+  toolId: string;
 }
 
-export function TabbedToolPageLayout({
+export function ToolPageLayout({
   title,
   description,
   icon,
   warning,
-  tryContent,
-  docsContent,
-}: TabbedToolPageLayoutProps) {
-  const [activeTab, setActiveTab] = useState<'try' | 'docs'>('try');
-
+  children,
+  toolId,
+}: ToolPageLayoutProps) {
+  const pathname = usePathname();
+  const isDocsPage = pathname.endsWith('/docs');
+  const isTryPage = pathname.endsWith('/try');
+  
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
@@ -47,35 +50,32 @@ export function TabbedToolPageLayout({
       <div className="mb-6">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('try')}
+            <Link
+              href={`/tools/${toolId}/docs`}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'try'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Try
-            </button>
-            <button
-              onClick={() => setActiveTab('docs')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'docs'
+                isDocsPage
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Documentation
-            </button>
+            </Link>
+            <Link
+              href={`/tools/${toolId}/try`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                isTryPage
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Try It
+            </Link>
           </nav>
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="tab-content">
-        {activeTab === 'try' && <div className="try-tab">{tryContent}</div>}
-        {activeTab === 'docs' && <div className="docs-tab">{docsContent}</div>}
-      </div>
+      {/* Content */}
+      {children}
     </div>
   );
 }
