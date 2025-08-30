@@ -1,33 +1,69 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/infrastructure/auth/auth";
-import { getServices } from "@/application/services/ServiceFactory";
+"use client";
 
-export default async function AgentTestPage({
-  params,
-}: {
-  params: Promise<{ agentId: string }>;
-}) {
-  const resolvedParams = await params;
-  const session = await auth();
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { TestTab } from "@/components/AgentDetail/tabs";
+import type { Agent } from "@roast/ai";
 
-  const { agentService } = getServices();
-  const result = await agentService.getAgentWithOwner(
-    resolvedParams.agentId,
-    session?.user?.id
-  );
-  
-  const agent = result.unwrap();
-  
+export default function TestPage() {
+  const router = useRouter();
+  const [agent, setAgent] = useState<Agent | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testSuccess, setTestSuccess] = useState<string | null>(null);
+
+  // Get agent ID from URL
+  const agentId = window.location.pathname.split('/')[2];
+
+  useEffect(() => {
+    const fetchAgent = async () => {
+      try {
+        const response = await fetch(`/api/agents/${agentId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setAgent(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch agent:", error);
+      }
+    };
+
+    if (agentId) {
+      fetchAgent();
+    }
+  }, [agentId]);
+
+  const setActiveTab = (tab: string) => {
+    router.push(`/agents/${agentId}/${tab}`);
+  };
+
+  const setBatches = () => {
+    // This would normally update batches state
+    console.log("setBatches called");
+  };
+
+  const fetchBatches = () => {
+    // This would fetch batches
+    console.log("fetchBatches called");
+  };
+
   if (!agent) {
-    redirect(`/agents/${resolvedParams.agentId}`);
-  }
-  
-  const isOwner = agent.isOwner || false;
-
-  // Redirect if not owner
-  if (!isOwner) {
-    redirect(`/agents/${resolvedParams.agentId}`);
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-lg text-gray-600">Loading agent data...</div>
+      </div>
+    );
   }
 
-  return <div>Test page - needs implementation</div>;
+  return (
+    <TestTab
+      agent={agent}
+      testLoading={testLoading}
+      testSuccess={testSuccess}
+      setTestLoading={setTestLoading}
+      setTestSuccess={setTestSuccess}
+      setActiveTab={setActiveTab}
+      setBatches={setBatches}
+      fetchBatches={fetchBatches}
+    />
+  );
 }

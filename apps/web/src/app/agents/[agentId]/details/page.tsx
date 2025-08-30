@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { getServices } from "@/application/services/ServiceFactory";
 import { auth } from "@/infrastructure/auth/auth";
+import { getServices } from "@/application/services/ServiceFactory";
 import { DetailsTab } from "@/components/AgentDetail/tabs";
 
-export default async function AgentDetailsPage({
+export default async function DetailsPage({
   params,
 }: {
   params: Promise<{ agentId: string }>;
@@ -17,8 +17,11 @@ export default async function AgentDetailsPage({
     session?.user?.id
   );
   
-  const agent = result.unwrap();
+  if (result.isError()) {
+    return notFound();
+  }
 
+  const agent = result.unwrap();
   if (!agent) {
     return notFound();
   }

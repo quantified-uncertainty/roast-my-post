@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { JobsTab } from "@/components/AgentDetail/tabs";
 import type { Agent } from "@roast/ai";
 import type { Job, BatchSummary } from "@/components/AgentDetail/types";
 
 export default function JobsPage() {
+  const params = useParams();
+  const agentId = params.agentId as string;
+  
   const [agent, setAgent] = useState<Agent | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string | null>(null);
   const [batches, setBatches] = useState<BatchSummary[]>([]);
-
-  // Get agent ID from URL
-  const agentId = window.location.pathname.split('/')[2];
 
   useEffect(() => {
     const fetchData = async () => {

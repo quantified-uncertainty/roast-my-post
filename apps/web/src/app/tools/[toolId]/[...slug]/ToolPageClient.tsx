@@ -226,6 +226,11 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           min: 1,
           placeholder: 'Optional line number hint',
         },
+        // Note: The options.* fields need nested object support
+        // For now, exclude the nested options until we add proper nested field support
+        // 'options.normalizeQuotes': { type: 'checkbox', defaultValue: false },
+        // 'options.partialMatch': { type: 'checkbox', defaultValue: false },
+        // 'options.useLLMFallback': { type: 'checkbox', defaultValue: false },
       },
       'fact-checker': {
         'claim': {

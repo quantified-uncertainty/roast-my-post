@@ -1,8 +1,4 @@
-import { notFound } from "next/navigation";
-
-import AgentDetail from "@/components/AgentDetail";
-import { auth } from "@/infrastructure/auth/auth";
-import { getServices } from "@/application/services/ServiceFactory";
+import { redirect } from "next/navigation";
 
 export default async function AgentPage({
   params,
@@ -10,21 +6,7 @@ export default async function AgentPage({
   params: Promise<{ agentId: string }>;
 }) {
   const resolvedParams = await params;
-  const session = await auth();
-
-  const { agentService } = getServices();
-  const result = await agentService.getAgentWithOwner(
-    resolvedParams.agentId,
-    session?.user?.id
-  );
   
-  if (result.isError()) {
-    return notFound();
-  }
-
-  const agent = result.unwrap();
-  if (!agent) {
-    return notFound();
-  }
-  return <AgentDetail agent={agent} isOwner={agent.isOwner} />;
+  // Redirect to the overview tab by default
+  redirect(`/agents/${resolvedParams.agentId}/overview`);
 }

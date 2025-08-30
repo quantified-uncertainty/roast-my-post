@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
 
 interface ToolRedirectPageProps {
-  params: {
+  params: Promise<{
     toolId: string;
-  };
+  }>;
 }
 
-export default function ToolRedirectPage({ params }: ToolRedirectPageProps) {
+export default async function ToolRedirectPage({ params }: ToolRedirectPageProps) {
+  const { toolId } = await params;
   // Redirect to the docs page by default
-  redirect(`/tools/${params.toolId}/docs`);
+  redirect(`/tools/${toolId}/docs`);
 }

@@ -86,7 +86,7 @@ export function AgentDetailLayout({
   return (
     <div
       className={
-        activeTab === "jobs" || activeTab === "evals"
+        activeTab === "jobs" || activeTab === "evals" || activeTab === "versions"
           ? "w-full px-4 py-8 sm:px-6 lg:px-8"
           : "mx-auto max-w-6xl p-8"
       }

@@ -1,13 +1,11 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { getServices } from "@/application/services/ServiceFactory";
-import { AgentDetailLayout } from "@/components/AgentDetail/AgentDetailLayout";
+import { OverviewTab } from "@/components/AgentDetail/tabs";
 
-export default async function AgentLayout({
-  children,
+export default async function OverviewPage({
   params,
 }: {
-  children: React.ReactNode;
   params: Promise<{ agentId: string }>;
 }) {
   const resolvedParams = await params;
@@ -28,12 +26,15 @@ export default async function AgentLayout({
     return notFound();
   }
 
-  const isAdmin = session?.user?.role === "ADMIN";
-  const isOwner = agent.isOwner;
+  // For now, we'll pass null for overview stats since we don't have that endpoint yet
+  const overviewStats = null;
+  const overviewLoading = false;
 
   return (
-    <AgentDetailLayout agent={agent} isOwner={isOwner} isAdmin={isAdmin}>
-      {children}
-    </AgentDetailLayout>
+    <OverviewTab
+      agent={agent}
+      overviewStats={overviewStats}
+      overviewLoading={overviewLoading}
+    />
   );
 }
