@@ -1,16 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
-
-import { Button } from "@/components/Button";
+import { formatDistanceToNow } from "date-fns";
 import type { Agent, AgentVersion } from "@roast/ai";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 interface AgentVersionsClientProps {
   agent: Agent;
@@ -21,7 +17,7 @@ interface AgentVersionsClientProps {
 export default function AgentVersionsClient({
   agent,
   versions,
-  isOwner: _isOwner, // Prefix with underscore to indicate it's intentionally unused
+  isOwner: _isOwner,
 }: AgentVersionsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -81,19 +77,7 @@ export default function AgentVersionsClient({
   );
 
   return (
-    <div className="w-full py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href={`/agents/${agent.id}`}>
-            <Button variant="secondary" className="flex items-center gap-2">
-              <ArrowLeftIcon className="h-4 w-4" />
-              Back to Agent
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">Version History: {agent.name}</h1>
-        </div>
-      </div>
-
+    <div className="w-full">
       {versions.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <h3 className="mb-2 text-lg font-medium">No versions found</h3>
@@ -105,40 +89,46 @@ export default function AgentVersionsClient({
         <div className="grid grid-cols-12 gap-6">
           {/* Left column - Versions list (5 columns) */}
           <div className="col-span-5">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
-              <h2 className="text-lg font-medium">
-                Versions ({versions.length})
-              </h2>
-            </div>
-            <div>
-              {versions.map((version, idx) => (
-                <div
-                  key={version.id}
-                  className={`cursor-pointer px-3 py-2 text-sm ${
-                    selectedVersionId === version.id
-                      ? "bg-blue-50"
-                      : "bg-transparent"
-                  } ${idx !== versions.length - 1 ? "border-b border-gray-200" : ""}`}
-                  onClick={() => handleVersionSelect(version.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        Version {version.version}
-                        {idx === 0 && " (Latest)"}
-                      </div>
-                      <div className="mt-1 text-xs text-gray-500">
-                        Created: {formatDate(version.createdAt)}
+            <div className="rounded-t-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <h2 className="text-lg font-medium">
+                  Versions ({versions.length})
+                </h2>
+              </div>
+              <div className="max-h-[600px] overflow-y-auto">
+                {versions.map((version, idx) => (
+                  <div
+                    key={version.id}
+                    className={`cursor-pointer px-4 py-3 transition-colors hover:bg-gray-50 ${
+                      selectedVersionId === version.id
+                        ? "bg-blue-50 border-l-4 border-blue-500"
+                        : "bg-white"
+                    } ${idx !== versions.length - 1 ? "border-b border-gray-200" : ""}`}
+                    onClick={() => handleVersionSelect(version.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          Version {version.version}
+                          {version.version.toString() === agent.version && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {formatDistanceToNow(new Date(version.createdAt), { addSuffix: true })}
+                        </div>
                       </div>
                     </div>
+                    <div className="mt-2">
+                      <p className="line-clamp-2 text-sm text-gray-600">
+                        {version.name}
+                      </p>
+                    </div>
                   </div>
-                  <div className="mt-1">
-                    <p className="line-clamp-2 text-xs text-gray-600">
-                      {version.description.substring(0, 150)}...
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
@@ -147,57 +137,54 @@ export default function AgentVersionsClient({
             {selectedVersion ? (
               <div>
                 <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-                  <div className="mb-4">
-                    <h2 className="text-lg font-medium">Version Details</h2>
-                    <div className="mt-2 flex flex-wrap gap-x-8 gap-y-2 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">Version:</span>{" "}
-                        {selectedVersion.version}
-                      </div>
-                      <div>
-                        <span className="font-medium">Name:</span>{" "}
-                        {selectedVersion.name}
-                      </div>
-                      <div>
-                        <span className="font-medium">Created:</span>{" "}
-                        {formatDate(selectedVersion.createdAt)}
-                      </div>
-                      <div>
-                        <span className="font-medium">Updated:</span>{" "}
-                        {formatDate(selectedVersion.updatedAt)}
-                      </div>
+                  <h2 className="text-lg font-medium">Version Details</h2>
+                  <div className="mt-2 grid grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Version:</span>{" "}
+                      {selectedVersion.version}
+                    </div>
+                    <div>
+                      <span className="font-medium">Created:</span>{" "}
+                      {formatDate(selectedVersion.createdAt)}
+                    </div>
+                    <div>
+                      <span className="font-medium">Name:</span>{" "}
+                      {selectedVersion.name}
+                    </div>
+                    <div>
+                      <span className="font-medium">Provides Grades:</span>{" "}
+                      {selectedVersion.providesGrades ? "Yes" : "No"}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6">
+                <div className="max-h-[500px] overflow-y-auto p-6">
                   <div className="space-y-6">
-                    <div>
-                      <h3 className="mb-2 text-lg font-medium text-gray-900">
-                        Description
-                      </h3>
-                      <div className="prose max-w-none">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
-                        >
-                          {selectedVersion.description}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-
-                    {selectedVersion.primaryInstructions && (
+                    {selectedVersion.description && (
                       <div>
                         <h3 className="mb-2 text-lg font-medium text-gray-900">
-                          Instructions
+                          Description
                         </h3>
-                        <div className="prose max-w-none">
+                        <div className="prose max-w-none text-sm">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeRaw]}
                           >
-                            {selectedVersion.primaryInstructions}
+                            {selectedVersion.description}
                           </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedVersion.primaryInstructions && (
+                      <div>
+                        <h3 className="mb-2 text-lg font-medium text-gray-900">
+                          Primary Instructions
+                        </h3>
+                        <div className="rounded-md bg-gray-50 p-4">
+                          <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                            {selectedVersion.primaryInstructions}
+                          </pre>
                         </div>
                       </div>
                     )}
@@ -207,12 +194,25 @@ export default function AgentVersionsClient({
                         <h3 className="mb-2 text-lg font-medium text-gray-900">
                           Self-Critique Instructions
                         </h3>
-                        <div className="prose max-w-none">
+                        <div className="rounded-md bg-gray-50 p-4">
+                          <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                            {selectedVersion.selfCritiqueInstructions}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedVersion.readme && (
+                      <div>
+                        <h3 className="mb-2 text-lg font-medium text-gray-900">
+                          README
+                        </h3>
+                        <div className="prose max-w-none text-sm">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeRaw]}
                           >
-                            {selectedVersion.selfCritiqueInstructions}
+                            {selectedVersion.readme}
                           </ReactMarkdown>
                         </div>
                       </div>

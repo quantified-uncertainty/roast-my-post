@@ -69,6 +69,7 @@ export default defineConfig({
       // Mock paths
       { find: 'server-only', replacement: path.resolve(__dirname, './src/__mocks__/server-only.js') },
       { find: 'next-auth', replacement: path.resolve(__dirname, './src/__mocks__/next-auth.js') },
+      { find: 'next-auth/react', replacement: path.resolve(__dirname, './src/__mocks__/next-auth/react.js') },
       { find: 'next-auth/providers/resend', replacement: path.resolve(__dirname, './src/__mocks__/next-auth/providers/resend.js') },
       { find: '@auth/prisma-adapter', replacement: path.resolve(__dirname, './src/__mocks__/@auth/prisma-adapter.js') },
       { find: 'next/font/google', replacement: path.resolve(__dirname, './src/__mocks__/next/font/google.js') },

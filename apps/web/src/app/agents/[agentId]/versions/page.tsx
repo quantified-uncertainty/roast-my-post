@@ -1,51 +1,43 @@
 import { notFound } from "next/navigation";
-
 import { auth } from "@/infrastructure/auth/auth";
 import { getServices } from "@/application/services/ServiceFactory";
-
 import AgentVersionsClient from "./AgentVersionsClient";
 
-export default async function AgentVersionsPage({
+export default async function VersionsPage({
   params,
 }: {
   params: Promise<{ agentId: string }>;
 }) {
   const resolvedParams = await params;
   const session = await auth();
-  if (!session?.user) {
-    return notFound();
-  }
 
   const { agentService } = getServices();
-  
-  const agentResult = await agentService.getAgentWithOwner(
+  const result = await agentService.getAgentWithOwner(
     resolvedParams.agentId,
-    session.user.id
+    session?.user?.id
   );
-
-  if (agentResult.isError()) {
+  
+  if (result.isError()) {
     return notFound();
   }
 
-  const agent = agentResult.unwrap();
+  const agent = result.unwrap();
   if (!agent) {
     return notFound();
   }
 
-  // Get agent versions
+  // Fetch all versions of the agent using the service
   const versionsResult = await agentService.getAgentVersions(resolvedParams.agentId);
-  
-  if (versionsResult.isError()) {
-    return notFound();
-  }
+  const versions = versionsResult.isOk() ? versionsResult.unwrap() : [];
+  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
 
-  const versions = versionsResult.unwrap();
+  const isOwner = agent.isOwner || false;
 
   return (
-    <AgentVersionsClient
-      agent={agent}
-      versions={versions}
-      isOwner={agent.isOwner}
+    <AgentVersionsClient 
+      agent={agent} 
+      versions={sortedVersions} 
+      isOwner={isOwner}
     />
   );
 }

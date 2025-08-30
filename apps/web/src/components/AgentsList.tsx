@@ -8,10 +8,11 @@ import { AgentBadges } from "./AgentBadges";
 
 interface AgentsListProps {
   agents: Agent[];
+  showNewAgentButton?: boolean;
 }
 
 
-export default function AgentsList({ agents }: AgentsListProps) {
+export default function AgentsList({ agents, showNewAgentButton = false }: AgentsListProps) {
 
   return (
     <div className="mx-auto max-w-6xl p-8">
@@ -21,6 +22,17 @@ export default function AgentsList({ agents }: AgentsListProps) {
       </h1>
       <p className="mb-8 text-gray-600">
         Select an agent to explore its capabilities and usage details.
+        {showNewAgentButton && (
+          <>
+            {" "}
+            <Link
+              href="/agents/new"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              Make a new agent
+            </Link>
+          </>
+        )}
       </p>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

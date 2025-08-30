@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Play } from "lucide-react";
 import { logger } from "@/infrastructure/logging/logger";

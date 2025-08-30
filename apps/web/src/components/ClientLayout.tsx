@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, FileText, Users, TrendingUp, Wrench, Home } from "lucide-react";
+import { Bot, FileText, Users, Wrench, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -50,13 +50,6 @@ export default function ClientLayout({
               >
                 <Users className="h-5 w-5" />
                 Users
-              </Link>
-              <Link
-                href="/self-ranking"
-                className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
-              >
-                <TrendingUp className="h-5 w-5" />
-                Self-Ranking
               </Link>
               <Link
                 href="/tools"

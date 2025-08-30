@@ -59,8 +59,8 @@ export default function ToolsIndexPage() {
               
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {categoryTools.map(tool => {
-                  // Derive the tool path from the ID - don't rely on config
-                  const toolPath = `/tools/${tool.id}`;
+                  // Link to docs page by default
+                  const toolPath = `/tools/${tool.id}/docs`;
                   const toolStatus = (tool.status as keyof typeof statusColors) || 'experimental';
                   
                   return (

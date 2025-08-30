@@ -75,3 +75,17 @@ export function serializeEvaluationVersion(evalVersion: any) {
     updatedAt: evalVersion.updatedAt ? (evalVersion.updatedAt instanceof Date ? evalVersion.updatedAt.toISOString() : evalVersion.updatedAt) : null,
   };
 }
+
+/**
+ * Serialize evaluation data for client components (handles Decimal conversion and dates)
+ */
+export function serializeEvaluationForClient(evaluation: any) {
+  return {
+    ...evaluation,
+    createdAt: evaluation.createdAt ? (evaluation.createdAt instanceof Date ? evaluation.createdAt.toISOString() : String(evaluation.createdAt)) : null,
+    jobCreatedAt: evaluation.jobCreatedAt ? (evaluation.jobCreatedAt instanceof Date ? evaluation.jobCreatedAt.toISOString() : String(evaluation.jobCreatedAt)) : undefined,
+    jobCompletedAt: evaluation.jobCompletedAt ? (evaluation.jobCompletedAt instanceof Date ? evaluation.jobCompletedAt.toISOString() : String(evaluation.jobCompletedAt)) : undefined,
+    priceInDollars: decimalToNumber(evaluation.priceInDollars),
+    job: evaluation.job ? serializeJobNumeric(evaluation.job) : undefined,
+  };
+}

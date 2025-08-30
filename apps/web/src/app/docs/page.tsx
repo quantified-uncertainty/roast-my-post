@@ -4,6 +4,7 @@ import DocumentsResults from "./DocumentsResults";
 import { DocumentModel } from "@/models/Document";
 import { PageLayout } from "@/components/PageLayout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { auth } from "@/infrastructure/auth/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ export default async function DocumentsPage({
   searchParams,
 }: DocumentsPageProps) {
   const searchQuery = (await searchParams).search || "";
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
 
   // Get documents for listing view
   const documents = await DocumentModel.getDocumentListings({
@@ -29,7 +32,7 @@ export default async function DocumentsPage({
 
   return (
     <>
-      <SearchBar searchQuery={searchQuery} showNewButton={true} />
+      <SearchBar searchQuery={searchQuery} showNewButton={isLoggedIn} />
 
       <Suspense
         fallback={

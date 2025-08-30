@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-
-import AgentDetail from "@/components/AgentDetail";
 import { auth } from "@/infrastructure/auth/auth";
 import { getServices } from "@/application/services/ServiceFactory";
+import OverviewClient from "./overview/OverviewClient";
 
 export default async function AgentPage({
   params,
@@ -26,5 +25,6 @@ export default async function AgentPage({
   if (!agent) {
     return notFound();
   }
-  return <AgentDetail agent={agent} isOwner={agent.isOwner} />;
+
+  return <OverviewClient agent={agent} agentId={resolvedParams.agentId} />;
 }

@@ -143,7 +143,7 @@ class DocumentTransformer {
       description: comment.description,
       importance: comment.importance,
       grade: comment.grade,
-      highlight: {
+      highlight: comment.highlight ? {
         id: comment.highlight.id,
         startOffset: comment.highlight.startOffset,
         endOffset: comment.highlight.endOffset,
@@ -151,7 +151,7 @@ class DocumentTransformer {
         isValid: comment.highlight.isValid,
         prefix: comment.highlight.prefix,
         error: comment.highlight.error,
-      },
+      } : null,
       header: getCommentProperty(comment, 'header', null),
       level: getCommentProperty(comment, 'level', null),
       source: getCommentProperty(comment, 'source', null),

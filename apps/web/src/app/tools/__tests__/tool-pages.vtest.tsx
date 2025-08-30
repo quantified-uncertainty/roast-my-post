@@ -1,61 +1,28 @@
 import { describe, it, expect } from 'vitest';
 /**
- * Minimal test suite for tool UI pages
- * Verifies that each tool page:
- * 1. Has a page.tsx file
- * 2. Exports a default component
+ * Test suite for tool pages structure
+ * Verifies that the dynamic routing system works properly
  */
 
-describe('Tool UI Pages', () => {
-  // Get tool IDs from centralized registry, falling back to static list for test environments
-  let toolsWithUI: string[];
-  
-  try {
-    // Try to import from centralized registry
-    const { allTools } = require('@roast/ai');
-    const toolsWithoutUI = ['forecaster'] as const; // 'forecaster' only has API, no UI page
-    const toolsWithComplexImports = ['link-validator'] as const; // Skip due to test environment issues
-    
-    toolsWithUI = Object.keys(allTools).filter(
-      toolId => !toolsWithoutUI.includes(toolId as any) && 
-                !toolsWithComplexImports.includes(toolId as any)
-    );
-  } catch (error) {
-    // Fallback to static list for test environments where AI package imports fail
-    toolsWithUI = [
-      'check-math',
-      'check-math-hybrid', 
-      'check-math-with-mathjs',
-      'check-spelling-grammar',
-      'detect-language-convention',
-      'document-chunker',
-      'extract-factual-claims',
-      'extract-forecasting-claims',
-      'extract-math-expressions',
-      'fact-checker',
-      'forecaster',
-      'fuzzy-text-locator',
-      'perplexity-research',
-    ];
-  }
-
-  describe.each(toolsWithUI)('Tool Page: %s', (toolId) => {
-    it(`should have a page file at /tools/${toolId}/page.tsx`, async () => {
+describe('Tool Pages Structure', () => {
+  describe('Dynamic Tool Page Route', () => {
+    it('should have the dynamic tool page at [toolId]/[...slug]/page.tsx', async () => {
       try {
-        const pageModule = await import(`../${toolId}/page.tsx`);
-        expect(pageModule).toBeDefined();
+        // Try importing from the path using Node require since ES import doesn't work well with bracket notation in tests
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Check if the file exists
+        const filePath = path.join(__dirname, '../[toolId]/[...slug]/page.tsx');
+        expect(fs.existsSync(filePath)).toBe(true);
+        
+        // For the dynamic route, we can't easily test the import due to bracket notation
+        // But we can verify the file exists and contains expected content
+        const content = fs.readFileSync(filePath, 'utf-8');
+        expect(content).toContain('export default');
+        expect(content).toContain('function');
       } catch (error) {
-        throw new Error(`Page file missing for ${toolId}`);
-      }
-    });
-
-    it(`should export a default component`, async () => {
-      try {
-        const pageModule = await import(`../${toolId}/page.tsx`);
-        expect(pageModule.default).toBeDefined();
-        expect(typeof pageModule.default).toBe('function');
-      } catch (error) {
-        throw new Error(`Default export missing for ${toolId} page`);
+        throw new Error(`Dynamic tool page route missing: ${error.message}`);
       }
     });
   });
@@ -72,13 +39,53 @@ describe('Tool UI Pages', () => {
     });
   });
 
-  // Separate test for link-validator that we can skip
-  describe.skip('Tool Page: link-validator (skipped due to test environment limitations)', () => {
-    it('has a page file but cannot be tested due to complex imports', () => {
-      // The link-validator page exists and works in production
-      // but has imports that don't work in the test environment
-      // We've verified it exists at: apps/web/src/app/tools/link-validator/page.tsx
-      expect(true).toBe(true);
+  describe('Tool Components', () => {
+    it('should have GenericToolDocsPage component file', () => {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const filePath = path.join(__dirname, '../components/GenericToolDocsPage.tsx');
+      expect(fs.existsSync(filePath)).toBe(true);
+      
+      const content = fs.readFileSync(filePath, 'utf-8');
+      expect(content).toContain('export');
+      expect(content).toContain('GenericToolDocsPage');
+    });
+
+    it('should have GenericToolTryPage component file', () => {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const filePath = path.join(__dirname, '../components/GenericToolTryPage.tsx');
+      expect(fs.existsSync(filePath)).toBe(true);
+      
+      const content = fs.readFileSync(filePath, 'utf-8');
+      expect(content).toContain('export');
+      expect(content).toContain('GenericToolTryPage');
+    });
+
+    it('should have AuthenticatedToolPage component file', () => {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const filePath = path.join(__dirname, '../components/AuthenticatedToolPage.tsx');
+      expect(fs.existsSync(filePath)).toBe(true);
+      
+      const content = fs.readFileSync(filePath, 'utf-8');
+      expect(content).toContain('export');
+      expect(content).toContain('AuthenticatedToolPage');
+    });
+  });
+
+  describe('Tool Examples Configuration', () => {
+    it('should have tool examples configuration', async () => {
+      try {
+        const { toolExamples } = await import('../utils/toolExamples');
+        expect(toolExamples).toBeDefined();
+        expect(typeof toolExamples).toBe('object');
+      } catch (error) {
+        throw new Error('Tool examples configuration missing');
+      }
     });
   });
 });

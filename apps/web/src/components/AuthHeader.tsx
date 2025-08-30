@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { User, UserCircle, FlaskConical, Settings, LogOut } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,10 +84,10 @@ export default function AuthHeader() {
       ) : (
         <div className="flex items-center space-x-4">
           <Button asChild variant="ghost">
-            <Link href="/auth/signin">Log In</Link>
+            <Link href={ROUTES.AUTH.SIGNIN}>Log In</Link>
           </Button>
           <Button asChild>
-            <Link href="/signup">Sign Up</Link>
+            <Link href={ROUTES.AUTH.SIGNUP}>Sign Up</Link>
           </Button>
         </div>
       )}

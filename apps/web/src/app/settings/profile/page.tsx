@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
+import { ROUTES } from "@/constants/routes";
 
 import { ProfileForm } from "./ProfileForm";
 
@@ -10,7 +11,7 @@ export default async function ProfilePage() {
   const userId = session?.user?.id;
 
   if (!userId) {
-    redirect("/api/auth/signin");
+    redirect(ROUTES.AUTH.SIGNIN);
   }
 
   const user = await prisma.user.findUnique({
@@ -23,7 +24,7 @@ export default async function ProfilePage() {
   });
 
   if (!user) {
-    redirect("/api/auth/signin");
+    redirect(ROUTES.AUTH.SIGNIN);
   }
 
   return <ProfileForm user={user} />;

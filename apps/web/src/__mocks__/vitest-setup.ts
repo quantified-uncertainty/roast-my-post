@@ -12,6 +12,15 @@ vi.mock('next-auth', () => ({
   auth: vi.fn(),
 }));
 
+// Mock next-auth/react for client components
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(() => ({
+    data: null,
+    status: 'unauthenticated',
+  })),
+  SessionProvider: vi.fn(({ children }) => children),
+}));
+
 // Mock next-auth providers
 vi.mock('next-auth/providers/resend', () => ({
   default: vi.fn(() => ({

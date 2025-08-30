@@ -1,4 +1,4 @@
-import type { FieldConfig } from '../components/GenericToolPage';
+import type { FieldConfig } from '../components/types';
 
 /**
  * Common field configurations for tools
