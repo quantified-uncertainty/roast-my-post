@@ -72,7 +72,10 @@ export function ExportTab({
       );
 
       if (!response.ok) {
-        throw new Error(`Export failed: ${response.statusText}`);
+        if (response.status === 401) {
+          throw new Error("Authentication required. Please sign in to export evaluation data.");
+        }
+        throw new Error(`Export failed: ${response.statusText || response.status}`);
       }
 
       const yamlContent = await response.text();
@@ -84,7 +87,8 @@ export function ExportTab({
       // Reset success message after 3 seconds
       setTimeout(() => setCopySuccess(false), 3000);
     } catch (err) {
-      logger.error('Export error:', err);
+      // Log the actual error for debugging
+      logger.error('Export error:', err instanceof Error ? err.message : String(err));
       setError(err instanceof Error ? err.message : "Export failed");
     } finally {
       setIsExporting(false);
