@@ -11,6 +11,7 @@ export default async function AgentPage({
 }) {
   const resolvedParams = await params;
   const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   const { agentService } = getServices();
   const result = await agentService.getAgentWithOwner(
@@ -26,5 +27,5 @@ export default async function AgentPage({
   if (!agent) {
     return notFound();
   }
-  return <AgentDetail agent={agent} isOwner={agent.isOwner} />;
+  return <AgentDetail agent={agent} isOwner={agent.isOwner} isAdmin={isAdmin} />;
 }

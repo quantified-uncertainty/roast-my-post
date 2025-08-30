@@ -27,7 +27,6 @@ import { useAgentDetail } from "./hooks";
 import {
   BatchesTab,
   DetailsTab,
-  DocumentsTab,
   EvaluationsTab,
   ExportTab,
   JobsTab,
@@ -44,6 +43,7 @@ import {
 export default function AgentDetail({
   agent,
   isOwner = false,
+  isAdmin = false,
 }: AgentDetailProps) {
   const {
     activeTab,
@@ -277,17 +277,6 @@ export default function AgentDetail({
             Details
           </button>
           <button
-            onClick={() => setActiveTab("documents")}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "documents"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <FileText className="mr-2 h-5 w-5" />
-            Documents
-          </button>
-          <button
             onClick={() => {
               setActiveTab("evals");
               setEvalsBatchFilter(null);
@@ -301,20 +290,22 @@ export default function AgentDetail({
             <BarChart3 className="mr-2 h-5 w-5" />
             Evals
           </button>
-          <button
-            onClick={() => {
-              setActiveTab("jobs");
-              setSelectedBatchFilter(null);
-            }}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "jobs"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <Clock className="mr-2 h-5 w-5" />
-            Jobs
-          </button>
+          {(isOwner || isAdmin) && (
+            <button
+              onClick={() => {
+                setActiveTab("jobs");
+                setSelectedBatchFilter(null);
+              }}
+              className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+                activeTab === "jobs"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+              }`}
+            >
+              <Clock className="mr-2 h-5 w-5" />
+              Jobs
+            </button>
+          )}
           {isOwner && (
             <>
               <button
@@ -341,20 +332,22 @@ export default function AgentDetail({
               </button>
             </>
           )}
-          <button
-            onClick={() => {
-              setActiveTab("export");
-              setExportBatchFilter(null);
-            }}
-            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
-              activeTab === "export"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-            }`}
-          >
-            <FileDown className="mr-2 h-5 w-5" />
-            Export
-          </button>
+          {(isOwner || isAdmin) && (
+            <button
+              onClick={() => {
+                setActiveTab("export");
+                setExportBatchFilter(null);
+              }}
+              className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+                activeTab === "export"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+              }`}
+            >
+              <FileDown className="mr-2 h-5 w-5" />
+              Export
+            </button>
+          )}
         </nav>
       </div>
 
@@ -369,14 +362,6 @@ export default function AgentDetail({
         )}
 
         {activeTab === "details" && <DetailsTab agent={agent} />}
-
-        {activeTab === "documents" && (
-          <DocumentsTab
-            agent={agent}
-            documents={documents}
-            documentsLoading={documentsLoading}
-          />
-        )}
 
         {activeTab === "evals" && (
           <EvaluationsTab
@@ -396,7 +381,7 @@ export default function AgentDetail({
           />
         )}
 
-        {activeTab === "jobs" && (
+        {activeTab === "jobs" && (isOwner || isAdmin) && (
           <JobsTab
             jobs={jobs}
             jobsLoading={jobsLoading}
@@ -433,7 +418,7 @@ export default function AgentDetail({
           />
         )}
 
-        {activeTab === "export" && (
+        {activeTab === "export" && (isOwner || isAdmin) && (
           <ExportTab
             agent={agent}
             exportBatchFilter={exportBatchFilter}

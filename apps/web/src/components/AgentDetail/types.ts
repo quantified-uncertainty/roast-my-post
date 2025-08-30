@@ -3,6 +3,7 @@ import type { Agent } from "@roast/ai";
 export interface AgentDetailProps {
   agent: Agent;
   isOwner?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface AgentDocument {
