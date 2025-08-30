@@ -243,7 +243,7 @@ export function EvaluationsTab({
                 
                 {/* Use new EvaluationContent component */}
                 <EvaluationContent
-                  summary={selectedEvaluation.summary}
+                  summary={selectedEvaluation.summary ?? undefined}
                   analysis={selectedEvaluation.analysis || ""}
                   thinking={selectedEvaluation.job?.llmThinking ?? undefined}
                   selfCritique={selectedEvaluation.selfCritique ?? undefined}

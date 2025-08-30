@@ -28,7 +28,24 @@ export default async function EvalsPage({
 
   // Fetch actual evaluations from the service
   const evaluationsResult = await agentService.getAgentEvaluations(resolvedParams.agentId);
-  const evaluations = evaluationsResult.isOk() ? evaluationsResult.unwrap() : [];
+  const serviceEvaluations = evaluationsResult.isOk() ? evaluationsResult.unwrap() : [];
+  
+  // Convert service evaluations to component type (mainly Date to string and handle nulls)
+  const evaluations = serviceEvaluations.map(serviceEval => ({
+    ...serviceEval,
+    createdAt: serviceEval.createdAt instanceof Date ? serviceEval.createdAt.toISOString() : String(serviceEval.createdAt),
+    jobCreatedAt: serviceEval.jobCreatedAt instanceof Date 
+      ? serviceEval.jobCreatedAt.toISOString() 
+      : serviceEval.jobCreatedAt === null 
+        ? undefined 
+        : serviceEval.jobCreatedAt,
+    jobCompletedAt: serviceEval.jobCompletedAt instanceof Date 
+      ? serviceEval.jobCompletedAt.toISOString() 
+      : serviceEval.jobCompletedAt === null 
+        ? undefined 
+        : serviceEval.jobCompletedAt,
+    priceInDollars: typeof serviceEval.priceInDollars === 'number' ? serviceEval.priceInDollars : undefined,
+  }));
 
   return (
     <EvalsClient 
