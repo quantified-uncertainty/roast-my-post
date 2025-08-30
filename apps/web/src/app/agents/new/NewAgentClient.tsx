@@ -41,8 +41,6 @@ const OPTIONAL_FIELDS = [
   "primaryInstructions",
   "selfCritiqueInstructions",
   "providesGrades",
-  "pluginIds",
-  "extendedCapabilityId",
   "readme",
 ];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
@@ -65,8 +63,6 @@ export default function NewAgentClient() {
       description: "",
       primaryInstructions: "",
       providesGrades: false,
-      pluginIds: [],
-      extendedCapabilityId: "",
     },
   });
 
