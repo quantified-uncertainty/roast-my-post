@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
 
-interface ToolBreadcrumbsProps {
+interface ToolPageNavigationProps {
   toolId: string;
   toolName: string;
   currentPage: 'docs' | 'try';
 }
 
-export function ToolBreadcrumbs({ toolId, toolName, currentPage }: ToolBreadcrumbsProps) {
+export function ToolPageNavigation({ toolId, toolName, currentPage }: ToolPageNavigationProps) {
   return (
     <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
       <Link 

@@ -1,4 +1,4 @@
-import { EditAgentClient } from "./EditAgentClient";
+import EditAgentForm from "./EditAgentForm";
 
 export default async function EditAgentPage({
   params,
@@ -6,5 +6,5 @@ export default async function EditAgentPage({
   params: Promise<{ agentId: string }>;
 }) {
   const resolvedParams = await params;
-  return <EditAgentClient agentId={resolvedParams.agentId} />;
+  return <EditAgentForm agentId={resolvedParams.agentId} />;
 }

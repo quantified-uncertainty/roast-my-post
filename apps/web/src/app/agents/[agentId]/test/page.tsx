@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { TestTab } from "@/components/AgentDetail/tabs";
+import { ROUTES } from "@/constants/routes";
 import type { Agent } from "@roast/ai";
+import type { BatchSummary } from "@/components/AgentDetail/types";
 
 export default function TestPage() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function TestPage() {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [testLoading, setTestLoading] = useState(false);
   const [testSuccess, setTestSuccess] = useState<string | null>(null);
+  const [batches, setBatches] = useState<BatchSummary[]>([]);
 
   // Get agent ID from URL
   const agentId = params.agentId as string;
@@ -18,7 +21,7 @@ export default function TestPage() {
   useEffect(() => {
     const fetchAgent = async () => {
       try {
-        const response = await fetch(`/api/agents/${agentId}`);
+        const response = await fetch(ROUTES.API.AGENTS.DETAIL(agentId));
         if (response.ok) {
           const data = await response.json();
           setAgent(data);
@@ -37,12 +40,16 @@ export default function TestPage() {
     router.push(`/agents/${agentId}/${tab}`);
   };
 
-  const setBatches = () => {
-    // This would normally update batches state
-  };
-
-  const fetchBatches = () => {
-    // This would fetch batches
+  const fetchBatches = async () => {
+    try {
+      const response = await fetch(ROUTES.API.AGENTS.BATCHES(agentId));
+      if (response.ok) {
+        const data = await response.json();
+        setBatches(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch batches:", error);
+    }
   };
 
   if (!agent) {

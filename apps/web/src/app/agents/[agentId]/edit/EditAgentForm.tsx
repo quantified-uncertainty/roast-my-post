@@ -23,7 +23,7 @@ import {
 
 import { updateAgent } from "./actions";
 
-export function EditAgentClient({ agentId }: { agentId: string }) {
+export default function EditAgentForm({ agentId }: { agentId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
