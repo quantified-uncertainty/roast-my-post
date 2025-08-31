@@ -31,9 +31,9 @@ vi.mock('@/shared/types/validationSchemas', () => ({
   },
 }));
 
-// Mock DocumentAccessControl
-vi.mock('@/infrastructure/auth/document-access', () => ({
-  DocumentAccessControl: {
+// Mock PrivacyService
+vi.mock('@/infrastructure/auth/privacy-service', () => ({
+  PrivacyService: {
     canViewDocument: vi.fn(() => Promise.resolve(true)),
     getViewableDocumentsFilter: vi.fn((userId) => {
       if (!userId) {

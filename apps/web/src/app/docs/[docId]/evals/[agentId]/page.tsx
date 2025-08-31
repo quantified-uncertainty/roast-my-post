@@ -73,7 +73,7 @@ export default async function EvaluationPage({
             logs={evaluationData.logs}
             comments={evaluationData.comments.map(comment => ({
               ...comment,
-              metadata: comment.metadata as Record<string, any> | null || null
+              metadata: comment.metadata as Record<string, unknown> | null || null
             }))}
             agentName={evaluationData.agentName}
             agentDescription={evaluationData.agentDescription}

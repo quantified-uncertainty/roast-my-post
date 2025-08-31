@@ -10,6 +10,7 @@ import type { Document, Comment, Evaluation } from "@/shared/types/databaseTypes
 // Legacy export functions kept for backward compatibility but marked for removal
 // TODO: Remove these once all references are migrated to DocumentExportService
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function documentToMarkdown(doc: Document): string {
   const metadata = [
     `# ${doc.title}`,
@@ -91,6 +92,7 @@ function documentToMarkdown(doc: Document): string {
   return metadata;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function documentToYAML(doc: Document): string {
   const exportData: Record<string, unknown> = {
     id: doc.id,
@@ -142,19 +144,26 @@ function documentToYAML(doc: Document): string {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function documentToJSON(doc: Document): Record<string, unknown> {
+  const metadata: Record<string, unknown> = {
+    author: doc.author,
+    platforms: doc.platforms,
+    url: doc.url,
+    importUrl: doc.importUrl,
+    intendedAgents: doc.intendedAgents,
+  };
+
+  // Only include submittedBy for private documents
+  if (doc.isPrivate) {
+    metadata.submittedBy = doc.submittedBy;
+  }
+
   const exportData: Record<string, unknown> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,
-    metadata: {
-      author: doc.author,
-      platforms: doc.platforms,
-      url: doc.url,
-      importUrl: doc.importUrl,
-      intendedAgents: doc.intendedAgents,
-      submittedBy: doc.submittedBy,
-    },
+    metadata,
     content: doc.content,
   };
 
@@ -212,8 +221,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
       );
     }
 
-    // Use centralized cache headers from PrivacyService
-    const cacheHeaders = PrivacyService.getCacheHeaders(document.isPrivate || false);
+    // Use centralized cache headers from PrivacyService (defaults to public if undefined)
+    const cacheHeaders = PrivacyService.getCacheHeaders(document.isPrivate ?? false);
 
     // Use DocumentExportService for cleaner export logic
     const exportResult = DocumentExportService.export(document, format);

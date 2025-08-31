@@ -164,17 +164,25 @@ class MarkdownExporter extends BaseDocumentExporter {
  */
 class JSONExporter extends BaseDocumentExporter {
   export(doc: Document): Record<string, unknown> {
-    return {
+    const exportData: Record<string, unknown> = {
       id: doc.id,
       title: doc.title,
       publishedDate: doc.publishedDate,
-      metadata: {
-        ...this.extractMetadata(doc),
-        submittedBy: doc.submittedBy,
-      },
+      metadata: this.extractMetadata(doc),
       content: doc.content,
       evaluations: this.extractEvaluations(doc.reviews),
     };
+
+    // Only include submittedBy for private documents (owner can see their own info)
+    // Public documents should not expose who submitted them
+    if (doc.isPrivate) {
+      exportData.metadata = {
+        ...(exportData.metadata as Record<string, unknown>),
+        submittedBy: doc.submittedBy,
+      };
+    }
+
+    return exportData;
   }
 
   getContentType(): string {

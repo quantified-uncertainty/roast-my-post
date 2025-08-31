@@ -28,7 +28,7 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
   const [showReuploadWarning, setShowReuploadWarning] = useState(false);
   const [evaluationCount, setEvaluationCount] = useState(0);
   const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(document.isPrivate || false);
+  const [isPrivate, setIsPrivate] = useState(document.isPrivate ?? false);
   const router = useRouter();
 
   useEffect(() => {

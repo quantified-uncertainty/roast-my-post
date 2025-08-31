@@ -1,14 +1,14 @@
 import { LockClosedIcon, GlobeAltIcon } from "@heroicons/react/20/solid";
 
 interface PrivacyBadgeProps {
-  isPrivate: boolean | undefined;
+  isPrivate?: boolean;
   variant?: "badge" | "icon" | "text";
   size?: "xs" | "sm" | "md";
   className?: string;
 }
 
 export function PrivacyBadge({ 
-  isPrivate, 
+  isPrivate = false, 
   variant = "badge",
   size = "sm",
   className = "" 

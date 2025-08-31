@@ -6,7 +6,7 @@ import { prisma } from "@roast/db";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
-import { DocumentAccessControl } from "@/infrastructure/auth/document-access";
+import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 
 const createEvaluationSchema = z.object({
   // Currently no body parameters needed
@@ -22,7 +22,7 @@ export async function GET(
 
   try {
     // Verify document access (handles privacy check)
-    const accessResult = await DocumentAccessControl.verifyApiAccess(req, docId);
+    const accessResult = await PrivacyService.verifyApiAccess(req, docId);
     if (accessResult.denied) {
       return accessResult.response;
     }

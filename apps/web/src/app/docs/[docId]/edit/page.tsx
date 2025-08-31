@@ -128,11 +128,11 @@ export default function EditDocumentPage({ params }: Props) {
               ? document.platforms.join(", ")
               : "",
           importUrl: document.importUrl || "",
-          isPrivate: document.isPrivate || false,
+          isPrivate: document.isPrivate ?? false,
         });
         
         // Update the local state for privacy
-        setIsPrivate(document.isPrivate || false);
+        setIsPrivate(document.isPrivate ?? false);
 
         // Count the number of evaluations
         const evalCount = document.reviews?.length || 0;

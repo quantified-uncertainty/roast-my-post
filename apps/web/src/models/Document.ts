@@ -666,8 +666,8 @@ export class DocumentModel {
     requestingUserId?: string // NEW: who's requesting
   ): Promise<Document | null> {
     // Check access before fetching
-    const { DocumentAccessControl } = await import('@/infrastructure/auth/document-access');
-    const canView = await DocumentAccessControl.canViewDocument(
+    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+    const canView = await PrivacyService.canViewDocument(
       docId,
       requestingUserId
     );
@@ -711,8 +711,8 @@ export class DocumentModel {
     requestingUserId?: string
   ): Promise<Document | null> {
     // Check access before fetching
-    const { DocumentAccessControl } = await import('@/infrastructure/auth/document-access');
-    const canView = await DocumentAccessControl.canViewDocument(
+    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+    const canView = await PrivacyService.canViewDocument(
       docId,
       requestingUserId
     );

@@ -81,8 +81,8 @@ export default function CreateDocumentForm() {
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(true);
 
-  const methods = useForm<DocumentInput>({
-    resolver: zodResolver(documentSchema) as any,
+  const methods = useForm({
+    resolver: zodResolver(documentSchema),
     defaultValues: {
       title: "",
       authors: "",
@@ -94,7 +94,6 @@ export default function CreateDocumentForm() {
   });
 
   const {
-    handleSubmit,
     formState: { errors, isSubmitting },
     setError,
     watch,
@@ -357,7 +356,7 @@ export default function CreateDocumentForm() {
           ) : (
             // Manual Mode
             <FormProvider {...methods}>
-              <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
+              <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   name="content"
                   label="Content"

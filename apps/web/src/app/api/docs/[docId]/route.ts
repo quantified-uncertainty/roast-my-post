@@ -12,6 +12,11 @@ const updateDocumentSchema = z.object({
   intendedAgentIds: z.array(z.string()).optional(),
 });
 
+// Type for the request with validatedBody added by withSecurity middleware
+interface RequestWithValidatedBody extends NextRequest {
+  validatedBody: z.infer<typeof updateDocumentSchema>;
+}
+
 // GET endpoint checks privacy based on authentication
 export async function GET(req: NextRequest, context: { params: Promise<{ docId: string }> }) {
   const params = await context.params;
@@ -40,7 +45,7 @@ export const PUT = withSecurity(
     const params = await context.params;
     const { docId } = params;
     const userId = (await authenticateRequest(req))!;
-    const body = (req as any).validatedBody;
+    const body = (req as RequestWithValidatedBody).validatedBody;
 
     try {
       const { intendedAgentIds } = body;
