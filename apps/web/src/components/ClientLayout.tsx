@@ -53,7 +53,7 @@ export default function ClientLayout({
               ) : (
                 <>
                   <Link
-                    href="/explore"
+                    href="/docs"
                     className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
                   >
                     <BookOpen className="h-5 w-5" />

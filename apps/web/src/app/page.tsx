@@ -31,7 +31,7 @@ export default async function Home() {
                 Get Started
               </Link>
               <Link
-                href="/explore"
+                href="/docs"
                 className="bg-gray-200 text-gray-800 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-300 transition"
               >
                 Browse Examples
