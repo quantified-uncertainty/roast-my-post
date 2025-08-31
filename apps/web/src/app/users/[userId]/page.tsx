@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { User, Pencil } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/infrastructure/auth/auth";
@@ -28,7 +26,7 @@ export default async function UserPage({
   return (
     <div className="mx-auto max-w-4xl p-8">
       {/* User Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
             <AvatarFallback className="text-xl">
@@ -39,20 +37,8 @@ export default async function UserPage({
             <h1 className="text-2xl font-semibold">
               {user.name || USER_DISPLAY.GUEST_NAME}
             </h1>
-            {user.email && (
-              <p className="text-muted-foreground text-sm">{user.email}</p>
-            )}
           </div>
         </div>
-
-        {user.isCurrentUser && (
-          <Button asChild variant="outline" className="flex items-center gap-2">
-            <Link href="/settings/profile">
-              <Pencil className="h-4 w-4" />
-              Edit Profile
-            </Link>
-          </Button>
-        )}
       </div>
 
       {/* Stats Cards */}
