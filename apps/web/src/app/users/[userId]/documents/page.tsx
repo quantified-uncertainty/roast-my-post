@@ -3,6 +3,7 @@ import { prisma } from "@roast/db";
 import DocumentsResults from "@/app/docs/DocumentsResults";
 import { DocumentModel } from "@/models/Document";
 import { USER_DISPLAY } from "@/shared/constants/constants";
+import { auth } from "@/infrastructure/auth/auth";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,10 +28,14 @@ export default async function UserDocumentsPage({
     notFound();
   }
 
-  // Get documents for listing view
+  // Get session to check privacy permissions
+  const session = await auth();
+
+  // Get documents for listing view (respects privacy)
   // For user pages, we want unique documents only (latest version per document)
   const documents = await DocumentModel.getDocumentListings({
     userId,
+    requestingUserId: session?.user?.id,
     limit: 50,
     latestVersionOnly: true,
   });

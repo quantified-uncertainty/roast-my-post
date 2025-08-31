@@ -27,11 +27,12 @@ export default async function MyDocumentsPage({
 
   const searchQuery = (await searchParams).search || "";
 
-  // Get only the current user's documents
+  // Get only the current user's documents (both public and private)
   const documents = await DocumentModel.getDocumentListings({
     searchQuery,
     limit: 50,
     userId: session.user.id,
+    requestingUserId: session.user.id,
   });
 
   const totalCount = documents.length;

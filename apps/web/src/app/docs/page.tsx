@@ -21,9 +21,10 @@ export default async function DocumentsPage({
   const session = await auth();
   const isLoggedIn = !!session?.user;
 
-  // Get documents for listing view
+  // Get documents for listing view (respects privacy)
   const documents = await DocumentModel.getDocumentListings({
     searchQuery,
+    requestingUserId: session?.user?.id,
     limit: 50,
   });
 

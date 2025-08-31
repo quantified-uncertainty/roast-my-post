@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { DocumentModel } from "@/models/Document";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import yaml from "js-yaml";
 import type { Document, Comment, Evaluation } from "@/shared/types/databaseTypes";
 
@@ -193,8 +194,11 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
   const format = searchParams.get('format') || 'json';
 
   try {
-    // Use the DocumentModel to get a formatted document with all evaluations
-    const document = await DocumentModel.getDocumentWithEvaluations(id);
+    // Get requesting user (optional - supports both authenticated and anonymous)
+    const requestingUserId = await authenticateRequest(req);
+    
+    // Use the DocumentModel to get a formatted document with all evaluations (respects privacy)
+    const document = await DocumentModel.getDocumentWithEvaluations(id, false, requestingUserId);
 
     if (!document) {
       return NextResponse.json(
