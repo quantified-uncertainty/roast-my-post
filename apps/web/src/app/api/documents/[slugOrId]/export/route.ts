@@ -208,7 +208,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
     }
 
     // Add cache control headers for private documents
-    const cacheHeaders = document.isPrivate 
+    const cacheHeaders: Record<string, string> = document.isPrivate 
       ? {
           'Cache-Control': 'private, no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
