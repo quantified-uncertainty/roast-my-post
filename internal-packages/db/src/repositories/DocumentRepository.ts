@@ -71,14 +71,14 @@ export interface DocumentRepositoryInterface {
   findById(id: string): Promise<DocumentEntity | null>;
   findWithEvaluations(id: string, includeStale?: boolean): Promise<DocumentWithEvaluations | null>;
   findByUser(userId: string, limit?: number): Promise<DocumentWithEvaluations[]>;
-  findRecent(limit?: number): Promise<DocumentWithEvaluations[]>;
+  findRecent(limit?: number, requestingUserId?: string): Promise<DocumentWithEvaluations[]>;
   findAll(): Promise<DocumentWithEvaluations[]>;
   create(data: CreateDocumentData): Promise<DocumentEntity>;
   updateContent(id: string, content: string, title: string): Promise<void>;
   updateMetadata(id: string, data: { intendedAgentIds?: string[] }): Promise<void>;
   delete(id: string): Promise<boolean>;
   checkOwnership(docId: string, userId: string): Promise<boolean>;
-  search(query: string, limit?: number): Promise<any[]>;
+  search(query: string, limit?: number, requestingUserId?: string): Promise<any[]>;
   getStatistics(): Promise<any>;
 }
 
@@ -214,8 +214,19 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Find recent documents
    */
-  async findRecent(limit = 50): Promise<DocumentWithEvaluations[]> {
+  async findRecent(limit = 50, requestingUserId?: string): Promise<DocumentWithEvaluations[]> {
+    // Build privacy filter
+    const privacyFilter = requestingUserId
+      ? {
+          OR: [
+            { isPrivate: false },
+            { submittedById: requestingUserId }
+          ]
+        }
+      : { isPrivate: false }; // Anonymous users can only see public docs
+
     const docs = await this.prisma.document.findMany({
+      where: privacyFilter,
       include: {
         versions: {
           orderBy: { version: 'desc' as const },
@@ -406,9 +417,20 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Search documents
    */
-  async search(query: string, limit = 50): Promise<any[]> {
+  async search(query: string, limit = 50, requestingUserId?: string): Promise<any[]> {
+    // Build privacy filter for the document relation
+    const privacyFilter = requestingUserId
+      ? {
+          OR: [
+            { isPrivate: false },
+            { submittedById: requestingUserId }
+          ]
+        }
+      : { isPrivate: false }; // Anonymous users can only see public docs
+
     return await this.prisma.documentVersion.findMany({
       where: {
+        document: privacyFilter,
         OR: [
           {
             title: {

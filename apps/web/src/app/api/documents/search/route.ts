@@ -5,10 +5,8 @@ import { getServices } from "@/application/services/ServiceFactory";
 
 export async function GET(request: NextRequest) {
   try {
+    // Get userId but don't require authentication - allow anonymous search of public docs
     const userId = await authenticateRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     // Get services from factory
     const { documentService } = getServices();
@@ -21,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     // If no query, return recent documents
     if (!query || query.trim().length === 0) {
-      const result = await documentService.getRecentDocuments(limit);
+      const result = await documentService.getRecentDocuments(limit, userId || undefined);
       
       if (result.isError()) {
         logger.error('Error fetching recent documents:', result.error());
@@ -41,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use the search method from DocumentService
-    const result = await documentService.searchDocuments(query, limit);
+    const result = await documentService.searchDocuments(query, limit, userId || undefined);
     
     if (result.isError()) {
       logger.error('Search error:', result.error());

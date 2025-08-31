@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Check, X } from "lucide-react";
+import { Search, Check, X, Lock } from "lucide-react";
 import debounce from "lodash/debounce";
 
 interface Document {
@@ -11,6 +11,7 @@ interface Document {
   platforms?: string[];
   publishedDate?: string;
   url?: string;
+  isPrivate?: boolean;
 }
 
 interface DocumentSearchProps {
@@ -186,6 +187,9 @@ export function DocumentSearch({
                 <div className="flex-1 min-w-0">
                   <p className={`font-medium text-gray-900 truncate ${doc.title === "Loading..." ? "italic text-gray-400" : ""}`}>
                     {doc.title}
+                    {doc.isPrivate && (
+                      <Lock className="inline-block ml-1 h-3 w-3 text-gray-400" />
+                    )}
                   </p>
                   {doc.title !== "Loading..." && (
                     <p className="text-xs text-gray-500">
@@ -283,6 +287,11 @@ export function DocumentSearch({
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {doc.title}
+                          {doc.isPrivate && (
+                            <span title="Private document">
+                              <Lock className="inline-block ml-1 h-3 w-3 text-gray-400" />
+                            </span>
+                          )}
                         </p>
                         <div className="mt-1 text-xs text-gray-500 space-x-2">
                           {doc.authors && doc.authors.length > 0 && (
