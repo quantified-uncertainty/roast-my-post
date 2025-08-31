@@ -18,27 +18,7 @@ export async function PATCH(
       );
     }
 
-    // Check if the user owns the document
-    const document = await prisma.document.findUnique({
-      where: { id: docId },
-      select: { submittedById: true }
-    });
-
-    if (!document) {
-      return NextResponse.json(
-        { error: "Document not found" },
-        { status: 404 }
-      );
-    }
-
-    if (document.submittedById !== userId) {
-      return NextResponse.json(
-        { error: "You don't have permission to update this document" },
-        { status: 403 }
-      );
-    }
-
-    // Update privacy setting
+    // Parse body first to validate input
     const body = await req.json();
     const { isPrivate } = body;
 
@@ -49,9 +29,27 @@ export async function PATCH(
       );
     }
 
-    const updated = await prisma.document.update({
+    // Use updateMany to atomically check ownership and update in one query
+    // This prevents information leakage about document existence vs ownership
+    const result = await prisma.document.updateMany({
+      where: {
+        id: docId,
+        submittedById: userId
+      },
+      data: { isPrivate }
+    });
+
+    // If no documents were updated, return 404 (regardless of whether document doesn't exist or user doesn't own it)
+    if (result.count === 0) {
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
+    }
+
+    // Fetch the updated document to return
+    const updated = await prisma.document.findUnique({
       where: { id: docId },
-      data: { isPrivate },
       select: { id: true, isPrivate: true }
     });
 
