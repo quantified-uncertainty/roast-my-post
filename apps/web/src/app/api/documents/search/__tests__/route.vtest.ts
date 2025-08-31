@@ -39,15 +39,24 @@ describe('GET /api/documents/search', () => {
     vi.clearAllMocks();
   });
 
-  it('should require authentication', async () => {
+  it('should allow anonymous access for searching', async () => {
     mockAuthenticateRequest.mockResolvedValueOnce(null);
+    
+    const mockDocuments = [
+      { id: 'doc1', title: 'Public Doc 1', isPrivate: false },
+      { id: 'doc2', title: 'Public Doc 2', isPrivate: false },
+    ];
+    
+    mockSearchDocuments.mockResolvedValueOnce(Result.ok(mockDocuments));
 
     const request = new NextRequest('http://localhost:3000/api/documents/search?q=test');
     const response = await GET(request);
     
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.error).toBe('Unauthorized');
+    expect(data.documents).toEqual(mockDocuments);
+    // Should pass undefined for anonymous users
+    expect(mockSearchDocuments).toHaveBeenCalledWith('test', 50, undefined);
   });
 
   it('should return recent documents when no query provided', async () => {
@@ -95,7 +104,7 @@ describe('GET /api/documents/search', () => {
       query: 'test',
     });
     
-    expect(mockSearchDocuments).toHaveBeenCalledWith('test', 10);
+    expect(mockSearchDocuments).toHaveBeenCalledWith('test', 10, mockUser.id);
   });
 
   it('should search content when searchContent is true', async () => {
@@ -149,7 +158,7 @@ describe('GET /api/documents/search', () => {
     expect(data.hasMore).toBe(true); // hasMore is true when we get exactly the limit
     expect(data.total).toBe(5);
     
-    expect(mockSearchDocuments).toHaveBeenCalledWith('test', 5);
+    expect(mockSearchDocuments).toHaveBeenCalledWith('test', 5, mockUser.id);
   });
 
   it('should handle database errors', async () => {
