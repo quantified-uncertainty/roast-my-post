@@ -88,19 +88,19 @@ export class AuthHelper {
  * This uses the BYPASS_TOOL_AUTH environment variable
  */
 export async function setupTestAuthBypass(page: Page) {
-  // Navigate to a page first to ensure localStorage is accessible
-  await page.goto('/');
-  
-  // Add the bypass flag to the page
+  // Add the bypass flag to the page before navigation
+  // This will be injected into every page navigation
   await page.addInitScript(() => {
     // Set environment flag that our createToolRoute checks
     (window as any).__test_bypass_auth = true;
+    // Also set localStorage flag for consistency
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('playwright-auth-bypass', 'true');
+    }
   });
   
-  // Also set localStorage flag for consistency
-  await page.evaluate(() => {
-    window.localStorage.setItem('playwright-auth-bypass', 'true');
-  });
+  // No need to navigate here - the test will navigate to the actual page
+  // The addInitScript will be executed on every page load
 }
 
 /**

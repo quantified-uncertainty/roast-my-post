@@ -39,14 +39,17 @@ const toolTestData = {
 async function testToolWithAuth(page: Page, toolId: string, testData: any) {
   const _authHelper = new AuthHelper(page);
   
-  // Navigate to the tool page
-  await page.goto(`/tools/${toolId}`);
+  // Navigate directly to the tool's try page
+  await page.goto(`/tools/${toolId}/try`);
   
   // Should be on the tool page (not redirected to sign-in)
-  await expect(page).toHaveURL(`/tools/${toolId}`);
+  await expect(page).toHaveURL(`/tools/${toolId}/try`);
   
   // Check that the page loaded properly - look for the tool title
   await expect(page.locator('h1').last()).toBeVisible();
+  
+  // Wait for the form to be visible
+  await page.waitForSelector('form', { timeout: 5000 });
   
   // Handle different input types based on the tool
   if (toolId === 'fuzzy-text-locator') {
@@ -193,10 +196,8 @@ test.describe('Tools with Auth Bypass', () => {
   
   for (const [toolId, testData] of Object.entries(toolTestData)) {
     test(`should work with auth bypass: ${toolId}`, async ({ page }) => {
-      // Set environment variable for bypass
-      await page.addInitScript(() => {
-        (window as any).process = { env: { BYPASS_TOOL_AUTH: 'true' } };
-      });
+      // Use the proper auth bypass setup
+      await setupTestAuthBypass(page);
       
       await testToolWithAuth(page, toolId, testData);
     });
@@ -258,7 +259,7 @@ test.describe('Tool Functionality Tests', () => {
   test('fuzzy-text-locator should find text matches', async ({ page }) => {
     await setupTestAuthBypass(page);
     
-    await page.goto('/tools/fuzzy-text-locator');
+    await page.goto('/tools/fuzzy-text-locator/try');
     
     // Fuzzy text locator should have two textareas
     const textareas = page.locator('textarea');
@@ -302,7 +303,7 @@ test.describe('Tool Functionality Tests', () => {
   test('document-chunker should split text into chunks', async ({ page }) => {
     await setupTestAuthBypass(page);
     
-    await page.goto('/tools/document-chunker');
+    await page.goto('/tools/document-chunker/try');
     
     // Fill the text area
     const textarea = page.locator('textarea').first();
@@ -346,7 +347,7 @@ test.describe('Tool Error Handling', () => {
   test('should handle missing input gracefully', async ({ page }) => {
     await setupTestAuthBypass(page);
     
-    await page.goto('/tools/fuzzy-text-locator');
+    await page.goto('/tools/fuzzy-text-locator/try');
     
     // Check if submit button is disabled without input
     const submitButton = page.locator('button[type="submit"]').first();
