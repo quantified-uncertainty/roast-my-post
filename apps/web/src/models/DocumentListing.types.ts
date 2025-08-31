@@ -15,6 +15,8 @@ export const documentListingSelect = {
     select: {
       id: true,
       publishedDate: true,
+      isPrivate: true,
+      submittedById: true,
       evaluations: {
         select: {
           agentId: true,
@@ -68,6 +70,28 @@ export const documentListingFilters = {
       mode: "insensitive" as const,
     },
   } satisfies Prisma.DocumentVersionWhereInput),
+  
+  privacy: (userId?: string) => {
+    if (!userId) {
+      // Anonymous users can only see public docs
+      return {
+        document: { isPrivate: false },
+      } satisfies Prisma.DocumentVersionWhereInput;
+    }
+    
+    // Authenticated users can see public docs and their own private docs
+    return {
+      document: {
+        OR: [
+          { isPrivate: false },
+          { 
+            submittedById: userId,
+            isPrivate: true
+          }
+        ]
+      }
+    } satisfies Prisma.DocumentVersionWhereInput;
+  },
 } as const;
 
 /**

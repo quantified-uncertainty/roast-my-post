@@ -661,8 +661,20 @@ export class DocumentModel {
    */
   static async getDocumentWithEvaluations(
     docId: string,
-    includeStale: boolean = false
+    includeStale: boolean = false,
+    requestingUserId?: string // NEW: who's requesting
   ): Promise<Document | null> {
+    // Check access before fetching
+    const { DocumentAccessControl } = await import('@/infrastructure/auth/document-access');
+    const canView = await DocumentAccessControl.canViewDocument(
+      docId,
+      requestingUserId
+    );
+
+    if (!canView) {
+      return null;
+    }
+
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
@@ -729,9 +741,10 @@ export class DocumentModel {
    * needs to display all evaluations regardless of their version compatibility.
    */
   static async getDocumentWithAllEvaluations(
-    docId: string
+    docId: string,
+    requestingUserId?: string
   ): Promise<Document | null> {
-    return DocumentModel.getDocumentWithEvaluations(docId, true);
+    return DocumentModel.getDocumentWithEvaluations(docId, true, requestingUserId);
   }
 
   /**
@@ -903,14 +916,18 @@ export class DocumentModel {
    */
   static async getDocumentListings(options?: {
     userId?: string;
+    requestingUserId?: string; // NEW: who's requesting the documents
     searchQuery?: string;
     limit?: number;
     latestVersionOnly?: boolean;
   }): Promise<SerializedDocumentListing[]> {
-    const { userId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
+    const { userId, requestingUserId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
 
     // Compose where conditions using type-safe filters
     const whereConditions = [];
+    
+    // CRITICAL: Add privacy filter first
+    whereConditions.push(documentListingFilters.privacy(requestingUserId));
     
     if (userId) {
       whereConditions.push(documentListingFilters.byUser(userId));
@@ -952,6 +969,7 @@ export class DocumentModel {
     content: string;
     importUrl?: string;
     submittedById: string;
+    isPrivate?: boolean;
   }) {
     // Validate content length
     if (!data.content || data.content.length < 30) {
@@ -986,6 +1004,7 @@ export class DocumentModel {
         id,
         publishedDate: new Date(),
         submittedById: data.submittedById,
+        isPrivate: data.isPrivate ?? false, // Default to public
         versions: {
           create: {
             version: 1,
@@ -1034,6 +1053,30 @@ export class DocumentModel {
     });
 
     return document;
+  }
+
+  /**
+   * Update the privacy setting of a document
+   */
+  static async updatePrivacy(
+    docId: string,
+    isPrivate: boolean,
+    userId: string
+  ): Promise<void> {
+    // Verify ownership before update
+    const doc = await prisma.document.findUnique({
+      where: { id: docId },
+      select: { submittedById: true },
+    });
+
+    if (!doc || doc.submittedById !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    await prisma.document.update({
+      where: { id: docId },
+      data: { isPrivate },
+    });
   }
 
   static async delete(docId: string) {
@@ -1170,6 +1213,7 @@ export class DocumentModel {
       intendedAgents?: string;
       content: string;
       importUrl?: string;
+      isPrivate?: boolean;
     },
     userId: string
   ) {
@@ -1221,6 +1265,7 @@ export class DocumentModel {
       const updatedDocument = await tx.document.update({
         where: { id: docId },
         data: {
+          isPrivate: data.isPrivate !== undefined ? data.isPrivate : undefined, // Only update if provided
           versions: {
             create: {
               version: newVersion,
