@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { auth } from "@/infrastructure/auth/auth";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const session = await auth();
+
+  // Redirect logged-in users to their documents
+  if (session?.user) {
+    redirect("/my-documents");
+  }
 
   return (
     <div className="bg-gray-50">
@@ -18,29 +24,18 @@ export default async function Home() {
               Each agent provides unique insights to help improve your writing.
             </p>
             <div className="flex justify-center space-x-4">
-              {session ? (
-                <Link
-                  href="/docs/import"
-                  className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
-                >
-                  Import Your Document
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    href="/signup"
-                    className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
-                  >
-                    Get Started
-                  </Link>
-                  <Link
-                    href="/docs"
-                    className="bg-gray-200 text-gray-800 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-300 transition"
-                  >
-                    Browse Examples
-                  </Link>
-                </>
-              )}
+              <Link
+                href="/signup"
+                className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
+              >
+                Get Started
+              </Link>
+              <Link
+                href="/explore"
+                className="bg-gray-200 text-gray-800 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-300 transition"
+              >
+                Browse Examples
+              </Link>
             </div>
           </div>
         </div>
@@ -120,21 +115,12 @@ export default async function Home() {
           <p className="text-xl mb-8 opacity-90">
             Get started with your first document analysis today.
           </p>
-          {session ? (
-            <Link
-              href="/docs/import"
-              className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition inline-block"
-            >
-              Import Document Now
-            </Link>
-          ) : (
-            <Link
-              href="/signup"
-              className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition inline-block"
-            >
-              Sign Up
-            </Link>
-          )}
+          <Link
+            href="/signup"
+            className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition inline-block"
+          >
+            Sign Up
+          </Link>
         </div>
       </section>
     </div>
