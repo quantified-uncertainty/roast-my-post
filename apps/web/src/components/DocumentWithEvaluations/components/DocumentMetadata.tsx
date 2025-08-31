@@ -62,7 +62,7 @@ export function DocumentMetadata({
   return (
     <div className="flex items-center justify-between px-3">
       <div className="flex items-center gap-4 text-sm text-gray-600">
-        <PrivacyBadge isPrivate={document.isPrivate} variant="text" />
+        <PrivacyBadge isPrivate={!!document.isPrivate} variant="text" />
         {document.submittedBy && (
           <>
             <span className="text-gray-300">•</span>
