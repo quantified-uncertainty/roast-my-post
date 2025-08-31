@@ -39,10 +39,7 @@ export class DocumentAccessControl {
     return {
       OR: [
         { isPrivate: false },
-        { 
-          submittedById: userId,
-          isPrivate: true
-        }
+        { submittedById: userId }
       ]
     };
   }

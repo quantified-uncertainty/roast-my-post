@@ -84,10 +84,7 @@ export const documentListingFilters = {
       document: {
         OR: [
           { isPrivate: false },
-          { 
-            submittedById: userId,
-            isPrivate: true
-          }
+          { submittedById: userId }
         ]
       }
     } satisfies Prisma.DocumentVersionWhereInput;
@@ -107,6 +104,8 @@ export interface SerializedDocumentListing {
   document: {
     id: string;
     publishedDate: string;
+    isPrivate: boolean;
+    submittedById: string;
     evaluations: Array<{
       agentId: string;
       agent: {
@@ -134,6 +133,8 @@ export function serializeDocumentListing(doc: DocumentListing): SerializedDocume
     document: {
       id: doc.document.id,
       publishedDate: doc.document.publishedDate.toISOString(),
+      isPrivate: doc.document.isPrivate,
+      submittedById: doc.document.submittedById,
       evaluations: doc.document.evaluations.map((evaluation) => ({
         agentId: evaluation.agentId,
         agent: {
