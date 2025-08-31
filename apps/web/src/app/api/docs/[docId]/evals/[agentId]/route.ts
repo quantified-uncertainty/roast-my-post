@@ -6,20 +6,27 @@ import { prisma } from "@roast/db";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
+import { DocumentAccessControl } from "@/infrastructure/auth/document-access";
 
 const createEvaluationSchema = z.object({
   // Currently no body parameters needed
 });
 
-// GET endpoint is public - matches existing evaluation viewing patterns
+// GET endpoint respects document privacy
 export async function GET(
-  _req: NextRequest, 
+  req: NextRequest, 
   context: { params: Promise<{ docId: string; agentId: string }> }
 ) {
   const params = await context.params;
   const { docId, agentId } = params;
 
   try {
+    // Verify document access (handles privacy check)
+    const accessResult = await DocumentAccessControl.verifyApiAccess(req, docId);
+    if (accessResult.denied) {
+      return accessResult.response;
+    }
+
     // Get evaluation data using existing query logic
     const evaluation = await getEvaluationForDisplay(docId, agentId);
 

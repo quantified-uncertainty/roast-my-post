@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { PageLayout } from "@/components/PageLayout";
 import { GradeBadge } from "@/components/GradeBadge";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
 import {
   formatWordCount,
   getWordCountInfo,
@@ -11,7 +12,6 @@ import {
   ChatBubbleLeftIcon,
   Squares2X2Icon,
   TableCellsIcon,
-  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,12 +115,7 @@ export default function DocumentsResults({
                       <Card className="h-full cursor-pointer transition-colors duration-150 hover:bg-gray-50">
                         <CardHeader className="pb-3">
                           <CardTitle className="text-base leading-7">
-                            <div className="flex items-start justify-between gap-2">
-                              <span>{document.title}</span>
-                              {document.document.isPrivate && (
-                                <LockClosedIcon className="h-4 w-4 text-gray-400 flex-shrink-0" title="Private document" />
-                              )}
-                            </div>
+                            {document.title}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
@@ -194,6 +189,7 @@ export default function DocumentsResults({
                             </div>
                           )}
                           <div className="flex flex-wrap gap-2">
+                            <PrivacyBadge isPrivate={document.document.isPrivate} size="xs" />
                             {Object.entries(agentReviews).map(
                               ([agentId, commentCount]) => {
                                 const evaluation =
@@ -271,9 +267,7 @@ export default function DocumentsResults({
                             className="flex items-center gap-2 truncate text-blue-600 hover:text-blue-900"
                           >
                             {document.title}
-                            {document.document.isPrivate && (
-                              <LockClosedIcon className="h-3 w-3 text-gray-400 flex-shrink-0" title="Private document" />
-                            )}
+                            <PrivacyBadge isPrivate={document.document.isPrivate} size="xs" />
                           </Link>
                         </TableCell>
                         <TableCell className="w-32">

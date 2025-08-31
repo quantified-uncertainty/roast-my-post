@@ -31,6 +31,24 @@ vi.mock('@/shared/types/validationSchemas', () => ({
   },
 }));
 
+// Mock DocumentAccessControl
+vi.mock('@/infrastructure/auth/document-access', () => ({
+  DocumentAccessControl: {
+    canViewDocument: vi.fn(() => Promise.resolve(true)),
+    getViewableDocumentsFilter: vi.fn((userId) => {
+      if (!userId) {
+        return { isPrivate: false };
+      }
+      return {
+        OR: [
+          { isPrivate: false },
+          { submittedById: userId }
+        ]
+      };
+    }),
+  },
+}));
+
 describe('DocumentModel', () => {
   beforeEach(() => {
     vi.clearAllMocks();

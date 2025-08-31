@@ -50,6 +50,10 @@ vi.mock('@/application/services/ServiceFactory', () => ({
   getServices: vi.fn(() => mockServices),
 }));
 
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: vi.fn(() => Promise.resolve(undefined)), // Default to unauthenticated
+}));
+
 describe('GET /api/agents/[agentId]/documents', () => {
   const mockAgentId = 'agent-123';
   const mockUser = { id: 'user-123', email: 'test@example.com' };
@@ -132,7 +136,7 @@ describe('GET /api/agents/[agentId]/documents', () => {
     expect(data).toEqual({ documents: mockDocuments });
     
     expect(mockAgentService.getAgentWithOwner).toHaveBeenCalledWith(mockAgentId);
-    expect(mockAgentService.getAgentDocuments).toHaveBeenCalledWith(mockAgentId, 40);
+    expect(mockAgentService.getAgentDocuments).toHaveBeenCalledWith(mockAgentId, 40, undefined);
   });
 
   it('should return empty array when agent has no evaluations', async () => {

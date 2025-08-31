@@ -295,12 +295,24 @@ export class AgentRepository {
 
   /**
    * Gets documents that have been evaluated by an agent
+   * Only returns documents the requesting user can view (public or owned)
    */
-  async getAgentDocuments(agentId: string, limit: number = 40): Promise<Result<any[], AppError>> {
+  async getAgentDocuments(agentId: string, limit: number = 40, requestingUserId?: string): Promise<Result<any[], AppError>> {
     try {
+      // Build privacy filter
+      const privacyFilter = requestingUserId
+        ? {
+            OR: [
+              { document: { isPrivate: false } },
+              { document: { submittedById: requestingUserId } }
+            ]
+          }
+        : { document: { isPrivate: false } };
+
       const evaluations = await prisma.evaluation.findMany({
       where: {
         agentId: agentId,
+        ...privacyFilter
       },
       orderBy: {
         createdAt: "desc",
@@ -347,6 +359,7 @@ export class AgentRepository {
         title: latestDocumentVersion?.title || "Untitled",
         author: evaluation.document?.submittedBy?.name || "Unknown",
         publishedDate: evaluation.document?.publishedDate,
+        isPrivate: evaluation.document?.isPrivate || false,
         evaluationId: evaluation.id,
         evaluationCreatedAt: evaluation.createdAt,
         summary: latestEvaluationVersion?.summary,

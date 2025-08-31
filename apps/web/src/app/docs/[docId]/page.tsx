@@ -10,14 +10,13 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import SlateEditor from "@/components/SlateEditor";
 import { PageHeader } from "@/components/PageHeader";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { DocumentModel } from "@/models/Document";
 import {
   ArrowTopRightOnSquareIcon,
   BookOpenIcon,
-  LockClosedIcon,
-  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { EvaluationManagement } from "./components/EvaluationManagement";
 
@@ -162,7 +161,12 @@ export default async function DocumentPage({
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
           <PageHeader
-            title={document.title || "Untitled Document"}
+            title={
+              <div className="flex items-center gap-3">
+                {document.title || "Untitled Document"}
+                <PrivacyBadge isPrivate={document.isPrivate} variant="badge" size="sm" />
+              </div>
+            }
             subtitle="Document Overview"
           >
             <div className="flex items-center gap-4">
@@ -267,18 +271,8 @@ export default async function DocumentPage({
                       <dt className="text-sm font-medium text-gray-500">
                         Privacy
                       </dt>
-                      <dd className="mt-1 flex items-center gap-2 text-sm text-gray-900">
-                        {document.isPrivate ? (
-                          <>
-                            <LockClosedIcon className="h-4 w-4 text-gray-400" />
-                            <span>Private</span>
-                          </>
-                        ) : (
-                          <>
-                            <GlobeAltIcon className="h-4 w-4 text-gray-400" />
-                            <span>Public</span>
-                          </>
-                        )}
+                      <dd className="mt-1 text-sm text-gray-900">
+                        <PrivacyBadge isPrivate={document.isPrivate} variant="text" size="sm" />
                       </dd>
                     </div>
 

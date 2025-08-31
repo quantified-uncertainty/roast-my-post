@@ -1,4 +1,6 @@
 import { prisma } from '@roast/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { authenticateRequest } from './auth-helpers';
 
 export class DocumentAccessControl {
   /**
@@ -41,6 +43,57 @@ export class DocumentAccessControl {
         { isPrivate: false },
         { submittedById: userId }
       ]
+    };
+  }
+
+  /**
+   * Verify document access for API routes
+   * Returns the requesting user ID if access is allowed, or returns an error response
+   * 
+   * Usage:
+   * ```typescript
+   * const accessResult = await DocumentAccessControl.verifyApiAccess(req, docId);
+   * if (accessResult.denied) {
+   *   return accessResult.response;
+   * }
+   * const requestingUserId = accessResult.userId;
+   * ```
+   */
+  static async verifyApiAccess(
+    request: NextRequest,
+    documentId: string
+  ): Promise<
+    | { denied: false; userId?: string }
+    | { denied: true; response: NextResponse }
+  > {
+    // Get requesting user (optional - supports both authenticated and anonymous)
+    const requestingUserId = await authenticateRequest(request);
+    
+    // Check if user can view the document
+    const canView = await this.canViewDocument(documentId, requestingUserId);
+    
+    if (!canView) {
+      // Return 404 (not 403) to prevent information leakage
+      return {
+        denied: true,
+        response: NextResponse.json(
+          { error: "Document not found" },
+          { status: 404 }
+        )
+      };
+    }
+    
+    return { denied: false, userId: requestingUserId };
+  }
+
+  /**
+   * Get Prisma filter for documents with their evaluations
+   * Ensures evaluations are only included for viewable documents
+   */
+  static getDocumentWithEvaluationsFilter(documentId: string, userId?: string) {
+    return {
+      id: documentId,
+      ...this.getViewableDocumentsFilter(userId)
     };
   }
 }

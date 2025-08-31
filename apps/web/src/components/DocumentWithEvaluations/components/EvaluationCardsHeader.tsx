@@ -8,6 +8,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { EvaluationCard } from "./EvaluationCard";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
 import type { Document } from "@/shared/types/databaseTypes";
 import type { EvaluationState } from "../types";
 import { TRANSITION_DURATION, TRANSITION_DURATION_SLOW, CARDS_GRID_MAX_HEIGHT } from "../constants";
@@ -180,6 +181,7 @@ export function EvaluationCardsHeader({
               <div className="text-sm text-gray-500">
                 Toggle evaluations to show their comments alongside the document
               </div>
+              <PrivacyBadge isPrivate={document.isPrivate} variant="icon" />
             </div>
           )}
           {!isLargeMode && (
@@ -197,6 +199,7 @@ export function EvaluationCardsHeader({
                 )}{" "}
               comments by {evaluationState.selectedAgentIds.size} Evaluation
               {evaluationState.selectedAgentIds.size === 1 ? "" : "s"}
+              <PrivacyBadge isPrivate={document.isPrivate} variant="badge" size="xs" className="ml-2" />
             </div>
           )}
           {isLargeMode ? (

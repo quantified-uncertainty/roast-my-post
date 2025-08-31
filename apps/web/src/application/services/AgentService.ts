@@ -234,12 +234,13 @@ export class AgentService {
 
   /**
    * Gets documents evaluated by an agent
+   * Only returns documents the requesting user can view (public or owned)
    */
-  async getAgentDocuments(agentId: string, limit: number = 40): Promise<Result<AgentDocument[], AppError>> {
+  async getAgentDocuments(agentId: string, limit: number = 40, requestingUserId?: string): Promise<Result<AgentDocument[], AppError>> {
     try {
-      this.logger.debug('Fetching agent documents', { agentId, limit });
+      this.logger.debug('Fetching agent documents', { agentId, limit, requestingUserId });
 
-      const documentsResult = await this.agentRepository.getAgentDocuments(agentId, limit);
+      const documentsResult = await this.agentRepository.getAgentDocuments(agentId, limit, requestingUserId);
       
       if (documentsResult.isError()) {
         return documentsResult;

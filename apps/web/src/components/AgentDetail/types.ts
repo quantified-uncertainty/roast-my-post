@@ -11,6 +11,7 @@ export interface AgentDocument {
   title: string;
   author: string;
   publishedDate: string;
+  isPrivate?: boolean;
   evaluationId: string;
   evaluationCreatedAt: string;
   summary?: string;

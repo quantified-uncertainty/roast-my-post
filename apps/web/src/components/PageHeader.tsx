@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface PageHeaderProps {
-  title: string;
+  title: string | React.ReactNode;
   subtitle?: string;
   children?: React.ReactNode;
   layout?: 'default' | 'with-sidebar';

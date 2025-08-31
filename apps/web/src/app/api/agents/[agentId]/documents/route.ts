@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { getServices } from "@/application/services/ServiceFactory";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 
 export async function GET(
   request: NextRequest,
@@ -9,6 +10,9 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const { agentId } = resolvedParams;
+
+    // Get requesting user (optional - supports both authenticated and anonymous)
+    const requestingUserId = await authenticateRequest(request);
 
     const { agentService } = getServices();
 
@@ -26,8 +30,8 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get("limit") || "40");
 
-    // Fetch documents evaluated by this agent
-    const documentsResult = await agentService.getAgentDocuments(agentId, limit);
+    // Fetch documents evaluated by this agent (with privacy filtering)
+    const documentsResult = await agentService.getAgentDocuments(agentId, limit, requestingUserId);
 
     if (documentsResult.isError()) {
       logger.error('Error fetching agent documents:', documentsResult.error());

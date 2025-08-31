@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useCallback } from "react";
 
 import type { Document } from "@/shared/types/databaseTypes";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -61,19 +62,23 @@ export function DocumentMetadata({
   return (
     <div className="flex items-center justify-between px-3">
       <div className="flex items-center gap-4 text-sm text-gray-600">
+        <PrivacyBadge isPrivate={document.isPrivate} variant="text" />
         {document.submittedBy && (
-          <span>
-            Uploaded from{" "}
-            <Link
-              href={`/users/${document.submittedBy.id}`}
-              className="text-blue-600 hover:underline"
-            >
-              {document.submittedBy.name ||
-                document.submittedBy.email ||
-                "Unknown"}
-            </Link>{" "}
-            on {new Date(document.updatedAt).toLocaleDateString()}
-          </span>
+          <>
+            <span className="text-gray-300">•</span>
+            <span>
+              Uploaded from{" "}
+              <Link
+                href={`/users/${document.submittedBy.id}`}
+                className="text-blue-600 hover:underline"
+              >
+                {document.submittedBy.name ||
+                  document.submittedBy.email ||
+                  "Unknown"}
+              </Link>{" "}
+              on {new Date(document.updatedAt).toLocaleDateString()}
+            </span>
+          </>
         )}
       </div>
       <div className="flex items-center gap-2">
