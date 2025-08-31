@@ -16,6 +16,8 @@ import { DocumentModel } from "@/models/Document";
 import {
   ArrowTopRightOnSquareIcon,
   BookOpenIcon,
+  LockClosedIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { EvaluationManagement } from "./components/EvaluationManagement";
 
@@ -70,7 +72,7 @@ export default async function DocumentPage({
 
   // Use getDocumentWithAllEvaluations to show all evaluations in the sidebar
   // regardless of staleness - users should always see their evaluations
-  const document = await DocumentModel.getDocumentWithAllEvaluations(docId);
+  const document = await DocumentModel.getDocumentWithAllEvaluations(docId, currentUserId);
 
   if (!document) {
     notFound();
@@ -172,7 +174,10 @@ export default async function DocumentPage({
               {isOwner && (
                 <DocumentActions
                   docId={docId}
-                  document={{ importUrl: document.importUrl }}
+                  document={{ 
+                    importUrl: document.importUrl,
+                    isPrivate: document.isPrivate 
+                  }}
                 />
               )}
             </div>
@@ -255,6 +260,25 @@ export default async function DocumentPage({
                       </dt>
                       <dd className="mt-1 text-sm text-gray-900">
                         {document.title || "Untitled"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Privacy
+                      </dt>
+                      <dd className="mt-1 flex items-center gap-2 text-sm text-gray-900">
+                        {document.isPrivate ? (
+                          <>
+                            <LockClosedIcon className="h-4 w-4 text-gray-400" />
+                            <span>Private</span>
+                          </>
+                        ) : (
+                          <>
+                            <GlobeAltIcon className="h-4 w-4 text-gray-400" />
+                            <span>Public</span>
+                          </>
+                        )}
                       </dd>
                     </div>
 

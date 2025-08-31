@@ -40,6 +40,7 @@ export interface CreateDocumentRequest {
   platforms?: string[];
   importUrl?: string;
   ephemeralBatchId?: string;
+  isPrivate?: boolean;
 }
 
 export interface UpdateDocumentRequest {
@@ -95,7 +96,8 @@ export class DocumentService {
         submittedById: userId,
         importUrl: data.importUrl,
         ephemeralBatchId: data.ephemeralBatchId,
-        markdownPrepend
+        markdownPrepend,
+        isPrivate: data.isPrivate || false
       };
 
       const repoDocument = await this.docRepo.create(createData);

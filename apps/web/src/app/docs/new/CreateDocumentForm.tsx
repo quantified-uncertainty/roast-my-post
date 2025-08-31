@@ -13,7 +13,8 @@ import { AgentBadges } from "@/components/AgentBadges";
 import { 
   LinkIcon, 
   DocumentTextIcon,
-  CheckIcon 
+  CheckIcon,
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 
 import { createDocument } from "./actions";
@@ -81,13 +82,14 @@ export default function CreateDocumentForm() {
   const [loadingAgents, setLoadingAgents] = useState(true);
 
   const methods = useForm<DocumentInput>({
-    resolver: zodResolver(documentSchema),
+    resolver: zodResolver(documentSchema) as any,
     defaultValues: {
       title: "",
       authors: "",
       content: "",
       urls: "",
       platforms: "",
+      isPrivate: false,
     },
   });
 
@@ -355,7 +357,7 @@ export default function CreateDocumentForm() {
           ) : (
             // Manual Mode
             <FormProvider {...methods}>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
                 <FormField
                   name="content"
                   label="Content"
@@ -410,6 +412,29 @@ export default function CreateDocumentForm() {
                     />
                   </FormField>
                 ))}
+
+                {/* Privacy Toggle */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-900">
+                    Document Privacy
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        {...methods.register("isPrivate")}
+                        type="checkbox"
+                        className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div className="flex items-start gap-2">
+                        <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Make this document private</div>
+                          <div className="text-xs text-gray-500">Only you will be able to view this document. Public by default.</div>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
 
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium text-gray-900">

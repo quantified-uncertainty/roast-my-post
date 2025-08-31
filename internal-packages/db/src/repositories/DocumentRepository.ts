@@ -60,6 +60,7 @@ export interface CreateDocumentData {
   importUrl?: string;
   ephemeralBatchId?: string;
   markdownPrepend?: string;
+  isPrivate?: boolean;
 }
 
 export interface UpdateDocumentData {
@@ -305,6 +306,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
         publishedDate: data.publishedDate || new Date(),
         submittedById: data.submittedById,
         ephemeralBatchId: data.ephemeralBatchId,
+        isPrivate: data.isPrivate || false,
         versions: {
           create: {
             title: data.title,

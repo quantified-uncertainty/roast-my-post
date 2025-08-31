@@ -430,7 +430,20 @@ describe('DocumentModel', () => {
 
       const result = await DocumentModel.getDocumentWithAllEvaluations('doc-123');
 
-      expect(getDocumentWithEvaluationsSpy).toHaveBeenCalledWith('doc-123', true);
+      expect(getDocumentWithEvaluationsSpy).toHaveBeenCalledWith('doc-123', true, undefined);
+      expect(result).toBe(mockDoc);
+
+      getDocumentWithEvaluationsSpy.mockRestore();
+    });
+
+    it('should pass requestingUserId when provided', async () => {
+      const mockDoc = { id: 'test' };
+      const getDocumentWithEvaluationsSpy = vi.spyOn(DocumentModel, 'getDocumentWithEvaluations')
+        .mockResolvedValue(mockDoc as any);
+
+      const result = await DocumentModel.getDocumentWithAllEvaluations('doc-123', 'user-456');
+
+      expect(getDocumentWithEvaluationsSpy).toHaveBeenCalledWith('doc-123', true, 'user-456');
       expect(result).toBe(mockDoc);
 
       getDocumentWithEvaluationsSpy.mockRestore();

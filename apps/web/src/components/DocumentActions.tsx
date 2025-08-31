@@ -6,6 +6,8 @@ import {
   ArrowPathIcon,
   PencilIcon,
   TrashIcon,
+  LockClosedIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "./Button";
 import { WarningDialog } from "./WarningDialog";
@@ -15,6 +17,7 @@ interface DocumentActionsProps {
   docId: string;
   document: {
     importUrl?: string | null;
+    isPrivate?: boolean;
   };
   className?: string;
 }
@@ -24,6 +27,8 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showReuploadWarning, setShowReuploadWarning] = useState(false);
   const [evaluationCount, setEvaluationCount] = useState(0);
+  const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(document.isPrivate || false);
   const router = useRouter();
 
   useEffect(() => {
@@ -102,8 +107,53 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
     router.push(`/docs/${docId}/edit`);
   };
 
+  const handleTogglePrivacy = async () => {
+    setIsTogglingPrivacy(true);
+    try {
+      const response = await fetch(`/api/documents/${docId}/privacy`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isPrivate: !isPrivate }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update privacy');
+      }
+
+      setIsPrivate(!isPrivate);
+      router.refresh();
+    } catch (error) {
+      console.error('Failed to update privacy:', error);
+      alert('Failed to update privacy settings');
+    } finally {
+      setIsTogglingPrivacy(false);
+    }
+  };
+
   return (
     <div className={`flex items-center justify-end gap-2 ${className}`}>
+      <Button
+        variant="secondary"
+        onClick={handleTogglePrivacy}
+        disabled={isTogglingPrivacy}
+        className="flex items-center gap-1"
+        title={isPrivate ? "Make document public" : "Make document private"}
+      >
+        {isPrivate ? (
+          <>
+            <GlobeAltIcon className="h-4 w-4" />
+            Make Public
+          </>
+        ) : (
+          <>
+            <LockClosedIcon className="h-4 w-4" />
+            Make Private
+          </>
+        )}
+      </Button>
+
       <Button
         variant="secondary"
         onClick={handleRefresh}

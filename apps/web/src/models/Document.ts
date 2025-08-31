@@ -312,6 +312,7 @@ class DocumentTransformer {
         email: null, // Explicitly null for privacy
         image: dbDoc.submittedBy.image,
       } : undefined,
+      isPrivate: dbDoc.isPrivate || false,
       createdAt: dbDoc.createdAt,
       updatedAt: dbDoc.updatedAt,
     };
@@ -706,8 +707,20 @@ export class DocumentModel {
    * @returns The document with latest evaluation data or null if not found
    */
   static async getDocumentForReader(
-    docId: string
+    docId: string,
+    requestingUserId?: string
   ): Promise<Document | null> {
+    // Check access before fetching
+    const { DocumentAccessControl } = await import('@/infrastructure/auth/document-access');
+    const canView = await DocumentAccessControl.canViewDocument(
+      docId,
+      requestingUserId
+    );
+
+    if (!canView) {
+      return null;
+    }
+
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
