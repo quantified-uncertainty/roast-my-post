@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { User, UserCircle, FlaskConical, Settings, LogOut } from "lucide-react";
+import { User, UserCircle, Settings, LogOut, Bot } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import {
   DropdownMenu,
@@ -52,11 +52,11 @@ export default function AuthHeader() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/experiments"
+                  href={`/users/${session.user?.id}/agents`}
                   className="flex cursor-pointer items-center gap-2"
                 >
-                  <FlaskConical className="h-4 w-4" />
-                  Experiments
+                  <Bot className="h-4 w-4" />
+                  My Agents
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
