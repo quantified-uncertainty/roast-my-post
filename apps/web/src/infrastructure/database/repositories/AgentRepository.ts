@@ -299,15 +299,9 @@ export class AgentRepository {
    */
   async getAgentDocuments(agentId: string, limit: number = 40, requestingUserId?: string): Promise<Result<any[], AppError>> {
     try {
-      // Build privacy filter
-      const privacyFilter = requestingUserId
-        ? {
-            OR: [
-              { document: { isPrivate: false } },
-              { document: { submittedById: requestingUserId } }
-            ]
-          }
-        : { document: { isPrivate: false } };
+      // Use centralized privacy filter from PrivacyService
+      const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+      const privacyFilter = PrivacyService.getEvaluationPrivacyFilter(requestingUserId);
 
       const evaluations = await prisma.evaluation.findMany({
       where: {

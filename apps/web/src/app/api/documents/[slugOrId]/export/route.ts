@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { DocumentModel } from "@/models/Document";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { DocumentExportService } from "@/infrastructure/export/document-export-service";
+import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 import yaml from "js-yaml";
 import type { Document, Comment, Evaluation } from "@/shared/types/databaseTypes";
+
+// Legacy export functions kept for backward compatibility but marked for removal
+// TODO: Remove these once all references are migrated to DocumentExportService
 
 function documentToMarkdown(doc: Document): string {
   const metadata = [
@@ -207,51 +212,29 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
       );
     }
 
-    // Add cache control headers for private documents
-    const cacheHeaders: Record<string, string> = document.isPrivate 
-      ? {
-          'Cache-Control': 'private, no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        }
-      : {
-          'Cache-Control': 'public, max-age=3600', // 1 hour cache for public docs
-        };
+    // Use centralized cache headers from PrivacyService
+    const cacheHeaders = PrivacyService.getCacheHeaders(document.isPrivate || false);
 
-    // Return based on format
-    switch (format.toLowerCase()) {
-      case 'md':
-      case 'markdown':
-        const markdown = documentToMarkdown(document);
-        return new NextResponse(markdown, {
-          headers: {
-            'Content-Type': 'text/markdown; charset=utf-8',
-            'Content-Disposition': `attachment; filename="${id}.md"`,
-            ...cacheHeaders,
-          },
-        });
-
-      case 'yaml':
-      case 'yml':
-        const yamlContent = documentToYAML(document);
-        return new NextResponse(yamlContent, {
-          headers: {
-            'Content-Type': 'text/yaml; charset=utf-8',
-            'Content-Disposition': `attachment; filename="${id}.yaml"`,
-            ...cacheHeaders,
-          },
-        });
-
-      case 'json':
-      default:
-        const jsonData = documentToJSON(document);
-        return NextResponse.json(jsonData, {
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Content-Disposition': `attachment; filename="${id}.json"`,
-            ...cacheHeaders,
-          },
-        });
+    // Use DocumentExportService for cleaner export logic
+    const exportResult = DocumentExportService.export(document, format);
+    
+    // Return appropriate response based on content type
+    if (typeof exportResult.content === 'string') {
+      return new NextResponse(exportResult.content, {
+        headers: {
+          'Content-Type': exportResult.contentType,
+          'Content-Disposition': `attachment; filename="${exportResult.fileName}"`,
+          ...cacheHeaders,
+        },
+      });
+    } else {
+      return NextResponse.json(exportResult.content, {
+        headers: {
+          'Content-Type': exportResult.contentType,
+          'Content-Disposition': `attachment; filename="${exportResult.fileName}"`,
+          ...cacheHeaders,
+        },
+      });
     }
   } catch (error) {
     logger.error('Error exporting document:', error);
