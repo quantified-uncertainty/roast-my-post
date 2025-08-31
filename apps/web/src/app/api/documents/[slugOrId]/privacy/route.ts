@@ -5,10 +5,10 @@ import { logger } from "@/infrastructure/logging/logger";
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ docId: string }> }
+  context: { params: Promise<{ slugOrId: string }> }
 ) {
   try {
-    const { docId } = await context.params;
+    const { slugOrId: docId } = await context.params;
     const userId = await authenticateRequest(req);
     
     if (!userId) {
