@@ -5,10 +5,10 @@ import { logger } from "@/infrastructure/logging/logger";
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ slugOrId: string }> }
+  { params }: { params: Promise<{ slugOrId: string }> }
 ) {
   try {
-    const { slugOrId: docId } = await context.params;
+    const { slugOrId: docId } = await params;
     const userId = await authenticateRequest(req);
     
     if (!userId) {
@@ -19,7 +19,16 @@ export async function PATCH(
     }
 
     // Parse body first to validate input
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+    
     const { isPrivate } = body;
 
     if (typeof isPrivate !== 'boolean') {
@@ -52,6 +61,13 @@ export async function PATCH(
       where: { id: docId },
       select: { id: true, isPrivate: true }
     });
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
+    }
 
     logger.info('Document privacy updated', {
       docId,

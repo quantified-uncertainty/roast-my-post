@@ -207,6 +207,17 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
       );
     }
 
+    // Add cache control headers for private documents
+    const cacheHeaders = document.isPrivate 
+      ? {
+          'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      : {
+          'Cache-Control': 'public, max-age=3600', // 1 hour cache for public docs
+        };
+
     // Return based on format
     switch (format.toLowerCase()) {
       case 'md':
@@ -216,6 +227,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
           headers: {
             'Content-Type': 'text/markdown; charset=utf-8',
             'Content-Disposition': `attachment; filename="${id}.md"`,
+            ...cacheHeaders,
           },
         });
 
@@ -226,6 +238,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
           headers: {
             'Content-Type': 'text/yaml; charset=utf-8',
             'Content-Disposition': `attachment; filename="${id}.yaml"`,
+            ...cacheHeaders,
           },
         });
 
@@ -236,6 +249,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
           headers: {
             'Content-Type': 'application/json; charset=utf-8',
             'Content-Disposition': `attachment; filename="${id}.json"`,
+            ...cacheHeaders,
           },
         });
     }
