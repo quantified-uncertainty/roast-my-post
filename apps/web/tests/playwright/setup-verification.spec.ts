@@ -16,6 +16,9 @@ test.describe('Playwright Setup Verification', () => {
   test('should be able to set up auth bypass', async ({ page }) => {
     await setupTestAuthBypass(page);
     
+    // Navigate to a page before checking localStorage
+    await page.goto('/');
+    
     // Check that the bypass flag is set
     const hasBypass = await page.evaluate(() => {
       return window.localStorage.getItem('playwright-auth-bypass') === 'true';
@@ -26,6 +29,9 @@ test.describe('Playwright Setup Verification', () => {
 
   test('should be able to set up environment auth bypass', async ({ page }) => {
     await setupTestAuthWithEnvBypass(page);
+    
+    // Navigate to a page before checking localStorage
+    await page.goto('/');
     
     // Check that localStorage was set correctly
     const hasEnvBypass = await page.evaluate(() => {
@@ -39,10 +45,10 @@ test.describe('Playwright Setup Verification', () => {
     await setupTestAuthBypass(page);
     await setupTestAuthWithEnvBypass(page);
     
-    await page.goto('/tools/fuzzy-text-locator');
+    await page.goto('/tools/fuzzy-text-locator/try');
     
     // Should be able to access the tool page (not redirected to sign-in)
-    await expect(page).toHaveURL('/tools/fuzzy-text-locator');
+    await expect(page).toHaveURL('/tools/fuzzy-text-locator/try');
     
     // Should see the tool interface - check for any h1 and textarea
     await expect(page.locator('h1').first()).toBeVisible();
@@ -53,10 +59,10 @@ test.describe('Playwright Setup Verification', () => {
     await setupTestAuthBypass(page);
     await setupTestAuthWithEnvBypass(page);
     
-    await page.goto('/tools/document-chunker');
+    await page.goto('/tools/document-chunker/try');
     
     // Should be able to access the tool page
-    await expect(page).toHaveURL('/tools/document-chunker');
+    await expect(page).toHaveURL('/tools/document-chunker/try');
     
     // Should see the tool interface - check for any h1 and textarea
     await expect(page.locator('h1').first()).toBeVisible();

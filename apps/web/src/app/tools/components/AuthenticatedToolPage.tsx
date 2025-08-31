@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -23,16 +23,32 @@ export function AuthenticatedToolPage({
   requireAuth = true 
 }: AuthenticatedToolPageProps) {
   const { data: session, status } = useSession();
+  const [isBypassActive, setIsBypassActive] = useState(false);
   const isLoading = status === 'loading';
   const isAuthenticated = !!session?.user;
 
-  // If auth is not required, just render children
-  if (!requireAuth) {
+  useEffect(() => {
+    // Check for test bypass
+    if (process.env.NEXT_PUBLIC_BYPASS_TOOL_AUTH === 'true') {
+      setIsBypassActive(true);
+    }
+    // Also check for playwright test mode
+    if (typeof window !== 'undefined') {
+      const hasTestBypass = (window as any).__test_bypass_auth || 
+                           window.localStorage.getItem('playwright-auth-bypass') === 'true';
+      if (hasTestBypass) {
+        setIsBypassActive(true);
+      }
+    }
+  }, []);
+
+  // If auth is not required or bypass is active, just render children
+  if (!requireAuth || isBypassActive) {
     return <>{children}</>;
   }
 
   // Show loading state while checking authentication
-  if (isLoading) {
+  if (isLoading && !isBypassActive) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-4xl mx-auto space-y-6">

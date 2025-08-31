@@ -64,6 +64,7 @@ const config: PlaywrightTestConfig = {
     env: {
       ...process.env,
       BYPASS_TOOL_AUTH: "true",
+      NEXT_PUBLIC_BYPASS_TOOL_AUTH: "true",
       // Always provide string values - empty string if not set
       // The dev server will load from .env.local if these are empty
       ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || "",

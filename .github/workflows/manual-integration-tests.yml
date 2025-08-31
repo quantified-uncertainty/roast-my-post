@@ -4,6 +4,11 @@ name: Manual Integration Tests
 on:
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Branch to test (defaults to current branch)'
+        required: false
+        type: string
+        default: ''
       test_suite:
         description: 'Which test suite to run'
         required: true
@@ -106,6 +111,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -151,6 +158,7 @@ jobs:
       - name: Start test run notification
         run: |
           echo "🧪 **Starting Test Run**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.event.inputs.branch || github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Suite**: ${{ github.event.inputs.test_suite }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Pattern**: ${{ github.event.inputs.test_pattern || 'All tests' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Estimated Cost**: \$${{ needs.setup.outputs.estimated-cost }}" >> $GITHUB_STEP_SUMMARY
@@ -211,6 +219,7 @@ jobs:
           
           echo "⏱️ **Duration**: ${DURATION} seconds ($((DURATION/60)) minutes)" >> $GITHUB_STEP_SUMMARY
           echo "💰 **Estimated Cost**: \$${{ needs.setup.outputs.estimated-cost }}" >> $GITHUB_STEP_SUMMARY
+          echo "🌿 **Branch**: ${{ github.event.inputs.branch || github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "🔧 **Suite**: ${{ github.event.inputs.test_suite }}" >> $GITHUB_STEP_SUMMARY
           echo "🎯 **Pattern**: ${{ github.event.inputs.test_pattern || 'All tests' }}" >> $GITHUB_STEP_SUMMARY
           echo "📅 **Completed**: $(date)" >> $GITHUB_STEP_SUMMARY
@@ -232,7 +241,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Integration Test Results*\n• Suite: ${{ github.event.inputs.test_suite }}\n• Duration: ${{ steps.run-tests.outputs.duration }} seconds\n• Cost: ~$${{ needs.setup.outputs.estimated-cost }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+                    "text": "*Integration Test Results*\n• Branch: ${{ github.event.inputs.branch || github.ref_name }}\n• Suite: ${{ github.event.inputs.test_suite }}\n• Duration: ${{ steps.run-tests.outputs.duration }} seconds\n• Cost: ~$${{ needs.setup.outputs.estimated-cost }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
                   }
                 }
               ]
@@ -261,6 +270,7 @@ jobs:
       - name: Log test completion
         run: |
           echo "Manual test run completed:"
+          echo "- Branch: ${{ github.event.inputs.branch || github.ref_name }}"
           echo "- Suite: ${{ github.event.inputs.test_suite }}"
           echo "- Exit Code: ${{ needs.run-tests.outputs.exit_code || 'N/A' }}"
           echo "- Duration: ${{ needs.run-tests.outputs.duration || 'N/A' }} seconds"

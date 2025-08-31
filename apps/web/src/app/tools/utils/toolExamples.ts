@@ -205,19 +205,19 @@ export const toolExamples: Record<string, ToolExample[]> = {
     { 
       label: 'Common Sites', 
       values: { 
-        urls: 'https://google.com\nhttps://github.com\nhttps://stackoverflow.com' 
+        text: 'https://google.com\nhttps://github.com\nhttps://stackoverflow.com' 
       }
     },
     { 
       label: 'Mixed Valid/Invalid', 
       values: { 
-        urls: 'https://example.com\nhttp://invalid-url-that-doesnt-exist.com\nhttps://wikipedia.org' 
+        text: 'https://example.com\nhttp://invalid-url-that-doesnt-exist.com\nhttps://wikipedia.org' 
       }
     },
     {
       label: 'Documentation Links',
       values: {
-        urls: 'https://docs.python.org\nhttps://developer.mozilla.org\nhttps://react.dev'
+        text: 'https://docs.python.org\nhttps://developer.mozilla.org\nhttps://react.dev'
       }
     }
   ],
