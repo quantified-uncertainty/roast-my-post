@@ -203,8 +203,25 @@ test.describe('Tool End-to-End Validation', () => {
 
   test.beforeAll(async () => {
     if (ANTHROPIC_API_KEY) {
-      anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-      console.log('✅ AI validation enabled with Sonnet 4');
+      try {
+        anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+        // Try a simple test to check if the API key has credits
+        await anthropic.messages.create({
+          model: ANALYSIS_MODEL,
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'test' }]
+        });
+        console.log('✅ AI validation enabled with Sonnet 4');
+      } catch (error) {
+        const err = error as { status?: number; message?: string };
+        if (err?.status === 400 && err?.message?.includes('credit balance')) {
+          console.log('⚠️  Anthropic API key has insufficient credits - running basic validation only');
+          anthropic = null;
+        } else {
+          console.log('⚠️  Failed to initialize Anthropic client:', err?.message || error);
+          anthropic = null;
+        }
+      }
     } else {
       console.log('⚠️  No API key - running basic validation only');
     }
@@ -469,10 +486,15 @@ test.describe('Tool End-to-End Validation', () => {
         // Basic validation
         if (!output || output.length < 10) {
           result.issues.push('No output or output too short');
-        } else if (output.includes('Missing Anthropic API key') || output.includes('ANTHROPIC_API_KEY') || output.includes('OpenRouter API key is required') || output.includes('OPENROUTER_API_KEY')) {
-          // Special case: tool requires API key but none is available
-          // This is expected behavior when running tests without API keys
-          console.log(`⚠️  ${toolId}: Tool requires API key - skipping validation`);
+        } else if (output.includes('Missing Anthropic API key') || 
+                   output.includes('ANTHROPIC_API_KEY') || 
+                   output.includes('OpenRouter API key is required') || 
+                   output.includes('OPENROUTER_API_KEY') ||
+                   output.includes('credit balance is too low') ||
+                   output.includes('insufficient credits')) {
+          // Special case: tool requires API key but none is available or has no credits
+          // This is expected behavior when running tests without API keys or credits
+          console.log(`⚠️  ${toolId}: Tool requires API key/credits - skipping validation`);
           result.success = true;
           results.push(result);
           return;
@@ -642,6 +664,12 @@ Respond with JSON only:
       }
     }
   } catch (error) {
+    // Handle specific API errors gracefully
+    const err = error as { status?: number; message?: string };
+    if (err?.status === 400 && err?.message?.includes('credit balance')) {
+      console.warn(`⚠️  Anthropic API has insufficient credits - skipping AI validation for ${toolId}`);
+      return { valid: true, reason: 'AI validation skipped (insufficient API credits)' };
+    }
     console.warn(`AI validation error for ${toolId}:`, error);
   }
   
