@@ -103,7 +103,7 @@ git commit -m "Remove accidentally committed files"
 ## Critical Database Safety Incident (2024-01-23)
 
 ### What Happened
-I lost 32 agent versions' worth of instruction data by using `prisma db push --accept-data-loss` to "rename" a column from `genericInstructions` to `primaryInstructions`. This command doesn't rename - it DROPS the old column and ADDS a new empty one.
+I lost 32 agent versions' worth of instruction data by using `prisma db push --accept-data-loss` to "rename" a column from `genericInstructions` to `primaryInstructions`. This command doesn't rename - it DROPS the old column and ADDS a new empty one, destroying all data.
 
 ### Root Cause
 - Misunderstood how `prisma db push` works with column changes
@@ -117,9 +117,9 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
    pg_dump -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql
    ```
 
-2. **NEVER use `prisma db push --accept-data-loss` for renaming columns**
-   - It will DROP and recreate, not rename
-   - Data WILL be lost
+2. **NEVER use `prisma db push --accept-data-loss` - EVER**
+   - It DROPS and recreates columns, destroying all data
+   - This flag should never be used in production or development
 
 3. **For column renames, write manual migrations**
    ```sql

@@ -40,7 +40,7 @@ For detailed analysis of current issues, see: `/claude/analysis/2025-06-22-01-ev
 1. ALWAYS create a backup before ANY schema change: `pg_dump -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql`
 2. Use proper migrations for column renames: `ALTER TABLE "TableName" RENAME COLUMN "old" TO "new";`
 3. Test destructive operations on a database copy first
-4. Take "--accept-data-loss" literally - it WILL lose data
+4. NEVER use `--accept-data-loss` - it literally drops and recreates columns, destroying all data
 **Impact**: Complete data loss for all agent instructions in development database.
 
 ## Database Access Options
