@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { LogsViewer } from "./LogsViewer";
