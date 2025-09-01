@@ -14,8 +14,19 @@ import {
 import {
   ChatBubbleLeftIcon,
   MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  DocumentTextIcon,
+  LinkIcon,
 } from "@heroicons/react/24/outline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
 
 interface DocumentsLayoutClientProps {
@@ -26,6 +37,7 @@ interface DocumentsLayoutClientProps {
   title: string;
   subtitle: string;
   showPrivacyBadges?: boolean;
+  currentUserId?: string;
 }
 
 export default function DocumentsLayoutClient({
@@ -36,6 +48,7 @@ export default function DocumentsLayoutClient({
   title,
   subtitle,
   showPrivacyBadges = false,
+  currentUserId,
 }: DocumentsLayoutClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -121,16 +134,20 @@ export default function DocumentsLayoutClient({
                 {} as Record<string, number>
               ) || {};
 
+            const isOwner = currentUserId && document.document.submittedById === currentUserId;
+            const hasSource = document.urls && document.urls.length > 0;
+
             return (
-              <Link
-                key={document.id}
-                href={`/docs/${document.document.id}/reader`}
-                className="block"
-              >
-                <Card className="h-full cursor-pointer transition-colors duration-150 hover:bg-gray-50">
-                  <CardHeader className="pb-3">
+              <div key={document.id} className="relative">
+                <Card className="h-full transition-colors duration-150">
+                  <CardHeader className="pb-3 pr-12">
                     <CardTitle className="text-base leading-7">
-                      {document.title}
+                      <Link 
+                        href={`/docs/${document.document.id}/reader`}
+                        className="hover:text-blue-600 transition-colors"
+                      >
+                        {document.title}
+                      </Link>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -219,9 +236,10 @@ export default function DocumentsLayoutClient({
                           const grade = evaluation?.latestVersion?.grade;
 
                           return (
-                            <div
+                            <Link
                               key={agentId}
-                              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+                              href={`/docs/${document.document.id}/reader?evals=${agentId}`}
+                              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-200 transition-colors"
                             >
                               {evaluation?.agent.name || "Unknown Agent"}
                               {hasGrade && (
@@ -235,7 +253,7 @@ export default function DocumentsLayoutClient({
                               <span className="text-gray-500">
                                 {commentCount}
                               </span>
-                            </div>
+                            </Link>
                           );
                         }
                       )}
@@ -247,7 +265,53 @@ export default function DocumentsLayoutClient({
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+                
+                {/* Dropdown Menu */}
+              <div className="absolute top-2 right-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {isOwner && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <a href={`/docs/${document.document.id}/edit`} className="flex items-center gap-2 cursor-pointer">
+                            <PencilIcon className="h-4 w-4" />
+                            <span>Edit</span>
+                          </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <a href={`/docs/${document.document.id}`} className="flex items-center gap-2 cursor-pointer">
+                        <DocumentTextIcon className="h-4 w-4" />
+                        <span>Details</span>
+                      </a>
+                    </DropdownMenuItem>
+                    {hasSource && (
+                      <DropdownMenuItem asChild>
+                        <a 
+                          href={document.urls[0]} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <LinkIcon className="h-4 w-4" />
+                          <span>Source</span>
+                        </a>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
             );
           })}
         </div>

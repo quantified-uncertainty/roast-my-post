@@ -43,6 +43,7 @@ export default async function MyDocumentsPage({
       title="Your Documents"
       subtitle="Manage and review your uploaded documents"
       showPrivacyBadges={true}
+      currentUserId={session.user.id}
     />
   );
 }
