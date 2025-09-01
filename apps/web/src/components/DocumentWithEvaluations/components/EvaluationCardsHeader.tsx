@@ -3,9 +3,11 @@
 import {
   ChatBubbleLeftIcon,
   CommandLineIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { Bot } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +17,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import { EvaluationCard } from "./EvaluationCard";
 import type { Document } from "@/shared/types/databaseTypes";
@@ -92,31 +99,97 @@ export function EvaluationCardsHeader({
     evaluationState: EvaluationState;
     onToggleAgent: (agentId: string) => void;
   }) {
+    const [showMoreOpen, setShowMoreOpen] = useState(false);
+    const maxVisible = 4;
+    const visibleReviews = document.reviews.slice(0, maxVisible);
+    const hiddenReviews = document.reviews.slice(maxVisible);
+    const hasHiddenReviews = hiddenReviews.length > 0;
+
     return (
       <div
         className="flex min-w-0 flex-shrink items-center gap-2 overflow-x-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {document.reviews.map((review) => {
+        {/* Show first 3 agents */}
+        {visibleReviews.map((review) => {
           const isActive = evaluationState.selectedAgentIds.has(review.agentId);
           return (
             <Button
               key={review.agentId}
+              asChild
               variant={isActive ? "secondary" : "outline"}
               size="sm"
               className="h-8 flex-shrink-0 gap-2 whitespace-nowrap px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200 data-[state=active]:hover:bg-gray-300"
-              onClick={() => onToggleAgent(review.agentId)}
               title={`${isActive ? "Hide" : "Show"} ${review.agent.name} evaluation`}
             >
-              <Checkbox checked={isActive} className="pointer-events-none" />
-              {review.agent.name}
-              <div className="flex items-center gap-0.5 text-xs">
-                <ChatBubbleLeftIcon className="h-3 w-3" />
-                <span>{review.comments?.length || 0}</span>
-              </div>
+              <span
+                onClick={() => onToggleAgent(review.agentId)}
+                className="cursor-pointer"
+              >
+                <Checkbox asChild checked={isActive}>
+                  <span className="pointer-events-none" />
+                </Checkbox>
+                {review.agent.name}
+                <div className="flex items-center gap-0.5 text-xs">
+                  <ChatBubbleLeftIcon className="h-3 w-3" />
+                  <span>{review.comments?.length || 0}</span>
+                </div>
+              </span>
             </Button>
           );
         })}
+
+        {/* Show more dropdown if there are hidden agents */}
+        {hasHiddenReviews && (
+          <Popover open={showMoreOpen} onOpenChange={setShowMoreOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex-shrink-0 gap-2 whitespace-nowrap px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200"
+                title={`Show ${hiddenReviews.length} more evaluation agents`}
+              >
+                <ChevronDownIcon className="mr-1.5 h-3.5 w-3.5" />
+                Show {hiddenReviews.length} More
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-2" align="end">
+              <div className="space-y-1">
+                <div className="px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Agents
+                </div>
+                {hiddenReviews.map((review) => {
+                  const isActive = evaluationState.selectedAgentIds.has(
+                    review.agentId
+                  );
+                  return (
+                    <Button
+                      key={review.agentId}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        onToggleAgent(review.agentId);
+                        setShowMoreOpen(false);
+                      }}
+                      className="h-9 w-full justify-between px-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Checkbox asChild checked={isActive}>
+                          <span className="pointer-events-none h-3 w-3" />
+                        </Checkbox>
+                        <span className="text-sm">{review.agent.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <ChatBubbleLeftIcon className="h-3 w-3" />
+                        <span>{review.comments?.length || 0}</span>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
     );
   }
@@ -132,15 +205,19 @@ export function EvaluationCardsHeader({
     return (
       <div onClick={(e) => e.stopPropagation()}>
         <Button
+          asChild
           variant={showDebug ? "destructive" : "outline"}
           size="sm"
           className="h-8 flex-shrink-0 gap-2 whitespace-nowrap px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200 data-[state=active]:hover:bg-red-600"
-          onClick={onToggle}
           title={showDebug ? "Hide debug comments" : "Show debug comments"}
         >
-          <Checkbox checked={showDebug} className="pointer-events-none" />
-          Debug
-          <CommandLineIcon className="h-3 w-3" />
+          <span onClick={onToggle} className="cursor-pointer">
+            <Checkbox asChild checked={showDebug}>
+              <span className="pointer-events-none" />
+            </Checkbox>
+            Debug
+            <CommandLineIcon className="h-3 w-3" />
+          </span>
         </Button>
       </div>
     );
