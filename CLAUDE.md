@@ -57,8 +57,8 @@ git commit -m "message"               # Only if staging correct
 
 ### Database Safety & Migrations
 
-#### 🚨 MANDATORY: Always Create Migration Files 🚨
-**NEVER run manual SQL without creating a migration file first!**
+#### 🚨 MANDATORY: Always create migration files 🚨
+**NEVER run manual SQL without creating a migration file first.**
 
 ```bash
 # WRONG - Never do this:
@@ -77,10 +77,9 @@ cat > "$MIGRATION_DIR/migration.sql" << 'EOF'
 ALTER TABLE "TableName" ADD COLUMN "columnName" TEXT;
 EOF
 
-# 3. Apply the migration
-pnpm --filter @roast/db run migrate:dev  # For dev
-# OR
-pnpm --filter @roast/db run db:push      # For quick iteration
+# 3. Apply the migration (executes your migration.sql files)
+pnpm --filter @roast/db run migrate:dev
+# Note: db:push ignores migration.sql and applies schema.prisma only—use it only for quick local iteration when you did NOT author manual SQL.
 
 # 4. ALWAYS add migration to git
 git add "$MIGRATION_DIR"
@@ -91,8 +90,14 @@ git add "$MIGRATION_DIR"
 # ALWAYS before schema changes:
 pg_dump -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql
 
-# NEVER use for column renames:
-prisma db push --accept-data-loss  # This DROPS data, doesn't rename!
+# DANGEROUS - NEVER USE:
+# prisma db push --accept-data-loss  # DROPS and recreates columns, DESTROYS data!
+# Use proper migrations with SQL ALTER statements instead
+
+# CRITICAL: db:push vs migrate:dev
+# - db:push: ONLY applies schema.prisma changes, IGNORES migration.sql files
+# - migrate:dev: Applies BOTH schema.prisma AND migration.sql files
+# For manual SQL migrations, MUST use migrate:dev!
 ```
 
 ### PR/Merge Workflow (See also: ABSOLUTE PROHIBITION above)

@@ -48,7 +48,7 @@ grep -r "prisma.*push.*--accept-data-loss\|DROP TABLE\|DELETE FROM.*WHERE 1=1" \
 ```
 
 **Dangerous patterns:**
-- `prisma db push --accept-data-loss`
+- `prisma db push --accept-data-loss` (NEVER use - drops and recreates columns, destroying data)
 - Raw SQL queries with user input
 - Unscoped DELETE operations
 - Missing WHERE clauses in updates
