@@ -44,6 +44,16 @@ export async function GET(request: NextRequest) {
         durationInSeconds: true,
         attempts: true,
         originalJobId: true,
+        cancelledAt: true,
+        cancelledById: true,
+        cancellationReason: true,
+        cancelledBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
         evaluation: {
           include: {
             document: {

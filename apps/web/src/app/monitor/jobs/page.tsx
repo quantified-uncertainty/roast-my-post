@@ -57,6 +57,8 @@ export default function JobsMonitorPage() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const fetchJobs = async (showRefreshIndicator = false) => {
     try {
@@ -83,6 +85,42 @@ export default function JobsMonitorPage() {
     } finally {
       setLoading(false);
       setIsRefreshing(false);
+    }
+  };
+
+  const handleCancelJob = async () => {
+    if (!selectedJob) return;
+    
+    try {
+      const response = await fetch(`/api/monitor/jobs/${selectedJob.id}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason: cancelReason })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to cancel job');
+      }
+      
+      // Refresh the job list and close dialog
+      setShowCancelDialog(false);
+      setCancelReason('');
+      await fetchJobs(true);
+      
+      // Update selected job if it matches
+      if (selectedJob) {
+        const updatedJobs = await fetchJobs();
+        const updatedJob = jobs.find(j => j.id === selectedJob.id);
+        if (updatedJob) {
+          setSelectedJob(updatedJob);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to cancel job:', err);
+      alert(err instanceof Error ? err.message : 'Failed to cancel job');
     }
   };
 
@@ -121,6 +159,7 @@ export default function JobsMonitorPage() {
             <option value="RUNNING">Running ({statusCounts.RUNNING || 0})</option>
             <option value="FAILED">Failed ({statusCounts.FAILED || 0})</option>
             <option value="PENDING">Pending ({statusCounts.PENDING || 0})</option>
+            <option value="CANCELLED">Cancelled ({statusCounts.CANCELLED || 0})</option>
           </select>
           <button
             onClick={() => fetchJobs(true)}
@@ -178,7 +217,6 @@ export default function JobsMonitorPage() {
               {/* Header with document/agent links */}
               <div className="bg-white shadow rounded-lg p-6">
                 <div className="mb-4">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Job Details</h2>
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <dt className="font-medium text-gray-900">Document</dt>
@@ -228,8 +266,13 @@ export default function JobsMonitorPage() {
                     priceInDollars: selectedJob.priceInDollars,
                     attempts: selectedJob.attempts,
                     originalJobId: selectedJob.originalJobId,
-                    error: selectedJob.error
+                    error: selectedJob.error,
+                    cancelledAt: (selectedJob as any).cancelledAt,
+                    cancelledBy: (selectedJob as any).cancelledBy,
+                    cancellationReason: (selectedJob as any).cancellationReason
                   }}
+                  canCancel={true}
+                  onCancel={() => setShowCancelDialog(true)}
                 />
               </div>
 
@@ -253,6 +296,48 @@ export default function JobsMonitorPage() {
           )}
         </div>
       </div>
+
+      {/* Cancel Job Dialog */}
+      {showCancelDialog && selectedJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Cancel Job</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to cancel this job? This action cannot be undone.
+            </p>
+            <div className="mb-4">
+              <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 mb-1">
+                Reason (optional)
+              </label>
+              <textarea
+                id="cancel-reason"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter cancellation reason..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelDialog(false);
+                  setCancelReason('');
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCancelJob}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+              >
+                Confirm Cancellation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

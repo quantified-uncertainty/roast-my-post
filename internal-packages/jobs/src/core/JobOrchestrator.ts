@@ -46,6 +46,21 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     let sessionManager: HeliconeSessionManager | undefined;
 
     try {
+      // Check if job was cancelled before we start processing
+      const currentJob = await prisma.job.findUnique({
+        where: { id: job.id },
+        select: { status: true }
+      });
+      
+      if (currentJob?.status === 'CANCELLED') {
+        this.logger.info(`Job ${job.id} was cancelled, skipping processing`);
+        return {
+          success: false,
+          job: { ...job, status: 'CANCELLED' as any },
+          error: new Error('Job was cancelled'),
+        };
+      }
+
       // Setup Helicone session tracking
       sessionManager = await this.setupSessionTracking(job);
 

@@ -1,19 +1,50 @@
+import { useState } from "react";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { LogsViewer } from "./LogsViewer";
 import { formatCostFromDollars, formatDuration, formatDate } from "@/application/services/job/formatters";
 import { JobData } from "@/application/services/job/types";
 import { getRetryText } from "@/application/services/job/transformers";
 import { CopyButton } from "@/components/CopyButton";
+import { XCircle } from "lucide-react";
 
 interface JobSummaryProps {
-  job: JobData & { logs?: string };
+  job: JobData & { 
+    logs?: string;
+    cancelledAt?: string | null;
+    cancelledBy?: {
+      id: string;
+      name: string | null;
+      email: string;
+    } | null;
+    cancellationReason?: string | null;
+  };
   showError?: boolean;
   showLogs?: boolean;
   compact?: boolean;
+  onCancel?: () => void;
+  canCancel?: boolean;
 }
 
-export function JobSummary({ job, showError = true, showLogs = true, compact = false }: JobSummaryProps) {
+export function JobSummary({ 
+  job, 
+  showError = true, 
+  showLogs = true, 
+  compact = false,
+  onCancel,
+  canCancel = false 
+}: JobSummaryProps) {
   const retryText = getRetryText(job);
+  const [isCancelling, setIsCancelling] = useState(false);
+  
+  const handleCancel = async () => {
+    if (!onCancel) return;
+    setIsCancelling(true);
+    try {
+      await onCancel();
+    } finally {
+      setIsCancelling(false);
+    }
+  };
   
   return (
     <div className={`${compact ? 'space-y-2' : 'space-y-4'}`}>
@@ -26,7 +57,20 @@ export function JobSummary({ job, showError = true, showLogs = true, compact = f
             </span>
           )}
         </h3>
-        <JobStatusBadge status={job.status} showIcon />
+        <div className="flex items-center gap-2">
+          <JobStatusBadge status={job.status} showIcon />
+          {canCancel && (job.status === 'PENDING' || job.status === 'RUNNING') && (
+            <button
+              onClick={handleCancel}
+              disabled={isCancelling}
+              className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Cancel this job"
+            >
+              <XCircle className="h-4 w-4" />
+              {isCancelling ? 'Cancelling...' : 'Cancel'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={`grid ${compact ? 'grid-cols-1 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
@@ -72,6 +116,28 @@ export function JobSummary({ job, showError = true, showLogs = true, compact = f
           </div>
         )}
       </div>
+
+      {job.status === 'CANCELLED' && job.cancelledAt && (
+        <div className="mt-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Cancellation Details</h4>
+          <div className="p-3 bg-gray-50 rounded-md space-y-2">
+            <div className="text-sm">
+              <span className="font-medium">Cancelled by:</span>{' '}
+              {job.cancelledBy ? (job.cancelledBy.name || job.cancelledBy.email) : 'Unknown'}
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">Cancelled at:</span>{' '}
+              {formatDate(job.cancelledAt)}
+            </div>
+            {job.cancellationReason && (
+              <div className="text-sm">
+                <span className="font-medium">Reason:</span>{' '}
+                {job.cancellationReason}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {showError && job.error && (
         <div className="mt-4">

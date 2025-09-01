@@ -49,7 +49,7 @@ export default async function EvaluationPage({
         <DocumentEvaluationSidebar 
           docId={docId}
           currentAgentId={agentId}
-          evaluations={evaluationData.allEvaluations}
+          evaluations={evaluationData.allEvaluations as any}
           isOwner={isOwner}
         />
         

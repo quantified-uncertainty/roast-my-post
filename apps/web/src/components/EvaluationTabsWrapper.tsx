@@ -3,6 +3,7 @@ import { prisma } from "@/infrastructure/database/prisma";
 import { EvaluationTabs } from "./EvaluationTabs";
 import { RerunButtonClient } from "./RerunButtonClient";
 import { JobStatusIndicator } from "./JobStatusIndicator";
+import type { JobStatus } from "@roast/db";
 
 interface EvaluationTabsWrapperProps {
   docId: string;
@@ -43,7 +44,7 @@ export async function EvaluationTabsWrapper({
   
   const isOwner = session?.user?.id === document?.submittedById;
   const hasExistingEvaluation = !!evaluation;
-  const latestJobStatus = evaluation?.jobs?.[0]?.status;
+  const latestJobStatus = evaluation?.jobs?.[0]?.status as JobStatus | undefined;
 
   return (
     <div className="border-b border-gray-200">

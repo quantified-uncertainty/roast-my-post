@@ -51,6 +51,7 @@ model User {
   apiKeys          ApiKey[]
   documents        Document[]
   sessions         Session[]
+  cancelledJobs    Job[]
 }
 
 model VerificationToken {
@@ -251,16 +252,21 @@ model Job {
   agentEvalBatchId    String?
   originalJobId       String?
   priceInDollars      Decimal?           @db.Decimal(10, 6)
+  cancelledAt         DateTime?
+  cancelledById       String?
+  cancellationReason  String?
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
   evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
   originalJob         Job?               @relation("JobRetries", fields: [originalJobId], references: [id])
   retryJobs           Job[]              @relation("JobRetries")
   tasks               Task[]
+  cancelledBy         User?              @relation(fields: [cancelledById], references: [id])
 
   @@index([evaluationId])
   @@index([agentEvalBatchId])
   @@index([originalJobId])
+  @@index([cancelledById])
 }
 
 model Task {
@@ -303,4 +309,5 @@ enum JobStatus {
   RUNNING
   COMPLETED
   FAILED
+  CANCELLED
 }

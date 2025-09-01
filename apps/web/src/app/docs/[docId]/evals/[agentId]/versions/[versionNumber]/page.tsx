@@ -183,7 +183,26 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
     : null;
   
   // Get all evaluations for the sidebar - already serialized by serializePrismaResult
-  const allEvaluations = evaluation.document.evaluations || [];
+  const allEvaluations = (evaluation.document.evaluations || []).map(ev => ({
+    id: ev.id,
+    agentId: ev.agentId,
+    agent: ev.agent ? {
+      name: ev.agent.versions?.[0]?.name,
+      versions: ev.agent.versions?.map(v => ({
+        name: v.name,
+      })),
+    } : undefined,
+    versions: ev.versions?.map(v => ({
+      grade: v.grade,
+      job: v.job ? {
+        status: v.job.status as any,
+      } : null,
+    })),
+    jobs: ev.jobs?.map(j => ({
+      status: j.status as any,
+    })),
+    grade: ev.versions?.[0]?.grade ?? null,
+  }));
   
   // Get ownership from fetched data
   const isOwner = currentUserId ? evaluation.document.submittedById === currentUserId : false;

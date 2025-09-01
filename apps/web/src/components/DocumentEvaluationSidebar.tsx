@@ -17,6 +17,7 @@ import {
 
 import { GradeBadge } from "./GradeBadge";
 import { JobStatusIndicator } from "./JobStatusIndicator";
+import type { JobStatus } from "@roast/db";
 
 interface Evaluation {
   id?: string;
@@ -30,11 +31,11 @@ interface Evaluation {
   versions?: Array<{
     grade?: number | null;
     job?: {
-      status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+      status: JobStatus;
     } | null;
   }>;
   jobs?: Array<{
-    status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+    status: JobStatus;
   }>;
   grade?: number | null;
 }
