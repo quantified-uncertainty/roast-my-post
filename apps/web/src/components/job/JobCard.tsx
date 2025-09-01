@@ -78,29 +78,16 @@ export function JobCard({
               </div>
             )}
             
-            {showUploader && job.evaluation?.document?.uploader && (
+            {(showDate || showUploader) && (
               <div className="text-xs">
-                By {job.evaluation.document.uploader.name || job.evaluation.document.uploader.email}
+                {showDate && formatRelativeDate(job.createdAt)}
+                {showDate && showUploader && job.evaluation?.document?.uploader && ' • '}
+                {showUploader && job.evaluation?.document?.uploader && (
+                  <span>{job.evaluation.document.uploader.name || job.evaluation.document.uploader.email}</span>
+                )}
               </div>
             )}
             
-            {(showDate || !compact) && (
-              <div className="text-xs">
-                {formatRelativeDate(job.createdAt)}
-              </div>
-            )}
-            
-            {showDocument && documentInfo.id && (
-              <div>
-                <Link 
-                  href={`/docs/${documentInfo.id}`}
-                  className="text-blue-600 hover:text-blue-800 text-xs"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  View Document →
-                </Link>
-              </div>
-            )}
             
             {showBatch && batchInfo && (
               <div className="text-blue-600">
