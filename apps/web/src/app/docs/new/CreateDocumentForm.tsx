@@ -70,6 +70,194 @@ interface Agent {
   providesGrades?: boolean;
 }
 
+// ============= EXTRACTED COMPONENTS =============
+
+interface PrivacyToggleProps {
+  isPrivate: boolean;
+  onChange: (value: boolean) => void;
+  useRegister?: any; // For react-hook-form register
+}
+
+function PrivacyToggle({ isPrivate, onChange, useRegister }: PrivacyToggleProps) {
+  return (
+    <div className="space-y-3">
+      <label className="text-sm font-medium text-gray-900">
+        Document Privacy
+      </label>
+      <div className="bg-gray-50 rounded-lg p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          {useRegister ? (
+            <input
+              {...useRegister}
+              type="checkbox"
+              className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
+            />
+          ) : (
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={(e) => onChange(e.target.checked)}
+              className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
+            />
+          )}
+          <div className="flex items-start gap-2">
+            <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
+            <div>
+              <div className="text-sm font-medium text-gray-900">Keep this document private</div>
+              <div className="text-xs text-gray-500">Only you will be able to view this document. Private by default.</div>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+interface AgentSelectorProps {
+  agents: Agent[];
+  selectedAgentIds: string[];
+  onToggleAgent: (agentId: string) => void;
+  loading: boolean;
+  title?: string;
+  actionText?: string;
+  layout?: "grid" | "list";
+}
+
+function AgentSelector({ 
+  agents, 
+  selectedAgentIds, 
+  onToggleAgent, 
+  loading, 
+  title = "Evaluations to run",
+  actionText = "will be queued",
+  layout = "grid"
+}: AgentSelectorProps) {
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-gray-700">
+          {title}
+        </label>
+        <div className="flex items-center justify-center p-8 rounded-lg border border-gray-200">
+          <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (agents.length === 0) {
+    return (
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-gray-700">
+          {title}
+        </label>
+        <p className="text-sm text-gray-500 italic">No evaluations available</p>
+      </div>
+    );
+  }
+
+  const containerClass = layout === "grid" 
+    ? "grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto"
+    : "space-y-2 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto";
+
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-gray-700">
+        {title}
+      </label>
+      
+      <div className={containerClass}>
+        {agents.map(agent => (
+          <label
+            key={agent.id}
+            className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 hover:border-gray-200 cursor-pointer transition-colors"
+          >
+            <input
+              type="checkbox"
+              checked={selectedAgentIds.includes(agent.id)}
+              onChange={() => onToggleAgent(agent.id)}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-900">{agent.name}</span>
+                <AgentBadges
+                  isDeprecated={agent.isDeprecated}
+                  isRecommended={agent.isRecommended}
+                  isSystemManaged={agent.isSystemManaged}
+                  providesGrades={agent.providesGrades}
+                  size="sm"
+                />
+              </div>
+              <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
+            </div>
+            {selectedAgentIds.includes(agent.id) && (
+              <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
+            )}
+          </label>
+        ))}
+      </div>
+      
+      {selectedAgentIds.length > 0 && (
+        <p className="text-sm text-gray-600">
+          {selectedAgentIds.length} evaluation{selectedAgentIds.length !== 1 ? 's' : ''} {actionText}
+        </p>
+      )}
+    </div>
+  );
+}
+
+interface ErrorAlertProps {
+  title?: string;
+  message: string;
+}
+
+function ErrorAlert({ title = "Error", message }: ErrorAlertProps) {
+  return (
+    <div className="rounded-md bg-red-50 p-4">
+      <div className="text-sm text-red-700">
+        <p className="font-medium">{title}</p>
+        <p className="mt-1">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+interface SubmitButtonProps {
+  isSubmitting: boolean;
+  selectedAgentCount: number;
+  baseText: string;
+  submittingText: string;
+  disabled?: boolean;
+}
+
+function SubmitButton({ 
+  isSubmitting, 
+  selectedAgentCount, 
+  baseText, 
+  submittingText,
+  disabled = false 
+}: SubmitButtonProps) {
+  const buttonText = selectedAgentCount > 0 
+    ? `${baseText} & Run ${selectedAgentCount} Evaluation${selectedAgentCount !== 1 ? 's' : ''}`
+    : baseText;
+
+  return (
+    <Button type="submit" disabled={disabled || isSubmitting}>
+      {isSubmitting ? (
+        <div className="flex items-center justify-center gap-2">
+          <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+          {submittingText}
+        </div>
+      ) : (
+        buttonText
+      )}
+    </Button>
+  );
+}
+
+// ============= MAIN COMPONENT =============
+
 export default function CreateDocumentForm() {
   const [mode, setMode] = useState<"import" | "manual">("import");
   const [importUrl, setImportUrl] = useState("");
@@ -116,8 +304,6 @@ export default function CreateDocumentForm() {
         // Sort agents: recommended first, then regular, then deprecated
         const sortedAgents = sortAgentsByBadgeStatus<Agent>(fetchedAgents);
         setAgents(sortedAgents);
-        // Start with no agents selected
-        // Users can manually select which evaluations they want to run
       } catch (error) {
         logger.error('Error fetching agents:', error);
       } finally {
@@ -251,113 +437,36 @@ export default function CreateDocumentForm() {
                 />
               </div>
 
-              {/* Privacy Toggle */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-900">
-                  Document Privacy
-                </label>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={importIsPrivate}
-                      onChange={(e) => setImportIsPrivate(e.target.checked)}
-                      className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <div className="flex items-start gap-2">
-                      <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">Keep this document private</div>
-                        <div className="text-xs text-gray-500">Only you will be able to view this document. Private by default.</div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
+              <PrivacyToggle 
+                isPrivate={importIsPrivate} 
+                onChange={setImportIsPrivate} 
+              />
 
-              {/* Agent Selection */}
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Run evaluations after import
-                  </label>
-                </div>
-                
-                {loadingAgents ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 p-4">
-                    {[1, 2, 3, 4].map(i => (
-                      <div key={i} className="h-20 bg-gray-100 rounded-lg"></div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto">
-                    {agents.map(agent => (
-                      <label
-                        key={agent.id}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 hover:border-gray-200 cursor-pointer transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedAgentIds.includes(agent.id)}
-                          onChange={() => toggleAgent(agent.id)}
-                          className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900">{agent.name}</span>
-                            <AgentBadges
-                              isDeprecated={agent.isDeprecated}
-                              isRecommended={agent.isRecommended}
-                              isSystemManaged={agent.isSystemManaged}
-                              providesGrades={agent.providesGrades}
-                              size="sm"
-                            />
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
-                        </div>
-                        {selectedAgentIds.includes(agent.id) && (
-                          <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                )}
-                
-                {selectedAgentIds.length > 0 && (
-                  <p className="text-sm text-gray-600">
-                    {selectedAgentIds.length} evaluation{selectedAgentIds.length !== 1 ? 's' : ''} will be queued after import
-                  </p>
-                )}
-              </div>
+              <AgentSelector
+                agents={agents}
+                selectedAgentIds={selectedAgentIds}
+                onToggleAgent={toggleAgent}
+                loading={loadingAgents}
+                title="Run evaluations after import"
+                actionText="will be queued after import"
+                layout="grid"
+              />
 
               {importError && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <div className="text-sm text-red-700">
-                    <p className="font-medium">Import failed</p>
-                    <p className="mt-1">{importError}</p>
-                  </div>
-                </div>
+                <ErrorAlert title="Import failed" message={importError} />
               )}
 
               <div className="flex justify-end gap-3">
                 <Link href="/docs">
                   <Button variant="secondary">Cancel</Button>
                 </Link>
-                <Button
-                  type="submit"
-                  disabled={isImporting || !importUrl.trim()}
-                >
-                  {isImporting ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-                      Importing...
-                    </div>
-                  ) : (
-                    selectedAgentIds.length > 0 
-                      ? `Import & Run ${selectedAgentIds.length} Evaluation${selectedAgentIds.length !== 1 ? 's' : ''}`
-                      : "Import Document"
-                  )}
-                </Button>
+                <SubmitButton
+                  isSubmitting={isImporting}
+                  selectedAgentCount={selectedAgentIds.length}
+                  baseText="Import Document"
+                  submittingText="Importing..."
+                  disabled={!importUrl.trim()}
+                />
               </div>
 
               {isImporting && (
@@ -437,107 +546,36 @@ export default function CreateDocumentForm() {
                   </FormField>
                 ))}
 
-                {/* Privacy Toggle */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-900">
-                    Document Privacy
-                  </label>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        {...methods.register("isPrivate")}
-                        type="checkbox"
-                        className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <div className="flex items-start gap-2">
-                        <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">Keep this document private</div>
-                          <div className="text-xs text-gray-500">Only you will be able to view this document. Private by default.</div>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
+                <PrivacyToggle 
+                  isPrivate={true}
+                  onChange={() => {}}
+                  useRegister={methods.register("isPrivate")}
+                />
 
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-900">
-                    Evaluations to run after creation
-                  </h3>
-                  
-                  {loadingAgents ? (
-                    <div className="flex items-center justify-center p-4">
-                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-600"></div>
-                    </div>
-                  ) : agents.length === 0 ? (
-                    <p className="text-sm text-gray-500 italic">No evaluations available</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {agents.map((agent) => (
-                        <label
-                          key={agent.id}
-                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 hover:border-gray-200 cursor-pointer transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedAgentIds.includes(agent.id)}
-                            onChange={() => toggleAgent(agent.id)}
-                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900">{agent.name}</span>
-                              <AgentBadges
-                                isDeprecated={agent.isDeprecated}
-                                isRecommended={agent.isRecommended}
-                                isSystemManaged={agent.isSystemManaged}
-                                providesGrades={agent.providesGrades}
-                                size="sm"
-                              />
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
-                          </div>
-                          {selectedAgentIds.includes(agent.id) && (
-                            <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
-                          )}
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {selectedAgentIds.length > 0 && (
-                    <p className="text-sm text-gray-600">
-                      {selectedAgentIds.length} evaluation{selectedAgentIds.length !== 1 ? 's' : ''} will be queued after creation
-                    </p>
-                  )}
-                </div>
+                <AgentSelector
+                  agents={agents}
+                  selectedAgentIds={selectedAgentIds}
+                  onToggleAgent={toggleAgent}
+                  loading={loadingAgents}
+                  title="Evaluations to run after creation"
+                  actionText="will be queued after creation"
+                  layout="list"
+                />
 
                 {errors.root && (
-                  <div className="rounded-md bg-red-50 p-4">
-                    <div className="flex">
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-red-800">
-                          Error
-                        </h3>
-                        <div className="mt-2 text-sm text-red-700">
-                          {errors.root.message}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <ErrorAlert message={errors.root.message || "An error occurred"} />
                 )}
 
                 <div className="flex justify-end gap-3">
                   <Link href="/docs">
                     <Button variant="secondary">Cancel</Button>
                   </Link>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : (
-                      selectedAgentIds.length > 0 
-                        ? `Save & Run ${selectedAgentIds.length} Evaluation${selectedAgentIds.length !== 1 ? 's' : ''}`
-                        : "Save Document"
-                    )}
-                  </Button>
+                  <SubmitButton
+                    isSubmitting={isSubmitting}
+                    selectedAgentCount={selectedAgentIds.length}
+                    baseText="Save Document"
+                    submittingText="Saving..."
+                  />
                 </div>
               </form>
             </FormProvider>

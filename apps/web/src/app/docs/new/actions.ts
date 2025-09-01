@@ -29,7 +29,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
         url: data.urls,
         platforms: data.platforms ? [data.platforms] : [],
         importUrl: data.importUrl,
-        isPrivate: data.isPrivate ?? false
+        isPrivate: data.isPrivate ?? true
       },
       agentIds
     );
