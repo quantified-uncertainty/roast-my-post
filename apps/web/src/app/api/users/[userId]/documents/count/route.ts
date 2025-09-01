@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { UserModel } from "@/models/User";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
@@ -12,7 +13,11 @@ export async function GET(
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
     
-    const count = await UserModel.getUserDocumentsCount(userId);
+    // Get requesting user (optional - supports both authenticated and anonymous)
+    const requestingUserId = await authenticateRequest(request);
+    
+    // Only count documents the requesting user can see
+    const count = await UserModel.getUserDocumentsCount(userId, requestingUserId);
     
     return NextResponse.json({ count });
   } catch (error) {

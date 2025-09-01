@@ -40,6 +40,7 @@ export interface CreateDocumentRequest {
   platforms?: string[];
   importUrl?: string;
   ephemeralBatchId?: string;
+  isPrivate?: boolean;
 }
 
 export interface UpdateDocumentRequest {
@@ -95,7 +96,8 @@ export class DocumentService {
         submittedById: userId,
         importUrl: data.importUrl,
         ephemeralBatchId: data.ephemeralBatchId,
-        markdownPrepend
+        markdownPrepend,
+        isPrivate: data.isPrivate || false
       };
 
       const repoDocument = await this.docRepo.create(createData);
@@ -296,10 +298,11 @@ export class DocumentService {
    * Get recent documents
    */
   async getRecentDocuments(
-    limit = 50
+    limit = 50,
+    requestingUserId?: string
   ): Promise<Result<DocumentWithEvaluations[], AppError>> {
     try {
-      const repoDocs = await this.docRepo.findRecent(limit);
+      const repoDocs = await this.docRepo.findRecent(limit, requestingUserId);
       const documents = repoDocs.map(doc => this.convertToDocumentWithEvaluations(doc));
       return Result.ok(documents);
     } catch (error) {
@@ -331,7 +334,8 @@ export class DocumentService {
    */
   async searchDocuments(
     query: string,
-    limit = 50
+    limit = 50,
+    requestingUserId?: string
   ): Promise<Result<any[], AppError>> {
     try {
       if (!query || query.trim().length < 2) {
@@ -340,7 +344,7 @@ export class DocumentService {
         );
       }
 
-      const results = await this.docRepo.search(query.trim(), limit);
+      const results = await this.docRepo.search(query.trim(), limit, requestingUserId);
       return Result.ok(results);
     } catch (error) {
       this.logger.error('Error searching documents', { error, query });

@@ -116,11 +116,20 @@ export function useAgentDetail(agent: Agent) {
     try {
       const response = await fetch(`/api/agents/${agent.id}/batches`);
       const data = await response.json();
-      if (data.batches) {
+      
+      // Ensure we always have an array
+      if (Array.isArray(data.batches)) {
         setBatches(data.batches);
+      } else if (Array.isArray(data)) {
+        // Handle case where the API returns array directly
+        setBatches(data);
+      } else {
+        logger.error('Unexpected batches response format:', data);
+        setBatches([]);
       }
     } catch (error) {
       logger.error('Error fetching batches:', error);
+      setBatches([]);
     } finally {
       setBatchesLoading(false);
     }

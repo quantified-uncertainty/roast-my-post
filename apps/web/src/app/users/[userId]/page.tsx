@@ -44,7 +44,7 @@ export default async function UserPage({
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
-          <DocumentsCard userId={user.id} />
+          <DocumentsCard userId={user.id} requestingUserId={currentUserId} />
         </Suspense>
 
         <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>

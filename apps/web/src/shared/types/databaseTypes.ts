@@ -14,6 +14,7 @@ export interface Document extends Omit<BaseDocument, 'reviews'> {
   };
   importUrl?: string; // For documents imported from URLs
   ephemeralBatchId?: string;
+  isPrivate?: boolean; // Document privacy setting
   // Override reviews field to use database Evaluation type
   reviews: Evaluation[];
 }

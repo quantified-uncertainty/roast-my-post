@@ -10,6 +10,7 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import SlateEditor from "@/components/SlateEditor";
 import { PageHeader } from "@/components/PageHeader";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { DocumentModel } from "@/models/Document";
@@ -68,9 +69,9 @@ export default async function DocumentPage({
     notFound();
   }
 
-  // Use getDocumentWithAllEvaluations to show all evaluations in the sidebar
-  // regardless of staleness - users should always see their evaluations
-  const document = await DocumentModel.getDocumentWithAllEvaluations(docId);
+  // Use unsafe version since privacy is checked by the layout
+  // Show all evaluations in the sidebar regardless of staleness
+  const document = await DocumentModel.getDocumentWithAllEvaluationsUnsafe(docId);
 
   if (!document) {
     notFound();
@@ -160,7 +161,12 @@ export default async function DocumentPage({
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
           <PageHeader
-            title={document.title || "Untitled Document"}
+            title={
+              <div className="flex items-center gap-3">
+                {document.title || "Untitled Document"}
+                <PrivacyBadge isPrivate={document.isPrivate} variant="badge" size="sm" />
+              </div>
+            }
             subtitle="Document Overview"
           >
             <div className="flex items-center gap-4">
@@ -172,7 +178,10 @@ export default async function DocumentPage({
               {isOwner && (
                 <DocumentActions
                   docId={docId}
-                  document={{ importUrl: document.importUrl }}
+                  document={{ 
+                    importUrl: document.importUrl,
+                    isPrivate: document.isPrivate 
+                  }}
                 />
               )}
             </div>
@@ -255,6 +264,15 @@ export default async function DocumentPage({
                       </dt>
                       <dd className="mt-1 text-sm text-gray-900">
                         {document.title || "Untitled"}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Privacy
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        <PrivacyBadge isPrivate={document.isPrivate} variant="text" size="sm" />
                       </dd>
                     </div>
 

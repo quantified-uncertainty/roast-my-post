@@ -15,6 +15,8 @@ export const documentListingSelect = {
     select: {
       id: true,
       publishedDate: true,
+      isPrivate: true,
+      submittedById: true,
       evaluations: {
         select: {
           agentId: true,
@@ -68,6 +70,25 @@ export const documentListingFilters = {
       mode: "insensitive" as const,
     },
   } satisfies Prisma.DocumentVersionWhereInput),
+  
+  privacy: (userId?: string) => {
+    if (!userId) {
+      // Anonymous users can only see public docs
+      return {
+        document: { isPrivate: false },
+      } satisfies Prisma.DocumentVersionWhereInput;
+    }
+    
+    // Authenticated users can see public docs and their own private docs
+    return {
+      document: {
+        OR: [
+          { isPrivate: false },
+          { submittedById: userId }
+        ]
+      }
+    } satisfies Prisma.DocumentVersionWhereInput;
+  },
 } as const;
 
 /**
@@ -83,6 +104,8 @@ export interface SerializedDocumentListing {
   document: {
     id: string;
     publishedDate: string;
+    isPrivate: boolean;
+    submittedById: string;
     evaluations: Array<{
       agentId: string;
       agent: {
@@ -110,6 +133,8 @@ export function serializeDocumentListing(doc: DocumentListing): SerializedDocume
     document: {
       id: doc.document.id,
       publishedDate: doc.document.publishedDate.toISOString(),
+      isPrivate: doc.document.isPrivate,
+      submittedById: doc.document.submittedById,
       evaluations: doc.document.evaluations.map((evaluation) => ({
         agentId: evaluation.agentId,
         agent: {

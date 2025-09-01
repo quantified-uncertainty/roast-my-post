@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { DocumentModel } from "@/models/Document";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 
 const queryEvaluationsSchema = z.object({
   includeStale: z.coerce.boolean().optional().default(false),
@@ -22,8 +23,11 @@ export async function GET(
     const queryParams = Object.fromEntries(url.searchParams);
     const { includeStale, agentIds } = queryEvaluationsSchema.parse(queryParams);
 
-    // Get document with all evaluations
-    const document = await DocumentModel.getDocumentWithEvaluations(docId, includeStale);
+    // Get requesting user (optional - supports both authenticated and anonymous)
+    const requestingUserId = await authenticateRequest(req);
+
+    // Get document with all evaluations (respects privacy)
+    const document = await DocumentModel.getDocumentWithEvaluations(docId, includeStale, requestingUserId);
 
     if (!document) {
       return commonErrors.notFound("Document not found");

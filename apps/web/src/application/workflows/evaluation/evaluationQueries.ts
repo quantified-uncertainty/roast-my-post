@@ -4,8 +4,9 @@ import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 /**
  * Shared query pattern for getting evaluation data for display
+ * Now also includes the requesting user ID for ownership checks
  */
-export async function getEvaluationForDisplay(docId: string, agentId: string) {
+export async function getEvaluationForDisplay(docId: string, agentId: string, currentUserId?: string) {
   const evaluation = await prisma.evaluation.findFirst({
     where: {
       agentId: agentId,
@@ -27,14 +28,22 @@ export async function getEvaluationForDisplay(docId: string, agentId: string) {
     },
   });
 
-  return evaluation;
+  return { evaluation, currentUserId };
 }
 
 
 /**
  * Extract evaluation display data from a full evaluation object
  */
-export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<ReturnType<typeof getEvaluationForDisplay>>>) {
+export function extractEvaluationDisplayData(
+  result: NonNullable<Awaited<ReturnType<typeof getEvaluationForDisplay>>>
+) {
+  const { evaluation, currentUserId } = result;
+  
+  if (!evaluation) {
+    throw new Error("Evaluation is required for extractEvaluationDisplayData");
+  }
+  
   const latestVersion = evaluation.versions[0];
   
   return {
@@ -70,6 +79,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
     // Additional metadata
     version: latestVersion?.version || 1,
     evaluationId: evaluation.id,
+    isOwner: currentUserId ? evaluation.document.submittedById === currentUserId : false,
     allEvaluations: (evaluation.document.evaluations || []).map(ev => ({
       id: ev.id,
       agentId: ev.agentId,

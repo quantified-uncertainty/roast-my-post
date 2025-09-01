@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
+import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { evaluationWithCurrentJob } from "@/infrastructure/database/prisma/evaluation-includes";
-import { checkDocumentOwnership } from "@/application/services/document-auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { PageHeader } from "@/components/PageHeader";
@@ -21,6 +21,10 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
   const resolvedParams = await params;
   const { docId, agentId } = resolvedParams;
 
+  // Get current user for ownership check
+  const session = await auth();
+  const currentUserId = session?.user?.id;
+
   // Fetch evaluation and job data
   const evaluation = await prisma.evaluation.findFirst({
     where: {
@@ -38,8 +42,8 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
   const allEvaluations = evaluation.document.evaluations || [];
   
-  // Check if current user owns the document
-  const isOwner = await checkDocumentOwnership(docId);
+  // Get ownership from fetched data
+  const isOwner = currentUserId ? evaluation.document.submittedById === currentUserId : false;
   
   // Get the current version and its job
   const currentVersion = evaluation.versions[0];

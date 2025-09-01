@@ -312,6 +312,7 @@ class DocumentTransformer {
         email: null, // Explicitly null for privacy
         image: dbDoc.submittedBy.image,
       } : undefined,
+      isPrivate: dbDoc.isPrivate || false,
       createdAt: dbDoc.createdAt,
       updatedAt: dbDoc.updatedAt,
     };
@@ -644,25 +645,19 @@ export class DocumentModel {
   }
 
   /**
-   * Retrieves a document with its evaluations, optionally filtering out stale evaluations.
+   * Retrieves a document with its evaluations WITHOUT privacy checks.
+   * Should only be used in contexts where privacy has already been verified (e.g., in layouts).
    * 
+   * @internal
    * @param docId - The unique identifier of the document
-   * @param includeStale - Whether to include evaluations that don't match the current document version.
-   *                       Defaults to false, which filters out stale evaluations.
+   * @param includeStale - Whether to include evaluations that don't match the current document version
    * @returns The document with evaluations, or null if not found
-   * 
-   * @remarks
-   * When includeStale is false (default), only evaluations where the latest evaluation version
-   * matches the current document version are included. This prevents stale evaluations with
-   * broken highlights from appearing in the main reader view.
-   * 
-   * When includeStale is true, all evaluations are returned regardless of version matching.
-   * This is useful for history views where users need to see all past evaluations.
    */
-  static async getDocumentWithEvaluations(
+  static async getDocumentWithEvaluationsUnsafe(
     docId: string,
     includeStale: boolean = false
   ): Promise<Document | null> {
+
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
@@ -687,15 +682,45 @@ export class DocumentModel {
   }
 
   /**
-   * Gets a document optimized for the reader view - only fetches latest evaluation version data.
-   * This significantly reduces query size by not loading historical evaluation comments/highlights.
+   * Retrieves a document with its evaluations, WITH privacy checks.
+   * Use this for API endpoints and other contexts where privacy hasn't been verified.
    * 
+   * @param docId - The unique identifier of the document
+   * @param includeStale - Whether to include evaluations that don't match the current document version
+   * @param requestingUserId - The ID of the requesting user (or undefined for anonymous)
+   * @returns The document with evaluations, or null if not found or access denied
+   */
+  static async getDocumentWithEvaluations(
+    docId: string,
+    includeStale: boolean = false,
+    requestingUserId: string | undefined
+  ): Promise<Document | null> {
+    // Check access before fetching
+    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+    const canView = await PrivacyService.canViewDocument(
+      docId,
+      requestingUserId
+    );
+
+    if (!canView) {
+      return null;
+    }
+
+    return DocumentModel.getDocumentWithEvaluationsUnsafe(docId, includeStale);
+  }
+
+  /**
+   * Gets a document optimized for the reader view WITHOUT privacy checks.
+   * Should only be used in contexts where privacy has already been verified (e.g., in layouts).
+   * 
+   * @internal
    * @param docId - The document ID to fetch
    * @returns The document with latest evaluation data or null if not found
    */
-  static async getDocumentForReader(
+  static async getDocumentForReaderUnsafe(
     docId: string
   ): Promise<Document | null> {
+
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
       ...DocumentQueryBuilder.buildQuery({
@@ -718,20 +743,58 @@ export class DocumentModel {
   }
 
   /**
-   * Retrieves a document with all evaluations, including stale ones.
+   * Gets a document optimized for the reader view WITH privacy checks.
+   * Use this for API endpoints and other contexts where privacy hasn't been verified.
    * 
+   * @param docId - The document ID to fetch
+   * @param requestingUserId - The ID of the requesting user (or undefined for anonymous)
+   * @returns The document with latest evaluation data or null if not found or access denied
+   */
+  static async getDocumentForReader(
+    docId: string,
+    requestingUserId: string | undefined
+  ): Promise<Document | null> {
+    // Check access before fetching
+    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+    const canView = await PrivacyService.canViewDocument(
+      docId,
+      requestingUserId
+    );
+
+    if (!canView) {
+      return null;
+    }
+
+    return DocumentModel.getDocumentForReaderUnsafe(docId);
+  }
+
+  /**
+   * Retrieves a document with all evaluations WITHOUT privacy checks.
+   * Should only be used in contexts where privacy has already been verified (e.g., in layouts).
+   * 
+   * @internal
    * @param docId - The unique identifier of the document
    * @returns The document with all evaluations, or null if not found
-   * 
-   * @remarks
-   * This is a convenience method equivalent to calling getDocumentWithEvaluations(docId, true).
-   * It's intended for use in history views, evaluation management pages, and anywhere that
-   * needs to display all evaluations regardless of their version compatibility.
    */
-  static async getDocumentWithAllEvaluations(
+  static async getDocumentWithAllEvaluationsUnsafe(
     docId: string
   ): Promise<Document | null> {
-    return DocumentModel.getDocumentWithEvaluations(docId, true);
+    return DocumentModel.getDocumentWithEvaluationsUnsafe(docId, true);
+  }
+
+  /**
+   * Retrieves a document with all evaluations, WITH privacy checks.
+   * Use this for API endpoints and other contexts where privacy hasn't been verified.
+   * 
+   * @param docId - The unique identifier of the document
+   * @param requestingUserId - The ID of the requesting user (or undefined for anonymous)
+   * @returns The document with all evaluations, or null if not found or access denied
+   */
+  static async getDocumentWithAllEvaluations(
+    docId: string,
+    requestingUserId: string | undefined
+  ): Promise<Document | null> {
+    return DocumentModel.getDocumentWithEvaluations(docId, true, requestingUserId);
   }
 
   /**
@@ -903,14 +966,18 @@ export class DocumentModel {
    */
   static async getDocumentListings(options?: {
     userId?: string;
+    requestingUserId?: string; // NEW: who's requesting the documents
     searchQuery?: string;
     limit?: number;
     latestVersionOnly?: boolean;
   }): Promise<SerializedDocumentListing[]> {
-    const { userId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
+    const { userId, requestingUserId, searchQuery, limit = 50, latestVersionOnly = false } = options || {};
 
     // Compose where conditions using type-safe filters
     const whereConditions = [];
+    
+    // CRITICAL: Add privacy filter first
+    whereConditions.push(documentListingFilters.privacy(requestingUserId));
     
     if (userId) {
       whereConditions.push(documentListingFilters.byUser(userId));
@@ -952,6 +1019,7 @@ export class DocumentModel {
     content: string;
     importUrl?: string;
     submittedById: string;
+    isPrivate?: boolean;
   }) {
     // Validate content length
     if (!data.content || data.content.length < 30) {
@@ -986,6 +1054,7 @@ export class DocumentModel {
         id,
         publishedDate: new Date(),
         submittedById: data.submittedById,
+        isPrivate: data.isPrivate ?? false, // Default to public
         versions: {
           create: {
             version: 1,
@@ -1034,6 +1103,30 @@ export class DocumentModel {
     });
 
     return document;
+  }
+
+  /**
+   * Update the privacy setting of a document
+   */
+  static async updatePrivacy(
+    docId: string,
+    isPrivate: boolean,
+    userId: string
+  ): Promise<void> {
+    // Verify ownership before update
+    const doc = await prisma.document.findUnique({
+      where: { id: docId },
+      select: { submittedById: true },
+    });
+
+    if (!doc || doc.submittedById !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    await prisma.document.update({
+      where: { id: docId },
+      data: { isPrivate },
+    });
   }
 
   static async delete(docId: string) {
@@ -1170,6 +1263,7 @@ export class DocumentModel {
       intendedAgents?: string;
       content: string;
       importUrl?: string;
+      isPrivate?: boolean;
     },
     userId: string
   ) {
@@ -1221,6 +1315,7 @@ export class DocumentModel {
       const updatedDocument = await tx.document.update({
         where: { id: docId },
         data: {
+          isPrivate: data.isPrivate !== undefined ? data.isPrivate : undefined, // Only update if provided
           versions: {
             create: {
               version: newVersion,

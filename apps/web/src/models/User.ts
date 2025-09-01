@@ -76,9 +76,20 @@ export class UserModel {
     });
   }
 
-  static async getUserDocumentsCount(userId: string): Promise<number> {
+  static async getUserDocumentsCount(userId: string, requestingUserId?: string): Promise<number> {
+    // If requesting user is viewing their own profile, show all documents
+    if (requestingUserId === userId) {
+      return await prisma.document.count({
+        where: { submittedById: userId },
+      });
+    }
+    
+    // Otherwise only count public documents
     return await prisma.document.count({
-      where: { submittedById: userId },
+      where: { 
+        submittedById: userId,
+        isPrivate: false 
+      },
     });
   }
 

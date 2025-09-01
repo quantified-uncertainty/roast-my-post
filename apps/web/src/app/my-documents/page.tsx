@@ -27,11 +27,12 @@ export default async function MyDocumentsPage({
 
   const searchQuery = (await searchParams).search || "";
 
-  // Get only the current user's documents
+  // Get only the current user's documents (both public and private)
   const documents = await DocumentModel.getDocumentListings({
     searchQuery,
     limit: 50,
     userId: session.user.id,
+    requestingUserId: session.user.id,
   });
 
   const totalCount = documents.length;
@@ -39,7 +40,7 @@ export default async function MyDocumentsPage({
 
   return (
     <>
-      <SearchBar searchQuery={searchQuery} showNewButton={true} />
+      <SearchBar searchQuery={searchQuery} showNewButton={false} />
 
       <Suspense
         fallback={
@@ -53,6 +54,8 @@ export default async function MyDocumentsPage({
           searchQuery={searchQuery}
           totalCount={totalCount}
           hasSearched={hasSearched}
+          pageTitle="Your Documents"
+          showPrivacyBadges={true}
         />
       </Suspense>
     </>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Agent } from "@roast/ai";
 
 import { StatusBadge } from "../components";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
 import type { AgentDocument } from "../types";
 import {
   formatDate,
@@ -46,13 +47,14 @@ export function DocumentsTab({
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-lg font-medium text-gray-900">
+                        <h4 className="flex items-center gap-2 text-lg font-medium text-gray-900">
                           <Link
                             href={`/docs/${doc.id}/evals/${agent.id}`}
                             className="transition-colors hover:text-blue-600"
                           >
                             {doc.title}
                           </Link>
+                          {doc.isPrivate && <PrivacyBadge isPrivate={true} variant="badge" size="xs" />}
                         </h4>
                         <p className="text-sm text-gray-500">
                           By {doc.author} • Published{" "}

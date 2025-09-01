@@ -18,6 +18,7 @@ import { z } from "zod";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import { WarningDialog } from "@/components/WarningDialog";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 
 import {
   type DocumentInput,
@@ -83,6 +84,7 @@ export default function EditDocumentPage({ params }: Props) {
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [evaluationCount, setEvaluationCount] = useState(0);
   const [pendingFormData, setPendingFormData] = useState<DocumentInput | null>(null);
+  const [_isPrivate, setIsPrivate] = useState(false);
 
   const methods = useForm<DocumentInput>({
     defaultValues: {
@@ -92,6 +94,7 @@ export default function EditDocumentPage({ params }: Props) {
       urls: "",
       platforms: "",
       importUrl: "",
+      isPrivate: false,
     },
   });
 
@@ -125,7 +128,11 @@ export default function EditDocumentPage({ params }: Props) {
               ? document.platforms.join(", ")
               : "",
           importUrl: document.importUrl || "",
+          isPrivate: document.isPrivate ?? false,
         });
+        
+        // Update the local state for privacy
+        setIsPrivate(document.isPrivate ?? false);
 
         // Count the number of evaluations
         const evalCount = document.reviews?.length || 0;
@@ -307,6 +314,23 @@ export default function EditDocumentPage({ params }: Props) {
                   placeholder="Document content in Markdown format"
                 />
               </FormField>
+
+              <div className="flex items-start">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    {...methods.register("isPrivate")}
+                    type="checkbox"
+                    className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <div className="flex items-start gap-2">
+                    <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">Make this document private</div>
+                      <div className="text-xs text-gray-500">Only you will be able to view this document. Public by default.</div>
+                    </div>
+                  </div>
+                </label>
+              </div>
 
               {errors.root && (
                 <div className="rounded-md bg-red-50 p-4">

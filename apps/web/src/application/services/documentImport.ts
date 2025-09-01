@@ -22,7 +22,8 @@ export interface ImportDocumentResult {
 export async function importDocumentService(
   url: string,
   userId: string,
-  agentIds: string[] = []
+  agentIds: string[] = [],
+  isPrivate: boolean = true
 ): Promise<ImportDocumentResult> {
   try {
     logger.info(`🔄 Starting article import for URL: ${url}`);
@@ -60,6 +61,7 @@ export async function importDocumentService(
         url: processedArticle.url,
         platforms: processedArticle.platforms,
         importUrl: url,
+        isPrivate,
       },
       agentIds
     );

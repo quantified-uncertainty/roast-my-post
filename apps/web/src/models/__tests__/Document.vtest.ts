@@ -31,6 +31,24 @@ vi.mock('@/shared/types/validationSchemas', () => ({
   },
 }));
 
+// Mock PrivacyService
+vi.mock('@/infrastructure/auth/privacy-service', () => ({
+  PrivacyService: {
+    canViewDocument: vi.fn(() => Promise.resolve(true)),
+    getViewableDocumentsFilter: vi.fn((userId) => {
+      if (!userId) {
+        return { isPrivate: false };
+      }
+      return {
+        OR: [
+          { isPrivate: false },
+          { submittedById: userId }
+        ]
+      };
+    }),
+  },
+}));
+
 describe('DocumentModel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -149,7 +167,7 @@ describe('DocumentModel', () => {
     it('should use database filtering for stale evaluations by default (includeStale=false)', async () => {
       (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDbDoc);
 
-      const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
+      const result = await DocumentModel.getDocumentWithEvaluations('doc-123', false, undefined);
 
       expect(result).toBeTruthy();
       expect(result?.reviews).toHaveLength(1);
@@ -201,7 +219,7 @@ describe('DocumentModel', () => {
       };
       (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocWithoutEvals);
 
-      const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
+      const result = await DocumentModel.getDocumentWithEvaluations('doc-123', false, undefined);
 
       expect(result).toBeTruthy();
       expect(result?.reviews).toHaveLength(0);
@@ -215,7 +233,7 @@ describe('DocumentModel', () => {
       };
       (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocWithEmptyEvals);
 
-      const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
+      const result = await DocumentModel.getDocumentWithEvaluations('doc-123', false, undefined);
 
       expect(result).toBeTruthy();
       expect(result?.reviews).toHaveLength(0);
@@ -229,7 +247,7 @@ describe('DocumentModel', () => {
       };
       (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocWithStaleEval);
 
-      const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
+      const result = await DocumentModel.getDocumentWithEvaluations('doc-123', false, undefined);
 
       expect(result).toBeTruthy();
       expect(result?.reviews).toHaveLength(0);
@@ -257,7 +275,7 @@ describe('DocumentModel', () => {
       };
       (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocMixedEvals);
 
-      const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
+      const result = await DocumentModel.getDocumentWithEvaluations('doc-123', false, undefined);
 
       expect(result).toBeTruthy();
       expect(result?.reviews).toHaveLength(1);
@@ -267,7 +285,7 @@ describe('DocumentModel', () => {
     it('should return null for non-existent document', async () => {
       (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(null);
 
-      const result = await DocumentModel.getDocumentWithEvaluations('non-existent');
+      const result = await DocumentModel.getDocumentWithEvaluations('non-existent', false, undefined);
 
       expect(result).toBeNull();
     });
@@ -279,7 +297,7 @@ describe('DocumentModel', () => {
       };
       (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValue(mockDocNoVersions);
 
-      const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
+      const result = await DocumentModel.getDocumentWithEvaluations('doc-123', false, undefined);
 
       expect(result).toBeNull();
     });
@@ -430,7 +448,20 @@ describe('DocumentModel', () => {
 
       const result = await DocumentModel.getDocumentWithAllEvaluations('doc-123');
 
-      expect(getDocumentWithEvaluationsSpy).toHaveBeenCalledWith('doc-123', true);
+      expect(getDocumentWithEvaluationsSpy).toHaveBeenCalledWith('doc-123', true, undefined);
+      expect(result).toBe(mockDoc);
+
+      getDocumentWithEvaluationsSpy.mockRestore();
+    });
+
+    it('should pass requestingUserId when provided', async () => {
+      const mockDoc = { id: 'test' };
+      const getDocumentWithEvaluationsSpy = vi.spyOn(DocumentModel, 'getDocumentWithEvaluations')
+        .mockResolvedValue(mockDoc as any);
+
+      const result = await DocumentModel.getDocumentWithAllEvaluations('doc-123', 'user-456');
+
+      expect(getDocumentWithEvaluationsSpy).toHaveBeenCalledWith('doc-123', true, 'user-456');
       expect(result).toBe(mockDoc);
 
       getDocumentWithEvaluationsSpy.mockRestore();

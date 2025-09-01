@@ -295,12 +295,18 @@ export class AgentRepository {
 
   /**
    * Gets documents that have been evaluated by an agent
+   * Only returns documents the requesting user can view (public or owned)
    */
-  async getAgentDocuments(agentId: string, limit: number = 40): Promise<Result<any[], AppError>> {
+  async getAgentDocuments(agentId: string, limit: number = 40, requestingUserId?: string): Promise<Result<any[], AppError>> {
     try {
+      // Use centralized privacy filter from PrivacyService
+      const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+      const privacyFilter = PrivacyService.getEvaluationPrivacyFilter(requestingUserId);
+
       const evaluations = await prisma.evaluation.findMany({
       where: {
         agentId: agentId,
+        ...privacyFilter
       },
       orderBy: {
         createdAt: "desc",
@@ -347,6 +353,7 @@ export class AgentRepository {
         title: latestDocumentVersion?.title || "Untitled",
         author: evaluation.document?.submittedBy?.name || "Unknown",
         publishedDate: evaluation.document?.publishedDate,
+        isPrivate: evaluation.document?.isPrivate || false,
         evaluationId: evaluation.id,
         evaluationCreatedAt: evaluation.createdAt,
         summary: latestEvaluationVersion?.summary,
@@ -418,11 +425,14 @@ export class AgentRepository {
 
   /**
    * Gets evaluations performed by an agent
+   * Only returns evaluations for documents the requesting user can view
    */
-  async getAgentEvaluations(agentId: string, options?: { limit?: number; batchId?: string }): Promise<Result<any[], AppError>> {
+  async getAgentEvaluations(agentId: string, options?: { limit?: number; batchId?: string; requestingUserId?: string }): Promise<Result<any[], AppError>> {
     try {
+      const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
       const limit = options?.limit || 50;
       const batchId = options?.batchId;
+      const requestingUserId = options?.requestingUserId;
     
     let whereConditions: any = {
       agentId: agentId,
@@ -443,8 +453,16 @@ export class AgentRepository {
       whereConditions.id = { in: evaluationVersionIds };
     }
 
+    // Apply privacy filter at the evaluation level
+    const privacyFilter = PrivacyService.getViewableDocumentsFilter(requestingUserId);
+    
     const evaluations = await prisma.evaluationVersion.findMany({
-      where: whereConditions,
+      where: {
+        ...whereConditions,
+        evaluation: {
+          document: privacyFilter // Filter evaluations by document privacy
+        }
+      },
       orderBy: {
         createdAt: "desc",
       },

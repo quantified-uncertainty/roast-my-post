@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm";
 
 import { prisma } from "@/infrastructure/database/prisma";
 import { evaluationWithAllVersions } from "@/infrastructure/database/prisma/evaluation-includes";
-import { checkDocumentOwnership } from "@/application/services/document-auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { serializePrismaResult } from "@/infrastructure/database/prisma-serializers";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
@@ -136,6 +136,10 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
     notFound();
   }
 
+  // Get current user for ownership check
+  const session = await auth();
+  const currentUserId = session?.user?.id;
+
   // Fetch the evaluation with all versions
   const evaluationRaw = await prisma.evaluation.findFirst({
     where: {
@@ -181,8 +185,8 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
   // Get all evaluations for the sidebar - already serialized by serializePrismaResult
   const allEvaluations = evaluation.document.evaluations || [];
   
-  // Check if current user owns the document
-  const isOwner = await checkDocumentOwnership(docId);
+  // Get ownership from fetched data
+  const isOwner = currentUserId ? evaluation.document.submittedById === currentUserId : false;
 
   // Extract headings from each section
   const analysisHeadings = analysis ? extractHeadings(analysis, 2) : []; // Only H2 for analysis

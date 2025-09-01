@@ -21,9 +21,10 @@ export default async function DocumentsPage({
   const session = await auth();
   const isLoggedIn = !!session?.user;
 
-  // Get documents for listing view
+  // Get only public documents for the public docs page
   const documents = await DocumentModel.getDocumentListings({
     searchQuery,
+    // Don't pass requestingUserId to ensure only public docs are shown
     limit: 50,
   });
 
@@ -32,7 +33,7 @@ export default async function DocumentsPage({
 
   return (
     <>
-      <SearchBar searchQuery={searchQuery} showNewButton={isLoggedIn} />
+      <SearchBar searchQuery={searchQuery} showNewButton={false} />
 
       <Suspense
         fallback={
