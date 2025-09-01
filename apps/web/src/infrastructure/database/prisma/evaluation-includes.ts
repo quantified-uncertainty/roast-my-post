@@ -36,7 +36,7 @@ export const evaluationWithGrade = {
 
 // Include for document with all evaluations (for sidebar)
 export const documentWithEvaluations = {
-  submittedById: true, // Include owner info for permission checks
+  submittedBy: true, // Include owner info for permission checks
   versions: {
     orderBy: { version: 'desc' as const },
     take: 1,
