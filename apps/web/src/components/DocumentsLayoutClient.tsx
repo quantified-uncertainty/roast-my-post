@@ -75,8 +75,12 @@ export default function DocumentsLayoutClient({
   }, [initialSearchQuery]);
 
   // Debounced search function that updates URL
-  const debouncedSearch = useDebouncedCallback((query: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const debouncedSearch = useDebouncedCallback((
+    query: string,
+    currentSearchParams: ReadonlyURLSearchParams,
+    currentPathname: string
+  ) => {
+    const params = new URLSearchParams(currentSearchParams.toString());
 
     if (query.trim()) {
       params.set("search", query.trim());
@@ -85,16 +89,16 @@ export default function DocumentsLayoutClient({
     }
 
     const newUrl = params.toString()
-      ? `${pathname}?${params.toString()}`
-      : pathname;
-    router.push(newUrl);
+      ? `${currentPathname}?${params.toString()}`
+      : currentPathname;
+    router.replace(newUrl, { scroll: false });
   }, 300);
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    debouncedSearch(value);
+    debouncedSearch(value, searchParams, pathname);
   };
 
   return (
@@ -227,7 +231,7 @@ export default function DocumentsLayoutClient({
                                 {document.platforms.map((platform: string) => (
                                   <span
                                     key={platform}
-                                    className="inline-flex items-center text-xs font-medium text-gray-500"
+                                    className="inline-flex items-center text-xs font-medium text-blue-500"
                                   >
                                     {platform}
                                   </span>
