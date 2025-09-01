@@ -5,12 +5,23 @@ import { JobData } from "@/application/services/job/types";
 import { getDocumentInfo, getAgentInfo, getBatchInfo, getRetryText } from "@/application/services/job/transformers";
 
 interface JobCardProps {
-  job: JobData;
+  job: JobData & {
+    evaluation?: {
+      document?: {
+        uploader?: {
+          name: string | null;
+          email: string;
+        };
+      };
+    };
+  };
   onClick?: () => void;
   isSelected?: boolean;
   showDocument?: boolean;
   showAgent?: boolean;
   showBatch?: boolean;
+  showUploader?: boolean;
+  showDate?: boolean;
   compact?: boolean;
 }
 
@@ -21,6 +32,8 @@ export function JobCard({
   showDocument = true, 
   showAgent = true, 
   showBatch = false,
+  showUploader = false,
+  showDate = false,
   compact = false 
 }: JobCardProps) {
   const documentInfo = getDocumentInfo(job);
@@ -65,27 +78,20 @@ export function JobCard({
               </div>
             )}
             
-            {showDocument && documentInfo.id && (
-              <div>
-                <Link 
-                  href={`/docs/${documentInfo.id}`}
-                  className="text-blue-600 hover:text-blue-800 text-xs"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  View Document →
-                </Link>
+            {(showDate || showUploader) && (
+              <div className="text-xs">
+                {showDate && formatRelativeDate(job.createdAt)}
+                {showDate && showUploader && job.evaluation?.document?.uploader && ' • '}
+                {showUploader && job.evaluation?.document?.uploader && (
+                  <span>{job.evaluation.document.uploader.name || job.evaluation.document.uploader.email}</span>
+                )}
               </div>
             )}
+            
             
             {showBatch && batchInfo && (
               <div className="text-blue-600">
                 Batch: {batchInfo.name}
-              </div>
-            )}
-            
-            {!compact && (
-              <div>
-                Created {formatRelativeDate(job.createdAt)}
               </div>
             )}
           </div>

@@ -74,7 +74,7 @@ export interface DocumentRepositoryInterface {
   findRecent(limit?: number, requestingUserId?: string): Promise<DocumentWithEvaluations[]>;
   findAll(): Promise<DocumentWithEvaluations[]>;
   create(data: CreateDocumentData): Promise<DocumentEntity>;
-  updateContent(id: string, content: string, title: string): Promise<void>;
+  updateContent(id: string, content: string, title: string, markdownPrepend?: string): Promise<void>;
   updateMetadata(id: string, data: { intendedAgentIds?: string[] }): Promise<void>;
   delete(id: string): Promise<boolean>;
   checkOwnership(docId: string, userId: string): Promise<boolean>;
@@ -345,7 +345,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Update document content (creates new version)
    */
-  async updateContent(id: string, content: string, title: string): Promise<void> {
+  async updateContent(id: string, content: string, title: string, markdownPrepend?: string): Promise<void> {
     const latestVersion = await this.prisma.documentVersion.findFirst({
       where: { documentId: id },
       orderBy: { version: 'desc' }
@@ -361,6 +361,8 @@ export class DocumentRepository implements DocumentRepositoryInterface {
         authors: latestVersion?.authors || ['Unknown'],
         urls: latestVersion?.urls || [],
         platforms: latestVersion?.platforms || [],
+        importUrl: latestVersion?.importUrl || null,
+        markdownPrepend: markdownPrepend || latestVersion?.markdownPrepend || null,
         version: nextVersion
       }
     });

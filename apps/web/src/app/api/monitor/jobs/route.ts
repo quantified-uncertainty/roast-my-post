@@ -19,7 +19,16 @@ export async function GET(request: NextRequest) {
   }
   
   try {
+    // Get status filter from query params
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    
+    const whereClause = status && status !== 'ALL' 
+      ? { status: status as any }
+      : {};
+    
     const jobs = await prisma.job.findMany({
+      where: whereClause,
       take: 20,
       orderBy: {
         createdAt: "desc",
@@ -40,6 +49,14 @@ export async function GET(request: NextRequest) {
             document: {
               select: {
                 id: true,
+                submittedById: true,
+                submittedBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
                 versions: {
                   select: {
                     title: true,
@@ -81,10 +98,24 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Get job counts by status
+    const counts = await prisma.job.groupBy({
+      by: ['status'],
+      _count: true,
+    });
+    
+    const statusCounts = counts.reduce((acc, curr) => {
+      acc[curr.status] = curr._count;
+      return acc;
+    }, {} as Record<string, number>);
+
     // Convert Decimal fields to numbers for client compatibility
     const serializedJobs = serializeJobsNumeric(jobs);
 
-    return NextResponse.json({ jobs: serializedJobs });
+    return NextResponse.json({ 
+      jobs: serializedJobs,
+      statusCounts 
+    });
   } catch (error) {
     logger.error('Error fetching jobs:', error);
     return commonErrors.serverError("Failed to fetch jobs");

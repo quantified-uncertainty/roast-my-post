@@ -223,8 +223,16 @@ export class DocumentService {
 
         const content = updates.content !== undefined ? updates.content : doc.content;
         const title = updates.title !== undefined ? updates.title : doc.title;
+        
+        // Generate fresh markdownPrepend with current metadata
+        const markdownPrepend = generateMarkdownPrepend({
+          title,
+          author: doc.author || 'Unknown',
+          platforms: doc.platforms || [],
+          publishedDate: doc.publishedDate || null
+        });
 
-        await this.docRepo.updateContent(docId, content, title);
+        await this.docRepo.updateContent(docId, content, title, markdownPrepend);
       }
 
       // Update metadata (doesn't create new version)

@@ -21,6 +21,7 @@ export default async function DocumentsPage({
     searchQuery,
     // Don't pass requestingUserId to ensure only public docs are shown
     limit: 50,
+    latestVersionOnly: true,
   });
 
   const totalCount = documents.length;
