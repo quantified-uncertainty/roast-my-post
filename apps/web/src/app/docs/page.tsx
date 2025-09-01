@@ -1,9 +1,5 @@
-import { Suspense } from "react";
-import SearchBar from "./SearchBar";
-import DocumentsResults from "./DocumentsResults";
+import DocumentsLayoutClient from "@/components/DocumentsLayoutClient";
 import { DocumentModel } from "@/models/Document";
-import { PageLayout } from "@/components/PageLayout";
-import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/infrastructure/auth/auth";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +13,8 @@ interface DocumentsPageProps {
 export default async function DocumentsPage({
   searchParams,
 }: DocumentsPageProps) {
-  const searchQuery = (await searchParams).search || "";
   const session = await auth();
-  const isLoggedIn = !!session?.user;
+  const searchQuery = (await searchParams).search || "";
 
   // Get only public documents for the public docs page
   const documents = await DocumentModel.getDocumentListings({
@@ -32,23 +27,15 @@ export default async function DocumentsPage({
   const hasSearched = !!searchQuery.trim() && searchQuery.trim().length >= 2;
 
   return (
-    <>
-      <SearchBar searchQuery={searchQuery} showNewButton={false} />
-
-      <Suspense
-        fallback={
-          <PageLayout>
-            <Skeleton className="h-full w-full" />
-          </PageLayout>
-        }
-      >
-        <DocumentsResults
-          documents={documents}
-          searchQuery={searchQuery}
-          totalCount={totalCount}
-          hasSearched={hasSearched}
-        />
-      </Suspense>
-    </>
+    <DocumentsLayoutClient
+      documents={documents}
+      searchQuery={searchQuery}
+      totalCount={totalCount}
+      hasSearched={hasSearched}
+      title="Public Documents"
+      subtitle="Explore and review community documents"
+      showPrivacyBadges={false}
+      currentUserId={session?.user?.id}
+    />
   );
 }
