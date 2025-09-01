@@ -35,6 +35,7 @@ import {
   getWordCountInfo,
 } from "@/shared/utils/ui/documentUtils";
 import {
+  BookOpenIcon,
   ChatBubbleLeftIcon,
   DocumentTextIcon,
   EllipsisVerticalIcon,
@@ -75,24 +76,27 @@ export default function DocumentsLayoutClient({
   }, [initialSearchQuery]);
 
   // Debounced search function that updates URL
-  const debouncedSearch = useDebouncedCallback((
-    query: string,
-    currentSearchParams: ReadonlyURLSearchParams,
-    currentPathname: string
-  ) => {
-    const params = new URLSearchParams(currentSearchParams.toString());
+  const debouncedSearch = useDebouncedCallback(
+    (
+      query: string,
+      currentSearchParams: URLSearchParams,
+      currentPathname: string
+    ) => {
+      const params = new URLSearchParams(currentSearchParams.toString());
 
-    if (query.trim()) {
-      params.set("search", query.trim());
-    } else {
-      params.delete("search");
-    }
+      if (query.trim()) {
+        params.set("search", query.trim());
+      } else {
+        params.delete("search");
+      }
 
-    const newUrl = params.toString()
-      ? `${currentPathname}?${params.toString()}`
-      : currentPathname;
-    router.replace(newUrl, { scroll: false });
-  }, 300);
+      const newUrl = params.toString()
+        ? `${currentPathname}?${params.toString()}`
+        : currentPathname;
+      router.replace(newUrl, { scroll: false });
+    },
+    300
+  );
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,18 +165,77 @@ export default function DocumentsLayoutClient({
             const hasSource = document.urls && document.urls.length > 0;
 
             return (
-              <div key={document.id} className="relative">
-                <Card className="h-full transition-colors duration-150">
-                  <CardHeader className="pb-3 pr-12">
+              <Card key={document.id} className="h-full">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base leading-7">
                       <Link
                         href={`/docs/${document.document.id}/reader`}
-                        className="transition-colors hover:text-blue-600"
+                        className="hover:underline"
                       >
                         {document.title}
                       </Link>
                     </CardTitle>
-                  </CardHeader>
+                    {/* Dropdown Menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {isOwner && (
+                          <>
+                            <DropdownMenuItem asChild>
+                              <a
+                                href={`/docs/${document.document.id}/edit`}
+                                className="flex cursor-pointer items-center gap-2"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                                <span>Edit</span>
+                              </a>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        <DropdownMenuItem asChild>
+                          <a
+                            href={`/docs/${document.document.id}/reader`}
+                            className="flex cursor-pointer items-center gap-2"
+                          >
+                            <BookOpenIcon className="h-4 w-4" />
+                            <span>Reader</span>
+                          </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <a
+                            href={`/docs/${document.document.id}`}
+                            className="flex cursor-pointer items-center gap-2"
+                          >
+                            <DocumentTextIcon className="h-4 w-4" />
+                            <span>Inspector View</span>
+                          </a>
+                        </DropdownMenuItem>
+                        {hasSource && (
+                          <DropdownMenuItem asChild>
+                            <a
+                              href={document.urls[0]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex cursor-pointer items-center gap-2"
+                            >
+                              <LinkIcon className="h-4 w-4" />
+                              <span>Source</span>
+                            </a>
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
                   <CardContent className="pt-0">
                     <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
                       <div>{document.authors.join(", ")}</div>
@@ -189,16 +252,31 @@ export default function DocumentsLayoutClient({
                       <div className="text-gray-300">•</div>
                       <div className="flex items-center gap-1">
                         {(() => {
-                          const { wordCount, color } = getWordCountInfo(
+                          const { wordCount } = getWordCountInfo(
                             document.content
                           );
                           return (
-                            <span className={color}>
+                            <span className="text-gray-500">
                               {formatWordCount(wordCount) + " words"}
                             </span>
                           );
                         })()}
                       </div>
+                      {document.platforms && document.platforms.length > 0 && (
+                        <>
+                          <div className="text-gray-300">•</div>
+                          <div className="flex items-center gap-2">
+                            {document.platforms.map((platform: string) => (
+                              <span
+                                key={platform}
+                                className="inline-flex items-center text-xs font-medium text-gray-500"
+                              >
+                                {platform}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                     {document.urls[0] && (
                       <div className="mb-3 flex items-center gap-2 truncate text-xs">
@@ -223,22 +301,6 @@ export default function DocumentsLayoutClient({
                             }
                           })()}
                         </span>
-                        {document.platforms &&
-                          document.platforms.length > 0 && (
-                            <>
-                              <div className="text-gray-300">•</div>
-                              <div className="flex items-center gap-2">
-                                {document.platforms.map((platform: string) => (
-                                  <span
-                                    key={platform}
-                                    className="inline-flex items-center text-xs font-medium text-blue-500"
-                                  >
-                                    {platform}
-                                  </span>
-                                ))}
-                              </div>
-                            </>
-                          )}
                       </div>
                     )}
                     <div className="mt-6 flex flex-wrap gap-2">
@@ -288,59 +350,6 @@ export default function DocumentsLayoutClient({
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Dropdown Menu */}
-                <div className="absolute right-2 top-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {isOwner && (
-                        <>
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={`/docs/${document.document.id}/edit`}
-                              className="flex cursor-pointer items-center gap-2"
-                            >
-                              <PencilIcon className="h-4 w-4" />
-                              <span>Edit</span>
-                            </a>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                        </>
-                      )}
-                      <DropdownMenuItem asChild>
-                        <a
-                          href={`/docs/${document.document.id}`}
-                          className="flex cursor-pointer items-center gap-2"
-                        >
-                          <DocumentTextIcon className="h-4 w-4" />
-                          <span>Details</span>
-                        </a>
-                      </DropdownMenuItem>
-                      {hasSource && (
-                        <DropdownMenuItem asChild>
-                          <a
-                            href={document.urls[0]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex cursor-pointer items-center gap-2"
-                          >
-                            <LinkIcon className="h-4 w-4" />
-                            <span>Source</span>
-                          </a>
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
             );
           })}
         </div>
