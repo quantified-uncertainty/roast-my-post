@@ -284,10 +284,11 @@ export class AgentService {
 
   /**
    * Gets evaluations performed by an agent
+   * @param requestingUserId - The user requesting evaluations. If not provided, only public docs shown
    */
   async getAgentEvaluations(
     agentId: string, 
-    options?: { limit?: number; batchId?: string }
+    options?: { limit?: number; batchId?: string; requestingUserId?: string }
   ): Promise<Result<AgentEvaluation[], AppError>> {
     try {
       this.logger.debug('Fetching agent evaluations', { agentId, options });

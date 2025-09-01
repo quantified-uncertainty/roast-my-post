@@ -27,8 +27,11 @@ export default async function EvalsPage({
     return notFound();
   }
 
-  // Fetch actual evaluations from the service
-  const evaluationsResult = await agentService.getAgentEvaluations(resolvedParams.agentId);
+  // Fetch actual evaluations from the service (pass user ID for privacy filtering)
+  const evaluationsResult = await agentService.getAgentEvaluations(
+    resolvedParams.agentId,
+    { requestingUserId: session?.user?.id }
+  );
   const serviceEvaluations = evaluationsResult.isOk() ? evaluationsResult.unwrap() : [];
   
   // Serialize evaluations for client components (handles Decimal conversion)
