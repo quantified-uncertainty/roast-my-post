@@ -49,8 +49,10 @@ export async function GET(request: NextRequest) {
             document: {
               select: {
                 id: true,
+                submittedById: true,
                 submittedBy: {
                   select: {
+                    id: true,
                     name: true,
                     email: true,
                   },

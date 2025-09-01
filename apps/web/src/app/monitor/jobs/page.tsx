@@ -20,7 +20,9 @@ interface Job {
   evaluation: {
     document: {
       id: string;
+      submittedById?: string;
       submittedBy?: {
+        id: string;
         name: string | null;
         email: string;
       };
@@ -177,7 +179,7 @@ export default function JobsMonitorPage() {
               <div className="bg-white shadow rounded-lg p-6">
                 <div className="mb-4">
                   <h2 className="text-xl font-bold text-gray-900 mb-2">Job Details</h2>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <dt className="font-medium text-gray-900">Document</dt>
                       <dd className="space-y-1">
@@ -199,6 +201,18 @@ export default function JobsMonitorPage() {
                         <Link href={`/agents/${selectedJob.evaluation.agent.id}`}>
                           {selectedJob.evaluation.agent.versions[0]?.name || 'Unknown Agent'}
                         </Link>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-gray-900">Uploaded by</dt>
+                      <dd className="text-blue-600 hover:text-blue-800">
+                        {selectedJob.evaluation.document.submittedBy ? (
+                          <Link href={`/profile/${selectedJob.evaluation.document.submittedBy.id}`}>
+                            {selectedJob.evaluation.document.submittedBy.name || selectedJob.evaluation.document.submittedBy.email}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-500">Unknown</span>
+                        )}
                       </dd>
                     </div>
                   </div>
