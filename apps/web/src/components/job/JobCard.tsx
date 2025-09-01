@@ -5,12 +5,23 @@ import { JobData } from "@/application/services/job/types";
 import { getDocumentInfo, getAgentInfo, getBatchInfo, getRetryText } from "@/application/services/job/transformers";
 
 interface JobCardProps {
-  job: JobData;
+  job: JobData & {
+    evaluation?: {
+      document?: {
+        uploader?: {
+          name: string | null;
+          email: string;
+        };
+      };
+    };
+  };
   onClick?: () => void;
   isSelected?: boolean;
   showDocument?: boolean;
   showAgent?: boolean;
   showBatch?: boolean;
+  showUploader?: boolean;
+  showDate?: boolean;
   compact?: boolean;
 }
 
@@ -21,6 +32,8 @@ export function JobCard({
   showDocument = true, 
   showAgent = true, 
   showBatch = false,
+  showUploader = false,
+  showDate = false,
   compact = false 
 }: JobCardProps) {
   const documentInfo = getDocumentInfo(job);
@@ -65,6 +78,18 @@ export function JobCard({
               </div>
             )}
             
+            {showUploader && job.evaluation?.document?.uploader && (
+              <div className="text-xs">
+                By {job.evaluation.document.uploader.name || job.evaluation.document.uploader.email}
+              </div>
+            )}
+            
+            {(showDate || !compact) && (
+              <div className="text-xs">
+                {formatRelativeDate(job.createdAt)}
+              </div>
+            )}
+            
             {showDocument && documentInfo.id && (
               <div>
                 <Link 
@@ -80,12 +105,6 @@ export function JobCard({
             {showBatch && batchInfo && (
               <div className="text-blue-600">
                 Batch: {batchInfo.name}
-              </div>
-            )}
-            
-            {!compact && (
-              <div>
-                Created {formatRelativeDate(job.createdAt)}
               </div>
             )}
           </div>
