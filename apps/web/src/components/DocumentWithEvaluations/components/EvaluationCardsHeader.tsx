@@ -114,28 +114,25 @@ export function EvaluationCardsHeader({
         {visibleReviews.map((review) => {
           const isActive = evaluationState.selectedAgentIds.has(review.agentId);
           return (
-            <Button
+            <div
               key={review.agentId}
-              asChild
-              variant={isActive ? "secondary" : "outline"}
-              size="sm"
-              className="h-8 flex-shrink-0 gap-2 whitespace-nowrap px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200 data-[state=active]:hover:bg-gray-300"
+              className={`inline-flex h-8 flex-shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md border px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200 ${
+                isActive
+                  ? "border-gray-300 bg-gray-200 hover:bg-gray-300"
+                  : "border-gray-200 bg-white"
+              }`}
+              onClick={() => onToggleAgent(review.agentId)}
               title={`${isActive ? "Hide" : "Show"} ${review.agent.name} evaluation`}
             >
-              <span
-                onClick={() => onToggleAgent(review.agentId)}
-                className="cursor-pointer"
-              >
-                <Checkbox asChild checked={isActive}>
-                  <span className="pointer-events-none" />
-                </Checkbox>
-                {review.agent.name}
-                <div className="flex items-center gap-0.5 text-xs">
-                  <ChatBubbleLeftIcon className="h-3 w-3" />
-                  <span>{review.comments?.length || 0}</span>
-                </div>
-              </span>
-            </Button>
+              <Checkbox asChild checked={isActive}>
+                <span className="pointer-events-none" />
+              </Checkbox>
+              {review.agent.name}
+              <div className="flex items-center gap-0.5 text-xs">
+                <ChatBubbleLeftIcon className="h-3 w-3" />
+                <span>{review.comments?.length || 0}</span>
+              </div>
+            </div>
           );
         })}
 
@@ -143,15 +140,13 @@ export function EvaluationCardsHeader({
         {hasHiddenReviews && (
           <Popover open={showMoreOpen} onOpenChange={setShowMoreOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 flex-shrink-0 gap-2 whitespace-nowrap px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200"
+              <div
+                className="inline-flex h-8 flex-shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md border border-gray-200 bg-white px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200"
                 title={`Show ${hiddenReviews.length} more evaluation agents`}
               >
                 <ChevronDownIcon className="mr-1.5 h-3.5 w-3.5" />
                 Show {hiddenReviews.length} More
-              </Button>
+              </div>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-2" align="end">
               <div className="space-y-1">
@@ -163,15 +158,13 @@ export function EvaluationCardsHeader({
                     review.agentId
                   );
                   return (
-                    <Button
+                    <div
                       key={review.agentId}
-                      variant="ghost"
-                      size="sm"
+                      className="flex h-9 w-full cursor-pointer items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-gray-100"
                       onClick={() => {
                         onToggleAgent(review.agentId);
                         setShowMoreOpen(false);
                       }}
-                      className="h-9 w-full justify-between px-2"
                     >
                       <div className="flex items-center gap-2">
                         <Checkbox asChild checked={isActive}>
@@ -183,7 +176,7 @@ export function EvaluationCardsHeader({
                         <ChatBubbleLeftIcon className="h-3 w-3" />
                         <span>{review.comments?.length || 0}</span>
                       </div>
-                    </Button>
+                    </div>
                   );
                 })}
               </div>
@@ -204,21 +197,21 @@ export function EvaluationCardsHeader({
   }) {
     return (
       <div onClick={(e) => e.stopPropagation()}>
-        <Button
-          asChild
-          variant={showDebug ? "destructive" : "outline"}
-          size="sm"
-          className="h-8 flex-shrink-0 gap-2 whitespace-nowrap px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200 data-[state=active]:hover:bg-red-600"
+        <div
+          className={`inline-flex h-8 flex-shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md border px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200 ${
+            showDebug
+              ? "border-red-300 bg-red-200 hover:bg-red-300"
+              : "border-gray-200 bg-white"
+          }`}
+          onClick={onToggle}
           title={showDebug ? "Hide debug comments" : "Show debug comments"}
         >
-          <span onClick={onToggle} className="cursor-pointer">
-            <Checkbox asChild checked={showDebug}>
-              <span className="pointer-events-none" />
-            </Checkbox>
-            Debug
-            <CommandLineIcon className="h-3 w-3" />
-          </span>
-        </Button>
+          <Checkbox asChild checked={showDebug}>
+            <span className="pointer-events-none" />
+          </Checkbox>
+          Debug
+          <CommandLineIcon className="h-3 w-3" />
+        </div>
       </div>
     );
   }
