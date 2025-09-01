@@ -65,11 +65,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { status, agentId, limit, offset } = queryEvaluationsSchema.parse(queryParams);
 
     // Verify document exists and user has access
+    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
     const document = await prisma.document.findUnique({
       where: { id: documentId },
     });
 
     if (!document) {
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
+    }
+    
+    // Check if user can view this document
+    const canView = await PrivacyService.canViewDocument(documentId, userId);
+    if (!canView) {
       return NextResponse.json(
         { error: "Document not found" },
         { status: 404 }
@@ -227,12 +237,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         );
       }
       
-      // Verify document exists
+      // Verify document exists and user has access
+      const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
       const document = await prisma.document.findUnique({
         where: { id: documentId },
       });
 
       if (!document) {
+        return NextResponse.json(
+          { error: "Document not found" },
+          { status: 404 }
+        );
+      }
+      
+      // Check if user can modify this document (must be owner)
+      if (document.submittedById !== userId) {
         return NextResponse.json(
           { error: "Document not found" },
           { status: 404 }
@@ -290,12 +309,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         );
       }
 
-      // Verify document exists
+      // Verify document exists and user has access
+      const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
       const document = await prisma.document.findUnique({
         where: { id: documentId },
       });
 
       if (!document) {
+        return NextResponse.json(
+          { error: "Document not found" },
+          { status: 404 }
+        );
+      }
+      
+      // Check if user can modify this document (must be owner)
+      if (document.submittedById !== userId) {
         return NextResponse.json(
           { error: "Document not found" },
           { status: 404 }

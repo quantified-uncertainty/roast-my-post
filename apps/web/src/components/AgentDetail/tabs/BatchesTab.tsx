@@ -25,13 +25,16 @@ export function BatchesTab({
   setEvalsBatchFilter,
   setExportBatchFilter,
 }: BatchesTabProps) {
+  // Ensure batches is always an array
+  const safeBatches = Array.isArray(batches) ? batches : [];
+  
   return (
     <div className="space-y-6">
       {batchesLoading ? (
         <div className="py-8 text-center">
           <div className="text-gray-500">Loading batch tests...</div>
         </div>
-      ) : batches.length === 0 ? (
+      ) : safeBatches.length === 0 ? (
         <div className="py-8 text-center">
           <div className="text-gray-500">No test batches created yet.</div>
           <p className="mt-2 text-sm text-gray-400">
@@ -41,10 +44,10 @@ export function BatchesTab({
       ) : (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">
-            Recent Test Batches ({batches.length})
+            Recent Test Batches ({safeBatches.length})
           </h3>
           <div className="grid gap-4">
-            {batches.map((batch) => (
+            {safeBatches.map((batch) => (
               <div
                 key={batch.id}
                 className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"

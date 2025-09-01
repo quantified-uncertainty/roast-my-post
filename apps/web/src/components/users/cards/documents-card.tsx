@@ -5,10 +5,11 @@ import { UserModel } from "@/models/User";
 
 interface DocumentsCardProps {
   userId: string;
+  requestingUserId?: string;
 }
 
-export default async function DocumentsCard({ userId }: DocumentsCardProps) {
-  const documentsCount = await UserModel.getUserDocumentsCount(userId);
+export default async function DocumentsCard({ userId, requestingUserId }: DocumentsCardProps) {
+  const documentsCount = await UserModel.getUserDocumentsCount(userId, requestingUserId);
 
   return (
     <Card className="group transition-all hover:shadow-md">
