@@ -1,25 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useDebouncedCallback } from "use-debounce";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import Link from "next/link";
-import { PageLayout } from "@/components/PageLayout";
+import {
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { useDebouncedCallback } from "use-debounce";
+
 import { GradeBadge } from "@/components/GradeBadge";
+import { PageLayout } from "@/components/PageLayout";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
 import {
-  formatWordCount,
-  getWordCountInfo,
-} from "@/shared/utils/ui/documentUtils";
-import {
-  ChatBubbleLeftIcon,
-  MagnifyingGlassIcon,
-  EllipsisVerticalIcon,
-  PencilIcon,
-  DocumentTextIcon,
-  LinkIcon,
-} from "@heroicons/react/24/outline";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +30,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
+import {
+  formatWordCount,
+  getWordCountInfo,
+} from "@/shared/utils/ui/documentUtils";
+import {
+  ChatBubbleLeftIcon,
+  DocumentTextIcon,
+  EllipsisVerticalIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
 
 interface DocumentsLayoutClientProps {
   documents: SerializedDocumentListing[];
@@ -70,7 +84,9 @@ export default function DocumentsLayoutClient({
       params.delete("search");
     }
 
-    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    const newUrl = params.toString()
+      ? `${pathname}?${params.toString()}`
+      : pathname;
     router.push(newUrl);
   }, 300);
 
@@ -85,11 +101,11 @@ export default function DocumentsLayoutClient({
     <PageLayout background="gray">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="pt-8 pb-6">
+        <div className="pb-6 pt-8">
           <h1 className="text-3xl font-semibold text-gray-900">{title}</h1>
           <p className="mt-2 text-gray-600">{subtitle}</p>
         </div>
-        
+
         {/* Search Bar */}
         <div className="mb-8">
           <div className="relative max-w-2xl">
@@ -109,7 +125,8 @@ export default function DocumentsLayoutClient({
         {/* Status message */}
         {!hasSearched && (
           <div className="mb-6 text-sm text-gray-600">
-            Showing {totalCount} most recent documents. Type at least 2 characters to search all documents.
+            Showing {totalCount} most recent documents. Type at least 2
+            characters to search all documents.
           </div>
         )}
 
@@ -134,7 +151,9 @@ export default function DocumentsLayoutClient({
                 {} as Record<string, number>
               ) || {};
 
-            const isOwner = currentUserId && document.document.submittedById === currentUserId;
+            const isOwner =
+              currentUserId &&
+              document.document.submittedById === currentUserId;
             const hasSource = document.urls && document.urls.length > 0;
 
             return (
@@ -142,9 +161,9 @@ export default function DocumentsLayoutClient({
                 <Card className="h-full transition-colors duration-150">
                   <CardHeader className="pb-3 pr-12">
                     <CardTitle className="text-base leading-7">
-                      <Link 
+                      <Link
                         href={`/docs/${document.document.id}/reader`}
-                        className="hover:text-blue-600 transition-colors"
+                        className="transition-colors hover:text-blue-600"
                       >
                         {document.title}
                       </Link>
@@ -205,31 +224,31 @@ export default function DocumentsLayoutClient({
                             <>
                               <div className="text-gray-300">•</div>
                               <div className="flex items-center gap-2">
-                                {document.platforms.map(
-                                  (platform: string) => (
-                                    <span
-                                      key={platform}
-                                      className="inline-flex items-center text-xs font-medium text-blue-500"
-                                    >
-                                      {platform}
-                                    </span>
-                                  )
-                                )}
+                                {document.platforms.map((platform: string) => (
+                                  <span
+                                    key={platform}
+                                    className="inline-flex items-center text-xs font-medium text-gray-500"
+                                  >
+                                    {platform}
+                                  </span>
+                                ))}
                               </div>
                             </>
                           )}
                       </div>
                     )}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="mt-6 flex flex-wrap gap-2">
                       {showPrivacyBadges && (
-                        <PrivacyBadge isPrivate={document.document.isPrivate} size="xs" />
+                        <PrivacyBadge
+                          isPrivate={document.document.isPrivate}
+                          size="xs"
+                        />
                       )}
                       {Object.entries(agentReviews).map(
                         ([agentId, commentCount]) => {
-                          const evaluation =
-                            document.document.evaluations.find(
-                              (r) => r.agentId === agentId
-                            );
+                          const evaluation = document.document.evaluations.find(
+                            (r) => r.agentId === agentId
+                          );
                           const hasGrade =
                             evaluation?.latestVersion?.grade !== null &&
                             evaluation?.latestVersion?.grade !== undefined;
@@ -239,7 +258,7 @@ export default function DocumentsLayoutClient({
                             <Link
                               key={agentId}
                               href={`/docs/${document.document.id}/reader?evals=${agentId}`}
-                              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-200 transition-colors"
+                              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
                             >
                               {evaluation?.agent.name || "Unknown Agent"}
                               {hasGrade && (
@@ -265,53 +284,59 @@ export default function DocumentsLayoutClient({
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 {/* Dropdown Menu */}
-              <div className="absolute top-2 right-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {isOwner && (
-                      <>
-                        <DropdownMenuItem asChild>
-                          <a href={`/docs/${document.document.id}/edit`} className="flex items-center gap-2 cursor-pointer">
-                            <PencilIcon className="h-4 w-4" />
-                            <span>Edit</span>
-                          </a>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    <DropdownMenuItem asChild>
-                      <a href={`/docs/${document.document.id}`} className="flex items-center gap-2 cursor-pointer">
-                        <DocumentTextIcon className="h-4 w-4" />
-                        <span>Details</span>
-                      </a>
-                    </DropdownMenuItem>
-                    {hasSource && (
+                <div className="absolute right-2 top-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {isOwner && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <a
+                              href={`/docs/${document.document.id}/edit`}
+                              className="flex cursor-pointer items-center gap-2"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                              <span>Edit</span>
+                            </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
                       <DropdownMenuItem asChild>
-                        <a 
-                          href={document.urls[0]} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 cursor-pointer"
+                        <a
+                          href={`/docs/${document.document.id}`}
+                          className="flex cursor-pointer items-center gap-2"
                         >
-                          <LinkIcon className="h-4 w-4" />
-                          <span>Source</span>
+                          <DocumentTextIcon className="h-4 w-4" />
+                          <span>Details</span>
                         </a>
                       </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      {hasSource && (
+                        <DropdownMenuItem asChild>
+                          <a
+                            href={document.urls[0]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex cursor-pointer items-center gap-2"
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                            <span>Source</span>
+                          </a>
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-            </div>
             );
           })}
         </div>
