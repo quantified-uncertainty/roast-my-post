@@ -30,11 +30,26 @@ describe('Document Search Privacy', () => {
   const mockDocumentService = {
     getRecentDocuments: vi.fn(),
     searchDocuments: vi.fn(),
+    // Add other methods to match full service shape
+    createDocument: vi.fn(),
+    updateDocument: vi.fn(),
+    deleteDocument: vi.fn(),
+    getDocument: vi.fn(),
+    getDocumentBySlug: vi.fn(),
+    updatePrivacy: vi.fn(),
+  };
+
+  const mockServices = {
+    documentService: mockDocumentService,
+    // Add other services
+    agentService: {},
+    evaluationService: {},
+    jobService: {},
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetServices.mockReturnValue({ documentService: mockDocumentService });
+    mockGetServices.mockReturnValue(mockServices as any);
   });
 
   describe('Anonymous Users', () => {

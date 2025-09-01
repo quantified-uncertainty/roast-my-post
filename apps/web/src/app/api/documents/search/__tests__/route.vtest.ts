@@ -23,7 +23,18 @@ vi.mock('@/application/services/ServiceFactory', () => ({
     documentService: {
       getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
       searchDocuments: (...args: any[]) => mockSearchDocuments(...args),
+      // Add other service methods to match the full shape
+      createDocument: vi.fn(),
+      updateDocument: vi.fn(),
+      deleteDocument: vi.fn(),
+      getDocument: vi.fn(),
+      getDocumentBySlug: vi.fn(),
+      updatePrivacy: vi.fn(),
     },
+    // Add other services that might be used
+    agentService: {},
+    evaluationService: {},
+    jobService: {},
   }),
 }));
 

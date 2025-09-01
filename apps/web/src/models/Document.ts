@@ -663,7 +663,7 @@ export class DocumentModel {
   static async getDocumentWithEvaluations(
     docId: string,
     includeStale: boolean = false,
-    requestingUserId?: string // NEW: who's requesting
+    requestingUserId: string | undefined // REQUIRED: must explicitly pass undefined for anonymous
   ): Promise<Document | null> {
     // Check access before fetching
     const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
@@ -708,7 +708,7 @@ export class DocumentModel {
    */
   static async getDocumentForReader(
     docId: string,
-    requestingUserId?: string
+    requestingUserId: string | undefined // REQUIRED: must explicitly pass undefined for anonymous
   ): Promise<Document | null> {
     // Check access before fetching
     const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
@@ -755,7 +755,7 @@ export class DocumentModel {
    */
   static async getDocumentWithAllEvaluations(
     docId: string,
-    requestingUserId?: string
+    requestingUserId: string | undefined // REQUIRED: must explicitly pass undefined for anonymous
   ): Promise<Document | null> {
     return DocumentModel.getDocumentWithEvaluations(docId, true, requestingUserId);
   }

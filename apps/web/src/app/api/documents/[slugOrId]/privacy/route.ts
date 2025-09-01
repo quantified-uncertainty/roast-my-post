@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
-import { prisma } from "@roast/db";
+import { prisma, Prisma } from "@roast/db";
 import { logger } from "@/infrastructure/logging/logger";
 
 export async function PATCH(
@@ -50,6 +50,8 @@ export async function PATCH(
 
     // If no documents were updated, return 404 (regardless of whether document doesn't exist or user doesn't own it)
     if (result.count === 0) {
+      // Don't log docId on 404 to prevent enumeration via logs
+      logger.debug('Privacy update failed: no matching document for user');
       return NextResponse.json(
         { error: "Document not found" },
         { status: 404 }
@@ -63,6 +65,8 @@ export async function PATCH(
     });
 
     if (!updated) {
+      // Race condition: document was deleted between update and fetch
+      logger.debug('Privacy update race: document deleted after update');
       return NextResponse.json(
         { error: "Document not found" },
         { status: 404 }
@@ -77,6 +81,15 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
+    // Handle Prisma P2025 (record not found during update) as 404
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      logger.debug('Privacy update failed: P2025 record not found');
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
+    }
+
     logger.error('Error updating document privacy:', error);
     return NextResponse.json(
       { error: "Failed to update privacy settings" },
