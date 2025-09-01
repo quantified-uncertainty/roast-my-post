@@ -1,9 +1,5 @@
-import { Suspense } from "react";
-import SearchBar from "../docs/SearchBar";
-import DocumentsResults from "../docs/DocumentsResults";
+import DocumentsLayoutClient from "@/components/DocumentsLayoutClient";
 import { DocumentModel } from "@/models/Document";
-import { PageLayout } from "@/components/PageLayout";
-import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/infrastructure/auth/auth";
 import { redirect } from "next/navigation";
 
@@ -39,25 +35,14 @@ export default async function MyDocumentsPage({
   const hasSearched = !!searchQuery.trim() && searchQuery.trim().length >= 2;
 
   return (
-    <>
-      <SearchBar searchQuery={searchQuery} showNewButton={false} />
-
-      <Suspense
-        fallback={
-          <PageLayout>
-            <Skeleton className="h-full w-full" />
-          </PageLayout>
-        }
-      >
-        <DocumentsResults
-          documents={documents}
-          searchQuery={searchQuery}
-          totalCount={totalCount}
-          hasSearched={hasSearched}
-          pageTitle="Your Documents"
-          showPrivacyBadges={true}
-        />
-      </Suspense>
-    </>
+    <DocumentsLayoutClient
+      documents={documents}
+      searchQuery={searchQuery}
+      totalCount={totalCount}
+      hasSearched={hasSearched}
+      title="Your Documents"
+      subtitle="Manage and review your uploaded documents"
+      showPrivacyBadges={true}
+    />
   );
 }
