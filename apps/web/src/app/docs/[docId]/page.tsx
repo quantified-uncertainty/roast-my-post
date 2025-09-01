@@ -69,9 +69,9 @@ export default async function DocumentPage({
     notFound();
   }
 
-  // Use getDocumentWithAllEvaluations to show all evaluations in the sidebar
-  // regardless of staleness - users should always see their evaluations
-  const document = await DocumentModel.getDocumentWithAllEvaluations(docId, currentUserId);
+  // Use unsafe version since privacy is checked by the layout
+  // Show all evaluations in the sidebar regardless of staleness
+  const document = await DocumentModel.getDocumentWithAllEvaluationsUnsafe(docId);
 
   if (!document) {
     notFound();

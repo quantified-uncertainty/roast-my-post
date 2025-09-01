@@ -20,6 +20,7 @@ export default async function EvaluationPage({
   const resolvedParams = await params;
   const { docId, agentId } = resolvedParams;
 
+  // Privacy check is now handled by the layout
   const evaluation = await getEvaluationForDisplay(docId, agentId);
 
   if (!evaluation) {

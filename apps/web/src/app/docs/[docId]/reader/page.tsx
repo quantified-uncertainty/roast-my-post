@@ -23,7 +23,8 @@ export default async function DocumentPage({
     notFound();
   }
 
-  const document = await DocumentModel.getDocumentForReader(docId, currentUserId);
+  // Use unsafe version since privacy is checked by the layout
+  const document = await DocumentModel.getDocumentForReaderUnsafe(docId);
 
   if (!document) {
     return (

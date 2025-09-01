@@ -645,36 +645,18 @@ export class DocumentModel {
   }
 
   /**
-   * Retrieves a document with its evaluations, optionally filtering out stale evaluations.
+   * Retrieves a document with its evaluations WITHOUT privacy checks.
+   * Should only be used in contexts where privacy has already been verified (e.g., in layouts).
    * 
+   * @internal
    * @param docId - The unique identifier of the document
-   * @param includeStale - Whether to include evaluations that don't match the current document version.
-   *                       Defaults to false, which filters out stale evaluations.
+   * @param includeStale - Whether to include evaluations that don't match the current document version
    * @returns The document with evaluations, or null if not found
-   * 
-   * @remarks
-   * When includeStale is false (default), only evaluations where the latest evaluation version
-   * matches the current document version are included. This prevents stale evaluations with
-   * broken highlights from appearing in the main reader view.
-   * 
-   * When includeStale is true, all evaluations are returned regardless of version matching.
-   * This is useful for history views where users need to see all past evaluations.
    */
-  static async getDocumentWithEvaluations(
+  static async getDocumentWithEvaluationsUnsafe(
     docId: string,
-    includeStale: boolean = false,
-    requestingUserId: string | undefined // REQUIRED: must explicitly pass undefined for anonymous
+    includeStale: boolean = false
   ): Promise<Document | null> {
-    // Check access before fetching
-    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
-    const canView = await PrivacyService.canViewDocument(
-      docId,
-      requestingUserId
-    );
-
-    if (!canView) {
-      return null;
-    }
 
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
@@ -700,15 +682,18 @@ export class DocumentModel {
   }
 
   /**
-   * Gets a document optimized for the reader view - only fetches latest evaluation version data.
-   * This significantly reduces query size by not loading historical evaluation comments/highlights.
+   * Retrieves a document with its evaluations, WITH privacy checks.
+   * Use this for API endpoints and other contexts where privacy hasn't been verified.
    * 
-   * @param docId - The document ID to fetch
-   * @returns The document with latest evaluation data or null if not found
+   * @param docId - The unique identifier of the document
+   * @param includeStale - Whether to include evaluations that don't match the current document version
+   * @param requestingUserId - The ID of the requesting user (or undefined for anonymous)
+   * @returns The document with evaluations, or null if not found or access denied
    */
-  static async getDocumentForReader(
+  static async getDocumentWithEvaluations(
     docId: string,
-    requestingUserId: string | undefined // REQUIRED: must explicitly pass undefined for anonymous
+    includeStale: boolean = false,
+    requestingUserId: string | undefined
   ): Promise<Document | null> {
     // Check access before fetching
     const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
@@ -720,6 +705,21 @@ export class DocumentModel {
     if (!canView) {
       return null;
     }
+
+    return DocumentModel.getDocumentWithEvaluationsUnsafe(docId, includeStale);
+  }
+
+  /**
+   * Gets a document optimized for the reader view WITHOUT privacy checks.
+   * Should only be used in contexts where privacy has already been verified (e.g., in layouts).
+   * 
+   * @internal
+   * @param docId - The document ID to fetch
+   * @returns The document with latest evaluation data or null if not found
+   */
+  static async getDocumentForReaderUnsafe(
+    docId: string
+  ): Promise<Document | null> {
 
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
@@ -743,19 +743,56 @@ export class DocumentModel {
   }
 
   /**
-   * Retrieves a document with all evaluations, including stale ones.
+   * Gets a document optimized for the reader view WITH privacy checks.
+   * Use this for API endpoints and other contexts where privacy hasn't been verified.
    * 
+   * @param docId - The document ID to fetch
+   * @param requestingUserId - The ID of the requesting user (or undefined for anonymous)
+   * @returns The document with latest evaluation data or null if not found or access denied
+   */
+  static async getDocumentForReader(
+    docId: string,
+    requestingUserId: string | undefined
+  ): Promise<Document | null> {
+    // Check access before fetching
+    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+    const canView = await PrivacyService.canViewDocument(
+      docId,
+      requestingUserId
+    );
+
+    if (!canView) {
+      return null;
+    }
+
+    return DocumentModel.getDocumentForReaderUnsafe(docId);
+  }
+
+  /**
+   * Retrieves a document with all evaluations WITHOUT privacy checks.
+   * Should only be used in contexts where privacy has already been verified (e.g., in layouts).
+   * 
+   * @internal
    * @param docId - The unique identifier of the document
    * @returns The document with all evaluations, or null if not found
+   */
+  static async getDocumentWithAllEvaluationsUnsafe(
+    docId: string
+  ): Promise<Document | null> {
+    return DocumentModel.getDocumentWithEvaluationsUnsafe(docId, true);
+  }
+
+  /**
+   * Retrieves a document with all evaluations, WITH privacy checks.
+   * Use this for API endpoints and other contexts where privacy hasn't been verified.
    * 
-   * @remarks
-   * This is a convenience method equivalent to calling getDocumentWithEvaluations(docId, true).
-   * It's intended for use in history views, evaluation management pages, and anywhere that
-   * needs to display all evaluations regardless of their version compatibility.
+   * @param docId - The unique identifier of the document
+   * @param requestingUserId - The ID of the requesting user (or undefined for anonymous)
+   * @returns The document with all evaluations, or null if not found or access denied
    */
   static async getDocumentWithAllEvaluations(
     docId: string,
-    requestingUserId: string | undefined // REQUIRED: must explicitly pass undefined for anonymous
+    requestingUserId: string | undefined
   ): Promise<Document | null> {
     return DocumentModel.getDocumentWithEvaluations(docId, true, requestingUserId);
   }
