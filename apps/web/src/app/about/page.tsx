@@ -49,7 +49,6 @@ Roast My Post is developed and maintained by [Quantified Uncertainty Research In
 
 We'd love to hear from you! Whether you have questions, feedback, or want to contribute:
 
-- **Email**: [contact@quantifieduncertainty.org](mailto:contact@quantifieduncertainty.org)
 - **Discord**: [Join our community](https://discord.gg/nsTnQTgtG6)
 - **GitHub Issues**: [Report bugs or request features](https://github.com/quantified-uncertainty/roast-my-post/issues)
 
@@ -67,17 +66,16 @@ export default function AboutPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <Link
-            href="/"
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
+          <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
             ← Back to Home
           </Link>
         </div>
-        
+
         <div className="rounded-lg bg-white p-8 shadow-sm">
           <div className="prose prose-gray max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{aboutContent}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {aboutContent}
+            </ReactMarkdown>
           </div>
         </div>
       </div>

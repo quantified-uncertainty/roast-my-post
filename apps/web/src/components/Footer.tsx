@@ -28,12 +28,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/docs" className="text-sm text-gray-600 hover:text-gray-900">
-                  Document Library
-                </Link>
-              </li>
-              <li>
-                <Link href="/settings" className="text-sm text-gray-600 hover:text-gray-900">
-                  Settings
+                  Public Documents
                 </Link>
               </li>
               <li>
@@ -105,26 +100,10 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/help/agents-humans"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  Agent Documentation
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/help/api"
                   className="text-sm text-gray-600 hover:text-gray-900"
                 >
                   API Documentation
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/help/roadmap"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  Roadmap
                 </Link>
               </li>
               <li>

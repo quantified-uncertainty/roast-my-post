@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
 
 const agentDocumentationForHumans = `# Agent Documentation for Humans
@@ -197,7 +198,6 @@ If the document is a blog post:
 
 - **Examples**: Check out [popular agents](/agents) for inspiration
 - **Community**: Join our [Discord](https://discord.gg/nsTnQTgtG6) to discuss agent creation
-- **Support**: Email us at contact@quantifieduncertainty.org
 
 Remember: The best agents are specialized, detailed, and provide actionable feedback. Start simple and refine based on results!`;
 
@@ -210,9 +210,11 @@ export default function AgentsHumansPage() {
         </h1>
         <CopyMarkdownButton content={agentDocumentationForHumans} />
       </div>
-      
+
       <div className="prose prose-gray max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{agentDocumentationForHumans}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {agentDocumentationForHumans}
+        </ReactMarkdown>
       </div>
     </div>
   );

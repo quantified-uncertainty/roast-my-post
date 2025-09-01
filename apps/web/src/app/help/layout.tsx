@@ -6,7 +6,6 @@ import {
   CodeBracketIcon, 
   UserGroupIcon, 
   RocketLaunchIcon,
-  DocumentTextIcon,
   ChatBubbleLeftRightIcon,
   Squares2X2Icon
 } from "@heroicons/react/24/outline";
@@ -17,7 +16,6 @@ const navigation = [
   { name: "Agents for Humans", href: "/help/agents-humans", icon: UserGroupIcon },
   { name: "Agents for LLMs", href: "/help/agents-llms", icon: ChatBubbleLeftRightIcon },
   { name: "API Documentation", href: "/help/api", icon: CodeBracketIcon },
-  { name: "Roadmap", href: "/help/roadmap", icon: DocumentTextIcon },
 ];
 
 export default function HelpLayout({

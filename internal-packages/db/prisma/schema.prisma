@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
-  output        = "../generated"  
+  output        = "../generated"
   binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
 }
 
@@ -67,8 +67,8 @@ model Document {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   submittedById    String
-  isPrivate        Boolean           @default(false)
   ephemeralBatchId String?
+  isPrivate        Boolean           @default(true)
   ephemeralBatch   AgentEvalBatch?   @relation("EphemeralDocuments", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
   submittedBy      User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
   versions         DocumentVersion[]
@@ -153,13 +153,10 @@ model EvaluationComment {
   grade               Int?
   evaluationVersionId String
   highlightId         String              @unique
-  
-  // New fields for plugin standardization
-  header              String?             // Concise summary like "2+2=5 → 2+2=4"
-  level               String?             // 'error' | 'warning' | 'info' | 'success'
-  source              String?             // Plugin identifier: 'math', 'spelling', etc.
-  metadata            Json?               // Plugin-specific data
-  
+  header              String?
+  level               String?
+  metadata            Json?
+  source              String?
   evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
   highlight           EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
 
@@ -184,8 +181,8 @@ model Agent {
   submittedById    String
   ephemeralBatchId String?          @unique
   isSystemManaged  Boolean          @default(false)
-  isRecommended    Boolean          @default(false)
   isDeprecated     Boolean          @default(false)
+  isRecommended    Boolean          @default(false)
   ephemeralBatch   AgentEvalBatch?  @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
   submittedBy      User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
   evalBatches      AgentEvalBatch[]
@@ -203,11 +200,11 @@ model AgentVersion {
   createdAt                DateTime            @default(now())
   updatedAt                DateTime            @updatedAt
   extendedCapabilityId     String?
-  pluginIds                String[]            @default([])
   readme                   String?
   selfCritiqueInstructions String?
   primaryInstructions      String?
   providesGrades           Boolean             @default(false)
+  pluginIds                String[]            @default([])
   agent                    Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
   evaluations              EvaluationVersion[]
 
@@ -247,13 +244,13 @@ model Job {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   llmThinking         String?
-  priceInDollars      Decimal?           @db.Decimal(10, 6)
   durationInSeconds   Int?
   logs                String?
   evaluationId        String
   evaluationVersionId String?            @unique
   agentEvalBatchId    String?
   originalJobId       String?
+  priceInDollars      Decimal?           @db.Decimal(10, 6)
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
   evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
@@ -270,13 +267,13 @@ model Task {
   id              String   @id @default(uuid())
   name            String
   modelName       String
-  priceInDollars  Decimal  @db.Decimal(10, 6)
   timeInSeconds   Int?
   log             String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   jobId           String
   llmInteractions Json?
+  priceInDollars  Decimal  @db.Decimal(10, 6)
   job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
