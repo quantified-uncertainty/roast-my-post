@@ -9,9 +9,7 @@ import { truncateSummary } from "@/shared/utils/text";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 import { CommentToggle } from "../../EvaluationCard/shared/CommentToggle";
-import {
-  EvaluationActions,
-} from "../../EvaluationCard/shared/EvaluationActions";
+import { EvaluationActions } from "../../EvaluationCard/shared/EvaluationActions";
 import { EvaluationHeader } from "../../EvaluationCard/shared/EvaluationHeader";
 import { StatusBadge } from "../../StatusBadge";
 
@@ -51,7 +49,7 @@ export function EvaluationCard({
 
   return (
     <div
-      className={`flex min-h-[100px] flex-col justify-between rounded-md bg-white p-3 ${
+      className={`flex min-h-[100px] flex-col justify-between rounded-md border border-gray-200 bg-white p-3 shadow-sm ${
         !hasCompletedVersion ? "opacity-90" : ""
       }`}
     >
@@ -110,7 +108,9 @@ export function EvaluationCard({
             agentId={review.agentId}
             showDetails={true}
             showRerun={isOwner && !!onRerun}
-            onRerun={isOwner && onRerun ? () => onRerun(review.agentId) : undefined}
+            onRerun={
+              isOwner && onRerun ? () => onRerun(review.agentId) : undefined
+            }
             className="flex items-center gap-4"
           />
           {hasCompletedVersion && (
