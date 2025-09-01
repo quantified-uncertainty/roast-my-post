@@ -13,6 +13,7 @@ import { test, expect, Page } from '@playwright/test';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { setupTestAuthBypass } from './auth-helpers';
 import { toolMetadata } from '../../src/app/tools/tool-metadata';
+import { isInsufficientCreditsError, outputIndicatesCreditsIssue } from '../../src/lib/api-error-utils';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || 'claude-3-5-sonnet-20241022';
@@ -213,11 +214,11 @@ test.describe('Tool End-to-End Validation', () => {
         });
         console.log('✅ AI validation enabled with Sonnet 4');
       } catch (error) {
-        const err = error as { status?: number; message?: string };
-        if (err?.status === 400 && err?.message?.includes('credit balance')) {
+        if (isInsufficientCreditsError(error)) {
           console.log('⚠️  Anthropic API key has insufficient credits - running basic validation only');
           anthropic = null;
         } else {
+          const err = error as { message?: string };
           console.log('⚠️  Failed to initialize Anthropic client:', err?.message || error);
           anthropic = null;
         }
@@ -486,12 +487,7 @@ test.describe('Tool End-to-End Validation', () => {
         // Basic validation
         if (!output || output.length < 10) {
           result.issues.push('No output or output too short');
-        } else if (output.includes('Missing Anthropic API key') || 
-                   output.includes('ANTHROPIC_API_KEY') || 
-                   output.includes('OpenRouter API key is required') || 
-                   output.includes('OPENROUTER_API_KEY') ||
-                   output.includes('credit balance is too low') ||
-                   output.includes('insufficient credits')) {
+        } else if (outputIndicatesCreditsIssue(output)) {
           // Special case: tool requires API key but none is available or has no credits
           // This is expected behavior when running tests without API keys or credits
           console.log(`⚠️  ${toolId}: Tool requires API key/credits - skipping validation`);
@@ -665,8 +661,7 @@ Respond with JSON only:
     }
   } catch (error) {
     // Handle specific API errors gracefully
-    const err = error as { status?: number; message?: string };
-    if (err?.status === 400 && err?.message?.includes('credit balance')) {
+    if (isInsufficientCreditsError(error)) {
       console.warn(`⚠️  Anthropic API has insufficient credits - skipping AI validation for ${toolId}`);
       return { valid: true, reason: 'AI validation skipped (insufficient API credits)' };
     }
