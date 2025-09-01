@@ -75,6 +75,7 @@ export default function CreateDocumentForm() {
   const [importUrl, setImportUrl] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [importIsPrivate, setImportIsPrivate] = useState(true); // Default to private
   
   // Agent selection state
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -89,7 +90,7 @@ export default function CreateDocumentForm() {
       content: "",
       urls: "",
       platforms: "",
-      isPrivate: false,
+      isPrivate: true, // Default to private
     },
   });
 
@@ -145,7 +146,7 @@ export default function CreateDocumentForm() {
     try {
       setIsImporting(true);
       setImportError(null);
-      await importDocument(importUrl.trim(), selectedAgentIds);
+      await importDocument(importUrl.trim(), selectedAgentIds, importIsPrivate);
     } catch (err) {
       setImportError(
         err instanceof Error ? err.message : "Failed to import document"
@@ -248,6 +249,30 @@ export default function CreateDocumentForm() {
                   disabled={isImporting}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
+              </div>
+
+              {/* Privacy Toggle */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-900">
+                  Document Privacy
+                </label>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={importIsPrivate}
+                      onChange={(e) => setImportIsPrivate(e.target.checked)}
+                      className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div className="flex items-start gap-2">
+                      <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">Keep this document private</div>
+                        <div className="text-xs text-gray-500">Only you will be able to view this document. Private by default.</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               {/* Agent Selection */}
@@ -427,8 +452,8 @@ export default function CreateDocumentForm() {
                       <div className="flex items-start gap-2">
                         <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
                         <div>
-                          <div className="text-sm font-medium text-gray-900">Make this document private</div>
-                          <div className="text-xs text-gray-500">Only you will be able to view this document. Public by default.</div>
+                          <div className="text-sm font-medium text-gray-900">Keep this document private</div>
+                          <div className="text-xs text-gray-500">Only you will be able to view this document. Private by default.</div>
                         </div>
                       </div>
                     </label>
