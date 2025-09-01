@@ -31,6 +31,13 @@ vi.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: vi.fn(),
 }));
 
+// Mock PrivacyService
+vi.mock('@/infrastructure/auth/privacy-service', () => ({
+  PrivacyService: {
+    canViewDocument: vi.fn().mockResolvedValue(true),
+  },
+}));
+
 // Mock the ServiceFactory 
 const mockJobService = {
   createJob: vi.fn().mockResolvedValue({ id: "job-123", status: "PENDING" }),
@@ -76,7 +83,10 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
 
   it('should return evaluations for document', async () => {
     (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ id: mockDocId });
+    (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
+      id: mockDocId,
+      submittedById: mockUser.id, // User owns the document
+    });
     
     const mockEvaluations = [
       {
@@ -252,6 +262,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
     (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
       id: mockDocId,
+      submittedById: mockUser.id, // Add this so the user owns the document
     });
     
     const mockAgent = {

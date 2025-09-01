@@ -27,15 +27,16 @@ export async function GET(
       return accessResult.response;
     }
 
-    // Get evaluation data using existing query logic
-    const evaluation = await getEvaluationForDisplay(docId, agentId);
+    // Get evaluation data using existing query logic (pass undefined for API calls)
+    const result = await getEvaluationForDisplay(docId, agentId, undefined);
 
-    if (!evaluation) {
+    if (!result.evaluation) {
       return commonErrors.notFound(`No evaluation found for agent '${agentId}' on document '${docId}'`);
     }
 
     // Extract display data
-    const evaluationData = extractEvaluationDisplayData(evaluation);
+    const evaluationData = extractEvaluationDisplayData(result);
+    const { evaluation } = result;
 
     return NextResponse.json({
       evaluation: {

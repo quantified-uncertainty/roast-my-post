@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { checkDocumentOwnership } from "@/application/services/document-auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { PageHeader } from "@/components/PageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
@@ -20,17 +20,19 @@ export default async function EvaluationPage({
   const resolvedParams = await params;
   const { docId, agentId } = resolvedParams;
 
-  // Privacy check is now handled by the layout
-  const evaluation = await getEvaluationForDisplay(docId, agentId);
+  // Get current user for ownership check
+  const session = await auth();
+  const currentUserId = session?.user?.id;
 
-  if (!evaluation) {
+  // Privacy check is now handled by the layout
+  const result = await getEvaluationForDisplay(docId, agentId, currentUserId);
+
+  if (!result.evaluation) {
     notFound();
   }
 
-  const evaluationData = extractEvaluationDisplayData(evaluation);
-  
-  // Check if current user owns the document (for export functionality only)
-  const isOwner = await checkDocumentOwnership(docId);
+  const evaluationData = extractEvaluationDisplayData(result);
+  const { isOwner } = evaluationData;
 
   return (
     <div className="h-full bg-gray-50 flex flex-col overflow-hidden">

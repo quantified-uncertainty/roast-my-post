@@ -2,6 +2,11 @@ import { vi } from 'vitest';
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 
+// Mock auth-helpers to avoid import issues
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Mock the Result class to match expected interface
 vi.mock('@roast/domain', () => {
   const originalResult = {
@@ -113,7 +118,7 @@ describe('GET /api/agents/[agentId]/evaluations', () => {
     const data = await response.json();
     expect(data).toEqual({ evaluations: mockEvaluations });
     
-    expect(mockAgentService.getAgentEvaluations).toHaveBeenCalledWith(mockAgentId, undefined);
+    expect(mockAgentService.getAgentEvaluations).toHaveBeenCalledWith(mockAgentId, { requestingUserId: undefined });
   });
 
   it('should filter evaluations by batchId', async () => {
@@ -140,7 +145,7 @@ describe('GET /api/agents/[agentId]/evaluations', () => {
     const data = await response.json();
     expect(data).toEqual({ evaluations: mockEvaluations });
     
-    expect(mockAgentService.getAgentEvaluations).toHaveBeenCalledWith(mockAgentId, { batchId: mockBatchId });
+    expect(mockAgentService.getAgentEvaluations).toHaveBeenCalledWith(mockAgentId, { batchId: mockBatchId, requestingUserId: undefined });
   });
 
   it('should return empty array when agent has no evaluations', async () => {
