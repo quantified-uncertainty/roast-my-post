@@ -8,7 +8,7 @@ import { isAdmin } from "@/infrastructure/auth/auth";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   const userId = await authenticateRequest(request);
   if (!userId) {
@@ -22,7 +22,7 @@ export async function POST(
   }
   
   try {
-    const { jobId } = params;
+    const { jobId } = await params;
     
     // Parse request body for optional cancellation reason
     let cancellationReason: string | undefined;
