@@ -8,6 +8,7 @@
 
 import { prisma as defaultPrisma } from '../client';
 import { generateId } from '../utils/generateId';
+import { generateMarkdownPrepend } from '@roast/domain';
 import type { PrismaClient } from '../client';
 
 // Types defined in this package to avoid circular dependencies
@@ -346,12 +347,27 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Update document content (creates new version)
    */
   async updateContent(id: string, content: string, title: string): Promise<void> {
-    const latestVersion = await this.prisma.documentVersion.findFirst({
-      where: { documentId: id },
-      orderBy: { version: 'desc' }
-    });
+    // Get the latest version and the document for publishedDate
+    const [latestVersion, document] = await Promise.all([
+      this.prisma.documentVersion.findFirst({
+        where: { documentId: id },
+        orderBy: { version: 'desc' }
+      }),
+      this.prisma.document.findUnique({
+        where: { id },
+        select: { publishedDate: true }
+      })
+    ]);
 
     const nextVersion = (latestVersion?.version || 0) + 1;
+    
+    // Generate fresh markdownPrepend with current metadata
+    const markdownPrepend = generateMarkdownPrepend({
+      title,
+      author: latestVersion?.authors?.[0] || 'Unknown',
+      platforms: latestVersion?.platforms || [],
+      publishedDate: document?.publishedDate || null
+    });
 
     await this.prisma.documentVersion.create({
       data: {
@@ -361,6 +377,8 @@ export class DocumentRepository implements DocumentRepositoryInterface {
         authors: latestVersion?.authors || ['Unknown'],
         urls: latestVersion?.urls || [],
         platforms: latestVersion?.platforms || [],
+        importUrl: latestVersion?.importUrl || null,
+        markdownPrepend,
         version: nextVersion
       }
     });
