@@ -40,7 +40,7 @@ export default async function MyDocumentsPage({
 
   return (
     <>
-      <SearchBar searchQuery={searchQuery} showNewButton={true} />
+      <SearchBar searchQuery={searchQuery} showNewButton={false} />
 
       <Suspense
         fallback={
@@ -54,6 +54,8 @@ export default async function MyDocumentsPage({
           searchQuery={searchQuery}
           totalCount={totalCount}
           hasSearched={hasSearched}
+          pageTitle="Your Documents"
+          showPrivacyBadges={true}
         />
       </Suspense>
     </>

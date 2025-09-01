@@ -30,6 +30,8 @@ interface DocumentsResultsProps {
   searchQuery: string;
   totalCount: number;
   hasSearched: boolean;
+  pageTitle?: string;
+  showPrivacyBadges?: boolean;
 }
 
 export default function DocumentsResults({
@@ -37,6 +39,8 @@ export default function DocumentsResults({
   searchQuery,
   totalCount,
   hasSearched,
+  pageTitle = "Public Documents",
+  showPrivacyBadges = false,
 }: DocumentsResultsProps) {
   // Get unique evaluator names from all documents
   const evaluators = Array.from(
@@ -54,9 +58,9 @@ export default function DocumentsResults({
 
   return (
     <PageLayout>
-      {/* Public Documents Header */}
+      {/* Page Header */}
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Public Documents</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{pageTitle}</h1>
       </div>
 
       {/* Status message */}
@@ -194,6 +198,9 @@ export default function DocumentsResults({
                             </div>
                           )}
                           <div className="flex flex-wrap gap-2">
+                            {showPrivacyBadges && (
+                              <PrivacyBadge isPrivate={document.document.isPrivate} size="xs" />
+                            )}
                             {Object.entries(agentReviews).map(
                               ([agentId, commentCount]) => {
                                 const evaluation =
@@ -271,6 +278,9 @@ export default function DocumentsResults({
                             className="flex items-center gap-2 truncate text-blue-600 hover:text-blue-900"
                           >
                             {document.title}
+                            {showPrivacyBadges && (
+                              <PrivacyBadge isPrivate={document.document.isPrivate} size="xs" />
+                            )}
                           </Link>
                         </TableCell>
                         <TableCell className="w-32">
