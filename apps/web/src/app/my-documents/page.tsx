@@ -29,6 +29,7 @@ export default async function MyDocumentsPage({
     limit: 50,
     userId: session.user.id,
     requestingUserId: session.user.id,
+    latestVersionOnly: true,
   });
 
   const totalCount = documents.length;
