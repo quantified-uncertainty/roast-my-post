@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/accordion";
 
 import { EvaluationCard } from "./EvaluationCard";
-import { PrivacyBadge } from "@/components/PrivacyBadge";
 import type { Document } from "@/shared/types/databaseTypes";
 import type { EvaluationState } from "../types";
 
@@ -31,6 +30,7 @@ interface EvaluationCardsHeaderProps {
   onToggleDebugComments?: () => void;
   isOwner?: boolean;
   onRerun?: (agentId: string) => void;
+  runningEvals?: Set<string>;
 }
 
 export function EvaluationCardsHeader({
@@ -43,6 +43,7 @@ export function EvaluationCardsHeader({
   onToggleDebugComments,
   isOwner = false,
   onRerun,
+  runningEvals = new Set(),
 }: EvaluationCardsHeaderProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -138,8 +139,8 @@ export function EvaluationCardsHeader({
           title={showDebug ? "Hide debug comments" : "Show debug comments"}
         >
           <Checkbox checked={showDebug} className="pointer-events-none" />
-          <CommandLineIcon className="h-3 w-3" />
           Debug
+          <CommandLineIcon className="h-3 w-3" />
         </Button>
       </div>
     );
