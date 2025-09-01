@@ -55,19 +55,48 @@ git commit -m "message"               # Only if staging correct
 # NOTE: Deletions of package-lock.json are allowed (we want to remove them in pnpm projects)
 ```
 
-### Database Safety
+### Database Safety & Migrations
+
+#### 🚨 MANDATORY: Always Create Migration Files 🚨
+**NEVER run manual SQL without creating a migration file first!**
+
+```bash
+# WRONG - Never do this:
+psql -c "ALTER TABLE..."  # NO! Creates no migration file
+
+# RIGHT - Always create a proper migration:
+# 1. Create migration directory with timestamp
+MIGRATION_NAME="your_change_description"
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+MIGRATION_DIR="internal-packages/db/prisma/migrations/${TIMESTAMP}_${MIGRATION_NAME}"
+mkdir -p "$MIGRATION_DIR"
+
+# 2. Write SQL to migration.sql file
+cat > "$MIGRATION_DIR/migration.sql" << 'EOF'
+-- Your SQL here
+ALTER TABLE "TableName" ADD COLUMN "columnName" TEXT;
+EOF
+
+# 3. Apply the migration
+pnpm --filter @roast/db run migrate:dev  # For dev
+# OR
+pnpm --filter @roast/db run db:push      # For quick iteration
+
+# 4. ALWAYS add migration to git
+git add "$MIGRATION_DIR"
+```
+
+#### General Database Safety
 ```bash
 # ALWAYS before schema changes:
 pg_dump -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # NEVER use for column renames:
 prisma db push --accept-data-loss  # This DROPS data, doesn't rename!
-
-# Safe column rename:
-ALTER TABLE "TableName" RENAME COLUMN "oldName" TO "newName";
 ```
 
 ### PR/Merge Workflow (See also: ABSOLUTE PROHIBITION above)
+- **Step 0**: Check for missing migrations! `git status | grep migrations` (COMMON ISSUE!)
 - **Step 1**: Create PR with `gh pr create`
 - **Step 2**: Push updates to feature branch
 - **Step 3**: Say "PR #X is ready for your review and merge at [URL]"
@@ -149,6 +178,16 @@ RUN pnpm --filter @roast/domain run build
 | @roast/ai | ❌ | Worker uses tsx, web uses transpilePackages |
 
 ## Common Prisma Issues
+
+**Missing migration files in PRs** (VERY COMMON!):
+```bash
+# Before EVERY PR, check for untracked migrations:
+git status | grep migrations
+
+# If found, add them:
+git add internal-packages/db/prisma/migrations/
+git commit -m "Add migration files"
+```
 
 **"Unknown argument" error**:
 ```bash
