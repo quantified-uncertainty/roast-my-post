@@ -41,17 +41,22 @@ export function DocumentContent({
       className={`relative p-0 ${isFullWidth ? "pr-4" : "max-w-3xl flex-1"}`}
       style={
         isFullWidth
-          ? { width: `calc(100% - ${LAYOUT.COMMENT_COLUMN_WIDTH}px)`, overflow: "hidden" }
+          ? {
+              width: `calc(100% - ${LAYOUT.COMMENT_COLUMN_WIDTH}px)`,
+              overflow: "hidden",
+            }
           : {}
       }
     >
       {/* Document metadata section */}
-      <DocumentMetadata
-        document={document}
-        showDetailedAnalysisLink={true}
-        isFullWidth={isFullWidth}
-        onToggleFullWidth={onToggleFullWidth}
-      />
+      <div className={isFullWidth ? "w-full" : "mx-auto max-w-3xl"}>
+        <DocumentMetadata
+          document={document}
+          showDetailedAnalysisLink={true}
+          isFullWidth={isFullWidth}
+          onToggleFullWidth={onToggleFullWidth}
+        />
+      </div>
 
       <article
         className={`prose prose-lg prose-slate ${
