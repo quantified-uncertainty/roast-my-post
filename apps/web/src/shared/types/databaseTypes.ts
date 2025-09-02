@@ -1,5 +1,6 @@
 // Database-specific types that extend the base AI package types
 import type { Document as BaseDocument, Comment as BaseComment } from "@roast/ai";
+import type { JobStatus } from "@roast/db";
 
 // Database Document type that includes all the database fields
 export interface Document extends Omit<BaseDocument, 'reviews'> {
@@ -101,7 +102,7 @@ export interface Task {
 // Database Job type
 export interface Job {
   id: string;
-  status: string;
+  status: JobStatus;
   priceInDollars: number;
   durationInSeconds?: number;
   llmThinking?: string | null;
@@ -111,7 +112,7 @@ export interface Job {
 // Simplified job summary type
 export interface JobSummary {
   id: string;
-  status: string;
+  status: JobStatus;
   createdAt: Date;
   startedAt?: Date;
   completedAt?: Date;

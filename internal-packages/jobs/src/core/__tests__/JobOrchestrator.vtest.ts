@@ -21,6 +21,9 @@ vi.mock('@roast/ai', () => ({
 
 vi.mock('@roast/db', () => ({
   prisma: {
+    job: {
+      findUnique: vi.fn(),
+    },
     evaluationVersion: {
       findFirst: vi.fn(),
       create: vi.fn(),
@@ -137,6 +140,7 @@ describe('JobOrchestrator', () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
 
+      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       mockAnalyzeDocument.mockResolvedValue(mockAnalysisResult);
       mockFetchJobCost.mockResolvedValue({ totalCostUSD: 0.75 });
       mockJobService.markAsCompleted.mockResolvedValue(mockJob);
@@ -156,6 +160,7 @@ describe('JobOrchestrator', () => {
       const mockJob = createMockJob();
       mockJob.evaluation.document.versions = [];
 
+      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(false);
@@ -167,6 +172,7 @@ describe('JobOrchestrator', () => {
       const mockJob = createMockJob();
       mockJob.evaluation.agent.versions = [];
 
+      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(false);
@@ -177,6 +183,8 @@ describe('JobOrchestrator', () => {
     it('should save highlights to database', async () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
+      
+      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       mockAnalysisResult.highlights = [
         {
           description: 'Test highlight',
@@ -211,9 +219,24 @@ describe('JobOrchestrator', () => {
       );
     });
 
+    it('should handle cancelled job', async () => {
+      const mockJob = createMockJob();
+      
+      (prisma.job.findUnique as any).mockResolvedValue({ status: 'CANCELLED' });
+      
+      const result = await orchestrator.processJob(mockJob);
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error?.message).toBe('Job was cancelled');
+      expect(mockLogger.info).toHaveBeenCalledWith('Job job-1 was cancelled, skipping processing');
+    });
+
     it('should calculate cost from tasks when Helicone unavailable', async () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
+      
+      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       mockAnalysisResult.tasks = [
         {
           name: 'Task 1',

@@ -124,16 +124,12 @@ export default async function DocumentPage({
         grade: version.grade,
         job: review.jobs?.[0]
           ? {
-              status: review.jobs[0].status as
-                | "PENDING"
-                | "RUNNING"
-                | "COMPLETED"
-                | "FAILED",
+              status: review.jobs[0].status,
             }
           : undefined,
       })),
       jobs: review.jobs?.map((job) => ({
-        status: job.status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED",
+        status: job.status,
       })),
     })) || [];
 

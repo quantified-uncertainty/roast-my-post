@@ -1,7 +1,8 @@
 import React from "react";
+import type { JobStatus } from "@roast/db";
 
 interface JobStatusIndicatorProps {
-  status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+  status: JobStatus;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
 }
@@ -74,6 +75,25 @@ export function JobStatusIndicator({
         {showLabel && (
           <span className={`${labelSizeClasses[size]} text-red-600 font-medium`}>
             Failed
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (status === "CANCELLED") {
+    return (
+      <div className="group relative flex items-center gap-2">
+        <div className="relative">
+          <div className={`${sizeClasses[size]} rounded-full bg-gray-400`} />
+          <div className="invisible group-hover:visible absolute z-10 -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
+            Cancelled
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900" />
+          </div>
+        </div>
+        {showLabel && (
+          <span className={`${labelSizeClasses[size]} text-gray-600 font-medium`}>
+            Cancelled
           </span>
         )}
       </div>
