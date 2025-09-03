@@ -2,6 +2,7 @@
 
 import { User } from "lucide-react";
 import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 
 import type { User as UserType } from "@/models/User";
 import { USER_DISPLAY } from "@/shared/constants/constants";
@@ -20,7 +21,7 @@ export default function UsersClient({ users }: UsersClientProps) {
         {users.map((user) => (
           <Link
             key={user.id}
-            href={`/users/${user.id}`}
+            href={ROUTES.USERS.PROFILE(user.id)}
             className="group block"
           >
             <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">

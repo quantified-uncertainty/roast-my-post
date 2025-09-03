@@ -5,6 +5,7 @@ import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import { JobCard, JobSummary, TaskDisplay } from "@/components/job";
 import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
+import { ROUTES } from "@/constants/routes";
 
 interface Job {
   id: string;
@@ -245,7 +246,7 @@ export default function JobsMonitorPage() {
                       <dt className="font-medium text-gray-900">Uploaded by</dt>
                       <dd className="text-blue-600 hover:text-blue-800">
                         {selectedJob.evaluation.document.submittedBy ? (
-                          <Link href={`/profile/${selectedJob.evaluation.document.submittedBy.id}`}>
+                          <Link href={ROUTES.USERS.PROFILE(selectedJob.evaluation.document.submittedBy.id)}>
                             {selectedJob.evaluation.document.submittedBy.name || selectedJob.evaluation.document.submittedBy.email}
                           </Link>
                         ) : (
