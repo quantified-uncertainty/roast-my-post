@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 
 import type { Document } from "@/shared/types/databaseTypes";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
+import { ROUTES } from "@/constants/routes";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -69,7 +70,7 @@ export function DocumentMetadata({
             <span>
               Uploaded from{" "}
               <Link
-                href={`/users/${document.submittedBy.id}`}
+                href={ROUTES.USERS.PROFILE(document.submittedBy.id)}
                 className="text-blue-600 hover:underline"
               >
                 {document.submittedBy.name ||

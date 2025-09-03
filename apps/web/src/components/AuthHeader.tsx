@@ -43,7 +43,7 @@ export default function AuthHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/users/${session.user?.id}`}
+                  href={session.user?.id ? ROUTES.USERS.PROFILE(session.user.id) : '#'}
                   className="flex cursor-pointer items-center gap-2"
                 >
                   <UserCircle className="h-4 w-4" />
@@ -52,7 +52,7 @@ export default function AuthHeader() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/users/${session.user?.id}/agents`}
+                  href={session.user?.id ? ROUTES.USERS.AGENTS(session.user.id) : '#'}
                   className="flex cursor-pointer items-center gap-2"
                 >
                   <Bot className="h-4 w-4" />
