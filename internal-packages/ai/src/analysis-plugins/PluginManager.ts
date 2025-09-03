@@ -10,6 +10,7 @@ import {
   HeliconeSessionManager,
 } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
+import { ANALYSIS_MODEL } from "../types";
 // Document and Comment types are passed as parameters to avoid circular dependencies
 // LLMInteraction type removed - was unused
 import type { Comment } from "../shared/types";
@@ -557,7 +558,7 @@ export class PluginManager {
 
       tasks.push({
         name: "Plugin Analysis",
-        modelName: "claude-3-5-sonnet-20241022", // Update to current model
+        modelName: ANALYSIS_MODEL, // claude-sonnet-4-20250514
         priceInDollars: pluginResults.statistics.totalCost,
         timeInSeconds: pluginDuration / 1000,
         log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, generated ${pluginResults.statistics.totalComments} comments using ${plugins.length} plugins.`,
