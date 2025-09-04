@@ -92,8 +92,7 @@ describe('ExtractFactualClaimsTool - Highlight Feature', () => {
         });
 
       const result = await tool.execute({
-        text: testText,
-        includeLocations: true
+        text: testText
       }, mockContext);
 
       expect(result.claims).toHaveLength(2);
@@ -140,8 +139,7 @@ describe('ExtractFactualClaimsTool - Highlight Feature', () => {
       });
 
       const result = await tool.execute({
-        text: testText,
-        includeLocations: true
+        text: testText
       }, mockContext);
 
       expect(result.claims).toHaveLength(1);
@@ -150,7 +148,7 @@ describe('ExtractFactualClaimsTool - Highlight Feature', () => {
       expect(result.claims[0].highlight?.error).toBe('Location not found in document');
     });
 
-    it('should skip location finding when includeLocations is false', async () => {
+    it('should include location finding for claims', async () => {
       const testText = 'The Earth orbits the Sun.';
       
       mockCallClaudeWithTool.mockResolvedValue({
@@ -168,14 +166,26 @@ describe('ExtractFactualClaimsTool - Highlight Feature', () => {
         llmInteraction: {} as any
       });
 
+      mockFuzzyTextLocator.mockResolvedValue({
+        searchText: 'The Earth orbits the Sun',
+        found: true,
+        location: {
+          startOffset: 0,
+          endOffset: 25,
+          quotedText: 'The Earth orbits the Sun',
+          strategy: 'exact',
+          confidence: 1.0
+        },
+        processingTimeMs: 5
+      });
+
       const result = await tool.execute({
-        text: testText,
-        includeLocations: false
+        text: testText
       }, mockContext);
 
       expect(result.claims).toHaveLength(1);
-      expect(result.claims[0].highlight).toBeUndefined();
-      expect(mockFuzzyTextLocator).not.toHaveBeenCalled();
+      expect(result.claims[0].highlight).toBeDefined();
+      expect(mockFuzzyTextLocator).toHaveBeenCalled();
     });
 
     it('should extract prefix text when location is found', async () => {
@@ -210,8 +220,7 @@ describe('ExtractFactualClaimsTool - Highlight Feature', () => {
       });
 
       const result = await tool.execute({
-        text: testText,
-        includeLocations: true
+        text: testText
       }, mockContext);
 
       expect(result.claims[0].highlight?.prefix).toBeDefined();
@@ -272,8 +281,7 @@ describe('ExtractFactualClaimsTool - Highlight Feature', () => {
         });
 
       const result = await tool.execute({
-        text: testText,
-        includeLocations: true
+        text: testText
       }, mockContext);
 
       expect(result.claims).toHaveLength(2);

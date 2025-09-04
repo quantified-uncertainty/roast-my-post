@@ -519,7 +519,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
             text: chunk.text,
             minQualityThreshold: THRESHOLDS.MIN_QUALITY_THRESHOLD,
             maxClaims: LIMITS.MAX_CLAIMS_PER_CHUNK,
-            includeLocations: true, // Enable location finding in extraction
           },
           {
             logger,

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
+import type { DocumentHighlight } from "../../shared/types";
 import {
   Tool,
   ToolContext,
@@ -8,15 +9,15 @@ import {
 import fuzzyTextLocatorTool from "../fuzzy-text-locator";
 import { generateCacheSeed } from "../shared/cache-utils";
 
-// Highlight schema matching EvaluationHighlight model
+// Create a Zod schema from the DocumentHighlight interface
 const highlightSchema = z.object({
   startOffset: z.number(),
   endOffset: z.number(),
-  prefix: z.string().optional(),
   quotedText: z.string(),
   isValid: z.boolean(),
+  prefix: z.string().optional(),
   error: z.string().optional(),
-});
+}) satisfies z.ZodType<DocumentHighlight>;
 
 // Claim schema
 const extractedFactualClaimSchema = z.object({
@@ -70,11 +71,6 @@ const inputSchema = z.object({
     .max(100)
     .default(30)
     .describe("Maximum number of claims to extract"),
-  includeLocations: z
-    .boolean()
-    .optional()
-    .default(true)
-    .describe("Whether to find locations for each claim (default: true)"),
 }) satisfies z.ZodType<ExtractFactualClaimsInput>;
 
 // Output validation schema
@@ -99,7 +95,6 @@ export interface ExtractFactualClaimsInput {
   instructions?: string;
   minQualityThreshold?: number;
   maxClaims?: number;
-  includeLocations?: boolean;
 }
 
 export interface ExtractFactualClaimsOutput {
@@ -279,12 +274,11 @@ Requirements:
       };
     }
 
-    // Add location information to each claim if requested
-    if (input.includeLocations !== false) {
-      context.logger.info(
-        "[ExtractFactualClaims] Finding locations for claims"
-      );
-      for (const claim of allClaims) {
+    // Add location information to each claim
+    context.logger.info(
+      "[ExtractFactualClaims] Finding locations for claims"
+    );
+    for (const claim of allClaims) {
         try {
           const locationResult = await fuzzyTextLocatorTool.execute(
             {
@@ -341,7 +335,6 @@ Requirements:
           };
         }
       }
-    }
 
     // Filter claims based on quality threshold
     const qualityClaims = allClaims.filter((claim) => {
