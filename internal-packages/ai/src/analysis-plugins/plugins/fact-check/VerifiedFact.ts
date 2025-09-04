@@ -7,6 +7,8 @@ import type {
   FactCheckerOutput,
   FactCheckResult,
 } from "../../../tools/fact-checker";
+import fuzzyTextLocatorTool from "../../../tools/fuzzy-text-locator";
+import type { ToolContext } from "../../../tools/base/Tool";
 import { TextChunk } from "../../TextChunk";
 import { THRESHOLDS } from "./constants";
 
@@ -158,16 +160,63 @@ export class VerifiedFact {
   }
 
   /**
-   * Find precise location for highlighting - prefers specific error location over full claim
+   * Find the critical text using fuzzy text locator for robust matching
+   * This works for ALL claims, not just false ones
    */
-  async findPreciseLocation(documentText: string): Promise<DocumentLocation | null> {
-    // Try to find precise error location first
-    const preciseLocation = await this.findErrorSpan(documentText);
-    if (preciseLocation) {
-      return preciseLocation;
+  private async findCriticalTextSpan(documentText: string, criticalText: string, context: ToolContext): Promise<DocumentLocation | null> {
+    // Use the fuzzy text locator tool for robust text finding
+    try {
+      const locationResult = await fuzzyTextLocatorTool.execute(
+        {
+          documentText,
+          searchText: criticalText.trim(),
+          options: {
+            normalizeQuotes: true,
+            partialMatch: false,
+            useLLMFallback: true, // Let it use LLM for tricky cases
+          },
+        },
+        context
+      );
+
+      if (locationResult.found && locationResult.location) {
+        return {
+          startOffset: locationResult.location.startOffset,
+          endOffset: locationResult.location.endOffset,
+          quotedText: locationResult.location.quotedText,
+        };
+      }
+    } catch (error) {
+      logger.warn(
+        `[FactCheck] Failed to find critical text "${criticalText}" using fuzzy locator`,
+        { error: error instanceof Error ? error.message : String(error) }
+      );
+    }
+
+    return null;
+  }
+
+  /**
+   * Find precise location for highlighting - prefers critical text over error spans over full claim
+   */
+  async findPreciseLocation(documentText: string, context: ToolContext): Promise<DocumentLocation | null> {
+    // First priority: Use criticalText (works for ALL claims)
+    if (this.verification?.criticalText) {
+      const criticalLocation = await this.findCriticalTextSpan(documentText, this.verification.criticalText, context);
+      if (criticalLocation) {
+        return criticalLocation;
+      }
     }
     
-    // Fallback to full claim location
+    // Second priority: Pattern matching for false claims (keep as fallback)
+    if (this.verification?.verdict === 'false') {
+      const errorSpan = await this.findErrorSpan(documentText);
+      if (errorSpan) {
+        return errorSpan;
+      }
+    }
+    
+    // Final fallback: Full claim location
     return this.findLocation(documentText);
   }
 

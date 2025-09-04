@@ -143,4 +143,20 @@ describeIfHasApiKey('FactCheckerTool E2E Integration', () => {
     expect(result.llmInteraction).toHaveProperty('response');
     expect(result.llmInteraction).toHaveProperty('tokensUsed');
   }, 15000);
+
+  it('should include criticalText for highlighting important parts', async () => {
+    const input = {
+      claim: 'Water boils at 100 degrees Celsius at sea level',
+      searchForEvidence: false
+    };
+
+    const result = await tool.execute(input, testContext);
+
+    expect(result.result).toBeDefined();
+    expect(result.result.criticalText).toBeDefined();
+    expect(typeof result.result.criticalText).toBe('string');
+    expect(result.result.criticalText!.length).toBeGreaterThan(0);
+    // Should contain some form of the critical measurement
+    expect(result.result.criticalText).toMatch(/100|degrees|Celsius/i);
+  }, 15000);
 });

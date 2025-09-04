@@ -136,7 +136,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       const commentPromises = this.facts.map(async (fact) => {
         // Run in next tick to ensure true parallelism
         await new Promise((resolve) => setImmediate(resolve));
-        const comment = await buildFactComment(fact, documentText);
+        const comment = await buildFactComment(fact, documentText, { logger });
         // Filter out comments with empty descriptions
         if (
           comment &&

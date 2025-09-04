@@ -1,4 +1,5 @@
 import type { Comment, ToolChainResult } from '../../../../shared/types';
+import type { ToolContext } from '../../../../tools/base/Tool';
 import { CommentBuilder } from '../../../utils/CommentBuilder';
 import type { VerifiedFact } from '../VerifiedFact';
 import {
@@ -17,10 +18,11 @@ import {
  */
 export async function buildFactComment(
   fact: VerifiedFact,
-  documentText: string
+  documentText: string,
+  context: ToolContext
 ): Promise<Comment | null> {
-  // Use precise location when available, fallback to full claim
-  const location = await fact.findPreciseLocation(documentText);
+  // Use precise location with context for fuzzy matching
+  const location = await fact.findPreciseLocation(documentText, context);
   if (!location) return null;
 
   // Build tool chain results

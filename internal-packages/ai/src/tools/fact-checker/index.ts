@@ -34,6 +34,7 @@ const factCheckResultSchema = z.object({
   explanation: z.string(),
   corrections: z.string().optional(),
   conciseCorrection: z.string().optional(),
+  criticalText: z.string().optional(),
   sources: z
     .array(
       z.object({
@@ -163,7 +164,16 @@ For each claim, you should:
    - *Italics* for clarifications
    - Clear, well-structured paragraphs
    - DO NOT include inline links unless you are 100% certain of the exact URL
-4. If false or partially true, provide:
+4. For ALL claims (regardless of verdict), provide:
+   - criticalText: Extract the minimum critical part of the text that is most factually important or interesting to highlight. This applies to ALL claims (correct or incorrect) - identify the key factual element. Examples:
+     * "The Earth orbits the Sun once every 365.25 days." → "365.25 days" (specific measurement)
+     * "Einstein invented the telephone in 1876." → "Einstein" or "telephone" (key factual elements)  
+     * "Paris is the capital of France." → "Paris" (key fact, even if correct)
+     * "The event happened in 2023." → "2023" (specific date)
+     * "Water boils at 100°C at sea level." → "100°C" (precise measurement)
+     Be conservative - include slightly more text if needed to maintain clarity, but keep it minimal and focused on the most factually significant part.
+
+5. If false or partially true, also provide:
    - corrections: Full corrected statement
    - conciseCorrection: Brief correction showing the key change. Choose the format that best captures the error:
      
@@ -298,6 +308,11 @@ ${input.claim}
             type: "string",
             description:
               "Brief correction showing key change (e.g., '2006 → 2009', '$2B → $2.2B')",
+          },
+          criticalText: {
+            type: "string",
+            description:
+              "Minimum critical part of the text that is most factually important to highlight (e.g., '365.25 days', 'Paris', '2023')",
           },
           sources: {
             type: "array",
