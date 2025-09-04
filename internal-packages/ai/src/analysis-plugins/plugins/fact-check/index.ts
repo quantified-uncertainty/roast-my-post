@@ -4,7 +4,6 @@ import {
 import { logger } from "../../../shared/logger";
 import type {
   Comment,
-  DocumentLocation,
   ToolChainResult,
 } from "../../../shared/types";
 import type {
@@ -13,7 +12,6 @@ import type {
 import extractFactualClaimsTool from "../../../tools/extract-factual-claims";
 import type {
   FactCheckerOutput,
-  FactCheckResult,
 } from "../../../tools/fact-checker";
 import factCheckerTool from "../../../tools/fact-checker";
 import { TextChunk } from "../../TextChunk";
@@ -28,324 +26,14 @@ import {
   THRESHOLDS,
 } from "./constants";
 import { generateAnalysis } from "./generateAnalysis";
-
-// Domain model for fact with verification
-export class VerifiedFact {
-  public claim: ExtractedFactualClaim;
-  private chunk: TextChunk;
-  public verification?: FactCheckResult;
-  public factCheckerOutput?: FactCheckerOutput; // Store full fact-checker output including Perplexity data
-  private processingStartTime: number;
-
-  constructor(
-    claim: ExtractedFactualClaim,
-    chunk: TextChunk,
-    processingStartTime: number
-  ) {
-    this.claim = claim;
-    this.chunk = chunk;
-    this.processingStartTime = processingStartTime;
-  }
-
-  get text(): string {
-    // Use the normalized claim text for fact-checking
-    return this.claim.claim;
-  }
-
-  get originalText(): string {
-    // Keep exactText for display purposes
-    return this.claim.exactText;
-  }
-
-  get topic(): string {
-    return this.claim.topic;
-  }
-
-  getChunk(): TextChunk {
-    return this.chunk;
-  }
-
-  get averageScore(): number {
-    return (this.claim.importanceScore + this.claim.checkabilityScore) / 2;
-  }
-
-  shouldVerify(): boolean {
-    // Prioritize verifying:
-    // 1. Important claims with low truth probability (likely false)
-    // 2. Important claims that are uncertain (50-70% truth probability)
-    // 3. Very checkable claims with questionable truth
-
-    const isImportant =
-      this.claim.importanceScore >= THRESHOLDS.IMPORTANCE_MEDIUM;
-    const isCheckable =
-      this.claim.checkabilityScore >= THRESHOLDS.CHECKABILITY_HIGH;
-    const isQuestionable =
-      this.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_MEDIUM;
-    const isLikelyFalse =
-      this.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_VERY_LOW;
-
-    return (
-      (isImportant && isQuestionable) ||
-      (isCheckable && isLikelyFalse) ||
-      this.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH
-    ); // Always check critical claims
-  }
-
-  async findLocation(documentText: string): Promise<DocumentLocation | null> {
-    // Use the highlight data from extraction if available
-    if (this.claim.highlight && this.claim.highlight.isValid) {
-      // Convert chunk-relative offsets to document-absolute offsets
-      const chunkStart = this.chunk.metadata?.position?.start || 0;
-      const absoluteStart = chunkStart + this.claim.highlight.startOffset;
-      const absoluteEnd = chunkStart + this.claim.highlight.endOffset;
-      
-      // Verify the text at this location matches what we expect
-      const textAtLocation = documentText.substring(absoluteStart, absoluteEnd);
-      if (textAtLocation !== this.claim.highlight.quotedText) {
-        logger.warn(
-          `[FactCheck] Text mismatch at calculated location for claim: "${this.claim.highlight.quotedText.substring(0, 50)}..."`,
-          {
-            expected: this.claim.highlight.quotedText.substring(0, 100),
-            found: textAtLocation.substring(0, 100),
-            chunkStart,
-            relativeStart: this.claim.highlight.startOffset,
-            absoluteStart,
-          }
-        );
-        // Location is invalid if text doesn't match
-        return null;
-      }
-      
-      return {
-        startOffset: absoluteStart,
-        endOffset: absoluteEnd,
-        quotedText: this.claim.highlight.quotedText,
-      };
-    }
-
-    // No valid highlight - give up
-    return null;
-  }
-
-  async toComment(documentText: string): Promise<Comment | null> {
-    const location = await this.findLocation(documentText);
-    if (!location) return null;
-
-    // Build tool chain results
-    const toolChain: ToolChainResult[] = [
-      {
-        toolName: "extractCheckableClaims",
-        stage: "extraction",
-        timestamp: new Date(this.processingStartTime + 30).toISOString(),
-        result: this.claim,
-      },
-    ];
-
-    // Add fact checking tool results if verification was done
-    if (this.factCheckerOutput) {
-      toolChain.push({
-        toolName: "factCheckWithPerplexity",
-        stage: "verification",
-        timestamp: new Date(this.processingStartTime + 500).toISOString(),
-        result: { ...this.factCheckerOutput },
-      });
-    }
-
-    if (this.verification) {
-      toolChain.push({
-        toolName: "verifyClaimWithLLM",
-        stage: "enhancement",
-        timestamp: new Date().toISOString(),
-        result: this.verification,
-      });
-    }
-
-    return CommentBuilder.build({
-      plugin: "fact-check",
-      location,
-      chunkId: this.chunk.id,
-      processingStartTime: this.processingStartTime,
-      toolChain,
-
-      // Clean semantic description - include sources if available
-      description: this.buildDescription(),
-
-      // Structured content
-      header: this.buildTitle(),
-      level: this.getLevel(),
-      observation: this.buildObservation(),
-      significance: this.buildSignificance(),
-      grade: this.buildGrade(),
-    });
-  }
-
-  private buildDescription(): string {
-    // If verified, use the verification explanation
-    if (this.verification?.explanation) {
-      let description = this.verification.explanation;
-
-      // Add sources if available from Perplexity research
-      if (this.verification.sources && this.verification.sources.length > 0) {
-        description += "\n\nSources:";
-        this.verification.sources.forEach((source, index) => {
-          description += `\n${index + 1}. ${source.title || "Source"} - ${source.url}`;
-        });
-      }
-
-      return description;
-    }
-
-    // For unverified facts, provide detailed skip description
-    return this.buildSkipDescription();
-  }
-
-  private buildSkipDescription(): string {
-    const shouldVerify = this.shouldVerify();
-
-    // Determine skip reason
-    let skipReason: string;
-    let detailedReason: string;
-
-    if (shouldVerify) {
-      // Should have been verified but wasn't (likely hit limit)
-      skipReason = "Processing limit reached (max 25 claims per analysis)";
-      detailedReason =
-        "This claim qualified for verification but was skipped due to resource limits. Consider manual fact-checking for high-priority claims like this.";
-    } else {
-      // Low priority - determine why
-      skipReason = "Low priority for fact-checking resources";
-
-      const reasons = [];
-      if (
-        this.claim.importanceScore < 60 &&
-        this.claim.checkabilityScore < 60
-      ) {
-        reasons.push("Both importance and checkability scores were too low.");
-      } else if (this.claim.importanceScore < 60) {
-        reasons.push("Importance score was too low for prioritization.");
-      } else if (this.claim.checkabilityScore < 60) {
-        reasons.push(
-          "Checkability score was too low for efficient verification."
-        );
-      } else if (this.claim.truthProbability > 70) {
-        reasons.push(
-          "Truth probability was too high (likely accurate) to prioritize."
-        );
-      } else {
-        reasons.push("Did not meet combined scoring thresholds.");
-      }
-
-      detailedReason = reasons.join(" ");
-    }
-
-    return `**Claim Found:**
-> "${this.claim.exactText}"
-
-**Skip Reason:** ${skipReason}
-
-**Scoring Breakdown:**
-- Importance: ${this.claim.importanceScore}/100${this.claim.importanceScore >= 60 ? " ✓" : ""} (threshold: ≥60)
-- Checkability: ${this.claim.checkabilityScore}/100${this.claim.checkabilityScore >= 60 ? " ✓" : ""} (threshold: ≥60)
-- Truth Probability: ${this.claim.truthProbability}%${this.claim.truthProbability <= 70 ? " ⚠️" : ""} (threshold: ≤70%)
-
-${detailedReason}`;
-  }
-
-  private buildTitle(): string {
-    const verdict = this.verification?.verdict;
-    const confidence = this.verification?.confidence;
-
-    // Use concise verdict with emoji
-    let header = "";
-    if (verdict === "false") {
-      header = "False";
-    } else if (verdict === "partially-true") {
-      header = "Partially true";
-    } else if (verdict === "true") {
-      header = "Verified";
-    } else if (verdict === "unverifiable") {
-      header = "Unverifiable";
-    } else {
-      header = "Claim Detected, Skipped";
-    }
-
-    // Add confidence if available
-    if (confidence && verdict !== "unverifiable") {
-      header += ` (${confidence} confidence)`;
-    }
-
-    // Add concise correction if false
-    if (verdict === "false" && this.verification?.conciseCorrection) {
-      header += `: ${this.verification.conciseCorrection}`;
-    }
-
-    return header;
-  }
-
-  private getLevel(): "error" | "warning" | "info" | "success" | "debug" {
-    const verdict = this.verification?.verdict;
-    if (verdict === "false") return "error";
-    if (verdict === "partially-true") return "warning";
-    if (verdict === "true") return "success";
-
-    // For unverified facts:
-    // - Important facts that should have been verified: 'info' (visible by default)
-    // - Low priority facts: 'debug' (hidden by default)
-    if (!this.verification) {
-      return this.shouldVerify() ? "info" : "debug";
-    }
-
-    return "info";
-  }
-
-  private buildObservation(): string | undefined {
-    if (this.verification) {
-      return this.verification.explanation;
-    }
-    if (this.claim.truthProbability <= 50) {
-      return `This claim appears questionable (${this.claim.truthProbability}% truth probability)`;
-    }
-    return undefined;
-  }
-
-  private buildSignificance(): string | undefined {
-    if (
-      this.verification?.verdict === "false" &&
-      this.claim.importanceScore >= 8
-    ) {
-      return "High-importance false claim";
-    }
-    if (this.verification?.verdict === "false") {
-      return "False claim identified";
-    }
-    if (this.verification?.verdict === "partially-true") {
-      return "Claim with missing context or nuances";
-    }
-    if (this.claim.importanceScore >= 8 && !this.verification) {
-      return "This is a key claim that should be verified with credible sources";
-    }
-    return undefined;
-  }
-
-  private buildGrade(): number | undefined {
-    if (this.verification?.verdict === "false") {
-      return 0.2; // Low grade for false claims
-    }
-    if (
-      this.verification?.verdict === "true" &&
-      this.verification.confidence === "high"
-    ) {
-      return 0.9; // High grade for verified true claims
-    }
-    return undefined;
-  }
-}
+import { VerifiedFact, type FactCheckResult } from "./VerifiedFact";
+import { VerifiedFactWithComment } from "./VerifiedFactWithComment";
 
 export class FactCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;
-  private facts: VerifiedFact[] = [];
+  private facts: VerifiedFactWithComment[] = [];
   private comments: Comment[] = [];
   private summary: string = "";
   private analysis: string = "";
@@ -549,7 +237,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         : await executeExtraction();
 
       const facts = result.claims.map(
-        (claim) => new VerifiedFact(claim, chunk, this.processingStartTime)
+        (claim) => new VerifiedFactWithComment(claim, chunk, this.processingStartTime)
       );
 
       return {
