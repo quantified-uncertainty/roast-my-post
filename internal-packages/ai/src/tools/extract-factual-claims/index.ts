@@ -21,11 +21,11 @@ const highlightSchema = z.object({
 
 // Claim schema
 const extractedFactualClaimSchema = z.object({
-  exactText: z.string().describe("The exact claim as it appears in the text"),
+  exactText: z.string().describe("The EXACT text as it appears in the document - used for location finding"),
   claim: z
     .string()
     .describe(
-      "The claim being made. This can feature minor variations from the exactText."
+      "The normalized/cleaned claim text for fact-checking - may have minor edits from exactText for clarity"
     ),
   topic: z.string().describe("Topic/category of the claim"),
   importanceScore: z
@@ -283,7 +283,7 @@ Requirements:
           const locationResult = await fuzzyTextLocatorTool.execute(
             {
               documentText: input.text,
-              searchText: claim.exactText || claim.claim || "",
+              searchText: claim.exactText,
               options: {
                 normalizeQuotes: true,
                 partialMatch: false,
@@ -309,7 +309,7 @@ Requirements:
             claim.highlight = {
               startOffset: 0,
               endOffset: 0,
-              quotedText: claim.exactText || claim.claim || "",
+              quotedText: claim.exactText,
               isValid: false,
               error: "Location not found in document",
             };
@@ -318,7 +318,7 @@ Requirements:
           context.logger.warn(
             "[ExtractFactualClaims] Failed to find location for claim:",
             {
-              claim: (claim.exactText || claim.claim || "").substring(0, 100),
+              claim: claim.exactText.substring(0, 100),
               error: error instanceof Error ? error.message : "Unknown error",
             }
           );
