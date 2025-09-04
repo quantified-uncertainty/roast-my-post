@@ -11,18 +11,19 @@ import type {
   ExtractedFactualClaim,
 } from "../../../tools/extract-factual-claims";
 import extractFactualClaimsTool from "../../../tools/extract-factual-claims";
-import type { FactCheckResult, FactCheckerOutput } from "../../../tools/fact-checker";
+import type {
+  FactCheckerOutput,
+  FactCheckResult,
+} from "../../../tools/fact-checker";
 import factCheckerTool from "../../../tools/fact-checker";
 import { TextChunk } from "../../TextChunk";
 import type {
   AnalysisResult,
-  LLMInteraction,
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
 import { CommentBuilder } from "../../utils/CommentBuilder";
 import {
-  COSTS,
   LIMITS,
   THRESHOLDS,
 } from "./constants";
@@ -325,8 +326,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   private comments: Comment[] = [];
   private summary: string = "";
   private analysis: string = "";
-  private llmInteractions: LLMInteraction[] = [];
-  private totalCost: number = 0;
   private processingStartTime: number = 0;
   static readonly alwaysRun = false;
 
@@ -396,11 +395,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       for (const result of extractionResults) {
         if (result.status === "fulfilled" && result.value) {
           allFacts.push(...result.value.facts);
-          if (result.value.llmInteraction) {
-            this.llmInteractions.push(
-              this.convertRichToLLMInteraction(result.value.llmInteraction)
-            );
-          }
           if (result.value.error) {
             extractionErrors.push(result.value.error);
           }
@@ -427,7 +421,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       // Phase 2: Verify high-priority facts
       const factsToVerify = this.facts
         .filter((fact) => fact.shouldVerify())
-        .slice(0, LIMITS.MAX_FACTS_TO_VERIFY); // Limit for cost management
+        .slice(0, LIMITS.MAX_FACTS_TO_VERIFY);
 
       if (factsToVerify.length > 0) {
         await this.verifyFacts(factsToVerify);
@@ -473,7 +467,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       const { summary, analysisSummary } = this.generateAnalysis();
       this.summary = summary;
       this.analysis = analysisSummary;
-      this.totalCost = this.calculateCost();
 
       this.hasRun = true;
       logger.info(
@@ -501,13 +494,12 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       summary: this.summary,
       analysis: this.analysis,
       comments: this.comments,
-      cost: this.totalCost,
+      cost: 0, // Cost tracking removed
     };
   }
 
   private async extractFactsFromChunk(chunk: TextChunk): Promise<{
     facts: VerifiedFact[];
-    llmInteraction?: unknown;
     error?: string;
   }> {
     try {
@@ -651,9 +643,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
       fact.verification = result.result;
       fact.factCheckerOutput = result; // Store full output including Perplexity data
-      this.llmInteractions.push(
-        this.convertRichToLLMInteraction(result.llmInteraction)
-      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown verification error";
@@ -670,34 +659,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     }
   }
 
-  private convertRichToLLMInteraction(rich: unknown): LLMInteraction {
-    const richTyped = rich as any; // Type assertion for legacy data
-    return {
-      messages: [
-        { role: "user" as const, content: richTyped.prompt },
-        { role: "assistant" as const, content: richTyped.response },
-      ],
-      usage: {
-        input_tokens: richTyped.tokensUsed?.prompt || 0,
-        output_tokens: richTyped.tokensUsed?.completion || 0,
-        prompt_tokens: richTyped.tokensUsed?.prompt || 0,
-        completion_tokens: richTyped.tokensUsed?.completion || 0,
-        total_tokens: richTyped.tokensUsed?.total || 0,
-      },
-    };
-  }
 
-  private calculateCost(): number {
-    // Estimate based on token usage
-    const totalTokens = this.llmInteractions.reduce((sum, interaction) => {
-      return (
-        sum + (interaction.usage.input_tokens + interaction.usage.output_tokens)
-      );
-    }, 0);
-
-    // Rough estimate: $0.01 per 1000 tokens
-    return totalTokens * COSTS.COST_PER_TOKEN;
-  }
 
   private async generateDebugComments(
     documentText: string
@@ -724,20 +686,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
     return debugComments;
   }
-
-  // DEPRECATED: These methods are no longer used as we handle skipped facts in regular comments
-  // Keeping them commented for reference
-  /*
-  private async createUnverifiedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
-    // This functionality is now handled in buildSkipDescription()
-    return null;
-  }
-
-  private async createSkippedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
-    // This functionality is now handled in buildSkipDescription()
-    return null;
-  }
-  */
 
   private async createLocationDebugComment(
     fact: VerifiedFact,
@@ -987,11 +935,11 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
   // Required methods from SimpleAnalysisPlugin interface
   getCost(): number {
-    return this.totalCost;
+    return 0; // Cost tracking removed
   }
 
-  getLLMInteractions(): LLMInteraction[] {
-    return this.llmInteractions;
+  getLLMInteractions(): unknown[] {
+    return []; // LLM interaction tracking removed
   }
 
   getDebugInfo(): Record<string, unknown> {
@@ -1005,7 +953,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       factsFound: this.facts.length,
       factsVerified: this.facts.filter((f) => f.verification).length,
       factsWithErrors: verificationErrors,
-      llmCallCount: this.llmInteractions.length,
       topTopics: this.facts.reduce(
         (acc, fact) => {
           acc[fact.topic] = (acc[fact.topic] || 0) + 1;
