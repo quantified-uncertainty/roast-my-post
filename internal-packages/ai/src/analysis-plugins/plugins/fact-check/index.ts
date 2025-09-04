@@ -46,11 +46,13 @@ export class VerifiedFact {
   }
 
   get text(): string {
-    return this.claim.originalText;
+    // Use the normalized claim text for fact-checking
+    return this.claim.claim || this.claim.exactText;
   }
 
   get originalText(): string {
-    return this.claim.originalText;
+    // Keep exactText for display purposes
+    return this.claim.exactText;
   }
 
   get topic(): string {
@@ -88,7 +90,16 @@ export class VerifiedFact {
   }
 
   async findLocation(documentText: string): Promise<DocumentLocation | null> {
-    // Use the chunk's method to find text and convert to absolute position
+    // Use the highlight data from extraction if available
+    if (this.claim.highlight && this.claim.highlight.isValid) {
+      return {
+        startOffset: this.claim.highlight.startOffset,
+        endOffset: this.claim.highlight.endOffset,
+        quotedText: this.claim.highlight.quotedText,
+      };
+    }
+
+    // Fallback to searching if no valid highlight
     const result = await this.chunk.findTextAbsolute(this.originalText, {
       normalizeQuotes: true, // Handle quote variations
       partialMatch: true, // Facts can be partial matches
@@ -212,7 +223,7 @@ export class VerifiedFact {
     }
 
     return `**Claim Found:**
-> "${this.claim.originalText}"
+> "${this.claim.exactText}"
 
 **Skip Reason:** ${skipReason}
 
@@ -516,6 +527,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
             text: chunk.text,
             minQualityThreshold: THRESHOLDS.MIN_QUALITY_THRESHOLD,
             maxClaims: LIMITS.MAX_CLAIMS_PER_CHUNK,
+            includeLocations: true, // Enable location finding in extraction
           },
           {
             logger,
@@ -632,7 +644,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       const executeFactCheck = async () => {
         return await factCheckerTool.execute(
           {
-            claim: fact.text,
+            claim: fact.text, // This now uses the normalized claim text
             context: `Topic: ${fact.topic}, Importance: ${fact.claim.importanceScore}/100, Initial truth estimate: ${fact.claim.truthProbability}%`,
             searchForEvidence: shouldResearch,
           },
@@ -871,7 +883,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         for (const fact of falseClaimsList) {
           const importance =
             fact.claim.importanceScore >= 70 ? " (Critical)" : "";
-          analysisSummary += `- "${fact.claim.originalText}"${importance}\n`;
+          analysisSummary += `- "${fact.claim.exactText}"${importance}\n`;
           if (fact.verification?.explanation) {
             analysisSummary += `  - ${fact.verification.explanation}\n`;
           }
@@ -894,7 +906,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       if (partialClaimsList.length > 0) {
         analysisSummary += `\n**⚠️ Partially Accurate Claims:**\n`;
         for (const fact of partialClaimsList) {
-          analysisSummary += `- "${fact.claim.originalText}"\n`;
+          analysisSummary += `- "${fact.claim.exactText}"\n`;
           if (fact.verification?.explanation) {
             analysisSummary += `  - ${fact.verification.explanation}\n`;
           }

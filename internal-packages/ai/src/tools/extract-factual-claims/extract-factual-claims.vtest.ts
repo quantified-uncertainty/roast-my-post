@@ -58,7 +58,8 @@ describe('ExtractFactualClaimsTool', () => {
             type: 'tool_use',
             input: {
               claims: [{
-                originalText: 'The Berlin Wall fell in 1989',
+                exactText: 'The Berlin Wall fell in 1989',
+                claim: 'The Berlin Wall fell in 1989',
                 topic: 'Historical events',
                 importanceScore: 85,
                 checkabilityScore: 90,
@@ -78,7 +79,8 @@ describe('ExtractFactualClaimsTool', () => {
         },
         toolResult: {
           claims: [{
-            originalText: 'The Berlin Wall fell in 1989',
+            exactText: 'The Berlin Wall fell in 1989',
+            claim: 'The Berlin Wall fell in 1989',
             topic: 'Historical events',
             importanceScore: 85,
             checkabilityScore: 90,
@@ -92,7 +94,7 @@ describe('ExtractFactualClaimsTool', () => {
       expect(result.claims).toHaveLength(1);
       expect(result.summary.totalFound).toBe(1);
       expect(result.summary.aboveThreshold).toBe(1);
-      expect(result.claims[0].originalText).toBe('The Berlin Wall fell in 1989');
+      expect(result.claims[0].exactText).toBe('The Berlin Wall fell in 1989');
     });
   });
 
@@ -106,14 +108,16 @@ describe('ExtractFactualClaimsTool', () => {
       
       const mockClaims = [
         {
-          originalText: 'The unemployment rate in the US was 3.7% in December 2023',
+          exactText: 'The unemployment rate in the US was 3.7% in December 2023',
+          claim: 'The unemployment rate in the US was 3.7% in December 2023',
           topic: 'Economic statistics',
           importanceScore: 80,
           checkabilityScore: 85,
           truthProbability: 70
         },
         {
-          originalText: 'Apple Inc. was founded in 1976',
+          exactText: 'Apple Inc. was founded in 1976',
+          claim: 'Apple Inc. was founded in 1976',
           topic: 'Corporate history',
           importanceScore: 60,
           checkabilityScore: 95,
@@ -194,14 +198,16 @@ describe('ExtractFactualClaimsTool', () => {
       
       const mockClaims = [
         {
-          originalText: 'High quality claim',
+          exactText: 'High quality claim',
+          claim: 'High quality claim',
           topic: 'Topic A',
           importanceScore: 80,
           checkabilityScore: 80,
           truthProbability: 50
         },
         {
-          originalText: 'Low quality claim',
+          exactText: 'Low quality claim',
+          claim: 'Low quality claim',
           topic: 'Topic B',
           importanceScore: 40,
           checkabilityScore: 40,
@@ -233,7 +239,7 @@ describe('ExtractFactualClaimsTool', () => {
       expect(result.claims).toHaveLength(1); // Only high quality claim
       expect(result.summary.totalFound).toBe(2);
       expect(result.summary.aboveThreshold).toBe(1);
-      expect(result.claims[0].originalText).toBe('High quality claim');
+      expect(result.claims[0].exactText).toBe('High quality claim');
     });
 
     it('should prioritize claims with low truth probability', async () => {
@@ -245,14 +251,16 @@ describe('ExtractFactualClaimsTool', () => {
       
       const mockClaims = [
         {
-          originalText: 'Likely true claim',
+          exactText: 'Likely true claim',
+          claim: 'Likely true claim',
           topic: 'Topic A',
           importanceScore: 70,
           checkabilityScore: 70,
           truthProbability: 90
         },
         {
-          originalText: 'Likely false claim',
+          exactText: 'Likely false claim',
+          claim: 'Likely false claim',
           topic: 'Topic B',
           importanceScore: 70,
           checkabilityScore: 70,
@@ -283,7 +291,7 @@ describe('ExtractFactualClaimsTool', () => {
       
       expect(result.claims).toHaveLength(2);
       // The likely false claim should be prioritized (sorted first)
-      expect(result.claims[0].originalText).toBe('Likely false claim');
+      expect(result.claims[0].exactText).toBe('Likely false claim');
       expect(result.claims[0].truthProbability).toBe(30);
     });
   });

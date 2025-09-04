@@ -16,7 +16,6 @@ export { default as checkMathTool } from './check-math';
 export { default as checkMathWithMathJsTool } from './check-math-with-mathjs';
 export { default as checkMathHybridTool } from './check-math-hybrid';
 export { default as factCheckerTool } from './fact-checker';
-export { default as multiFactCheckerTool } from './fact-checker-multi';
 export { default as forecasterTool } from './forecaster';
 export { default as fuzzyTextLocatorTool } from './fuzzy-text-locator';
 export { default as documentChunkerTool } from './document-chunker';
