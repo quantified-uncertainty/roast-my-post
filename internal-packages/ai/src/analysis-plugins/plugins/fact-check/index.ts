@@ -331,7 +331,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       const executeFactCheck = async () => {
         return await factCheckerTool.execute(
           {
-            claim: fact.text, // This now uses the normalized claim text
+            claim: fact.text, // Use the normalized claim text for fact-checking
             context,
             searchForEvidence: shouldResearch,
           },

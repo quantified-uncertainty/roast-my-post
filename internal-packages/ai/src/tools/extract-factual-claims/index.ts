@@ -25,7 +25,7 @@ const extractedFactualClaimSchema = z.object({
   claim: z
     .string()
     .describe(
-      "The normalized/cleaned claim text for fact-checking - may have minor edits from exactText for clarity"
+      "The normalized claim text for fact-checking - can rephrase for clarity but must preserve all factual content exactly as stated"
     ),
   topic: z
     .string()
@@ -140,8 +140,15 @@ For each claim, provide:
 1. **Importance Score** (0-100): How central to the document's main argument
 2. **Checkability Score** (0-100): How easily fact-checkable with public sources
 3. **Truth Probability** (0-100): Estimated probability a fact-checker would verify as TRUE
-4. **Claim**: The normalized claim text (can have minor variations from exactText)
+4. **Claim**: The normalized claim text for fact-checking (can rephrase for clarity but NEVER fix factual errors)
 5. **Exact Text**: The exact text as it appears in the document
+
+CRITICAL: The 'claim' field can normalize language and grammar, but must preserve all factual content exactly as stated. Do NOT correct factual errors like wrong dates, numbers, or names - those errors need to be fact-checked.
+
+Example:
+- exactText: "Einstein was born in 1880 and he invented relativity"  
+- claim: "Einstein was born in 1880 and invented the theory of relativity" ✓ (grammar fix, preserves wrong date)
+- claim: "Einstein was born in 1879 and invented the theory of relativity" ✗ (corrects factual error)
 
 DO extract: Historical facts, scientific facts, statistics, institutional facts, research findings
 DON'T extract: Math calculations (Math tool handles), future predictions (Forecast tool handles), opinions, hypotheticals
