@@ -65,7 +65,7 @@ The speed of light in a vacuum is approximately 299,792 kilometers per second.
     expect(result.cost).toBeDefined();
     expect(typeof result.cost).toBe('number');
     expect(result.cost).toBeGreaterThan(0);
-  }, 30000); // 30 second timeout for LLM calls
+  }, 60000); // 60 second timeout for LLM calls
 
   it('should handle documents with false claims', async () => {
     const plugin = new FactCheckPlugin();
@@ -101,7 +101,7 @@ The human body has 206 bones (adults actually have 206, this is correct).
     
     // Summary should indicate issues found
     expect(result.summary.toLowerCase()).toMatch(/error|false|incorrect/);
-  }, 30000);
+  }, 60000);
 
   it('should handle empty document gracefully', async () => {
     const plugin = new FactCheckPlugin();
@@ -152,7 +152,7 @@ The human body has 206 bones (adults actually have 206, this is correct).
         }
       });
     }
-  }, 30000);
+  }, 60000);
 
   it('should prioritize important and questionable claims', async () => {
     const plugin = new FactCheckPlugin();
@@ -202,5 +202,5 @@ We have achieved 99.9% customer satisfaction across 10 million users.
     trivialClaims.forEach(claim => {
       expect(claim.level).toMatch(/^(debug|info)$/);
     });
-  }, 30000);
+  }, 60000);
 });

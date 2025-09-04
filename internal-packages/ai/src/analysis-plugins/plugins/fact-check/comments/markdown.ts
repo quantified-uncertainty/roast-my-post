@@ -1,66 +1,14 @@
-import type { Comment, ToolChainResult } from '../../../shared/types';
-import { CommentBuilder } from '../../utils/CommentBuilder';
-import type { VerifiedFact } from './VerifiedFact';
+import type { VerifiedFact } from '../VerifiedFact';
 
 /**
- * Builds a comment from a verified fact for UI presentation
+ * Pure functions for generating markdown content for fact-check comments.
+ * These functions take data and return formatted markdown strings.
  */
-export async function buildFactComment(
-  fact: VerifiedFact,
-  documentText: string
-): Promise<Comment | null> {
-  const location = await fact.findLocation(documentText);
-  if (!location) return null;
 
-  // Build tool chain results
-  const toolChain: ToolChainResult[] = [
-    {
-      toolName: "extractCheckableClaims",
-      stage: "extraction",
-      timestamp: new Date(fact.getProcessingStartTime() + 30).toISOString(),
-      result: fact.claim,
-    },
-  ];
-
-  // Add fact checking tool results if verification was done
-  if (fact.factCheckerOutput) {
-    toolChain.push({
-      toolName: "factCheckWithPerplexity",
-      stage: "verification",
-      timestamp: new Date(fact.getProcessingStartTime() + 500).toISOString(),
-      result: { ...fact.factCheckerOutput },
-    });
-  }
-
-  if (fact.verification) {
-    toolChain.push({
-      toolName: "verifyClaimWithLLM",
-      stage: "enhancement",
-      timestamp: new Date().toISOString(),
-      result: { ...fact.verification } as any,
-    });
-  }
-
-  return CommentBuilder.build({
-    plugin: "fact-check",
-    location,
-    chunkId: fact.getChunk().id,
-    processingStartTime: fact.getProcessingStartTime(),
-    toolChain,
-
-    // Clean semantic description - include sources if available
-    description: buildDescription(fact),
-
-    // Structured content
-    header: buildTitle(fact),
-    level: getLevel(fact),
-    observation: buildObservation(fact),
-    significance: buildSignificance(fact),
-    grade: buildGrade(fact),
-  });
-}
-
-function buildDescription(fact: VerifiedFact): string {
+/**
+ * Build the main description content for a fact comment
+ */
+export function buildDescription(fact: VerifiedFact): string {
   // If verified, use the verification explanation
   if (fact.verification?.explanation) {
     let description = fact.verification.explanation;
@@ -80,7 +28,10 @@ function buildDescription(fact: VerifiedFact): string {
   return buildSkipDescription(fact);
 }
 
-function buildSkipDescription(fact: VerifiedFact): string {
+/**
+ * Build description for facts that were not verified
+ */
+export function buildSkipDescription(fact: VerifiedFact): string {
   const shouldVerify = fact.shouldVerify();
 
   // Determine skip reason
@@ -132,7 +83,10 @@ function buildSkipDescription(fact: VerifiedFact): string {
 ${detailedReason}`;
 }
 
-function buildTitle(fact: VerifiedFact): string {
+/**
+ * Build the title/header for a fact comment
+ */
+export function buildTitle(fact: VerifiedFact): string {
   const verdict = fact.verification?.verdict;
   const confidence = fact.verification?.confidence;
 
@@ -163,7 +117,10 @@ function buildTitle(fact: VerifiedFact): string {
   return header;
 }
 
-function getLevel(fact: VerifiedFact): "error" | "warning" | "info" | "success" | "debug" {
+/**
+ * Get the severity level for a fact comment
+ */
+export function getLevel(fact: VerifiedFact): "error" | "warning" | "info" | "success" | "debug" {
   const verdict = fact.verification?.verdict;
   if (verdict === "false") return "error";
   if (verdict === "partially-true") return "warning";
@@ -179,7 +136,10 @@ function getLevel(fact: VerifiedFact): "error" | "warning" | "info" | "success" 
   return "info";
 }
 
-function buildObservation(fact: VerifiedFact): string | undefined {
+/**
+ * Build the observation text for a fact comment
+ */
+export function buildObservation(fact: VerifiedFact): string | undefined {
   if (fact.verification) {
     return fact.verification.explanation;
   }
@@ -189,7 +149,10 @@ function buildObservation(fact: VerifiedFact): string | undefined {
   return undefined;
 }
 
-function buildSignificance(fact: VerifiedFact): string | undefined {
+/**
+ * Build the significance text for a fact comment
+ */
+export function buildSignificance(fact: VerifiedFact): string | undefined {
   if (
     fact.verification?.verdict === "false" &&
     fact.claim.importanceScore >= 8
@@ -208,7 +171,10 @@ function buildSignificance(fact: VerifiedFact): string | undefined {
   return undefined;
 }
 
-function buildGrade(fact: VerifiedFact): number | undefined {
+/**
+ * Build the grade score for a fact comment
+ */
+export function buildGrade(fact: VerifiedFact): number | undefined {
   if (fact.verification?.verdict === "false") {
     return 0.2; // Low grade for false claims
   }

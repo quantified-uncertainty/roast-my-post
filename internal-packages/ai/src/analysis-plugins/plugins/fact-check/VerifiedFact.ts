@@ -1,9 +1,14 @@
-import type { ExtractedFactualClaim } from '../../../tools/extract-factual-claims';
-import type { FactCheckerOutput, FactCheckResult } from '../../../tools/fact-checker';
-import { TextChunk } from '../../TextChunk';
-import type { DocumentLocation } from '../../../shared/types';
-import { logger } from '../../../shared/logger';
-import { THRESHOLDS } from './constants';
+import { logger } from "../../../shared/logger";
+import type { DocumentLocation } from "../../../shared/types";
+import type {
+  ExtractedFactualClaim,
+} from "../../../tools/extract-factual-claims";
+import type {
+  FactCheckerOutput,
+  FactCheckResult,
+} from "../../../tools/fact-checker";
+import { TextChunk } from "../../TextChunk";
+import { THRESHOLDS } from "./constants";
 
 // Domain model for fact with verification
 export class VerifiedFact {
@@ -31,10 +36,6 @@ export class VerifiedFact {
   get originalText(): string {
     // Keep exactText for display purposes
     return this.claim.exactText;
-  }
-
-  get topic(): string {
-    return this.claim.topic;
   }
 
   getChunk(): TextChunk {
@@ -68,8 +69,10 @@ export class VerifiedFact {
   }
 
   isHighValue(): boolean {
-    const isImportant = this.claim.importanceScore >= THRESHOLDS.IMPORTANCE_MEDIUM;
-    const isCheckable = this.claim.checkabilityScore >= THRESHOLDS.CHECKABILITY_HIGH;
+    const isImportant =
+      this.claim.importanceScore >= THRESHOLDS.IMPORTANCE_MEDIUM;
+    const isCheckable =
+      this.claim.checkabilityScore >= THRESHOLDS.CHECKABILITY_HIGH;
     const isQuestionable =
       this.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_MEDIUM;
     const isLikelyFalse =
@@ -133,16 +136,56 @@ export class VerifiedFact {
 
   public isDisputed(): boolean {
     return (
-      this.verification?.verdict === 'false' ||
-      this.verification?.verdict === 'partially-true'
+      this.verification?.verdict === "false" ||
+      this.verification?.verdict === "partially-true"
     );
   }
 
   public needsCorrection(): boolean {
-    return this.verification?.verdict === 'false';
+    return this.verification?.verdict === "false";
   }
 
   public getCorrection(): string | undefined {
-    return this.verification?.conciseCorrection || this.verification?.corrections;
+    return (
+      this.verification?.conciseCorrection || this.verification?.corrections
+    );
+  }
+
+  /**
+   * Gather surrounding text context for fact-checking
+   */
+  public async gatherContext(
+    documentText: string,
+    windowSize: number = 300
+  ): Promise<string> {
+    // Get the claim's position in the full document
+    const location = await this.findLocation(documentText);
+
+    if (
+      location &&
+      location.startOffset !== undefined &&
+      location.endOffset !== undefined
+    ) {
+      // Extract from FULL document, not chunk
+      const start = Math.max(0, location.startOffset - windowSize);
+      const end = Math.min(
+        documentText.length,
+        location.endOffset + windowSize
+      );
+      let context = documentText.substring(start, end);
+
+      // Add ellipsis if truncated
+      if (start > 0) context = "..." + context;
+      if (end < documentText.length) context += "...";
+
+      return `<surrounding_context>
+${context}
+</surrounding_context>`;
+    }
+
+    // Fallback: use chunk if we can't locate in document
+    return `<surrounding_context>
+${this.chunk.text}
+</surrounding_context>`;
   }
 }

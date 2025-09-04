@@ -6,13 +6,7 @@ import type {
   Comment,
   ToolChainResult,
 } from "../../../shared/types";
-import type {
-  ExtractedFactualClaim,
-} from "../../../tools/extract-factual-claims";
 import extractFactualClaimsTool from "../../../tools/extract-factual-claims";
-import type {
-  FactCheckerOutput,
-} from "../../../tools/fact-checker";
 import factCheckerTool from "../../../tools/fact-checker";
 import { TextChunk } from "../../TextChunk";
 import type {
@@ -25,9 +19,9 @@ import {
   LIMITS,
   THRESHOLDS,
 } from "./constants";
-import { generateAnalysis } from "./generateAnalysis";
+import { buildFactComment } from "./comments/builder";
+import { generateAnalysis } from "./analysis/generator";
 import { VerifiedFact } from "./VerifiedFact";
-import { buildFactComment } from "./factCommentBuilder";
 
 export class FactCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
@@ -167,10 +161,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         ...regularComments,
         ...debugComments.filter((c) => c !== null),
       ];
-
-      // Sort comments by importance
-      comments.sort((a, b) => (b.importance || 0) - (a.importance || 0));
-
       // Store results for later retrieval
       this.comments = comments;
 
@@ -333,13 +323,16 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         );
       }
 
+      // Gather contextual information for better fact-checking
+      const context = await fact.gatherContext(this.documentText);
+
       // Track tool execution if session manager is available
       const sessionManager = getGlobalSessionManager();
       const executeFactCheck = async () => {
         return await factCheckerTool.execute(
           {
             claim: fact.text, // This now uses the normalized claim text
-            context: `Importance: ${fact.claim.importanceScore}/100, Initial truth estimate: ${fact.claim.truthProbability}%`,
+            context,
             searchForEvidence: shouldResearch,
           },
           {
