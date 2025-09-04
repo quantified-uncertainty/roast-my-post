@@ -26,14 +26,14 @@ import {
   THRESHOLDS,
 } from "./constants";
 import { generateAnalysis } from "./generateAnalysis";
-import { VerifiedFact, type FactCheckResult } from "./VerifiedFact";
-import { VerifiedFactWithComment } from "./VerifiedFactWithComment";
+import { VerifiedFact } from "./VerifiedFact";
+import { buildFactComment } from "./factCommentBuilder";
 
 export class FactCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;
-  private facts: VerifiedFactWithComment[] = [];
+  private facts: VerifiedFact[] = [];
   private comments: Comment[] = [];
   private summary: string = "";
   private analysis: string = "";
@@ -142,7 +142,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       const commentPromises = this.facts.map(async (fact) => {
         // Run in next tick to ensure true parallelism
         await new Promise((resolve) => setImmediate(resolve));
-        const comment = await fact.toComment(documentText);
+        const comment = await buildFactComment(fact, documentText);
         // Filter out comments with empty descriptions
         if (
           comment &&
@@ -237,7 +237,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         : await executeExtraction();
 
       const facts = result.claims.map(
-        (claim) => new VerifiedFactWithComment(claim, chunk, this.processingStartTime)
+        (claim) => new VerifiedFact(claim, chunk, this.processingStartTime)
       );
 
       return {
@@ -469,3 +469,4 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
 // Export the plugin class for backward compatibility
 export { FactCheckPlugin as FactCheckAnalyzerJob };
+export { VerifiedFact } from "./VerifiedFact";

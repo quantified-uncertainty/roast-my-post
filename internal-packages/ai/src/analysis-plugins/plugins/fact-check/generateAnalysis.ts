@@ -1,4 +1,4 @@
-import type { VerifiedFact } from './index';
+import type { VerifiedFact } from './VerifiedFact';
 
 export interface AnalysisResult {
   summary: string;

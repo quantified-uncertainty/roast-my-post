@@ -1,18 +1,9 @@
 import type { ExtractedFactualClaim } from '../../../tools/extract-factual-claims';
-import type { FactCheckerOutput } from '../../../tools/fact-checker';
-import type { TextChunk } from '../../../tools/document-chunker';
+import type { FactCheckerOutput, FactCheckResult } from '../../../tools/fact-checker';
+import { TextChunk } from '../../TextChunk';
 import type { DocumentLocation } from '../../../shared/types';
 import { logger } from '../../../shared/logger';
 import { THRESHOLDS } from './constants';
-
-// Result from fact-checking
-export interface FactCheckResult {
-  verdict: 'true' | 'false' | 'partially-true' | 'unverifiable';
-  explanation?: string;
-  corrections?: string;
-  conciseCorrection?: string;
-  sources?: Array<{ title?: string; url: string; snippet?: string }>;
-}
 
 // Domain model for fact with verification
 export class VerifiedFact {
