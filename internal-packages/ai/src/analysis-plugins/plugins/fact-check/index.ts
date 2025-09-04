@@ -47,7 +47,7 @@ export class VerifiedFact {
 
   get text(): string {
     // Use the normalized claim text for fact-checking
-    return this.claim.claim || this.claim.exactText;
+    return this.claim.claim;
   }
 
   get originalText(): string {
@@ -99,16 +99,8 @@ export class VerifiedFact {
       };
     }
 
-    // Fallback to searching if no valid highlight
-    const result = await this.chunk.findTextAbsolute(this.originalText, {
-      normalizeQuotes: true, // Handle quote variations
-      partialMatch: true, // Facts can be partial matches
-      useLLMFallback: true, // Enable LLM fallback for paraphrased text
-      pluginName: "fact-check",
-      documentText: documentText, // Pass for position verification
-    });
-
-    return result;
+    // No valid highlight - give up
+    return null;
   }
 
   async toComment(documentText: string): Promise<Comment | null> {
