@@ -46,6 +46,15 @@ export function uFuzzySearch(
     return null;
   }
   
+  // Debug logging (commented out for now as logger.isDebugEnabled is not available)
+  // if (logger.isDebugEnabled && logger.isDebugEnabled()) {
+  //   logger.debug(`uFuzzy ranges: ${JSON.stringify(info.ranges[0])}`);
+  //   const ranges = info.ranges[0];
+  //   for (let i = 0; i < ranges.length; i += 2) {
+  //     logger.debug(`  Range ${i/2}: [${ranges[i]}, ${ranges[i+1]}] = "${documentText.slice(ranges[i], ranges[i+1])}"`);
+  //   }
+  // }
+  
   // Process ranges to find actual match boundaries
   const location = processUFuzzyRanges(
     info.ranges[0],
@@ -100,54 +109,109 @@ function processUFuzzyRanges(
   if (ranges.length < 2) return null;
   
   // uFuzzy returns [start1, end1, start2, end2, ...] for each matched token
-  // We need to find the span from first start to last end
+  // We want to find the smallest span that contains the most tokens
   
-  let minStart = Infinity;
-  let maxEnd = -1;
-  
-  // Process ranges in pairs
+  // Convert ranges to token objects for easier manipulation
+  const tokens: Array<{start: number, end: number, text: string}> = [];
   for (let i = 0; i < ranges.length; i += 2) {
-    const start = ranges[i];
-    const end = ranges[i + 1];
-    
-    if (start < minStart) minStart = start;
-    if (end > maxEnd) maxEnd = end;
+    tokens.push({
+      start: ranges[i],
+      end: ranges[i + 1],
+      text: documentText.slice(ranges[i], ranges[i + 1])
+    });
   }
   
-  if (minStart === Infinity || maxEnd === -1 || minStart >= maxEnd) {
-    return null;
+  // Sort tokens by position
+  tokens.sort((a, b) => a.start - b.start);
+  
+  // Find the best span using a sliding window approach
+  // We want the span with the most tokens and smallest total length
+  let bestSpan = null;
+  let bestScore = -1;
+  const searchWords = searchText.split(/\s+/).filter(w => w.length > 0);
+  
+  // Try different window sizes, preferring larger windows (more complete matches)
+  for (let windowSize = tokens.length; windowSize >= Math.min(2, Math.ceil(searchWords.length * 0.4)); windowSize--) {
+    for (let i = 0; i <= tokens.length - windowSize; i++) {
+      const windowTokens = tokens.slice(i, i + windowSize);
+      const spanStart = windowTokens[0].start;
+      const spanEnd = windowTokens[windowTokens.length - 1].end;
+      const spanText = documentText.slice(spanStart, spanEnd);
+      
+      // Calculate gaps between consecutive tokens to detect non-contiguous matches
+      let maxGap = 0;
+      let totalGaps = 0;
+      for (let j = 1; j < windowTokens.length; j++) {
+        const gap = windowTokens[j].start - windowTokens[j-1].end;
+        maxGap = Math.max(maxGap, gap);
+        totalGaps += gap;
+      }
+      
+      // Average gap between tokens
+      const avgGap = windowTokens.length > 1 ? totalGaps / (windowTokens.length - 1) : 0;
+      
+      // Heavily penalize large gaps (non-contiguous matches)
+      // A gap of > 20 chars likely means tokens are from different phrases
+      const gapPenalty = Math.exp(-maxGap / 10); // Exponential decay for large gaps
+      
+      // Calculate score based on:
+      // 1. Number of tokens in span (more is better)
+      // 2. Gap penalty (smaller gaps are much better)
+      // 3. Word coverage (how many search words appear in span)
+      const tokenCount = windowTokens.length;
+      const spanLength = spanEnd - spanStart;
+      
+      // Check word coverage
+      let wordCoverage = 0;
+      const spanLower = spanText.toLowerCase();
+      for (const word of searchWords) {
+        if (spanLower.includes(word.toLowerCase())) {
+          wordCoverage++;
+        }
+      }
+      const coverageRatio = wordCoverage / searchWords.length;
+      
+      // Combined score: heavily weight gap penalty to prefer contiguous matches
+      const score = (tokenCount / searchWords.length) * 0.2 +  // Token completeness
+                    gapPenalty * 0.5 +                          // Contiguity (most important)
+                    coverageRatio * 0.3;                        // Word coverage
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestSpan = { start: spanStart, end: spanEnd, text: spanText, tokenCount };
+      }
+    }
   }
   
-  // Use the ranges directly - no complex mapping needed
-  const startOffset = minStart;
-  const endOffset = Math.min(maxEnd, documentText.length);
+  if (!bestSpan) {
+    // Fallback: just use all tokens
+    const start = tokens[0].start;
+    const end = tokens[tokens.length - 1].end;
+    bestSpan = {
+      start,
+      end,
+      text: documentText.slice(start, end),
+      tokenCount: tokens.length
+    };
+  }
   
   // Validate boundaries
-  if (startOffset < 0 || endOffset > documentText.length || startOffset >= endOffset) {
+  if (bestSpan.start < 0 || bestSpan.end > documentText.length || bestSpan.start >= bestSpan.end) {
     return null;
-  }
-  
-  const quotedText = documentText.slice(startOffset, endOffset);
-  
-  // Only expand word boundaries if the match seems incomplete
-  let finalBounds = { startOffset, endOffset, quotedText };
-  
-  // Check if we should expand boundaries for very short matches
-  if (quotedText.length < searchText.length * 0.7) {
-    finalBounds = expandToWordBoundaries(startOffset, endOffset, documentText, searchText);
   }
   
   // Calculate confidence based on match quality
-  const confidence = calculateConfidence(searchText, finalBounds.quotedText);
+  const confidence = calculateConfidence(searchText, bestSpan.text);
   
   return {
-    startOffset: finalBounds.startOffset,
-    endOffset: finalBounds.endOffset,
-    quotedText: finalBounds.quotedText,
+    startOffset: bestSpan.start,
+    endOffset: bestSpan.end,
+    quotedText: bestSpan.text,
     strategy: "ufuzzy",
     confidence,
   };
 }
+
 
 /**
  * Expand match boundaries to include complete words when reasonable

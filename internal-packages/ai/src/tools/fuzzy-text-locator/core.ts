@@ -3,14 +3,26 @@
  */
 
 import { logger } from "../../shared/logger";
-import { TextLocation, TextLocationOptions } from './types';
-import { exactSearch } from './exactSearch';
-import { uFuzzySearch, UFuzzyOptions } from './uFuzzySearch';
-import { markdownAwareFuzzySearch, MarkdownAwareFuzzyOptions } from './markdownAwareFuzzySearch';
-import { llmSearch, LLMSearchOptions } from './llmSearch';
+import { exactSearch } from "./exactSearch";
+import {
+  llmSearch,
+  LLMSearchOptions,
+} from "./llmSearch";
+import {
+  MarkdownAwareFuzzyOptions,
+  markdownAwareFuzzySearch,
+} from "./markdownAwareFuzzySearch";
+import {
+  TextLocation,
+  TextLocationOptions,
+} from "./types";
+import {
+  UFuzzyOptions,
+  uFuzzySearch,
+} from "./uFuzzySearch";
 
 // Re-export types for backward compatibility
-export * from './types';
+export * from "./types";
 
 /**
  * Partial match implementation
@@ -21,53 +33,70 @@ function partialMatch(
   documentText: string,
   minMatchLength: number = 10
 ): TextLocation | null {
-  const searchWords = searchText.split(/\s+/).filter(w => w.length > 0);
+  const searchWords = searchText.split(/\s+/).filter((w) => w.length > 0);
   if (searchWords.length === 0) return null;
-  
+
   // Try to find sequences of words from the search text
   for (let wordCount = searchWords.length; wordCount > 0; wordCount--) {
-    for (let startIdx = 0; startIdx <= searchWords.length - wordCount; startIdx++) {
-      const partialPhrase = searchWords.slice(startIdx, startIdx + wordCount).join(' ');
-      
+    for (
+      let startIdx = 0;
+      startIdx <= searchWords.length - wordCount;
+      startIdx++
+    ) {
+      const partialPhrase = searchWords
+        .slice(startIdx, startIdx + wordCount)
+        .join(" ");
+
       // Lower the threshold for meaningful short phrases
       let effectiveMinLength = minMatchLength;
       if (partialPhrase.length >= 4) {
         // Accept 4+ character phrases that are likely meaningful
-        if (/^\d{4}$/.test(partialPhrase) || // Years like 2025
-            partialPhrase.length >= 6) {     // Any 6+ character phrase
-          effectiveMinLength = Math.min(effectiveMinLength, partialPhrase.length);
+        if (
+          /^\d{4}$/.test(partialPhrase) || // Years like 2025
+          partialPhrase.length >= 6
+        ) {
+          // Any 6+ character phrase
+          effectiveMinLength = Math.min(
+            effectiveMinLength,
+            partialPhrase.length
+          );
         }
       }
-      
+
       // Skip if too short
       if (partialPhrase.length < effectiveMinLength) continue;
-      
+
       const index = documentText.indexOf(partialPhrase);
       if (index !== -1) {
         return {
           startOffset: index,
           endOffset: index + partialPhrase.length,
           quotedText: partialPhrase,
-          strategy: 'partial',
+          strategy: "partial",
           confidence: 0.7 * (partialPhrase.length / searchText.length), // Scale confidence by match percentage
         };
       }
-      
+
       // Try case-insensitive
-      const lowerIndex = documentText.toLowerCase().indexOf(partialPhrase.toLowerCase());
+      const lowerIndex = documentText
+        .toLowerCase()
+        .indexOf(partialPhrase.toLowerCase());
       if (lowerIndex !== -1) {
-        const matchedText = documentText.slice(lowerIndex, lowerIndex + partialPhrase.length);
+        const matchedText = documentText.slice(
+          lowerIndex,
+          lowerIndex + partialPhrase.length
+        );
         return {
           startOffset: lowerIndex,
           endOffset: lowerIndex + partialPhrase.length,
           quotedText: matchedText,
-          strategy: 'partial',
+          strategy: "partial",
           confidence: 0.65 * (partialPhrase.length / searchText.length),
         };
       }
     }
   }
-  
+
   return null;
 }
 
@@ -78,9 +107,9 @@ function normalizeQuotes(text: string): string {
   return text
     .replace(/[''`]/g, "'")
     .replace(/[""]/g, '"')
-    .replace(/…/g, '...')
-    .replace(/—/g, '--')
-    .replace(/–/g, '-');
+    .replace(/…/g, "...")
+    .replace(/—/g, "--")
+    .replace(/–/g, "-");
 }
 
 /**
@@ -100,58 +129,65 @@ export async function findTextLocation(
   if (!searchText || !documentText) {
     return null;
   }
-  
+
   // If we have a line number hint, try searching around that area first
   if (options.lineNumberHint && options.lineNumberHint > 0) {
-    const lines = documentText.split('\n');
+    const lines = documentText.split("\n");
     const targetLine = options.lineNumberHint - 1; // Convert to 0-based index
-    
+
     if (targetLine >= 0 && targetLine < lines.length) {
       // First, try to find on the exact target line
       let lineStartOffset = 0;
       for (let i = 0; i < targetLine; i++) {
         lineStartOffset += lines[i].length + 1; // +1 for newline
       }
-      
+
       const targetLineText = lines[targetLine];
       const exactLineResult = exactSearch(searchText, targetLineText);
-      
+
       if (exactLineResult) {
-        logger.debug(`Found with exact search on target line ${options.lineNumberHint}`);
+        logger.debug(
+          `Found with exact search on target line ${options.lineNumberHint}`
+        );
         return {
           ...exactLineResult,
           startOffset: exactLineResult.startOffset + lineStartOffset,
           endOffset: exactLineResult.endOffset + lineStartOffset,
-          strategy: 'exact-line-hint'
+          strategy: "exact-line-hint",
         };
       }
-      
+
       // If not found on exact line, search in a window around it
       const windowStart = Math.max(0, targetLine - 5);
       const windowEnd = Math.min(lines.length, targetLine + 6);
-      
+
       // Search each line in the window, starting from closest to target
       for (let distance = 0; distance <= 5; distance++) {
         // Check lines at this distance from target
         const linesToCheck = [
           targetLine - distance,
-          targetLine + distance
-        ].filter(line => line >= windowStart && line < windowEnd && line !== targetLine);
-        
+          targetLine + distance,
+        ].filter(
+          (line) =>
+            line >= windowStart && line < windowEnd && line !== targetLine
+        );
+
         for (const lineIndex of linesToCheck) {
           let lineOffset = 0;
           for (let i = 0; i < lineIndex; i++) {
             lineOffset += lines[i].length + 1;
           }
-          
+
           const lineResult = exactSearch(searchText, lines[lineIndex]);
           if (lineResult) {
-            logger.debug(`Found with exact search in line ${lineIndex + 1} (distance ${distance} from hint)`);
+            logger.debug(
+              `Found with exact search in line ${lineIndex + 1} (distance ${distance} from hint)`
+            );
             return {
               ...lineResult,
               startOffset: lineResult.startOffset + lineOffset,
               endOffset: lineResult.endOffset + lineOffset,
-              strategy: 'exact-line-hint'
+              strategy: "exact-line-hint",
             };
           }
         }
@@ -162,7 +198,7 @@ export async function findTextLocation(
   // Strategy 1: Try exact match first
   const exactResult = exactSearch(searchText, documentText);
   if (exactResult) {
-    logger.debug('Found with exact search');
+    logger.debug("Found with exact search");
     return exactResult;
   }
 
@@ -171,27 +207,33 @@ export async function findTextLocation(
     const normalizedSearch = normalizeQuotes(searchText);
     const normalizedDoc = normalizeQuotes(documentText);
     const normalizedExactResult = exactSearch(normalizedSearch, normalizedDoc);
-    
+
     if (normalizedExactResult) {
       // Map back to original document positions by finding the actual text
-      const originalMatch = documentText.slice(normalizedExactResult.startOffset, normalizedExactResult.endOffset);
-      logger.debug('Found with quote-normalized exact search');
+      const originalMatch = documentText.slice(
+        normalizedExactResult.startOffset,
+        normalizedExactResult.endOffset
+      );
+      logger.debug("Found with quote-normalized exact search");
       return {
         startOffset: normalizedExactResult.startOffset,
         endOffset: normalizedExactResult.endOffset,
         quotedText: originalMatch,
-        strategy: 'quotes-normalized',
+        strategy: "quotes-normalized",
         confidence: 1.0,
       };
     }
   }
 
+  // Strategies 3-5: Run multiple fuzzy strategies and return the highest confidence result
+  const candidates: Array<TextLocation & { strategyOrder: number }> = [];
+
   // Strategy 3: Try partial match if enabled
   if (options.partialMatch) {
     const partialResult = partialMatch(searchText, documentText);
     if (partialResult) {
-      logger.debug('Found with partial match');
-      return partialResult;
+      logger.debug(`Partial match found with confidence ${partialResult.confidence}`);
+      candidates.push({ ...partialResult, strategyOrder: 3 });
     }
   }
 
@@ -201,37 +243,61 @@ export async function findTextLocation(
     caseSensitive: options.caseSensitive ?? false, // Default to case-insensitive for better matching
     maxErrors: options.maxTypos,
   };
+
   const fuzzyResult = uFuzzySearch(searchText, documentText, fuzzyOptions);
   if (fuzzyResult) {
-    logger.debug('Found with uFuzzy search');
-    return fuzzyResult;
+    logger.debug(`uFuzzy found with confidence ${fuzzyResult.confidence}`);
+    candidates.push({ ...fuzzyResult, strategyOrder: 4 });
   }
 
   // Strategy 5: Try markdown-aware fuzzy search
   const markdownAwareOptions: MarkdownAwareFuzzyOptions = {
     ...fuzzyOptions, // Inherit all fuzzy options
   };
-  const markdownResult = markdownAwareFuzzySearch(searchText, documentText, markdownAwareOptions);
+  const markdownResult = markdownAwareFuzzySearch(
+    searchText,
+    documentText,
+    markdownAwareOptions
+  );
   if (markdownResult) {
-    logger.debug('Found with markdown-aware fuzzy search');
-    return markdownResult;
+    logger.debug(`Markdown-aware fuzzy found with confidence ${markdownResult.confidence}`);
+    candidates.push({ ...markdownResult, strategyOrder: 5 });
+  }
+
+  // Return the candidate with the highest confidence
+  if (candidates.length > 0) {
+    // Sort by confidence (descending), then by strategy order (ascending) as tiebreaker
+    candidates.sort((a, b) => {
+      if (Math.abs(a.confidence - b.confidence) < 0.01) {
+        // If confidence is very close (within 0.01), prefer earlier strategy
+        return a.strategyOrder - b.strategyOrder;
+      }
+      return b.confidence - a.confidence;
+    });
+    
+    const bestCandidate = candidates[0];
+    logger.debug(`Selected ${bestCandidate.strategy} with confidence ${bestCandidate.confidence}`);
+    
+    // Remove the temporary strategyOrder field before returning
+    const { strategyOrder, ...result } = bestCandidate;
+    return result;
   }
 
   // Strategy 6: Try LLM if enabled
   if (options.useLLMFallback) {
     const llmOptions: LLMSearchOptions = {
       context: options.llmContext,
-      pluginName: options.pluginName
+      pluginName: options.pluginName,
     };
-    
+
     const llmResult = await llmSearch(searchText, documentText, llmOptions);
     if (llmResult) {
-      logger.debug('Found with LLM search');
+      logger.debug("Found with LLM search");
       return llmResult;
     }
   }
 
-  logger.debug('Text not found with any strategy');
+  logger.debug("Text not found with any strategy");
   return null;
 }
 
