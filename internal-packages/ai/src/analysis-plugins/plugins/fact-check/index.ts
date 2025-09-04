@@ -11,7 +11,7 @@ import type {
   ExtractedFactualClaim,
 } from "../../../tools/extract-factual-claims";
 import extractFactualClaimsTool from "../../../tools/extract-factual-claims";
-import type { FactCheckResult } from "../../../tools/fact-checker";
+import type { FactCheckResult, FactCheckerOutput } from "../../../tools/fact-checker";
 import factCheckerTool from "../../../tools/fact-checker";
 import { TextChunk } from "../../TextChunk";
 import type {
@@ -32,7 +32,7 @@ export class VerifiedFact {
   public claim: ExtractedFactualClaim;
   private chunk: TextChunk;
   public verification?: FactCheckResult;
-  public factCheckerOutput?: Record<string, unknown>; // Store full fact-checker output including Perplexity data
+  public factCheckerOutput?: FactCheckerOutput; // Store full fact-checker output including Perplexity data
   private processingStartTime: number;
 
   constructor(
@@ -123,7 +123,7 @@ export class VerifiedFact {
         toolName: "factCheckWithPerplexity",
         stage: "verification",
         timestamp: new Date(this.processingStartTime + 500).toISOString(),
-        result: this.factCheckerOutput,
+        result: { ...this.factCheckerOutput },
       });
     }
 
@@ -650,7 +650,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         : await executeFactCheck();
 
       fact.verification = result.result;
-      fact.factCheckerOutput = result as unknown as Record<string, unknown>; // Store full output including Perplexity data
+      fact.factCheckerOutput = result; // Store full output including Perplexity data
       this.llmInteractions.push(
         this.convertRichToLLMInteraction(result.llmInteraction)
       );
@@ -912,7 +912,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       analysisSummary += "<details>\n<summary>Technical Details</summary>\n\n";
 
       const researchedFacts = this.facts.filter(
-        (f) => (f.factCheckerOutput as any)?.perplexityData
+        (f) => f.factCheckerOutput?.perplexityData
       ).length;
       const likelyFalseFacts = this.facts.filter(
         (f) => f.claim.truthProbability <= 40
