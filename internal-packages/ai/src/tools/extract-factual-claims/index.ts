@@ -27,7 +27,9 @@ const extractedFactualClaimSchema = z.object({
     .describe(
       "The normalized/cleaned claim text for fact-checking - may have minor edits from exactText for clarity"
     ),
-  topic: z.string().describe("Topic/category of the claim"),
+  topic: z
+    .string()
+    .describe("Topic/category (e.g., 'economics', 'history', 'science')"),
   importanceScore: z
     .number()
     .min(0)
