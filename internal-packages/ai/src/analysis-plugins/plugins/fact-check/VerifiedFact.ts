@@ -121,6 +121,56 @@ export class VerifiedFact {
     return null;
   }
 
+  /**
+   * Find the specific error span for simple corrections like "2008 → 2007"
+   * Returns the location of just the incorrect part, not the full claim
+   */
+  private async findErrorSpan(documentText: string): Promise<DocumentLocation | null> {
+    // Only works if we have a concise correction in "X → Y" format
+    if (!this.verification?.conciseCorrection) return null;
+    
+    const correction = this.verification.conciseCorrection;
+    const arrowMatch = correction.match(/^(.+?)\s*→\s*(.+)$/);
+    if (!arrowMatch) return null;
+    
+    const [, wrongValue] = arrowMatch;
+    const wrongValueTrimmed = wrongValue.trim();
+    
+    // Find the wrong value within our claim's location
+    const fullLocation = await this.findLocation(documentText);
+    if (!fullLocation || fullLocation.startOffset === undefined || fullLocation.endOffset === undefined) {
+      return null;
+    }
+    
+    // Search for wrong value within the highlighted text
+    const claimText = documentText.substring(fullLocation.startOffset, fullLocation.endOffset);
+    const errorIndex = claimText.indexOf(wrongValueTrimmed);
+    
+    if (errorIndex !== -1) {
+      return {
+        startOffset: fullLocation.startOffset + errorIndex,
+        endOffset: fullLocation.startOffset + errorIndex + wrongValueTrimmed.length,
+        quotedText: wrongValueTrimmed,
+      };
+    }
+    
+    return null; // Fallback to full claim
+  }
+
+  /**
+   * Find precise location for highlighting - prefers specific error location over full claim
+   */
+  async findPreciseLocation(documentText: string): Promise<DocumentLocation | null> {
+    // Try to find precise error location first
+    const preciseLocation = await this.findErrorSpan(documentText);
+    if (preciseLocation) {
+      return preciseLocation;
+    }
+    
+    // Fallback to full claim location
+    return this.findLocation(documentText);
+  }
+
   // Getters for analysis
   public getProcessingStartTime(): number {
     return this.processingStartTime;

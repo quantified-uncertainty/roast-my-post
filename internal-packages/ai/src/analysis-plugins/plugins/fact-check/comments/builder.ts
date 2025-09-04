@@ -19,7 +19,8 @@ export async function buildFactComment(
   fact: VerifiedFact,
   documentText: string
 ): Promise<Comment | null> {
-  const location = await fact.findLocation(documentText);
+  // Use precise location when available, fallback to full claim
+  const location = await fact.findPreciseLocation(documentText);
   if (!location) return null;
 
   // Build tool chain results
