@@ -57,17 +57,22 @@ export interface Comment {
   grade?: number;                    // Quality/confidence score (integer in DB)
   
   // Location data (will be stored in separate EvaluationHighlight table)
-  highlight: {
-    startOffset: number;
-    endOffset: number;
-    quotedText: string;
-    isValid: boolean;                // Always true for valid comments
-    prefix?: string;
-    error?: string;
-  };
+  highlight: DocumentHighlight;
   
   // Complete tool chain metadata (JSON in database)
   metadata?: CommentMetadata;
+}
+
+/**
+ * Highlight information for text locations in a document
+ */
+export interface DocumentHighlight {
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+  isValid: boolean;
+  prefix?: string;
+  error?: string;
 }
 
 /**

@@ -30,6 +30,6 @@ export const outputSchema = z.object({
     severity: z.enum(['critical', 'major', 'minor']).optional().describe('Severity if error found'),
     reasoning: z.string().describe('Detailed reasoning')
   }).optional().describe('LLM analysis details'),
-  conciseCorrection: z.string().optional().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x")'),
+  displayCorrection: z.string().optional().describe('XML markup for displaying correction (e.g., "<r:replace from=\"45\" to=\"234\"/>")'),
   toolsUsed: z.array(z.enum(['mathjs', 'llm'])).describe('Which tools were used')
 });

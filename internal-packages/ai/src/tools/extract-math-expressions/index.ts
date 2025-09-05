@@ -10,7 +10,7 @@ export interface ExtractedMathExpression {
   errorType?: MathErrorType;
   errorExplanation?: string;
   correctedVersion?: string;
-  conciseCorrection?: string; // e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15"
+  displayCorrection?: string; // e.g., "<r:replace from=\"45\" to=\"234\"/>"
   complexityScore: number; // 0-100
   contextImportanceScore: number; // 0-100
   errorSeverityScore: number; // 0-100
@@ -45,7 +45,7 @@ const outputSchema = z.object({
     severity: z.enum(['critical', 'major', 'minor']).optional().describe('Severity of the error'),
     errorExplanation: z.string().optional().describe('Explanation of the error'),
     correctedVersion: z.string().optional().describe('Corrected version of the expression'),
-    conciseCorrection: z.string().optional().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15")'),
+    displayCorrection: z.string().optional().describe('XML markup for displaying the correction (e.g., "<r:replace from=\"45\" to=\"234\"/>")'),
     complexityScore: z.number().min(0).max(100).describe('How complex the mathematical expression is (0-100)'),
     contextImportanceScore: z.number().min(0).max(100).describe('How important this expression is to the document context (0-100)'),
     errorSeverityScore: z.number().min(0).max(100).describe('How severe the error is if present (0-100)'),
@@ -169,14 +169,14 @@ For each SUSPECTED ERROR:
    - 60-80: Significant errors affecting understanding
    - 80-100: Critical errors that invalidate conclusions
 
-7. For errors, provide a conciseCorrection that shows ONLY the key change:
-   - Arithmetic: "125 → 100"
-   - Coefficients: "4x → 5x"
-   - Operations: "×0.15 → ×1.15"
-   - Order of magnitude: "50,000 → 5,000,000"
-   - Units: "km → km/h"
+7. For errors, provide a displayCorrection using XML format that shows ONLY the key change:
+   - Arithmetic: "<r:replace from=\"125\" to=\"100\"/>"
+   - Coefficients: "<r:replace from=\"4x\" to=\"5x\"/>"
+   - Operations: "<r:replace from=\"×0.15\" to=\"×1.15\"/>"
+   - Order of magnitude: "<r:replace from=\"50,000\" to=\"5,000,000\"/>"
+   - Units: "<r:replace from=\"km\" to=\"km/h\"/>"
    
-Keep conciseCorrection under 15 characters when possible.
+Escape special XML characters (&, <, >, ", ') as needed.
 
 Remember: If you're not reasonably confident it's a MATH ERROR, don't include it.`;
   }
@@ -252,9 +252,9 @@ ${input.text}
                 type: "string",
                 description: "Corrected version of the expression",
               },
-              conciseCorrection: {
+              displayCorrection: {
                 type: "string",
-                description: "Concise summary of the correction showing only the key change (e.g., '45 → 234', '4x → 5x', '×0.15 → ×1.15')",
+                description: "XML markup for displaying the correction (e.g., '<r:replace from=\"45\" to=\"234\"/>')",
               },
               complexityScore: {
                 type: "number",

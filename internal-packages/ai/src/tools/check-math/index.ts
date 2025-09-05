@@ -41,7 +41,7 @@ const outputSchema = z.object({
   errorDetails: z.object({
     errorType: z.enum(['calculation', 'logic', 'unit', 'notation', 'conceptual']).describe('Type of mathematical error'),
     severity: z.enum(['critical', 'major', 'minor']).describe('Severity of the error'),
-    conciseCorrection: z.string().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x")'),
+    displayCorrection: z.string().describe('XML markup for displaying correction (e.g., "<r:replace from=\"45\" to=\"234\"/>")'),
     expectedValue: z.string().optional().describe('The expected/correct value'),
     actualValue: z.string().optional().describe('The actual/incorrect value found in the statement')
   }).optional().describe('Details about the error (only present when status is verified_false)'),

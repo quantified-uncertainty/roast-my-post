@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
+
 import ReactMarkdown from "react-markdown";
-import { 
-  DocumentDuplicateIcon,
+
+import { commentToYaml } from "@/shared/utils/commentToYaml";
+import { parseColoredText } from "@/shared/utils/ui/coloredText";
+import {
+  CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  DocumentDuplicateIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-  XCircleIcon,
-  CheckCircleIcon
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
-
 import type { Comment } from "@roast/ai";
-import { commentToYaml } from "@/shared/utils/commentToYaml";
 
-import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
+import {
+  MARKDOWN_COMPONENTS,
+  MARKDOWN_PLUGINS,
+} from "../config/markdown";
 import {
   COMMENT_BG_DEFAULT,
   COMMENT_MARGIN_LEFT,
@@ -37,6 +42,39 @@ interface PositionedCommentProps {
   skipAnimation?: boolean;
 }
 
+// Helper function to display agent name with truncation
+function getDisplayAgentName(agentName: string, isHovered: boolean): string {
+  return isHovered ? agentName : agentName.slice(0, 5);
+}
+
+// Component for displaying agent name and source
+function AgentInfo({
+  agentName,
+  source,
+  isHovered,
+}: {
+  agentName: string;
+  source?: string;
+  isHovered: boolean;
+}) {
+  const textColor = isHovered ? "text-neutral-600" : "text-neutral-400";
+  const separatorColor = isHovered ? "text-neutral-400" : "text-neutral-200";
+
+  return (
+    <div className="flex-shrink-0 text-xs">
+      <span className={textColor}>
+        {getDisplayAgentName(agentName, isHovered)}
+      </span>
+      {source && (
+        <>
+          <span className={separatorColor}> / </span>
+          <span className={textColor}>{source}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function PositionedComment({
   comment,
   index,
@@ -54,32 +92,39 @@ export function PositionedComment({
 
   // Note: We show header if available, otherwise description is shown inline
 
-  // Get level styling
-  const levelStyles = {
-    error: { bgColor: "#fef2f2" },
-    warning: { bgColor: "#fffbeb" },
-    info: { bgColor: "#eff6ff" },
-    success: { bgColor: "#f0fdf4" },
-  };
-
   const level = comment.level || "info"; // Default to info if not set
-  const styles =
-    levelStyles[level as keyof typeof levelStyles] || levelStyles.info;
+  // Get level indicator (icon with colored background)
+  const getLevelIndicator = (level: string, isHovered: boolean) => {
+    let bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
+    let content: React.ReactNode;
 
-  // Get level icon
-  const getLevelIcon = (level: string) => {
-    const iconClass = "h-4 w-4 flex-shrink-0";
     switch (level) {
-      case 'error':
-        return <XCircleIcon className={`${iconClass} text-red-500`} />;
-      case 'warning':
-        return <ExclamationTriangleIcon className={`${iconClass} text-amber-500`} />;
-      case 'success':
-        return <CheckCircleIcon className={`${iconClass} text-green-500`} />;
-      case 'info':
+      case "error":
+        bgColor = isHovered ? "bg-red-500" : "bg-red-300";
+        content = <XMarkIcon className="h-3.5 w-3.5 text-white" />;
+        break;
+      case "warning":
+        bgColor = isHovered ? "bg-amber-500" : "bg-amber-400";
+        content = <span className="text-white font-bold text-sm leading-none">!</span>;
+        break;
+      case "success":
+        bgColor = isHovered ? "bg-green-500" : "bg-green-300";
+        content = <CheckIcon className="h-3.5 w-3.5 text-white" />;
+        break;
+      case "info":
       default:
-        return <InformationCircleIcon className={`${iconClass} text-blue-500`} />;
+        bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
+        content = <span className="text-white font-bold text-sm leading-none">i</span>;
+        break;
     }
+
+    return (
+      <div
+        className={`h-4 w-4 rounded-sm ${bgColor} mr-2 flex flex-shrink-0 items-center justify-center`}
+      >
+        {content}
+      </div>
+    );
   };
 
   return (
@@ -97,9 +142,10 @@ export function PositionedComment({
         zIndex: isHovered ? Z_INDEX_COMMENT_HOVERED : Z_INDEX_COMMENT,
         opacity: isVisible ? 1 : 0,
         visibility: isVisible ? "visible" : "hidden",
-        backgroundColor: isHovered ? styles.bgColor : COMMENT_BG_DEFAULT,
-        borderRadius: "8px",
+        backgroundColor: isHovered ? "white" : COMMENT_BG_DEFAULT,
+        borderRadius: "4px",
         boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+        border: isHovered ? "1px solid #e5e7eb" : "1px solid #f0f0f0",
       }}
       onClick={() => onClick(tag)}
       onMouseEnter={() => onHover(tag)}
@@ -110,16 +156,26 @@ export function PositionedComment({
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
           {/* Show header if available */}
           {comment.header && (
-            <div className="mb-1 flex items-center gap-2 font-medium text-gray-900">
-              {getLevelIcon(level)}
-              {comment.header}
+            <div
+              className={`mb-0.5 flex items-center justify-between gap-2 transition-opacity ${!isHovered ? "opacity-80" : "opacity-100"}`}
+            >
+              <div className="flex items-center gap-1 font-medium text-gray-900">
+                {getLevelIndicator(level, isHovered)}
+                {parseColoredText(comment.header)}
+              </div>
+              {/* Agent name on the right */}
+              <AgentInfo
+                agentName={agentName}
+                source={comment.source}
+                isHovered={isHovered}
+              />
             </div>
           )}
 
           {/* Show full description when expanded or if no header */}
           {(isHovered || !comment.header) && comment.description && (
             <div
-              className={`prose prose-sm max-w-none break-words ${!isHovered && !comment.header ? "line-clamp-2" : ""}`}
+              className={`prose prose-md max-w-none break-words ${!isHovered && !comment.header ? "line-clamp-2" : ""}`}
             >
               <ReactMarkdown
                 {...MARKDOWN_PLUGINS}
@@ -130,11 +186,16 @@ export function PositionedComment({
             </div>
           )}
 
-          {/* Source and Agent name */}
-          <div className="mt-1 text-xs text-gray-400">
-            {comment.source && `[${comment.source}] `}
-            {agentName}
-          </div>
+          {/* Show agent name below only if there's no header (since header already shows it on the right) */}
+          {!comment.header && (
+            <div className="mt-0.5 inline-block py-0.5">
+              <AgentInfo
+                agentName={agentName}
+                source={comment.source}
+                isHovered={isHovered}
+              />
+            </div>
+          )}
 
           {/* Additional metadata when expanded */}
           {isHovered && comment.grade !== undefined && (
@@ -175,7 +236,7 @@ export function PositionedComment({
                 )}
                 <span>Metadata</span>
               </button>
-              
+
               {isMetadataExpanded && (
                 <div className="mt-2 rounded border bg-gray-50 p-3">
                   <pre className="overflow-x-auto text-xs text-gray-600">
@@ -190,9 +251,26 @@ export function PositionedComment({
           {isHovered && (
             <div className="mt-3 flex justify-end">
               <button
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation(); // Prevent triggering comment click
-                  navigator.clipboard.writeText(commentToYaml(comment, agentName));
+                  try {
+                    await navigator.clipboard.writeText(
+                      commentToYaml(comment, agentName)
+                    );
+                  } catch (err) {
+                    // Fallback for non-secure contexts
+                    const text = commentToYaml(comment, agentName);
+                    const ta = document.createElement("textarea");
+                    ta.value = text;
+                    ta.setAttribute("readonly", "");
+                    ta.style.position = "absolute";
+                    ta.style.left = "-9999px";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                    console.warn("Clipboard API failed; used fallback.", err);
+                  }
                 }}
                 className="group flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
                 title="Copy comment as YAML"

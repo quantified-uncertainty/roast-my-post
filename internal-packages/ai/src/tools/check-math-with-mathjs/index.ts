@@ -403,7 +403,7 @@ IMPORTANT:
         output.errorDetails = {
           errorType: finalResponse.error_type,
           severity: finalResponse.severity || 'major',
-          conciseCorrection: finalResponse.concise_correction || '',
+          displayCorrection: finalResponse.concise_correction || '',
           expectedValue: finalResponse.expected_value,
           actualValue: finalResponse.actual_value
         };
@@ -563,7 +563,7 @@ IMPORTANT:
               errorDetails: {
                 errorType: 'calculation',
                 severity: 'minor',
-                conciseCorrection: `Consider using ${leftFormatted.substring(0, rightFormatted.length + 2)}`,
+                displayCorrection: `Consider using ${leftFormatted.substring(0, rightFormatted.length + 2)}`,
                 expectedValue: leftFormatted,
                 actualValue: rightFormatted
               },
@@ -634,7 +634,7 @@ IMPORTANT:
           errorDetails: {
             errorType: 'calculation',
             severity: comparisonDetails.severity || 'major',
-            conciseCorrection: `${rightFormatted} → ${expectedValue}`,
+            displayCorrection: `${rightFormatted} → ${expectedValue}`,
             expectedValue: expectedValue,
             actualValue: rightFormatted
           },
@@ -741,7 +741,7 @@ Respond with a JSON object containing:
 - errorDetails: (only if verified_false) Object with:
   - errorType: Must be one of: "calculation", "logic", "unit", "notation", or "conceptual"
   - severity: Must be one of: "critical", "major", or "minor"
-  - conciseCorrection: Brief correction like "60 → 70" or "5 → 4"
+  - displayCorrection: Brief correction like "60 → 70" or "5 → 4"
   - expectedValue: The correct value (optional)
   - actualValue: The incorrect value from the statement (optional)`;
 
@@ -840,8 +840,8 @@ Respond with a JSON object containing:
         if (parsed.errorDetails.actualValue !== undefined) {
           parsed.errorDetails.actualValue = String(parsed.errorDetails.actualValue);
         }
-        if (parsed.errorDetails.conciseCorrection !== undefined) {
-          parsed.errorDetails.conciseCorrection = String(parsed.errorDetails.conciseCorrection);
+        if (parsed.errorDetails.displayCorrection !== undefined) {
+          parsed.errorDetails.displayCorrection = String(parsed.errorDetails.displayCorrection);
         }
         output.errorDetails = parsed.errorDetails;
       }

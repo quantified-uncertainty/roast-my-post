@@ -65,7 +65,7 @@ describe("SpellingPlugin Unit Test", () => {
             confidence: 95,
             context: "This documnet has",
             description: 'Misspelling of "document"',
-            conciseCorrection: "documnet → document",
+            displayCorrection: '<r:replace from="documnet" to="document"/>',
           },
           {
             text: "varios",
@@ -75,7 +75,7 @@ describe("SpellingPlugin Unit Test", () => {
             confidence: 90,
             context: "has varios spelling",
             description: 'Misspelling of "various"',
-            conciseCorrection: "varios → various",
+            displayCorrection: '<r:replace from="varios" to="various"/>',
           },
         ],
       })

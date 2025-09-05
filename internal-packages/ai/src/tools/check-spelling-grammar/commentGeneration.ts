@@ -1,5 +1,6 @@
 import type { SpellingGrammarError } from "./index";
 import { styleHeader, CommentSeverity, formatDiff, formatConciseCorrection, SEVERITY_STYLES, importanceToSeverity } from "./comment-styles";
+import { escapeXml } from "../../shared/utils/xml";
 
 /**
  * Generate a comment for a single spelling/grammar error
@@ -16,10 +17,10 @@ export function generateSpellingComment(error: SpellingGrammarError): string {
   const emoji = isSpelling ? '✏️' : '📝';
   const pluginLabel = isSpelling ? 'Spelling' : 'Grammar';
   
-  // Format the diff - prioritize conciseCorrection if available
-  const diff = error.conciseCorrection 
-    ? formatConciseCorrection(error.conciseCorrection)
-    : formatDiff(`"${error.text}"`, `"${error.correction}"`);
+  // Format the diff - prioritize displayCorrection if available
+  const diff = error.displayCorrection 
+    ? error.displayCorrection
+    : `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction)}"/>`;
   
   // Use importance score to determine severity
   const severity = importanceToSeverity(error.importance);

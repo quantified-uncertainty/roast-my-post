@@ -5,18 +5,39 @@ import {
   useRef,
   useState,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 
+import { LAYOUT } from "../constants";
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
-import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
-import { DocumentContent } from "./DocumentContent";
 import { CommentsColumn } from "./CommentsColumn";
+import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
-import { LAYOUT, TIMING } from "../constants";
+import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+
+/**
+ * Maps comment levels to appropriate highlight colors
+ */
+function getLevelHighlightColor(level?: string | null): string {
+  switch (level) {
+    case "error":
+      return "#dc2626"; // Brighter red - for false claims (more intense)
+    case "warning":
+      return "#f59e0b"; // Amber - for partially-true claims
+    case "success":
+      return "#86efac"; // Lighter green - for verified true claims (less intense)
+    case "info":
+    default:
+      return "#93c5fd"; // Lighter blue - for info/unverified claims and default
+  }
+}
 
 export function EvaluationView({
   evaluationState,
@@ -35,18 +56,19 @@ export function EvaluationView({
   const [isFullWidth, setIsFullWidth] = useState(false);
 
   // Debug state management
-  const [localShowDebugComments, setLocalShowDebugComments] = useState(showDebugComments);
-  
+  const [localShowDebugComments, setLocalShowDebugComments] =
+    useState(showDebugComments);
+
   const handleToggleDebugComments = () => {
     const newShowDebug = !localShowDebugComments;
     setLocalShowDebugComments(newShowDebug);
-    
+
     // Update URL parameter
     const params = new URLSearchParams(searchParams.toString());
     if (newShowDebug) {
-      params.set('debug', 'true');
+      params.set("debug", "true");
     } else {
-      params.delete('debug');
+      params.delete("debug");
     }
     router.replace(`?${params.toString()}`, { scroll: false });
   };
@@ -83,23 +105,28 @@ export function EvaluationView({
     if (localShowDebugComments) {
       return allComments;
     }
-    return allComments.filter(comment => comment.level !== 'debug');
+    return allComments.filter((comment) => comment.level !== "debug");
   }, [allComments, localShowDebugComments]);
 
   const highlights = useMemo(
     () =>
       displayComments
-        .filter((comment): comment is typeof comment & { highlight: NonNullable<typeof comment.highlight> } => 
-          comment.highlight != null && 
-          comment.highlight.startOffset != null && 
-          comment.highlight.endOffset != null
+        .filter(
+          (
+            comment
+          ): comment is typeof comment & {
+            highlight: NonNullable<typeof comment.highlight>;
+          } =>
+            comment.highlight != null &&
+            comment.highlight.startOffset != null &&
+            comment.highlight.endOffset != null
         )
         .map((comment, index) => ({
           startOffset: comment.highlight.startOffset!,
           endOffset: comment.highlight.endOffset!,
           quotedText: comment.highlight.quotedText || "",
           tag: index.toString(),
-          color: "#3b82f6",
+          color: getLevelHighlightColor(comment.level),
         })),
     [displayComments]
   );
@@ -168,7 +195,13 @@ export function EvaluationView({
               contentRef={contentRef}
             />
             {/* Comments column with filters and positioned comments */}
-            <div style={{ width: `${LAYOUT.COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}>
+            <div
+              style={{
+                width: `${LAYOUT.COMMENT_COLUMN_WIDTH}px`,
+                flexShrink: 0,
+                marginLeft: "2rem",
+              }}
+            >
               <CommentsColumn
                 comments={displayComments}
                 contentRef={contentRef}

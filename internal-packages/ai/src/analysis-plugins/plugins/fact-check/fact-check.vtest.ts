@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // Vitest test file
-import { FactCheckPlugin, FactCheckAnalyzerJob } from './index';
+import { FactCheckPlugin } from './index';
 
 describe('FactCheckPlugin', () => {
   it('should have correct metadata', () => {
@@ -13,14 +13,9 @@ describe('FactCheckPlugin', () => {
     expect(examples[0]?.shouldProcess).toBeDefined();
   });
 
-  it('should backward compatibility alias work', () => {
-    // FactCheckAnalyzerJob should be an alias for FactCheckPlugin
-    expect(FactCheckAnalyzerJob).toBe(FactCheckPlugin);
-  });
-
-  it('should be able to instantiate the job', () => {
-    const job = new FactCheckAnalyzerJob();
-    expect(job).toBeDefined();
+  it('should be able to instantiate the plugin', () => {
+    const plugin = new FactCheckPlugin();
+    expect(plugin).toBeDefined();
   });
 
   it('should handle empty document', async () => {

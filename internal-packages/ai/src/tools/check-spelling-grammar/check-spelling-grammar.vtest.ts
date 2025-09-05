@@ -68,7 +68,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'teh',
             correction: 'the',
-            conciseCorrection: 'teh → the',
+            displayCorrection: '<r:replace from="teh" to="the"/>',
             type: 'spelling',
             context: 'This is teh best approach',
             importance: 15,
@@ -78,7 +78,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'recieve',
             correction: 'receive',
-            conciseCorrection: 'recieve → receive',
+            displayCorrection: '<r:replace from="recieve" to="receive"/>',
             type: 'spelling',
             context: 'We will recieve the data',
             importance: 20,
@@ -111,7 +111,7 @@ describe('CheckSpellingGrammarTool', () => {
 
     expect(result.errors).toHaveLength(2);
     expect(result.errors[0].text).toBe('teh');
-    expect(result.errors[0].conciseCorrection).toBe('teh → the');
+    expect(result.errors[0].displayCorrection).toBe('<r:replace from="teh" to="the"/>');
     expect(result.errors[1].text).toBe('recieve');
     expect(result.metadata?.totalErrorsFound).toBe(2);
   });
@@ -126,7 +126,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'dont',
             correction: "don't",
-            conciseCorrection: "dont → don't",
+            displayCorrection: '<r:replace from="dont" to="don\'t"/>',
             type: 'spelling',
             context: "We dont have time",
             importance: 55, // Above minimal threshold of 51
@@ -171,7 +171,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'notintext', // This doesn't exist in the input
             correction: 'corrected',
-            conciseCorrection: 'notintext → corrected',
+            displayCorrection: '<r:replace from="notintext" to="corrected"/>',
             type: 'spelling',
             importance: 50,
             confidence: 90,
@@ -180,7 +180,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'antropics', // Case mismatch - actual text is "Anthropic's"
             correction: "Anthropic's",
-            conciseCorrection: "antropics → Anthropic's",
+            displayCorrection: '<r:replace from="antropics" to="Anthropic\'s"/>',
             type: 'spelling',
             importance: 40,
             confidence: 85,
@@ -189,7 +189,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'actual',
             correction: 'actual',
-            conciseCorrection: 'actual → actual',
+            displayCorrection: '<r:replace from="actual" to="actual"/>',
             type: 'spelling',
             context: 'This is the actual text',
             importance: 30,
@@ -244,7 +244,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'mistake',
             correction: 'correct',
-            conciseCorrection: 'mistake → correct',
+            displayCorrection: '<r:replace from="mistake" to="correct"/>',
             type: 'spelling',
             importance: 40,
             confidence: 90,
@@ -286,7 +286,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'are',
             correction: 'is',
-            conciseCorrection: 'are → is',
+            displayCorrection: '<r:replace from="are" to="is"/>',
             type: 'grammar',
             context: 'of engineers are working',
             importance: 45,
@@ -330,7 +330,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'teh',
             correction: 'the',
-            conciseCorrection: 'teh → the',
+            displayCorrection: '<r:replace from="teh" to="the"/>',
             type: 'spelling',
             context: 'This is teh first line',
             importance: 15,
@@ -341,7 +341,7 @@ describe('CheckSpellingGrammarTool', () => {
           {
             text: 'recieve',
             correction: 'receive',
-            conciseCorrection: 'recieve → receive',
+            displayCorrection: '<r:replace from="recieve" to="receive"/>',
             type: 'spelling',
             context: 'Third line will recieve data',
             importance: 20,

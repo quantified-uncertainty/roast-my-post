@@ -72,8 +72,8 @@ async function runAllTests() {
       if (result.status === 'verified_false' && result.errorDetails) {
         console.log(`Error Type: ${result.errorDetails.errorType}`);
         console.log(`Severity: ${result.errorDetails.severity}`);
-        if (result.errorDetails.conciseCorrection) {
-          console.log(`Correction: ${result.errorDetails.conciseCorrection}`);
+        if (result.errorDetails.displayCorrection) {
+          console.log(`Correction: ${result.errorDetails.displayCorrection}`);
         }
       }
       

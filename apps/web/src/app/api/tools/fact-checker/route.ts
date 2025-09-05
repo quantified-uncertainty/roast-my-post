@@ -1,4 +1,4 @@
 import { createToolAPIHandler } from '@/application/services/tools/createToolAPIHandler';
-import { multiFactCheckerTool } from '@roast/ai/server';
+import { factCheckerTool } from '@roast/ai/server';
 
-export const POST = createToolAPIHandler(multiFactCheckerTool);
+export const POST = createToolAPIHandler(factCheckerTool);

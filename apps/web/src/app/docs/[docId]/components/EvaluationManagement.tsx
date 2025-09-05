@@ -103,7 +103,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sortedAgents.slice(0, 10).map((agent) => {
+            {sortedAgents.map((agent) => {
               const isRunning = runningAgents.has(agent.id);
 
               return (
@@ -160,9 +160,9 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
             })}
           </div>
 
-          {sortedAgents.length > 10 && (
+          {sortedAgents.length > 0 && (
             <p className="text-sm text-gray-500 text-center mt-4">
-              Showing 10 of {sortedAgents.length} available agents
+              Showing all {sortedAgents.length} available agents
             </p>
           )}
         </div>
