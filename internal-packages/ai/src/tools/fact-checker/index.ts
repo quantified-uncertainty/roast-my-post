@@ -34,12 +34,14 @@ const factCheckResultSchema = z.object({
   explanation: z.string(),
   corrections: z.string().optional(),
   displayCorrection: z.string().optional(),
-  criticalText: z.string().optional(),
+  criticalText: z.string().min(1, "criticalText must not be empty"),
   sources: z
     .array(
       z.object({
         title: z.string(),
-        url: z.string(),
+        url: z.string()
+          .url("Must be a valid URL")
+          .refine((u) => /^https?:\/\//i.test(u), "Only http(s) URLs are allowed"),
       })
     )
     .optional(),
@@ -134,7 +136,13 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
           searchResponse: perplexityFullOutput.summary
         };
         
-        researchNotes = `Research Summary: ${perplexityFullOutput.summary}\n\nKey Findings:\n${perplexityFullOutput.keyFindings.join('\n- ')}`;
+        const keyFindingsArr = Array.isArray(perplexityFullOutput.keyFindings)
+          ? perplexityFullOutput.keyFindings
+          : [];
+        const keyFindingsText = keyFindingsArr.map((s: string) => `- ${s}`).join('\n');
+        researchNotes = `Research Summary: ${perplexityFullOutput.summary}${
+          keyFindingsText ? `\n\nKey Findings:\n${keyFindingsText}` : ""
+        }`;
         context.logger.info(`[FactChecker] Found ${perplexityFullOutput.sources.length} sources`);
       } catch (error) {
         context.logger.warn(`[FactChecker] Perplexity research failed:`, { error: error instanceof Error ? error.message : String(error) });
@@ -320,14 +328,14 @@ ${input.claim}
               type: "object",
               properties: {
                 title: { type: "string" },
-                url: { type: "string" },
+                url: { type: "string", pattern: "^https?://" },
               },
               required: ["title", "url"],
             },
             description: "List of sources with titles and URLs",
           },
         },
-        required: ["verdict", "confidence", "explanation"],
+        required: ["verdict", "confidence", "explanation", "criticalText"],
       },
       enablePromptCaching: true,
       cacheSeed,

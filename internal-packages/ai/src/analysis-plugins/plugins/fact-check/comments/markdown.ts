@@ -1,10 +1,32 @@
 import type { VerifiedFact } from '../VerifiedFact';
 import { escapeXml } from '../../../../shared/utils/xml';
+import { LIMITS, THRESHOLDS } from '../constants';
 
 /**
  * Pure functions for generating markdown content for fact-check comments.
  * These functions take data and return formatted markdown strings.
  */
+
+// Helper to escape markdown special characters
+function escapeMd(s: string): string {
+  return s.replace(/[[\]()*_`>]/g, (m) => `\\${m}`);
+}
+
+// Helper to sanitize URLs
+function sanitizeUrl(u: string): string {
+  try {
+    const url = new URL(u, "https://example.com");
+    const scheme = url.protocol.replace(":", "");
+    return scheme === "http" || scheme === "https" ? u : "#";
+  } catch {
+    return "#";
+  }
+}
+
+// Helper to escape custom marker tokens
+function escapeMarkers(s: string): string {
+  return s.replaceAll('[[', '\\[\\[').replaceAll(']]', '\\]\\]');
+}
 
 /**
  * Build the main description content for a fact comment
@@ -16,10 +38,16 @@ export function buildDescription(fact: VerifiedFact): string {
 
     // Add sources if available from Perplexity research
     if (fact.verification.sources && fact.verification.sources.length > 0) {
-      description += "\n\nSources:";
-      fact.verification.sources.forEach((source, index) => {
-        description += `\n${index + 1}. ${source.title || "Source"} - ${source.url}`;
-      });
+      const items = fact.verification.sources
+        .filter((s) => s && typeof s.url === "string")
+        .map((s, i) => {
+          const title = escapeMd(s.title || "Source");
+          const url = sanitizeUrl(String(s.url));
+          return `${i + 1}. [${title}](${url})`;
+        });
+      if (items.length > 0) {
+        description += "\n\nSources:\n" + items.join("\n");
+      }
     }
 
     return description;
@@ -41,7 +69,7 @@ export function buildSkipDescription(fact: VerifiedFact): string {
 
   if (shouldVerify) {
     // Should have been verified but wasn't (likely hit limit)
-    skipReason = "Processing limit reached (max 25 claims per analysis)";
+    skipReason = `Processing limit reached (max ${LIMITS.MAX_FACTS_TO_VERIFY} claims per analysis)`;
     detailedReason =
       "This claim qualified for verification but was skipped due to resource limits. Consider manual fact-checking for high-priority claims like this.";
   } else {
@@ -50,17 +78,17 @@ export function buildSkipDescription(fact: VerifiedFact): string {
 
     const reasons = [];
     if (
-      fact.claim.importanceScore < 60 &&
-      fact.claim.checkabilityScore < 60
+      fact.claim.importanceScore < THRESHOLDS.CHECKABILITY_HIGH &&
+      fact.claim.checkabilityScore < THRESHOLDS.CHECKABILITY_HIGH
     ) {
       reasons.push("Both importance and checkability scores were too low.");
-    } else if (fact.claim.importanceScore < 60) {
+    } else if (fact.claim.importanceScore < THRESHOLDS.CHECKABILITY_HIGH) {
       reasons.push("Importance score was too low for prioritization.");
-    } else if (fact.claim.checkabilityScore < 60) {
+    } else if (fact.claim.checkabilityScore < THRESHOLDS.CHECKABILITY_HIGH) {
       reasons.push(
         "Checkability score was too low for efficient verification."
       );
-    } else if (fact.claim.truthProbability > 70) {
+    } else if (fact.claim.truthProbability > THRESHOLDS.TRUTH_PROBABILITY_MEDIUM) {
       reasons.push(
         "Truth probability was too high (likely accurate) to prioritize."
       );
@@ -77,9 +105,9 @@ export function buildSkipDescription(fact: VerifiedFact): string {
 **Skip Reason:** ${skipReason}
 
 **Scoring Breakdown:**
-- Importance: ${fact.claim.importanceScore}/100${fact.claim.importanceScore >= 60 ? " ✓" : ""} (threshold: ≥60)
-- Checkability: ${fact.claim.checkabilityScore}/100${fact.claim.checkabilityScore >= 60 ? " ✓" : ""} (threshold: ≥60)
-- Truth Probability: ${fact.claim.truthProbability}%${fact.claim.truthProbability <= 70 ? " ⚠️" : ""} (threshold: ≤70%)
+- Importance: ${fact.claim.importanceScore}/100${fact.claim.importanceScore >= THRESHOLDS.CHECKABILITY_HIGH ? " ✓" : ""} (threshold: ≥${THRESHOLDS.CHECKABILITY_HIGH})
+- Checkability: ${fact.claim.checkabilityScore}/100${fact.claim.checkabilityScore >= THRESHOLDS.CHECKABILITY_HIGH ? " ✓" : ""} (threshold: ≥${THRESHOLDS.CHECKABILITY_HIGH})
+- Truth Probability: ${fact.claim.truthProbability}%${fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_MEDIUM ? " ⚠️" : ""} (threshold: ≤${THRESHOLDS.TRUTH_PROBABILITY_MEDIUM}%)
 
 ${detailedReason}`;
 }
@@ -153,7 +181,7 @@ export function buildObservation(fact: VerifiedFact): string | undefined {
   if (fact.verification) {
     return fact.verification.explanation;
   }
-  if (fact.claim.truthProbability <= 50) {
+  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LOW) {
     return `This claim appears questionable (${fact.claim.truthProbability}% truth probability)`;
   }
   return undefined;
@@ -165,7 +193,7 @@ export function buildObservation(fact: VerifiedFact): string | undefined {
 export function buildSignificance(fact: VerifiedFact): string | undefined {
   if (
     fact.verification?.verdict === "false" &&
-    fact.claim.importanceScore >= 8
+    fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH
   ) {
     return "High-importance false claim";
   }
@@ -175,7 +203,7 @@ export function buildSignificance(fact: VerifiedFact): string | undefined {
   if (fact.verification?.verdict === "partially-true") {
     return "Claim with missing context or nuances";
   }
-  if (fact.claim.importanceScore >= 8 && !fact.verification) {
+  if (fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH && !fact.verification) {
     return "This is a key claim that should be verified with credible sources";
   }
   return undefined;

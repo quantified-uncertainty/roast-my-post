@@ -460,6 +460,5 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   }
 }
 
-// Export the plugin class for backward compatibility
-export { FactCheckPlugin as FactCheckAnalyzerJob };
+// Export the plugin class and VerifiedFact
 export { VerifiedFact } from "./VerifiedFact";
