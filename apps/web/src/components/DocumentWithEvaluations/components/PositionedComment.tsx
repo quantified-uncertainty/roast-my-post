@@ -7,9 +7,13 @@ import ReactMarkdown from "react-markdown";
 import { commentToYaml } from "@/shared/utils/commentToYaml";
 import { parseColoredText } from "@/shared/utils/ui/coloredText";
 import {
+  CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentDuplicateIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
 
@@ -89,22 +93,37 @@ export function PositionedComment({
   // Note: We show header if available, otherwise description is shown inline
 
   const level = comment.level || "info"; // Default to info if not set
-  // Get level indicator (colored circle)
+  // Get level indicator (icon with colored background)
   const getLevelIndicator = (level: string, isHovered: boolean) => {
-    let bgColor = isHovered ? "bg-blue-500" : "bg-blue-200"; // default info color
+    let bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
+    let content: React.ReactNode;
+
     switch (level) {
       case "error":
         bgColor = isHovered ? "bg-red-500" : "bg-red-300";
+        content = <XMarkIcon className="h-3.5 w-3.5 text-white" />;
         break;
       case "warning":
-        bgColor = isHovered ? "bg-amber-500" : "bg-amber-200";
+        bgColor = isHovered ? "bg-amber-500" : "bg-amber-400";
+        content = <span className="text-white font-bold text-sm leading-none">!</span>;
         break;
       case "success":
-        bgColor = isHovered ? "bg-green-500" : "bg-green-200";
+        bgColor = isHovered ? "bg-green-500" : "bg-green-300";
+        content = <CheckIcon className="h-3.5 w-3.5 text-white" />;
+        break;
+      case "info":
+      default:
+        bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
+        content = <span className="text-white font-bold text-sm leading-none">i</span>;
         break;
     }
+
     return (
-      <div className={`h-2 w-2 rounded-full ${bgColor} mr-2 flex-shrink-0`} />
+      <div
+        className={`h-4 w-4 rounded-sm ${bgColor} mr-2 flex flex-shrink-0 items-center justify-center`}
+      >
+        {content}
+      </div>
     );
   };
 
@@ -137,7 +156,9 @@ export function PositionedComment({
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
           {/* Show header if available */}
           {comment.header && (
-            <div className="mb-0.5 flex items-center justify-between gap-2">
+            <div
+              className={`mb-0.5 flex items-center justify-between gap-2 transition-opacity ${!isHovered ? "opacity-80" : "opacity-100"}`}
+            >
               <div className="flex items-center gap-1 font-medium text-gray-900">
                 {getLevelIndicator(level, isHovered)}
                 {parseColoredText(comment.header)}
