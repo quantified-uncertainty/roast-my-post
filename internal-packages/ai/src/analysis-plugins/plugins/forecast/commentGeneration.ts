@@ -1,7 +1,7 @@
 import type { ExtractedForecast } from "../../../tools/extract-forecasting-claims";
 
 import type { ForecasterOutput } from "../../../tools/forecaster";
-import { CommentSeverity, formatDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
+import { CommentSeverity, SEVERITY_STYLES } from "../../utils/comment-styles";
 
 interface ForecastWithPrediction {
   forecast: ExtractedForecast;
@@ -39,26 +39,32 @@ export function generateForecastComment(data: ForecastWithPrediction): string {
     severity = CommentSeverity.LOW;
   }
 
-  // Build compact header
+  // Build interpretation-only header (no numbers since they're in the title)
   let headerContent = '';
   
   if (hasAuthorProb) {
-    const diff = formatDiff(`${forecast.authorProbability}%`, `${prediction.probability}%`);
-    headerContent = diff;
-    
-    // Add context for large gaps
+    // Show interpretation based on confidence gap
     if (gap >= 40) {
-      headerContent += ' (extreme overconfidence)';
+      headerContent = 'Extreme overconfidence';
     } else if (gap >= 25) {
-      headerContent += ' (overconfident)';
+      headerContent = 'Overconfident prediction';
+    } else if (gap >= 10) {
+      headerContent = 'Confidence gap detected';
+    } else {
+      headerContent = 'Well-calibrated prediction';
+    }
+    
+    // Add robustness warning if needed
+    if (forecast.robustnessScore < 40) {
+      headerContent += ' (weak empirical basis)';
     }
   } else {
-    headerContent = `Our estimate: ${prediction.probability}%`;
-  }
-  
-  // Add robustness warning if needed
-  if (forecast.robustnessScore < 40) {
-    headerContent += ' (weak empirical basis)';
+    // No author probability provided
+    if (forecast.robustnessScore < 40) {
+      headerContent = 'Weak empirical basis';
+    } else {
+      headerContent = 'Analysis provided';
+    }
   }
 
   const style = SEVERITY_STYLES[severity];
