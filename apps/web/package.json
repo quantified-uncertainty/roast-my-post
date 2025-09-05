@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "check": "pnpm run typecheck && pnpm run lint",
     "test": "vitest run",
+    "test:model": "vitest run --config vitest.model.config.ts",
     "test:unit": "vitest run --exclude=**/*.{integration,e2e,llm}.vtest.*",
     "test:integration": "vitest run **/*.integration.vtest.*",
     "test:e2e": "vitest run **/*.e2e.vtest.*",

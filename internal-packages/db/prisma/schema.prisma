@@ -137,7 +137,7 @@ model EvaluationVersion {
   comments          EvaluationComment[]
   agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
-  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id])
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   job               Job?
 
   @@unique([evaluationId, version])
@@ -256,7 +256,7 @@ model Job {
   cancelledById       String?
   cancellationReason  String?
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
-  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
+  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
   originalJob         Job?               @relation("JobRetries", fields: [originalJobId], references: [id])
   retryJobs           Job[]              @relation("JobRetries")
