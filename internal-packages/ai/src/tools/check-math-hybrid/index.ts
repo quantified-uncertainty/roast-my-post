@@ -50,12 +50,20 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
         verifiedBy = 'llm';
       }
       
-      // Extract concise correction from either tool
-      let conciseCorrection: string | undefined;
+      // Extract display correction from either tool
+      let displayCorrection: string | undefined;
       if (mathJsResult.status === 'verified_false' && mathJsResult.errorDetails?.actualValue && mathJsResult.errorDetails?.expectedValue) {
-        conciseCorrection = `${mathJsResult.errorDetails.actualValue} → ${mathJsResult.errorDetails.expectedValue}`;
-      } else if (llmResult?.errorDetails?.conciseCorrection) {
-        conciseCorrection = llmResult.errorDetails.conciseCorrection;
+        // Escape XML special characters
+        const escapeXml = (str: string) => str.replace(/[<>&"']/g, (c) => ({
+          '<': '&lt;',
+          '>': '&gt;',
+          '&': '&amp;',
+          '"': '&quot;',
+          "'": '&apos;'
+        })[c] || c);
+        displayCorrection = `<r:replace from="${escapeXml(mathJsResult.errorDetails.actualValue)}" to="${escapeXml(mathJsResult.errorDetails.expectedValue)}"/>`;
+      } else if (llmResult?.errorDetails?.displayCorrection) {
+        displayCorrection = llmResult.errorDetails.displayCorrection;
       }
 
       return {
@@ -78,7 +86,7 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
           severity: llmResult.errorDetails?.severity,
           reasoning: llmResult.reasoning
         } : undefined,
-        conciseCorrection,
+        displayCorrection,
         toolsUsed
       };
       

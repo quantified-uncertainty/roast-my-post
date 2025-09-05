@@ -42,9 +42,9 @@ export const mathErrorDetailsSchema = {
       enum: ["critical", "major", "minor"],
       description: "Severity of the error"
     },
-    conciseCorrection: {
+    displayCorrection: {
       type: "string",
-      description: "Concise correction showing the key change (e.g., '5 → 4', '×0.15 → ×1.15')"
+      description: "XML markup for displaying the correction (e.g., '<r:replace from=\"5\" to=\"4\"/>')"
     },
     expectedValue: {
       type: "string",
@@ -73,7 +73,7 @@ export const mathErrorDetailsSchema = {
       }
     }
   },
-  required: ["errorType", "severity", "conciseCorrection"]
+  required: ["errorType", "severity", "displayCorrection"]
 };
 
 // Verification details schema - details about how verification was performed
@@ -117,7 +117,7 @@ export type MathSeverity = 'critical' | 'major' | 'minor';
 export interface MathErrorDetails {
   errorType: MathErrorType;
   severity: MathSeverity;
-  conciseCorrection: string;
+  displayCorrection: string;
   expectedValue?: string;
   actualValue?: string;
   steps?: Array<{

@@ -147,9 +147,9 @@ export class HybridMathErrorWrapper {
       return `✓ Verified correct`;
     } else if (
       this.verificationResult.status === "verified_false" &&
-      this.verificationResult.conciseCorrection
+      this.verificationResult.displayCorrection
     ) {
-      return this.verificationResult.conciseCorrection;
+      return this.verificationResult.displayCorrection;
     } else if (this.verificationResult.status === "verified_false") {
       return `Math error: ${this.expression.originalText}`;
     } else {
@@ -371,7 +371,7 @@ export class ExtractedMathExpression {
 
       // Custom overrides
       header:
-        this.expression.conciseCorrection ||
+        this.expression.displayCorrection ||
         (this.expression.hasError
           ? `Math Error: ${this.expression.originalText}`
           : `Math: ${this.expression.originalText}`),

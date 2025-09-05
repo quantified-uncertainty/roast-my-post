@@ -67,7 +67,7 @@ describe('CheckMathTool', () => {
         errorDetails: {
           errorType: 'calculation',
           severity: 'major',
-          conciseCorrection: '5 → 4',
+          displayCorrection: '<r:replace from="5" to="4"/>',
           expectedValue: '4',
           actualValue: '5'
         }
@@ -83,7 +83,7 @@ describe('CheckMathTool', () => {
       expect(result.errorDetails).toBeDefined();
       expect(result.errorDetails?.errorType).toBe('calculation');
       expect(result.errorDetails?.severity).toBe('major');
-      expect(result.errorDetails?.conciseCorrection).toBe('5 → 4');
+      expect(result.errorDetails?.displayCorrection).toBe('<r:replace from="5" to="4"/>');
     });
 
     it('should verify correct statements', async () => {
@@ -131,7 +131,7 @@ describe('CheckMathTool', () => {
         errorDetails: {
           errorType: 'unit',
           severity: 'critical',
-          conciseCorrection: '100 m → 1000 m',
+          displayCorrection: '<r:replace from="100 m" to="1000 m"/>',
           expectedValue: '1000 meters',
           actualValue: '100 meters'
         }
@@ -146,7 +146,7 @@ describe('CheckMathTool', () => {
       expect(result.status).toBe('verified_false');
       expect(result.errorDetails?.errorType).toBe('unit');
       expect(result.errorDetails?.severity).toBe('critical');
-      expect(result.errorDetails?.conciseCorrection).toBe('100 m → 1000 m');
+      expect(result.errorDetails?.displayCorrection).toBe('<r:replace from="100 m" to="1000 m"/>');
     });
 
     it('should handle context when provided', async () => {
@@ -192,7 +192,7 @@ describe('CheckMathTool', () => {
         errorDetails: {
           errorType: 'calculation',
           severity: 'major',
-          conciseCorrection: '40 → 35'
+          displayCorrection: '<r:replace from="40" to="35"/>'
         }
       });
 
@@ -209,7 +209,7 @@ describe('CheckMathTool', () => {
         errorDetails: {
           errorType: 'logic',
           severity: 'critical',
-          conciseCorrection: 'a < c → a > c'
+          displayCorrection: '<r:replace from="a < c" to="a > c"/>'
         }
       });
 
@@ -228,7 +228,7 @@ describe('CheckMathTool', () => {
         errorDetails: {
           errorType: 'notation',
           severity: 'minor',
-          conciseCorrection: 'Fix notation consistency'
+          displayCorrection: '<r:replace from="Fix notation consistency" to="Fix notation consistency"/>'
         }
       });
 
