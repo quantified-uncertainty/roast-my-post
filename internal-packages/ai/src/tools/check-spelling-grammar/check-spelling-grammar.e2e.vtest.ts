@@ -152,8 +152,8 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
 
               expect(error).toBeDefined();
               expect(error?.type).toBe("spelling");
-              if (error?.conciseCorrection) {
-                expect(error.conciseCorrection.toLowerCase()).toMatch(
+              if (error?.displayCorrection) {
+                expect(error.displayCorrection.toLowerCase()).toMatch(
                   /teh\s*→\s*the/i
                 );
               }
@@ -172,8 +172,8 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               );
               expect(error).toBeDefined();
               expect(error?.type).toBe("spelling");
-              if (error?.conciseCorrection) {
-                expect(error.conciseCorrection.toLowerCase()).toMatch(
+              if (error?.displayCorrection) {
+                expect(error.displayCorrection.toLowerCase()).toMatch(
                   /recieve\s*→\s*receive/i
                 );
               }
@@ -188,7 +188,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               const error = result.errors.find((e) => e.text === "algorithem");
               expect(error).toBeDefined();
               expect(error?.correction).toBe("algorithm");
-              expect(error?.conciseCorrection).toMatch(
+              expect(error?.displayCorrection).toMatch(
                 /algorithem\s*→\s*algorithm/
               );
               expect(error?.type).toBe("spelling");
@@ -208,8 +208,8 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               expect(errors).toContain("recieved");
               expect(errors).toContain("thier");
               result.errors.forEach((error) => {
-                expect(error.conciseCorrection).toBeTruthy();
-                expect(error.conciseCorrection).toMatch(/→/);
+                expect(error.displayCorrection).toBeTruthy();
+                expect(error.displayCorrection).toMatch(/→/);
               });
             },
           },
@@ -245,7 +245,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
               const error = result.errors.find((e) => e.text === "their");
               expect(error).toBeDefined();
               expect(error?.correction).toBe("there");
-              expect(error?.conciseCorrection).toMatch(/their\s*→\s*there/);
+              expect(error?.displayCorrection).toMatch(/their\s*→\s*there/);
               // Their/there confusion can be classified as either spelling or grammar
               expect(["spelling", "grammar"]).toContain(error?.type);
               expect(error?.importance).toBeGreaterThanOrEqual(26);
@@ -266,7 +266,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
                 );
                 if (error) {
                   expect(error.correction).toMatch(/is/);
-                  expect(error.conciseCorrection).toBeTruthy();
+                  expect(error.displayCorrection).toBeTruthy();
                   expect(error.type).toBe("grammar");
                   expect(error.importance).toBeGreaterThanOrEqual(26);
                   expect(error.importance).toBeLessThanOrEqual(75);
@@ -721,10 +721,10 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
             input: { text: "I recieved teh package." },
             expectations: (result) => {
               result.errors.forEach((error) => {
-                expect(error.conciseCorrection).toBeTruthy();
-                expect(error.conciseCorrection).toMatch(/→/);
+                expect(error.displayCorrection).toBeTruthy();
+                expect(error.displayCorrection).toMatch(/→/);
                 // Should be concise - not full sentences
-                expect(error.conciseCorrection.length).toBeLessThan(50);
+                expect(error.displayCorrection.length).toBeLessThan(50);
               });
             },
           },
@@ -737,7 +737,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
                 result.errors.map((e) => ({
                   text: e.text,
                   correction: e.correction,
-                  conciseCorrection: e.conciseCorrection,
+                  displayCorrection: e.displayCorrection,
                 }))
               );
 
@@ -754,8 +754,8 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
                 );
               }
 
-              if (error?.conciseCorrection) {
-                expect(error.conciseCorrection.toLowerCase()).toMatch(
+              if (error?.displayCorrection) {
+                expect(error.displayCorrection.toLowerCase()).toMatch(
                   /is\s*→\s*are/i
                 );
               }
@@ -769,7 +769,7 @@ describeIfApiKey("CheckSpellingGrammarTool Integration", () => {
                 e.text.includes("could of")
               );
               if (error) {
-                expect(error.conciseCorrection).toMatch(
+                expect(error.displayCorrection).toMatch(
                   /could of\s*→\s*could have/
                 );
               }

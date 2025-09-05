@@ -49,7 +49,7 @@ export interface SpellingErrorWithLocation {
   } | null;
 }
 
-export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
+export class SpellingPlugin implements SimpleAnalysisPlugin {
   // Property to bypass routing - spelling check should always run on all chunks
   readonly runOnAllChunks = true;
 
@@ -546,5 +546,3 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   }
 }
 
-// Export SpellingAnalyzerJob as SpellingPlugin for compatibility
-export { SpellingAnalyzerJob as SpellingPlugin };

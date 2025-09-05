@@ -386,7 +386,7 @@ export class ExtractedMathExpression {
   }
 }
 
-export class MathAnalyzerJob implements SimpleAnalysisPlugin {
+export class MathPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;
@@ -1072,4 +1072,3 @@ This expression was skipped because it's ${extractedExpression.expression.comple
 }
 
 // Export MathAnalyzerJob as MathPlugin for compatibility
-export { MathAnalyzerJob as MathPlugin };

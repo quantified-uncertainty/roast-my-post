@@ -404,7 +404,7 @@ ${detailedReason}`;
   }
 }
 
-export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
+export class ForecastPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;
@@ -895,5 +895,3 @@ The analysis may still be valid, but the highlighting won't be precise.`,
   }
 }
 
-// Export ForecastAnalyzerJob as ForecastPlugin for compatibility
-export { ForecastAnalyzerJob as ForecastPlugin };
