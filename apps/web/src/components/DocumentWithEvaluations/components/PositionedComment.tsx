@@ -7,13 +7,9 @@ import ReactMarkdown from "react-markdown";
 import { commentToYaml } from "@/shared/utils/commentToYaml";
 import { parseColoredText } from "@/shared/utils/ui/coloredText";
 import {
-  CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentDuplicateIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
 
@@ -71,24 +67,25 @@ export function PositionedComment({
   const styles =
     levelStyles[level as keyof typeof levelStyles] || levelStyles.info;
 
-  // Get level icon
-  const getLevelIcon = (level: string) => {
-    const iconClass = "h-4 w-4 flex-shrink-0";
+  // Get level indicator (colored circle)
+  const getLevelIndicator = (level: string, isHovered: boolean) => {
+    let bgColor = isHovered ? "bg-blue-500" : "bg-blue-100"; // default info color
     switch (level) {
       case "error":
-        return <XCircleIcon className={`${iconClass} text-red-500`} />;
+        bgColor = isHovered ? "bg-red-500" : "bg-red-100";
+        break;
       case "warning":
-        return (
-          <ExclamationTriangleIcon className={`${iconClass} text-amber-500`} />
-        );
+        bgColor = isHovered ? "bg-amber-500" : "bg-amber-100";
+        break;
       case "success":
-        return <CheckCircleIcon className={`${iconClass} text-green-500`} />;
-      case "info":
-      default:
-        return (
-          <InformationCircleIcon className={`${iconClass} text-blue-500`} />
-        );
+        bgColor = isHovered ? "bg-green-500" : "bg-green-100";
+        break;
     }
+    return (
+      <div
+        className={`h-1.5 w-1.5 rounded-full ${bgColor} mr-2 flex-shrink-0`}
+      />
+    );
   };
 
   return (
@@ -98,7 +95,7 @@ export function PositionedComment({
         top: `${position}px`,
         left: `${COMMENT_MARGIN_LEFT}px`,
         right: `${COMMENT_MARGIN_RIGHT}px`,
-        padding: `6px 12px`,
+        padding: `2px 8px`,
         transition: skipAnimation
           ? "none"
           : "opacity 0.2s ease-out, background-color 0.2s ease-out, top 0.3s ease-out",
@@ -106,9 +103,10 @@ export function PositionedComment({
         zIndex: isHovered ? Z_INDEX_COMMENT_HOVERED : Z_INDEX_COMMENT,
         opacity: isVisible ? 1 : 0,
         visibility: isVisible ? "visible" : "hidden",
-        backgroundColor: isHovered ? styles.bgColor : COMMENT_BG_DEFAULT,
-        borderRadius: "8px",
-        boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+        backgroundColor: isHovered ? "white" : COMMENT_BG_DEFAULT,
+        borderRadius: "4px",
+        border: isHovered ? "1px solid #e5e7eb" : "1px solid transparent",
+        // boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
       }}
       onClick={() => onClick(tag)}
       onMouseEnter={() => onHover(tag)}
@@ -119,9 +117,16 @@ export function PositionedComment({
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
           {/* Show header if available */}
           {comment.header && (
-            <div className="mb-0.5 flex items-center gap-2 font-medium text-gray-900">
-              {getLevelIcon(level)}
-              {parseColoredText(comment.header)}
+            <div className="mb-0.5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1 font-medium text-gray-900">
+                {getLevelIndicator(level, isHovered)}
+                {parseColoredText(comment.header)}
+              </div>
+              {/* Agent name on the right */}
+              <div className="flex-shrink-0 text-xs text-neutral-400">
+                {comment.source && `[${comment.source}] `}
+                {agentName}
+              </div>
             </div>
           )}
 
@@ -139,11 +144,13 @@ export function PositionedComment({
             </div>
           )}
 
-          {/* Source and Agent name */}
-          <div className="mt-0.5 inline-block rounded py-0.5 text-xs text-neutral-500">
-            {comment.source && `[${comment.source}] `}
-            {agentName}
-          </div>
+          {/* Show agent name below only if there's no header (since header already shows it on the right) */}
+          {!comment.header && (
+            <div className="mt-0.5 inline-block rounded py-0.5 text-xs text-neutral-500">
+              {comment.source && `[${comment.source}] `}
+              {agentName}
+            </div>
+          )}
 
           {/* Additional metadata when expanded */}
           {isHovered && comment.grade !== undefined && (
