@@ -251,11 +251,26 @@ export function PositionedComment({
           {isHovered && (
             <div className="mt-3 flex justify-end">
               <button
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation(); // Prevent triggering comment click
-                  navigator.clipboard.writeText(
-                    commentToYaml(comment, agentName)
-                  );
+                  try {
+                    await navigator.clipboard.writeText(
+                      commentToYaml(comment, agentName)
+                    );
+                  } catch (err) {
+                    // Fallback for non-secure contexts
+                    const text = commentToYaml(comment, agentName);
+                    const ta = document.createElement("textarea");
+                    ta.value = text;
+                    ta.setAttribute("readonly", "");
+                    ta.style.position = "absolute";
+                    ta.style.left = "-9999px";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                    console.warn("Clipboard API failed; used fallback.", err);
+                  }
                 }}
                 className="group flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
                 title="Copy comment as YAML"

@@ -15,8 +15,8 @@ vi.mock('../../../tools/extract-factual-claims', () => ({
           checkabilityScore: 90,
           truthProbability: 95,
           highlight: {
-            startOffset: 10, // This is relative to the chunk
-            endOffset: 36,
+            startOffset: 18, // position of "The" within chunk
+            endOffset: 43, // position after "." within chunk
             quotedText: 'The Earth orbits the Sun.',
             isValid: true,
           },
@@ -86,8 +86,8 @@ describe('FactCheckPlugin Location Tracking', () => {
     if (comment && comment.location) {
       // The fact "The Earth orbits the Sun." starts at position 30 in the document
       // (12 for chunk start + 18 for position within chunk)
-      const expectedStart = 12 + 10; // chunk start + relative offset
-      const expectedEnd = 12 + 36;   // chunk start + relative end offset
+      const expectedStart = 12 + 18; // chunk start + relative offset
+      const expectedEnd = 12 + 43;   // chunk start + relative end offset
       
       expect(comment.location.startOffset).toBe(expectedStart);
       expect(comment.location.endOffset).toBe(expectedEnd);
@@ -119,9 +119,10 @@ describe('FactCheckPlugin Location Tracking', () => {
     // Should still generate results but location will use fallback (0 offset)
     expect(result.comments).toBeDefined();
     if (result.comments.length > 0 && result.comments[0]?.location) {
-      // With no chunk position metadata, it should fall back to chunk start = 0
-      expect(result.comments[0].location.startOffset).toBe(10);
-      expect(result.comments[0].location.endOffset).toBe(36);
+      const { startOffset, endOffset, quotedText } = result.comments[0].location;
+      expect(startOffset).toBeGreaterThanOrEqual(0);
+      expect(endOffset).toBeGreaterThan(startOffset);
+      expect(documentText.substring(startOffset, endOffset)).toBe(quotedText);
     }
   });
 
