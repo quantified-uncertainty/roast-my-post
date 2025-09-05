@@ -308,6 +308,14 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       result: error as unknown as Record<string, unknown>,
     });
 
+    // Debug logging to check error type
+    logger.debug(`Creating comment for ${error.type} error: "${error.text}"`, {
+      errorType: error.type,
+      isGrammar: error.type === "grammar",
+      isSpelling: error.type === "spelling", 
+      level: error.type === "grammar" ? "warning" : "error"
+    });
+
     return CommentBuilder.build({
       plugin: "spelling",
       location,
@@ -315,10 +323,11 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       processingStartTime: this.processingStartTime,
       toolChain,
 
-      // Structured content - no redundant description needed
+      // Structured content
       header: error.conciseCorrection || `[[red]]${error.text}[[/red]] → ${error.correction || "[suggestion needed]"}`,
       level: error.type === "grammar" ? "warning" : "error",
-      description: error.description || undefined, // Only use the LLM's description if provided
+      // Minimal description - required by CommentBuilder but not shown when header exists
+      description: error.description || " ",
       significance:
         error.importance >= HIGH_IMPORTANCE_THRESHOLD
           ? "Affects readability and professionalism"
