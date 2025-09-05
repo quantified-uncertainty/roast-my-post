@@ -1,7 +1,7 @@
 import type { ExtractedForecast } from "../../../tools/extract-forecasting-claims";
 
 import type { ForecasterOutput } from "../../../tools/forecaster";
-import { CommentSeverity, SEVERITY_STYLES } from "../../utils/comment-styles";
+// Removed unused imports - no longer need CommentSeverity or SEVERITY_STYLES
 
 interface ForecastWithPrediction {
   forecast: ExtractedForecast;
@@ -14,68 +14,20 @@ export function generateForecastComment(data: ForecastWithPrediction): string {
 
   // If no prediction available, just note the forecast
   if (!prediction) {
-    const style = SEVERITY_STYLES[CommentSeverity.INFO];
-    const headerText = forecast.authorProbability ? `${forecast.authorProbability}%` : 'Prediction identified';
-    return `🔮 [Forecast] <span style="color: ${style.color}">${headerText}</span>`;
+    const headerText = forecast.authorProbability ? `${forecast.authorProbability}% prediction` : 'Prediction identified';
+    return `**Forecast:** ${forecast.rewrittenPredictionText || forecast.originalText}\n\n${headerText}`;
   }
 
   // Calculate confidence gap
   const hasAuthorProb = forecast.authorProbability !== undefined;
   const gap = hasAuthorProb ? Math.abs(forecast.authorProbability! - prediction.probability) : 0;
 
-  // Determine severity based on gap and robustness
-  let severity: CommentSeverity;
-  let emoji = '🎯';
-  
-  if (gap >= 40) {
-    severity = CommentSeverity.HIGH;
-    emoji = '⚠️';
-  } else if (gap >= 25) {
-    severity = CommentSeverity.MEDIUM;
-  } else if (forecast.robustnessScore < 40) {
-    severity = CommentSeverity.MEDIUM;
-    emoji = '💡';
-  } else {
-    severity = CommentSeverity.LOW;
-  }
-
-  // Build interpretation-only header (no numbers since they're in the title)
-  let headerContent = '';
-  
-  if (hasAuthorProb) {
-    // Show interpretation based on confidence gap
-    if (gap >= 40) {
-      headerContent = 'Extreme overconfidence';
-    } else if (gap >= 25) {
-      headerContent = 'Overconfident prediction';
-    } else if (gap >= 10) {
-      headerContent = 'Confidence gap detected';
-    } else {
-      headerContent = 'Well-calibrated prediction';
-    }
-    
-    // Add robustness warning if needed
-    if (forecast.robustnessScore < 40) {
-      headerContent += ' (weak empirical basis)';
-    }
-  } else {
-    // No author probability provided
-    if (forecast.robustnessScore < 40) {
-      headerContent = 'Weak empirical basis';
-    } else {
-      headerContent = 'Analysis provided';
-    }
-  }
-
-  const style = SEVERITY_STYLES[severity];
-  const styledHeader = `${emoji} [Forecast] <span style="color: ${style.color}">${headerContent}</span>`;
-  
-  // Build content sections
-  let content = styledHeader;
+  // Build content sections - start directly with the forecast question
+  let content = '';
   
   // Add the forecast question/claim if available
   if (forecast.rewrittenPredictionText) {
-    content += `\n\n**Forecast:** ${forecast.rewrittenPredictionText}`;
+    content = `**Forecast:** ${forecast.rewrittenPredictionText}`;
   }
   
   // Add explanation based on the type of issue
