@@ -1,15 +1,6 @@
 import type { SpellingGrammarError } from "./index";
 import { styleHeader, CommentSeverity, formatDiff, formatConciseCorrection, SEVERITY_STYLES, importanceToSeverity } from "./comment-styles";
-
-// Helper function to escape XML special characters
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
+import { escapeXml } from "../../shared/utils/xml";
 
 /**
  * Generate a comment for a single spelling/grammar error

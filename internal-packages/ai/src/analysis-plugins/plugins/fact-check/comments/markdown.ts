@@ -1,4 +1,5 @@
 import type { VerifiedFact } from '../VerifiedFact';
+import { escapeXml } from '../../../../shared/utils/xml';
 
 /**
  * Pure functions for generating markdown content for fact-check comments.
@@ -94,16 +95,20 @@ export function buildTitle(fact: VerifiedFact): string {
   let header = "";
   if (verdict === "false") {
     // For false verdicts, skip the "False:" prefix and just show the correction
-    if (fact.verification?.conciseCorrection) {
-      // Check if it's in the "X → Y" format
-      const correctionMatch = fact.verification.conciseCorrection.match(/^(.+?)\s*→\s*(.+)$/);
+    if (fact.verification?.displayCorrection) {
+      // Use displayCorrection directly if it's already in XML format
+      header = fact.verification.displayCorrection;
+    } else if ((fact.verification as any)?.conciseCorrection) {
+      // Backward compatibility: convert old format to XML
+      const conciseCorrection = (fact.verification as any).conciseCorrection;
+      const correctionMatch = conciseCorrection.match(/^(.+?)\s*→\s*(.+)$/);
       if (correctionMatch) {
         const [, wrongValue, correctValue] = correctionMatch;
-        // Use special markers that the frontend can parse for styling
-        header = `[[red]]${wrongValue}[[/red]] → [[green]]${correctValue}[[/green]]`;
+        // Generate XML format
+        header = `<r:replace from="${escapeXml(wrongValue.trim())}" to="${escapeXml(correctValue.trim())}"/>`;
       } else {
         // Fallback for non-arrow corrections
-        header = fact.verification.conciseCorrection;
+        header = conciseCorrection;
       }
     } else {
       // No correction available, just show "False"

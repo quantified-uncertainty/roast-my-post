@@ -357,7 +357,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         confidence: "low",
         explanation: `Verification failed: ${errorMessage}`,
         corrections: undefined,
-        conciseCorrection: undefined,
+        displayCorrection: undefined,
         sources: [],
       };
     }

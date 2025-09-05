@@ -4,6 +4,7 @@ import type {
   LanguageConventionOption,
   ToolChainResult,
 } from "../../../shared/types";
+import { escapeXml } from "../../../shared/utils/xml";
 import type {
   SpellingGrammarError,
 } from "../../../tools/check-spelling-grammar";
@@ -37,16 +38,6 @@ import {
   LOW_CONFIDENCE_THRESHOLD,
   LOW_CONSISTENCY_THRESHOLD
 } from "./constants";
-
-// Helper function to escape XML special characters
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;

@@ -33,7 +33,7 @@ const factCheckResultSchema = z.object({
   confidence: z.enum(["high", "medium", "low"]),
   explanation: z.string(),
   corrections: z.string().optional(),
-  conciseCorrection: z.string().optional(),
+  displayCorrection: z.string().optional(),
   criticalText: z.string().optional(),
   sources: z
     .array(
@@ -175,13 +175,13 @@ For each claim, you should:
 
 5. If false or partially true, also provide:
    - corrections: Full corrected statement
-   - conciseCorrection: Brief correction showing the key change. Choose the format that best captures the error:
+   - displayCorrection: Brief correction showing the key change in XML format. Choose the format that best captures the error:
      
-     SIMPLE REPLACEMENTS (use "X → Y" format):
-     * Numbers/dates: "2006 → 2009", "$2B → $2.2B", "90% → 9%"
-     * Names/places: "France → Germany", "Einstein → Newton"
-     * Status/order: "largest → 3rd largest", "first → second"
-     * Degree: "doubled → increased 30%", "all → most"
+     SIMPLE REPLACEMENTS (use XML format):
+     * Numbers/dates: "<r:replace from=\"2006\" to=\"2009\"/>", "<r:replace from=\"$2B\" to=\"$2.2B\"/>"
+     * Names/places: "<r:replace from=\"France\" to=\"Germany\"/>", "<r:replace from=\"Einstein\" to=\"Newton\"/>"
+     * Status/order: "<r:replace from=\"largest\" to=\"3rd largest\"/>"
+     * Degree: "<r:replace from=\"doubled\" to=\"increased 30%\"/>"
      
      COMPLEX ERRORS (use alternative formats):
      * Anachronisms: "Wrong era (1860s)", "Anachronism"
@@ -304,10 +304,10 @@ ${input.claim}
             description:
               "Full corrected version of the claim if false or partially true",
           },
-          conciseCorrection: {
+          displayCorrection: {
             type: "string",
             description:
-              "Brief correction showing key change (e.g., '2006 → 2009', '$2B → $2.2B')",
+              "Brief correction in XML format (e.g., '<r:replace from=\"2006\" to=\"2009\"/>')",
           },
           criticalText: {
             type: "string",

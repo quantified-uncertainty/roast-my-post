@@ -128,10 +128,10 @@ export class VerifiedFact {
    * Returns the location of just the incorrect part, not the full claim
    */
   private async findErrorSpan(documentText: string): Promise<DocumentLocation | null> {
-    // Only works if we have a concise correction in "X → Y" format
-    if (!this.verification?.conciseCorrection) return null;
-    
-    const correction = this.verification.conciseCorrection;
+    // Only works if we have a correction in "X → Y" format or XML format
+    // Support both old conciseCorrection and new displayCorrection
+    const correction = (this.verification as any)?.displayCorrection || (this.verification as any)?.conciseCorrection;
+    if (!correction) return null;
     const arrowMatch = correction.match(/^(.+?)\s*→\s*(.+)$/);
     if (!arrowMatch) return null;
     
@@ -246,7 +246,7 @@ export class VerifiedFact {
 
   public getCorrection(): string | undefined {
     return (
-      this.verification?.conciseCorrection || this.verification?.corrections
+      (this.verification as any)?.displayCorrection || (this.verification as any)?.conciseCorrection || this.verification?.corrections
     );
   }
 
