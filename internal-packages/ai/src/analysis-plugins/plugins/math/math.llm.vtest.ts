@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // Vitest integration test file
-import { MathAnalyzerJob } from './index';
+import { MathPlugin } from './index';
 import { TextChunk } from '../../TextChunk';
 // Test file uses real tool integration - no mocking needed for this import
 import { extractMathExpressionsTool } from '../../../tools/extract-math-expressions';
@@ -64,7 +64,7 @@ Let's check: 1.2M × 1.15 = 1.38M ✓
       ),
     ];
 
-    const analyzer = new MathAnalyzerJob();
+    const analyzer = new MathPlugin();
     const result = await analyzer.analyze(chunks, documentText);
 
     // Verify results structure
@@ -136,7 +136,7 @@ they would get: σ = √((9+1+1+9+25)/5) = √9 = 3, which is wrong.
       ),
     ];
 
-    const analyzer = new MathAnalyzerJob();
+    const analyzer = new MathPlugin();
     const result = await analyzer.analyze(chunks, documentText);
 
     // Should identify complex calculations

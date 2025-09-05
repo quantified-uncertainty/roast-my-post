@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // Vitest test file
-import { MathAnalyzerJob } from './index';
+import { MathPlugin } from './index';
 import { TextChunk } from '../../TextChunk';
 import { extractMathExpressionsTool } from '../../../tools/extract-math-expressions';
 import { checkMathHybridTool } from '../../../tools/check-math-hybrid';
@@ -26,21 +26,21 @@ vi.mock('../../../shared/logger', () => ({
   },
 }));
 
-describe('MathAnalyzerJob', () => {
+describe('MathPlugin', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('name', () => {
     it('should return correct display name', () => {
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       expect(analyzer.name()).toBe('MATH');
     });
   });
 
   describe('promptForWhenToUse', () => {
     it('should return appropriate prompt', () => {
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       const prompt = analyzer.promptForWhenToUse();
       expect(prompt).toContain('math of any kind');
       expect(prompt).toContain('Equations and formulas');
@@ -50,7 +50,7 @@ describe('MathAnalyzerJob', () => {
 
   describe('routingExamples', () => {
     it('should provide appropriate routing examples', () => {
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       const examples = analyzer.routingExamples();
       expect(examples).toHaveLength(3);
       
@@ -113,11 +113,11 @@ describe('MathAnalyzerJob', () => {
           explanation: '2 + 2 equals 4, not 5',
           verifiedBy: 'mathjs',
           toolsUsed: ['mathjs'],
-          conciseCorrection: '5 → 4',
+          displayCorrection: '<r:replace from="5" to="4" />',
           errorDetails: {
             errorType: 'calculation',
             severity: 'major',
-            conciseCorrection: '5 → 4'
+            displayCorrection: '<r:replace from="5" to="4" />'
           }
         }))
         .mockImplementationOnce(() => Promise.resolve({
@@ -149,7 +149,7 @@ describe('MathAnalyzerJob', () => {
         }),
       ];
 
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
 
       const result = await analyzer.analyze(chunks, 'Basic math: 2 + 2 = 5\nPhysics formula: E = mc²');
 
@@ -170,7 +170,7 @@ describe('MathAnalyzerJob', () => {
         expressions: []
       }));
 
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       const chunks = [new TextChunk('No math here, just text.', 'chunk1')];
 
       const result = await analyzer.analyze(chunks, 'No math here, just text.');
@@ -185,7 +185,7 @@ describe('MathAnalyzerJob', () => {
         expressions: []
       }));
 
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       const chunks = [new TextChunk('Test', 'chunk1')];
 
       const result1 = await analyzer.analyze(chunks, 'Test');
@@ -198,7 +198,7 @@ describe('MathAnalyzerJob', () => {
 
   describe('getResults', () => {
     it('should throw error if analysis not run', () => {
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       expect(() => analyzer.getResults()).toThrow('Analysis has not been run yet');
     });
 
@@ -207,7 +207,7 @@ describe('MathAnalyzerJob', () => {
         expressions: []
       }));
 
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       const chunks = [new TextChunk('Test', 'chunk1')];
 
       const analysisResult = await analyzer.analyze(chunks, 'Test');
@@ -241,7 +241,7 @@ describe('MathAnalyzerJob', () => {
         toolsUsed: ['mathjs']
       }));
 
-      const analyzer = new MathAnalyzerJob();
+      const analyzer = new MathPlugin();
       const chunks = [Object.assign(new TextChunk('Test: 1 + 1 = 2', 'chunk1'), {
         findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve({
           startOffset: 5,
