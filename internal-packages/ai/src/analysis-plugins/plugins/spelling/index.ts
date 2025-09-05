@@ -12,7 +12,6 @@ import {
 } from "../../../tools/check-spelling-grammar";
 import {
   generateDocumentSummary,
-  generateSpellingComment,
   type SpellingErrorWithLocation as ToolSpellingErrorWithLocation,
 } from "../../../tools/check-spelling-grammar/commentGeneration";
 import {
@@ -309,9 +308,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       result: error as unknown as Record<string, unknown>,
     });
 
-    // Keep formatted description for backwards compatibility
-    const formattedDescription = generateSpellingComment(error);
-
     return CommentBuilder.build({
       plugin: "spelling",
       location,
@@ -319,13 +315,10 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       processingStartTime: this.processingStartTime,
       toolChain,
 
-      // Custom description (keeps existing formatting)
-      description: formattedDescription,
-
-      // Structured content
-      header: error.conciseCorrection || `${error.text} → ${error.correction || "[suggestion needed]"}`,
-      level: error.type === "grammar" ? "warning" : "info",
-      observation: `${error.type === "spelling" ? "Misspelling" : "Grammar error"}: "${error.text}"`,
+      // Structured content - no redundant description needed
+      header: error.conciseCorrection || `[[red]]${error.text}[[/red]] → ${error.correction || "[suggestion needed]"}`,
+      level: error.type === "grammar" ? "warning" : "error",
+      description: error.description || undefined, // Only use the LLM's description if provided
       significance:
         error.importance >= HIGH_IMPORTANCE_THRESHOLD
           ? "Affects readability and professionalism"
