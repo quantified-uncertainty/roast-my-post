@@ -1,10 +1,91 @@
 import React from "react";
 
 /**
- * Parses text with color markers and returns React elements with appropriate styling
- * Supports [[red]]text[[/red]] and [[green]]text[[/green]] markers
+ * Unescape XML entities
+ */
+function unescapeXml(str: string): string {
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * Parse XML markup format like <r:replace from="x" to="y"/>
+ */
+function parseXmlMarkup(text: string): React.ReactNode {
+  // Match <r:replace from="..." to="..."/>
+  const replaceMatch = text.match(/<r:replace\s+from="([^"]*)"\s+to="([^"]*)"\s*\/>/);
+  if (replaceMatch) {
+    const [, from, to] = replaceMatch;
+    const fromText = unescapeXml(from);
+    const toText = unescapeXml(to);
+    
+    return (
+      <>
+        <span
+          className="text-gray-500"
+          style={{
+            textDecoration: "line-through",
+            textDecorationColor: "currentColor",
+            textDecorationThickness: "2px",
+          }}
+        >
+          {fromText}
+        </span>
+        <span className="text-gray-400"> → </span>
+        <span className="font-semibold text-gray-900">
+          {toText}
+        </span>
+      </>
+    );
+  }
+  
+  // Match <r:delete>...</r:delete>
+  const deleteMatch = text.match(/<r:delete>(.*?)<\/r:delete>/);
+  if (deleteMatch) {
+    const [, content] = deleteMatch;
+    return (
+      <span
+        className="text-gray-500"
+        style={{
+          textDecoration: "line-through",
+          textDecorationColor: "currentColor",
+          textDecorationThickness: "2px",
+        }}
+      >
+        {unescapeXml(content)}
+      </span>
+    );
+  }
+  
+  // Match <r:insert>...</r:insert>
+  const insertMatch = text.match(/<r:insert>(.*?)<\/r:insert>/);
+  if (insertMatch) {
+    const [, content] = insertMatch;
+    return (
+      <span className="font-semibold text-gray-900">
+        {unescapeXml(content)}
+      </span>
+    );
+  }
+  
+  // If no XML pattern matched, return as is
+  return text;
+}
+
+/**
+ * Parses text with color markers and XML markup, returns React elements with appropriate styling
+ * Supports both legacy [[red]]text[[/red]] format and new <r:replace from="x" to="y"/> format
  */
 export function parseColoredText(text: string): React.ReactNode {
+  // Check if this is XML format
+  if (text.startsWith("<r:")) {
+    return parseXmlMarkup(text);
+  }
+  
   // If no color markers or arrows, return plain text
   if (!text.includes("[[") && !text.includes("→")) {
     return text;
@@ -38,27 +119,28 @@ export function parseColoredText(text: string): React.ReactNode {
       const color = match[1];
       const content = match[2];
 
-      // Add colored text with GitHub-style diff backgrounds
+      // Add styled text - strikethrough for incorrect, bold for correct
       if (color === "red") {
-        // Red background like GitHub diff removal - with strikethrough
+        // Strikethrough for incorrect/old text
         parts.push(
           <span
             key={`colored-${key++}`}
-            className="inline-block px-1 font-semibold text-gray-500"
+            className="text-gray-500"
             style={{
               textDecoration: "line-through",
-              textDecorationColor: "#666", // darker gray for the line
+              textDecorationColor: "currentColor",
+              textDecorationThickness: "2px",
             }}
           >
             {content}
           </span>
         );
       } else {
-        // Green background like GitHub diff addition
+        // Bold/emphasized for correct/new text
         parts.push(
           <span
             key={`colored-${key++}`}
-            className="inline-block rounded px-1 font-semibold text-gray-800"
+            className="font-semibold text-gray-900"
           >
             {content}
           </span>

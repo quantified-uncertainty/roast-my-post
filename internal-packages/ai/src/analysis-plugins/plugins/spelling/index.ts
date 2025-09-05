@@ -38,6 +38,16 @@ import {
   LOW_CONSISTENCY_THRESHOLD
 } from "./constants";
 
+// Helper function to escape XML special characters
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;
   chunk: TextChunk;
@@ -323,8 +333,15 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       processingStartTime: this.processingStartTime,
       toolChain,
 
-      // Structured content
-      header: error.conciseCorrection || `[[red]]${error.text}[[/red]] → ${error.correction || "[suggestion needed]"}`,
+      // Use displayCorrection directly if available, otherwise generate XML format
+      header: (() => {
+        // Use displayCorrection directly if available
+        if (error.displayCorrection) {
+          return error.displayCorrection;
+        }
+        // Fallback to generating from text/correction
+        return `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction || '[suggestion needed]')}"/>`;
+      })(),
       level: error.type === "grammar" ? "warning" : "error",
       // Minimal description - required by CommentBuilder but not shown when header exists
       description: error.description || " ",
