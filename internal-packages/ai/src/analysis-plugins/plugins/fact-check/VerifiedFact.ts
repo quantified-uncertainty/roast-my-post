@@ -129,8 +129,7 @@ export class VerifiedFact {
    */
   private async findErrorSpan(documentText: string): Promise<DocumentLocation | null> {
     // Only works if we have a correction in "X → Y" format or XML format
-    // Support both old conciseCorrection and new displayCorrection
-    const correction = (this.verification as any)?.displayCorrection || (this.verification as any)?.conciseCorrection;
+    const correction = this.verification?.displayCorrection;
     if (!correction) return null;
     const arrowMatch = correction.match(/^(.+?)\s*→\s*(.+)$/);
     if (!arrowMatch) return null;
@@ -246,7 +245,7 @@ export class VerifiedFact {
 
   public getCorrection(): string | undefined {
     return (
-      (this.verification as any)?.displayCorrection || (this.verification as any)?.conciseCorrection || this.verification?.corrections
+      this.verification?.displayCorrection || this.verification?.corrections
     );
   }
 

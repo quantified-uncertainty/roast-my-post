@@ -95,6 +95,7 @@ describe('SpellingAnalyzerJob', () => {
           type: 'spelling' as const,
           context: "This is thier house",
           importance: 30,
+          description: "Spelling error: 'thier' should be 'their'",
         },
         {
           text: "dont",
@@ -103,6 +104,7 @@ describe('SpellingAnalyzerJob', () => {
           type: 'grammar' as const,
           context: "They dont know",
           importance: 40,
+          description: "Grammar error: 'dont' should be 'don't'",
         },
       ];
 
