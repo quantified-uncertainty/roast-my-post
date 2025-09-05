@@ -18,6 +18,23 @@ import { CommentsColumn } from "./CommentsColumn";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { LAYOUT, TIMING } from "../constants";
 
+/**
+ * Maps comment levels to appropriate highlight colors
+ */
+function getLevelHighlightColor(level?: string | null): string {
+  switch (level) {
+    case 'error':
+      return '#ef4444'; // Red - for false claims
+    case 'warning': 
+      return '#f59e0b'; // Amber - for partially-true claims
+    case 'success':
+      return '#10b981'; // Green - for verified true claims
+    case 'info':
+    default:
+      return '#3b82f6'; // Blue - for info/unverified claims and default
+  }
+}
+
 export function EvaluationView({
   evaluationState,
   onEvaluationStateChange,
@@ -99,7 +116,7 @@ export function EvaluationView({
           endOffset: comment.highlight.endOffset!,
           quotedText: comment.highlight.quotedText || "",
           tag: index.toString(),
-          color: "#3b82f6",
+          color: getLevelHighlightColor(comment.level),
         })),
     [displayComments]
   );

@@ -93,7 +93,22 @@ export function buildTitle(fact: VerifiedFact): string {
   // Use concise verdict with emoji
   let header = "";
   if (verdict === "false") {
-    header = "False";
+    // For false verdicts, skip the "False:" prefix and just show the correction
+    if (fact.verification?.conciseCorrection) {
+      // Check if it's in the "X → Y" format
+      const correctionMatch = fact.verification.conciseCorrection.match(/^(.+?)\s*→\s*(.+)$/);
+      if (correctionMatch) {
+        const [, wrongValue, correctValue] = correctionMatch;
+        // Use special markers that the frontend can parse for styling
+        header = `[[red]]${wrongValue}[[/red]] → [[green]]${correctValue}[[/green]]`;
+      } else {
+        // Fallback for non-arrow corrections
+        header = fact.verification.conciseCorrection;
+      }
+    } else {
+      // No correction available, just show "False"
+      header = "False";
+    }
   } else if (verdict === "partially-true") {
     header = "Partially true";
   } else if (verdict === "true") {
@@ -102,16 +117,6 @@ export function buildTitle(fact: VerifiedFact): string {
     header = "Unverifiable";
   } else {
     header = "Claim Detected, Skipped";
-  }
-
-  // Add confidence if available
-  if (confidence && verdict !== "unverifiable") {
-    header += ` (${confidence} confidence)`;
-  }
-
-  // Add concise correction if false
-  if (verdict === "false" && fact.verification?.conciseCorrection) {
-    header += `: ${fact.verification.conciseCorrection}`;
   }
 
   return header;

@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
+
 import ReactMarkdown from "react-markdown";
-import { 
-  DocumentDuplicateIcon,
+
+import { commentToYaml } from "@/shared/utils/commentToYaml";
+import { parseColoredText } from "@/shared/utils/ui/coloredText";
+import {
+  CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  DocumentDuplicateIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   XCircleIcon,
-  CheckCircleIcon
 } from "@heroicons/react/24/outline";
-
 import type { Comment } from "@roast/ai";
-import { commentToYaml } from "@/shared/utils/commentToYaml";
 
-import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
+import {
+  MARKDOWN_COMPONENTS,
+  MARKDOWN_PLUGINS,
+} from "../config/markdown";
 import {
   COMMENT_BG_DEFAULT,
   COMMENT_MARGIN_LEFT,
@@ -70,15 +75,19 @@ export function PositionedComment({
   const getLevelIcon = (level: string) => {
     const iconClass = "h-4 w-4 flex-shrink-0";
     switch (level) {
-      case 'error':
+      case "error":
         return <XCircleIcon className={`${iconClass} text-red-500`} />;
-      case 'warning':
-        return <ExclamationTriangleIcon className={`${iconClass} text-amber-500`} />;
-      case 'success':
+      case "warning":
+        return (
+          <ExclamationTriangleIcon className={`${iconClass} text-amber-500`} />
+        );
+      case "success":
         return <CheckCircleIcon className={`${iconClass} text-green-500`} />;
-      case 'info':
+      case "info":
       default:
-        return <InformationCircleIcon className={`${iconClass} text-blue-500`} />;
+        return (
+          <InformationCircleIcon className={`${iconClass} text-blue-500`} />
+        );
     }
   };
 
@@ -89,7 +98,7 @@ export function PositionedComment({
         top: `${position}px`,
         left: `${COMMENT_MARGIN_LEFT}px`,
         right: `${COMMENT_MARGIN_RIGHT}px`,
-        padding: `2px 8px`,
+        padding: `6px 12px`,
         transition: skipAnimation
           ? "none"
           : "opacity 0.2s ease-out, background-color 0.2s ease-out, top 0.3s ease-out",
@@ -110,9 +119,9 @@ export function PositionedComment({
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
           {/* Show header if available */}
           {comment.header && (
-            <div className="mb-1 flex items-center gap-2 font-medium text-gray-900">
+            <div className="mb-0.5 flex items-center gap-2 font-medium text-gray-900">
               {getLevelIcon(level)}
-              {comment.header}
+              {parseColoredText(comment.header)}
             </div>
           )}
 
@@ -131,7 +140,7 @@ export function PositionedComment({
           )}
 
           {/* Source and Agent name */}
-          <div className="mt-1 text-xs text-gray-400">
+          <div className="mt-0.5 inline-block rounded py-0.5 text-xs text-neutral-500">
             {comment.source && `[${comment.source}] `}
             {agentName}
           </div>
@@ -175,7 +184,7 @@ export function PositionedComment({
                 )}
                 <span>Metadata</span>
               </button>
-              
+
               {isMetadataExpanded && (
                 <div className="mt-2 rounded border bg-gray-50 p-3">
                   <pre className="overflow-x-auto text-xs text-gray-600">
@@ -192,7 +201,9 @@ export function PositionedComment({
               <button
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent triggering comment click
-                  navigator.clipboard.writeText(commentToYaml(comment, agentName));
+                  navigator.clipboard.writeText(
+                    commentToYaml(comment, agentName)
+                  );
                 }}
                 className="group flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
                 title="Copy comment as YAML"
