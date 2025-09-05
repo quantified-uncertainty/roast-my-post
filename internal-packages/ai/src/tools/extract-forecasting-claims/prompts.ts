@@ -552,6 +552,19 @@ INCLUDE: Forecasts with "will/should/might/could", probability statements, trend
 EXCLUDE: Normative "should" statements, hypotheticals without commitment, past events, current state descriptions, vague buzzwords (transform/revolutionize/democratize), subjective experiences, private information dependencies.
 </what_to_extract>
 
+<minimal_probability_span>
+IMPORTANT: For minimalProbabilitySpan, extract ONLY the smallest text fragment containing the probability expression:
+- For explicit percentages: just "99.9%", "95%", "85%", "90%" 
+- For probability words: just "certain", "likely", "probable"
+- DO NOT include surrounding words like "I am", "There is a", "with", "probability"
+- Examples:
+  * "I am 99.9% certain that" → minimalProbabilitySpan: "99.9%"
+  * "There is a 95% probability that" → minimalProbabilitySpan: "95%"
+  * "with 98% confidence" → minimalProbabilitySpan: "98%"
+  * "highly likely" → minimalProbabilitySpan: "highly likely"
+  * "almost certain" → minimalProbabilitySpan: "almost certain"
+</minimal_probability_span>
+
 <scoring>
 PRECISION (How binary/specific?)
 90-100: Exact threshold + specific date + single outcome + clear measurement
