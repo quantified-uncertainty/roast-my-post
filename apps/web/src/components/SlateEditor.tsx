@@ -7,8 +7,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Image from 'next/image';
 
+import Image from "next/image";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { remarkToSlate } from "remark-slate-transformer";
@@ -27,20 +27,35 @@ import {
 } from "slate-react";
 import { unified } from "unified";
 
+import {
+  LAYOUT,
+  TEXT_PROCESSING,
+} from "@/components/DocumentWithEvaluations/constants";
 // Import our improved hooks for Phase 2
 import { useHighlightMapper } from "@/hooks/useHighlightMapper";
 import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
 import { readerFontFamily } from "@/shared/constants/fonts";
+
 import CodeBlock from "./CodeBlock";
 import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
-import { LAYOUT, TEXT_PROCESSING, TIMING } from "@/components/DocumentWithEvaluations/constants";
 
 // Define custom element types for Slate
 type CustomText = { text: string };
 type CustomElement = {
-  type: 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 
-        'heading-four' | 'heading-five' | 'heading-six' | 'block-quote' | 
-        'list-item' | 'link' | 'code' | 'image' | 'list';
+  type:
+    | "paragraph"
+    | "heading-one"
+    | "heading-two"
+    | "heading-three"
+    | "heading-four"
+    | "heading-five"
+    | "heading-six"
+    | "block-quote"
+    | "list-item"
+    | "link"
+    | "code"
+    | "image"
+    | "list";
   children?: (CustomElement | CustomText)[];
   url?: string;
   value?: string;
@@ -85,7 +100,12 @@ interface RenderElementProps {
   highlights?: Highlight[];
 }
 
-const renderElement = ({ attributes, children, element, highlights }: RenderElementProps) => {
+const renderElement = ({
+  attributes,
+  children,
+  element,
+  highlights,
+}: RenderElementProps) => {
   switch (element.type) {
     case "heading-one":
       return (
@@ -169,58 +189,68 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
     case "code":
       // Find which lines to highlight based on comment highlights
       const codeContent = element.value || "";
-      const codeLines = codeContent.split('\n');
+      const codeLines = codeContent.split("\n");
       const linesToHighlight: number[] = [];
-      
+
       // Track which highlights match this code block and their line positions
       const highlightPositions: Array<{ tag: string; lineNumber: number }> = [];
-      
+
       // Check each highlight to see if its quoted text appears in this code block
       if (highlights && Array.isArray(highlights)) {
         highlights.forEach((highlight: Highlight) => {
           if (highlight.quotedText) {
             // Search for the quoted text in the code block
             const quotedText = highlight.quotedText.trim();
-            
+
             // Skip if quoted text is too short or just punctuation
             if (quotedText.length < TEXT_PROCESSING.MIN_HIGHLIGHT_LENGTH) {
               return;
             }
-            
+
             // Check if the entire quoted text appears in the code block
             if (codeContent.includes(quotedText)) {
               // Find the first line that contains this quoted text
               const quotedStart = codeContent.indexOf(quotedText);
               let currentPos = 0;
               let firstMatchingLine = -1;
-              
+
               codeLines.forEach((line: string, index: number) => {
                 const lineStart = currentPos;
                 const lineEnd = currentPos + line.length;
-                
+
                 // Check if the quoted text starts in this line
-                if (quotedStart >= lineStart && quotedStart < lineEnd && firstMatchingLine === -1) {
+                if (
+                  quotedStart >= lineStart &&
+                  quotedStart < lineEnd &&
+                  firstMatchingLine === -1
+                ) {
                   firstMatchingLine = index + 1; // 1-indexed
                 }
-                
+
                 // Track all lines that contain part of this quoted text
-                if (quotedStart <= lineEnd && (quotedStart + quotedText.length) >= lineStart) {
+                if (
+                  quotedStart <= lineEnd &&
+                  quotedStart + quotedText.length >= lineStart
+                ) {
                   if (!linesToHighlight.includes(index + 1)) {
                     linesToHighlight.push(index + 1);
                   }
                 }
-                
+
                 currentPos = lineEnd + 1; // +1 for newline
               });
-              
+
               if (firstMatchingLine > 0) {
-                highlightPositions.push({ tag: highlight.tag, lineNumber: firstMatchingLine });
+                highlightPositions.push({
+                  tag: highlight.tag,
+                  lineNumber: firstMatchingLine,
+                });
               }
             }
           }
         });
       }
-      
+
       return (
         <CodeBlockErrorBoundary>
           <CodeBlock
@@ -234,10 +264,14 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
       );
     case "image":
       // Validate image URL before rendering
-      if (!element.url || typeof element.url !== 'string' || element.url.trim() === '') {
+      if (
+        !element.url ||
+        typeof element.url !== "string" ||
+        element.url.trim() === ""
+      ) {
         return (
           <div {...attributes} contentEditable={false} className="relative">
-            <div className="bg-gray-200 rounded p-4 text-gray-600">
+            <div className="rounded bg-gray-200 p-4 text-gray-600">
               [Invalid image URL]
             </div>
             {children}
@@ -300,32 +334,18 @@ const renderLeaf = ({
     // Use leaf.isActive if available, otherwise fall back to tag comparison
     const isActive = leaf.isActive || leaf.tag === activeTag;
     const isHovered = leaf.tag === hoveredTag;
-    
+
     el = (
       <span
         {...leafAttributes}
         data-tag={leaf.tag}
         id={`highlight-${leaf.tag}`}
         style={{
-          backgroundColor: (() => {
-            // Handle color format - remove # if present
-            const color = leaf.color.startsWith('#') ? leaf.color.slice(1) : leaf.color;
-            const r = parseInt(color.slice(0, 2), 16) || 59;
-            const g = parseInt(color.slice(2, 4), 16) || 130;
-            const b = parseInt(color.slice(4, 6), 16) || 246;
-            return `rgba(${r}, ${g}, ${b}, ${isActive ? 0.8 : 0.3})`;
-          })(),
-          borderRadius: "2px",
-          boxShadow:
-            isActive
-              ? "0 0 0 2px rgba(59, 130, 246, 0.5)"
-              : isHovered
-              ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
-              : "none",
-          transform: isActive ? "scale(1.01)" : "scale(1)",
-          transformOrigin: "center",
-          padding: "0 1px",
-          margin: "0 -1px",
+          textDecoration: "underline",
+          textDecorationColor: leaf.color,
+          textDecorationThickness: isActive ? "4px" : "2px",
+          textDecorationStyle: "solid",
+          textUnderlineOffset: "3px",
           scrollMarginTop: `${LAYOUT.SCROLL_MARGIN_TOP}px`, // Add scroll margin to prevent the highlight from being hidden under the header
         }}
         className={`group cursor-pointer transition-all duration-150 ease-out hover:bg-opacity-60 ${
@@ -336,7 +356,7 @@ const renderLeaf = ({
           onHighlightClick?.(leaf.tag);
         }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             onHighlightClick?.(leaf.tag);
           }
@@ -410,7 +430,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const result = processor.processSync(content);
       let nodes = result.result as Descendant[];
 
-
       // Apply a custom processor for handling markdown formatting
       const processNode = (node: any): any => {
         // Handle leaf text nodes
@@ -461,11 +480,11 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             let codeValue = node.value || "";
             if (!codeValue && node.children && node.children.length > 0) {
               // Sometimes the code is in the children as text nodes
-              codeValue = node.children.map((child: any) => 
-                child.text || child.value || ""
-              ).join("");
+              codeValue = node.children
+                .map((child: any) => child.text || child.value || "")
+                .join("");
             }
-            
+
             return {
               ...node,
               type: "code",
@@ -473,7 +492,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               lang: node.lang || node.language || node.meta || "plain",
               children: [{ text: "" }], // Code blocks need at least one child
             };
-
 
           default:
             // Process any children of other node types
@@ -488,49 +506,49 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       };
 
       // Process all nodes in the tree and filter out nulls
-      nodes = nodes.map(processNode).filter(node => node !== null);
-      
+      nodes = nodes.map(processNode).filter((node) => node !== null);
+
       // Validate and fix nodes to ensure they have proper text content
       const validateNode = (node: any): any => {
         // If it's a text node, ensure it has the correct structure
-        if (typeof node === 'string') {
+        if (typeof node === "string") {
           return { text: node };
         }
-        
-        if (node && typeof node.text === 'string') {
+
+        if (node && typeof node.text === "string") {
           return node;
         }
-        
+
         // If it's an element, ensure it has children
-        if (node && typeof node === 'object') {
+        if (node && typeof node === "object") {
           if (!node.children || !Array.isArray(node.children)) {
             // If no children, create a text node
             return {
               ...node,
-              children: [{ text: '' }]
+              children: [{ text: "" }],
             };
           }
-          
+
           // Recursively validate children, ensuring they're not empty
           const validatedChildren = node.children
             .map(validateNode)
             .filter((child: any) => child !== null && child !== undefined);
-          
+
           // If no valid children remain, add an empty text node
           if (validatedChildren.length === 0) {
-            validatedChildren.push({ text: '' });
+            validatedChildren.push({ text: "" });
           }
-          
+
           return {
             ...node,
-            children: validatedChildren
+            children: validatedChildren,
           };
         }
-        
+
         // Fallback for invalid nodes
-        return { text: '' };
+        return { text: "" };
       };
-      
+
       nodes = nodes.map(validateNode);
       return nodes as Descendant[];
     } catch (_error) {
@@ -617,7 +635,10 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       // Check if this text node is within a code block
       const ancestors = Node.ancestors(editor, path);
       for (const [ancestor] of ancestors) {
-        if (Element.isElement(ancestor) && (ancestor as CustomElement).type === 'code') {
+        if (
+          Element.isElement(ancestor) &&
+          (ancestor as CustomElement).type === "code"
+        ) {
           // Skip highlighting within code blocks
           return [];
         }
@@ -639,7 +660,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           console.warn(`Skipping invalid highlight ${highlight.tag}:`, {
             startOffset: highlight?.startOffset,
             endOffset: highlight?.endOffset,
-            tag: highlight?.tag
+            tag: highlight?.tag,
           });
           continue; // Skip invalid highlights
         }
@@ -683,20 +704,38 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           // Fall back approach - but ONLY highlight if the node contains the expected offset range
           const nodeText = node.text;
           let highlightText = highlight.quotedText || "";
-          
+
           // Calculate the node's position in the overall document
           const nodeStartInDoc = nodeInfo.start;
           const nodeEndInDoc = nodeInfo.end;
-          
+
           // Check if this highlight's offsets fall within this node
-          if (highlight.startOffset >= nodeStartInDoc && highlight.startOffset < nodeEndInDoc) {
+          if (
+            highlight.startOffset >= nodeStartInDoc &&
+            highlight.startOffset < nodeEndInDoc
+          ) {
             // Calculate relative position within this node
             const relativeStart = highlight.startOffset - nodeStartInDoc;
-            const relativeEnd = Math.min(highlight.endOffset - nodeStartInDoc, nodeText.length);
-            
+            const relativeEnd = Math.min(
+              highlight.endOffset - nodeStartInDoc,
+              nodeText.length
+            );
+
             // Verify the text matches at this specific location
-            const textAtLocation = nodeText.substring(relativeStart, relativeEnd);
-            if (textAtLocation && highlightText && textAtLocation.includes(highlightText.substring(0, Math.min(highlightText.length, textAtLocation.length)))) {
+            const textAtLocation = nodeText.substring(
+              relativeStart,
+              relativeEnd
+            );
+            if (
+              textAtLocation &&
+              highlightText &&
+              textAtLocation.includes(
+                highlightText.substring(
+                  0,
+                  Math.min(highlightText.length, textAtLocation.length)
+                )
+              )
+            ) {
               ranges.push({
                 anchor: { path, offset: relativeStart },
                 focus: { path, offset: relativeEnd },
@@ -710,14 +749,17 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           }
 
           // If we can't find it at the expected location, skip this highlight
-          console.warn(`Failed to render highlight ${highlight.tag} at expected location:`, {
-            startOffset: highlight.startOffset,
-            endOffset: highlight.endOffset,
-            quotedText: highlight.quotedText?.substring(0, 50) + '...',
-            reason: 'Text not found at expected offset',
-            nodeTextPreview: node.text.substring(0, 100) + '...',
-            nodeInfo: nodeInfo
-          });
+          console.warn(
+            `Failed to render highlight ${highlight.tag} at expected location:`,
+            {
+              startOffset: highlight.startOffset,
+              endOffset: highlight.endOffset,
+              quotedText: highlight.quotedText?.substring(0, 50) + "...",
+              reason: "Text not found at expected offset",
+              nodeTextPreview: node.text.substring(0, 100) + "...",
+              nodeInfo: nodeInfo,
+            }
+          );
           continue;
         }
 
@@ -756,7 +798,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     },
     [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets]
   );
-
 
   if (!initialized) {
     return <div>Loading...</div>;

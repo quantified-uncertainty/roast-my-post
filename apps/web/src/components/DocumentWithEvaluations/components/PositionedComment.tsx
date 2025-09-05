@@ -38,6 +38,39 @@ interface PositionedCommentProps {
   skipAnimation?: boolean;
 }
 
+// Helper function to display agent name with truncation
+function getDisplayAgentName(agentName: string, isHovered: boolean): string {
+  return isHovered ? agentName : agentName.slice(0, 5);
+}
+
+// Component for displaying agent name and source
+function AgentInfo({
+  agentName,
+  source,
+  isHovered,
+}: {
+  agentName: string;
+  source?: string;
+  isHovered: boolean;
+}) {
+  const textColor = isHovered ? "text-neutral-600" : "text-neutral-400";
+  const separatorColor = isHovered ? "text-neutral-400" : "text-neutral-200";
+
+  return (
+    <div className="flex-shrink-0 text-xs">
+      <span className={textColor}>
+        {getDisplayAgentName(agentName, isHovered)}
+      </span>
+      {source && (
+        <>
+          <span className={separatorColor}> / </span>
+          <span className={textColor}>{source}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function PositionedComment({
   comment,
   index,
@@ -55,36 +88,23 @@ export function PositionedComment({
 
   // Note: We show header if available, otherwise description is shown inline
 
-  // Get level styling
-  const levelStyles = {
-    error: { bgColor: "#fef2f2" },
-    warning: { bgColor: "#fffbeb" },
-    info: { bgColor: "#eff6ff" },
-    success: { bgColor: "#f0fdf4" },
-  };
-
   const level = comment.level || "info"; // Default to info if not set
-  const styles =
-    levelStyles[level as keyof typeof levelStyles] || levelStyles.info;
-
   // Get level indicator (colored circle)
   const getLevelIndicator = (level: string, isHovered: boolean) => {
-    let bgColor = isHovered ? "bg-blue-500" : "bg-blue-100"; // default info color
+    let bgColor = isHovered ? "bg-blue-500" : "bg-blue-200"; // default info color
     switch (level) {
       case "error":
-        bgColor = isHovered ? "bg-red-500" : "bg-red-100";
+        bgColor = isHovered ? "bg-red-500" : "bg-red-300";
         break;
       case "warning":
-        bgColor = isHovered ? "bg-amber-500" : "bg-amber-100";
+        bgColor = isHovered ? "bg-amber-500" : "bg-amber-200";
         break;
       case "success":
-        bgColor = isHovered ? "bg-green-500" : "bg-green-100";
+        bgColor = isHovered ? "bg-green-500" : "bg-green-200";
         break;
     }
     return (
-      <div
-        className={`h-1.5 w-1.5 rounded-full ${bgColor} mr-2 flex-shrink-0`}
-      />
+      <div className={`h-2 w-2 rounded-full ${bgColor} mr-2 flex-shrink-0`} />
     );
   };
 
@@ -105,8 +125,8 @@ export function PositionedComment({
         visibility: isVisible ? "visible" : "hidden",
         backgroundColor: isHovered ? "white" : COMMENT_BG_DEFAULT,
         borderRadius: "4px",
-        border: isHovered ? "1px solid #e5e7eb" : "1px solid transparent",
-        // boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+        boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+        border: isHovered ? "1px solid #e5e7eb" : "1px solid #f0f0f0",
       }}
       onClick={() => onClick(tag)}
       onMouseEnter={() => onHover(tag)}
@@ -123,17 +143,18 @@ export function PositionedComment({
                 {parseColoredText(comment.header)}
               </div>
               {/* Agent name on the right */}
-              <div className="flex-shrink-0 text-xs text-neutral-400">
-                {comment.source && `[${comment.source}] `}
-                {agentName}
-              </div>
+              <AgentInfo
+                agentName={agentName}
+                source={comment.source}
+                isHovered={isHovered}
+              />
             </div>
           )}
 
           {/* Show full description when expanded or if no header */}
           {(isHovered || !comment.header) && comment.description && (
             <div
-              className={`prose prose-sm max-w-none break-words ${!isHovered && !comment.header ? "line-clamp-2" : ""}`}
+              className={`prose prose-md max-w-none break-words ${!isHovered && !comment.header ? "line-clamp-2" : ""}`}
             >
               <ReactMarkdown
                 {...MARKDOWN_PLUGINS}
@@ -146,9 +167,12 @@ export function PositionedComment({
 
           {/* Show agent name below only if there's no header (since header already shows it on the right) */}
           {!comment.header && (
-            <div className="mt-0.5 inline-block rounded py-0.5 text-xs text-neutral-500">
-              {comment.source && `[${comment.source}] `}
-              {agentName}
+            <div className="mt-0.5 inline-block py-0.5">
+              <AgentInfo
+                agentName={agentName}
+                source={comment.source}
+                isHovered={isHovered}
+              />
             </div>
           )}
 
