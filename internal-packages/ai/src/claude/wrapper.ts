@@ -174,6 +174,17 @@ export async function callClaude(
       }
       
       response = result;
+      
+      // Check for max_tokens issue
+      if (response.stop_reason === 'max_tokens') {
+        throw new Error(
+          `⚠️ CRITICAL: Claude hit max_tokens limit (${options.max_tokens || 4000} tokens) and response may be incomplete!\n` +
+          `This often means the response was truncated and tool calls may have failed.\n` +
+          `Consider increasing max_tokens for this operation.\n` +
+          `Model: ${model}`
+        );
+      }
+      
       break; // Success, exit retry loop
       
     } catch (error) {
@@ -243,15 +254,47 @@ export async function callClaudeWithTool<T>(
 
   const result = await callClaude(toolOptions, previousInteractions);
   
+  // Check for max_tokens issue in tool calls specifically
+  if (result.response.stop_reason === 'max_tokens') {
+    throw new Error(
+      `⚠️ CRITICAL: Tool call "${options.toolName}" hit max_tokens limit!\n` +
+      `The tool response was truncated and is likely invalid or empty.\n` +
+      `Current max_tokens: ${options.max_tokens || 4000}\n` +
+      `Consider increasing max_tokens for this tool.\n` +
+      `This is a common cause of mysterious failures where tools return empty results.`
+    );
+  }
+  
   // Extract tool result
   const toolUse = result.response.content.find((c): c is Anthropic.Messages.ToolUseBlock => 
     c.type === "tool_use"
   );
   if (!toolUse) {
+    // Enhanced error message to check for max_tokens issue
+    const stopReason = result.response.stop_reason as string;
+    if (stopReason === 'max_tokens') {
+      throw new Error(
+        `No tool use found - response was truncated due to max_tokens limit (${options.max_tokens || 4000} tokens)`
+      );
+    }
     throw new Error('No tool use found in response');
   }
   if (toolUse.name !== options.toolName) {
     throw new Error(`Expected tool use for ${options.toolName}, got ${toolUse.name}`);
+  }
+
+  // Check if tool input is empty or malformed (often happens with max_tokens)
+  if (!toolUse.input || Object.keys(toolUse.input).length === 0) {
+    const stopReason = result.response.stop_reason as string;
+    if (stopReason === 'max_tokens') {
+      throw new Error(
+        `⚠️ CRITICAL: Tool "${options.toolName}" returned empty input due to max_tokens limit!\n` +
+        `The response was truncated at ${options.max_tokens || 4000} tokens.\n` +
+        `This is why the tool appears to return nothing.\n` +
+        `SOLUTION: Increase max_tokens in the tool implementation.`
+      );
+    }
+    throw new Error(`Tool "${options.toolName}" returned empty or invalid input`);
   }
 
   return {
