@@ -19,12 +19,11 @@ type DatabaseComment = {
   importance: number | null;
   grade: number | null;
   evaluationVersionId: string;
-  highlightId: string;
   header?: string | null;
   level?: string | null;
   source?: string | null;
   metadata?: Record<string, any> | null;
-  highlight: {
+  highlight?: {
     id: string;
     startOffset: number;
     endOffset: number;
@@ -32,7 +31,7 @@ type DatabaseComment = {
     isValid: boolean;
     prefix: string | null;
     error: string | null;
-  };
+  } | null;
 };
 
 interface EvaluationCommentsProps {

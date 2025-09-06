@@ -253,7 +253,6 @@ export function EvaluationsTab({
                     importance: comment.importance ?? null,
                     grade: comment.grade ?? null,
                     evaluationVersionId: selectedEvaluation.evaluationId,
-                    highlightId: comment.id,
                     header: comment.header ?? null,
                     level: comment.level ?? null,
                     source: comment.source ?? null,
