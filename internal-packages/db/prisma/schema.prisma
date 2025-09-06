@@ -153,13 +153,12 @@ model EvaluationComment {
   importance          Int?
   grade               Int?
   evaluationVersionId String
-  highlightId         String              @unique
   header              String?
   level               String?
   metadata            Json?
   source              String?
   evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
-  highlight           EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+  highlight           EvaluationHighlight?
 
   @@index([evaluationVersionId])
 }
@@ -172,7 +171,10 @@ model EvaluationHighlight {
   quotedText  String
   isValid     Boolean            @default(true)
   error       String?
-  comment     EvaluationComment?
+  commentId   String             @unique
+  comment     EvaluationComment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([commentId])
 }
 
 model Agent {

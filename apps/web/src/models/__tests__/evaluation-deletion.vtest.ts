@@ -153,25 +153,25 @@ describeIfDb("Evaluation Model - Cascade Deletion", () => {
       },
     });
 
-    // Create highlight first
+    // Create comment first
+    const comment = await prisma.evaluationComment.create({
+      data: {
+        evaluationVersionId: evalVersion.id,
+        description: "Test comment",
+        importance: 3,
+        grade: 80,
+        header: "Test Header",
+      },
+    });
+
+    // Then create highlight that references the comment
     const highlight = await prisma.evaluationHighlight.create({
       data: {
         startOffset: 0,
         endOffset: 10,
         quotedText: "This is te",
         prefix: "",
-      },
-    });
-
-    // Then create comment that references the highlight
-    const comment = await prisma.evaluationComment.create({
-      data: {
-        evaluationVersionId: evalVersion.id,
-        highlightId: highlight.id,
-        description: "Test comment",
-        importance: 3,
-        grade: 80,
-        header: "Test Header",
+        commentId: comment.id,
       },
     });
 
@@ -218,11 +218,9 @@ describeIfDb("Evaluation Model - Cascade Deletion", () => {
     expect(await prisma.job.findUnique({ where: { id: job.id } })).toBeNull();
     expect(await prisma.task.findUnique({ where: { id: task.id } })).toBeNull();
     
-    // Note: EvaluationHighlight is NOT automatically deleted because the FK relationship 
-    // is FROM Comment TO Highlight (Comment references Highlight), not the other way around.
-    // This is expected behavior - highlights remain as orphaned records.
-    // In practice, this is fine as highlights are always accessed through comments.
-    expect(await prisma.evaluationHighlight.findUnique({ where: { id: highlight.id } })).toBeTruthy();
+    // With the reversed FK relationship (Highlight references Comment),
+    // highlights are now automatically deleted when their parent comment is deleted
+    expect(await prisma.evaluationHighlight.findUnique({ where: { id: highlight.id } })).toBeNull();
 
     // Verify document and agent still exist (they should not be deleted)
     expect(await prisma.document.findUnique({ where: { id: testDocId } })).toBeTruthy();
