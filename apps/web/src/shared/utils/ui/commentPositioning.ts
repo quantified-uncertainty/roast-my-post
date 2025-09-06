@@ -2,7 +2,7 @@
 import truncateMarkdown from "markdown-truncate";
 import { COMMENT_POSITIONING, TEXT_PROCESSING, LAYOUT, LIMITS } from '@/components/DocumentWithEvaluations/constants';
 
-import type { Comment } from "@/shared/types/databaseTypes";
+import type { FrontendComment as Comment } from "@/shared/types/frontendTypes";
 
 interface _CommentPosition {
   id: string;

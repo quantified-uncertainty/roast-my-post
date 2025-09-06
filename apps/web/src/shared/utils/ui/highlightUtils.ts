@@ -1,4 +1,15 @@
-import type { Evaluation, Highlight, Comment } from "@/shared/types/databaseTypes";
+import type { Evaluation } from "@/shared/types/databaseTypes";
+import type { FrontendComment as Comment } from "@/shared/types/frontendTypes";
+
+// Highlight type for compatibility
+interface Highlight {
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+  isValid: boolean;
+  prefix?: string | null;
+  error?: string | null;
+}
 
 /**
  * Checks if two highlights overlap
@@ -239,8 +250,14 @@ export function fixOverlappingHighlights(comments: Comment[]): Comment[] {
 
   const fixed: Comment[] = [];
   for (const comment of sorted) {
-    const hasOverlap = fixed.some((existing) =>
-      highlightsOverlap(existing.highlight!, comment.highlight!)
+    if (!comment.highlight) {
+      fixed.push(comment);
+      continue;
+    }
+    
+    const commentHighlight = comment.highlight;
+    const hasOverlap = fixed.some((existing) => 
+      existing.highlight && highlightsOverlap(existing.highlight, commentHighlight)
     );
 
     if (!hasOverlap) {
@@ -263,7 +280,7 @@ export function validateHighlights(review: Evaluation): {
   const errors: string[] = [];
 
   for (const comment of review.comments) {
-    if (comment.highlight && !comment.highlight.isValid) {
+    if (!comment.highlightIsValid) {
       errors.push(`Invalid highlight for comment: ${comment.description}`);
     }
   }

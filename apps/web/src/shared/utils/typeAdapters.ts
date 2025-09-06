@@ -8,6 +8,7 @@
 
 import type { Comment as AiComment, Evaluation as AiEvaluation } from '@roast/ai';
 import type { Comment as DbComment, Evaluation as DbEvaluation } from '@/shared/types/databaseTypes';
+import type { FrontendComment } from '@/shared/types/frontendTypes';
 
 /**
  * Convert database Comment to AI package Comment
@@ -18,15 +19,40 @@ export function dbCommentToAiComment(dbComment: DbComment): AiComment {
     ...dbComment,
     importance: dbComment.importance ?? 0,
     grade: dbComment.grade ?? undefined,
-    highlight: dbComment.highlight ? {
-      ...dbComment.highlight,
-      prefix: dbComment.highlight.prefix ?? undefined,
-      error: dbComment.highlight.error ?? undefined,
+    // Convert flat highlight fields to nested structure
+    highlight: {
+      startOffset: dbComment.highlightStartOffset,
+      endOffset: dbComment.highlightEndOffset,
+      quotedText: dbComment.highlightQuotedText,
+      isValid: dbComment.highlightIsValid,
+      prefix: dbComment.highlightPrefix ?? undefined,
+      error: dbComment.highlightError ?? undefined,
+    }
+  };
+}
+
+/**
+ * Convert frontend Comment to AI package Comment
+ * Frontend comment already has nested highlight structure
+ */
+export function frontendCommentToAiComment(frontendComment: FrontendComment): AiComment {
+  const highlight = frontendComment.highlight;
+  return {
+    ...frontendComment,
+    importance: frontendComment.importance ?? 0,
+    grade: frontendComment.grade ?? undefined,
+    highlight: highlight ? {
+      startOffset: highlight.startOffset,
+      endOffset: highlight.endOffset,
+      quotedText: highlight.quotedText,
+      isValid: highlight.isValid,
+      prefix: highlight.prefix ?? undefined,
+      error: highlight.error ?? undefined,
     } : {
       startOffset: 0,
       endOffset: 0,
       quotedText: '',
-      isValid: false
+      isValid: false,
     }
   };
 }
@@ -37,14 +63,17 @@ export function dbCommentToAiComment(dbComment: DbComment): AiComment {
  */
 export function aiCommentToDbComment(aiComment: AiComment): Omit<DbComment, 'id' | 'evaluationId' | 'createdAt' | 'updatedAt' | 'agentId'> {
   return {
-    ...aiComment,
+    description: aiComment.description,
     importance: aiComment.importance ?? null,
     grade: aiComment.grade ?? null,
-    highlight: aiComment.highlight ? {
-      ...aiComment.highlight,
-      prefix: aiComment.highlight.prefix ?? null,
-      error: aiComment.highlight.error ?? null,
-    } : undefined
+    reasoning: (aiComment as any).reasoning,
+    // Convert nested highlight to flat fields
+    highlightStartOffset: aiComment.highlight.startOffset,
+    highlightEndOffset: aiComment.highlight.endOffset,
+    highlightQuotedText: aiComment.highlight.quotedText,
+    highlightIsValid: aiComment.highlight.isValid ?? true,
+    highlightPrefix: aiComment.highlight.prefix ?? null,
+    highlightError: aiComment.highlight.error ?? null,
   } as Omit<DbComment, 'id' | 'evaluationId' | 'createdAt' | 'updatedAt' | 'agentId'>;
 }
 

@@ -21,7 +21,7 @@ export interface Document extends Omit<BaseDocument, 'reviews'> {
 }
 
 // Comment type that extends the AI package Comment type with database fields
-export interface Comment extends Omit<BaseComment, 'importance' | 'grade'> {
+export interface Comment extends Omit<BaseComment, 'importance' | 'grade' | 'highlight'> {
   id?: string;
   evaluationId?: string;
   createdAt?: Date;
@@ -30,6 +30,13 @@ export interface Comment extends Omit<BaseComment, 'importance' | 'grade'> {
   reasoning?: string;
   importance: number | null;
   grade: number | null;
+  // Highlight fields merged from EvaluationHighlight table
+  highlightStartOffset: number;
+  highlightEndOffset: number;
+  highlightQuotedText: string;
+  highlightPrefix: string | null;
+  highlightError: string | null;
+  highlightIsValid: boolean;
 }
 
 // Database Evaluation type that includes all the database-specific fields
@@ -75,17 +82,6 @@ export interface Evaluation {
   }>;
   jobs?: JobSummary[];
   isStale?: boolean;
-}
-
-// Database Highlight type - matches EvaluationHighlight model in Prisma schema
-export interface Highlight {
-  id?: string;
-  startOffset: number;
-  endOffset: number;
-  quotedText: string;
-  isValid: boolean;
-  prefix?: string;
-  error?: string;
 }
 
 // Database Task type

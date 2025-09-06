@@ -117,11 +117,7 @@ export async function GET(
             },
           },
         },
-        comments: {
-          include: {
-            highlight: true,
-          },
-        },
+        comments: true,
         job: {
           include: {
             tasks: true,
@@ -239,11 +235,11 @@ export async function GET(
             description: comment.description,
             importance: comment.importance,
             grade: comment.grade,
-            highlight: comment.highlight
+            highlight: comment.highlightQuotedText
               ? {
-                  quoted_text: comment.highlight.quotedText,
-                  start_offset: comment.highlight.startOffset,
-                  end_offset: comment.highlight.endOffset,
+                  quoted_text: comment.highlightQuotedText,
+                  start_offset: comment.highlightStartOffset,
+                  end_offset: comment.highlightEndOffset,
                 }
               : null,
           })),

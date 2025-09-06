@@ -12,6 +12,7 @@ import {
 } from "next/navigation";
 
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
+import { dbCommentToFrontend, type FrontendComment } from "@/shared/types/frontendTypes";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 
 import { LAYOUT } from "../constants";
@@ -87,11 +88,12 @@ export function EvaluationView({
 
   // Merge comments from all selected evaluations
   const allComments = useMemo(() => {
-    const comments: Array<DbComment & { agentName: string }> = [];
+    const comments: Array<FrontendComment & { agentName: string }> = [];
     selectedEvaluations.forEach((evaluation) => {
       evaluation.comments.forEach((comment) => {
+        const frontendComment = dbCommentToFrontend(comment);
         comments.push({
-          ...comment,
+          ...frontendComment,
           agentName: evaluation.agent.name,
         });
       });

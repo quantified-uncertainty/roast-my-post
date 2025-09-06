@@ -3,8 +3,9 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 
 import type { Document } from "@roast/ai";
-import type { Comment as DbComment } from "@/shared/types/databaseTypes";
-import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
+import type { FrontendComment } from "@/shared/types/frontendTypes";
+import { frontendCommentToDb } from "@/shared/types/frontendTypes";
+import { frontendCommentToAiComment } from "@/shared/utils/typeAdapters";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 import { COMMENT_COLUMN_WIDTH } from "../constants";
 import type { EvaluationState } from "../types";
@@ -16,7 +17,7 @@ import { useHighlightDetection } from "../hooks/comments/useHighlightDetection";
 import { useCommentPositions } from "../hooks/comments/useCommentPositions";
 
 interface CommentsColumnProps {
-  comments: (DbComment & { agentName?: string })[];
+  comments: (FrontendComment & { agentName?: string })[];
   contentRef: React.RefObject<HTMLDivElement | null>;
   selectedCommentId: string | null;
   hoveredCommentId: string | null;
@@ -50,7 +51,7 @@ export function CommentsColumn({
   // Get valid and sorted comments with memoization
   // Note: Comments are already filtered for debug level in EvaluationView
   const sortedComments = useMemo(() => {
-    return getValidAndSortedComments(comments) as (DbComment & { agentName?: string })[];
+    return getValidAndSortedComments(comments) as (FrontendComment & { agentName?: string })[];
   }, [comments]);
 
   // Use custom hooks for highlight detection and positioning
@@ -59,8 +60,13 @@ export function CommentsColumn({
     sortedComments.length
   );
 
+  // Convert FrontendComments to DbComments for the position hook
+  const dbComments = useMemo(() => {
+    return sortedComments.map(c => frontendCommentToDb(c));
+  }, [sortedComments]);
+
   const { positions: commentPositions } = useCommentPositions(
-    sortedComments,
+    dbComments,
     contentRef,
     {
       hoveredCommentId,
@@ -82,7 +88,7 @@ export function CommentsColumn({
 
   // Memoize comment conversion to avoid repeated conversions
   const convertedComments = useMemo(() => {
-    return visibleComments.map(({ item }) => dbCommentToAiComment(item));
+    return visibleComments.map(({ item }) => frontendCommentToAiComment(item));
   }, [visibleComments]);
 
   // Add timeout to show error state if highlights fail

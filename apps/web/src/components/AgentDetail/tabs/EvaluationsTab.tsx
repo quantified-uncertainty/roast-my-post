@@ -257,15 +257,13 @@ export function EvaluationsTab({
                     level: comment.level ?? null,
                     source: comment.source ?? null,
                     metadata: comment.metadata ?? null,
-                    highlight: {
-                      id: comment.id,
-                      startOffset: 0,
-                      endOffset: 0,
-                      quotedText: comment.title || "",
-                      prefix: null,
-                      error: null,
-                      isValid: true
-                    }
+                    // Flat highlight fields
+                    highlightStartOffset: comment.highlightStartOffset ?? 0,
+                    highlightEndOffset: comment.highlightEndOffset ?? 0,
+                    highlightQuotedText: comment.highlightQuotedText ?? '',
+                    highlightPrefix: comment.highlightPrefix ?? null,
+                    highlightError: comment.highlightError ?? null,
+                    highlightIsValid: comment.highlightIsValid ?? true
                   })) || []}
                   agentName={agent.name}
                   agentDescription={agent.description}

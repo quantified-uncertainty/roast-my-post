@@ -118,15 +118,13 @@ export function EvaluationAnalysisSection({
                       level: comment.level ?? null,
                       source: comment.source ?? null,
                       metadata: comment.metadata ?? null,
-                      highlight: comment.highlight ? {
-                        id: `${evaluation.agentId}-highlight-${index}`,
-                        startOffset: comment.highlight.startOffset || 0,
-                        endOffset: comment.highlight.endOffset || 0,
-                        quotedText: comment.highlight.quotedText || '',
-                        isValid: comment.highlight.isValid || true,
-                        prefix: comment.highlight.prefix ?? null,
-                        error: comment.highlight.error ?? null,
-                      } : null
+                      // Highlight fields are now flat
+                      highlightStartOffset: comment.highlightStartOffset || 0,
+                      highlightEndOffset: comment.highlightEndOffset || 0,
+                      highlightQuotedText: comment.highlightQuotedText || '',
+                      highlightIsValid: comment.highlightIsValid !== undefined ? comment.highlightIsValid : true,
+                      highlightPrefix: comment.highlightPrefix ?? null,
+                      highlightError: comment.highlightError ?? null,
                     }))} 
                   />
                 </CollapsibleSection>

@@ -56,7 +56,7 @@ export interface Comment {
   importance?: number;               // Importance score (integer in DB)
   grade?: number;                    // Quality/confidence score (integer in DB)
   
-  // Location data (will be stored in separate EvaluationHighlight table)
+  // Location data (will be stored in EvaluationComment table)
   highlight: DocumentHighlight;
   
   // Complete tool chain metadata (JSON in database)

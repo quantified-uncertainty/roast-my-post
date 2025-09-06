@@ -362,15 +362,15 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         }
       }
 
-      // Only create highlight if we have highlight data
+      // Only create comment if we have highlight data
       if (!comment.highlight) {
         // Skip this comment if no highlight data
         this.logger.warn(`Skipping comment without highlight data: ${comment.description}`);
         continue;
       }
 
-      // Create comment first
-      const createdComment = await prisma.evaluationComment.create({
+      // Create comment with highlight fields merged
+      await prisma.evaluationComment.create({
         data: {
           description: comment.description || 'No description',
           importance: comment.importance || null,
@@ -380,19 +380,13 @@ export class JobOrchestrator implements JobOrchestratorInterface {
           source: comment.source || null,
           metadata: comment.metadata || null,
           evaluationVersionId,
-        },
-      });
-
-      // Create highlight linked to comment
-      await prisma.evaluationHighlight.create({
-        data: {
-          startOffset: comment.highlight.startOffset,
-          endOffset: comment.highlight.endOffset,
-          quotedText: comment.highlight.quotedText,
-          prefix: comment.highlight.prefix || null,
-          isValid,
-          error,
-          commentId: createdComment.id,
+          // Highlight fields
+          highlightStartOffset: comment.highlight.startOffset,
+          highlightEndOffset: comment.highlight.endOffset,
+          highlightQuotedText: comment.highlight.quotedText,
+          highlightPrefix: comment.highlight.prefix || null,
+          highlightIsValid: isValid,
+          highlightError: error,
         },
       });
     }

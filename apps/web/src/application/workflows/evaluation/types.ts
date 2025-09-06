@@ -17,15 +17,13 @@ export interface EvaluationDisplayData {
     level?: string | null;
     source?: string | null;
     metadata?: Record<string, any> | null;
-    highlight?: {
-      id: string;
-      startOffset: number;
-      endOffset: number;
-      quotedText: string;
-      prefix: string | null;
-      error: string | null;
-      isValid: boolean;
-    } | null;
+    // Highlight fields merged into comment
+    highlightStartOffset: number;
+    highlightEndOffset: number;
+    highlightQuotedText: string;
+    highlightPrefix: string | null;
+    highlightError: string | null;
+    highlightIsValid: boolean;
   }>;
   
   // Agent information
@@ -74,16 +72,14 @@ export interface EvaluationContentProps {
     level?: string | null;
     source?: string | null;
     metadata?: Record<string, any> | null;
-    highlight?: {
-      id: string;
-      startOffset: number;
-      endOffset: number;
-      quotedText: string;
-      prefix: string | null;
-      error: string | null;
-      isValid: boolean;
-    } | null;
-  }>; 
+    // Highlight fields merged into comment
+    highlightStartOffset: number;
+    highlightEndOffset: number;
+    highlightQuotedText: string;
+    highlightPrefix: string | null;
+    highlightError: string | null;
+    highlightIsValid: boolean;
+  }>;
   
   // Agent information
   agentName: string;

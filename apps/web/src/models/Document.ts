@@ -143,14 +143,15 @@ class DocumentTransformer {
       description: comment.description,
       importance: comment.importance,
       grade: comment.grade,
-      highlight: comment.highlight ? {
-        id: comment.highlight.id,
-        startOffset: comment.highlight.startOffset,
-        endOffset: comment.highlight.endOffset,
-        quotedText: comment.highlight.quotedText,
-        isValid: comment.highlight.isValid,
-        prefix: comment.highlight.prefix,
-        error: comment.highlight.error,
+      // Transform flat highlight fields back to nested structure for compatibility
+      highlight: comment.highlightQuotedText ? {
+        id: comment.id + '-highlight',
+        startOffset: comment.highlightStartOffset,
+        endOffset: comment.highlightEndOffset,
+        quotedText: comment.highlightQuotedText,
+        isValid: comment.highlightIsValid,
+        prefix: comment.highlightPrefix,
+        error: comment.highlightError,
       } : null,
       header: getCommentProperty(comment, 'header', null),
       level: getCommentProperty(comment, 'level', null),
@@ -921,21 +922,7 @@ export class DocumentModel {
             },
             versions: {
               include: {
-                comments: {
-                  include: {
-                    highlight: {
-                      select: {
-                        id: true,
-                        startOffset: true,
-                        endOffset: true,
-                        prefix: true,
-                        quotedText: true,
-                        isValid: true,
-                        error: true,
-                      },
-                    },
-                  },
-                },
+                comments: true,
                 job: {
                   include: {
                     tasks: true,

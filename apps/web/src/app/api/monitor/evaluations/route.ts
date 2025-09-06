@@ -81,6 +81,17 @@ export async function GET(request: NextRequest) {
                 description: true,
                 importance: true,
                 grade: true,
+                header: true,
+                level: true,
+                source: true,
+                metadata: true,
+                // Highlight fields
+                highlightStartOffset: true,
+                highlightEndOffset: true,
+                highlightQuotedText: true,
+                highlightPrefix: true,
+                highlightError: true,
+                highlightIsValid: true,
               },
             },
             job: {

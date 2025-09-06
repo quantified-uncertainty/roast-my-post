@@ -54,11 +54,11 @@ abstract class BaseDocumentExporter implements DocumentExporter {
       description: comment.description,
       importance: comment.importance,
       grade: comment.grade,
-      highlight: comment.highlight ? {
-        quotedText: comment.highlight.quotedText,
-        startOffset: comment.highlight.startOffset,
-        endOffset: comment.highlight.endOffset,
-        isValid: comment.highlight.isValid,
+      highlight: comment.highlightQuotedText ? {
+        quotedText: comment.highlightQuotedText,
+        startOffset: comment.highlightStartOffset,
+        endOffset: comment.highlightEndOffset,
+        isValid: comment.highlightIsValid,
       } : null,
     }));
   }
@@ -135,8 +135,8 @@ class MarkdownExporter extends BaseDocumentExporter {
             }
             
             sections.push(`   ${comment.description}`);
-            if (comment.highlight?.quotedText) {
-              sections.push(`   > "${comment.highlight.quotedText}"`);
+            if (comment.highlightQuotedText) {
+              sections.push(`   > "${comment.highlightQuotedText}"`);
             }
             if (comment.importance !== null && comment.importance !== undefined) {
               sections.push(`   Importance: ${comment.importance}/10`);

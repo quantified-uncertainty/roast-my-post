@@ -51,6 +51,12 @@ export interface AgentEvaluation {
     level?: string | null;
     source?: string | null;
     metadata?: any | null;
+    highlightStartOffset?: number;
+    highlightEndOffset?: number;
+    highlightQuotedText?: string;
+    highlightPrefix?: string | null;
+    highlightError?: string | null;
+    highlightIsValid?: boolean;
   }>;
   job?: {
     status: string;

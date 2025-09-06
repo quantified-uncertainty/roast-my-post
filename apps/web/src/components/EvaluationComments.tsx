@@ -23,15 +23,13 @@ type DatabaseComment = {
   level?: string | null;
   source?: string | null;
   metadata?: Record<string, any> | null;
-  highlight?: {
-    id: string;
-    startOffset: number;
-    endOffset: number;
-    quotedText: string;
-    isValid: boolean;
-    prefix: string | null;
-    error: string | null;
-  } | null;
+  // Highlight fields merged into comment
+  highlightStartOffset: number;
+  highlightEndOffset: number;
+  highlightQuotedText: string;
+  highlightPrefix: string | null;
+  highlightError: string | null;
+  highlightIsValid: boolean;
 };
 
 interface EvaluationCommentsProps {
@@ -93,7 +91,7 @@ export function EvaluationComments({
             </h3>
 
             {/* Info button */}
-            {comment.highlight && (
+            {comment.highlightQuotedText && (
               <div className="relative">
                 <button
                   onMouseEnter={() => setHoveredCommentIndex(index)}
@@ -118,22 +116,22 @@ export function EvaluationComments({
                     <div className="space-y-1">
                       <div>
                         <span className="font-semibold">Start Offset:</span>{" "}
-                        {comment.highlight.startOffset}
+                        {comment.highlightStartOffset}
                       </div>
                       <div>
                         <span className="font-semibold">End Offset:</span>{" "}
-                        {comment.highlight.endOffset}
+                        {comment.highlightEndOffset}
                       </div>
                       <div>
                         <span className="font-semibold">Length:</span>{" "}
-                        {comment.highlight.endOffset -
-                          comment.highlight.startOffset}{" "}
+                        {comment.highlightEndOffset -
+                          comment.highlightStartOffset}{" "}
                         chars
                       </div>
-                      {comment.highlight.quotedText && (
+                      {comment.highlightQuotedText && (
                         <div>
                           <span className="font-semibold">Text Length:</span>{" "}
-                          {comment.highlight.quotedText.length} chars
+                          {comment.highlightQuotedText.length} chars
                         </div>
                       )}
                     </div>
@@ -178,14 +176,14 @@ export function EvaluationComments({
             </div>
 
             {/* Highlighted text */}
-            {comment.highlight?.quotedText && (
+            {comment.highlightQuotedText && (
               <div className="mb-6">
                 <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">
                   Referenced Text
                 </h4>
                 <div className="rounded-md bg-gray-100 p-4">
                   <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm text-gray-700">
-                    {comment.highlight?.quotedText}
+                    {comment.highlightQuotedText}
                   </pre>
                 </div>
               </div>

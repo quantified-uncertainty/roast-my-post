@@ -48,6 +48,12 @@ interface Evaluation {
       level: string | null;
       source: string | null;
       metadata: Record<string, any> | null;
+      highlightStartOffset: number;
+      highlightEndOffset: number;
+      highlightQuotedText: string;
+      highlightPrefix: string | null;
+      highlightError: string | null;
+      highlightIsValid: boolean;
     }>;
     job?: {
       id: string;
@@ -275,20 +281,17 @@ export default function EvaluationsMonitorPage() {
                   importance: comment.importance ?? null,
                   grade: comment.grade ?? null,
                   evaluationVersionId: selectedVersion.id,
-                  highlightId: comment.id,
                   header: comment.header ?? null,
                   level: comment.level ?? null,
                   source: comment.source ?? null,
                   metadata: comment.metadata ?? null,
-                  highlight: {
-                    id: comment.id,
-                    startOffset: 0,
-                    endOffset: 0,
-                    quotedText: comment.title,
-                    prefix: null,
-                    error: null,
-                    isValid: true
-                  }
+                  // Flat highlight fields
+                  highlightStartOffset: comment.highlightStartOffset ?? 0,
+                  highlightEndOffset: comment.highlightEndOffset ?? 0,
+                  highlightQuotedText: comment.highlightQuotedText ?? '',
+                  highlightPrefix: comment.highlightPrefix ?? null,
+                  highlightError: comment.highlightError ?? null,
+                  highlightIsValid: comment.highlightIsValid ?? true
                 }))}
                 agentName={selectedEvaluation.agent.versions[0]?.name || 'Unknown Agent'}
                 agentDescription={undefined}

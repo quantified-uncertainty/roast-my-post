@@ -1,6 +1,6 @@
 import chroma from "chroma-js";
 
-import type { Comment } from "@/shared/types/databaseTypes";
+import type { FrontendComment as Comment } from "@/shared/types/frontendTypes";
 
 // Available colors for comments (keeping this for non-evaluation cases)
 export const COMMENT_COLORS = [

@@ -148,33 +148,27 @@ model EvaluationVersion {
 }
 
 model EvaluationComment {
-  id                  String              @id @default(uuid())
-  description         String
-  importance          Int?
-  grade               Int?
-  evaluationVersionId String
-  header              String?
-  level               String?
-  metadata            Json?
-  source              String?
-  evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
-  highlight           EvaluationHighlight?
+  id                   String            @id @default(uuid())
+  description          String
+  importance           Int?
+  grade                Int?
+  evaluationVersionId  String
+  header               String?
+  level                String?
+  metadata             Json?
+  source               String?
+  // Highlight fields (merged from EvaluationHighlight table)
+  highlightStartOffset Int
+  highlightEndOffset   Int
+  highlightPrefix      String?
+  highlightQuotedText  String
+  highlightIsValid     Boolean           @default(true)
+  highlightError       String?
+  evaluationVersion    EvaluationVersion @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
 
   @@index([evaluationVersionId])
-}
-
-model EvaluationHighlight {
-  id          String             @id @default(uuid())
-  startOffset Int
-  endOffset   Int
-  prefix      String?
-  quotedText  String
-  isValid     Boolean            @default(true)
-  error       String?
-  commentId   String             @unique
-  comment     EvaluationComment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
-  @@index([commentId])
+  @@index([highlightStartOffset])
+  @@index([highlightEndOffset])
 }
 
 model Agent {

@@ -60,15 +60,14 @@ export function aiCommentToDatabaseComment(
     (comment as any).commentText ||
     '';
 
-  // Safely extract highlight information
-  const highlight = comment.highlight ? {
-    startOffset: comment.highlight.startOffset,
-    endOffset: comment.highlight.endOffset,
-    quotedText: comment.highlight.quotedText,
-    isValid: comment.highlight.isValid ?? true,
-    prefix: comment.highlight.prefix,
-    error: comment.highlight.error,
-  } : undefined;
+  // Note: highlight fields are now flat in the database comment structure,
+  // but we're converting from AI comment which still has nested highlight
+  const highlightStartOffset = comment.highlight?.startOffset ?? 0;
+  const highlightEndOffset = comment.highlight?.endOffset ?? 0;
+  const highlightQuotedText = comment.highlight?.quotedText ?? '';
+  const highlightIsValid = comment.highlight?.isValid ?? true;
+  const highlightPrefix = comment.highlight?.prefix ?? null;
+  const highlightError = comment.highlight?.error ?? null;
 
   return {
     id: defaults.id,
@@ -79,7 +78,13 @@ export function aiCommentToDatabaseComment(
     grade: comment.grade ?? null,
     createdAt: new Date(),
     updatedAt: new Date(),
-    highlight,
+    // Highlight fields are now flat in the database comment
+    highlightStartOffset,
+    highlightEndOffset,
+    highlightQuotedText,
+    highlightIsValid,
+    highlightPrefix,
+    highlightError,
     // Add any extended fields that might be in the comment
     ...(comment.header !== undefined && { header: comment.header }),
     ...(comment.level !== undefined && { level: comment.level }),
