@@ -137,7 +137,7 @@ model EvaluationVersion {
   comments          EvaluationComment[]
   agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
-  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id])
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   job               Job?
 
   @@unique([evaluationId, version])
@@ -153,13 +153,12 @@ model EvaluationComment {
   importance          Int?
   grade               Int?
   evaluationVersionId String
-  highlightId         String              @unique
   header              String?
   level               String?
   metadata            Json?
   source              String?
   evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
-  highlight           EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+  highlight           EvaluationHighlight?
 
   @@index([evaluationVersionId])
 }
@@ -172,7 +171,10 @@ model EvaluationHighlight {
   quotedText  String
   isValid     Boolean            @default(true)
   error       String?
-  comment     EvaluationComment?
+  commentId   String             @unique
+  comment     EvaluationComment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([commentId])
 }
 
 model Agent {
@@ -256,7 +258,7 @@ model Job {
   cancelledById       String?
   cancellationReason  String?
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
-  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
+  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
   originalJob         Job?               @relation("JobRetries", fields: [originalJobId], references: [id])
   retryJobs           Job[]              @relation("JobRetries")

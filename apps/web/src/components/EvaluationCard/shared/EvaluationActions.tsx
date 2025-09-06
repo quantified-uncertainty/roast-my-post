@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowPathIcon, CommandLineIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, CommandLineIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface EvaluationActionsProps {
   documentId: string;
   agentId: string;
   onRerun?: () => void;
+  onDelete?: () => void;
   isRunning?: boolean;
+  isDeleting?: boolean;
   showRerun?: boolean;
+  showDelete?: boolean;
   showDetails?: boolean;
   detailsText?: string;
   detailsStyle?: "link" | "button";
@@ -22,8 +25,11 @@ export function EvaluationActions({
   documentId,
   agentId,
   onRerun,
+  onDelete,
   isRunning = false,
+  isDeleting = false,
   showRerun = false,
+  showDelete = false,
   showDetails = true,
   detailsText = "Details",
   detailsStyle = "link",
@@ -39,6 +45,16 @@ export function EvaluationActions({
         >
           <ArrowPathIcon className={`h-3.5 w-3.5 ${isRunning ? 'animate-spin' : ''}`} />
           {isRunning ? 'Running...' : 'Rerun'}
+        </button>
+      )}
+      {showDelete && onDelete && (
+        <button
+          onClick={onDelete}
+          disabled={isDeleting}
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <TrashIcon className={`h-3.5 w-3.5 ${isDeleting ? 'animate-pulse' : ''}`} />
+          {isDeleting ? 'Deleting...' : 'Delete'}
         </button>
       )}
       {showDetails && (

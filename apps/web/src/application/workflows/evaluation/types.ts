@@ -13,12 +13,11 @@ export interface EvaluationDisplayData {
     importance: number | null;
     grade: number | null;
     evaluationVersionId: string;
-    highlightId: string;
     header?: string | null;
     level?: string | null;
     source?: string | null;
     metadata?: Record<string, any> | null;
-    highlight: {
+    highlight?: {
       id: string;
       startOffset: number;
       endOffset: number;
@@ -26,7 +25,7 @@ export interface EvaluationDisplayData {
       prefix: string | null;
       error: string | null;
       isValid: boolean;
-    };
+    } | null;
   }>;
   
   // Agent information
@@ -71,12 +70,11 @@ export interface EvaluationContentProps {
     importance: number | null;
     grade: number | null;
     evaluationVersionId: string;
-    highlightId: string;
     header?: string | null;
     level?: string | null;
     source?: string | null;
     metadata?: Record<string, any> | null;
-    highlight: {
+    highlight?: {
       id: string;
       startOffset: number;
       endOffset: number;
@@ -84,8 +82,8 @@ export interface EvaluationContentProps {
       prefix: string | null;
       error: string | null;
       isValid: boolean;
-    };
-  }>;
+    } | null;
+  }>; 
   
   // Agent information
   agentName: string;

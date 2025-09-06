@@ -9,7 +9,7 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { AgentBadges } from "@/components/AgentBadges";
-import { createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
+import { createOrRerunEvaluation, deleteEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
 import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
 import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 import { ManagementEvaluationCard } from "./ManagementEvaluationCard";
@@ -36,6 +36,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
   const router = useRouter();
   const { handleRerun, runningEvals } = useEvaluationRerun({ documentId: docId });
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
+  const [deletingEvals, setDeletingEvals] = useState<Set<string>>(new Set());
   const [sortedAgents, setSortedAgents] = useState<Agent[]>([]);
 
   // Sort available agents: recommended first, then regular, then deprecated
@@ -53,6 +54,32 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
       console.error('Failed to add agent evaluation:', error);
     } finally {
       setRunningAgents(prev => {
+        const next = new Set(prev);
+        next.delete(agentId);
+        return next;
+      });
+    }
+  };
+
+  const handleDeleteEvaluation = async (agentId: string) => {
+    if (!window.confirm('Are you sure you want to delete this evaluation? This will remove all related data including analysis, comments, and history.')) {
+      return;
+    }
+    
+    setDeletingEvals(prev => new Set([...prev, agentId]));
+    try {
+      const result = await deleteEvaluation(agentId, docId);
+      if (result.success) {
+        router.refresh();
+      } else {
+        console.error('Failed to delete evaluation:', result.error);
+        alert(`Failed to delete evaluation: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to delete evaluation:', error);
+      alert('Failed to delete evaluation. Please try again.');
+    } finally {
+      setDeletingEvals(prev => {
         const next = new Set(prev);
         next.delete(agentId);
         return next;
@@ -85,7 +112,9 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                 evaluation={evaluation}
                 isOwner={isOwner}
                 isRunning={runningEvals.has(evaluation.agent.id)}
+                isDeleting={deletingEvals.has(evaluation.agent.id)}
                 onRerun={handleRerun}
+                onDelete={handleDeleteEvaluation}
               />
             ))
           )}

@@ -31,7 +31,9 @@ interface ManagementEvaluationCardProps {
   };
   isOwner: boolean;
   isRunning: boolean;
+  isDeleting?: boolean;
   onRerun: (agentId: string) => Promise<void>;
+  onDelete?: (agentId: string) => Promise<void>;
 }
 
 export function ManagementEvaluationCard({
@@ -39,7 +41,9 @@ export function ManagementEvaluationCard({
   evaluation,
   isOwner,
   isRunning,
+  isDeleting = false,
   onRerun,
+  onDelete,
 }: ManagementEvaluationCardProps) {
   const agentId = evaluation.agent.id;
   const latestVersion = evaluation.versions?.[0];
@@ -132,12 +136,15 @@ export function ManagementEvaluationCard({
               documentId={docId}
               agentId={agentId}
               onRerun={isOwner ? () => onRerun(agentId) : undefined}
+              onDelete={isOwner && onDelete ? () => onDelete(agentId) : undefined}
               isRunning={
                 isRunning ||
                 latestJobStatus === "PENDING" ||
                 latestJobStatus === "RUNNING"
               }
+              isDeleting={isDeleting}
               showRerun={isOwner}
+              showDelete={isOwner}
               showDetails={true}
               detailsStyle="button"
               className="flex items-center gap-2"

@@ -114,20 +114,19 @@ export function EvaluationAnalysisSection({
                       importance: comment.importance ?? null,
                       grade: comment.grade ?? null,
                       evaluationVersionId: evaluation.id || '',
-                      highlightId: `${evaluation.agentId}-highlight-${index}`,
                       header: comment.header ?? null,
                       level: comment.level ?? null,
                       source: comment.source ?? null,
                       metadata: comment.metadata ?? null,
-                      highlight: {
+                      highlight: comment.highlight ? {
                         id: `${evaluation.agentId}-highlight-${index}`,
-                        startOffset: comment.highlight?.startOffset || 0,
-                        endOffset: comment.highlight?.endOffset || 0,
-                        quotedText: comment.highlight?.quotedText || '',
-                        isValid: comment.highlight?.isValid || true,
-                        prefix: comment.highlight?.prefix ?? null,
-                        error: comment.highlight?.error ?? null,
-                      }
+                        startOffset: comment.highlight.startOffset || 0,
+                        endOffset: comment.highlight.endOffset || 0,
+                        quotedText: comment.highlight.quotedText || '',
+                        isValid: comment.highlight.isValid || true,
+                        prefix: comment.highlight.prefix ?? null,
+                        error: comment.highlight.error ?? null,
+                      } : null
                     }))} 
                   />
                 </CollapsibleSection>
