@@ -369,20 +369,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         continue;
       }
 
-      // Create highlight with validation status
-      const createdHighlight = await prisma.evaluationHighlight.create({
-        data: {
-          startOffset: comment.highlight.startOffset,
-          endOffset: comment.highlight.endOffset,
-          quotedText: comment.highlight.quotedText,
-          prefix: comment.highlight.prefix || null,
-          isValid,
-          error,
-        },
-      });
-
-      // Create comment linked to highlight
-      await prisma.evaluationComment.create({
+      // Create comment first
+      const createdComment = await prisma.evaluationComment.create({
         data: {
           description: comment.description || 'No description',
           importance: comment.importance || null,
@@ -392,7 +380,19 @@ export class JobOrchestrator implements JobOrchestratorInterface {
           source: comment.source || null,
           metadata: comment.metadata || null,
           evaluationVersionId,
-          highlightId: createdHighlight.id,
+        },
+      });
+
+      // Create highlight linked to comment
+      await prisma.evaluationHighlight.create({
+        data: {
+          startOffset: comment.highlight.startOffset,
+          endOffset: comment.highlight.endOffset,
+          quotedText: comment.highlight.quotedText,
+          prefix: comment.highlight.prefix || null,
+          isValid,
+          error,
+          commentId: createdComment.id,
         },
       });
     }
