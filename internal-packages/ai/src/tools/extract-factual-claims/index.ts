@@ -71,7 +71,7 @@ const inputSchema = z.object({
     .number()
     .min(1)
     .max(100)
-    .default(30)
+    .default(50)
     .describe("Maximum number of claims to extract"),
 }) satisfies z.ZodType<ExtractFactualClaimsInput>;
 
@@ -184,7 +184,7 @@ Requirements:
           content: userPrompt,
         },
       ],
-      max_tokens: 2000,
+      max_tokens: 8000,
       temperature: 0,
       toolName: "extract_factual_claims",
       toolDescription: "Extract and score factual claims from text",

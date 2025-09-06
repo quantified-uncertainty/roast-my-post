@@ -3,6 +3,7 @@ import { createAnthropicClient } from '../utils/anthropic';
 import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 import { withRetry } from '../utils/retryUtils';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
+import { logger } from '../shared/logger';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -174,6 +175,26 @@ export async function callClaude(
       }
       
       response = result;
+      
+      // Check for max_tokens issue - log as critical but don't throw
+      if (response.stop_reason === 'max_tokens') {
+        const errorMessage = 
+          `⚠️ CRITICAL: Claude hit max_tokens limit (${options.max_tokens || 4000} tokens) and response may be incomplete!\n` +
+          `This often means the response was truncated and tool calls may have failed.\n` +
+          `Consider increasing max_tokens for this operation.\n` +
+          `Model: ${model}`;
+        
+        logger.error('[Claude] Max tokens limit hit - response likely truncated', {
+          max_tokens: options.max_tokens || 4000,
+          model,
+          stop_reason: response.stop_reason,
+          error: errorMessage
+        });
+        
+        // Log the warning - we can't modify the response object directly
+        // Callers should check stop_reason === 'max_tokens' to detect truncation
+      }
+      
       break; // Success, exit retry loop
       
     } catch (error) {
@@ -243,15 +264,59 @@ export async function callClaudeWithTool<T>(
 
   const result = await callClaude(toolOptions, previousInteractions);
   
+  // Check for max_tokens issue in tool calls specifically
+  if (result.response.stop_reason === 'max_tokens') {
+    logger.error('[Claude] Tool call truncated due to max_tokens limit', {
+      tool: options.toolName,
+      max_tokens: options.max_tokens || 4000,
+      stop_reason: result.response.stop_reason
+    });
+    
+    // For tool calls, we need to throw as the tool response is unusable
+    throw new Error(
+      `⚠️ TOOL FAILURE: Tool "${options.toolName}" response was truncated at ${options.max_tokens || 4000} tokens.\n` +
+      `The tool cannot function with incomplete data.\n` +
+      `Action required: Increase max_tokens for this tool or reduce input size.\n` +
+      `This is a known issue that needs configuration adjustment.`
+    );
+  }
+  
   // Extract tool result
   const toolUse = result.response.content.find((c): c is Anthropic.Messages.ToolUseBlock => 
     c.type === "tool_use"
   );
   if (!toolUse) {
+    // Enhanced error message to check for max_tokens issue
+    const stopReason = result.response.stop_reason as string;
+    if (stopReason === 'max_tokens') {
+      throw new Error(
+        `No tool use found - response was truncated due to max_tokens limit (${options.max_tokens || 4000} tokens)`
+      );
+    }
     throw new Error('No tool use found in response');
   }
   if (toolUse.name !== options.toolName) {
     throw new Error(`Expected tool use for ${options.toolName}, got ${toolUse.name}`);
+  }
+
+  // Check if tool input is empty or malformed (often happens with max_tokens)
+  if (!toolUse.input || Object.keys(toolUse.input).length === 0) {
+    const stopReason = result.response.stop_reason as string;
+    if (stopReason === 'max_tokens') {
+      logger.error('[Claude] Tool returned empty due to max_tokens truncation', {
+        tool: options.toolName,
+        max_tokens: options.max_tokens || 4000,
+        stop_reason: stopReason
+      });
+      
+      throw new Error(
+        `⚠️ TOOL FAILURE: Tool "${options.toolName}" returned empty result due to truncation.\n` +
+        `Response was cut off at ${options.max_tokens || 4000} tokens.\n` +
+        `This is why the tool appears to return nothing.\n` +
+        `SOLUTION: Increase max_tokens in the tool implementation or reduce input size.`
+      );
+    }
+    throw new Error(`Tool "${options.toolName}" returned empty or invalid input`);
   }
 
   return {

@@ -279,7 +279,7 @@ ${input.claim}
           content: userPrompt,
         },
       ],
-      max_tokens: 1000,
+      max_tokens: 4000,
       temperature: 0,
       toolName: "fact_check",
       toolDescription: "Verify the accuracy of a factual claim",

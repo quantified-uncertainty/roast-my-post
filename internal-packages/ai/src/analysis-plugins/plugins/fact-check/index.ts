@@ -32,7 +32,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   private summary: string = "";
   private analysis: string = "";
   private processingStartTime: number = 0;
-  static readonly alwaysRun = false;
 
   constructor() {
     // Initialize empty values - they'll be set in analyze()
