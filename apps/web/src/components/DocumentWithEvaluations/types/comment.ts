@@ -49,26 +49,30 @@ export function toUnifiedComment(comment: DbComment | AiComment, agentName?: str
     };
   } else {
     const aiComment = comment as AiComment;
+    // For AiComment, we need to provide flat fields for DbComment compatibility
+    // and normalize the nested highlight structure
+    const highlight = aiComment.highlight;
     return {
       ...aiComment,
-      // Provide flat highlight fields for DbComment compatibility
-      highlightStartOffset: aiComment.highlight?.startOffset ?? 0,
-      highlightEndOffset: aiComment.highlight?.endOffset ?? 0,
-      highlightQuotedText: aiComment.highlight?.quotedText ?? '',
-      highlightPrefix: aiComment.highlight?.prefix ?? null,
-      highlightError: aiComment.highlight?.error ?? null,
-      highlightIsValid: aiComment.highlight?.isValid ?? false,
+      // Flat highlight fields for DbComment compatibility
+      highlightStartOffset: highlight?.startOffset ?? 0,
+      highlightEndOffset: highlight?.endOffset ?? 0,
+      highlightQuotedText: highlight?.quotedText ?? '',
+      highlightPrefix: highlight?.prefix ?? null,
+      highlightError: highlight?.error ?? null,
+      highlightIsValid: highlight?.isValid ?? false,
+      // Normalized optional fields
       importance: aiComment.importance ?? null,
       grade: aiComment.grade ?? null,
-      highlight: aiComment.highlight 
-        ? {
-            ...aiComment.highlight,
-            startOffset: aiComment.highlight.startOffset ?? null,
-            endOffset: aiComment.highlight.endOffset ?? null,
-            prefix: aiComment.highlight.prefix ?? null,
-            error: aiComment.highlight.error ?? null,
-          } 
-        : null,
+      // Normalized nested highlight
+      highlight: highlight ? {
+        startOffset: highlight.startOffset ?? null,
+        endOffset: highlight.endOffset ?? null,
+        quotedText: highlight.quotedText,
+        isValid: highlight.isValid,
+        prefix: highlight.prefix ?? null,
+        error: highlight.error ?? null,
+      } : null,
       agentName,
     } as UnifiedComment;
   }
