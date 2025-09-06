@@ -175,14 +175,28 @@ export async function callClaude(
       
       response = result;
       
-      // Check for max_tokens issue
+      // Check for max_tokens issue - log as critical but don't throw
       if (response.stop_reason === 'max_tokens') {
-        throw new Error(
+        const errorMessage = 
           `⚠️ CRITICAL: Claude hit max_tokens limit (${options.max_tokens || 4000} tokens) and response may be incomplete!\n` +
           `This often means the response was truncated and tool calls may have failed.\n` +
           `Consider increasing max_tokens for this operation.\n` +
-          `Model: ${model}`
-        );
+          `Model: ${model}`;
+        
+        logger.error('[Claude] Max tokens limit hit - response likely truncated', {
+          max_tokens: options.max_tokens || 4000,
+          model,
+          stop_reason: response.stop_reason,
+          error: errorMessage
+        });
+        
+        // Add a warning to the response metadata so callers can handle it
+        response.metadata = {
+          ...response.metadata,
+          truncated: true,
+          truncation_reason: 'max_tokens',
+          warning: errorMessage
+        };
       }
       
       break; // Success, exit retry loop
@@ -256,12 +270,18 @@ export async function callClaudeWithTool<T>(
   
   // Check for max_tokens issue in tool calls specifically
   if (result.response.stop_reason === 'max_tokens') {
+    logger.error('[Claude] Tool call truncated due to max_tokens limit', {
+      tool: options.toolName,
+      max_tokens: options.max_tokens || 4000,
+      stop_reason: result.response.stop_reason
+    });
+    
+    // For tool calls, we need to throw as the tool response is unusable
     throw new Error(
-      `⚠️ CRITICAL: Tool call "${options.toolName}" hit max_tokens limit!\n` +
-      `The tool response was truncated and is likely invalid or empty.\n` +
-      `Current max_tokens: ${options.max_tokens || 4000}\n` +
-      `Consider increasing max_tokens for this tool.\n` +
-      `This is a common cause of mysterious failures where tools return empty results.`
+      `⚠️ TOOL FAILURE: Tool "${options.toolName}" response was truncated at ${options.max_tokens || 4000} tokens.\n` +
+      `The tool cannot function with incomplete data.\n` +
+      `Action required: Increase max_tokens for this tool or reduce input size.\n` +
+      `This is a known issue that needs configuration adjustment.`
     );
   }
   
@@ -287,11 +307,17 @@ export async function callClaudeWithTool<T>(
   if (!toolUse.input || Object.keys(toolUse.input).length === 0) {
     const stopReason = result.response.stop_reason as string;
     if (stopReason === 'max_tokens') {
+      logger.error('[Claude] Tool returned empty due to max_tokens truncation', {
+        tool: options.toolName,
+        max_tokens: options.max_tokens || 4000,
+        stop_reason: stopReason
+      });
+      
       throw new Error(
-        `⚠️ CRITICAL: Tool "${options.toolName}" returned empty input due to max_tokens limit!\n` +
-        `The response was truncated at ${options.max_tokens || 4000} tokens.\n` +
+        `⚠️ TOOL FAILURE: Tool "${options.toolName}" returned empty result due to truncation.\n` +
+        `Response was cut off at ${options.max_tokens || 4000} tokens.\n` +
         `This is why the tool appears to return nothing.\n` +
-        `SOLUTION: Increase max_tokens in the tool implementation.`
+        `SOLUTION: Increase max_tokens in the tool implementation or reduce input size.`
       );
     }
     throw new Error(`Tool "${options.toolName}" returned empty or invalid input`);
