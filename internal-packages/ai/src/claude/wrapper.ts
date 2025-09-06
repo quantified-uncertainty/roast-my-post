@@ -3,6 +3,7 @@ import { createAnthropicClient } from '../utils/anthropic';
 import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 import { withRetry } from '../utils/retryUtils';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
+import { logger } from '../shared/logger';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -190,13 +191,8 @@ export async function callClaude(
           error: errorMessage
         });
         
-        // Add a warning to the response metadata so callers can handle it
-        response.metadata = {
-          ...response.metadata,
-          truncated: true,
-          truncation_reason: 'max_tokens',
-          warning: errorMessage
-        };
+        // Log the warning - we can't modify the response object directly
+        // Callers should check stop_reason === 'max_tokens' to detect truncation
       }
       
       break; // Success, exit retry loop
