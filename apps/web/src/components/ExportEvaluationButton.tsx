@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { CheckIcon } from "@heroicons/react/24/solid";
+import { Button } from "@/components/ui/button";
 import { exportEvaluationToXml, copyToClipboard } from "@/application/workflows/evaluation/exportXml";
 
 interface ExportEvaluationButtonProps {
@@ -62,13 +63,11 @@ export function ExportEvaluationButton({ evaluationData, className = "" }: Expor
     }
   };
 
-  const baseClassName = "inline-flex items-center gap-2 rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700";
-  const combinedClassName = className ? `${baseClassName} ${className}` : baseClassName;
-
   return (
-    <button
+    <Button
       onClick={handleExportToXml}
-      className={combinedClassName}
+      variant="secondary"
+      className={className}
     >
       {copied ? (
         <>
@@ -81,6 +80,6 @@ export function ExportEvaluationButton({ evaluationData, className = "" }: Expor
           Export to XML
         </>
       )}
-    </button>
+    </Button>
   );
 }
