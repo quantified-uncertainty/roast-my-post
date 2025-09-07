@@ -10,11 +10,14 @@ import { z } from "zod";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import { AgentBadges } from "@/components/AgentBadges";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { 
   LinkIcon, 
   DocumentTextIcon,
   CheckIcon,
   LockClosedIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 
 import { createDocument } from "./actions";
@@ -84,31 +87,32 @@ function PrivacyToggle({ isPrivate, onChange, useRegister }: PrivacyToggleProps)
       <label className="text-sm font-medium text-gray-900">
         Document Privacy
       </label>
-      <div className="bg-gray-50 rounded-lg p-4">
-        <label className="flex items-start gap-3 cursor-pointer">
-          {useRegister ? (
-            <input
-              {...useRegister}
-              type="checkbox"
-              className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
-            />
-          ) : (
-            <input
-              type="checkbox"
-              checked={isPrivate}
-              onChange={(e) => onChange(e.target.checked)}
-              className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
-            />
-          )}
-          <div className="flex items-start gap-2">
-            <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
+      <RadioGroup
+        value={isPrivate ? "private" : "public"}
+        onValueChange={(value: string) => onChange(value === "private")}
+        className="flex gap-6"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="public" id="create-public" />
+          <Label htmlFor="create-public" className="flex items-center gap-2 cursor-pointer">
+            <GlobeAltIcon className="h-4 w-4 text-gray-500" />
             <div>
-              <div className="text-sm font-medium text-gray-900">Keep this document private</div>
-              <div className="text-xs text-gray-500">Only you will be able to view this document. Private by default.</div>
+              <div className="text-sm font-medium">Public</div>
+              <div className="text-xs text-gray-500">Anyone can view this document</div>
             </div>
-          </div>
-        </label>
-      </div>
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="private" id="create-private" />
+          <Label htmlFor="create-private" className="flex items-center gap-2 cursor-pointer">
+            <LockClosedIcon className="h-4 w-4 text-gray-500" />
+            <div>
+              <div className="text-sm font-medium">Private</div>
+              <div className="text-xs text-gray-500">Only you can view this document</div>
+            </div>
+          </Label>
+        </div>
+      </RadioGroup>
     </div>
   );
 }
@@ -547,9 +551,8 @@ export default function CreateDocumentForm() {
                 ))}
 
                 <PrivacyToggle 
-                  isPrivate={true}
-                  onChange={() => {}}
-                  useRegister={methods.register("isPrivate")}
+                  isPrivate={methods.watch("isPrivate") || false}
+                  onChange={(value) => methods.setValue("isPrivate", value)}
                 />
 
                 <AgentSelector
