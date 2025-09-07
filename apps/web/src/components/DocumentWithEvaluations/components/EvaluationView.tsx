@@ -18,6 +18,7 @@ import { LAYOUT } from "../constants";
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { CommentsColumn } from "./CommentsColumn";
+import { CommentToolbar } from "./CommentToolbar";
 import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
@@ -191,7 +192,6 @@ export function EvaluationView({
                 });
               }}
               isFullWidth={isFullWidth}
-              onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
               contentRef={contentRef}
             />
             {/* Comments column with filters and positioned comments */}
@@ -202,6 +202,11 @@ export function EvaluationView({
                 marginLeft: "2rem",
               }}
             >
+              <CommentToolbar
+                documentId={document.id}
+                isFullWidth={isFullWidth}
+                onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
+              />
               <CommentsColumn
                 comments={displayComments}
                 contentRef={contentRef}

@@ -93,8 +93,8 @@ model DocumentVersion {
   createdAt             DateTime                 @default(now())
   updatedAt             DateTime                 @updatedAt
   importUrl             String?
-  searchableText        String?                  @default(dbgenerated("lower(((((((((COALESCE(title, ''::text) || ' '::text) || COALESCE(immutable_array_to_string(authors, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(platforms, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(urls, ' '::text), ''::text)) || ' '::text) || COALESCE(\"importUrl\", ''::text)))"))
-  content_search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"left\"(content, 10000), ''::text))"))
+  searchableText        String?
+  content_search_vector Unsupported("tsvector")?
   contentSearchVector   Unsupported("tsvector")?
   markdownPrepend       String?
   document              Document                 @relation(fields: [documentId], references: [id], onDelete: Cascade)

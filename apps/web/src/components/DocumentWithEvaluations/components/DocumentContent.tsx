@@ -20,7 +20,6 @@ interface DocumentContentProps {
   onHighlightHover: (commentId: string | null) => void;
   onHighlightClick: (commentId: string) => void;
   isFullWidth: boolean;
-  onToggleFullWidth: () => void;
   contentRef: RefObject<HTMLDivElement | null>;
 }
 
@@ -32,7 +31,6 @@ export function DocumentContent({
   onHighlightHover,
   onHighlightClick,
   isFullWidth,
-  onToggleFullWidth,
   contentRef,
 }: DocumentContentProps) {
   return (
@@ -49,8 +47,6 @@ export function DocumentContent({
       <DocumentMetadata
         document={document}
         showDetailedAnalysisLink={true}
-        isFullWidth={isFullWidth}
-        onToggleFullWidth={onToggleFullWidth}
       />
 
       <article
