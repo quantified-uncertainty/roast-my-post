@@ -1,27 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { logger } from "@/infrastructure/logging/logger";
+import { useEffect, useState } from "react";
+
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+import { AgentBadges } from "@/components/AgentBadges";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
-import { AgentBadges } from "@/components/AgentBadges";
-import { 
-  LinkIcon, 
-  DocumentTextIcon,
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { logger } from "@/infrastructure/logging/logger";
+import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
+import {
   CheckIcon,
+  DocumentTextIcon,
+  GlobeAltIcon,
+  LinkIcon,
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-import { createDocument } from "./actions";
 import { importDocument } from "../import/actions";
-import { type DocumentInput, documentSchema, CONTENT_MIN_CHARS, CONTENT_MAX_WORDS } from "./schema";
-import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
+import { createDocument } from "./actions";
 import { useContentValidation } from "./hooks/useContentValidation";
+import {
+  CONTENT_MAX_WORDS,
+  CONTENT_MIN_CHARS,
+  type DocumentInput,
+  documentSchema,
+} from "./schema";
 
 interface FormFieldConfig {
   name: keyof DocumentInput;
@@ -78,37 +87,52 @@ interface PrivacyToggleProps {
   useRegister?: any; // For react-hook-form register
 }
 
-function PrivacyToggle({ isPrivate, onChange, useRegister }: PrivacyToggleProps) {
+function PrivacyToggle({
+  isPrivate,
+  onChange,
+  useRegister,
+}: PrivacyToggleProps) {
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium text-gray-900">
         Document Privacy
       </label>
-      <div className="bg-gray-50 rounded-lg p-4">
-        <label className="flex items-start gap-3 cursor-pointer">
-          {useRegister ? (
-            <input
-              {...useRegister}
-              type="checkbox"
-              className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
-            />
-          ) : (
-            <input
-              type="checkbox"
-              checked={isPrivate}
-              onChange={(e) => onChange(e.target.checked)}
-              className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
-            />
-          )}
-          <div className="flex items-start gap-2">
-            <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
+      <RadioGroup
+        value={isPrivate ? "private" : "public"}
+        onValueChange={(value: string) => onChange(value === "private")}
+        className="flex gap-6"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="public" id="create-public" />
+          <Label
+            htmlFor="create-public"
+            className="flex cursor-pointer items-center gap-2"
+          >
+            <GlobeAltIcon className="h-4 w-4 text-gray-500" />
             <div>
-              <div className="text-sm font-medium text-gray-900">Keep this document private</div>
-              <div className="text-xs text-gray-500">Only you will be able to view this document. Private by default.</div>
+              <div className="text-sm font-medium">Public</div>
+              <div className="text-xs text-gray-500">
+                Anyone can view this document
+              </div>
             </div>
-          </div>
-        </label>
-      </div>
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="private" id="create-private" />
+          <Label
+            htmlFor="create-private"
+            className="flex cursor-pointer items-center gap-2"
+          >
+            <LockClosedIcon className="h-4 w-4 text-gray-500" />
+            <div>
+              <div className="text-sm font-medium">Private</div>
+              <div className="text-xs text-gray-500">
+                Only you can view this document
+              </div>
+            </div>
+          </Label>
+        </div>
+      </RadioGroup>
     </div>
   );
 }
@@ -123,14 +147,14 @@ interface AgentSelectorProps {
   layout?: "grid" | "list";
 }
 
-function AgentSelector({ 
-  agents, 
-  selectedAgentIds, 
-  onToggleAgent, 
-  loading, 
+function AgentSelector({
+  agents,
+  selectedAgentIds,
+  onToggleAgent,
+  loading,
   title = "Evaluations to run",
   actionText = "will be queued",
-  layout = "grid"
+  layout = "grid",
 }: AgentSelectorProps) {
   if (loading) {
     return (
@@ -138,7 +162,7 @@ function AgentSelector({
         <label className="block text-sm font-medium text-gray-700">
           {title}
         </label>
-        <div className="flex items-center justify-center p-8 rounded-lg border border-gray-200">
+        <div className="flex items-center justify-center rounded-lg border border-gray-200 p-8">
           <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-600"></div>
         </div>
       </div>
@@ -151,26 +175,25 @@ function AgentSelector({
         <label className="block text-sm font-medium text-gray-700">
           {title}
         </label>
-        <p className="text-sm text-gray-500 italic">No evaluations available</p>
+        <p className="text-sm italic text-gray-500">No evaluations available</p>
       </div>
     );
   }
 
-  const containerClass = layout === "grid" 
-    ? "grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto"
-    : "space-y-2 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto";
+  const containerClass =
+    layout === "grid"
+      ? "grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto"
+      : "space-y-2 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto";
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">
-        {title}
-      </label>
-      
+      <label className="block text-sm font-medium text-gray-700">{title}</label>
+
       <div className={containerClass}>
-        {agents.map(agent => (
+        {agents.map((agent) => (
           <label
             key={agent.id}
-            className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 hover:border-gray-200 cursor-pointer transition-colors"
+            className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-100 p-3 transition-colors hover:border-gray-200 hover:bg-gray-50"
           >
             <input
               type="checkbox"
@@ -178,7 +201,7 @@ function AgentSelector({
               onChange={() => onToggleAgent(agent.id)}
               className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-gray-900">{agent.name}</span>
                 <AgentBadges
@@ -189,18 +212,21 @@ function AgentSelector({
                   size="sm"
                 />
               </div>
-              <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
+              <div className="mt-1 text-sm text-gray-600">
+                {agent.description}
+              </div>
             </div>
             {selectedAgentIds.includes(agent.id) && (
-              <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
+              <CheckIcon className="mt-1 h-5 w-5 flex-shrink-0 text-blue-600" />
             )}
           </label>
         ))}
       </div>
-      
+
       {selectedAgentIds.length > 0 && (
         <p className="text-sm text-gray-600">
-          {selectedAgentIds.length} evaluation{selectedAgentIds.length !== 1 ? 's' : ''} {actionText}
+          {selectedAgentIds.length} evaluation
+          {selectedAgentIds.length !== 1 ? "s" : ""} {actionText}
         </p>
       )}
     </div>
@@ -231,16 +257,17 @@ interface SubmitButtonProps {
   disabled?: boolean;
 }
 
-function SubmitButton({ 
-  isSubmitting, 
-  selectedAgentCount, 
-  baseText, 
+function SubmitButton({
+  isSubmitting,
+  selectedAgentCount,
+  baseText,
   submittingText,
-  disabled = false 
+  disabled = false,
 }: SubmitButtonProps) {
-  const buttonText = selectedAgentCount > 0 
-    ? `${baseText} & Run ${selectedAgentCount} Evaluation${selectedAgentCount !== 1 ? 's' : ''}`
-    : baseText;
+  const buttonText =
+    selectedAgentCount > 0
+      ? `${baseText} & Run ${selectedAgentCount} Evaluation${selectedAgentCount !== 1 ? "s" : ""}`
+      : baseText;
 
   return (
     <Button type="submit" disabled={disabled || isSubmitting}>
@@ -264,7 +291,7 @@ export default function CreateDocumentForm() {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importIsPrivate, setImportIsPrivate] = useState(true); // Default to private
-  
+
   // Agent selection state
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
@@ -287,10 +314,11 @@ export default function CreateDocumentForm() {
     setError,
     watch,
   } = methods;
-  
+
   // Watch content field for real-time validation
   const content = watch("content");
-  const { charCount, wordCount, hasMinChars, hasMaxWords } = useContentValidation(content);
+  const { charCount, wordCount, hasMinChars, hasMaxWords } =
+    useContentValidation(content);
 
   // Fetch available agents
   useEffect(() => {
@@ -300,12 +328,12 @@ export default function CreateDocumentForm() {
         if (!response.ok) throw new Error("Failed to fetch agents");
         const data = await response.json();
         const fetchedAgents = data.agents || [];
-        
+
         // Sort agents: recommended first, then regular, then deprecated
         const sortedAgents = sortAgentsByBadgeStatus<Agent>(fetchedAgents);
         setAgents(sortedAgents);
       } catch (error) {
-        logger.error('Error fetching agents:', error);
+        logger.error("Error fetching agents:", error);
       } finally {
         setLoadingAgents(false);
       }
@@ -314,9 +342,9 @@ export default function CreateDocumentForm() {
   }, []);
 
   const toggleAgent = (agentId: string) => {
-    setSelectedAgentIds(prev => 
-      prev.includes(agentId) 
-        ? prev.filter(id => id !== agentId)
+    setSelectedAgentIds((prev) =>
+      prev.includes(agentId)
+        ? prev.filter((id) => id !== agentId)
         : [...prev, agentId]
     );
   };
@@ -355,7 +383,10 @@ export default function CreateDocumentForm() {
       if (error instanceof z.ZodError) {
         let hasFieldError = false;
         error.errors.forEach((err) => {
-          const field = typeof err.path?.[0] === "string" ? (err.path[0] as keyof DocumentInput) : undefined;
+          const field =
+            typeof err.path?.[0] === "string"
+              ? (err.path[0] as keyof DocumentInput)
+              : undefined;
           if (field) {
             setError(field, { message: err.message });
             hasFieldError = true;
@@ -365,7 +396,7 @@ export default function CreateDocumentForm() {
           setError("root", { message: "Please fix the validation errors." });
         }
       } else {
-        logger.error('Error submitting form:', error);
+        logger.error("Error submitting form:", error);
         setError("root", { message: "An unexpected error occurred" });
       }
     }
@@ -390,7 +421,7 @@ export default function CreateDocumentForm() {
               <button
                 type="button"
                 onClick={() => setMode("import")}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                   mode === "import"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -402,7 +433,7 @@ export default function CreateDocumentForm() {
               <button
                 type="button"
                 onClick={() => setMode("manual")}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                   mode === "manual"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -435,11 +466,15 @@ export default function CreateDocumentForm() {
                   disabled={isImporting}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
+                <div className="mt-6 text-sm text-gray-600">
+                  Supports LessWrong and the EA Forum. Attempts to fetch article
+                  content from other platforms.
+                </div>
               </div>
 
-              <PrivacyToggle 
-                isPrivate={importIsPrivate} 
-                onChange={setImportIsPrivate} 
+              <PrivacyToggle
+                isPrivate={importIsPrivate}
+                onChange={setImportIsPrivate}
               />
 
               <AgentSelector
@@ -471,26 +506,18 @@ export default function CreateDocumentForm() {
 
               {isImporting && (
                 <div className="mt-4 text-center text-sm text-gray-600">
-                  Importing may take 10-20 seconds. Please be patient while we process
-                  your document.
+                  Importing may take 10-20 seconds. Please be patient while we
+                  process your document.
                 </div>
               )}
-
-              <div className="mt-6 text-sm text-gray-600">
-                <p>Supported platforms:</p>
-                <ul className="mt-2 list-inside list-disc space-y-1">
-                  <li>LessWrong</li>
-                  <li>EA Forum</li>
-                  <li>Medium</li>
-                  <li>Substack</li>
-                  <li>General web articles</li>
-                </ul>
-              </div>
             </form>
           ) : (
             // Manual Mode
             <FormProvider {...methods}>
-              <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={methods.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <FormField
                   name="content"
                   label="Content"
@@ -507,20 +534,34 @@ export default function CreateDocumentForm() {
                     />
                     <div className="flex justify-between text-sm">
                       <div className="space-x-4">
-                        <span className={`${!hasMinChars && charCount > 0 ? "text-red-600" : "text-gray-500"}`}>
-                          {charCount} characters {!hasMinChars && charCount > 0 && `(min: ${CONTENT_MIN_CHARS})`}
+                        <span
+                          className={`${!hasMinChars && charCount > 0 ? "text-red-600" : "text-gray-500"}`}
+                        >
+                          {charCount} characters{" "}
+                          {!hasMinChars &&
+                            charCount > 0 &&
+                            `(min: ${CONTENT_MIN_CHARS})`}
                         </span>
-                        <span className={`${!hasMaxWords && wordCount > 0 ? "text-red-600" : "text-gray-500"}`}>
-                          {wordCount.toLocaleString()} words {!hasMaxWords && `(max: ${CONTENT_MAX_WORDS.toLocaleString()})`}
+                        <span
+                          className={`${!hasMaxWords && wordCount > 0 ? "text-red-600" : "text-gray-500"}`}
+                        >
+                          {wordCount.toLocaleString()} words{" "}
+                          {!hasMaxWords &&
+                            `(max: ${CONTENT_MAX_WORDS.toLocaleString()})`}
                         </span>
                       </div>
                       {content && (
                         <div>
                           {!hasMinChars && (
-                            <span className="text-red-600">Need {CONTENT_MIN_CHARS - charCount} more characters</span>
+                            <span className="text-red-600">
+                              Need {CONTENT_MIN_CHARS - charCount} more
+                              characters
+                            </span>
                           )}
                           {hasMinChars && hasMaxWords && (
-                            <span className="text-green-600">✓ Valid length</span>
+                            <span className="text-green-600">
+                              ✓ Valid length
+                            </span>
                           )}
                         </div>
                       )}
@@ -546,10 +587,9 @@ export default function CreateDocumentForm() {
                   </FormField>
                 ))}
 
-                <PrivacyToggle 
-                  isPrivate={true}
-                  onChange={() => {}}
-                  useRegister={methods.register("isPrivate")}
+                <PrivacyToggle
+                  isPrivate={methods.watch("isPrivate") || false}
+                  onChange={(value) => methods.setValue("isPrivate", value)}
                 />
 
                 <AgentSelector
@@ -563,7 +603,9 @@ export default function CreateDocumentForm() {
                 />
 
                 {errors.root && (
-                  <ErrorAlert message={errors.root.message || "An error occurred"} />
+                  <ErrorAlert
+                    message={errors.root.message || "An error occurred"}
+                  />
                 )}
 
                 <div className="flex justify-end gap-3">

@@ -7,13 +7,11 @@ import {
   EvaluationActions,
 } from "@/components/EvaluationCard/shared/EvaluationActions";
 import {
-  EvaluationHeader,
-} from "@/components/EvaluationCard/shared/EvaluationHeader";
-import {
   EvaluationStats,
 } from "@/components/EvaluationCard/shared/EvaluationStats";
 import { GradeBadge } from "@/components/GradeBadge";
 import { StatusBadge } from "@/components/StatusBadge";
+import { StaleBadge } from "@/components/StaleBadge";
 import type { Evaluation } from "@/shared/types/databaseTypes";
 import { getEvaluationStatus } from "@/shared/utils/evaluationStatus";
 import {
@@ -101,21 +99,17 @@ export function ManagementEvaluationCard({
               <BeakerIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
             </div>
             <div className="min-w-0 flex-1">
-              <EvaluationHeader
-                agentName={evaluation.agent.name}
-                grade={latestGrade}
-                isStale={isStale}
-                isRerunning={isRerunning}
-                evaluationStatus={evaluationStatus}
-                showGrade={false}
-              >
+              <div className="flex items-center gap-2">
                 <Link
                   href={`/agents/${agentId}`}
-                  className="ml-1 text-gray-400 hover:text-gray-600"
+                  className="text-sm font-semibold text-gray-700 hover:text-gray-900"
                 >
-                  →
+                  {evaluation.agent.name}
                 </Link>
-              </EvaluationHeader>
+                {isStale && (
+                  <StaleBadge size="sm" />
+                )}
+              </div>
               <div className="mt-0.5">
                 <EvaluationStats
                   versionCount={versionCount}
@@ -146,6 +140,7 @@ export function ManagementEvaluationCard({
               showRerun={isOwner}
               showDelete={isOwner}
               showDetails={true}
+              detailsText="View Results"
               detailsStyle="button"
               className="flex items-center gap-2"
             />
@@ -157,18 +152,12 @@ export function ManagementEvaluationCard({
       {latestVersion && (
         <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
           <div className="flex items-start gap-4">
-            {/* Grade badge */}
-            <div className="flex-shrink-0">
-              {latestGrade !== null && latestGrade !== undefined ? (
+            {/* Grade badge - only show if grade exists */}
+            {latestGrade !== null && latestGrade !== undefined && (
+              <div className="flex-shrink-0">
                 <GradeBadge grade={latestGrade} variant="grayscale" size="md" />
-              ) : (
-                <div className="rounded bg-gray-100 px-3 py-1">
-                  <span className="text-sm font-semibold text-gray-400">
-                    N/A
-                  </span>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Summary and metadata */}
             <div className="min-w-0 flex-1">
@@ -205,7 +194,7 @@ export function ManagementEvaluationCard({
                     <span>•</span>
                     <Link
                       href={`/docs/${docId}/evals/${agentId}/logs`}
-                      className="text-purple-700 hover:text-purple-900"
+                      className="text-blue-600 hover:text-blue-800"
                     >
                       Logs
                     </Link>

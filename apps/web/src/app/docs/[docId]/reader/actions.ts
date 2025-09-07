@@ -7,6 +7,7 @@ import { auth } from "@/infrastructure/auth/auth";
 import { processArticle } from "@/infrastructure/external/articleImport";
 import { NotFoundError, AuthorizationError } from '@roast/domain';
 import { getServices } from "@/application/services/ServiceFactory";
+import { prisma } from "@/infrastructure/database/prisma";
 
 export async function deleteDocument(docId: string) {
   try {
@@ -131,6 +132,62 @@ export async function reuploadDocument(docId: string) {
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Failed to re-upload document" 
+    };
+  }
+}
+
+export async function toggleDocumentPrivacy(docId: string) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: "User must be logged in to change document privacy",
+      };
+    }
+
+    // Get the document to check ownership and current privacy status
+    const document = await prisma.document.findUnique({
+      where: { id: docId },
+      select: { 
+        submittedById: true, 
+        isPrivate: true 
+      },
+    });
+
+    if (!document) {
+      return {
+        success: false,
+        error: "Document not found",
+      };
+    }
+
+    if (document.submittedById !== session.user.id) {
+      return {
+        success: false,
+        error: "You don't have permission to change this document's privacy",
+      };
+    }
+
+    // Toggle the privacy status
+    await prisma.document.update({
+      where: { id: docId },
+      data: { isPrivate: !document.isPrivate },
+    });
+
+    // Revalidate the document page
+    revalidatePath(`/docs/${docId}`);
+
+    return { 
+      success: true, 
+      isPrivate: !document.isPrivate 
+    };
+  } catch (error) {
+    logger.error("Failed to toggle document privacy", { error, docId });
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
 }

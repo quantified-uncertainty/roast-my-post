@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { logger } from "@/infrastructure/logging/logger";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/Button";
+import { logger } from "@/infrastructure/logging/logger";
 import { CheckIcon } from "@heroicons/react/24/solid";
 
 import { importDocument } from "./actions";
@@ -31,9 +31,11 @@ export default function ImportPage() {
         const data = await response.json();
         setAgents(data.agents || []);
         // Select all agents by default
-        setSelectedAgentIds((data.agents || []).map((agent: Agent) => agent.id));
+        setSelectedAgentIds(
+          (data.agents || []).map((agent: Agent) => agent.id)
+        );
       } catch (error) {
-        logger.error('Error fetching agents:', error);
+        logger.error("Error fetching agents:", error);
       } finally {
         setLoadingAgents(false);
       }
@@ -42,13 +44,12 @@ export default function ImportPage() {
   }, []);
 
   const toggleAgent = (agentId: string) => {
-    setSelectedAgentIds(prev => 
-      prev.includes(agentId) 
-        ? prev.filter(id => id !== agentId)
+    setSelectedAgentIds((prev) =>
+      prev.includes(agentId)
+        ? prev.filter((id) => id !== agentId)
         : [...prev, agentId]
     );
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,19 +104,19 @@ export default function ImportPage() {
               Run evaluations after import
             </label>
           </div>
-          
+
           {loadingAgents ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 p-4">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-20 bg-gray-100 rounded-lg"></div>
+            <div className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 p-4 md:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-20 rounded-lg bg-gray-100"></div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 p-4 max-h-96 overflow-y-auto">
-              {agents.map(agent => (
+            <div className="grid max-h-96 grid-cols-1 gap-3 overflow-y-auto rounded-lg border border-gray-200 p-4 md:grid-cols-2">
+              {agents.map((agent) => (
                 <label
                   key={agent.id}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 hover:border-gray-200 cursor-pointer transition-colors"
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-100 p-3 transition-colors hover:border-gray-200 hover:bg-gray-50"
                 >
                   <input
                     type="checkbox"
@@ -123,21 +124,27 @@ export default function ImportPage() {
                     onChange={() => toggleAgent(agent.id)}
                     className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900">{agent.name}</div>
-                    <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-gray-900">
+                      {agent.name}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      {agent.description}
+                    </div>
                   </div>
                   {selectedAgentIds.includes(agent.id) && (
-                    <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
+                    <CheckIcon className="mt-1 h-5 w-5 flex-shrink-0 text-blue-600" />
                   )}
                 </label>
               ))}
             </div>
           )}
-          
+
           {selectedAgentIds.length > 0 && (
             <p className="text-sm text-gray-600">
-              {selectedAgentIds.length} evaluation{selectedAgentIds.length !== 1 ? 's' : ''} will be queued after import
+              {selectedAgentIds.length} evaluation
+              {selectedAgentIds.length !== 1 ? "s" : ""} will be queued after
+              import
             </p>
           )}
         </div>
@@ -154,10 +161,10 @@ export default function ImportPage() {
               <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
               Importing...
             </div>
+          ) : selectedAgentIds.length > 0 ? (
+            `Import & Run ${selectedAgentIds.length} Evaluation${selectedAgentIds.length !== 1 ? "s" : ""}`
           ) : (
-            selectedAgentIds.length > 0 
-              ? `Import & Run ${selectedAgentIds.length} Evaluation${selectedAgentIds.length !== 1 ? 's' : ''}`
-              : "Import Document"
+            "Import Document"
           )}
         </Button>
       </form>
@@ -170,14 +177,8 @@ export default function ImportPage() {
       )}
 
       <div className="mt-6 text-sm text-gray-600">
-        <p>Supported platforms:</p>
-        <ul className="mt-2 list-inside list-disc space-y-1">
-          <li>LessWrong</li>
-          <li>EA Forum</li>
-          <li>Medium</li>
-          <li>Substack</li>
-          <li>General web articles</li>
-        </ul>
+        Supports LessWrong and the EA Forum. Attempts to fetch article content
+        from other platforms.
       </div>
     </div>
   );

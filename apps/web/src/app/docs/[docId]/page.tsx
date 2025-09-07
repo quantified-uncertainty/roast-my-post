@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { BookOpen } from "lucide-react";
 // @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
 import Link from "next/link";
@@ -7,18 +8,15 @@ import { notFound } from "next/navigation";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
-import SlateEditor from "@/components/SlateEditor";
-import { PageHeader } from "@/components/PageHeader";
-import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
+import SlateEditor from "@/components/SlateEditor";
+import { Button } from "@/components/ui/button";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { DocumentModel } from "@/models/Document";
-import {
-  ArrowTopRightOnSquareIcon,
-  BookOpenIcon,
-} from "@heroicons/react/24/outline";
+
 import { EvaluationManagement } from "./components/EvaluationManagement";
+import { PrivacySection } from "./components/PrivacySection";
 
 async function getAvailableAgents(docId: string) {
   // Get all agents that don't have evaluations for this document yet
@@ -71,7 +69,8 @@ export default async function DocumentPage({
 
   // Use unsafe version since privacy is checked by the layout
   // Show all evaluations in the sidebar regardless of staleness
-  const document = await DocumentModel.getDocumentWithAllEvaluationsUnsafe(docId);
+  const document =
+    await DocumentModel.getDocumentWithAllEvaluationsUnsafe(docId);
 
   if (!document) {
     notFound();
@@ -136,7 +135,7 @@ export default async function DocumentPage({
   const availableAgents = await getAvailableAgents(docId);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-gray-50">
+    <div className="flex flex-col bg-gray-50">
       {/* Full-width breadcrumbs */}
       <BreadcrumbHeader
         items={[
@@ -146,7 +145,7 @@ export default async function DocumentPage({
       />
 
       {/* Sidebar and content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1">
         {/* Document/Evaluation Switcher Sidebar */}
         <DocumentEvaluationSidebar
           docId={docId}
@@ -155,48 +154,39 @@ export default async function DocumentPage({
         />
 
         <div className="flex-1 overflow-y-auto">
-          {/* Full-width Header */}
-          <PageHeader
-            title={
-              <div className="flex items-center gap-3">
-                {document.title || "Untitled Document"}
-                <PrivacyBadge isPrivate={document.isPrivate} variant="badge" size="sm" />
-              </div>
-            }
-            subtitle="Document Overview"
-          >
-            <div className="flex items-center gap-4">
-              {documentWithBatch?.ephemeralBatch && (
-                <ExperimentalBadge 
-                  trackingId={documentWithBatch.ephemeralBatch.trackingId}
-                />
-              )}
-              {isOwner && (
-                <DocumentActions
-                  docId={docId}
-                  document={{ 
-                    importUrl: document.importUrl,
-                    isPrivate: document.isPrivate 
-                  }}
-                />
-              )}
-            </div>
-          </PageHeader>
-
           <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 lg:auto-rows-fr lg:grid-cols-3">
               {/* Main Content */}
-              <div className="lg:col-span-2">
+              <div className="flex flex-col lg:col-span-2">
                 {/* Document Preview Card */}
-                <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-lg font-semibold text-gray-900">
-                    Document Opening
-                  </h2>
+                <div className="flex flex-1 flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Document Preview
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <Button asChild size="sm">
+                        <Link href={`/docs/${docId}/reader`}>
+                          <BookOpen className="h-3.5 w-3.5" />
+                          Reader View
+                        </Link>
+                      </Button>
+                      {isOwner && (
+                        <DocumentActions
+                          docId={docId}
+                          document={{
+                            importUrl: document.importUrl,
+                            isPrivate: document.isPrivate,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
 
-                  <div className="prose prose-gray max-w-none">
+                  <div className="prose prose-gray max-w-none flex-1">
                     {document.content ? (
                       <div className="leading-relaxed text-gray-700">
-                        <SlateEditor 
+                        <SlateEditor
                           content={truncateMarkdown(document.content, {
                             limit: 500,
                             ellipsis: true,
@@ -214,41 +204,12 @@ export default async function DocumentPage({
                       Blog Post • First paragraph preview
                     </p>
                   </div>
-
-                  <div className="mt-6 flex gap-3">
-                    {document.importUrl ? (
-                      <a
-                        href={document.importUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
-                      >
-                        <ArrowTopRightOnSquareIcon className="mr-2 h-4 w-4" />
-                        Go to source
-                      </a>
-                    ) : (
-                      <Link
-                        href={`/docs/${docId}/reader`}
-                        className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
-                      >
-                        <BookOpenIcon className="mr-2 h-4 w-4" />
-                        View full document
-                      </Link>
-                    )}
-                    <Link
-                      href={`/docs/${docId}/reader`}
-                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                    >
-                      <BookOpenIcon className="mr-2 h-4 w-4" />
-                      Reader View
-                    </Link>
-                  </div>
                 </div>
               </div>
 
               {/* Right Sidebar */}
-              <div className="lg:col-span-1">
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col lg:col-span-1">
+                <div className="flex-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-6 text-lg font-semibold text-gray-900">
                     Document Information
                   </h2>
@@ -263,14 +224,11 @@ export default async function DocumentPage({
                       </dd>
                     </div>
 
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">
-                        Privacy
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        <PrivacyBadge isPrivate={document.isPrivate} variant="text" size="sm" />
-                      </dd>
-                    </div>
+                    <PrivacySection
+                      docId={docId}
+                      isPrivate={document.isPrivate || false}
+                      isOwner={isOwner}
+                    />
 
                     {document.importUrl && (
                       <div>

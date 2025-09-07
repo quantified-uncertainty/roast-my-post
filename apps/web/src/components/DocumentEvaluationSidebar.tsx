@@ -2,22 +2,23 @@
 
 import { useState } from "react";
 
+import { Microscope } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { UI_LABELS } from "@/constants/ui-labels";
 import { getEvaluationGrade } from "@/shared/utils/type-guards";
 import {
   BeakerIcon,
   BookOpenIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  CommandLineIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+import type { JobStatus } from "@roast/db";
 
 import { GradeBadge } from "./GradeBadge";
 import { JobStatusIndicator } from "./JobStatusIndicator";
-import type { JobStatus } from "@roast/db";
 
 interface Evaluation {
   id?: string;
@@ -60,12 +61,12 @@ export function DocumentEvaluationSidebar({
   const isReaderPage = pathname === `/docs/${docId}/reader`;
 
   return (
-    <nav className="h-full w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
+    <nav className="w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
       <div className="p-6">
-        {/* Inspector View Header */}
+        {/* Eval Editor Header */}
         <div className="mb-6 ml-2 flex cursor-default select-none items-center gap-2 text-sm font-semibold text-gray-500">
-          <CommandLineIcon className="h-5 w-5 text-gray-400" />
-          INSPECTOR VIEW
+          <Microscope className="h-5 w-5 text-gray-400" />
+          {UI_LABELS.EVAL_EDITOR.label.toUpperCase()}
         </div>
         {/* Document Link */}
         <Link
@@ -79,7 +80,6 @@ export function DocumentEvaluationSidebar({
           <DocumentTextIcon className="h-4 w-4" />
           Overview
         </Link>
-
 
         {/* Reader View Link */}
         <Link
