@@ -46,7 +46,7 @@ export function EvaluationStats({
       <Link
         key="versions"
         href={`/docs/${docId}/evals/${agentId}/versions/${versionNumber || versionCount}`}
-        className="text-purple-700 hover:text-purple-900"
+        className="text-blue-600 hover:text-blue-800"
       >
         {versionCount} version{versionCount !== 1 ? "s" : ""}
       </Link>
