@@ -1,13 +1,13 @@
 "use client";
 
+import { ExternalLink, Microscope } from "lucide-react";
 import Link from "next/link";
 
-import type { Document } from "@/shared/types/databaseTypes";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
-import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
-import { PenTool, ExternalLink } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
 import { UI_LABELS } from "@/constants/ui-labels";
+import type { Document } from "@/shared/types/databaseTypes";
 
 interface DocumentMetadataProps {
   document: Document;
@@ -41,24 +41,18 @@ export function DocumentMetadata({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-        >
+        <Button asChild variant="outline" size="sm">
           <Link href={`/docs/${document.id}`}>
-            <PenTool className="h-4 w-4" />
+            <Microscope className="h-4 w-4" />
             <span className="hidden sm:inline">
-              {showDetailedAnalysisLink ? UI_LABELS.EVAL_EDITOR.label : "Document Details"}
+              {showDetailedAnalysisLink
+                ? UI_LABELS.EVAL_EDITOR.label
+                : "Document Details"}
             </span>
           </Link>
         </Button>
         {(document.importUrl || document.url) && (
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-          >
+          <Button asChild variant="outline" size="sm">
             <Link
               href={document.importUrl || document.url || ""}
               target="_blank"

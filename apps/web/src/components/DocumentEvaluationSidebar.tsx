@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { PenTool } from "lucide-react";
+import { Microscope } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -65,7 +65,7 @@ export function DocumentEvaluationSidebar({
       <div className="p-6">
         {/* Eval Editor Header */}
         <div className="mb-6 ml-2 flex cursor-default select-none items-center gap-2 text-sm font-semibold text-gray-500">
-          <PenTool className="h-5 w-5 text-gray-400" />
+          <Microscope className="h-5 w-5 text-gray-400" />
           {UI_LABELS.EVAL_EDITOR.label.toUpperCase()}
         </div>
         {/* Document Link */}
