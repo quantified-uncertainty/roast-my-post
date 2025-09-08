@@ -110,7 +110,7 @@ export function EvaluationView({
       return allComments;
     }
     return allComments.filter((comment) => comment.level !== "debug");
-  }, [allComments, localShowDebugComments]);
+  }, [allComments, localShowDebugComments]) as Array<DbComment & { agentName: string }>;
 
   // Check for comment query param on mount and when it changes
   const commentIdFromUrl = searchParams.get('comment');
