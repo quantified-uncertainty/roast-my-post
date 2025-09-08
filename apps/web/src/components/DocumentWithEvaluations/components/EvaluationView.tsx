@@ -131,7 +131,7 @@ export function EvaluationView({
         }
       }
     }
-  }, [commentIdFromUrl, displayComments.length]);
+  }, [commentIdFromUrl, displayComments, evaluationState, onEvaluationStateChange]);
 
   const highlights = useMemo(
     () =>
@@ -260,7 +260,6 @@ export function EvaluationView({
                     },
                   });
                 }}
-                document={document as any}
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
                 showDebugComments={localShowDebugComments}

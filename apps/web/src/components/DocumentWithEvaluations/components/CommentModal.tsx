@@ -165,9 +165,10 @@ export function CommentModal({
             className="absolute right-6 top-6 z-50 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100"
             style={{ width: "40px", height: "40px" }}
             title="Close (Esc key)"
+            aria-label="Close modal"
           >
-            <X style={{ width: "30px", height: "30px" }} />
-            <span className="sr-only">Close</span>
+            <X style={{ width: "30px", height: "30px" }} aria-hidden="true" />
+            <span className="sr-only">Close modal</span>
           </Button>
 
           {/* Navigation buttons - much larger */}
@@ -181,9 +182,11 @@ export function CommentModal({
                 className="absolute left-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
                 style={{ width: "48px", height: "48px" }}
                 title="Previous comment (← Arrow key)"
+                aria-label="Go to previous comment"
+                aria-keyshortcuts="ArrowLeft"
               >
-                <ChevronLeft style={{ width: "30px", height: "30px" }} />
-                <span className="sr-only">Previous comment</span>
+                <ChevronLeft style={{ width: "30px", height: "30px" }} aria-hidden="true" />
+                <span className="sr-only">Go to previous comment</span>
               </Button>
 
               <Button
@@ -194,9 +197,11 @@ export function CommentModal({
                 className="absolute right-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
                 style={{ width: "48px", height: "48px" }}
                 title="Next comment (→ Arrow key)"
+                aria-label="Go to next comment"
+                aria-keyshortcuts="ArrowRight"
               >
-                <ChevronRight style={{ width: "30px", height: "30px" }} />
-                <span className="sr-only">Next comment</span>
+                <ChevronRight style={{ width: "30px", height: "30px" }} aria-hidden="true" />
+                <span className="sr-only">Go to next comment</span>
               </Button>
             </>
           )}
