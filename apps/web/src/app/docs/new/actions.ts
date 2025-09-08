@@ -45,25 +45,8 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     const document = result.unwrap();
 
-    // Queue evaluations if agents are selected
-    if (agentIds.length > 0) {
-      const { evaluationService } = getServices();
-      const evaluationResult = await evaluationService.createEvaluationsForDocument({
-        documentId: document.id,
-        agentIds,
-        userId: session.user.id
-      });
-
-      if (evaluationResult.isError()) {
-        logger.error('Failed to create evaluations:', evaluationResult.error());
-        // Don't fail the document creation, just log the error
-      } else {
-        logger.info('Evaluations created successfully', {
-          documentId: document.id,
-          evaluationsCreated: evaluationResult.unwrap().length
-        });
-      }
-    }
+    // Note: Evaluations are already created by DocumentService.createDocument()
+    // when agentIds are passed, so we don't need to create them again here
 
     revalidatePath("/docs");
     redirect(`/docs/${document.id}/reader`);

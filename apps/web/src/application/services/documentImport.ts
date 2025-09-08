@@ -82,30 +82,10 @@ export async function importDocumentService(
 
     const document = result.unwrap();
     
-    // Create evaluations and jobs if agentIds are provided
-    const createdEvaluations = [];
-    if (agentIds && agentIds.length > 0) {
-      logger.info(`Creating evaluations for ${agentIds.length} agents`);
-      
-      // EvaluationService is already created above with dependencies
-      const evaluationResult = await evaluationService.createEvaluationsForDocument({
-        documentId: document.id,
-        agentIds,
-        userId
-      });
-
-      if (evaluationResult.isError()) {
-        logger.error('Failed to create evaluations:', evaluationResult.error());
-        // Continue with partial success - document was created successfully
-      } else {
-        const results = evaluationResult.unwrap();
-        createdEvaluations.push(...results);
-        logger.info('Evaluations created successfully', {
-          documentId: document.id,
-          evaluationsCreated: results.length
-        });
-      }
-    }
+    // Note: Evaluations are already created by DocumentService.createDocument()
+    // when agentIds are passed, so we don't need to create them again here
+    // We return an empty array since we don't have access to the evaluation details from DocumentService
+    const createdEvaluations: Array<{ evaluationId: string; agentId: string; jobId: string; }> = [];
 
     return {
       success: true,
