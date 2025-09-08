@@ -49,7 +49,7 @@ export async function importDocumentService(
     }
 
     // Get services from factory
-    const { documentService, evaluationService } = getServices();
+    const { documentService } = getServices();
 
     // Creating document using the DocumentService
     const result = await documentService.createDocument(
@@ -82,31 +82,9 @@ export async function importDocumentService(
 
     const document = result.unwrap();
     
-    // Create evaluations and jobs if agentIds are provided
-    const createdEvaluations = [];
-    if (agentIds && agentIds.length > 0) {
-      logger.info(`Creating evaluations for ${agentIds.length} agents`);
-      
-      // EvaluationService is already created above with dependencies
-      const evaluationResult = await evaluationService.createEvaluationsForDocument({
-        documentId: document.id,
-        agentIds,
-        userId
-      });
-
-      if (evaluationResult.isError()) {
-        logger.error('Failed to create evaluations:', evaluationResult.error());
-        // Continue with partial success - document was created successfully
-      } else {
-        const results = evaluationResult.unwrap();
-        createdEvaluations.push(...results);
-        logger.info('Evaluations created successfully', {
-          documentId: document.id,
-          evaluationsCreated: results.length
-        });
-      }
-    }
-
+    // DocumentService handles evaluation creation when agentIds are provided
+    // Return empty array for backward compatibility with existing consumers
+    
     return {
       success: true,
       documentId: document.id,
@@ -115,7 +93,7 @@ export async function importDocumentService(
         title: document.title,
         authors: document.authorName,
       },
-      evaluations: createdEvaluations,
+      evaluations: [], // Empty for backward compatibility
     };
   } catch (error) {
     logger.error('Error in importDocumentService:', error);
