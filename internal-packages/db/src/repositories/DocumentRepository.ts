@@ -61,6 +61,7 @@ export interface CreateDocumentData {
   ephemeralBatchId?: string;
   markdownPrepend?: string;
   isPrivate?: boolean;
+  submitterNotes?: string;
 }
 
 export interface UpdateDocumentData {
@@ -327,6 +328,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
             platforms: data.platforms || [],
             importUrl: data.importUrl,
             markdownPrepend: data.markdownPrepend,
+            submitterNotes: data.submitterNotes,
             version: 1
           }
         }

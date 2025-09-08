@@ -20,6 +20,7 @@ export const documentSchema = z.object({
   platforms: z.string().optional(),
   importUrl: z.string().optional(),
   isPrivate: z.boolean().optional().default(false),
+  submitterNotes: z.string().optional(),
 });
 
 export type DocumentInput = z.infer<typeof documentSchema>;

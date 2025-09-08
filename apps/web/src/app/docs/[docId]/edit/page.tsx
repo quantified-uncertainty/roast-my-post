@@ -97,6 +97,7 @@ export default function EditDocumentPage({ params }: Props) {
       platforms: "",
       importUrl: "",
       isPrivate: false,
+      submitterNotes: "",
     },
   });
 
@@ -131,6 +132,7 @@ export default function EditDocumentPage({ params }: Props) {
               : "",
           importUrl: document.importUrl || "",
           isPrivate: document.isPrivate ?? false,
+          submitterNotes: document.submitterNotes || "",
         });
         
         // Update the local state for privacy
@@ -315,6 +317,24 @@ export default function EditDocumentPage({ params }: Props) {
                   className={`form-input w-full ${errors.content ? "border-red-500" : ""}`}
                   placeholder="Document content in Markdown format"
                 />
+              </FormField>
+
+              <FormField
+                name="submitterNotes"
+                label="Submitter Notes (Optional)"
+                error={errors.submitterNotes}
+              >
+                <textarea
+                  {...methods.register("submitterNotes")}
+                  id="submitterNotes"
+                  rows={4}
+                  className={`form-input w-full ${errors.submitterNotes ? "border-red-500" : ""}`}
+                  placeholder="Add any context or notes for readers. This will be displayed to readers but NOT included in AI evaluations."
+                />
+                <p className="mt-2 text-sm text-gray-600">
+                  These notes provide context for human readers but are not included in AI evaluations.
+                  Changing only submitter notes will NOT trigger re-evaluation of existing AI reviews.
+                </p>
               </FormField>
 
               <FormField

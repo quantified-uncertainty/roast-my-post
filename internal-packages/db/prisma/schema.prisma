@@ -97,6 +97,7 @@ model DocumentVersion {
   content_search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"left\"(content, 10000), ''::text))"))
   contentSearchVector   Unsupported("tsvector")?
   markdownPrepend       String?
+  submitterNotes        String?
   document              Document                 @relation(fields: [documentId], references: [id], onDelete: Cascade)
   evaluationVersions    EvaluationVersion[]
 

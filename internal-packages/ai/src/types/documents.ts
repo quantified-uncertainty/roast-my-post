@@ -74,6 +74,7 @@ export interface Document {
   platforms?: string[];
   reviews: Evaluation[];
   intendedAgents: string[];
+  submitterNotes?: string;
 }
 
 export interface DocumentsCollection {
