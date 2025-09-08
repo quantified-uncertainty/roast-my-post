@@ -29,7 +29,8 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
         url: data.urls,
         platforms: data.platforms ? [data.platforms] : [],
         importUrl: data.importUrl,
-        isPrivate: data.isPrivate ?? true
+        isPrivate: data.isPrivate ?? true,
+        submitterNotes: data.submitterNotes
       },
       agentIds
     );

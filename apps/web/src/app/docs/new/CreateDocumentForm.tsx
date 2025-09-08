@@ -587,6 +587,23 @@ export default function CreateDocumentForm() {
                   </FormField>
                 ))}
 
+                <FormField
+                  name="submitterNotes"
+                  label="Submitter Notes (Optional)"
+                  error={errors.submitterNotes}
+                >
+                  <textarea
+                    {...methods.register("submitterNotes")}
+                    id="submitterNotes"
+                    rows={4}
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.submitterNotes ? "border-red-500" : ""}`}
+                    placeholder="Add any context or notes for readers. This will be displayed to readers but NOT included in AI evaluations."
+                  />
+                  <p className="mt-2 text-sm text-gray-600">
+                    These notes provide context for human readers but are not included in AI evaluations.
+                  </p>
+                </FormField>
+
                 <PrivacyToggle
                   isPrivate={methods.watch("isPrivate") || false}
                   onChange={(value) => methods.setValue("isPrivate", value)}

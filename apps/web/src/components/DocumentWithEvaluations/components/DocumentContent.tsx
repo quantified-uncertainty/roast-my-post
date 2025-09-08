@@ -49,6 +49,18 @@ export function DocumentContent({
         showDetailedAnalysisLink={true}
       />
 
+      {/* Submitter Notes - only show if notes exist */}
+      {document.submitterNotes && (
+        <div className="mx-4 mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h3 className="mb-2 text-sm font-semibold text-blue-900">
+            Submitter's Notes
+          </h3>
+          <p className="text-sm text-blue-800 whitespace-pre-wrap">
+            {document.submitterNotes}
+          </p>
+        </div>
+      )}
+
       <article
         className={`prose prose-lg prose-slate ${
           isFullWidth

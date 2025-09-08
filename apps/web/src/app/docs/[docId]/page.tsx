@@ -158,6 +158,20 @@ export default async function DocumentPage({
             <div className="grid grid-cols-1 gap-8 lg:auto-rows-fr lg:grid-cols-3">
               {/* Main Content */}
               <div className="flex flex-col lg:col-span-2">
+                {/* Submitter Notes Card - only show if notes exist */}
+                {document.submitterNotes && (
+                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-6 shadow-sm">
+                    <h3 className="mb-3 text-sm font-semibold text-blue-900">
+                      Submitter's Notes
+                    </h3>
+                    <div className="prose prose-sm prose-blue max-w-none">
+                      <p className="text-blue-800 whitespace-pre-wrap">
+                        {document.submitterNotes}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Document Preview Card */}
                 <div className="flex flex-1 flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                   <div className="mb-6 flex items-center justify-between">

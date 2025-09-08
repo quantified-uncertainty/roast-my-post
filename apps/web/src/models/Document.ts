@@ -59,6 +59,7 @@ type DocumentWithRelations = {
     authors: string[];
     urls: string[];
     importUrl: string | null;
+    submitterNotes: string | null;
     createdAt: Date;
     updatedAt: Date;
     documentId: string;
@@ -313,6 +314,7 @@ class DocumentTransformer {
         image: dbDoc.submittedBy.image,
       } : undefined,
       isPrivate: dbDoc.isPrivate || false,
+      submitterNotes: latestVersion.submitterNotes || undefined,
       createdAt: dbDoc.createdAt,
       updatedAt: dbDoc.updatedAt,
     };
@@ -1264,6 +1266,7 @@ export class DocumentModel {
       content: string;
       importUrl?: string;
       isPrivate?: boolean;
+      submitterNotes?: string;
     },
     userId: string
   ) {
@@ -1295,6 +1298,7 @@ export class DocumentModel {
       // Get current version number
       const currentVersion = document.versions[0]?.version || 0;
       const newVersion = currentVersion + 1;
+      const previousVersion = document.versions[0];
 
       // Parse arrays from strings
       const authors = data.authors.split(",").map((a) => a.trim());
@@ -1302,6 +1306,18 @@ export class DocumentModel {
         ? data.platforms.split(",").map((p) => p.trim())
         : [];
       const urls = data.urls ? data.urls.split(",").map((u) => u.trim()) : [];
+
+      // Check if only submitterNotes changed (and possibly isPrivate)
+      const contentUnchanged = previousVersion && 
+        previousVersion.title === data.title &&
+        JSON.stringify(previousVersion.authors) === JSON.stringify(authors) &&
+        JSON.stringify(previousVersion.urls) === JSON.stringify(urls) &&
+        JSON.stringify(previousVersion.platforms) === JSON.stringify(platforms) &&
+        previousVersion.content === data.content &&
+        previousVersion.importUrl === (data.importUrl || null);
+
+      const onlySubmitterNotesChanged = contentUnchanged && 
+        previousVersion.submitterNotes !== (data.submitterNotes || null);
 
       // Generate markdownPrepend for document version
       const markdownPrepend = generateMarkdownPrepend({
@@ -1329,6 +1345,7 @@ export class DocumentModel {
               content: data.content,
               importUrl: data.importUrl || null,
               markdownPrepend,
+              submitterNotes: data.submitterNotes || null,
             },
           },
         },
@@ -1343,28 +1360,31 @@ export class DocumentModel {
         },
       });
 
-      // Mark all existing evaluation versions as stale
-      await tx.evaluationVersion.updateMany({
-        where: {
-          evaluation: {
-            documentId: docId,
+      // Only mark evaluations as stale if content changed (not just submitterNotes)
+      if (!onlySubmitterNotesChanged) {
+        // Mark all existing evaluation versions as stale
+        await tx.evaluationVersion.updateMany({
+          where: {
+            evaluation: {
+              documentId: docId,
+            },
+            isStale: false, // Only update ones that aren't already stale
           },
-          isStale: false, // Only update ones that aren't already stale
-        },
-        data: {
-          isStale: true,
-        },
-      });
-
-      // Automatically queue re-evaluations for all existing evaluations
-      if (document.evaluations.length > 0) {
-        // Use createMany for better performance
-        await tx.job.createMany({
-          data: document.evaluations.map((evaluation) => ({
-            status: "PENDING",
-            evaluationId: evaluation.id,
-          })),
+          data: {
+            isStale: true,
+          },
         });
+
+        // Automatically queue re-evaluations for all existing evaluations
+        if (document.evaluations.length > 0) {
+          // Use createMany for better performance
+          await tx.job.createMany({
+            data: document.evaluations.map((evaluation) => ({
+              status: "PENDING",
+              evaluationId: evaluation.id,
+            })),
+          });
+        }
       }
 
       return updatedDocument;
