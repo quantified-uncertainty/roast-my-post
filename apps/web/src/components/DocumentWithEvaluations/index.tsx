@@ -77,6 +77,7 @@ export function DocumentWithEvaluations({
             ),
             hoveredCommentId: null,
             expandedCommentId: null,
+            modalComment: null,
           }
         : null
     );
