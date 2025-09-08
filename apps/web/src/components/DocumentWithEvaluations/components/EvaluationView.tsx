@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useEffect,
 } from "react";
 
 import {
@@ -18,10 +19,12 @@ import { LAYOUT } from "../constants";
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { CommentsColumn } from "./CommentsColumn";
+import { CommentModal } from "./CommentModal";
 import { CommentToolbar } from "./CommentToolbar";
 import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
 
 /**
  * Maps comment levels to appropriate highlight colors
@@ -108,6 +111,27 @@ export function EvaluationView({
     }
     return allComments.filter((comment) => comment.level !== "debug");
   }, [allComments, localShowDebugComments]);
+
+  // Check for comment query param on mount and when it changes
+  const commentIdFromUrl = searchParams.get('comment');
+  useEffect(() => {
+    if (commentIdFromUrl && displayComments.length > 0) {
+      const commentIndex = parseInt(commentIdFromUrl);
+      if (!isNaN(commentIndex) && commentIndex >= 0 && commentIndex < displayComments.length) {
+        const comment = displayComments[commentIndex];
+        if (!evaluationState.modalComment || evaluationState.modalComment.commentId !== commentIdFromUrl) {
+          onEvaluationStateChange?.({
+            ...evaluationState,
+            modalComment: {
+              comment: dbCommentToAiComment(comment),
+              agentName: comment.agentName || "Unknown",
+              commentId: commentIdFromUrl,
+            },
+          });
+        }
+      }
+    }
+  }, [commentIdFromUrl, displayComments.length]);
 
   const highlights = useMemo(
     () =>
@@ -218,10 +242,21 @@ export function EvaluationView({
                     hoveredCommentId: commentId,
                   })
                 }
-                onCommentClick={(commentId) => {
+                onCommentClick={(commentId, comment) => {
+                  const aiComment = dbCommentToAiComment(comment);
+                  
+                  // Update URL with comment ID
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('comment', commentId);
+                  router.replace(`?${params.toString()}`, { scroll: false });
+                  
                   onEvaluationStateChange?.({
                     ...evaluationState,
-                    expandedCommentId: commentId,
+                    modalComment: {
+                      comment: aiComment,
+                      agentName: comment.agentName || "Unknown",
+                      commentId: commentId,
+                    },
                   });
                 }}
                 document={document as any}
@@ -241,6 +276,54 @@ export function EvaluationView({
           </div>
         </div>
       </div>
+      
+      {/* Comment Modal */}
+      <CommentModal
+        comment={evaluationState.modalComment?.comment || null}
+        agentName={evaluationState.modalComment?.agentName || ""}
+        currentCommentId={evaluationState.modalComment?.commentId}
+        totalComments={displayComments.length}
+        isOpen={!!evaluationState.modalComment}
+        onClose={() => {
+          // Remove comment from URL
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('comment');
+          router.replace(`?${params.toString()}`, { scroll: false });
+          
+          onEvaluationStateChange?.({
+            ...evaluationState,
+            modalComment: null,
+          });
+        }}
+        onNavigate={(direction) => {
+          const currentId = evaluationState.modalComment?.commentId;
+          if (!currentId) return;
+          
+          const currentIndex = parseInt(currentId);
+          const nextIndex = direction === 'next' 
+            ? Math.min(currentIndex + 1, displayComments.length - 1)
+            : Math.max(currentIndex - 1, 0);
+          
+          if (nextIndex !== currentIndex) {
+            const nextComment = displayComments[nextIndex];
+            const aiComment = dbCommentToAiComment(nextComment);
+            
+            // Update URL
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('comment', nextIndex.toString());
+            router.replace(`?${params.toString()}`, { scroll: false });
+            
+            onEvaluationStateChange?.({
+              ...evaluationState,
+              modalComment: {
+                comment: aiComment,
+                agentName: nextComment.agentName || "Unknown",
+                commentId: nextIndex.toString(),
+              },
+            });
+          }
+        }}
+      />
     </>
   );
 }

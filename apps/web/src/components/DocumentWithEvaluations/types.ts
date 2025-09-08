@@ -11,6 +11,11 @@ export interface EvaluationState {
   selectedAgentIds: Set<string>;
   hoveredCommentId: string | null;
   expandedCommentId: string | null;
+  modalComment: {
+    comment: any;
+    agentName: string;
+    commentId?: string;
+  } | null;
 }
 
 export interface EvaluationSelectorProps {

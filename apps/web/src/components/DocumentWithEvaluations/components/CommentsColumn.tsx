@@ -21,7 +21,7 @@ interface CommentsColumnProps {
   selectedCommentId: string | null;
   hoveredCommentId: string | null;
   onCommentHover: (commentId: string | null) => void;
-  onCommentClick: (commentId: string) => void;
+  onCommentClick: (commentId: string, comment: DbComment & { agentName?: string }) => void;
   showDebugComments?: boolean;
   // Props for agent pills
   document?: Document;
@@ -194,7 +194,7 @@ export function CommentsColumn({
                 isSelected={isSelected}
                 isHovered={isHovered}
                 onHover={onCommentHover}
-                onClick={onCommentClick}
+                onClick={(tag) => onCommentClick(tag, comment)}
                 agentName={comment.agentName || "Unknown"}
                 skipAnimation={!hasInitialized}
               />
