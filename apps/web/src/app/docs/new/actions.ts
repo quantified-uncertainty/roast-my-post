@@ -45,8 +45,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     const document = result.unwrap();
 
-    // Note: Evaluations are already created by DocumentService.createDocument()
-    // when agentIds are passed, so we don't need to create them again here
+    // DocumentService handles evaluation creation when agentIds are provided
 
     revalidatePath("/docs");
     redirect(`/docs/${document.id}/reader`);
