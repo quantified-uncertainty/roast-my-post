@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -29,6 +29,7 @@ interface CommentModalProps {
   comment: Comment | null;
   agentName: string;
   currentCommentId?: string;
+  currentCommentIndex?: number;
   totalComments?: number;
   isOpen: boolean;
   onClose: () => void;
@@ -76,6 +77,7 @@ export function CommentModal({
   comment,
   agentName,
   currentCommentId,
+  currentCommentIndex,
   totalComments = 0,
   isOpen,
   onClose,
@@ -83,6 +85,47 @@ export function CommentModal({
 }: CommentModalProps) {
   const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+
+  const index = currentCommentIndex ?? 0;
+  const canNavigatePrev = index > 0;
+  const canNavigateNext = index < totalComments - 1;
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle if user is typing in an input/textarea
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          if (onNavigate && canNavigatePrev) {
+            onNavigate("prev");
+          }
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          if (onNavigate && canNavigateNext) {
+            onNavigate("next");
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          onClose();
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onNavigate, onClose, canNavigatePrev, canNavigateNext]);
 
   if (!comment) return null;
 
@@ -110,10 +153,6 @@ export function CommentModal({
     }
   };
 
-  const currentIndex = currentCommentId ? parseInt(currentCommentId) : 0;
-  const canNavigatePrev = currentIndex > 0;
-  const canNavigateNext = currentIndex < totalComments - 1;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="!fixed !inset-8 !left-8 !top-8 !h-[calc(100vh-4rem)] !w-[calc(100vw-4rem)] !max-w-[calc(100vw-4rem)] !translate-x-0 !translate-y-0 rounded-xl bg-white p-0 shadow-2xl sm:!inset-12 sm:!left-12 sm:!top-12 sm:!h-[calc(100vh-6rem)] sm:!w-[calc(100vw-6rem)] sm:!max-w-[calc(100vw-6rem)] lg:!inset-16 lg:!left-16 lg:!top-16 lg:!h-[calc(100vh-8rem)] lg:!w-[calc(100vw-8rem)] lg:!max-w-[calc(100vw-8rem)] [&>button.absolute.right-4.top-4]:hidden">
@@ -125,6 +164,7 @@ export function CommentModal({
             size="icon"
             className="absolute right-6 top-6 z-50 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100"
             style={{ width: "40px", height: "40px" }}
+            title="Close (Esc key)"
           >
             <X style={{ width: "30px", height: "30px" }} />
             <span className="sr-only">Close</span>
@@ -140,6 +180,7 @@ export function CommentModal({
                 size="icon"
                 className="absolute left-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
                 style={{ width: "48px", height: "48px" }}
+                title="Previous comment (← Arrow key)"
               >
                 <ChevronLeft style={{ width: "30px", height: "30px" }} />
                 <span className="sr-only">Previous comment</span>
@@ -152,6 +193,7 @@ export function CommentModal({
                 size="icon"
                 className="absolute right-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
                 style={{ width: "48px", height: "48px" }}
+                title="Next comment (→ Arrow key)"
               >
                 <ChevronRight style={{ width: "30px", height: "30px" }} />
                 <span className="sr-only">Next comment</span>
@@ -266,9 +308,9 @@ export function CommentModal({
           <div className="flex-shrink-0 border-t px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500">
-                {currentCommentId && totalComments > 0 && (
+                {totalComments > 0 && (
                   <span>
-                    Comment {currentIndex + 1} of {totalComments}
+                    Comment {index + 1} of {totalComments}
                   </span>
                 )}
               </div>

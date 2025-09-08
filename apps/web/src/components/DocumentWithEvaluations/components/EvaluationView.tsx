@@ -116,9 +116,9 @@ export function EvaluationView({
   const commentIdFromUrl = searchParams.get('comment');
   useEffect(() => {
     if (commentIdFromUrl && displayComments.length > 0) {
-      const commentIndex = parseInt(commentIdFromUrl);
-      if (!isNaN(commentIndex) && commentIndex >= 0 && commentIndex < displayComments.length) {
-        const comment = displayComments[commentIndex];
+      // Find comment by ID instead of using index
+      const comment = displayComments.find(c => c.id === commentIdFromUrl);
+      if (comment) {
         if (!evaluationState.modalComment || evaluationState.modalComment.commentId !== commentIdFromUrl) {
           onEvaluationStateChange?.({
             ...evaluationState,
@@ -242,12 +242,13 @@ export function EvaluationView({
                     hoveredCommentId: commentId,
                   })
                 }
-                onCommentClick={(commentId, comment) => {
+                onCommentClick={(_, comment) => {
                   const aiComment = dbCommentToAiComment(comment);
+                  const actualCommentId = comment.id || `temp-${Date.now()}`;
                   
-                  // Update URL with comment ID
+                  // Update URL with actual comment ID
                   const params = new URLSearchParams(searchParams.toString());
-                  params.set('comment', commentId);
+                  params.set('comment', actualCommentId);
                   router.replace(`?${params.toString()}`, { scroll: false });
                   
                   onEvaluationStateChange?.({
@@ -255,7 +256,7 @@ export function EvaluationView({
                     modalComment: {
                       comment: aiComment,
                       agentName: comment.agentName || "Unknown",
-                      commentId: commentId,
+                      commentId: actualCommentId,
                     },
                   });
                 }}
@@ -282,6 +283,11 @@ export function EvaluationView({
         comment={evaluationState.modalComment?.comment || null}
         agentName={evaluationState.modalComment?.agentName || ""}
         currentCommentId={evaluationState.modalComment?.commentId}
+        currentCommentIndex={
+          evaluationState.modalComment?.commentId
+            ? displayComments.findIndex(c => c.id === evaluationState.modalComment?.commentId)
+            : undefined
+        }
         totalComments={displayComments.length}
         isOpen={!!evaluationState.modalComment}
         onClose={() => {
@@ -299,7 +305,10 @@ export function EvaluationView({
           const currentId = evaluationState.modalComment?.commentId;
           if (!currentId) return;
           
-          const currentIndex = parseInt(currentId);
+          // Find current comment index
+          const currentIndex = displayComments.findIndex(c => c.id === currentId);
+          if (currentIndex === -1) return;
+          
           const nextIndex = direction === 'next' 
             ? Math.min(currentIndex + 1, displayComments.length - 1)
             : Math.max(currentIndex - 1, 0);
@@ -307,10 +316,11 @@ export function EvaluationView({
           if (nextIndex !== currentIndex) {
             const nextComment = displayComments[nextIndex];
             const aiComment = dbCommentToAiComment(nextComment);
+            const nextCommentId = nextComment.id || `temp-${Date.now()}`;
             
-            // Update URL
+            // Update URL with actual comment ID
             const params = new URLSearchParams(searchParams.toString());
-            params.set('comment', nextIndex.toString());
+            params.set('comment', nextCommentId);
             router.replace(`?${params.toString()}`, { scroll: false });
             
             onEvaluationStateChange?.({
@@ -318,7 +328,7 @@ export function EvaluationView({
               modalComment: {
                 comment: aiComment,
                 agentName: nextComment.agentName || "Unknown",
-                commentId: nextIndex.toString(),
+                commentId: nextCommentId,
               },
             });
           }
