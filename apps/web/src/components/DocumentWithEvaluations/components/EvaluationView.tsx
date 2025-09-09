@@ -246,11 +246,7 @@ export function EvaluationView({
                   const aiComment = dbCommentToAiComment(comment);
                   const actualCommentId = comment.id || `temp-${Date.now()}`;
                   
-                  // Update URL with actual comment ID
-                  const params = new URLSearchParams(searchParams.toString());
-                  params.set('comment', actualCommentId);
-                  router.replace(`?${params.toString()}`, { scroll: false });
-                  
+                  // Update state first (immediate UI update)
                   onEvaluationStateChange?.({
                     ...evaluationState,
                     modalComment: {
@@ -258,6 +254,13 @@ export function EvaluationView({
                       agentName: comment.agentName || "Unknown",
                       commentId: actualCommentId,
                     },
+                  });
+                  
+                  // Update URL after state (non-blocking)
+                  requestAnimationFrame(() => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set('comment', actualCommentId);
+                    router.replace(`?${params.toString()}`, { scroll: false });
                   });
                 }}
                 evaluationState={evaluationState}
@@ -317,11 +320,7 @@ export function EvaluationView({
             const aiComment = dbCommentToAiComment(nextComment);
             const nextCommentId = nextComment.id || `temp-${Date.now()}`;
             
-            // Update URL with actual comment ID
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('comment', nextCommentId);
-            router.replace(`?${params.toString()}`, { scroll: false });
-            
+            // Update state first (immediate UI update)
             onEvaluationStateChange?.({
               ...evaluationState,
               modalComment: {
@@ -329,6 +328,13 @@ export function EvaluationView({
                 agentName: nextComment.agentName || "Unknown",
                 commentId: nextCommentId,
               },
+            });
+            
+            // Update URL after state (non-blocking)
+            requestAnimationFrame(() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('comment', nextCommentId);
+              router.replace(`?${params.toString()}`, { scroll: false });
             });
           }
         }}
