@@ -24,6 +24,7 @@ interface CommentModalOptimizedProps {
   }>;
   currentCommentId: string | null;
   isOpen: boolean;
+  hideNavigation?: boolean;
   onClose: () => void;
   onNavigate: (commentId: string) => void;
 }
@@ -69,6 +70,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
   comments,
   currentCommentId,
   isOpen,
+  hideNavigation = false,
   onClose,
   onNavigate,
 }: CommentModalOptimizedProps) {
@@ -100,7 +102,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
     }
   }, [canNavigateNext, currentIndex, comments, onNavigate]);
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation (only in navigation mode)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -114,12 +116,16 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
 
       switch (e.key) {
         case "ArrowLeft":
-          e.preventDefault();
-          navigatePrev();
+          if (!hideNavigation) {
+            e.preventDefault();
+            navigatePrev();
+          }
           break;
         case "ArrowRight":
-          e.preventDefault();
-          navigateNext();
+          if (!hideNavigation) {
+            e.preventDefault();
+            navigateNext();
+          }
           break;
         case "Escape":
           e.preventDefault();
@@ -130,7 +136,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, navigatePrev, navigateNext, onClose]);
+  }, [isOpen, hideNavigation, navigatePrev, navigateNext, onClose]);
 
   // Reset metadata expansion when comment changes
   useEffect(() => {
@@ -184,32 +190,36 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
             <X style={{ width: "30px", height: "30px" }} aria-hidden="true" />
           </Button>
 
-          {/* Navigation buttons */}
-          <Button
-            onClick={navigatePrev}
-            disabled={!canNavigatePrev}
-            variant="ghost"
-            size="icon"
-            className="absolute left-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
-            style={{ width: "48px", height: "48px" }}
-            aria-label="Previous comment"
-            title="Previous comment (← key)"
-          >
-            <ChevronLeft style={{ width: "30px", height: "30px" }} aria-hidden="true" />
-          </Button>
+          {/* Navigation buttons - only show in navigation mode */}
+          {!hideNavigation && (
+            <>
+              <Button
+                onClick={navigatePrev}
+                disabled={!canNavigatePrev}
+                variant="ghost"
+                size="icon"
+                className="absolute left-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
+                style={{ width: "48px", height: "48px" }}
+                aria-label="Previous comment"
+                title="Previous comment (← key)"
+              >
+                <ChevronLeft style={{ width: "30px", height: "30px" }} aria-hidden="true" />
+              </Button>
 
-          <Button
-            onClick={navigateNext}
-            disabled={!canNavigateNext}
-            variant="ghost"
-            size="icon"
-            className="absolute right-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
-            style={{ width: "48px", height: "48px" }}
-            aria-label="Next comment"
-            title="Next comment (→ key)"
-          >
-            <ChevronRight style={{ width: "30px", height: "30px" }} aria-hidden="true" />
-          </Button>
+              <Button
+                onClick={navigateNext}
+                disabled={!canNavigateNext}
+                variant="ghost"
+                size="icon"
+                className="absolute right-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
+                style={{ width: "48px", height: "48px" }}
+                aria-label="Next comment"
+                title="Next comment (→ key)"
+              >
+                <ChevronRight style={{ width: "30px", height: "30px" }} aria-hidden="true" />
+              </Button>
+            </>
+          )}
 
           {/* Header */}
           <div className="flex-shrink-0 border-b px-8 py-6">

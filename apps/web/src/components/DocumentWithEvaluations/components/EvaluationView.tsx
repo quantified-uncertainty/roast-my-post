@@ -148,63 +148,36 @@ export function EvaluationView({
     };
   }, [displayComments]);
 
-  // Debounced URL update to prevent race conditions
-  const urlUpdateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Track whether we're in "navigation mode" (using arrows) or "direct mode" (from URL)
+  const isNavigationMode = useRef(false);
   
-  const updateUrlDebounced = useCallback((commentId: string | null) => {
-    // Clear any pending URL update
-    if (urlUpdateTimerRef.current) {
-      clearTimeout(urlUpdateTimerRef.current);
-    }
-    
-    // Schedule new URL update after 500ms of no changes
-    urlUpdateTimerRef.current = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (commentId) {
-        params.set('comment', commentId);
-      } else {
-        params.delete('comment');
-      }
-      router.replace(`?${params.toString()}`, { scroll: false });
-    }, 500); // 500ms delay
-  }, [router, searchParams]);
-  
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (urlUpdateTimerRef.current) {
-        clearTimeout(urlUpdateTimerRef.current);
-      }
-    };
-  }, []);
-  
-  // Check for comment query param on mount and when it changes
-  // Only update if the modal isn't already showing this comment (prevents double updates)
+  // Handle URL-based navigation (when user shares a link or manually changes URL)
   const commentIdFromUrl = searchParams.get('comment');
+  
   useEffect(() => {
     if (commentIdFromUrl && aiCommentsMap.size > 0) {
-      // Only update if we're not already showing this comment
-      if (evaluationState.modalComment?.commentId !== commentIdFromUrl) {
-        const commentData = aiCommentsMap.get(commentIdFromUrl);
-        if (commentData) {
-          onEvaluationStateChange?.({
-            ...evaluationState,
-            modalComment: {
-              comment: commentData.comment,
-              agentName: commentData.agentName,
-              commentId: commentIdFromUrl,
-            },
-          });
-        }
+      // We're in "direct mode" - showing a specific comment from URL
+      isNavigationMode.current = false;
+      
+      const commentData = aiCommentsMap.get(commentIdFromUrl);
+      if (commentData && evaluationState.modalComment?.commentId !== commentIdFromUrl) {
+        onEvaluationStateChange?.({
+          ...evaluationState,
+          modalComment: {
+            comment: commentData.comment,
+            agentName: commentData.agentName,
+            commentId: commentIdFromUrl,
+          },
+        });
       }
-    } else if (!commentIdFromUrl && evaluationState.modalComment) {
-      // Clear modal if URL param is removed
+    } else if (!commentIdFromUrl && evaluationState.modalComment && !isNavigationMode.current) {
+      // URL cleared externally, close modal
       onEvaluationStateChange?.({
         ...evaluationState,
         modalComment: null,
       });
     }
-  }, [commentIdFromUrl]); // Simplified deps - only react to URL changes
+  }, [commentIdFromUrl, aiCommentsMap, evaluationState, onEvaluationStateChange]);
 
   const highlights = useMemo(
     () =>
@@ -317,22 +290,13 @@ export function EvaluationView({
                 }
                 onCommentClick={(commentIndex, comment) => {
                   const actualCommentId = comment.id || `temp-${commentIndex}`;
-                  const commentData = aiCommentsMap.get(actualCommentId);
                   
-                  if (commentData) {
-                    // Update state first (immediate UI update)
-                    onEvaluationStateChange?.({
-                      ...evaluationState,
-                      modalComment: {
-                        comment: commentData.comment,
-                        agentName: commentData.agentName,
-                        commentId: actualCommentId,
-                      },
-                    });
-                    
-                    // Update URL with debouncing
-                    updateUrlDebounced(actualCommentId);
-                  }
+                  // Set URL immediately for direct mode
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('comment', actualCommentId);
+                  router.replace(`?${params.toString()}`, { scroll: false });
+                  
+                  // The useEffect will handle opening the modal
                 }}
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
@@ -356,20 +320,31 @@ export function EvaluationView({
         comments={modalComments}
         currentCommentId={evaluationState.modalComment?.commentId || null}
         isOpen={!!evaluationState.modalComment}
+        hideNavigation={!!commentIdFromUrl}
         onClose={() => {
-          // Clear state immediately
+          // Clear URL to close modal
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('comment');
+          router.replace(`?${params.toString()}`, { scroll: false });
+          
+          // Clear state
           onEvaluationStateChange?.({
             ...evaluationState,
             modalComment: null,
           });
-          
-          // Update URL with debouncing
-          updateUrlDebounced(null);
         }}
         onNavigate={(nextCommentId) => {
+          // Enter navigation mode - NO URL updates
+          isNavigationMode.current = true;
+          
+          // Clear URL to indicate we're in navigation mode
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('comment');
+          router.replace(`?${params.toString()}`, { scroll: false });
+          
           const commentData = aiCommentsMap.get(nextCommentId);
           if (commentData) {
-            // Update state immediately
+            // Update state only (no URL)
             onEvaluationStateChange?.({
               ...evaluationState,
               modalComment: {
@@ -378,9 +353,6 @@ export function EvaluationView({
                 commentId: nextCommentId,
               },
             });
-            
-            // Update URL with debouncing (waits 500ms after last navigation)
-            updateUrlDebounced(nextCommentId);
           }
         }}
       />
