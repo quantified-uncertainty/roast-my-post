@@ -293,10 +293,10 @@ export function EvaluationView({
                   const commentData = aiCommentsMap.get(actualCommentId);
                   
                   if (commentData) {
-                    // Enter navigation mode (no URL)
+                    // Enter navigation mode
                     isNavigationMode.current = true;
                     
-                    // Open modal directly without URL
+                    // Open modal immediately for instant response
                     onEvaluationStateChange?.({
                       ...evaluationState,
                       modalComment: {
@@ -348,17 +348,12 @@ export function EvaluationView({
           });
         }}
         onNavigate={(nextCommentId) => {
-          // Enter navigation mode - NO URL updates
+          // Enter navigation mode
           isNavigationMode.current = true;
-          
-          // Clear URL to indicate we're in navigation mode
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete('comment');
-          router.replace(`?${params.toString()}`, { scroll: false });
           
           const commentData = aiCommentsMap.get(nextCommentId);
           if (commentData) {
-            // Update state only (no URL)
+            // Update state immediately for instant navigation
             onEvaluationStateChange?.({
               ...evaluationState,
               modalComment: {
@@ -368,6 +363,13 @@ export function EvaluationView({
               },
             });
           }
+        }}
+        onGetShareLink={(commentId) => {
+          // Generate the shareable URL with the comment ID
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('comment', commentId);
+          const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+          return url;
         }}
       />
     </>

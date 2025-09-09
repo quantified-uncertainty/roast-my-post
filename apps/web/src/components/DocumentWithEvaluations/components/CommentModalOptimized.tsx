@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, memo, useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Link } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { commentToYaml } from "@/shared/utils/commentToYaml";
@@ -27,6 +27,7 @@ interface CommentModalOptimizedProps {
   hideNavigation?: boolean;
   onClose: () => void;
   onNavigate: (commentId: string) => void;
+  onGetShareLink?: (commentId: string) => string;
 }
 
 function getLevelIndicator(level: string) {
@@ -73,9 +74,11 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
   hideNavigation = false,
   onClose,
   onNavigate,
+  onGetShareLink,
 }: CommentModalOptimizedProps) {
   const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   
   // Memoize current index and data to avoid O(n) lookup on every render
   const { currentIndex, currentData } = useMemo(() => {
@@ -142,6 +145,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
   useEffect(() => {
     setIsMetadataExpanded(false);
     setCopySuccess(false);
+    setLinkCopied(false);
   }, [currentCommentId]);
 
   const handleCopy = useCallback(async () => {
@@ -157,6 +161,19 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
       console.warn("Clipboard API failed", err);
     }
   }, [currentData]);
+
+  const handleCopyLink = useCallback(async () => {
+    if (!currentCommentId || !onGetShareLink) return;
+    
+    try {
+      const url = onGetShareLink(currentCommentId);
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.warn("Clipboard API failed", err);
+    }
+  }, [currentCommentId, onGetShareLink]);
 
   if (!currentData || !isOpen) return null;
 
@@ -177,18 +194,33 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
       {/* Modal Content - No animations */}
       <div className="fixed inset-8 sm:inset-12 lg:inset-16 bg-white rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex h-full flex-col">
-          {/* Close button */}
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="absolute right-6 top-6 z-50 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100"
-            style={{ width: "40px", height: "40px" }}
-            aria-label="Close modal"
-            title="Close (Esc key)"
-          >
-            <X style={{ width: "30px", height: "30px" }} aria-hidden="true" />
-          </Button>
+          {/* Top buttons - Link and Close */}
+          <div className="absolute right-6 top-6 z-50 flex gap-2">
+            {onGetShareLink && (
+              <Button
+                onClick={handleCopyLink}
+                variant="ghost"
+                size="icon"
+                className="rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100"
+                style={{ width: "40px", height: "40px" }}
+                aria-label="Copy link"
+                title={linkCopied ? "Link copied!" : "Copy shareable link"}
+              >
+                <Link style={{ width: "24px", height: "24px" }} aria-hidden="true" />
+              </Button>
+            )}
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="icon"
+              className="rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100"
+              style={{ width: "40px", height: "40px" }}
+              aria-label="Close modal"
+              title="Close (Esc key)"
+            >
+              <X style={{ width: "30px", height: "30px" }} aria-hidden="true" />
+            </Button>
+          </div>
 
           {/* Navigation buttons - only show in navigation mode */}
           {!hideNavigation && (
