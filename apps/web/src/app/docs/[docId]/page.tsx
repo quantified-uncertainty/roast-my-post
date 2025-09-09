@@ -4,6 +4,7 @@ import { BookOpen } from "lucide-react";
 import truncateMarkdown from "markdown-truncate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
@@ -17,6 +18,44 @@ import { DocumentModel } from "@/models/Document";
 
 import { EvaluationManagement } from "./components/EvaluationManagement";
 import { PrivacySection } from "./components/PrivacySection";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ docId: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  const docId = resolvedParams.docId;
+
+  const document = await prisma.document.findUnique({
+    where: { id: docId },
+    select: {
+      versions: {
+        orderBy: { version: "desc" },
+        take: 1,
+        select: {
+          title: true,
+          authors: true,
+        },
+      },
+    },
+  });
+
+  if (!document || !document.versions[0]) {
+    return {
+      title: "Document Not Found - RoastMyPost",
+    };
+  }
+
+  const version = document.versions[0];
+  const title = version.title || "Untitled Document";
+  const authorPrefix = version.authors?.length > 0 ? `by ${version.authors.join(", ")} - ` : "";
+
+  return {
+    title: `${title} ${authorPrefix}RoastMyPost`,
+    description: `View and manage evaluations for "${title}"`,
+  };
+}
 
 async function getAvailableAgents(docId: string) {
   // Get all agents that don't have evaluations for this document yet
