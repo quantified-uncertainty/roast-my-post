@@ -45,8 +45,17 @@ export interface HeliconeQueryFilter {
   };
 }
 
+// New filter format required by Helicone v1 API
+export interface HeliconeV1Filter {
+  left: {
+    properties?: Record<string, { equals?: string }>;
+  } | HeliconeV1Filter;
+  operator: 'and' | 'or';
+  right: 'all' | HeliconeV1Filter;
+}
+
 export interface HeliconeQueryOptions {
-  filter: HeliconeQueryFilter | 'all';
+  filter: HeliconeQueryFilter | HeliconeV1Filter | 'all';
   offset?: number;
   limit?: number;
   sort?: {
@@ -130,10 +139,14 @@ export class HeliconeAPIClient {
     try {
       const result = await this.queryRequests({
         filter: {
-          properties: {
-            'Helicone-Session-Id': { equals: sessionId }
-          }
-        } as any, // Type cast needed as our interface doesn't match actual API
+          left: {
+            properties: {
+              'Helicone-Session-Id': { equals: sessionId }
+            }
+          },
+          operator: 'and',
+          right: 'all'
+        } as any,
         sort: { created_at: 'asc' },
         limit: 100
       });
