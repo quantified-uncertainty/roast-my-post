@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, memo, useCallback } from "react";
+import { useEffect, useState, memo, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
@@ -75,12 +75,30 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
   const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   
-  // Find current comment data
-  const currentIndex = comments.findIndex(c => c.commentId === currentCommentId);
-  const currentData = currentIndex >= 0 ? comments[currentIndex] : null;
+  // Memoize current index and data to avoid O(n) lookup on every render
+  const { currentIndex, currentData } = useMemo(() => {
+    const index = comments.findIndex(c => c.commentId === currentCommentId);
+    return {
+      currentIndex: index,
+      currentData: index >= 0 ? comments[index] : null
+    };
+  }, [comments, currentCommentId]);
   
   const canNavigatePrev = currentIndex > 0;
   const canNavigateNext = currentIndex < comments.length - 1;
+  
+  // Unified navigation handlers to avoid duplication
+  const navigatePrev = useCallback(() => {
+    if (canNavigatePrev && currentIndex > 0) {
+      onNavigate(comments[currentIndex - 1].commentId);
+    }
+  }, [canNavigatePrev, currentIndex, comments, onNavigate]);
+  
+  const navigateNext = useCallback(() => {
+    if (canNavigateNext && currentIndex >= 0) {
+      onNavigate(comments[currentIndex + 1].commentId);
+    }
+  }, [canNavigateNext, currentIndex, comments, onNavigate]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -97,15 +115,11 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
       switch (e.key) {
         case "ArrowLeft":
           e.preventDefault();
-          if (canNavigatePrev) {
-            onNavigate(comments[currentIndex - 1].commentId);
-          }
+          navigatePrev();
           break;
         case "ArrowRight":
           e.preventDefault();
-          if (canNavigateNext) {
-            onNavigate(comments[currentIndex + 1].commentId);
-          }
+          navigateNext();
           break;
         case "Escape":
           e.preventDefault();
@@ -116,7 +130,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, currentIndex, canNavigatePrev, canNavigateNext, onNavigate, onClose, comments]);
+  }, [isOpen, navigatePrev, navigateNext, onClose]);
 
   // Reset metadata expansion when comment changes
   useEffect(() => {
@@ -164,31 +178,37 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
             size="icon"
             className="absolute right-6 top-6 z-50 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100"
             style={{ width: "40px", height: "40px" }}
+            aria-label="Close modal"
+            title="Close (Esc key)"
           >
-            <X style={{ width: "30px", height: "30px" }} />
+            <X style={{ width: "30px", height: "30px" }} aria-hidden="true" />
           </Button>
 
           {/* Navigation buttons */}
           <Button
-            onClick={() => onNavigate(comments[currentIndex - 1].commentId)}
+            onClick={navigatePrev}
             disabled={!canNavigatePrev}
             variant="ghost"
             size="icon"
             className="absolute left-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
             style={{ width: "48px", height: "48px" }}
+            aria-label="Previous comment"
+            title="Previous comment (← key)"
           >
-            <ChevronLeft style={{ width: "30px", height: "30px" }} />
+            <ChevronLeft style={{ width: "30px", height: "30px" }} aria-hidden="true" />
           </Button>
 
           <Button
-            onClick={() => onNavigate(comments[currentIndex + 1].commentId)}
+            onClick={navigateNext}
             disabled={!canNavigateNext}
             variant="ghost"
             size="icon"
             className="absolute right-6 top-1/2 z-50 -translate-y-1/2 rounded-lg bg-white/80 backdrop-blur hover:bg-gray-100 disabled:opacity-50"
             style={{ width: "48px", height: "48px" }}
+            aria-label="Next comment"
+            title="Next comment (→ key)"
           >
-            <ChevronRight style={{ width: "30px", height: "30px" }} />
+            <ChevronRight style={{ width: "30px", height: "30px" }} aria-hidden="true" />
           </Button>
 
           {/* Header */}
