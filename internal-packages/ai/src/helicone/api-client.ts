@@ -137,15 +137,12 @@ export class HeliconeAPIClient {
    */
   async getSessionRequests(sessionId: string): Promise<HeliconeRequest[]> {
     try {
+      // Filter by properties object which contains custom properties like Helicone-Session-Id and jobid
       const result = await this.queryRequests({
         filter: {
-          left: {
-            properties: {
-              'Helicone-Session-Id': { equals: sessionId }
-            }
-          },
-          operator: 'and',
-          right: 'all'
+          properties: {
+            'Helicone-Session-Id': { equals: sessionId }
+          }
         } as any,
         sort: { created_at: 'asc' },
         limit: 100
