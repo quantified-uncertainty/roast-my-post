@@ -148,13 +148,14 @@ export function EvaluationView({
   }, [displayComments]);
 
   // Check for comment query param on mount and when it changes
+  // Only update if the modal isn't already showing this comment (prevents double updates)
   const commentIdFromUrl = searchParams.get('comment');
   useEffect(() => {
     if (commentIdFromUrl && aiCommentsMap.size > 0) {
-      // Use pre-converted comment from map
-      const commentData = aiCommentsMap.get(commentIdFromUrl);
-      if (commentData) {
-        if (!evaluationState.modalComment || evaluationState.modalComment.commentId !== commentIdFromUrl) {
+      // Only update if we're not already showing this comment
+      if (evaluationState.modalComment?.commentId !== commentIdFromUrl) {
+        const commentData = aiCommentsMap.get(commentIdFromUrl);
+        if (commentData) {
           onEvaluationStateChange?.({
             ...evaluationState,
             modalComment: {
@@ -165,8 +166,14 @@ export function EvaluationView({
           });
         }
       }
+    } else if (!commentIdFromUrl && evaluationState.modalComment) {
+      // Clear modal if URL param is removed
+      onEvaluationStateChange?.({
+        ...evaluationState,
+        modalComment: null,
+      });
     }
-  }, [commentIdFromUrl, aiCommentsMap, evaluationState, onEvaluationStateChange]);
+  }, [commentIdFromUrl]); // Simplified deps - only react to URL changes
 
   const highlights = useMemo(
     () =>
@@ -292,12 +299,12 @@ export function EvaluationView({
                       },
                     });
                     
-                    // Update URL after state (non-blocking)
-                    requestAnimationFrame(() => {
-                      const params = new URLSearchParams(searchParams.toString());
-                      params.set('comment', actualCommentId);
-                      router.replace(`?${params.toString()}`, { scroll: false });
-                    });
+                    // URL update temporarily disabled to debug issue
+                    // requestAnimationFrame(() => {
+                    //   const params = new URLSearchParams(searchParams.toString());
+                    //   params.set('comment', actualCommentId);
+                    //   router.replace(`?${params.toString()}`, { scroll: false });
+                    // });
                   }
                 }}
                 evaluationState={evaluationState}
@@ -323,10 +330,10 @@ export function EvaluationView({
         currentCommentId={evaluationState.modalComment?.commentId || null}
         isOpen={!!evaluationState.modalComment}
         onClose={() => {
-          // Remove comment from URL
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete('comment');
-          router.replace(`?${params.toString()}`, { scroll: false });
+          // URL update temporarily disabled to debug issue
+          // const params = new URLSearchParams(searchParams.toString());
+          // params.delete('comment');
+          // router.replace(`?${params.toString()}`, { scroll: false });
           
           onEvaluationStateChange?.({
             ...evaluationState,
@@ -336,7 +343,7 @@ export function EvaluationView({
         onNavigate={(nextCommentId) => {
           const commentData = aiCommentsMap.get(nextCommentId);
           if (commentData) {
-            // Update state immediately
+            // Update state immediately (URL updating temporarily disabled)
             onEvaluationStateChange?.({
               ...evaluationState,
               modalComment: {
@@ -346,12 +353,12 @@ export function EvaluationView({
               },
             });
             
-            // Defer URL update
-            requestAnimationFrame(() => {
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('comment', nextCommentId);
-              router.replace(`?${params.toString()}`, { scroll: false });
-            });
+            // URL update temporarily disabled to debug issue
+            // requestAnimationFrame(() => {
+            //   const params = new URLSearchParams(searchParams.toString());
+            //   params.set('comment', nextCommentId);
+            //   router.replace(`?${params.toString()}`, { scroll: false });
+            // });
           }
         }}
       />
