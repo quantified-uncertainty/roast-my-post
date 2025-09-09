@@ -15,6 +15,7 @@ import {
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import type { Comment } from "@roast/ai";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
+import { renderMarkdownToReact } from "../utils/markdownRenderer";
 
 import { LAYOUT } from "../constants";
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
@@ -114,16 +115,25 @@ export function EvaluationView({
   }, [allComments, localShowDebugComments]) as Array<DbComment & { agentName: string }>;
   
   // Pre-convert all comments to AI format for modal use and create index map
+  // Also pre-render Markdown content for performance
   const { aiCommentsMap, commentIndexMap } = useMemo(() => {
-    const commentsMap = new Map<string, { comment: Comment; agentName: string; index: number }>();
+    const commentsMap = new Map<string, { 
+      comment: Comment; 
+      agentName: string; 
+      index: number;
+      renderedDescription: React.ReactElement | null;
+    }>();
     const indexMap = new Map<string, number>();
     
     displayComments.forEach((dbComment, index) => {
       const id = dbComment.id || `temp-${index}`;
+      const aiComment = dbCommentToAiComment(dbComment);
+      
       commentsMap.set(id, {
-        comment: dbCommentToAiComment(dbComment),
+        comment: aiComment,
         agentName: dbComment.agentName || "Unknown",
-        index
+        index,
+        renderedDescription: renderMarkdownToReact(aiComment.description)
       });
       indexMap.set(id, index);
     });
@@ -145,6 +155,7 @@ export function EvaluationView({
               comment: commentData.comment,
               agentName: commentData.agentName,
               commentId: commentIdFromUrl,
+              renderedDescription: commentData.renderedDescription,
             },
           });
         }
@@ -273,6 +284,7 @@ export function EvaluationView({
                         comment: commentData.comment,
                         agentName: commentData.agentName,
                         commentId: actualCommentId,
+                        renderedDescription: commentData.renderedDescription,
                       },
                     });
                     
@@ -306,6 +318,7 @@ export function EvaluationView({
         comment={evaluationState.modalComment?.comment || null}
         agentName={evaluationState.modalComment?.agentName || ""}
         currentCommentId={evaluationState.modalComment?.commentId}
+        renderedDescription={evaluationState.modalComment?.renderedDescription}
         currentCommentIndex={
           evaluationState.modalComment?.commentId
             ? displayComments.findIndex(c => c.id === evaluationState.modalComment?.commentId)
@@ -349,6 +362,7 @@ export function EvaluationView({
                   comment: commentData.comment,
                   agentName: commentData.agentName,
                   commentId: nextCommentId,
+                  renderedDescription: commentData.renderedDescription,
                 },
               });
               

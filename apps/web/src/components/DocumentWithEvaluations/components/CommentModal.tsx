@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -34,6 +34,7 @@ interface CommentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate?: (direction: "prev" | "next") => void;
+  renderedDescription?: React.ReactElement | null;
 }
 
 function getLevelIndicator(level: string) {
@@ -73,7 +74,7 @@ function getLevelIndicator(level: string) {
   );
 }
 
-export function CommentModal({
+export const CommentModal = memo(function CommentModal({
   comment,
   agentName,
   currentCommentId,
@@ -82,6 +83,7 @@ export function CommentModal({
   isOpen,
   onClose,
   onNavigate,
+  renderedDescription,
 }: CommentModalProps) {
   const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -249,12 +251,14 @@ export function CommentModal({
 
               {comment.description && (
                 <div className="prose prose-lg max-w-none">
-                  <ReactMarkdown
-                    {...MARKDOWN_PLUGINS}
-                    components={MARKDOWN_COMPONENTS}
-                  >
-                    {comment.description}
-                  </ReactMarkdown>
+                  {renderedDescription || (
+                    <ReactMarkdown
+                      {...MARKDOWN_PLUGINS}
+                      components={MARKDOWN_COMPONENTS}
+                    >
+                      {comment.description}
+                    </ReactMarkdown>
+                  )}
                 </div>
               )}
 
@@ -332,4 +336,4 @@ export function CommentModal({
       </DialogContent>
     </Dialog>
   );
-}
+});
