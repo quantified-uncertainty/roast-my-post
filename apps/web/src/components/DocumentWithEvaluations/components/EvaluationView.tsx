@@ -290,13 +290,22 @@ export function EvaluationView({
                 }
                 onCommentClick={(commentIndex, comment) => {
                   const actualCommentId = comment.id || `temp-${commentIndex}`;
+                  const commentData = aiCommentsMap.get(actualCommentId);
                   
-                  // Set URL immediately for direct mode
-                  const params = new URLSearchParams(searchParams.toString());
-                  params.set('comment', actualCommentId);
-                  router.replace(`?${params.toString()}`, { scroll: false });
-                  
-                  // The useEffect will handle opening the modal
+                  if (commentData) {
+                    // Enter navigation mode (no URL)
+                    isNavigationMode.current = true;
+                    
+                    // Open modal directly without URL
+                    onEvaluationStateChange?.({
+                      ...evaluationState,
+                      modalComment: {
+                        comment: commentData.comment,
+                        agentName: commentData.agentName,
+                        commentId: actualCommentId,
+                      },
+                    });
+                  }
                 }}
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
@@ -320,12 +329,17 @@ export function EvaluationView({
         comments={modalComments}
         currentCommentId={evaluationState.modalComment?.commentId || null}
         isOpen={!!evaluationState.modalComment}
-        hideNavigation={!!commentIdFromUrl}
+        hideNavigation={!!commentIdFromUrl && !isNavigationMode.current}
         onClose={() => {
-          // Clear URL to close modal
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete('comment');
-          router.replace(`?${params.toString()}`, { scroll: false });
+          // Reset navigation mode
+          isNavigationMode.current = false;
+          
+          // Clear URL if present
+          if (commentIdFromUrl) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('comment');
+            router.replace(`?${params.toString()}`, { scroll: false });
+          }
           
           // Clear state
           onEvaluationStateChange?.({
