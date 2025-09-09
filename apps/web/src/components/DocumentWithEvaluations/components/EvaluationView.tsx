@@ -21,7 +21,7 @@ import { LAYOUT } from "../constants";
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { CommentsColumn } from "./CommentsColumn";
-import { CommentModal } from "./CommentModal";
+import { CommentModalOptimized } from "./CommentModalOptimized";
 import { CommentToolbar } from "./CommentToolbar";
 import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
@@ -116,7 +116,7 @@ export function EvaluationView({
   
   // Pre-convert all comments to AI format for modal use and create index map
   // Also pre-render Markdown content for performance
-  const { aiCommentsMap, commentIndexMap } = useMemo(() => {
+  const { aiCommentsMap, commentIndexMap, modalComments } = useMemo(() => {
     const commentsMap = new Map<string, { 
       comment: Comment; 
       agentName: string; 
@@ -124,21 +124,39 @@ export function EvaluationView({
       renderedDescription: React.ReactElement | null;
     }>();
     const indexMap = new Map<string, number>();
+    const modalCommentsArray: Array<{
+      comment: Comment;
+      agentName: string;
+      commentId: string;
+      renderedDescription: React.ReactElement | null;
+    }> = [];
     
     displayComments.forEach((dbComment, index) => {
       const id = dbComment.id || `temp-${index}`;
       const aiComment = dbCommentToAiComment(dbComment);
+      const renderedDesc = renderMarkdownToReact(aiComment.description);
       
       commentsMap.set(id, {
         comment: aiComment,
         agentName: dbComment.agentName || "Unknown",
         index,
-        renderedDescription: renderMarkdownToReact(aiComment.description)
+        renderedDescription: renderedDesc
       });
       indexMap.set(id, index);
+      
+      modalCommentsArray.push({
+        comment: aiComment,
+        agentName: dbComment.agentName || "Unknown",
+        commentId: id,
+        renderedDescription: renderedDesc
+      });
     });
     
-    return { aiCommentsMap: commentsMap, commentIndexMap: indexMap };
+    return { 
+      aiCommentsMap: commentsMap, 
+      commentIndexMap: indexMap,
+      modalComments: modalCommentsArray
+    };
   }, [displayComments]);
 
   // Check for comment query param on mount and when it changes
@@ -313,18 +331,10 @@ export function EvaluationView({
         </div>
       </div>
       
-      {/* Comment Modal */}
-      <CommentModal
-        comment={evaluationState.modalComment?.comment || null}
-        agentName={evaluationState.modalComment?.agentName || ""}
-        currentCommentId={evaluationState.modalComment?.commentId}
-        renderedDescription={evaluationState.modalComment?.renderedDescription}
-        currentCommentIndex={
-          evaluationState.modalComment?.commentId
-            ? displayComments.findIndex(c => c.id === evaluationState.modalComment?.commentId)
-            : undefined
-        }
-        totalComments={displayComments.length}
+      {/* Optimized Comment Modal - always mounted, just swaps content */}
+      <CommentModalOptimized
+        comments={modalComments}
+        currentCommentId={evaluationState.modalComment?.commentId || null}
         isOpen={!!evaluationState.modalComment}
         onClose={() => {
           // Remove comment from URL
@@ -337,42 +347,26 @@ export function EvaluationView({
             modalComment: null,
           });
         }}
-        onNavigate={(direction) => {
-          const currentId = evaluationState.modalComment?.commentId;
-          if (!currentId) return;
-          
-          // Use index map for O(1) lookup
-          const currentIndex = commentIndexMap.get(currentId);
-          if (currentIndex === undefined) return;
-          
-          const nextIndex = direction === 'next' 
-            ? Math.min(currentIndex + 1, displayComments.length - 1)
-            : Math.max(currentIndex - 1, 0);
-          
-          if (nextIndex !== currentIndex) {
-            const nextComment = displayComments[nextIndex];
-            const nextCommentId = nextComment.id || `temp-${nextIndex}`;
-            const commentData = aiCommentsMap.get(nextCommentId);
+        onNavigate={(nextCommentId) => {
+          const commentData = aiCommentsMap.get(nextCommentId);
+          if (commentData) {
+            // Update state immediately
+            onEvaluationStateChange?.({
+              ...evaluationState,
+              modalComment: {
+                comment: commentData.comment,
+                agentName: commentData.agentName,
+                commentId: nextCommentId,
+                renderedDescription: commentData.renderedDescription,
+              },
+            });
             
-            if (commentData) {
-              // Update state immediately - no conversions needed
-              onEvaluationStateChange?.({
-                ...evaluationState,
-                modalComment: {
-                  comment: commentData.comment,
-                  agentName: commentData.agentName,
-                  commentId: nextCommentId,
-                  renderedDescription: commentData.renderedDescription,
-                },
-              });
-              
-              // Defer URL update
-              requestAnimationFrame(() => {
-                const params = new URLSearchParams(searchParams.toString());
-                params.set('comment', nextCommentId);
-                router.replace(`?${params.toString()}`, { scroll: false });
-              });
-            }
+            // Defer URL update
+            requestAnimationFrame(() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('comment', nextCommentId);
+              router.replace(`?${params.toString()}`, { scroll: false });
+            });
           }
         }}
       />
