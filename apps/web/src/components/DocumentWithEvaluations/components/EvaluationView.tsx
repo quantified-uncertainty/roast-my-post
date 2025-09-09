@@ -13,6 +13,7 @@ import {
 } from "next/navigation";
 
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
+import type { Comment } from "@roast/ai";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 
 import { LAYOUT } from "../constants";
@@ -111,27 +112,45 @@ export function EvaluationView({
     }
     return allComments.filter((comment) => comment.level !== "debug");
   }, [allComments, localShowDebugComments]) as Array<DbComment & { agentName: string }>;
+  
+  // Pre-convert all comments to AI format for modal use and create index map
+  const { aiCommentsMap, commentIndexMap } = useMemo(() => {
+    const commentsMap = new Map<string, { comment: Comment; agentName: string; index: number }>();
+    const indexMap = new Map<string, number>();
+    
+    displayComments.forEach((dbComment, index) => {
+      const id = dbComment.id || `temp-${index}`;
+      commentsMap.set(id, {
+        comment: dbCommentToAiComment(dbComment),
+        agentName: dbComment.agentName || "Unknown",
+        index
+      });
+      indexMap.set(id, index);
+    });
+    
+    return { aiCommentsMap: commentsMap, commentIndexMap: indexMap };
+  }, [displayComments]);
 
   // Check for comment query param on mount and when it changes
   const commentIdFromUrl = searchParams.get('comment');
   useEffect(() => {
-    if (commentIdFromUrl && displayComments.length > 0) {
-      // Find comment by ID instead of using index
-      const comment = displayComments.find(c => c.id === commentIdFromUrl);
-      if (comment) {
+    if (commentIdFromUrl && aiCommentsMap.size > 0) {
+      // Use pre-converted comment from map
+      const commentData = aiCommentsMap.get(commentIdFromUrl);
+      if (commentData) {
         if (!evaluationState.modalComment || evaluationState.modalComment.commentId !== commentIdFromUrl) {
           onEvaluationStateChange?.({
             ...evaluationState,
             modalComment: {
-              comment: dbCommentToAiComment(comment),
-              agentName: comment.agentName || "Unknown",
+              comment: commentData.comment,
+              agentName: commentData.agentName,
               commentId: commentIdFromUrl,
             },
           });
         }
       }
     }
-  }, [commentIdFromUrl, displayComments, evaluationState, onEvaluationStateChange]);
+  }, [commentIdFromUrl, aiCommentsMap, evaluationState, onEvaluationStateChange]);
 
   const highlights = useMemo(
     () =>
@@ -242,26 +261,28 @@ export function EvaluationView({
                     hoveredCommentId: commentId,
                   })
                 }
-                onCommentClick={(_, comment) => {
-                  const aiComment = dbCommentToAiComment(comment);
-                  const actualCommentId = comment.id || `temp-${Date.now()}`;
+                onCommentClick={(commentIndex, comment) => {
+                  const actualCommentId = comment.id || `temp-${commentIndex}`;
+                  const commentData = aiCommentsMap.get(actualCommentId);
                   
-                  // Update state first (immediate UI update)
-                  onEvaluationStateChange?.({
-                    ...evaluationState,
-                    modalComment: {
-                      comment: aiComment,
-                      agentName: comment.agentName || "Unknown",
-                      commentId: actualCommentId,
-                    },
-                  });
-                  
-                  // Update URL after state (non-blocking)
-                  requestAnimationFrame(() => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set('comment', actualCommentId);
-                    router.replace(`?${params.toString()}`, { scroll: false });
-                  });
+                  if (commentData) {
+                    // Update state first (immediate UI update)
+                    onEvaluationStateChange?.({
+                      ...evaluationState,
+                      modalComment: {
+                        comment: commentData.comment,
+                        agentName: commentData.agentName,
+                        commentId: actualCommentId,
+                      },
+                    });
+                    
+                    // Update URL after state (non-blocking)
+                    requestAnimationFrame(() => {
+                      const params = new URLSearchParams(searchParams.toString());
+                      params.set('comment', actualCommentId);
+                      router.replace(`?${params.toString()}`, { scroll: false });
+                    });
+                  }
                 }}
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
@@ -307,9 +328,9 @@ export function EvaluationView({
           const currentId = evaluationState.modalComment?.commentId;
           if (!currentId) return;
           
-          // Find current comment index
-          const currentIndex = displayComments.findIndex(c => c.id === currentId);
-          if (currentIndex === -1) return;
+          // Use index map for O(1) lookup
+          const currentIndex = commentIndexMap.get(currentId);
+          if (currentIndex === undefined) return;
           
           const nextIndex = direction === 'next' 
             ? Math.min(currentIndex + 1, displayComments.length - 1)
@@ -317,25 +338,27 @@ export function EvaluationView({
           
           if (nextIndex !== currentIndex) {
             const nextComment = displayComments[nextIndex];
-            const aiComment = dbCommentToAiComment(nextComment);
-            const nextCommentId = nextComment.id || `temp-${Date.now()}`;
+            const nextCommentId = nextComment.id || `temp-${nextIndex}`;
+            const commentData = aiCommentsMap.get(nextCommentId);
             
-            // Update state first (immediate UI update)
-            onEvaluationStateChange?.({
-              ...evaluationState,
-              modalComment: {
-                comment: aiComment,
-                agentName: nextComment.agentName || "Unknown",
-                commentId: nextCommentId,
-              },
-            });
-            
-            // Update URL after state (non-blocking)
-            requestAnimationFrame(() => {
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('comment', nextCommentId);
-              router.replace(`?${params.toString()}`, { scroll: false });
-            });
+            if (commentData) {
+              // Update state immediately - no conversions needed
+              onEvaluationStateChange?.({
+                ...evaluationState,
+                modalComment: {
+                  comment: commentData.comment,
+                  agentName: commentData.agentName,
+                  commentId: nextCommentId,
+                },
+              });
+              
+              // Defer URL update
+              requestAnimationFrame(() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('comment', nextCommentId);
+                router.replace(`?${params.toString()}`, { scroll: false });
+              });
+            }
           }
         }}
       />
