@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   useEffect,
+  useCallback,
 } from "react";
 
 import {
@@ -13,13 +14,14 @@ import {
 } from "next/navigation";
 
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
+import type { Comment } from "@roast/ai";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 
 import { LAYOUT } from "../constants";
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { CommentsColumn } from "./CommentsColumn";
-import { CommentModal } from "./CommentModal";
+import { CommentModalOptimized } from "./CommentModalOptimized";
 import { CommentToolbar } from "./CommentToolbar";
 import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
@@ -111,27 +113,71 @@ export function EvaluationView({
     }
     return allComments.filter((comment) => comment.level !== "debug");
   }, [allComments, localShowDebugComments]) as Array<DbComment & { agentName: string }>;
+  
+  // Pre-convert all comments to AI format and create lookup maps for O(1) access
+  const { aiCommentsMap, modalComments } = useMemo(() => {
+    const commentsMap = new Map<string, { 
+      comment: Comment; 
+      agentName: string; 
+    }>();
+    const modalCommentsArray: Array<{
+      comment: Comment;
+      agentName: string;
+      commentId: string;
+    }> = [];
+    
+    displayComments.forEach((dbComment, index) => {
+      const id = dbComment.id || `temp-${index}`;
+      const aiComment = dbCommentToAiComment(dbComment);
+      
+      commentsMap.set(id, {
+        comment: aiComment,
+        agentName: dbComment.agentName || "Unknown",
+      });
+      
+      modalCommentsArray.push({
+        comment: aiComment,
+        agentName: dbComment.agentName || "Unknown",
+        commentId: id,
+      });
+    });
+    
+    return { 
+      aiCommentsMap: commentsMap, 
+      modalComments: modalCommentsArray
+    };
+  }, [displayComments]);
 
-  // Check for comment query param on mount and when it changes
+  // Track whether we're in "navigation mode" (using arrows) or "direct mode" (from URL)
+  const isNavigationMode = useRef(false);
+  
+  // Handle URL-based navigation (when user shares a link or manually changes URL)
   const commentIdFromUrl = searchParams.get('comment');
+  
   useEffect(() => {
-    if (commentIdFromUrl && displayComments.length > 0) {
-      // Find comment by ID instead of using index
-      const comment = displayComments.find(c => c.id === commentIdFromUrl);
-      if (comment) {
-        if (!evaluationState.modalComment || evaluationState.modalComment.commentId !== commentIdFromUrl) {
-          onEvaluationStateChange?.({
-            ...evaluationState,
-            modalComment: {
-              comment: dbCommentToAiComment(comment),
-              agentName: comment.agentName || "Unknown",
-              commentId: commentIdFromUrl,
-            },
-          });
-        }
+    if (commentIdFromUrl && aiCommentsMap.size > 0) {
+      // We're in "direct mode" - showing a specific comment from URL
+      isNavigationMode.current = false;
+      
+      const commentData = aiCommentsMap.get(commentIdFromUrl);
+      if (commentData && evaluationState.modalComment?.commentId !== commentIdFromUrl) {
+        onEvaluationStateChange?.({
+          ...evaluationState,
+          modalComment: {
+            comment: commentData.comment,
+            agentName: commentData.agentName,
+            commentId: commentIdFromUrl,
+          },
+        });
       }
+    } else if (!commentIdFromUrl && evaluationState.modalComment && !isNavigationMode.current) {
+      // URL cleared externally, close modal
+      onEvaluationStateChange?.({
+        ...evaluationState,
+        modalComment: null,
+      });
     }
-  }, [commentIdFromUrl, displayComments, evaluationState, onEvaluationStateChange]);
+  }, [commentIdFromUrl, aiCommentsMap, evaluationState, onEvaluationStateChange]);
 
   const highlights = useMemo(
     () =>
@@ -242,23 +288,24 @@ export function EvaluationView({
                     hoveredCommentId: commentId,
                   })
                 }
-                onCommentClick={(_, comment) => {
-                  const aiComment = dbCommentToAiComment(comment);
-                  const actualCommentId = comment.id || `temp-${Date.now()}`;
+                onCommentClick={(commentIndex, comment) => {
+                  const actualCommentId = comment.id || `temp-${commentIndex}`;
+                  const commentData = aiCommentsMap.get(actualCommentId);
                   
-                  // Update URL with actual comment ID
-                  const params = new URLSearchParams(searchParams.toString());
-                  params.set('comment', actualCommentId);
-                  router.replace(`?${params.toString()}`, { scroll: false });
-                  
-                  onEvaluationStateChange?.({
-                    ...evaluationState,
-                    modalComment: {
-                      comment: aiComment,
-                      agentName: comment.agentName || "Unknown",
-                      commentId: actualCommentId,
-                    },
-                  });
+                  if (commentData) {
+                    // Enter navigation mode
+                    isNavigationMode.current = true;
+                    
+                    // Open modal immediately for instant response
+                    onEvaluationStateChange?.({
+                      ...evaluationState,
+                      modalComment: {
+                        comment: commentData.comment,
+                        agentName: commentData.agentName,
+                        commentId: actualCommentId,
+                      },
+                    });
+                  }
                 }}
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
@@ -277,60 +324,52 @@ export function EvaluationView({
         </div>
       </div>
       
-      {/* Comment Modal */}
-      <CommentModal
-        comment={evaluationState.modalComment?.comment || null}
-        agentName={evaluationState.modalComment?.agentName || ""}
-        currentCommentId={evaluationState.modalComment?.commentId}
-        currentCommentIndex={
-          evaluationState.modalComment?.commentId
-            ? displayComments.findIndex(c => c.id === evaluationState.modalComment?.commentId)
-            : undefined
-        }
-        totalComments={displayComments.length}
+      {/* Optimized Comment Modal - always mounted, just swaps content */}
+      <CommentModalOptimized
+        comments={modalComments}
+        currentCommentId={evaluationState.modalComment?.commentId || null}
         isOpen={!!evaluationState.modalComment}
+        hideNavigation={!!commentIdFromUrl && !isNavigationMode.current}
         onClose={() => {
-          // Remove comment from URL
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete('comment');
-          router.replace(`?${params.toString()}`, { scroll: false });
+          // Reset navigation mode
+          isNavigationMode.current = false;
           
+          // Clear URL if present
+          if (commentIdFromUrl) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('comment');
+            router.replace(`?${params.toString()}`, { scroll: false });
+          }
+          
+          // Clear state
           onEvaluationStateChange?.({
             ...evaluationState,
             modalComment: null,
           });
         }}
-        onNavigate={(direction) => {
-          const currentId = evaluationState.modalComment?.commentId;
-          if (!currentId) return;
+        onNavigate={(nextCommentId) => {
+          // Enter navigation mode
+          isNavigationMode.current = true;
           
-          // Find current comment index
-          const currentIndex = displayComments.findIndex(c => c.id === currentId);
-          if (currentIndex === -1) return;
-          
-          const nextIndex = direction === 'next' 
-            ? Math.min(currentIndex + 1, displayComments.length - 1)
-            : Math.max(currentIndex - 1, 0);
-          
-          if (nextIndex !== currentIndex) {
-            const nextComment = displayComments[nextIndex];
-            const aiComment = dbCommentToAiComment(nextComment);
-            const nextCommentId = nextComment.id || `temp-${Date.now()}`;
-            
-            // Update URL with actual comment ID
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('comment', nextCommentId);
-            router.replace(`?${params.toString()}`, { scroll: false });
-            
+          const commentData = aiCommentsMap.get(nextCommentId);
+          if (commentData) {
+            // Update state immediately for instant navigation
             onEvaluationStateChange?.({
               ...evaluationState,
               modalComment: {
-                comment: aiComment,
-                agentName: nextComment.agentName || "Unknown",
+                comment: commentData.comment,
+                agentName: commentData.agentName,
                 commentId: nextCommentId,
               },
             });
           }
+        }}
+        onGetShareLink={(commentId) => {
+          // Generate the shareable URL with the comment ID
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('comment', commentId);
+          const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+          return url;
         }}
       />
     </>
