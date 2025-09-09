@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, memo, useRef, useCallback } from "react";
+import { useEffect, useState, memo, useCallback } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { commentToYaml } from "@/shared/utils/commentToYaml";
 import { parseColoredText } from "@/shared/utils/ui/coloredText";
@@ -13,13 +14,13 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
+import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
 
 interface CommentModalOptimizedProps {
   comments: Array<{
     comment: Comment;
     agentName: string;
     commentId: string;
-    renderedDescription?: React.ReactElement | null;
   }>;
   currentCommentId: string | null;
   isOpen: boolean;
@@ -73,7 +74,6 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
 }: CommentModalOptimizedProps) {
   const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
   
   // Find current comment data
   const currentIndex = comments.findIndex(c => c.commentId === currentCommentId);
@@ -140,7 +140,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
 
   if (!currentData || !isOpen) return null;
 
-  const { comment, agentName, renderedDescription } = currentData;
+  const { comment, agentName } = currentData;
   const level = comment.level || "info";
 
   return (
@@ -218,8 +218,8 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
             </div>
           </div>
 
-          {/* Content - with ref for instant updates */}
-          <div ref={contentRef} className="flex-1 overflow-y-auto px-8 py-6">
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-8 py-6">
             <div className="mx-auto max-w-4xl space-y-6">
               {comment.highlight?.quotedText && (
                 <div className="space-y-2">
@@ -236,7 +236,12 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
 
               {comment.description && (
                 <div className="prose prose-lg max-w-none">
-                  {renderedDescription || <div>{comment.description}</div>}
+                  <ReactMarkdown
+                    {...MARKDOWN_PLUGINS}
+                    components={MARKDOWN_COMPONENTS}
+                  >
+                    {comment.description}
+                  </ReactMarkdown>
                 </div>
               )}
 

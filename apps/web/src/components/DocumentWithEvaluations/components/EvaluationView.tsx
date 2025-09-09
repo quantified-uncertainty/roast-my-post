@@ -15,7 +15,6 @@ import {
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import type { Comment } from "@roast/ai";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
-import { renderMarkdownToReact } from "../utils/markdownRenderer";
 
 import { LAYOUT } from "../constants";
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
@@ -114,47 +113,36 @@ export function EvaluationView({
     return allComments.filter((comment) => comment.level !== "debug");
   }, [allComments, localShowDebugComments]) as Array<DbComment & { agentName: string }>;
   
-  // Pre-convert all comments to AI format for modal use and create index map
-  // Also pre-render Markdown content for performance
-  const { aiCommentsMap, commentIndexMap, modalComments } = useMemo(() => {
+  // Pre-convert all comments to AI format and create lookup maps for O(1) access
+  const { aiCommentsMap, modalComments } = useMemo(() => {
     const commentsMap = new Map<string, { 
       comment: Comment; 
       agentName: string; 
-      index: number;
-      renderedDescription: React.ReactElement | null;
     }>();
-    const indexMap = new Map<string, number>();
     const modalCommentsArray: Array<{
       comment: Comment;
       agentName: string;
       commentId: string;
-      renderedDescription: React.ReactElement | null;
     }> = [];
     
     displayComments.forEach((dbComment, index) => {
       const id = dbComment.id || `temp-${index}`;
       const aiComment = dbCommentToAiComment(dbComment);
-      const renderedDesc = renderMarkdownToReact(aiComment.description);
       
       commentsMap.set(id, {
         comment: aiComment,
         agentName: dbComment.agentName || "Unknown",
-        index,
-        renderedDescription: renderedDesc
       });
-      indexMap.set(id, index);
       
       modalCommentsArray.push({
         comment: aiComment,
         agentName: dbComment.agentName || "Unknown",
         commentId: id,
-        renderedDescription: renderedDesc
       });
     });
     
     return { 
       aiCommentsMap: commentsMap, 
-      commentIndexMap: indexMap,
       modalComments: modalCommentsArray
     };
   }, [displayComments]);
@@ -173,7 +161,6 @@ export function EvaluationView({
               comment: commentData.comment,
               agentName: commentData.agentName,
               commentId: commentIdFromUrl,
-              renderedDescription: commentData.renderedDescription,
             },
           });
         }
@@ -302,7 +289,6 @@ export function EvaluationView({
                         comment: commentData.comment,
                         agentName: commentData.agentName,
                         commentId: actualCommentId,
-                        renderedDescription: commentData.renderedDescription,
                       },
                     });
                     
@@ -357,7 +343,6 @@ export function EvaluationView({
                 comment: commentData.comment,
                 agentName: commentData.agentName,
                 commentId: nextCommentId,
-                renderedDescription: commentData.renderedDescription,
               },
             });
             

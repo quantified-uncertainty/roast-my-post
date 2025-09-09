@@ -12,7 +12,6 @@ export interface ModalCommentState {
   comment: Comment;
   agentName: string;
   commentId?: string;
-  renderedDescription?: React.ReactElement | null;
 }
 
 export interface EvaluationState {
