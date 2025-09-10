@@ -138,16 +138,23 @@ export class HeliconeAPIClient {
   async getSessionRequests(sessionId: string): Promise<HeliconeRequest[]> {
     try {
       // Filter by properties object which contains custom properties like Helicone-Session-Id and jobid
+      // Using Helicone v1 API filter format
       const result = await this.queryRequests({
         filter: {
-          properties: {
-            'Helicone-Session-Id': { equals: sessionId }
-          }
+          left: {
+            properties: {
+              'Helicone-Session-Id': {
+                equals: sessionId
+              }
+            }
+          },
+          operator: 'and',
+          right: 'all'
         } as any,
         sort: { created_at: 'asc' },
         limit: 100
       });
-
+      
       return result.data;
     } catch (error) {
       throw new Error(`Failed to get session requests for ${sessionId}: ${error instanceof Error ? error.message : String(error)}`);
