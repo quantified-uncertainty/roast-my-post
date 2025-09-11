@@ -45,8 +45,17 @@ export interface HeliconeQueryFilter {
   };
 }
 
+// New filter format required by Helicone v1 API
+export interface HeliconeV1Filter {
+  left: {
+    properties?: Record<string, { equals?: string }>;
+  } | HeliconeV1Filter;
+  operator: 'and' | 'or';
+  right: 'all' | HeliconeV1Filter;
+}
+
 export interface HeliconeQueryOptions {
-  filter: HeliconeQueryFilter | 'all';
+  filter: HeliconeQueryFilter | HeliconeV1Filter | 'all';
   offset?: number;
   limit?: number;
   sort?: {
@@ -128,16 +137,24 @@ export class HeliconeAPIClient {
    */
   async getSessionRequests(sessionId: string): Promise<HeliconeRequest[]> {
     try {
+      // Filter by properties object which contains custom properties like Helicone-Session-Id and jobid
+      // Using Helicone v1 API filter format
       const result = await this.queryRequests({
         filter: {
-          properties: {
-            'Helicone-Session-Id': { equals: sessionId }
-          }
-        } as any, // Type cast needed as our interface doesn't match actual API
+          left: {
+            properties: {
+              'Helicone-Session-Id': {
+                equals: sessionId
+              }
+            }
+          },
+          operator: 'and',
+          right: 'all'
+        } as any,
         sort: { created_at: 'asc' },
         limit: 100
       });
-
+      
       return result.data;
     } catch (error) {
       throw new Error(`Failed to get session requests for ${sessionId}: ${error instanceof Error ? error.message : String(error)}`);

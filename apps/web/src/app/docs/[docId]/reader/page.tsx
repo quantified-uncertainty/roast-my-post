@@ -1,9 +1,49 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { DocumentWithEvaluations } from "@/components/DocumentWithEvaluations";
 import { auth } from "@/infrastructure/auth/auth";
+import { prisma } from "@/infrastructure/database/prisma";
 import { DocumentModel } from "@/models/Document";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ docId: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  const docId = resolvedParams.docId;
+
+  const document = await prisma.document.findUnique({
+    where: { id: docId },
+    select: {
+      versions: {
+        orderBy: { version: "desc" },
+        take: 1,
+        select: {
+          title: true,
+          authors: true,
+        },
+      },
+    },
+  });
+
+  if (!document || !document.versions[0]) {
+    return {
+      title: "Reader - RoastMyPost",
+    };
+  }
+
+  const version = document.versions[0];
+  const title = version.title || "Untitled Document";
+  const authorPrefix = version.authors?.length > 0 ? `by ${version.authors.join(", ")} - ` : "";
+
+  return {
+    title: `${title} ${authorPrefix}Reader - RoastMyPost`,
+    description: `Read "${title}" with AI evaluations`,
+  };
+}
 
 export default async function DocumentPage({
   params,
