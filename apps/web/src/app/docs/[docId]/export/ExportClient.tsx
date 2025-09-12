@@ -58,6 +58,7 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
   // State for include options
   const [includeContent, setIncludeContent] = useState(true);
   const [commentsMode, setCommentsMode] = useState<'none' | 'basic' | 'expanded'>('basic');
+  const [includeAnalysis, setIncludeAnalysis] = useState(true);
   const [includeGrades, setIncludeGrades] = useState(true);
   const [exportFormat, setExportFormat] = useState<'yaml' | 'json'>('yaml');
 
@@ -111,11 +112,13 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
             agent: evaluation.agentName,
           };
 
-          // Add summary and analysis if they exist
+          // Add summary if it exists
           if (evaluation.summary) {
             evalData.summary = evaluation.summary;
           }
-          if (evaluation.analysis) {
+          
+          // Add analysis if selected and exists
+          if (includeAnalysis && evaluation.analysis) {
             evalData.analysis = evaluation.analysis;
           }
 
@@ -312,7 +315,7 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
           </div>
 
           {/* Export Format */}
-          <div className="space-y-2">
+          <div className="mb-6 space-y-2">
             <label className="text-sm font-medium text-gray-700">
               Export Format
             </label>
@@ -342,32 +345,50 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
             </div>
           </div>
 
-          {/* Include Options */}
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Include in Export
+          {/* Document Information Section */}
+          <div className="mb-6">
+            <h3 className="mb-3 text-sm font-semibold text-gray-900">
+              Document Information
+            </h3>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeContent}
+                  onChange={(e) => setIncludeContent(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-gray-700">Include document content</span>
               </label>
-              <div className="mt-2 space-y-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={includeContent}
-                    onChange={(e) => setIncludeContent(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Include document content</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={includeGrades}
-                    onChange={(e) => setIncludeGrades(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Include grades</span>
-                </label>
-              </div>
+            </div>
+          </div>
+
+          {/* Evaluation Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Evaluation Information
+            </h3>
+            
+            {/* Include Options */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeAnalysis}
+                  onChange={(e) => setIncludeAnalysis(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-gray-700">Include analysis</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeGrades}
+                  onChange={(e) => setIncludeGrades(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-gray-700">Include grades</span>
+              </label>
             </div>
             
             {/* Comments Mode Radio Group */}
