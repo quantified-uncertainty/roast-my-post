@@ -9,12 +9,12 @@ import type { Metadata } from "next";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
-import { PrivacyBadge } from "@/components/PrivacyBadge";
 import SlateEditor from "@/components/SlateEditor";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { DocumentModel } from "@/models/Document";
+import { generateDocumentMetadata } from "@/lib/document-metadata";
 
 import { EvaluationManagement } from "./components/EvaluationManagement";
 import { PrivacySection } from "./components/PrivacySection";
@@ -25,36 +25,7 @@ export async function generateMetadata({
   params: Promise<{ docId: string }>;
 }): Promise<Metadata> {
   const resolvedParams = await params;
-  const docId = resolvedParams.docId;
-
-  const document = await prisma.document.findUnique({
-    where: { id: docId },
-    select: {
-      versions: {
-        orderBy: { version: "desc" },
-        take: 1,
-        select: {
-          title: true,
-          authors: true,
-        },
-      },
-    },
-  });
-
-  if (!document || !document.versions[0]) {
-    return {
-      title: "Document Not Found - RoastMyPost",
-    };
-  }
-
-  const version = document.versions[0];
-  const title = version.title || "Untitled Document";
-  const authorPrefix = version.authors?.length > 0 ? `by ${version.authors.join(", ")} - ` : "";
-
-  return {
-    title: `${title} ${authorPrefix}RoastMyPost`,
-    description: `View and manage evaluations for "${title}"`,
-  };
+  return generateDocumentMetadata(resolvedParams.docId);
 }
 
 async function getAvailableAgents(docId: string) {
