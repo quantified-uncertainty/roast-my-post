@@ -59,14 +59,21 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
   const [includeContent, setIncludeContent] = useState(true);
   const [commentsMode, setCommentsMode] = useState<'none' | 'basic' | 'expanded'>('basic');
   const [includeGrades, setIncludeGrades] = useState(true);
+  const [exportFormat, setExportFormat] = useState<'yaml' | 'json'>('yaml');
 
-  // State for YAML content
-  const [yamlContent, setYamlContent] = useState<string>("");
+  // State for export content
+  const [exportContent, setExportContent] = useState<string>("");
+  const [currentFormat, setCurrentFormat] = useState<'yaml' | 'json'>('yaml'); // Format of currently displayed content
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Generate YAML based on current selections
-  const generateYaml = () => {
+  // Estimate token count (rough approximation: ~4 chars per token)
+  const estimateTokenCount = (text: string): number => {
+    return Math.round(text.length / 4);
+  };
+
+  // Generate export based on current selections
+  const generateExport = () => {
     setIsGenerating(true);
 
     // Small delay to show loading state
@@ -196,22 +203,29 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
         });
       }
 
-      const yamlString = yaml.dump(exportData, {
-        noRefs: true,
-        sortKeys: false,
-        lineWidth: -1,
-        skipInvalid: true,
-      });
+      // Generate output based on selected format
+      let outputString: string;
+      if (exportFormat === 'json') {
+        outputString = JSON.stringify(exportData, null, 2);
+      } else {
+        outputString = yaml.dump(exportData, {
+          noRefs: true,
+          sortKeys: false,
+          lineWidth: -1,
+          skipInvalid: true,
+        });
+      }
 
-      setYamlContent(yamlString);
+      setExportContent(outputString);
+      setCurrentFormat(exportFormat); // Update the format of displayed content
       setLastUpdated(new Date());
       setIsGenerating(false);
     }, 100);
   };
 
-  // Generate initial YAML on mount
+  // Generate initial export on mount
   useEffect(() => {
-    generateYaml();
+    generateExport();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle select all/clear all
@@ -297,6 +311,37 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
             </div>
           </div>
 
+          {/* Export Format */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Export Format
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="exportFormat"
+                  value="yaml"
+                  checked={exportFormat === 'yaml'}
+                  onChange={() => setExportFormat('yaml')}
+                  className="border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-gray-700">YAML</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="exportFormat"
+                  value="json"
+                  checked={exportFormat === 'json'}
+                  onChange={() => setExportFormat('json')}
+                  className="border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-gray-700">JSON</span>
+              </label>
+            </div>
+          </div>
+
           {/* Include Options */}
           <div className="space-y-4">
             <div>
@@ -371,22 +416,22 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
           {/* Update Button */}
           <div className="mt-6">
             <Button
-              onClick={generateYaml}
-              className="w-full"
+              onClick={generateExport}
+              className={`w-full ${exportFormat !== currentFormat ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
               variant="default"
               disabled={isGenerating}
             >
               <RefreshCw
                 className={`mr-2 h-4 w-4 ${isGenerating ? "animate-spin" : ""}`}
               />
-              {isGenerating ? "Updating..." : "Update Preview"}
+              {isGenerating ? "Updating..." : exportFormat !== currentFormat ? "Update to " + exportFormat.toUpperCase() : "Update Preview"}
             </Button>
           </div>
 
           {/* Export Info */}
           <div className="mt-4 rounded-md bg-blue-50 p-3">
             <p className="text-xs text-blue-800">
-              Click "Update Preview" to regenerate the YAML with your selected
+              Click "Update Preview" to regenerate the {exportFormat.toUpperCase()} with your selected
               options. Use the copy button in the preview to copy the export
               data.
             </p>
@@ -394,19 +439,25 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
         </div>
       </div>
 
-      {/* Right Panel - YAML Preview */}
+      {/* Right Panel - Export Preview */}
       <div className="lg:col-span-2">
         <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-200 px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
-                  YAML Preview
+                  {currentFormat === 'yaml' ? 'YAML' : 'JSON'} Preview
+                  {exportFormat !== currentFormat && (
+                    <span className="ml-2 text-sm font-normal text-amber-600">
+                      (Format changed - click Update)
+                    </span>
+                  )}
                 </h2>
                 <p className="mt-1 text-sm text-gray-500">
                   {selectedEvaluations.size} evaluation
                   {selectedEvaluations.size !== 1 ? "s" : ""} selected
-                  {" • "}~{Math.round(yamlContent.length / 1024)}KB
+                  {" • "}~{Math.round(exportContent.length / 1024)}KB
+                  {" • "}~{estimateTokenCount(exportContent).toLocaleString()} tokens
                 </p>
               </div>
               <div className="text-right">
@@ -418,7 +469,7 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
             </div>
           </div>
           <div className="p-6">
-            <CodeBlock code={yamlContent} language="yaml" />
+            <CodeBlock code={exportContent} language={currentFormat === 'yaml' ? 'yaml' : 'json'} />
           </div>
         </div>
       </div>
