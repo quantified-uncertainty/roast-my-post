@@ -1,9 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { DocumentWithEvaluations } from "@/components/DocumentWithEvaluations";
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
+import { generateDocumentMetadata } from "@/lib/document-metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ docId: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  return generateDocumentMetadata(resolvedParams.docId, { suffix: "Reader" });
+}
 
 export default async function DocumentPage({
   params,

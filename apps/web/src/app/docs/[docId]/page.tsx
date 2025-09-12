@@ -4,19 +4,29 @@ import { BookOpen } from "lucide-react";
 import truncateMarkdown from "markdown-truncate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
-import { PrivacyBadge } from "@/components/PrivacyBadge";
 import SlateEditor from "@/components/SlateEditor";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { DocumentModel } from "@/models/Document";
+import { generateDocumentMetadata } from "@/lib/document-metadata";
 
 import { EvaluationManagement } from "./components/EvaluationManagement";
 import { PrivacySection } from "./components/PrivacySection";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ docId: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  return generateDocumentMetadata(resolvedParams.docId);
+}
 
 async function getAvailableAgents(docId: string) {
   // Get all agents that don't have evaluations for this document yet
