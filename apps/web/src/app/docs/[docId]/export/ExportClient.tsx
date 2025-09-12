@@ -50,9 +50,9 @@ interface ExportClientProps {
 }
 
 export function ExportClient({ document, evaluations }: ExportClientProps) {
-  // State for selected evaluations - start with none selected
+  // State for selected evaluations - start with all selected
   const [selectedEvaluations, setSelectedEvaluations] = useState<Set<string>>(
-    new Set()
+    new Set(evaluations.map((e) => e.agentId))
   );
 
   // State for include options
