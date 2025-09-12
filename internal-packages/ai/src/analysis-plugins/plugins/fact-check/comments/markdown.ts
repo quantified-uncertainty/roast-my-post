@@ -69,7 +69,7 @@ export function buildSkipDescription(fact: VerifiedFact): string {
 
   if (shouldVerify) {
     // Should have been verified but wasn't (likely hit limit)
-    skipReason = `Processing limit reached (max ${LIMITS.MAX_FACTS_TO_VERIFY} claims per analysis)`;
+    skipReason = `Processing limit reached (max ${LIMITS.MAX_FACTS_TO_PROCESS} facts per analysis)`;
     detailedReason =
       "This claim qualified for verification but was skipped due to resource limits. Consider manual fact-checking for high-priority claims like this.";
   } else {

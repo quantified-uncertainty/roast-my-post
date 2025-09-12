@@ -24,11 +24,12 @@ export const THRESHOLDS = {
 
 // Limits and counts
 export const LIMITS = {
-  // Maximum facts to verify per analysis
-  MAX_FACTS_TO_VERIFY: 200,
+  // Maximum total facts to process per analysis (extraction, verification, and commenting)
+  // Facts are prioritized by importance, checkability, and doubt level
+  MAX_FACTS_TO_PROCESS: 30,
 
   // Maximum claims to extract per chunk
-  MAX_CLAIMS_PER_CHUNK: 50,
+  MAX_CLAIMS_PER_CHUNK: 20,
 
   // Minimum key phrase length for fuzzy matching
   MIN_KEY_PHRASE_LENGTH: 10,
