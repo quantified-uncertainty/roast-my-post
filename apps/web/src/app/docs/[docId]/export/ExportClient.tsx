@@ -57,7 +57,7 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
 
   // State for include options
   const [includeContent, setIncludeContent] = useState(true);
-  const [includeComments, setIncludeComments] = useState(true);
+  const [commentsMode, setCommentsMode] = useState<'none' | 'basic' | 'expanded'>('basic');
   const [includeGrades, setIncludeGrades] = useState(true);
 
   // State for YAML content
@@ -126,9 +126,9 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
             evalData.selfCritique = evaluation.selfCritique;
           }
 
-          // Add comments if selected
+          // Add comments based on mode
           if (
-            includeComments &&
+            commentsMode !== 'none' &&
             evaluation.comments &&
             evaluation.comments.length > 0
           ) {
@@ -138,28 +138,54 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
                 description: comment.description,
               };
 
-              if (comment.level) commentData.level = comment.level;
-              if (comment.source) commentData.source = comment.source;
-              if (comment.metadata) commentData.metadata = comment.metadata;
-
-              if (includeGrades) {
-                if (
-                  comment.importance !== null &&
-                  comment.importance !== undefined
-                ) {
-                  commentData.importance = comment.importance;
+              // Add highlight for both basic and expanded modes
+              if (comment.highlight && (commentsMode === 'basic' || commentsMode === 'expanded')) {
+                commentData.highlight = {
+                  quotedText: comment.highlight.quotedText,
+                };
+                
+                // Add context for basic mode (30 chars before and after)
+                if (commentsMode === 'basic' && document.content) {
+                  const startOffset = comment.highlight.startOffset;
+                  const endOffset = comment.highlight.endOffset;
+                  
+                  // Get 30 chars before start and 30 chars after end
+                  const contextStart = Math.max(0, startOffset - 30);
+                  const contextEnd = Math.min(document.content.length, endOffset + 30);
+                  
+                  let context = document.content.substring(contextStart, contextEnd);
+                  
+                  // Add ellipsis if truncated
+                  if (contextStart > 0) context = '...' + context;
+                  if (contextEnd < document.content.length) context = context + '...';
+                  
+                  commentData.highlight.context = context;
                 }
-                if (comment.grade !== null && comment.grade !== undefined) {
-                  commentData.grade = comment.grade;
+                
+                // Add full offset data for expanded mode
+                if (commentsMode === 'expanded') {
+                  commentData.highlight.startOffset = comment.highlight.startOffset;
+                  commentData.highlight.endOffset = comment.highlight.endOffset;
                 }
               }
 
-              if (comment.highlight) {
-                commentData.highlight = {
-                  quotedText: comment.highlight.quotedText,
-                  startOffset: comment.highlight.startOffset,
-                  endOffset: comment.highlight.endOffset,
-                };
+              // Add expanded data only if mode is 'expanded'
+              if (commentsMode === 'expanded') {
+                if (comment.level) commentData.level = comment.level;
+                if (comment.source) commentData.source = comment.source;
+                if (comment.metadata) commentData.metadata = comment.metadata;
+
+                if (includeGrades) {
+                  if (
+                    comment.importance !== null &&
+                    comment.importance !== undefined
+                  ) {
+                    commentData.importance = comment.importance;
+                  }
+                  if (comment.grade !== null && comment.grade !== undefined) {
+                    commentData.grade = comment.grade;
+                  }
+                }
               }
 
               return commentData;
@@ -176,7 +202,6 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
         lineWidth: -1,
         skipInvalid: true,
       });
-      console.log("YAML content:", yamlString);
 
       setYamlContent(yamlString);
       setLastUpdated(new Date());
@@ -208,8 +233,6 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
     }
     setSelectedEvaluations(newSelected);
   };
-
-  console.log("rendering yaml", yamlContent);
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -275,37 +298,74 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
           </div>
 
           {/* Include Options */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">
-              Include in Export
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={includeContent}
-                onChange={(e) => setIncludeContent(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Include document content</span>
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={includeComments}
-                onChange={(e) => setIncludeComments(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Include comments</span>
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={includeGrades}
-                onChange={(e) => setIncludeGrades(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-gray-700">Include grades</span>
-            </label>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Include in Export
+              </label>
+              <div className="mt-2 space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={includeContent}
+                    onChange={(e) => setIncludeContent(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Include document content</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={includeGrades}
+                    onChange={(e) => setIncludeGrades(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Include grades</span>
+                </label>
+              </div>
+            </div>
+            
+            {/* Comments Mode Radio Group */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Comments
+              </label>
+              <div className="mt-2 space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="commentsMode"
+                    value="none"
+                    checked={commentsMode === 'none'}
+                    onChange={() => setCommentsMode('none')}
+                    className="border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">None</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="commentsMode"
+                    value="basic"
+                    checked={commentsMode === 'basic'}
+                    onChange={() => setCommentsMode('basic')}
+                    className="border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Basic data (headers & descriptions only)</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="commentsMode"
+                    value="expanded"
+                    checked={commentsMode === 'expanded'}
+                    onChange={() => setCommentsMode('expanded')}
+                    className="border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Expanded data (all fields)</span>
+                </label>
+              </div>
+            </div>
           </div>
 
           {/* Update Button */}
