@@ -994,9 +994,9 @@ export class DocumentModel {
       ? { AND: whereConditions }
       : {};
 
-    // For distinct queries, we need to order by documentId first to ensure deterministic results
+    // For distinct queries, order by createdAt desc to get most recently updated documents
     const orderBy = latestVersionOnly 
-      ? [{ documentId: "asc" as const }, { createdAt: "desc" as const }]
+      ? [{ createdAt: "desc" as const }, { documentId: "asc" as const }]
       : { createdAt: "desc" as const };
 
     // Execute query for listing views

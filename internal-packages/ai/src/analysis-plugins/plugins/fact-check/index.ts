@@ -123,9 +123,9 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       this.facts = this.deduplicateFacts(allFacts);
 
       // Phase 2: Verify high-priority facts
+      // Since facts are already limited to MAX_FACTS_TO_PROCESS, we don't need additional slicing
       const factsToVerify = this.facts
-        .filter((fact) => fact.shouldVerify())
-        .slice(0, LIMITS.MAX_FACTS_TO_VERIFY);
+        .filter((fact) => fact.shouldVerify());
 
       if (factsToVerify.length > 0) {
         await this.verifyFacts(factsToVerify);
@@ -254,8 +254,42 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       }
     }
 
-    // Sort by average score
-    return unique.sort((a, b) => b.averageScore - a.averageScore);
+    // Calculate priority score for each fact
+    // Higher score = more important to check
+    const priorityScore = (fact: VerifiedFact) => 
+      fact.claim.importanceScore + 
+      fact.claim.checkabilityScore + 
+      (100 - fact.claim.truthProbability);
+
+    // Sort by priority score (most important facts first)
+    const sortedFacts = unique.sort((a, b) => 
+      priorityScore(b) - priorityScore(a)
+    );
+
+    // Limit to maximum facts if we have too many
+    if (sortedFacts.length > LIMITS.MAX_FACTS_TO_PROCESS) {
+      logger.info(
+        `Limiting facts from ${sortedFacts.length} to ${LIMITS.MAX_FACTS_TO_PROCESS} based on priority scores`
+      );
+      
+      // Log details about what's being kept and discarded
+      const keptFacts = sortedFacts.slice(0, LIMITS.MAX_FACTS_TO_PROCESS);
+      const discardedFacts = sortedFacts.slice(LIMITS.MAX_FACTS_TO_PROCESS);
+      
+      const avgKeptScore = keptFacts.reduce((sum, f) => sum + priorityScore(f), 0) / keptFacts.length;
+      const avgDiscardedScore = discardedFacts.length > 0 
+        ? discardedFacts.reduce((sum, f) => sum + priorityScore(f), 0) / discardedFacts.length
+        : 0;
+      
+      logger.debug(
+        `Priority scores - Kept facts avg: ${avgKeptScore.toFixed(1)}, ` +
+        `Discarded facts avg: ${avgDiscardedScore.toFixed(1)}`
+      );
+      
+      return keptFacts;
+    }
+
+    return sortedFacts;
   }
 
   private async verifyFacts(facts: VerifiedFact[]): Promise<void> {
