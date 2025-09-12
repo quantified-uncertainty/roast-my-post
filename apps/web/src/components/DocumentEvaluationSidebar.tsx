@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Microscope } from "lucide-react";
+import { FileDown, Microscope } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -59,6 +59,7 @@ export function DocumentEvaluationSidebar({
 
   const isDocumentPage = pathname === `/docs/${docId}`;
   const isReaderPage = pathname === `/docs/${docId}/reader`;
+  const isExportPage = pathname === `/docs/${docId}/export`;
 
   return (
     <nav className="w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
@@ -92,6 +93,19 @@ export function DocumentEvaluationSidebar({
         >
           <BookOpenIcon className="h-4 w-4" />
           Reader View
+        </Link>
+
+        {/* Export Link */}
+        <Link
+          href={`/docs/${docId}/export`}
+          className={`mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            isExportPage
+              ? "bg-blue-50 text-gray-900"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          }`}
+        >
+          <FileDown className="h-4 w-4" />
+          Export
         </Link>
 
         {/* Evaluations Section */}

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Highlight, themes, Language } from "prism-react-renderer";
-import {
-  CheckIcon,
-  DocumentDuplicateIcon,
-} from "@heroicons/react/24/outline";
+import React, { useEffect, useState } from "react";
+
+import { Highlight, Language, themes } from "prism-react-renderer";
+
+import { CheckIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 
 interface CodeBlockProps {
   code: string;
@@ -43,6 +42,11 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   const [copied, setCopied] = useState(false);
   const [isFormatting, setIsFormatting] = useState(false);
   const [formatError, setFormatError] = useState<string | null>(null);
+
+  // Keep internal state in sync when external code prop changes
+  useEffect(() => {
+    setFormattedCode(code);
+  }, [code]);
 
   const formatCode = async () => {
     try {
@@ -112,8 +116,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   return (
     <div
       {...attributes}
-      className="relative my-4 overflow-hidden rounded-lg bg-gray-800 max-w-full"
-      style={{ position: 'relative' }}
+      className="relative my-4 max-w-full overflow-hidden rounded-lg bg-gray-800"
+      style={{ position: "relative" }}
     >
       <div className="flex items-center justify-between bg-gray-700 px-4 py-2">
         <span className="text-sm text-gray-400">{language}</span>
@@ -160,15 +164,15 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         language={prismLanguage}
       >
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
-          <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
+          <div className="overflow-x-auto" style={{ maxWidth: "100%" }}>
             <pre
               className={`${className} flex !border-0 bg-transparent text-sm !shadow-none`}
               style={{
                 ...style,
                 background: "transparent",
                 margin: 0,
-                maxWidth: '100%',
-                overflow: 'visible',
+                maxWidth: "100%",
+                overflow: "visible",
                 fontFamily:
                   'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
               }}
@@ -184,9 +188,11 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
                       className={`text-xs ${
                         isHighlighted ? "text-gray-300" : "text-gray-500"
                       }`}
-                      style={{ 
+                      style={{
                         lineHeight: "1.5rem",
-                        backgroundColor: isHighlighted ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                        backgroundColor: isHighlighted
+                          ? "rgba(59, 130, 246, 0.15)"
+                          : "transparent",
                         marginLeft: isHighlighted ? "-12px" : "0",
                         marginRight: isHighlighted ? "-12px" : "0",
                         paddingLeft: isHighlighted ? "12px" : "0",
@@ -205,12 +211,14 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
                   const lineNumber = i + 1;
                   const isHighlighted = highlightLines.includes(lineNumber);
                   return (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       {...getLineProps({ line })}
-                      style={{ 
+                      style={{
                         lineHeight: "1.5rem",
-                        backgroundColor: isHighlighted ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                        backgroundColor: isHighlighted
+                          ? "rgba(59, 130, 246, 0.15)"
+                          : "transparent",
                         marginLeft: isHighlighted ? "-16px" : "0",
                         marginRight: isHighlighted ? "-16px" : "0",
                         paddingLeft: isHighlighted ? "16px" : "0",
@@ -229,7 +237,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
           </div>
         )}
       </Highlight>
-      
+
       {/* Position markers for comment alignment */}
       {highlightPositions.map(({ tag, lineNumber }) => {
         // Calculate vertical position based on line number
@@ -238,18 +246,18 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         const headerHeight = 54;
         const lineHeight = 24; // 1.5rem
         const topPosition = headerHeight + (lineNumber - 1) * lineHeight;
-        
+
         return (
           <div
             key={tag}
             data-tag={tag}
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: `${topPosition}px`,
               left: 0,
               width: 0,
               height: 0,
-              pointerEvents: 'none',
+              pointerEvents: "none",
             }}
           />
         );
