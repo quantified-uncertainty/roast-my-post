@@ -1,32 +1,23 @@
 "use client";
 
-import {
-  useMemo,
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 
-import {
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { Card } from "@/components/ui/card";
 
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import type { Comment } from "@roast/ai";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
+import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
 
 import { LAYOUT } from "../constants";
-import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { CommentsColumn } from "./CommentsColumn";
 import { CommentModalOptimized } from "./CommentModalOptimized";
-import { CommentToolbar } from "./CommentToolbar";
 import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
-import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
 
 /**
  * Maps comment levels to appropriate highlight colors
@@ -79,12 +70,9 @@ export function EvaluationView({
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
-  // Use the scroll behavior hook
-  const { scrollContainerRef, headerVisible, isLargeMode, setIsLargeMode } =
-    useScrollBehavior({
-      evaluationsSectionRef,
-      isLargeMode: true,
-    });
+  // Local state for accordion mode (collapsed by default)
+  const [isLargeMode, setIsLargeMode] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
@@ -112,55 +100,63 @@ export function EvaluationView({
       return allComments;
     }
     return allComments.filter((comment) => comment.level !== "debug");
-  }, [allComments, localShowDebugComments]) as Array<DbComment & { agentName: string }>;
-  
+  }, [allComments, localShowDebugComments]) as Array<
+    DbComment & { agentName: string }
+  >;
+
   // Pre-convert all comments to AI format and create lookup maps for O(1) access
   const { aiCommentsMap, modalComments } = useMemo(() => {
-    const commentsMap = new Map<string, { 
-      comment: Comment; 
-      agentName: string; 
-    }>();
+    const commentsMap = new Map<
+      string,
+      {
+        comment: Comment;
+        agentName: string;
+      }
+    >();
     const modalCommentsArray: Array<{
       comment: Comment;
       agentName: string;
       commentId: string;
     }> = [];
-    
+
     displayComments.forEach((dbComment, index) => {
       const id = dbComment.id || `temp-${index}`;
       const aiComment = dbCommentToAiComment(dbComment);
-      
+
       commentsMap.set(id, {
         comment: aiComment,
         agentName: dbComment.agentName || "Unknown",
       });
-      
+
       modalCommentsArray.push({
         comment: aiComment,
         agentName: dbComment.agentName || "Unknown",
         commentId: id,
       });
     });
-    
-    return { 
-      aiCommentsMap: commentsMap, 
-      modalComments: modalCommentsArray
+
+    return {
+      aiCommentsMap: commentsMap,
+      modalComments: modalCommentsArray,
     };
   }, [displayComments]);
 
   // Track whether we're in "navigation mode" (using arrows) or "direct mode" (from URL)
   const isNavigationMode = useRef(false);
-  
+
   // Handle URL-based navigation (when user shares a link or manually changes URL)
-  const commentIdFromUrl = searchParams.get('comment');
-  
+  const commentIdFromUrl = searchParams.get("comment");
+
   useEffect(() => {
     if (commentIdFromUrl && aiCommentsMap.size > 0) {
       // We're in "direct mode" - showing a specific comment from URL
       isNavigationMode.current = false;
-      
+
       const commentData = aiCommentsMap.get(commentIdFromUrl);
-      if (commentData && evaluationState.modalComment?.commentId !== commentIdFromUrl) {
+      if (
+        commentData &&
+        evaluationState.modalComment?.commentId !== commentIdFromUrl
+      ) {
         onEvaluationStateChange?.({
           ...evaluationState,
           modalComment: {
@@ -170,14 +166,23 @@ export function EvaluationView({
           },
         });
       }
-    } else if (!commentIdFromUrl && evaluationState.modalComment && !isNavigationMode.current) {
+    } else if (
+      !commentIdFromUrl &&
+      evaluationState.modalComment &&
+      !isNavigationMode.current
+    ) {
       // URL cleared externally, close modal
       onEvaluationStateChange?.({
         ...evaluationState,
         modalComment: null,
       });
     }
-  }, [commentIdFromUrl, aiCommentsMap, evaluationState, onEvaluationStateChange]);
+  }, [
+    commentIdFromUrl,
+    aiCommentsMap,
+    evaluationState,
+    onEvaluationStateChange,
+  ]);
 
   const highlights = useMemo(
     () =>
@@ -209,35 +214,28 @@ export function EvaluationView({
 
   return (
     <>
-      {/* Header wrapper that collapses when hidden */}
-      <div
-        className={`transition-all duration-300 ease-in-out ${
-          headerVisible ? "max-h-96" : "max-h-0 overflow-hidden"
-        }`}
-      >
-        {/* Sticky Evaluation Cards Header Bar */}
-        <div className="sticky top-0 z-50 mx-5 mt-3 rounded-lg border border-gray-200 bg-slate-100 shadow-sm">
-          <EvaluationCardsHeader
-            document={document}
-            evaluationState={evaluationState}
-            onEvaluationStateChange={onEvaluationStateChange}
-            isLargeMode={isLargeMode}
-            onToggleMode={() => setIsLargeMode((v) => !v)}
-            showDebugComments={localShowDebugComments}
-            onToggleDebugComments={handleToggleDebugComments}
-            isOwner={isOwner}
-            onRerun={onRerun}
-            runningEvals={runningEvals}
-          />
-        </div>
-      </div>
+      {/* Fixed Evaluation Cards Header Bar */}
+      <Card className="sticky top-0 z-50 mx-6 mt-4">
+        <EvaluationCardsHeader
+          document={document}
+          evaluationState={evaluationState}
+          onEvaluationStateChange={onEvaluationStateChange}
+          isLargeMode={isLargeMode}
+          onToggleMode={() => setIsLargeMode((v) => !v)}
+          showDebugComments={localShowDebugComments}
+          onToggleDebugComments={handleToggleDebugComments}
+          isOwner={isOwner}
+          onRerun={onRerun}
+          runningEvals={runningEvals}
+        />
+      </Card>
 
       {/* Main content container */}
       <div className="flex h-full flex-col overflow-x-hidden">
         {/* Unified scroll container for all content */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden pt-2"
+          className="flex-1 overflow-y-auto overflow-x-hidden"
         >
           {/* Document content and comments section */}
           <div
@@ -262,6 +260,7 @@ export function EvaluationView({
                 });
               }}
               isFullWidth={isFullWidth}
+              onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
               contentRef={contentRef}
             />
             {/* Comments column with filters and positioned comments */}
@@ -272,11 +271,6 @@ export function EvaluationView({
                 marginLeft: "2rem",
               }}
             >
-              <CommentToolbar
-                documentId={document.id}
-                isFullWidth={isFullWidth}
-                onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
-              />
               <CommentsColumn
                 comments={displayComments}
                 contentRef={contentRef}
@@ -291,11 +285,11 @@ export function EvaluationView({
                 onCommentClick={(commentIndex, comment) => {
                   const actualCommentId = comment.id || `temp-${commentIndex}`;
                   const commentData = aiCommentsMap.get(actualCommentId);
-                  
+
                   if (commentData) {
                     // Enter navigation mode
                     isNavigationMode.current = true;
-                    
+
                     // Open modal immediately for instant response
                     onEvaluationStateChange?.({
                       ...evaluationState,
@@ -323,7 +317,7 @@ export function EvaluationView({
           </div>
         </div>
       </div>
-      
+
       {/* Optimized Comment Modal - always mounted, just swaps content */}
       <CommentModalOptimized
         comments={modalComments}
@@ -333,14 +327,14 @@ export function EvaluationView({
         onClose={() => {
           // Reset navigation mode
           isNavigationMode.current = false;
-          
+
           // Clear URL if present
           if (commentIdFromUrl) {
             const params = new URLSearchParams(searchParams.toString());
-            params.delete('comment');
+            params.delete("comment");
             router.replace(`?${params.toString()}`, { scroll: false });
           }
-          
+
           // Clear state
           onEvaluationStateChange?.({
             ...evaluationState,
@@ -350,7 +344,7 @@ export function EvaluationView({
         onNavigate={(nextCommentId) => {
           // Enter navigation mode
           isNavigationMode.current = true;
-          
+
           const commentData = aiCommentsMap.get(nextCommentId);
           if (commentData) {
             // Update state immediately for instant navigation
@@ -367,7 +361,7 @@ export function EvaluationView({
         onGetShareLink={(commentId) => {
           // Generate the shareable URL with the comment ID
           const params = new URLSearchParams(searchParams.toString());
-          params.set('comment', commentId);
+          params.set("comment", commentId);
           const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
           return url;
         }}

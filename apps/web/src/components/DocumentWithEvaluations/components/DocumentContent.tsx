@@ -20,6 +20,7 @@ interface DocumentContentProps {
   onHighlightHover: (commentId: string | null) => void;
   onHighlightClick: (commentId: string) => void;
   isFullWidth: boolean;
+  onToggleFullWidth: () => void;
   contentRef: RefObject<HTMLDivElement | null>;
 }
 
@@ -31,6 +32,7 @@ export function DocumentContent({
   onHighlightHover,
   onHighlightClick,
   isFullWidth,
+  onToggleFullWidth,
   contentRef,
 }: DocumentContentProps) {
   return (
@@ -39,17 +41,22 @@ export function DocumentContent({
       className={`relative p-0 ${isFullWidth ? "pr-4" : "max-w-3xl flex-1"}`}
       style={
         isFullWidth
-          ? { width: `calc(100% - ${LAYOUT.COMMENT_COLUMN_WIDTH}px)`, overflow: "hidden" }
+          ? {
+              width: `calc(100% - ${LAYOUT.COMMENT_COLUMN_WIDTH}px)`,
+              overflow: "hidden",
+            }
           : {}
       }
     >
       {/* Document metadata section */}
-      <DocumentMetadata
-        document={document}
-        showDetailedAnalysisLink={true}
-      />
-
-      {/* Submitter Notes - only show if notes exist */}
+      <div className={isFullWidth ? "w-full" : "mx-auto max-w-3xl"}>
+        <DocumentMetadata
+          document={document}
+          showDetailedAnalysisLink={true}
+          isFullWidth={isFullWidth}
+          onToggleFullWidth={onToggleFullWidth}
+        />
+        {/* Submitter Notes - only show if notes exist */}
       {document.submitterNotes && (
         <div className="mx-4 mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
           <h3 className="mb-2 text-sm font-semibold text-blue-900">
@@ -60,6 +67,7 @@ export function DocumentContent({
           </p>
         </div>
       )}
+      </div>
 
       <article
         className={`prose prose-lg prose-slate ${
