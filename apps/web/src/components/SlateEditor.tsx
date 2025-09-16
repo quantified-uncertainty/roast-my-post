@@ -657,11 +657,11 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           highlight?.startOffset < 0 ||
           highlight?.endOffset <= highlight?.startOffset
         ) {
-          console.warn(`Skipping invalid highlight ${highlight.tag}:`, {
+          /*console.warn(`Skipping invalid highlight ${highlight.tag}:`, {
             startOffset: highlight?.startOffset,
             endOffset: highlight?.endOffset,
             tag: highlight?.tag,
-          });
+          });*/  
           continue; // Skip invalid highlights
         }
 
@@ -749,7 +749,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           }
 
           // If we can't find it at the expected location, skip this highlight
-          console.warn(
+          /*console.warn(
             `Failed to render highlight ${highlight.tag} at expected location:`,
             {
               startOffset: highlight.startOffset,
@@ -759,7 +759,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               nodeTextPreview: node.text.substring(0, 100) + "...",
               nodeInfo: nodeInfo,
             }
-          );
+          );*/
           continue;
         }
 
