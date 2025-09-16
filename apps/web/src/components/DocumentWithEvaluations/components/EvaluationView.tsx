@@ -15,7 +15,6 @@ import { LAYOUT } from "../constants";
 import { EvaluationViewProps } from "../types";
 import { CommentsColumn } from "./CommentsColumn";
 import { CommentModalOptimized } from "./CommentModalOptimized";
-import { CommentToolbar } from "./CommentToolbar";
 import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
@@ -272,11 +271,6 @@ export function EvaluationView({
                 marginLeft: "2rem",
               }}
             >
-              <CommentToolbar
-                documentId={document.id}
-                isFullWidth={isFullWidth}
-                onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
-              />
               <CommentsColumn
                 comments={displayComments}
                 contentRef={contentRef}
