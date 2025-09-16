@@ -1,17 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import { useRouter } from "next/navigation";
-import { 
+
+import {
+  deleteDocument,
+  reuploadDocument,
+} from "@/app/docs/[docId]/reader/actions";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   ArrowPathIcon,
+  EllipsisHorizontalIcon,
   PencilIcon,
   TrashIcon,
-  LockClosedIcon,
-  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
-import { Button } from "./Button";
+
 import { WarningDialog } from "./WarningDialog";
-import { deleteDocument, reuploadDocument } from "@/app/docs/[docId]/reader/actions";
 
 interface DocumentActionsProps {
   docId: string;
@@ -22,13 +33,15 @@ interface DocumentActionsProps {
   className?: string;
 }
 
-export function DocumentActions({ docId, document, className = "" }: DocumentActionsProps) {
+export function DocumentActions({
+  docId,
+  document,
+  className = "",
+}: DocumentActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showReuploadWarning, setShowReuploadWarning] = useState(false);
   const [evaluationCount, setEvaluationCount] = useState(0);
-  const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(document.isPrivate ?? false);
   const router = useRouter();
 
   useEffect(() => {
@@ -48,7 +61,11 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
   }, [docId]);
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this document and all its evaluations?")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this document and all its evaluations?"
+      )
+    ) {
       return;
     }
 
@@ -107,86 +124,44 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
     router.push(`/docs/${docId}/edit`);
   };
 
-  const handleTogglePrivacy = async () => {
-    setIsTogglingPrivacy(true);
-    try {
-      const response = await fetch(`/api/documents/${docId}/privacy`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isPrivate: !isPrivate }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update privacy');
-      }
-
-      setIsPrivate(!isPrivate);
-      router.refresh();
-    } catch (error) {
-      console.error('Failed to update privacy:', error);
-      alert('Failed to update privacy settings');
-    } finally {
-      setIsTogglingPrivacy(false);
-    }
-  };
-
   return (
     <div className={`flex items-center justify-end gap-2 ${className}`}>
-      <Button
-        variant="secondary"
-        onClick={handleTogglePrivacy}
-        disabled={isTogglingPrivacy}
-        className="flex items-center gap-1"
-        title={isPrivate ? "Make document public" : "Make document private"}
-      >
-        {isPrivate ? (
-          <>
-            <GlobeAltIcon className="h-4 w-4" />
-            Make Public
-          </>
-        ) : (
-          <>
-            <LockClosedIcon className="h-4 w-4" />
-            Make Private
-          </>
-        )}
-      </Button>
-
-      <Button
-        variant="secondary"
-        onClick={handleRefresh}
-        disabled={isRefreshing || !document.importUrl}
-        className="flex items-center gap-1"
-      >
-        <ArrowPathIcon className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-        Refresh from Source
-      </Button>
-      
-      <Button
-        variant="primary"
-        onClick={handleEdit}
-        className="flex items-center gap-1"
-      >
-        <PencilIcon className="h-4 w-4" />
+      <Button variant="outline" size="sm" onClick={handleEdit}>
+        <PencilIcon className="h-3.5 w-3.5" />
         Edit
       </Button>
-      
-      <Button
-        variant="danger"
-        onClick={handleDelete}
-        disabled={isDeleting}
-        className="flex items-center gap-1"
-      >
-        <TrashIcon className="h-4 w-4" />
-        Delete
-      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="px-2">
+            <EllipsisHorizontalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={handleRefresh}
+            disabled={isRefreshing || !document.importUrl}
+          >
+            <ArrowPathIcon
+              className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            Refresh from Source
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="text-destructive"
+          >
+            <TrashIcon className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <WarningDialog
         isOpen={showReuploadWarning}
         title="Re-upload Document"
-        message={`Re-uploading this document will create a new version and invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? 's' : ''}. They will be automatically re-run, which will incur API costs. Continue?`}
+        message={`Re-uploading this document will create a new version and invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? "s" : ""}. They will be automatically re-run, which will incur API costs. Continue?`}
         confirmText="Continue with re-upload"
         onConfirm={handleConfirmReupload}
         onCancel={handleCancelReupload}

@@ -11,7 +11,7 @@ describe('generateMathComment', () => {
         errorType: 'calculation',
         errorExplanation: '2 + 2 equals 4, not 5',
         correctedVersion: '2 + 2 = 4',
-        conciseCorrection: '5 → 4',
+        displayCorrection: '<r:replace from="5" to="4"/>',
         complexityScore: 10,
         contextImportanceScore: 50,
         errorSeverityScore: 70,
@@ -23,7 +23,7 @@ describe('generateMathComment', () => {
       // Check that the description doesn't contain styled header
       expect(comment).not.toContain('[Math]');
       expect(comment).not.toContain('<span style=');
-      expect(comment).not.toContain('5 → 4'); // conciseCorrection should NOT be in description
+      expect(comment).not.toContain('<r:replace from="5" to="4"/>'); // displayCorrection should NOT be in description
       
       // Check that it contains the explanation
       expect(comment).toContain('2 + 2 equals 4, not 5');
@@ -168,7 +168,7 @@ describe('Math Plugin Integration', () => {
         explanation: '2 + 2 equals 4, not 5',
         verifiedBy: 'mathjs',
         toolsUsed: ['mathjs'],
-        conciseCorrection: '5 → 4',
+        displayCorrection: '<r:replace from="5" to="4"/>',
         mathJsResult: {
           status: 'verified_false',
           explanation: 'Incorrect',
@@ -192,7 +192,7 @@ describe('Math Plugin Integration', () => {
     const header = (wrapper as any).buildHeader();
     const level = (wrapper as any).getLevel();
     
-    expect(header).toBe('5 → 4'); // Should use conciseCorrection
+    expect(header).toBe('<r:replace from="5" to="4"/>'); // Should use displayCorrection
     expect(level).toBe('error');
   });
 
@@ -207,7 +207,7 @@ describe('Math Plugin Integration', () => {
         explanation: '2 + 2 equals 4, not 5',
         verifiedBy: 'mathjs',
         toolsUsed: ['mathjs'],
-        conciseCorrection: '5 → 4',
+        displayCorrection: '<r:replace from="5" to="4"/>',
         mathJsResult: {
           status: 'verified_false',
           explanation: 'Incorrect',

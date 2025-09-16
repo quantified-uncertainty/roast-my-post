@@ -5,8 +5,11 @@ import { useRef } from "react";
 import Link from "next/link";
 
 import SlateEditor from "@/components/SlateEditor";
-import { InformationCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import type { Document } from "@/shared/types/databaseTypes";
+import {
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/20/solid";
 
 import { DocumentMetadata } from "./DocumentMetadata";
 
@@ -80,13 +83,12 @@ export function EmptyEvaluationsView({
             {isOwner && failedJobs.length > 0 && (
               <div className="mx-6 mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
                 <div className="flex items-start gap-2">
-                  <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mt-0.5" />
+                  <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 text-red-600" />
                   <div className="flex-1">
-                    <p className="text-sm text-red-800 font-medium mb-2">
-                      {failedJobs.length === 1 
+                    <p className="mb-2 text-sm font-medium text-red-800">
+                      {failedJobs.length === 1
                         ? "Warning: Evaluation failed"
-                        : `Warning: ${failedJobs.length} evaluations failed`
-                      }
+                        : `Warning: ${failedJobs.length} evaluations failed`}
                     </p>
                     <div className="space-y-1">
                       {failedJobs.map((job) => (
@@ -108,7 +110,7 @@ export function EmptyEvaluationsView({
             {/* Document metadata section */}
             <DocumentMetadata document={document} />
 
-            <article className="prose prose-lg prose-slate mx-auto rounded-lg px-4 py-8">
+            <article className="prose prose-lg prose-slate mx-auto rounded-lg py-8 pl-4 pr-8">
               <SlateEditor
                 content={contentWithMetadataPrepend}
                 onHighlightHover={() => {}}

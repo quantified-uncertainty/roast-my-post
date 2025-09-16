@@ -18,7 +18,9 @@ import { z } from "zod";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import { WarningDialog } from "@/components/WarningDialog";
-import { LockClosedIcon } from "@heroicons/react/24/outline";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { LockClosedIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 
 import {
   type DocumentInput,
@@ -95,6 +97,7 @@ export default function EditDocumentPage({ params }: Props) {
       platforms: "",
       importUrl: "",
       isPrivate: false,
+      submitterNotes: "",
     },
   });
 
@@ -129,6 +132,7 @@ export default function EditDocumentPage({ params }: Props) {
               : "",
           importUrl: document.importUrl || "",
           isPrivate: document.isPrivate ?? false,
+          submitterNotes: document.submitterNotes || "",
         });
         
         // Update the local state for privacy
@@ -315,22 +319,56 @@ export default function EditDocumentPage({ params }: Props) {
                 />
               </FormField>
 
-              <div className="flex items-start">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    {...methods.register("isPrivate")}
-                    type="checkbox"
-                    className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <div className="flex items-start gap-2">
-                    <LockClosedIcon className="h-5 w-5 text-gray-500 mt-0.5" />
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">Make this document private</div>
-                      <div className="text-xs text-gray-500">Only you will be able to view this document. Public by default.</div>
-                    </div>
+              <FormField
+                name="submitterNotes"
+                label="Submitter Notes (Optional)"
+                error={errors.submitterNotes}
+              >
+                <textarea
+                  {...methods.register("submitterNotes")}
+                  id="submitterNotes"
+                  rows={4}
+                  className={`form-input w-full ${errors.submitterNotes ? "border-red-500" : ""}`}
+                  placeholder="Add any context or notes for readers. This will be displayed to readers but NOT included in AI evaluations."
+                />
+                <p className="mt-2 text-sm text-gray-600">
+                  These notes provide context for human readers but are not included in AI evaluations.
+                  Changing only submitter notes will NOT trigger re-evaluation of existing AI reviews.
+                </p>
+              </FormField>
+
+              <FormField
+                name="isPrivate"
+                label="Privacy"
+                error={errors.isPrivate}
+              >
+                <RadioGroup
+                  value={methods.watch("isPrivate") ? "private" : "public"}
+                  onValueChange={(value: string) => methods.setValue("isPrivate", value === "private")}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="public" id="public" />
+                    <Label htmlFor="public" className="flex items-center gap-2 cursor-pointer">
+                      <GlobeAltIcon className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm font-medium">Public</div>
+                        <div className="text-xs text-gray-500">Anyone can view this document</div>
+                      </div>
+                    </Label>
                   </div>
-                </label>
-              </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="private" id="private" />
+                    <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
+                      <LockClosedIcon className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <div className="text-sm font-medium">Private</div>
+                        <div className="text-xs text-gray-500">Only you can view this document</div>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </FormField>
 
               {errors.root && (
                 <div className="rounded-md bg-red-50 p-4">

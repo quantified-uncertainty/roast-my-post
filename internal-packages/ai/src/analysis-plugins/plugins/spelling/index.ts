@@ -4,6 +4,7 @@ import type {
   LanguageConventionOption,
   ToolChainResult,
 } from "../../../shared/types";
+import { escapeXml } from "../../../shared/utils/xml";
 import type {
   SpellingGrammarError,
 } from "../../../tools/check-spelling-grammar";
@@ -12,7 +13,6 @@ import {
 } from "../../../tools/check-spelling-grammar";
 import {
   generateDocumentSummary,
-  generateSpellingComment,
   type SpellingErrorWithLocation as ToolSpellingErrorWithLocation,
 } from "../../../tools/check-spelling-grammar/commentGeneration";
 import {
@@ -49,7 +49,7 @@ export interface SpellingErrorWithLocation {
   } | null;
 }
 
-export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
+export class SpellingPlugin implements SimpleAnalysisPlugin {
   // Property to bypass routing - spelling check should always run on all chunks
   readonly runOnAllChunks = true;
 
@@ -309,8 +309,13 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       result: error as unknown as Record<string, unknown>,
     });
 
-    // Keep formatted description for backwards compatibility
-    const formattedDescription = generateSpellingComment(error);
+    // Debug logging to check error type
+    logger.debug(`Creating comment for ${error.type} error: "${error.text}"`, {
+      errorType: error.type,
+      isGrammar: error.type === "grammar",
+      isSpelling: error.type === "spelling", 
+      level: error.type === "grammar" ? "warning" : "error"
+    });
 
     return CommentBuilder.build({
       plugin: "spelling",
@@ -319,13 +324,18 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       processingStartTime: this.processingStartTime,
       toolChain,
 
-      // Custom description (keeps existing formatting)
-      description: formattedDescription,
-
-      // Structured content
-      header: error.conciseCorrection || `${error.text} → ${error.correction || "[suggestion needed]"}`,
-      level: error.type === "grammar" ? "warning" : "info",
-      observation: `${error.type === "spelling" ? "Misspelling" : "Grammar error"}: "${error.text}"`,
+      // Use displayCorrection directly if available, otherwise generate XML format
+      header: (() => {
+        // Use displayCorrection directly if available
+        if (error.displayCorrection) {
+          return error.displayCorrection;
+        }
+        // Fallback to generating from text/correction
+        return `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction || '[suggestion needed]')}"/>`;
+      })(),
+      level: error.type === "grammar" ? "warning" : "error",
+      // Minimal description - required by CommentBuilder but not shown when header exists
+      description: error.description || " ",
       significance:
         error.importance >= HIGH_IMPORTANCE_THRESHOLD
           ? "Affects readability and professionalism"
@@ -536,5 +546,3 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   }
 }
 
-// Export SpellingAnalyzerJob as SpellingPlugin for compatibility
-export { SpellingAnalyzerJob as SpellingPlugin };

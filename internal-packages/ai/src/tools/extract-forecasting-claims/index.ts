@@ -64,6 +64,7 @@ const forecastSchema = z.object({
   authorProbability: z.number().min(0).max(100).optional(),
   robustnessScore: z.number().min(0).max(100),
   resolutionDate: z.string().optional(),
+  minimalProbabilitySpan: z.string().optional(),
 });
 
 // Infer the type from the schema
@@ -231,6 +232,11 @@ ${text}
                     description:
                       "When the prediction can be resolved. Use ISO 8601 format (YYYY-MM-DD) for better parsing, e.g., '2025-12-31', '2024-06-30'. Use null if no timeframe specified.",
                   },
+                  minimalProbabilitySpan: {
+                    type: "string",
+                    description:
+                      "The minimal text span containing just the probability value from originalText (e.g., '70%', '80 percent', 'very likely'). This should be the smallest substring that captures the author's confidence expression. If no explicit probability found, leave null.",
+                  },
                 },
                 required: [
                   "originalText",
@@ -242,6 +248,7 @@ ${text}
                   "authorProbability",
                   "resolutionDate",
                   "robustnessScore",
+                  "minimalProbabilitySpan",
                 ],
               },
             },

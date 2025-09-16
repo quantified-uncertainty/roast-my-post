@@ -1,19 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+import { Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  BeakerIcon,
-  ArrowPathIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
+
+import {
+  createOrRerunEvaluation,
+  deleteEvaluation,
+} from "@/app/docs/[docId]/actions/evaluation-actions";
 import { AgentBadges } from "@/components/AgentBadges";
-import { createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
+import { Button } from "@/components/ui/button";
 import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
-import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
-import { ManagementEvaluationCard } from "./ManagementEvaluationCard";
 import type { Evaluation } from "@/shared/types/databaseTypes";
+import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
+import { BeakerIcon } from "@heroicons/react/24/outline";
+
+import { ManagementEvaluationCard } from "./ManagementEvaluationCard";
 
 interface Agent {
   id: string;
@@ -32,10 +36,18 @@ interface EvaluationManagementProps {
   isOwner: boolean;
 }
 
-export function EvaluationManagement({ docId, evaluations, availableAgents, isOwner }: EvaluationManagementProps) {
+export function EvaluationManagement({
+  docId,
+  evaluations,
+  availableAgents,
+  isOwner,
+}: EvaluationManagementProps) {
   const router = useRouter();
-  const { handleRerun, runningEvals } = useEvaluationRerun({ documentId: docId });
+  const { handleRerun, runningEvals } = useEvaluationRerun({
+    documentId: docId,
+  });
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
+  const [deletingEvals, setDeletingEvals] = useState<Set<string>>(new Set());
   const [sortedAgents, setSortedAgents] = useState<Agent[]>([]);
 
   // Sort available agents: recommended first, then regular, then deprecated
@@ -45,14 +57,14 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
   }, [availableAgents]);
 
   const handleAddAgent = async (agentId: string) => {
-    setRunningAgents(prev => new Set([...prev, agentId]));
+    setRunningAgents((prev) => new Set([...prev, agentId]));
     try {
       await createOrRerunEvaluation(agentId, docId);
       router.refresh();
     } catch (error) {
-      console.error('Failed to add agent evaluation:', error);
+      console.error("Failed to add agent evaluation:", error);
     } finally {
-      setRunningAgents(prev => {
+      setRunningAgents((prev) => {
         const next = new Set(prev);
         next.delete(agentId);
         return next;
@@ -60,22 +72,53 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
     }
   };
 
+  const handleDeleteEvaluation = async (agentId: string) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this evaluation? This will remove all related data including analysis, comments, and history."
+      )
+    ) {
+      return;
+    }
+
+    setDeletingEvals((prev) => new Set([...prev, agentId]));
+    try {
+      const result = await deleteEvaluation(agentId, docId);
+      if (result.success) {
+        router.refresh();
+      } else {
+        console.error("Failed to delete evaluation:", result.error);
+        alert(`Failed to delete evaluation: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to delete evaluation:", error);
+      alert("Failed to delete evaluation. Please try again.");
+    } finally {
+      setDeletingEvals((prev) => {
+        const next = new Set(prev);
+        next.delete(agentId);
+        return next;
+      });
+    }
+  };
 
   return (
     <>
       {/* Active Evaluations */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">
-          Active Evaluations ({evaluations.length})
+        <h2 className="mb-1 text-lg font-semibold text-gray-900">
+          Document Evaluations ({evaluations.length})
         </h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="mb-6 text-sm text-gray-600">
           Manage and monitor your AI agent evaluations
         </p>
 
         <div className="space-y-6">
           {evaluations.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-              <p className="text-gray-500">No evaluations yet. Add agents below to get started.</p>
+            <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
+              <p className="text-gray-500">
+                No evaluations yet. Add agents below to get started.
+              </p>
             </div>
           ) : (
             evaluations.map((evaluation) => (
@@ -85,7 +128,9 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                 evaluation={evaluation}
                 isOwner={isOwner}
                 isRunning={runningEvals.has(evaluation.agent.id)}
+                isDeleting={deletingEvals.has(evaluation.agent.id)}
                 onRerun={handleRerun}
+                onDelete={handleDeleteEvaluation}
               />
             ))
           )}
@@ -94,32 +139,32 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
 
       {/* Add More Agents */}
       {isOwner && sortedAgents.length > 0 && (
-        <div className="bg-gray-50 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+        <div className="rounded-lg bg-gray-50 py-6">
+          <h2 className="mb-1 text-lg font-semibold text-gray-900">
             Add More Agents
           </h2>
-          <p className="text-sm text-gray-600 mb-6">
+          <p className="mb-6 text-sm text-gray-600">
             Available agents to evaluate your document
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sortedAgents.slice(0, 10).map((agent) => {
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {sortedAgents.map((agent) => {
               const isRunning = runningAgents.has(agent.id);
 
               return (
                 <div
                   key={agent.id}
-                  className="bg-white rounded-lg border border-gray-200 p-5 flex items-center justify-between"
+                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-5"
                 >
-                  <div className="flex items-start gap-3 flex-1">
+                  <div className="flex flex-1 items-start gap-3">
                     <div className="p-1.5">
                       <BeakerIcon className="h-4 w-4 text-gray-500" />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <Link 
+                        <Link
                           href={`/agents/${agent.id}`}
-                          className="font-medium text-gray-900 hover:text-gray-700 truncate"
+                          className="truncate font-medium text-gray-900 hover:text-gray-700"
                         >
                           {agent.name}
                         </Link>
@@ -132,37 +177,39 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                         />
                       </div>
                       {agent.description && (
-                        <p className="text-sm text-gray-500 line-clamp-2 mt-1">
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-500">
                           {agent.description}
                         </p>
                       )}
                     </div>
                   </div>
-                  <button
+                  <Button
                     onClick={() => handleAddAgent(agent.id)}
                     disabled={isRunning}
-                    className="ml-4 flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="outline"
+                    size="sm"
+                    className="ml-4 flex-shrink-0"
                   >
                     {isRunning ? (
                       <>
-                        <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Adding...
                       </>
                     ) : (
                       <>
-                        <PlusIcon className="h-4 w-4" />
+                        <Plus className="h-4 w-4" />
                         Add
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               );
             })}
           </div>
 
-          {sortedAgents.length > 10 && (
-            <p className="text-sm text-gray-500 text-center mt-4">
-              Showing 10 of {sortedAgents.length} available agents
+          {sortedAgents.length > 0 && (
+            <p className="mt-4 text-center text-sm text-gray-500">
+              Showing all {sortedAgents.length} available agents
             </p>
           )}
         </div>

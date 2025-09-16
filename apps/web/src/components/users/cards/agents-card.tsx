@@ -1,5 +1,6 @@
 import { Bot, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserModel } from "@/models/User";
 
@@ -12,7 +13,7 @@ export default async function AgentsCard({ userId }: AgentsCardProps) {
 
   return (
     <Card className="group transition-all hover:shadow-md">
-      <Link href={`/users/${userId}/agents`} className="block">
+      <Link href={ROUTES.USERS.AGENTS(userId)} className="block">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Bot className="h-5 w-5" />

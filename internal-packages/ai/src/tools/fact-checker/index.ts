@@ -33,12 +33,15 @@ const factCheckResultSchema = z.object({
   confidence: z.enum(["high", "medium", "low"]),
   explanation: z.string(),
   corrections: z.string().optional(),
-  conciseCorrection: z.string().optional(),
+  displayCorrection: z.string().optional(),
+  criticalText: z.string().min(1, "criticalText must not be empty"),
   sources: z
     .array(
       z.object({
         title: z.string(),
-        url: z.string(),
+        url: z.string()
+          .url("Must be a valid URL")
+          .refine((u) => /^https?:\/\//i.test(u), "Only http(s) URLs are allowed"),
       })
     )
     .optional(),
@@ -133,7 +136,13 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
           searchResponse: perplexityFullOutput.summary
         };
         
-        researchNotes = `Research Summary: ${perplexityFullOutput.summary}\n\nKey Findings:\n${perplexityFullOutput.keyFindings.join('\n- ')}`;
+        const keyFindingsArr = Array.isArray(perplexityFullOutput.keyFindings)
+          ? perplexityFullOutput.keyFindings
+          : [];
+        const keyFindingsText = keyFindingsArr.map((s: string) => `- ${s}`).join('\n');
+        researchNotes = `Research Summary: ${perplexityFullOutput.summary}${
+          keyFindingsText ? `\n\nKey Findings:\n${keyFindingsText}` : ""
+        }`;
         context.logger.info(`[FactChecker] Found ${perplexityFullOutput.sources.length} sources`);
       } catch (error) {
         context.logger.warn(`[FactChecker] Perplexity research failed:`, { error: error instanceof Error ? error.message : String(error) });
@@ -163,15 +172,24 @@ For each claim, you should:
    - *Italics* for clarifications
    - Clear, well-structured paragraphs
    - DO NOT include inline links unless you are 100% certain of the exact URL
-4. If false or partially true, provide:
+4. For ALL claims (regardless of verdict), provide:
+   - criticalText: Extract the minimum critical part of the text that is most factually important or interesting to highlight. This applies to ALL claims (correct or incorrect) - identify the key factual element. Examples:
+     * "The Earth orbits the Sun once every 365.25 days." → "365.25 days" (specific measurement)
+     * "Einstein invented the telephone in 1876." → "Einstein" or "telephone" (key factual elements)  
+     * "Paris is the capital of France." → "Paris" (key fact, even if correct)
+     * "The event happened in 2023." → "2023" (specific date)
+     * "Water boils at 100°C at sea level." → "100°C" (precise measurement)
+     Be conservative - include slightly more text if needed to maintain clarity, but keep it minimal and focused on the most factually significant part.
+
+5. If false or partially true, also provide:
    - corrections: Full corrected statement
-   - conciseCorrection: Brief correction showing the key change. Choose the format that best captures the error:
+   - displayCorrection: Brief correction showing the key change in XML format. Choose the format that best captures the error:
      
-     SIMPLE REPLACEMENTS (use "X → Y" format):
-     * Numbers/dates: "2006 → 2009", "$2B → $2.2B", "90% → 9%"
-     * Names/places: "France → Germany", "Einstein → Newton"
-     * Status/order: "largest → 3rd largest", "first → second"
-     * Degree: "doubled → increased 30%", "all → most"
+     SIMPLE REPLACEMENTS (use XML format):
+     * Numbers/dates: "<r:replace from=\"2006\" to=\"2009\"/>", "<r:replace from=\"$2B\" to=\"$2.2B\"/>"
+     * Names/places: "<r:replace from=\"France\" to=\"Germany\"/>", "<r:replace from=\"Einstein\" to=\"Newton\"/>"
+     * Status/order: "<r:replace from=\"largest\" to=\"3rd largest\"/>"
+     * Degree: "<r:replace from=\"doubled\" to=\"increased 30%\"/>"
      
      COMPLEX ERRORS (use alternative formats):
      * Anachronisms: "Wrong era (1860s)", "Anachronism"
@@ -261,7 +279,7 @@ ${input.claim}
           content: userPrompt,
         },
       ],
-      max_tokens: 1000,
+      max_tokens: 4000,
       temperature: 0,
       toolName: "fact_check",
       toolDescription: "Verify the accuracy of a factual claim",
@@ -294,10 +312,15 @@ ${input.claim}
             description:
               "Full corrected version of the claim if false or partially true",
           },
-          conciseCorrection: {
+          displayCorrection: {
             type: "string",
             description:
-              "Brief correction showing key change (e.g., '2006 → 2009', '$2B → $2.2B')",
+              "Brief correction in XML format (e.g., '<r:replace from=\"2006\" to=\"2009\"/>')",
+          },
+          criticalText: {
+            type: "string",
+            description:
+              "Minimum critical part of the text that is most factually important to highlight (e.g., '365.25 days', 'Paris', '2023')",
           },
           sources: {
             type: "array",
@@ -305,14 +328,14 @@ ${input.claim}
               type: "object",
               properties: {
                 title: { type: "string" },
-                url: { type: "string" },
+                url: { type: "string", pattern: "^https?://" },
               },
               required: ["title", "url"],
             },
             description: "List of sources with titles and URLs",
           },
         },
-        required: ["verdict", "confidence", "explanation"],
+        required: ["verdict", "confidence", "explanation", "criticalText"],
       },
       enablePromptCaching: true,
       cacheSeed,

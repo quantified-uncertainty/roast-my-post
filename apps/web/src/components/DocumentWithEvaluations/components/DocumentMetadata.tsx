@@ -3,20 +3,17 @@
 import Link from "next/link";
 import { useState, useCallback } from "react";
 
-import type { Document } from "@/shared/types/databaseTypes";
+import { PrivacyBadge } from "@/components/PrivacyBadge";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ROUTES } from "@/constants/routes";
+import type { Document } from "@/shared/types/databaseTypes";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
   CheckIcon,
 } from "@heroicons/react/20/solid";
-import { Lock, ExternalLink, Download, Copy, BarChart3 } from "lucide-react";
+import { ExternalLink, Download, Copy, BarChart3 } from "lucide-react";
 
 interface DocumentMetadataProps {
   document: Document;
@@ -70,21 +67,17 @@ export function DocumentMetadata({
       setCopiedFormat(null);
     }, 200);
   }, []);
-
   return (
     <div className="flex items-center justify-between py-2">
       <div className="flex flex-col gap-1 text-sm text-gray-600">
         <div className="flex items-center gap-1.5 text-gray-600">
-          <Lock className="h-3 w-3 text-gray-500" />
-          <span className="font-semibold text-gray-500">
-            {document.isPrivate ? "Private" : "Public"}
-          </span>
+          <PrivacyBadge isPrivate={document.isPrivate} />
         </div>
         {document.submittedBy && (
           <div className="text-gray-600">
             <span>Uploaded by </span>
             <Link
-              href={`/users/${document.submittedBy.id}`}
+              href={ROUTES.USERS.PROFILE(document.submittedBy.id)}
               className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
             >
               {document.submittedBy.name ||

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 // Vitest test file
-import { SpellingAnalyzerJob } from './index';
+import { SpellingPlugin } from './index';
 import { TextChunk } from '../../TextChunk';
 import { checkSpellingGrammarTool } from '../../../tools/check-spelling-grammar';
 import * as conventionDetector from '../../../tools/detect-language-convention/conventionDetector';
@@ -24,7 +24,7 @@ vi.mock('../../../shared/logger', () => ({
 vi.mock('../../../tools/detect-language-convention/conventionDetector');
 vi.mock('../../../tools/check-spelling-grammar/grading');
 
-describe('SpellingAnalyzerJob', () => {
+describe('SpellingPlugin', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
@@ -62,14 +62,14 @@ describe('SpellingAnalyzerJob', () => {
 
   describe('name', () => {
     it('should return correct name', () => {
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
       expect(analyzer.name()).toBe('SPELLING');
     });
   });
 
   describe('promptForWhenToUse', () => {
     it('should return appropriate prompt', () => {
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
       const prompt = analyzer.promptForWhenToUse();
       expect(prompt).toContain('Spelling and grammar checking');
       expect(prompt).toContain('automatically runs');
@@ -78,7 +78,7 @@ describe('SpellingAnalyzerJob', () => {
 
   describe('routingExamples', () => {
     it('should provide appropriate routing examples', () => {
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
       const examples = analyzer.routingExamples();
       // runOnAllChunks = true, so no routing examples needed
       expect(examples).toHaveLength(0);
@@ -91,18 +91,18 @@ describe('SpellingAnalyzerJob', () => {
         {
           text: "thier",
           correction: "their",
-          conciseCorrection: "thier → their",
           type: 'spelling' as const,
           context: "This is thier house",
           importance: 30,
+          description: "Spelling error: 'thier' should be 'their'",
         },
         {
           text: "dont",
           correction: "don't",
-          conciseCorrection: "dont → don't",
           type: 'grammar' as const,
           context: "They dont know",
           importance: 40,
+          description: "Grammar error: 'dont' should be 'don't'",
         },
       ];
 
@@ -136,7 +136,7 @@ describe('SpellingAnalyzerJob', () => {
         }),
       ];
 
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
 
       const result = await analyzer.analyze(chunks, 'This is thier house\nThey dont know');
 
@@ -173,7 +173,7 @@ describe('SpellingAnalyzerJob', () => {
         }
       });
 
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
 
       const result = await analyzer.analyze([new TextChunk('No errors here.', 'chunk1')], 'No errors here.');
 
@@ -188,7 +188,7 @@ describe('SpellingAnalyzerJob', () => {
         errors: [],
       }));
 
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
 
       const chunks = [new TextChunk('Test', 'chunk1')];
       const result1 = await analyzer.analyze(chunks, 'Test');
@@ -202,7 +202,7 @@ describe('SpellingAnalyzerJob', () => {
 
   describe('getResults', () => {
     it('should throw error if analysis not run', () => {
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
 
       expect(() => analyzer.getResults()).toThrow(
         'Analysis has not been run yet. Call analyze() first.'
@@ -221,7 +221,7 @@ describe('SpellingAnalyzerJob', () => {
         }],
       }));
 
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
 
       const chunks = [
         Object.assign(new TextChunk('teh', 'chunk1', { position: { start: 0, end: 3 } }), {
@@ -259,7 +259,7 @@ describe('SpellingAnalyzerJob', () => {
 
       (checkSpellingGrammarTool.execute as any).mockImplementation(() => Promise.resolve({ errors: [] }));
 
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
       const result = await analyzer.analyze(
         [new TextChunk('Text with organize and colour', 'chunk1')], 
         'Text with organize and colour'
@@ -302,7 +302,7 @@ describe('SpellingAnalyzerJob', () => {
         findTextAbsolute: vi.fn().mockImplementation(() => Promise.resolve(null)) // Cannot find location
       });
 
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
       const result = await analyzer.analyze([chunk], 'This text does not contain the error');
 
       // Should not create comment for unlocatable error
@@ -330,7 +330,7 @@ describe('SpellingAnalyzerJob', () => {
         }
       );
 
-      const analyzer = new SpellingAnalyzerJob();
+      const analyzer = new SpellingPlugin();
       const result = await analyzer.analyze([chunk], 'I will recieve teh package');
 
       expect(result.comments).toHaveLength(2);
@@ -367,7 +367,7 @@ describe('SpellingAnalyzerJob', () => {
           }))
         });
 
-        const analyzer = new SpellingAnalyzerJob();
+        const analyzer = new SpellingPlugin();
         const result = await analyzer.analyze([chunk], 'error');
 
         // Importance is not currently being set by the implementation

@@ -60,7 +60,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Calculation Error',
             errorExplanation: 'Basic arithmetic error: 2 + 2 equals 4, not 5',
             correctedVersion: '2 + 2 = 4',
-            conciseCorrection: '5 → 4',
+            displayCorrection: '<r:replace from="5" to="4"/>',
             complexityScore: 10,
             contextImportanceScore: 30,
             errorSeverityScore: 80,
@@ -78,7 +78,7 @@ describe('ExtractMathExpressionsTool', () => {
 
       expect(result.expressions.length).toBe(1);
       expect(result.expressions[0].hasError).toBe(true);
-      expect(result.expressions[0].conciseCorrection).toBe('5 → 4');
+      expect(result.expressions[0].displayCorrection).toBe('<r:replace from="5" to="4"/>');
       expect(result.expressions[0].errorSeverityScore).toBe(80);
     });
 
@@ -107,7 +107,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Unit Conversion Error',
             errorExplanation: '100 meters equals approximately 328 feet, not 300 feet',
             correctedVersion: '100 meters tall, approximately 328 feet',
-            conciseCorrection: '300 → 328',
+            displayCorrection: '<r:replace from="300" to="328"/>',
             complexityScore: 25,
             contextImportanceScore: 50,
             errorSeverityScore: 45,
@@ -125,7 +125,7 @@ describe('ExtractMathExpressionsTool', () => {
 
       expect(result.expressions.length).toBe(1);
       expect(result.expressions[0].errorType).toBe('Unit Conversion Error');
-      expect(result.expressions[0].conciseCorrection).toBe('300 → 328');
+      expect(result.expressions[0].displayCorrection).toBe('<r:replace from="300" to="328"/>');
     });
 
     it('should handle multiple errors with different severities', async () => {
@@ -137,7 +137,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Percentage Calculation Error',
             errorExplanation: '15% of $200 equals $30, not $50',
             correctedVersion: '15% of $200 = $30',
-            conciseCorrection: '$50 → $30',
+            displayCorrection: '<r:replace from="$50" to="$30"/>',
             complexityScore: 20,
             contextImportanceScore: 60,
             errorSeverityScore: 65,
@@ -149,7 +149,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Order of Magnitude Error',
             errorExplanation: '330 million should be written as 3.3 × 10^8, not 10^6',
             correctedVersion: '3.3 × 10^8',
-            conciseCorrection: '10^6 → 10^8',
+            displayCorrection: '<r:replace from="10^6" to="10^8"/>',
             complexityScore: 30,
             contextImportanceScore: 70,
             errorSeverityScore: 90,
@@ -185,7 +185,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Calculation Error',
             errorExplanation: 'Arithmetic error in example context',
             correctedVersion: '2 + 2 = 4',
-            conciseCorrection: '5 → 4',
+            displayCorrection: '<r:replace from="5" to="4"/>',
             complexityScore: 10,
             contextImportanceScore: 10, // Low importance due to example context
             errorSeverityScore: 30,
@@ -230,7 +230,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Method Error',
             errorExplanation: 'Used linear multiplication instead of compound interest formula',
             correctedVersion: '2,159',
-            conciseCorrection: '10,800 → 2,159',
+            displayCorrection: '<r:replace from="10,800" to="2,159"/>',
             complexityScore: 60,
             contextImportanceScore: 80,
             errorSeverityScore: 75,
@@ -316,7 +316,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Calculation Error',
             errorExplanation: '45% of 400 equals 180, not 125',
             correctedVersion: '45% of 400 = 180',
-            conciseCorrection: '125 → 180',
+            displayCorrection: '<r:replace from="125" to="180"/>',
             complexityScore: 20,
             contextImportanceScore: 50,
             errorSeverityScore: 60,
@@ -328,7 +328,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Formula Error',
             errorExplanation: 'Should multiply by 1.15 for 15% increase, not 0.15',
             correctedVersion: '×1.15',
-            conciseCorrection: '×0.15 → ×1.15',
+            displayCorrection: '<r:replace from="×0.15" to="×1.15"/>',
             complexityScore: 30,
             contextImportanceScore: 70,
             errorSeverityScore: 70,
@@ -340,7 +340,7 @@ describe('ExtractMathExpressionsTool', () => {
             errorType: 'Calculation Error',
             errorExplanation: '120 km in 2 hours equals 60 km/h, not 50',
             correctedVersion: '60 km/h',
-            conciseCorrection: '50 → 60',
+            displayCorrection: '<r:replace from="50" to="60"/>',
             complexityScore: 15,
             contextImportanceScore: 40,
             errorSeverityScore: 50,
@@ -359,13 +359,13 @@ describe('ExtractMathExpressionsTool', () => {
       expect(result.expressions.length).toBe(3);
       
       // Check each concise correction
-      expect(result.expressions[0].conciseCorrection).toBe('125 → 180');
-      expect(result.expressions[1].conciseCorrection).toBe('×0.15 → ×1.15');
-      expect(result.expressions[2].conciseCorrection).toBe('50 → 60');
+      expect(result.expressions[0].displayCorrection).toBe('<r:replace from="125" to="180"/>');
+      expect(result.expressions[1].displayCorrection).toBe('<r:replace from="×0.15" to="×1.15"/>');
+      expect(result.expressions[2].displayCorrection).toBe('<r:replace from="50" to="60"/>');
       
       // All should be under 15 characters as specified in the prompt
       result.expressions.forEach(expr => {
-        expect(expr.conciseCorrection!.length).toBeLessThanOrEqual(20);
+        expect(expr.displayCorrection!.length).toBeLessThanOrEqual(50);
       });
     });
   });

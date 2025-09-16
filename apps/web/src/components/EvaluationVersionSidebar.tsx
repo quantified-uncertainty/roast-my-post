@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/shared/utils/utils";
 import { JobStatusIndicator } from "./JobStatusIndicator";
+import type { JobStatus } from "@roast/db";
 
 interface Version {
   id: string;
@@ -41,7 +42,7 @@ export function EvaluationVersionSidebar({
           {versions.map((version) => {
             const isActive = version.version === currentVersion;
             const isFailed = version.job?.status === 'FAILED';
-            const jobStatus = version.job?.status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | undefined;
+            const jobStatus = version.job?.status as JobStatus | undefined;
             
             return (
               <Link

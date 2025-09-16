@@ -70,6 +70,24 @@ export class ChunkRouter {
       const duration = Date.now() - startTime;
       logger.info(`[ChunkRouter] Routing completed in ${duration}ms`);
 
+      // Log detailed routing decisions for each chunk
+      logger.info('[ChunkRouter] === DETAILED ROUTING DECISIONS ===');
+      for (const chunk of chunks) {
+        const assignedPlugins = routingDecisions.get(chunk.id) || [];
+        
+        // Get first and last few words of chunk for identification
+        const chunkText = chunk.text.trim();
+        const words = chunkText.split(/\s+/);
+        const preview = words.length > 10 
+          ? `"${words.slice(0, 5).join(' ')} ... ${words.slice(-5).join(' ')}"`
+          : `"${chunkText.substring(0, 100)}${chunkText.length > 100 ? '...' : ''}"`;
+        
+        logger.info(`[ChunkRouter] Chunk ${chunk.id}:`);
+        logger.info(`  Preview: ${preview}`);
+        logger.info(`  Length: ${chunk.text.length} chars`);
+        logger.info(`  Routed to: ${assignedPlugins.length > 0 ? assignedPlugins.join(', ') : '(none - skipped)'}`);
+      }
+
       // Log routing summary
       const pluginCounts = new Map<string, number>();
       for (const plugins of routingDecisions.values()) {
@@ -78,7 +96,11 @@ export class ChunkRouter {
         }
       }
       
-      logger.info('[ChunkRouter] Routing summary:', Object.fromEntries(pluginCounts));
+      logger.info('[ChunkRouter] === ROUTING SUMMARY ===');
+      logger.info('[ChunkRouter] Total chunks:', chunks.length);
+      logger.info('[ChunkRouter] Chunks routed:', routingDecisions.size);
+      logger.info('[ChunkRouter] Chunks skipped:', chunks.length - routingDecisions.size);
+      logger.info('[ChunkRouter] Plugin assignments:', Object.fromEntries(pluginCounts));
 
       return {
         routingDecisions,
@@ -129,6 +151,7 @@ export class ChunkRouter {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(chunks);
 
+    logger.info(`[ChunkRouter] Processing batch of ${chunks.length} chunks...`);
     
     const result = await callClaudeWithTool<{ decisions: RoutingDecision[] }>({
       system: systemPrompt,
@@ -171,19 +194,40 @@ export class ChunkRouter {
       enablePromptCaching: true
     });
 
-    return result.toolResult.decisions || [];
+    const decisions = result.toolResult.decisions || [];
+    
+    // Log what the LLM decided for this batch
+    logger.info(`[ChunkRouter] LLM routing decisions for batch:`);
+    for (const decision of decisions) {
+      logger.info(`  - Chunk ${decision.chunkId} → ${decision.plugins.length > 0 ? decision.plugins.join(', ') : '(none)'}`);
+      if (decision.reasoning) {
+        logger.info(`    Reasoning: ${decision.reasoning}`);
+      }
+    }
+    
+    return decisions;
   }
 
   private buildSystemPrompt(): string {
     return `You are a document analysis router. Your job is to decide which specialized plugins should analyze each text chunk.
 
-CRITICAL ROUTING RULES:
+ROUTING PRINCIPLES:
 1. Each chunk can be routed to ZERO, ONE, or MULTIPLE plugins
-2. Only route to plugins when their specific criteria are clearly met
-3. Avoid overlap - be strict about plugin boundaries
-4. When in doubt, don't route (better to miss than over-process)
+2. DEFAULT TO INCLUDING chunks for fact-checking unless they are PURELY:
+   - Personal feelings/emotions with zero factual content
+   - Pure hypothetical scenarios
+   - Questions without any statements
+3. ALWAYS route to FACT_CHECK if the chunk contains ANY of:
+   - Numbers, statistics, percentages (even rough estimates like "many" or "most")
+   - Comparisons ("more than", "less than", "same as")
+   - Claims about the real world (health, society, economics, etc.)
+   - References to studies, research, or sources
+   - Statements about what things cause or prevent
+   - Claims about organizations, people, events, or places
+   - Any statement that could be true or false
+4. Even if a chunk has personal opinion, if it ALSO has factual claims, route it to FACT_CHECK
 
-AVAILABLE PLUGINS AND THEIR STRICT CRITERIA:
+AVAILABLE PLUGINS AND THEIR CRITERIA:
 
 ${this.pluginInfo.map(plugin => `
 **${plugin.name}**
@@ -193,15 +237,20 @@ Examples:
 ${plugin.examples.map(ex => `- "${ex.chunkText}" → ${ex.shouldProcess ? 'YES' : 'NO'} (${ex.reason})`).join('\n')}
 `).join('\n')}
 
-OVERLAP PREVENTION RULES:
-- MATH: Only for computational errors, complex formulas, or mathematical proofs. NOT for simple percentages or correct calculations.
-- FACT_CHECK: Only for verifiable historical/current facts. NOT for predictions or mathematical calculations.
-- FORECAST: Only for future predictions with timeframes. NOT for historical data or current statistics.
+PLUGIN GUIDELINES:
+- MATH: For computational errors, complex formulas, or mathematical proofs
+- FACT_CHECK: For ANY verifiable claims - be very inclusive here. This includes:
+  * All statistics, percentages, and numerical claims
+  * Historical facts, dates, and events
+  * Scientific and technical statements
+  * Claims about real people, companies, or organizations
+  * Any statement that could be fact-checked against sources
+- FORECAST: For future predictions with timeframes
 
-When you see percentages or statistics:
-- Route to MATH only if there's likely a calculation error
-- Route to FACT_CHECK only if it's a verifiable claim about the past/present
-- Route to FORECAST only if it's predicting future values`;
+When you see data or claims:
+- Route to FACT_CHECK liberally - it's better to verify than to miss false information
+- Can route to multiple plugins if content overlaps (e.g., a statistic about the past → FACT_CHECK, a calculation error → MATH)
+- Default to including FACT_CHECK when unsure if something is verifiable`;
   }
 
   private buildUserPrompt(chunks: TextChunk[]): string {
@@ -214,9 +263,10 @@ When you see percentages or statistics:
 ${chunkDescriptions}
 
 Remember:
-- Be strict about plugin boundaries
-- A chunk might need NO plugins if it's just narrative text
-- Only route when criteria are clearly met
-- Prevent overlap between similar plugins`;
+- Be inclusive for FACT_CHECK - route any chunk with verifiable claims
+- A chunk can go to multiple plugins if it contains different types of content
+- Pure narrative without any claims can skip all plugins
+- When in doubt about factual content, include FACT_CHECK
+- It's better to check too many facts than to miss misinformation`;
   }
 }

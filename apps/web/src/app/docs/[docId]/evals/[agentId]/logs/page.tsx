@@ -40,7 +40,26 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
 
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
-  const allEvaluations = evaluation.document.evaluations || [];
+  const allEvaluations = (evaluation.document.evaluations || []).map(ev => ({
+    id: ev.id,
+    agentId: ev.agentId,
+    agent: ev.agent ? {
+      name: ev.agent.versions?.[0]?.name,
+      versions: ev.agent.versions?.map(v => ({
+        name: v.name,
+      })),
+    } : undefined,
+    versions: ev.versions?.map(v => ({
+      grade: v.grade,
+      job: v.job ? {
+        status: v.job.status as any,
+      } : null,
+    })),
+    jobs: ev.jobs?.map(j => ({
+      status: j.status as any,
+    })),
+    grade: ev.versions?.[0]?.grade ?? null,
+  }));
   
   // Get ownership from fetched data
   const isOwner = currentUserId ? evaluation.document.submittedById === currentUserId : false;

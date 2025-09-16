@@ -81,8 +81,8 @@ export function calculateCommentPositions(
     if (rect) {
       // Position relative to content container, accounting for scroll
       const relativeTop = rect.top - containerRect.top + container.scrollTop;
-      const highlightCenter = relativeTop + rect.height / 2;
-      const adjustedPosition = highlightCenter - COMMENT_POSITIONING.HIGHLIGHT_ALIGNMENT_OFFSET;
+      // Position at the top of the highlight, not the center
+      const adjustedPosition = relativeTop - COMMENT_POSITIONING.HIGHLIGHT_ALIGNMENT_OFFSET;
       newPositions[tag] = Math.max(0, adjustedPosition);
     } else {
       // Fallback position if highlight not found

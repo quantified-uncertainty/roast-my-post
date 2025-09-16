@@ -27,6 +27,6 @@ export interface CheckMathHybridOutput {
     severity?: 'critical' | 'major' | 'minor';
     reasoning: string;
   };
-  conciseCorrection?: string;
+  displayCorrection?: string;
   toolsUsed: Array<'mathjs' | 'llm'>;
 }

@@ -93,6 +93,7 @@ class ExtractedForecast {
           context: "",
           numForecasts: 2,
           usePerplexity: false,
+          authorProbability: this.extractedForecast.authorProbability,
         },
         {
           userId: userId,
@@ -118,14 +119,48 @@ class ExtractedForecast {
     endOffset: number;
     quotedText: string;
   } | null> {
-    // Use the chunk's method to find text and convert to absolute position
-    return this.chunk.findTextAbsolute(this.extractedForecast.originalText, {
-      normalizeQuotes: true, // Handle quote variations
+    // If we have a minimal probability span from the extraction tool, try to find that first
+    if (this.extractedForecast.minimalProbabilitySpan) {
+      const minimalLocation = await this.chunk.findTextAbsolute(this.extractedForecast.minimalProbabilitySpan, {
+        normalizeQuotes: true,
+        partialMatch: false, // Exact match for the minimal span
+        useLLMFallback: false, // No LLM needed for short exact text
+        pluginName: "forecast",
+        documentText: this.documentText,
+      });
+      
+      if (minimalLocation) {
+        return minimalLocation;
+      }
+    }
+    
+    // Fallback to finding the full text
+    const fullLocation = await this.chunk.findTextAbsolute(this.extractedForecast.originalText, {
+      normalizeQuotes: true,
       partialMatch: true, // Forecasts can be long
       useLLMFallback: true, // Enable LLM fallback for paraphrased text
       pluginName: "forecast",
-      documentText: this.documentText, // Pass for position verification
+      documentText: this.documentText,
     });
+    
+    if (!fullLocation) {
+      return null;
+    }
+    
+    // If we have a minimal span but couldn't find it directly, try to find it within the full text
+    if (this.extractedForecast.minimalProbabilitySpan && fullLocation.quotedText.includes(this.extractedForecast.minimalProbabilitySpan)) {
+      const offsetInQuoted = fullLocation.quotedText.indexOf(this.extractedForecast.minimalProbabilitySpan);
+      if (offsetInQuoted !== -1) {
+        return {
+          startOffset: fullLocation.startOffset + offsetInQuoted,
+          endOffset: fullLocation.startOffset + offsetInQuoted + this.extractedForecast.minimalProbabilitySpan.length,
+          quotedText: this.extractedForecast.minimalProbabilitySpan,
+        };
+      }
+    }
+    
+    // Return the full location if we couldn't use a minimal span
+    return fullLocation;
   }
 
   private commentImportanceScore(): number {
@@ -146,11 +181,26 @@ class ExtractedForecast {
   }
 
   private getLevel(): "error" | "warning" | "info" | "success" | "debug" {
-    // Forecasts are informational by nature
-    const averageScore = this.averageScore;
-
-    // If we have our forecast, show as info level
+    // If we have both author and our forecast, base level on confidence gap
+    if (this.ourForecast && this.extractedForecast.authorProbability !== undefined) {
+      const gap = Math.abs(
+        this.extractedForecast.authorProbability - this.ourForecast.probability
+      );
+      
+      if (gap >= 40) {
+        return "error"; // Extreme overconfidence
+      } else if (gap >= 25) {
+        return "warning"; // Significant overconfidence
+      } else if (gap >= 10) {
+        return "info"; // Notable difference
+      } else {
+        return "success"; // Good calibration
+      }
+    }
+    
+    // If we have our forecast but no author probability
     if (this.ourForecast) {
+      const averageScore = this.averageScore;
       if (averageScore >= 80) {
         return "success";
       } else if (averageScore >= 50) {
@@ -218,7 +268,12 @@ class ExtractedForecast {
   }
 
   private buildTitle(): string {
-    // Use concise description from comment generation
+    // Use displayCorrection from tool if available
+    if (this.ourForecast?.displayCorrection) {
+      return this.ourForecast.displayCorrection;
+    }
+    
+    // Fallback to existing logic
     const hasAuthorProb =
       this.extractedForecast.authorProbability !== undefined;
     const gap =
@@ -349,7 +404,7 @@ ${detailedReason}`;
   }
 }
 
-export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
+export class ForecastPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;
@@ -840,5 +895,3 @@ The analysis may still be valid, but the highlighting won't be precise.`,
   }
 }
 
-// Export ForecastAnalyzerJob as ForecastPlugin for compatibility
-export { ForecastAnalyzerJob as ForecastPlugin };

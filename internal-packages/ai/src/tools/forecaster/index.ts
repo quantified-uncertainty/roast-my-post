@@ -9,6 +9,7 @@ export interface ForecasterInput {
   context?: string;
   numForecasts?: number;
   usePerplexity?: boolean;
+  authorProbability?: number;
 }
 
 export interface ForecasterOutput {
@@ -27,6 +28,7 @@ export interface ForecasterOutput {
     title: string;
     url: string;
   }>;
+  displayCorrection?: string;
 }
 
 // Simplified input schema
@@ -34,7 +36,8 @@ const inputSchema = z.object({
   question: z.string().min(1).max(500).describe('The question to forecast'),
   context: z.string().max(1000).optional().describe('Additional context for the forecast'),
   numForecasts: z.number().min(1).max(20).optional().default(6).describe('Number of independent forecasts to generate'),
-  usePerplexity: z.boolean().optional().default(false).describe('Whether to use Perplexity for research')
+  usePerplexity: z.boolean().optional().default(false).describe('Whether to use Perplexity for research'),
+  authorProbability: z.number().min(0).max(100).optional().describe('The author\'s probability estimate if available')
 }) satisfies z.ZodType<ForecasterInput>;
 
 // Simplified output schema
@@ -53,7 +56,8 @@ const outputSchema = z.object({
   perplexityResults: z.array(z.object({
     title: z.string(),
     url: z.string()
-  })).optional().describe('Perplexity search results if available')
+  })).optional().describe('Perplexity search results if available'),
+  displayCorrection: z.string().optional().describe('XML markup for displaying probability correction')
 }) satisfies z.ZodType<ForecasterOutput>;
 
 export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
@@ -82,6 +86,18 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
         usePerplexity: input.usePerplexity ?? false
       });
       
+      // Generate displayCorrection if author probability differs significantly
+      let displayCorrection: string | undefined;
+      if (input.authorProbability !== undefined) {
+        const gap = Math.abs(input.authorProbability - result.forecast.probability);
+        if (gap >= 10) {
+          // Format probabilities with % sign
+          const fromProb = `${input.authorProbability}%`;
+          const toProb = `${result.forecast.probability}%`;
+          displayCorrection = `<r:replace from="${fromProb}" to="${toProb}"/>`;
+        }
+      }
+      
       return {
         probability: result.forecast.probability,
         description: result.forecast.description,
@@ -94,7 +110,8 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
           mean: result.statistics.mean,
           stdDev: result.statistics.std_dev
         },
-        perplexityResults: result.perplexityResults
+        perplexityResults: result.perplexityResults,
+        displayCorrection
       };
     } catch (error) {
       context.logger.error('[ForecasterTool] Error generating forecast:', error);

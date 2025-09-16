@@ -1,6 +1,14 @@
-import { z } from 'zod';
-import { Tool, ToolConfig, ToolContext } from '../base/Tool';
-import { findTextLocation, TextLocationOptions, TextLocation } from './core';
+import { z } from "zod";
+
+import {
+  Tool,
+  ToolConfig,
+  ToolContext,
+} from "../base/Tool";
+import {
+  findTextLocation,
+  TextLocationOptions,
+} from "./core";
 
 export interface TextLocationFinderInput {
   documentText: string;
@@ -32,57 +40,82 @@ export interface TextLocationFinderOutput {
 
 // Input validation schema
 const inputSchema = z.object({
-  documentText: z.string().min(1, "Document text is required").max(100000, "Document text too long"),
-  searchText: z.string().min(1, "Search text is required").max(1000, "Search text too long"),
+  documentText: z
+    .string()
+    .min(1, "Document text is required")
+    .max(100000, "Document text too long"),
+  searchText: z
+    .string()
+    .min(1, "Search text is required")
+    .max(1000, "Search text too long"),
   context: z.string().optional(),
-  lineNumberHint: z.number().min(1).optional().describe("Optional line number to help narrow search"),
-  options: z.object({
-    normalizeQuotes: z.boolean().optional(),
-    partialMatch: z.boolean().optional(),
-    useLLMFallback: z.boolean().optional()
-  }).optional()
+  lineNumberHint: z
+    .number()
+    .min(1)
+    .optional()
+    .describe("Optional line number to help narrow search"),
+  options: z
+    .object({
+      normalizeQuotes: z.boolean().optional(),
+      partialMatch: z.boolean().optional(),
+      useLLMFallback: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 // Output validation schema
 const outputSchema = z.object({
   searchText: z.string(),
   found: z.boolean(),
-  location: z.object({
-    startOffset: z.number(),
-    endOffset: z.number(),
-    quotedText: z.string(),
-    strategy: z.string(),
-    confidence: z.number()
-  }).optional(),
+  location: z
+    .object({
+      startOffset: z.number(),
+      endOffset: z.number(),
+      quotedText: z.string(),
+      strategy: z.string(),
+      confidence: z.number(),
+    })
+    .optional(),
   error: z.string().optional(),
   processingTimeMs: z.number(),
-  llmUsed: z.boolean().optional()
+  llmUsed: z.boolean().optional(),
 });
 
-export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLocationFinderOutput> {
+export class FuzzyTextLocatorTool extends Tool<
+  TextLocationFinderInput,
+  TextLocationFinderOutput
+> {
   config: ToolConfig = {
-    id: 'fuzzy-text-locator',
-    name: 'Fuzzy Text Locator',
-    description: 'Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text',
-    version: '1.1.0',
-    category: 'utility',
-    costEstimate: 'Free (or minimal LLM cost if fallback is used)',
-    path: '/tools/fuzzy-text-locator',
-    status: 'stable'
+    id: "fuzzy-text-locator",
+    name: "Fuzzy Text Locator",
+    description:
+      "Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text",
+    version: "1.1.0",
+    category: "utility",
+    costEstimate: "Free (or minimal LLM cost if fallback is used)",
+    path: "/tools/fuzzy-text-locator",
+    status: "stable",
   };
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;
 
-  async execute(input: TextLocationFinderInput, context: ToolContext): Promise<TextLocationFinderOutput> {
+  async execute(
+    input: TextLocationFinderInput,
+    context: ToolContext
+  ): Promise<TextLocationFinderOutput> {
     const startTime = Date.now();
-    
+
     // Validate input exists
     if (!input || !input.documentText || !input.searchText) {
-      throw new Error(`Invalid input: documentText and searchText are required. Received: ${JSON.stringify(input)}`);
+      throw new Error(
+        `Invalid input: documentText and searchText are required. Received: ${JSON.stringify(input)}`
+      );
     }
-    
-    context.logger.debug(`FuzzyTextLocator: Searching for "${input.searchText}" in document of ${input.documentText.length} characters`);
+
+    context.logger.debug(
+      `FuzzyTextLocator: Searching for "${input.searchText}" in document of ${input.documentText.length} characters`
+    );
 
     try {
       // Convert options to unified TextLocationOptions format
@@ -91,18 +124,28 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
         partialMatch: input.options?.partialMatch ?? false,
         useLLMFallback: input.options?.useLLMFallback ?? false,
         llmContext: input.context,
-        pluginName: 'fuzzy-text-locator',
-        lineNumberHint: input.lineNumberHint
+        pluginName: "fuzzy-text-locator",
+        lineNumberHint: input.lineNumberHint,
       };
 
       // Use the unified finder with all strategies
-      const locationResult = await findTextLocation(input.searchText, input.documentText, locationOptions);
-      
+      const locationResult = await findTextLocation(
+        input.searchText,
+        input.documentText,
+        locationOptions
+      );
+      console.log("locationResult", {
+        locationResult,
+        documentText: input.documentText,
+        searchText: input.searchText,
+        locationOptions,
+      });
+
       // Check if LLM was used based on the strategy
-      const llmUsed = locationResult?.strategy === 'llm';
+      const llmUsed = locationResult?.strategy === "llm";
 
       const processingTime = Date.now() - startTime;
-      
+
       if (locationResult) {
         const output: TextLocationFinderOutput = {
           searchText: input.searchText,
@@ -112,30 +155,35 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
             endOffset: locationResult.endOffset,
             quotedText: locationResult.quotedText,
             strategy: locationResult.strategy,
-            confidence: locationResult.confidence
+            confidence: locationResult.confidence,
           },
           processingTimeMs: processingTime,
-          llmUsed
+          llmUsed,
         };
 
-        context.logger.debug(`FuzzyTextLocator: Found text using ${locationResult.strategy} strategy in ${processingTime}ms`);
+        context.logger.debug(
+          `FuzzyTextLocator: Found text using ${locationResult.strategy} strategy in ${processingTime}ms`
+        );
         return output;
       } else {
         const output: TextLocationFinderOutput = {
           searchText: input.searchText,
           found: false,
-          error: 'Text not found in document',
+          error: "Text not found in document",
           processingTimeMs: processingTime,
-          llmUsed
+          llmUsed,
         };
 
-        context.logger.debug(`FuzzyTextLocator: Text not found in ${processingTime}ms`);
+        context.logger.debug(
+          `FuzzyTextLocator: Text not found in ${processingTime}ms`
+        );
         return output;
       }
-
     } catch (error) {
-      context.logger.error('FuzzyTextLocator execution failed:', error);
-      throw new Error(`Fuzzy text locator failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      context.logger.error("FuzzyTextLocator execution failed:", error);
+      throw new Error(
+        `Fuzzy text locator failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -145,55 +193,64 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
     return true;
   }
 
-
   // Optional: provide usage examples
-  getExamples(): Array<{ input: TextLocationFinderInput; description: string }> {
+  getExamples(): Array<{
+    input: TextLocationFinderInput;
+    description: string;
+  }> {
     return [
       {
         description: "Basic exact text search",
         input: {
-          documentText: "This is a sample document with some text. It contains multiple sentences and paragraphs.",
-          searchText: "sample document"
-        }
+          documentText:
+            "This is a sample document with some text. It contains multiple sentences and paragraphs.",
+          searchText: "sample document",
+        },
       },
       {
         description: "Quote normalization (apostrophes)",
         input: {
-          documentText: "The company's earnings weren't what analysts expected.",
+          documentText:
+            "The company's earnings weren't what analysts expected.",
           searchText: "The company's earnings weren't what analysts expected.",
           options: {
-            normalizeQuotes: true
-          }
-        }
+            normalizeQuotes: true,
+          },
+        },
       },
       {
         description: "Partial match for long text",
         input: {
-          documentText: "The research shows that climate change will impact agriculture significantly by 2030.",
-          searchText: "The research shows that climate change will impact agriculture and food security in developing nations by 2030",
+          documentText:
+            "The research shows that climate change will impact agriculture significantly by 2030.",
+          searchText:
+            "The research shows that climate change will impact agriculture and food security in developing nations by 2030",
           options: {
-            partialMatch: true
-          }
-        }
+            partialMatch: true,
+          },
+        },
       },
       {
         description: "LLM fallback for paraphrased text",
         input: {
-          documentText: "Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.",
-          searchText: "research shows that worldwide temperatures could increase by 2-3°C in the next 50 years",
+          documentText:
+            "Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.",
+          searchText:
+            "research shows that worldwide temperatures could increase by 2-3°C in the next 50 years",
           options: {
-            useLLMFallback: true
-          }
-        }
+            useLLMFallback: true,
+          },
+        },
       },
       {
         description: "Context-aware search",
         input: {
-          documentText: "The company reported revenues of $5.2 billion in Q3 2023.",
+          documentText:
+            "The company reported revenues of $5.2 billion in Q3 2023.",
           searchText: "5.2 billion",
-          context: "financial earnings report"
-        }
-      }
+          context: "financial earnings report",
+        },
+      },
     ];
   }
 }
@@ -212,5 +269,5 @@ export interface DocumentLocation {
 export {
   findTextLocation,
   type TextLocation,
-  type TextLocationOptions
-} from './core';
+  type TextLocationOptions,
+} from "./core";

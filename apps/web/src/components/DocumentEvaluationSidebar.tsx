@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 
+import { FileDown, Microscope } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { UI_LABELS } from "@/constants/ui-labels";
 import { getEvaluationGrade } from "@/shared/utils/type-guards";
 import {
   BeakerIcon,
   BookOpenIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  CommandLineIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+import type { JobStatus } from "@roast/db";
 
 import { GradeBadge } from "./GradeBadge";
 import { JobStatusIndicator } from "./JobStatusIndicator";
@@ -30,11 +32,11 @@ interface Evaluation {
   versions?: Array<{
     grade?: number | null;
     job?: {
-      status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+      status: JobStatus;
     } | null;
   }>;
   jobs?: Array<{
-    status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+    status: JobStatus;
   }>;
   grade?: number | null;
 }
@@ -57,14 +59,15 @@ export function DocumentEvaluationSidebar({
 
   const isDocumentPage = pathname === `/docs/${docId}`;
   const isReaderPage = pathname === `/docs/${docId}/reader`;
+  const isExportPage = pathname === `/docs/${docId}/export`;
 
   return (
-    <nav className="h-full w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
+    <nav className="w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
       <div className="p-6">
-        {/* Inspector View Header */}
+        {/* Eval Editor Header */}
         <div className="mb-6 ml-2 flex cursor-default select-none items-center gap-2 text-sm font-semibold text-gray-500">
-          <CommandLineIcon className="h-5 w-5 text-gray-400" />
-          INSPECTOR VIEW
+          <Microscope className="h-5 w-5 text-gray-400" />
+          {UI_LABELS.EVAL_EDITOR.label.toUpperCase()}
         </div>
         {/* Document Link */}
         <Link
@@ -79,7 +82,6 @@ export function DocumentEvaluationSidebar({
           Overview
         </Link>
 
-
         {/* Reader View Link */}
         <Link
           href={`/docs/${docId}/reader`}
@@ -91,6 +93,19 @@ export function DocumentEvaluationSidebar({
         >
           <BookOpenIcon className="h-4 w-4" />
           Reader View
+        </Link>
+
+        {/* Export Link */}
+        <Link
+          href={`/docs/${docId}/export`}
+          className={`mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            isExportPage
+              ? "bg-blue-50 text-gray-900"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          }`}
+        >
+          <FileDown className="h-4 w-4" />
+          Export
         </Link>
 
         {/* Evaluations Section */}

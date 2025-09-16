@@ -1,5 +1,6 @@
 import { FileText, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserModel } from "@/models/User";
 
@@ -13,7 +14,7 @@ export default async function DocumentsCard({ userId, requestingUserId }: Docume
 
   return (
     <Card className="group transition-all hover:shadow-md">
-      <Link href={`/users/${userId}/documents`} className="block">
+      <Link href={ROUTES.USERS.DOCUMENTS(userId)} className="block">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <FileText className="h-5 w-5" />

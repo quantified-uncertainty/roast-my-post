@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/actions/evaluation-actions";
 
 interface RerunButtonClientProps {
@@ -60,12 +61,11 @@ export function RerunButtonClient({
   }
 
   return (
-    <button
+    <Button
       onClick={handleRerun}
       disabled={isLoading}
-      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {isLoading ? "Triggering..." : "Rerun"}
-    </button>
+    </Button>
   );
 }

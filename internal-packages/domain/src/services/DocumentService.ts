@@ -41,6 +41,7 @@ export interface CreateDocumentRequest {
   importUrl?: string;
   ephemeralBatchId?: string;
   isPrivate?: boolean;
+  submitterNotes?: string;
 }
 
 export interface UpdateDocumentRequest {
@@ -97,7 +98,8 @@ export class DocumentService {
         importUrl: data.importUrl,
         ephemeralBatchId: data.ephemeralBatchId,
         markdownPrepend,
-        isPrivate: data.isPrivate || false
+        isPrivate: data.isPrivate || false,
+        submitterNotes: data.submitterNotes
       };
 
       const repoDocument = await this.docRepo.create(createData);
@@ -223,8 +225,16 @@ export class DocumentService {
 
         const content = updates.content !== undefined ? updates.content : doc.content;
         const title = updates.title !== undefined ? updates.title : doc.title;
+        
+        // Generate fresh markdownPrepend with current metadata
+        const markdownPrepend = generateMarkdownPrepend({
+          title,
+          author: doc.author || 'Unknown',
+          platforms: doc.platforms || [],
+          publishedDate: doc.publishedDate || null
+        });
 
-        await this.docRepo.updateContent(docId, content, title);
+        await this.docRepo.updateContent(docId, content, title, markdownPrepend);
       }
 
       // Update metadata (doesn't create new version)

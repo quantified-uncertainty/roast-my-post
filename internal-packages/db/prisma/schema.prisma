@@ -51,6 +51,7 @@ model User {
   apiKeys          ApiKey[]
   documents        Document[]
   sessions         Session[]
+  cancelledJobs    Job[]
 }
 
 model VerificationToken {
@@ -96,6 +97,7 @@ model DocumentVersion {
   content_search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"left\"(content, 10000), ''::text))"))
   contentSearchVector   Unsupported("tsvector")?
   markdownPrepend       String?
+  submitterNotes        String?
   document              Document                 @relation(fields: [documentId], references: [id], onDelete: Cascade)
   evaluationVersions    EvaluationVersion[]
 
@@ -136,7 +138,7 @@ model EvaluationVersion {
   comments          EvaluationComment[]
   agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
-  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id])
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   job               Job?
 
   @@unique([evaluationId, version])
@@ -251,16 +253,21 @@ model Job {
   agentEvalBatchId    String?
   originalJobId       String?
   priceInDollars      Decimal?           @db.Decimal(10, 6)
+  cancelledAt         DateTime?
+  cancelledById       String?
+  cancellationReason  String?
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
-  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
+  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
   originalJob         Job?               @relation("JobRetries", fields: [originalJobId], references: [id])
   retryJobs           Job[]              @relation("JobRetries")
   tasks               Task[]
+  cancelledBy         User?              @relation(fields: [cancelledById], references: [id])
 
   @@index([evaluationId])
   @@index([agentEvalBatchId])
   @@index([originalJobId])
+  @@index([cancelledById])
 }
 
 model Task {
@@ -303,4 +310,5 @@ enum JobStatus {
   RUNNING
   COMPLETED
   FAILED
+  CANCELLED
 }

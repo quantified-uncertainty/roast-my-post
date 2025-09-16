@@ -29,7 +29,8 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
         url: data.urls,
         platforms: data.platforms ? [data.platforms] : [],
         importUrl: data.importUrl,
-        isPrivate: data.isPrivate ?? true
+        isPrivate: data.isPrivate ?? true,
+        submitterNotes: data.submitterNotes
       },
       agentIds
     );
@@ -45,25 +46,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     const document = result.unwrap();
 
-    // Queue evaluations if agents are selected
-    if (agentIds.length > 0) {
-      const { evaluationService } = getServices();
-      const evaluationResult = await evaluationService.createEvaluationsForDocument({
-        documentId: document.id,
-        agentIds,
-        userId: session.user.id
-      });
-
-      if (evaluationResult.isError()) {
-        logger.error('Failed to create evaluations:', evaluationResult.error());
-        // Don't fail the document creation, just log the error
-      } else {
-        logger.info('Evaluations created successfully', {
-          documentId: document.id,
-          evaluationsCreated: evaluationResult.unwrap().length
-        });
-      }
-    }
+    // DocumentService handles evaluation creation when agentIds are provided
 
     revalidatePath("/docs");
     redirect(`/docs/${document.id}/reader`);

@@ -18,6 +18,7 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 
 import { Button } from "@/components/Button";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
@@ -192,7 +193,7 @@ export default function AgentDetail({
               <>
                 {" • "}
                 <Link
-                  href={`/users/${agent.owner.id}`}
+                  href={ROUTES.USERS.PROFILE(agent.owner.id)}
                   className="text-blue-500 hover:text-blue-700"
                 >
                   {agent.owner.name || "View Owner"}

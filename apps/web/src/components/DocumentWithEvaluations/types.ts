@@ -1,4 +1,5 @@
 import type { Document } from "@/shared/types/databaseTypes";
+import type { Comment } from "@roast/ai";
 
 export interface DocumentWithReviewsProps {
   document: Document;
@@ -7,10 +8,17 @@ export interface DocumentWithReviewsProps {
   showDebugComments?: boolean;
 }
 
+export interface ModalCommentState {
+  comment: Comment;
+  agentName: string;
+  commentId?: string;
+}
+
 export interface EvaluationState {
   selectedAgentIds: Set<string>;
   hoveredCommentId: string | null;
   expandedCommentId: string | null;
+  modalComment: ModalCommentState | null;
 }
 
 export interface EvaluationSelectorProps {

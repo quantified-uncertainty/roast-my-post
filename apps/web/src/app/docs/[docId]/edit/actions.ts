@@ -17,6 +17,7 @@ type DocumentUpdateData = {
   intendedAgents?: string;
   importUrl?: string;
   isPrivate?: boolean;
+  submitterNotes?: string;
 };
 
 export async function updateDocument(
@@ -37,6 +38,7 @@ export async function updateDocument(
         intendedAgents: formData.get("intendedAgents") as string,
         importUrl: formData.get("importUrl") as string,
         isPrivate: formData.get("isPrivate") === "true",
+        submitterNotes: formData.get("submitterNotes") as string,
       };
     } else {
       // Handle direct object submission

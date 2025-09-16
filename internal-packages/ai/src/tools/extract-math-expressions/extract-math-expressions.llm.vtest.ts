@@ -37,7 +37,7 @@ This gives us a healthy 25% margin.
       const error = result.expressions[0];
       expect(error.hasError).toBe(true);
       expect(error.originalText).toContain('10/45');
-      expect(error.conciseCorrection).toMatch(/25%?\s*→\s*22\.2%?/);
+      expect(error.displayCorrection).toMatch(/<r:replace from=["']25%?["'] to=["']22\.2%?["']\/>/i);
       expect(error.errorType).toBeTruthy();
       expect(error.errorSeverityScore).toBeGreaterThan(20);
     });
@@ -117,13 +117,13 @@ That's a 20% return calculated as (1200-1000)/1000 = 200/1000 = 0.15 = 15%.
         e.originalText.includes('150') || e.originalText.includes('15% discount')
       );
       expect(discountError?.hasError).toBe(true);
-      expect(discountError?.conciseCorrection).toMatch(/\$?150\s*→\s*\$?170|15%\s*→\s*25%/);
+      expect(discountError?.displayCorrection).toMatch(/<r:replace from=["'].*["'] to=["'].*["']\/>/i);
 
       const percentError = result.expressions.find(e => 
         e.originalText.includes('0.15 = 15%') || e.originalText.includes('200/1000')
       );
       expect(percentError?.hasError).toBe(true);
-      expect(percentError?.conciseCorrection).toMatch(/15%?\s*→\s*20%?|0\.15\s*→\s*0\.20/);
+      expect(percentError?.displayCorrection).toMatch(/<r:replace from=["'].*["'] to=["'].*["']\/>/i);
     });
 
     it('should NOT extract factual claims or forecasts', async () => {
@@ -166,7 +166,7 @@ The US population is about 330 million, which can be written as 3.3 × 10^6 peop
         e.originalText.includes('3.3 × 10^6') || e.originalText.includes('3.3 × 10⁶')
       );
       expect(magnitudeError?.hasError).toBe(true);
-      expect(magnitudeError?.conciseCorrection).toMatch(/10\^6\s*→\s*10\^8|10⁶\s*→\s*10⁸/);
+      expect(magnitudeError?.displayCorrection).toMatch(/<r:replace from=["'].*10\^6.*["'] to=["'].*10\^8.*["']\/>/i);
     });
 
     it('should handle compound interest and growth calculations', async () => {
@@ -191,7 +191,7 @@ But if we miscalculate: 1000 × 1.08 × 10 = $10,800 (wrong method!)
       );
       expect(compoundError?.hasError).toBe(true);
       expect(compoundError?.errorType).toBe('conceptual');
-      expect(compoundError?.conciseCorrection).toBeTruthy();
+      expect(compoundError?.displayCorrection).toBeTruthy();
     });
 
     it('should respect severity thresholds', async () => {
@@ -240,20 +240,20 @@ Various calculation errors:
       // Each should have a concise correction showing the key change
       result.expressions.forEach(expr => {
         expect(expr.hasError).toBe(true);
-        expect(expr.conciseCorrection).toBeTruthy();
-        expect(expr.conciseCorrection!.length).toBeLessThan(20); // Should be concise
-        expect(expr.conciseCorrection).toContain('→'); // Should use arrow format
+        expect(expr.displayCorrection).toBeTruthy();
+        expect(expr.displayCorrection!.length).toBeLessThan(100); // XML format is longer
+        expect(expr.displayCorrection).toMatch(/<r:replace/); // Should use XML format
       });
 
       // Check specific corrections
       const percentError = result.expressions.find(e => e.originalText.includes('125'));
-      expect(percentError?.conciseCorrection).toMatch(/125\s*→\s*180/);
+      expect(percentError?.displayCorrection).toMatch(/<r:replace from=["'].*125.*["'] to=["'].*180.*["']\/>/i);
 
       const speedError = result.expressions.find(e => e.originalText.includes('50 km/h'));
-      expect(speedError?.conciseCorrection).toMatch(/50\s*→\s*60/);
+      expect(speedError?.displayCorrection).toMatch(/<r:replace from=["'].*50.*["'] to=["'].*60.*["']\/>/i);
 
       const markupError = result.expressions.find(e => e.originalText.includes('0.20'));
-      expect(markupError?.conciseCorrection).toMatch(/[×x]0\.20\s*→\s*[×x]1\.20/);
+      expect(markupError?.displayCorrection).toMatch(/<r:replace from=["'].*(0\.20|×0\.20|x0\.20).*["'] to=["'].*(1\.20|×1\.20|x1\.20).*["']\/>/i);
     });
 
     it('should handle statistical claims without calculations', async () => {
@@ -295,10 +295,10 @@ Incorrect: Volume of cube with side 3 = 9 (should be 27).
       expect(result.expressions.length).toBe(2);
       
       const multiplicationError = result.expressions.find(e => e.originalText.includes('24'));
-      expect(multiplicationError?.conciseCorrection).toMatch(/24\s*→\s*21/);
+      expect(multiplicationError?.displayCorrection).toMatch(/<r:replace from=["'].*24.*["'] to=["'].*21.*["']\/>/i);
 
       const volumeError = result.expressions.find(e => e.originalText.includes('= 9'));
-      expect(volumeError?.conciseCorrection).toMatch(/9\s*→\s*27/);
+      expect(volumeError?.displayCorrection).toMatch(/<r:replace from=["'].*9.*["'] to=["'].*27.*["']\/>/i);
     });
 
     it('should handle currency and formatting variations', async () => {
@@ -321,7 +321,7 @@ The customer paid €920 which at 1.1 USD/EUR = $1,012.
         e.originalText.includes('75') || e.originalText.includes('8.5%')
       );
       expect(taxError?.hasError).toBe(true);
-      expect(taxError?.conciseCorrection).toMatch(/\$?75\s*→\s*\$?85/);
+      expect(taxError?.displayCorrection).toMatch(/<r:replace from=["'].*75.*["'] to=["'].*85.*["']\/>/i);
 
       // Total should also be wrong (1000 + 85 = 1085, not 1075)
       const totalError = result.expressions.find(e => e.originalText.includes('1,075'));

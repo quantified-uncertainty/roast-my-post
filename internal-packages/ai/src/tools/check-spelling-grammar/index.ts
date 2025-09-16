@@ -8,7 +8,7 @@ import type { LanguageConvention, LanguageConventionOption } from '../../shared/
 export interface SpellingGrammarError {
   text: string;
   correction: string;
-  conciseCorrection: string;
+  displayCorrection: string;
   type: 'spelling' | 'grammar';
   context?: string;
   importance: number; // 0-100
@@ -48,7 +48,7 @@ const outputSchema = z.object({
   errors: z.array(z.object({
     text: z.string().describe('The EXACT incorrect text from the input'),
     correction: z.string().describe('Suggested correction'),
-    conciseCorrection: z.string().describe('Minimal change notation (e.g., "teh → the")'),
+    displayCorrection: z.string().describe('XML markup for displaying correction (e.g., "<r:replace from=\"teh\" to=\"the\"/>\")' ),
     type: z.enum(['spelling', 'grammar']).describe('Type of error'),
     context: z.string().optional().describe('Surrounding context (20-30 chars each side)'),
     importance: z.number().min(0).max(100).describe('Importance score (0-100)'),
@@ -248,7 +248,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "recieved",
       "correction": "received",
-      "conciseCorrection": "recieved → received",
+      "displayCorrection": "<r:replace from=\"recieved\" to=\"received\"/>",
       "type": "spelling",
       "context": "I recieved teh package",
       "importance": 30,
@@ -260,7 +260,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "teh",
       "correction": "the",
-      "conciseCorrection": "teh → the",
+      "displayCorrection": "<r:replace from=\"teh\" to=\"the\"/>",
       "type": "spelling",
       "context": "recieved teh package yesterday",
       "importance": 15,
@@ -276,7 +276,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "are",
       "correction": "is",
-      "conciseCorrection": "are → is",
+      "displayCorrection": "<r:replace from=\"are\" to=\"is\"/>",
       "type": "grammar",
       "context": "engineers are working on",
       "importance": 45,
@@ -292,7 +292,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "Its",
       "correction": "It's",
-      "conciseCorrection": "Its → It's",
+      "displayCorrection": "<r:replace from=\"Its\" to=\"It's\"/>",
       "type": "grammar",
       "context": "Its a beautiful",
       "importance": 40,
@@ -304,7 +304,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "it's",
       "correction": "its",
-      "conciseCorrection": "it's → its",
+      "displayCorrection": "<r:replace from=\"it's\" to=\"its\"/>",
       "type": "grammar",
       "context": "cat licked it's paws",
       "importance": 40,
@@ -320,7 +320,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "data is",
       "correction": "data are",
-      "conciseCorrection": "data is → data are",
+      "displayCorrection": "<r:replace from=\"data is\" to=\"data are\"/>",
       "type": "grammar",
       "context": "The data is compelling",
       "importance": 25,
@@ -344,7 +344,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   For each error, provide:
   1. text: The EXACT error text from input
   2. correction: The corrected version
-  3. conciseCorrection: Minimal change notation (e.g., "teh → the")
+  3. displayCorrection: XML markup for display (e.g., "<r:replace from=\"teh\" to=\"the\"/>")
   4. type: "spelling" or "grammar"
   5. context: ~20-30 characters on each side of the error
   6. importance: Score from 0-100
@@ -418,9 +418,9 @@ ${textWithLineNumbers}
                   type: "string", 
                   description: "Suggested correction" 
                 },
-                conciseCorrection: { 
+                displayCorrection: { 
                   type: "string", 
-                  description: "Minimal change notation (e.g., 'teh → the')" 
+                  description: "XML markup for displaying correction (e.g., '<r:replace from=\"teh\" to=\"the\"/>')" 
                 },
                 type: {
                   type: "string",
@@ -452,7 +452,7 @@ ${textWithLineNumbers}
                   description: "The line number where the error appears (starting from 1)"
                 }
               },
-              required: ["text", "correction", "conciseCorrection", "type", "importance", "confidence"]
+              required: ["text", "correction", "displayCorrection", "type", "importance", "confidence"]
             }
           },
           totalErrorsFound: {

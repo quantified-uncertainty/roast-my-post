@@ -1,19 +1,41 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
+
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
+import type { Comment } from "@roast/ai";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
+import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
 
-import { EvaluationViewProps } from "../types";
-import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
-import { DocumentContent } from "./DocumentContent";
-import { CommentsColumn } from "./CommentsColumn";
-import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { LAYOUT } from "../constants";
+import { EvaluationViewProps } from "../types";
+import { CommentsColumn } from "./CommentsColumn";
+import { CommentModalOptimized } from "./CommentModalOptimized";
+import { CommentToolbar } from "./CommentToolbar";
+import { DocumentContent } from "./DocumentContent";
+import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
+import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+
+/**
+ * Maps comment levels to appropriate highlight colors
+ */
+function getLevelHighlightColor(level?: string | null): string {
+  switch (level) {
+    case "error":
+      return "#dc2626"; // Brighter red - for false claims (more intense)
+    case "warning":
+      return "#f59e0b"; // Amber - for partially-true claims
+    case "success":
+      return "#86efac"; // Lighter green - for verified true claims (less intense)
+    case "info":
+    default:
+      return "#93c5fd"; // Lighter blue - for info/unverified claims and default
+  }
+}
 
 export function EvaluationView({
   evaluationState,
@@ -79,7 +101,89 @@ export function EvaluationView({
       return allComments;
     }
     return allComments.filter((comment) => comment.level !== "debug");
-  }, [allComments, localShowDebugComments]);
+  }, [allComments, localShowDebugComments]) as Array<
+    DbComment & { agentName: string }
+  >;
+
+  // Pre-convert all comments to AI format and create lookup maps for O(1) access
+  const { aiCommentsMap, modalComments } = useMemo(() => {
+    const commentsMap = new Map<
+      string,
+      {
+        comment: Comment;
+        agentName: string;
+      }
+    >();
+    const modalCommentsArray: Array<{
+      comment: Comment;
+      agentName: string;
+      commentId: string;
+    }> = [];
+
+    displayComments.forEach((dbComment, index) => {
+      const id = dbComment.id || `temp-${index}`;
+      const aiComment = dbCommentToAiComment(dbComment);
+
+      commentsMap.set(id, {
+        comment: aiComment,
+        agentName: dbComment.agentName || "Unknown",
+      });
+
+      modalCommentsArray.push({
+        comment: aiComment,
+        agentName: dbComment.agentName || "Unknown",
+        commentId: id,
+      });
+    });
+
+    return {
+      aiCommentsMap: commentsMap,
+      modalComments: modalCommentsArray,
+    };
+  }, [displayComments]);
+
+  // Track whether we're in "navigation mode" (using arrows) or "direct mode" (from URL)
+  const isNavigationMode = useRef(false);
+
+  // Handle URL-based navigation (when user shares a link or manually changes URL)
+  const commentIdFromUrl = searchParams.get("comment");
+
+  useEffect(() => {
+    if (commentIdFromUrl && aiCommentsMap.size > 0) {
+      // We're in "direct mode" - showing a specific comment from URL
+      isNavigationMode.current = false;
+
+      const commentData = aiCommentsMap.get(commentIdFromUrl);
+      if (
+        commentData &&
+        evaluationState.modalComment?.commentId !== commentIdFromUrl
+      ) {
+        onEvaluationStateChange?.({
+          ...evaluationState,
+          modalComment: {
+            comment: commentData.comment,
+            agentName: commentData.agentName,
+            commentId: commentIdFromUrl,
+          },
+        });
+      }
+    } else if (
+      !commentIdFromUrl &&
+      evaluationState.modalComment &&
+      !isNavigationMode.current
+    ) {
+      // URL cleared externally, close modal
+      onEvaluationStateChange?.({
+        ...evaluationState,
+        modalComment: null,
+      });
+    }
+  }, [
+    commentIdFromUrl,
+    aiCommentsMap,
+    evaluationState,
+    onEvaluationStateChange,
+  ]);
 
   const highlights = useMemo(
     () =>
@@ -99,7 +203,7 @@ export function EvaluationView({
           endOffset: comment.highlight.endOffset!,
           quotedText: comment.highlight.quotedText || "",
           tag: index.toString(),
-          color: "#3b82f6",
+          color: getLevelHighlightColor(comment.level),
         })),
     [displayComments]
   );
@@ -165,8 +269,14 @@ export function EvaluationView({
               style={{
                 width: `${LAYOUT.COMMENT_COLUMN_WIDTH}px`,
                 flexShrink: 0,
+                marginLeft: "2rem",
               }}
             >
+              <CommentToolbar
+                documentId={document.id}
+                isFullWidth={isFullWidth}
+                onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
+              />
               <CommentsColumn
                 comments={displayComments}
                 contentRef={contentRef}
@@ -178,13 +288,25 @@ export function EvaluationView({
                     hoveredCommentId: commentId,
                   })
                 }
-                onCommentClick={(commentId) => {
-                  onEvaluationStateChange?.({
-                    ...evaluationState,
-                    expandedCommentId: commentId,
-                  });
+                onCommentClick={(commentIndex, comment) => {
+                  const actualCommentId = comment.id || `temp-${commentIndex}`;
+                  const commentData = aiCommentsMap.get(actualCommentId);
+
+                  if (commentData) {
+                    // Enter navigation mode
+                    isNavigationMode.current = true;
+
+                    // Open modal immediately for instant response
+                    onEvaluationStateChange?.({
+                      ...evaluationState,
+                      modalComment: {
+                        comment: commentData.comment,
+                        agentName: commentData.agentName,
+                        commentId: actualCommentId,
+                      },
+                    });
+                  }
                 }}
-                document={document as any}
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
                 showDebugComments={localShowDebugComments}
@@ -201,6 +323,55 @@ export function EvaluationView({
           </div>
         </div>
       </div>
+
+      {/* Optimized Comment Modal - always mounted, just swaps content */}
+      <CommentModalOptimized
+        comments={modalComments}
+        currentCommentId={evaluationState.modalComment?.commentId || null}
+        isOpen={!!evaluationState.modalComment}
+        hideNavigation={!!commentIdFromUrl && !isNavigationMode.current}
+        onClose={() => {
+          // Reset navigation mode
+          isNavigationMode.current = false;
+
+          // Clear URL if present
+          if (commentIdFromUrl) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete("comment");
+            router.replace(`?${params.toString()}`, { scroll: false });
+          }
+
+          // Clear state
+          onEvaluationStateChange?.({
+            ...evaluationState,
+            modalComment: null,
+          });
+        }}
+        onNavigate={(nextCommentId) => {
+          // Enter navigation mode
+          isNavigationMode.current = true;
+
+          const commentData = aiCommentsMap.get(nextCommentId);
+          if (commentData) {
+            // Update state immediately for instant navigation
+            onEvaluationStateChange?.({
+              ...evaluationState,
+              modalComment: {
+                comment: commentData.comment,
+                agentName: commentData.agentName,
+                commentId: nextCommentId,
+              },
+            });
+          }
+        }}
+        onGetShareLink={(commentId) => {
+          // Generate the shareable URL with the comment ID
+          const params = new URLSearchParams(searchParams.toString());
+          params.set("comment", commentId);
+          const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+          return url;
+        }}
+      />
     </>
   );
 }

@@ -127,7 +127,7 @@ describe('CheckMathHybridTool', () => {
         errorDetails: {
           errorType: 'calculation',
           severity: 'major',
-          conciseCorrection: '5 → 4',
+          displayCorrection: '<r:replace from="5" to="4"/>',
           expectedValue: '4',
           actualValue: '5'
         },
@@ -143,7 +143,7 @@ describe('CheckMathHybridTool', () => {
       expect(result.status).toBe('verified_false');
       expect(result.verifiedBy).toBe('mathjs');
       expect(result.toolsUsed).toEqual(['mathjs']);
-      expect(result.conciseCorrection).toBe('5 → 4');
+      expect(result.displayCorrection).toBe('<r:replace from="5" to="4"/>');
       expect(result.mathJsResult).toBeDefined();
       expect(mockCheckMath).not.toHaveBeenCalled();
     });
@@ -180,7 +180,7 @@ describe('CheckMathHybridTool', () => {
         errorDetails: {
           errorType: 'calculation',
           severity: 'major',
-          conciseCorrection: '3x → 2x'
+          displayCorrection: '<r:replace from="3x" to="2x"/>'
         },
       };
 
@@ -193,7 +193,7 @@ describe('CheckMathHybridTool', () => {
       );
 
       expect(result.status).toBe('verified_false');
-      expect(result.conciseCorrection).toBe('3x → 2x');
+      expect(result.displayCorrection).toBe('<r:replace from="3x" to="2x"/>');
       expect(result.verifiedBy).toBe('llm');
     });
   });

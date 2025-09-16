@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowPathIcon, CommandLineIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, CommandLineIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/button";
 
 interface EvaluationActionsProps {
   documentId: string;
   agentId: string;
   onRerun?: () => void;
+  onDelete?: () => void;
   isRunning?: boolean;
+  isDeleting?: boolean;
   showRerun?: boolean;
+  showDelete?: boolean;
   showDetails?: boolean;
   detailsText?: string;
   detailsStyle?: "link" | "button";
@@ -22,8 +26,11 @@ export function EvaluationActions({
   documentId,
   agentId,
   onRerun,
+  onDelete,
   isRunning = false,
+  isDeleting = false,
   showRerun = false,
+  showDelete = false,
   showDetails = true,
   detailsText = "Details",
   detailsStyle = "link",
@@ -32,38 +39,47 @@ export function EvaluationActions({
   return (
     <div className={className}>
       {showRerun && onRerun && (
-        <button
+        <Button
           onClick={onRerun}
           disabled={isRunning}
-          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          size="sm"
         >
           <ArrowPathIcon className={`h-3.5 w-3.5 ${isRunning ? 'animate-spin' : ''}`} />
           {isRunning ? 'Running...' : 'Rerun'}
-        </button>
+        </Button>
+      )}
+      {showDelete && onDelete && (
+        <Button
+          onClick={onDelete}
+          disabled={isDeleting}
+          variant="outline"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+        >
+          <TrashIcon className={`h-3.5 w-3.5 ${isDeleting ? 'animate-pulse' : ''}`} />
+          {isDeleting ? 'Deleting...' : 'Delete'}
+        </Button>
       )}
       {showDetails && (
-        <Link
-          href={`/docs/${documentId}/evals/${agentId}`}
-          className={
-            detailsStyle === "button"
-              ? "inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
-              : "flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
-          }
-        >
-          {detailsStyle === "button" ? (
-            <>
+        detailsStyle === "button" ? (
+          <Button asChild size="sm">
+            <Link href={`/docs/${documentId}/evals/${agentId}`}>
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
               {detailsText}
-            </>
-          ) : (
-            <>
-              <CommandLineIcon className="mr-1 h-4 w-4" />
-              {detailsText}
-            </>
-          )}
-        </Link>
+            </Link>
+          </Button>
+        ) : (
+          <Link
+            href={`/docs/${documentId}/evals/${agentId}`}
+            className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
+          >
+            <CommandLineIcon className="mr-1 h-4 w-4" />
+            {detailsText}
+          </Link>
+        )
       )}
     </div>
   );
