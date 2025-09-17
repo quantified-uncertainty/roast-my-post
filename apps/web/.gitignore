@@ -38,3 +38,4 @@ next-env.d.ts
 # prisma generated client (not used - kept in shared db package)
 generated/
 prisma-generated/
+.aider*
