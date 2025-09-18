@@ -7,9 +7,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { Bot } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { type RefObject, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Accordion,
@@ -26,34 +26,36 @@ import {
 import { EvaluationCard } from "./EvaluationCard";
 import type { Document } from "@/shared/types/databaseTypes";
 import type { EvaluationState } from "../types";
+import { useScrollHeaderBehavior } from "../hooks/useScrollHeaderBehavior";
 
 interface EvaluationCardsHeaderProps {
   document: Document;
   evaluationState: EvaluationState;
   onEvaluationStateChange?: (newState: EvaluationState) => void;
-  isLargeMode?: boolean;
-  onToggleMode?: () => void;
+  scrollContainerRef?: RefObject<HTMLDivElement | null>;
   showDebugComments?: boolean;
   onToggleDebugComments?: () => void;
   isOwner?: boolean;
   onRerun?: (agentId: string) => void;
-  runningEvals?: Set<string>;
 }
 
 export function EvaluationCardsHeader({
   document,
   evaluationState,
   onEvaluationStateChange,
-  isLargeMode = false,
-  onToggleMode,
+  scrollContainerRef,
   showDebugComments = false,
   onToggleDebugComments,
   isOwner = false,
   onRerun,
-  runningEvals = new Set(),
 }: EvaluationCardsHeaderProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Local expand/collapse managed here to avoid parent re-renders
+  const { isLargeMode, setIsLargeMode } = useScrollHeaderBehavior(
+    scrollContainerRef ?? { current: null }
+  );
 
   if (!document || !evaluationState) {
     return null;
@@ -222,9 +224,7 @@ export function EvaluationCardsHeader({
       collapsible
       value={isLargeMode ? "evaluations" : ""}
       onValueChange={(_value) => {
-        if (onToggleMode) {
-          onToggleMode();
-        }
+        setIsLargeMode(!isLargeMode);
       }}
     >
       <AccordionItem value="evaluations" className="border-none">

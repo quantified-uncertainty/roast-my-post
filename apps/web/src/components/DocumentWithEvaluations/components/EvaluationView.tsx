@@ -12,6 +12,7 @@ import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
 
 import { LAYOUT } from "../constants";
+import { cn } from "@/lib/utils";
 import { EvaluationViewProps } from "../types";
 import { CommentsColumn } from "./CommentsColumn";
 import { CommentModalOptimized } from "./CommentModalOptimized";
@@ -45,7 +46,7 @@ export function EvaluationView({
   showDebugComments = false,
   isOwner = false,
   onRerun,
-  runningEvals = new Set(),
+  runningEvals: _runningEvals = new Set(),
 }: EvaluationViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,8 +72,7 @@ export function EvaluationView({
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
-  // Local state for accordion mode (collapsed by default)
-  const [isLargeMode, setIsLargeMode] = useState(false);
+  // Header expand/collapse tied to scroll (now handled inside header component as well)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Get selected evaluations
@@ -213,6 +213,8 @@ export function EvaluationView({
     evaluationState.selectedAgentIds.has(r.agentId)
   );
 
+  // (Scroll behavior logic moved into useScrollHeaderBehavior hook)
+
   return (
     <div className="flex h-full flex-col">
       {/* Fixed Evaluation Cards Header Bar */}
@@ -221,13 +223,11 @@ export function EvaluationView({
           document={document}
           evaluationState={evaluationState}
           onEvaluationStateChange={onEvaluationStateChange}
-          isLargeMode={isLargeMode}
-          onToggleMode={() => setIsLargeMode((v) => !v)}
+          scrollContainerRef={scrollContainerRef}
           showDebugComments={localShowDebugComments}
           onToggleDebugComments={handleToggleDebugComments}
           isOwner={isOwner}
           onRerun={onRerun}
-          runningEvals={runningEvals}
         />
       </Card>
 
@@ -236,31 +236,32 @@ export function EvaluationView({
         {/* Unified scroll container for all content */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden"
+          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 pt-4"
         >
           {/* Document metadata header - now part of scrollable content */}
-          <div className="w-full px-4 pt-4">
-            <DocumentMetadata
-              document={document}
-              showDetailedAnalysisLink
-              isFullWidth={isFullWidth}
-              onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
-            />
-            {/* Submitter Notes - only show if notes exist */}
-            {document.submitterNotes && (
-              <div className="mx-4 mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <h3 className="mb-2 text-sm font-semibold text-blue-900">
-                  Submitter's Notes
-                </h3>
-                <p className="whitespace-pre-wrap text-sm text-blue-800">
-                  {document.submitterNotes}
-                </p>
-              </div>
-            )}
-          </div>
+          <DocumentMetadata
+            document={document}
+            showDetailedAnalysisLink
+            isFullWidth={isFullWidth}
+            onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
+          />
+          {/* Submitter Notes - only show if notes exist */}
+          {document.submitterNotes && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <h3 className="mb-2 text-sm font-semibold text-blue-900">
+                Submitter's Notes
+              </h3>
+              <p className="whitespace-pre-wrap text-sm text-blue-800">
+                {document.submitterNotes}
+              </p>
+            </div>
+          )}
           {/* Document content and comments section */}
           <div
-            className={`flex min-h-screen ${isFullWidth ? "px-5" : "justify-center"}`}
+            className={cn(
+              "flex min-h-screen",
+              isFullWidth ? "px-5" : "justify-center"
+            )}
           >
             {/* Main content area */}
             <DocumentContent
