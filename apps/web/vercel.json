@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx turbo build",
+  "buildCommand": "cd internal-packages/db && npx prisma migrate deploy && cd ../.. && npx turbo build",
   "framework": "nextjs",
   "ignoreCommand": "npx turbo-ignore"
 }
