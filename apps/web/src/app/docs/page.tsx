@@ -16,13 +16,23 @@ export default async function DocumentsPage({
   const session = await auth();
   const searchQuery = (await searchParams).search || "";
 
-  // Get only public documents for the public docs page
-  const documents = await DocumentModel.getDocumentListings({
-    searchQuery,
-    // Don't pass requestingUserId to ensure only public docs are shown
-    limit: 50,
-    latestVersionOnly: true,
-  });
+  let documents: any[] = [];
+
+  try {
+    // Get only public documents for the public docs page
+    documents = await DocumentModel.getDocumentListings({
+      searchQuery,
+      // Don't pass requestingUserId to ensure only public docs are shown
+      limit: 50,
+      latestVersionOnly: true,
+    });
+  } catch (error: any) {
+    // Handle missing table error gracefully for preview deployments
+    console.error('Failed to fetch documents:', error);
+    if (error?.code === 'P2021') {
+      console.log('Database table not found - likely a preview deployment with fresh database');
+    }
+  }
 
   const totalCount = documents.length;
   const hasSearched = !!searchQuery.trim() && searchQuery.trim().length >= 2;
