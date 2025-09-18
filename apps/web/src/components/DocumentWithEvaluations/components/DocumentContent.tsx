@@ -2,7 +2,6 @@
 
 import { RefObject } from "react";
 import SlateEditor from "@/components/SlateEditor";
-import { DocumentMetadata } from "./DocumentMetadata";
 import { LAYOUT } from "../constants";
 import type { Document } from "@/shared/types/databaseTypes";
 
@@ -48,33 +47,12 @@ export function DocumentContent({
           : {}
       }
     >
-      {/* Document metadata section */}
-      <div className={isFullWidth ? "w-full" : "mx-auto max-w-3xl"}>
-        <DocumentMetadata
-          document={document}
-          showDetailedAnalysisLink={true}
-          isFullWidth={isFullWidth}
-          onToggleFullWidth={onToggleFullWidth}
-        />
-        {/* Submitter Notes - only show if notes exist */}
-      {document.submitterNotes && (
-        <div className="mx-4 mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <h3 className="mb-2 text-sm font-semibold text-blue-900">
-            Submitter's Notes
-          </h3>
-          <p className="text-sm text-blue-800 whitespace-pre-wrap">
-            {document.submitterNotes}
-          </p>
-        </div>
-      )}
-      </div>
-
       <article
         className={`prose prose-lg prose-slate ${
           isFullWidth
             ? `max-w-none [&_pre]:!max-w-[calc(100vw-${LAYOUT.COMMENT_COLUMN_WIDTH}px-${LAYOUT.CONTENT_SIDE_PADDING}px)] [&_pre]:overflow-x-auto`
             : "mx-auto"
-        } rounded-lg px-4 py-8`}
+        } rounded-lg px-4`}
       >
         <SlateEditor
           content={contentWithMetadataPrepend}

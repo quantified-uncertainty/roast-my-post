@@ -18,6 +18,7 @@ import { CommentModalOptimized } from "./CommentModalOptimized";
 import { DocumentContent } from "./DocumentContent";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+import { DocumentMetadata } from "./DocumentMetadata";
 
 /**
  * Maps comment levels to appropriate highlight colors
@@ -213,9 +214,9 @@ export function EvaluationView({
   );
 
   return (
-    <>
+    <div className="flex h-full flex-col">
       {/* Fixed Evaluation Cards Header Bar */}
-      <Card className="sticky top-0 z-50 mx-6 mt-4">
+      <Card className="sticky top-0 z-50 mx-6">
         <EvaluationCardsHeader
           document={document}
           evaluationState={evaluationState}
@@ -235,11 +236,31 @@ export function EvaluationView({
         {/* Unified scroll container for all content */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden"
+          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden"
         >
+          {/* Document metadata header - now part of scrollable content */}
+          <div className="w-full px-4 pt-4">
+            <DocumentMetadata
+              document={document}
+              showDetailedAnalysisLink
+              isFullWidth={isFullWidth}
+              onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
+            />
+            {/* Submitter Notes - only show if notes exist */}
+            {document.submitterNotes && (
+              <div className="mx-4 mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <h3 className="mb-2 text-sm font-semibold text-blue-900">
+                  Submitter's Notes
+                </h3>
+                <p className="whitespace-pre-wrap text-sm text-blue-800">
+                  {document.submitterNotes}
+                </p>
+              </div>
+            )}
+          </div>
           {/* Document content and comments section */}
           <div
-            className={`flex min-h-screen ${isFullWidth ? "px-5" : "justify-center"} py-5`}
+            className={`flex min-h-screen ${isFullWidth ? "px-5" : "justify-center"}`}
           >
             {/* Main content area */}
             <DocumentContent
@@ -366,6 +387,6 @@ export function EvaluationView({
           return url;
         }}
       />
-    </>
+    </div>
   );
 }
