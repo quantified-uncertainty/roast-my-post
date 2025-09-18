@@ -92,15 +92,20 @@ export class DocumentService {
       });
 
       // Create document
-      const createData: RepositoryCreateDocumentData = {
-        ...sanitized,
+      const createData = {
+        title: sanitized.title,
+        content: sanitized.content,
+        authors: sanitized.authors,
+        publishedDate: sanitized.publishedDate,
+        url: sanitized.url,
+        platforms: sanitized.platforms,
         submittedById: userId,
         importUrl: data.importUrl,
         ephemeralBatchId: data.ephemeralBatchId,
         markdownPrepend,
         isPrivate: data.isPrivate || false,
         submitterNotes: data.submitterNotes
-      };
+      } as RepositoryCreateDocumentData;
 
       const repoDocument = await this.docRepo.create(createData);
       const document = this.convertToDomainEntity(repoDocument);
