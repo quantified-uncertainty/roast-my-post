@@ -3,7 +3,7 @@
  */
 
 export const TEXT_TRUNCATION = {
-  SUMMARY: 300,
+  SUMMARY: 180,
   TASK: 200,
   DESCRIPTION: 500,
 } as const;
@@ -16,22 +16,22 @@ export const TEXT_TRUNCATION = {
  * @returns The truncated text with suffix if needed
  */
 export function truncateText(
-  text: string, 
-  maxLength: number = TEXT_TRUNCATION.SUMMARY, 
+  text: string,
+  maxLength: number = TEXT_TRUNCATION.SUMMARY,
   suffix: string = "..."
 ): string {
   if (!text) return "";
   if (text.length <= maxLength) return text;
-  
+
   // Try to break at a word boundary
   const truncated = text.substring(0, maxLength);
   const lastSpaceIndex = truncated.lastIndexOf(" ");
-  
+
   // If we found a space in the last 20% of the string, break there
   if (lastSpaceIndex > maxLength * 0.8) {
     return truncated.substring(0, lastSpaceIndex) + suffix;
   }
-  
+
   return truncated + suffix;
 }
 
@@ -65,7 +65,7 @@ export function toTitleCase(text: string): string {
   return text
     .toLowerCase()
     .split(" ")
-    .map(word => capitalize(word))
+    .map((word) => capitalize(word))
     .join(" ");
 }
 
