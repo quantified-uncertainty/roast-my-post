@@ -37,22 +37,26 @@ An AI-powered document evaluation platform that provides intelligent analysis, c
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/quantified-uncertainty/roast-my-post.git
 cd roast-my-post
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` with your configuration:
+
 ```
 DATABASE_URL="postgresql://user:password@localhost:5432/roast_my_post"
 NEXTAUTH_URL="http://localhost:3000"
@@ -67,6 +71,7 @@ AUTH_RESEND_KEY="your-resend-api-key"
 **Optional: Helicone Integration**
 
 To enable monitoring of Anthropic API usage through Helicone:
+
 1. Create a [Helicone account](https://helicone.ai)
 2. Add your Helicone API key to `HELICONE_API_KEY` in `.env`
 3. All Anthropic API calls will automatically route through Helicone for monitoring and analytics
@@ -74,6 +79,7 @@ To enable monitoring of Anthropic API usage through Helicone:
 **Optional: Helicone Prompt Caching**
 
 To enable prompt caching for improved performance and cost savings:
+
 ```bash
 HELICONE_CACHE_ENABLED=true          # Enable prompt caching
 HELICONE_CACHE_MAX_AGE=3600          # Cache duration in seconds (1 hour)
@@ -83,6 +89,7 @@ HELICONE_CACHE_BUCKET_MAX_SIZE=1000  # Max cache entries per bucket
 Prompt caching can significantly reduce API costs for repeated similar requests.
 
 4. Set up the database and system agents:
+
 ```bash
 pnpm run db:setup
 ```
@@ -90,6 +97,7 @@ pnpm run db:setup
 This will push the database schema and synchronize system-managed agents (spelling/grammar checker, math checker, fact checker).
 
 5. Start the development server:
+
 ```bash
 pnpm run dev
 ```
@@ -111,6 +119,7 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 - `pnpm run process-jobs` - Process evaluation jobs manually
 
 For package-specific commands:
+
 - `pnpm --filter @roast/web <command>` - Run commands in the web app
 - `pnpm --filter @roast/db <command>` - Run commands in the database package
 - `pnpm --filter @roast/ai <command>` - Run commands in the AI package
@@ -157,6 +166,7 @@ claude/                   # Claude Code specific tools and analysis
 This project includes an MCP (Model Context Protocol) server that provides instant database access without writing scripts. This is 10-20x faster than creating TypeScript files for data queries.
 
 To set up the MCP server:
+
 ```bash
 pnpm --filter @roast/mcp-server run setup
 ```
@@ -166,7 +176,9 @@ Then restart Claude Code. See [/apps/mcp-server/README.md](./apps/mcp-server/REA
 ## Core Concepts
 
 ### Agents
+
 AI evaluators that can be configured for various purposes:
+
 - Critical analysis and quality assessment
 - Constructive suggestions and improvements
 - Context and supplementary information
@@ -174,17 +186,22 @@ AI evaluators that can be configured for various purposes:
 - Custom evaluation criteria based on specific needs
 
 ### Documents
+
 Content items stored with versioning support. Each document can have multiple versions, and each version can be evaluated by multiple agents.
 
 ### Evaluations
+
 AI-generated analysis containing:
+
 - Summary and detailed analysis
 - Inline comments with highlights
 - Importance ratings and grades
 - Self-critique from the agent
 
 ### Jobs
+
 Asynchronous processing queue for evaluations with:
+
 - Automatic retry logic with exponential backoff
 - Cost tracking per job
 - Detailed logging for debugging
@@ -194,26 +211,31 @@ Asynchronous processing queue for evaluations with:
 ### REST API Endpoints
 
 #### Core Resources
+
 - `/api/agents` - Agent management
-- `/api/documents` - Document operations  
+- `/api/documents` - Document operations
 - `/api/jobs` - Job processing
 - `/api/monitor` - System monitoring (admin only)
 - `/api/import` - Article import from URLs
 
 #### New Unified API Structure
+
 The API now follows a clean, intuitive structure that matches web URLs:
 
 **Document Operations:**
+
 - `GET /api/docs/{docId}` - Get document with all evaluations (public)
 - `PUT /api/docs/{docId}` - Update document (requires auth + ownership)
 
 **Evaluation Operations:**
+
 - `GET /api/docs/{docId}/evals/{agentId}` - Get specific evaluation with full details (public)
 - `POST /api/docs/{docId}/evals/{agentId}` - Create new evaluation (requires auth + ownership)
 - `POST /api/docs/{docId}/evals/{agentId}/rerun` - Re-run existing evaluation (requires auth + ownership)
 - `GET /api/documents/{docId}/evaluations` - List all evaluations for document (public)
 
 **Security Features:**
+
 - **Authentication**: Required for all write operations (PUT, POST)
 - **Ownership verification**: Document owner-only for modifications
 - **Input validation**: Zod schemas for request body validation
@@ -221,6 +243,7 @@ The API now follows a clean, intuitive structure that matches web URLs:
 - **Consistent error handling**: Standardized error responses
 
 **Key Benefits:**
+
 - Natural identifiers: Use `documentId + agentId` instead of evaluation IDs
 - Perfect URL alignment with web interface (`/docs/{docId}/evals/{agentId}`)
 - Complete evaluation data including comments, highlights, and job information
@@ -229,6 +252,7 @@ The API now follows a clean, intuitive structure that matches web URLs:
 ### Authentication
 
 The application uses NextAuth.js with support for:
+
 - Email magic links via Resend
 - API key authentication for programmatic access
 
@@ -242,6 +266,7 @@ The test suite is organized by dependency requirements:
 - **LLM tests** (`*.llm.test.ts`): AI API calls (expensive)
 
 Run tests with:
+
 ```bash
 pnpm run test:fast    # Unit + integration
 pnpm run test:ci      # CI-safe tests only
@@ -253,12 +278,14 @@ pnpm run test:e2e     # End-to-end tests
 ### Safety Practices
 
 Always use the safe wrapper scripts for database operations:
+
 ```bash
 pnpm run db:push          # Safe schema push
 pnpm run db:migrate       # Safe migration
 ```
 
 ### Backup Before Changes
+
 ```bash
 ./scripts/backup-database.sh
 ```
@@ -266,6 +293,7 @@ pnpm run db:migrate       # Safe migration
 ### Performance Optimization
 
 The database includes optimized indexes for:
+
 - Full-text search on document content
 - Fast metadata search on titles, authors, platforms
 - Efficient evaluation queries
@@ -290,6 +318,7 @@ For Claude-specific development workflows, see [CLAUDE.md](./CLAUDE.md).
 5. Open a Pull Request
 
 Please ensure:
+
 - All tests pass (`pnpm run test:fast`)
 - Type checking passes (`pnpm run typecheck`)
 - Code is linted (`pnpm run lint`)

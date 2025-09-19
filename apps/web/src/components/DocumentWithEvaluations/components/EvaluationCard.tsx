@@ -7,6 +7,8 @@ import {
 } from "@/shared/utils/evaluationStatus";
 import { truncateSummary } from "@/shared/utils/text";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { cn } from "@/lib/utils";
+import { HoverPopover } from "@/components/HoverPopover";
 
 import { CommentToggle } from "../../EvaluationCard/shared/CommentToggle";
 import { EvaluationActions } from "../../EvaluationCard/shared/EvaluationActions";
@@ -38,6 +40,7 @@ export function EvaluationCard({
 
   const summary = review.summary || "No summary available";
   const truncatedSummary = truncateSummary(summary);
+  const isTruncated = truncatedSummary !== summary;
 
   // Use shared utility for status content
   const statusContent = getEvaluationStatusContent(
@@ -49,12 +52,15 @@ export function EvaluationCard({
 
   return (
     <div
-      className={`flex min-h-[100px] flex-col justify-between rounded-md border border-gray-200 bg-white p-3 shadow-sm ${
-        !hasCompletedVersion ? "opacity-90" : ""
-      }`}
+      className={cn(
+        "flex min-h-[88px] flex-col justify-between rounded-md border border-gray-200 bg-white p-2.5 shadow-sm",
+        {
+          "opacity-90": !hasCompletedVersion,
+        }
+      )}
     >
       {/* Header Row */}
-      <div className="mb-3 flex items-start justify-between">
+      <div className="mb-2.5 flex items-start justify-between">
         <EvaluationHeader
           agentName={review.agent.name}
           grade={review.grade}
@@ -76,11 +82,18 @@ export function EvaluationCard({
       </div>
       {/* Summary or Status Message */}
       <div
-        className={`mb-3 min-h-[40px] text-sm ${
+        className={cn(
+          "mb-2.5 min-h-[36px] text-sm",
           hasCompletedVersion ? "text-gray-700" : "italic text-gray-500"
-        }`}
+        )}
       >
-        {statusContent}
+        {isTruncated ? (
+          <HoverPopover content={summary} contentClassName="w-[600px]">
+            <span>{statusContent}</span>
+          </HoverPopover>
+        ) : (
+          statusContent
+        )}
       </div>
       {/* Footer */}
       <div className="mt-auto flex flex-row items-center justify-between">
