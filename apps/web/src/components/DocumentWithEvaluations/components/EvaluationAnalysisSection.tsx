@@ -45,17 +45,18 @@ export function EvaluationAnalysisSection({
             >
               <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-4">
                 <div className="flex items-center gap-2">
-                  {evaluation.grade !== undefined && (
-                    <span className="ml-3">
+                  <Link
+                    href={`/agents/${evaluation.agentId}`}
+                    className="flex items-center gap-2 text-lg font-semibold text-blue-800 hover:text-blue-900 hover:underline"
+                  >
+                    <Bot className="h-4 w-4" />
+                    {evaluation.agent.name}
+                  </Link>
+                  {!!evaluation.grade && (
+                    <span className="mr-3">
                       <GradeBadge grade={evaluation.grade} variant="light" />
                     </span>
                   )}
-                  <Link
-                    href={`/agents/${evaluation.agentId}`}
-                    className="text-lg font-semibold text-blue-800 underline hover:text-blue-900"
-                  >
-                    {evaluation.agent.name}
-                  </Link>
                 </div>
                 <Link href={`/docs/${document.id}/evals/${evaluation.agentId}`}>
                   <Button variant="outline" size="xs">
