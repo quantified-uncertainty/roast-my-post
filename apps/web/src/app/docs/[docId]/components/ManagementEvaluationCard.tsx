@@ -1,26 +1,18 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import { BotIcon } from "lucide-react";
 import Link from "next/link";
 
-import {
-  EvaluationActions,
-} from "@/components/EvaluationCard/shared/EvaluationActions";
-import {
-  EvaluationStats,
-} from "@/components/EvaluationCard/shared/EvaluationStats";
+import { EvaluationActions } from "@/components/EvaluationCard/shared/EvaluationActions";
+import { EvaluationStats } from "@/components/EvaluationCard/shared/EvaluationStats";
 import { GradeBadge } from "@/components/GradeBadge";
-import { StatusBadge } from "@/components/StatusBadge";
 import { StaleBadge } from "@/components/StaleBadge";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { Evaluation } from "@/shared/types/databaseTypes";
 import { getEvaluationStatus } from "@/shared/utils/evaluationStatus";
-import {
-  ChatBubbleLeftIcon as ChatBubbleLeftIconSolid,
-} from "@heroicons/react/20/solid";
-import {
-  BeakerIcon,
-  DocumentTextIcon,
-} from "@heroicons/react/24/outline";
+import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 interface ManagementEvaluationCardProps {
   docId: string;
@@ -96,19 +88,17 @@ export function ManagementEvaluationCard({
           {/* Left side - Agent info */}
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="p-1.5">
-              <BeakerIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
+              <BotIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Link
                   href={`/agents/${agentId}`}
-                  className="text-sm font-semibold text-gray-700 hover:text-gray-900"
+                  className="text-sm font-semibold text-gray-600 underline hover:text-blue-900"
                 >
                   {evaluation.agent.name}
                 </Link>
-                {isStale && (
-                  <StaleBadge size="sm" />
-                )}
+                {isStale && <StaleBadge size="sm" />}
               </div>
               <div className="mt-0.5">
                 <EvaluationStats
@@ -130,7 +120,9 @@ export function ManagementEvaluationCard({
               documentId={docId}
               agentId={agentId}
               onRerun={isOwner ? () => onRerun(agentId) : undefined}
-              onDelete={isOwner && onDelete ? () => onDelete(agentId) : undefined}
+              onDelete={
+                isOwner && onDelete ? () => onDelete(agentId) : undefined
+              }
               isRunning={
                 isRunning ||
                 latestJobStatus === "PENDING" ||

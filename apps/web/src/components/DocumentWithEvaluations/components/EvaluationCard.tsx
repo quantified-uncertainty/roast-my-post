@@ -1,17 +1,19 @@
 "use client";
 
+import { HoverPopover } from "@/components/HoverPopover";
+import { cn } from "@/lib/utils";
 import type { Evaluation } from "@/shared/types/databaseTypes";
 import {
   getEvaluationStatus,
   getEvaluationStatusContent,
 } from "@/shared/utils/evaluationStatus";
 import { truncateSummary } from "@/shared/utils/text";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { cn } from "@/lib/utils";
-import { HoverPopover } from "@/components/HoverPopover";
+import { ChevronDoubleDownIcon } from "@heroicons/react/24/outline";
 
 import { CommentToggle } from "../../EvaluationCard/shared/CommentToggle";
-import { EvaluationActions } from "../../EvaluationCard/shared/EvaluationActions";
+import {
+  EvaluationActions,
+} from "../../EvaluationCard/shared/EvaluationActions";
 import { EvaluationHeader } from "../../EvaluationCard/shared/EvaluationHeader";
 import { StatusBadge } from "../../StatusBadge";
 
@@ -63,6 +65,7 @@ export function EvaluationCard({
       <div className="mb-2.5 flex items-start justify-between">
         <EvaluationHeader
           agentName={review.agent.name}
+          agentId={review.agentId}
           grade={review.grade}
           isStale={isStale}
           isRerunning={isRerunning}
@@ -100,7 +103,7 @@ export function EvaluationCard({
         {hasCompletedVersion && (
           <a
             href={`#eval-${review.agentId}`}
-            className="flex items-center text-xs font-medium text-purple-600 hover:underline"
+            className="flex items-center text-xs font-medium text-blue-500 hover:underline"
             onClick={(e) => {
               e.preventDefault();
               const element = window.document.getElementById(
@@ -111,8 +114,8 @@ export function EvaluationCard({
               }
             }}
           >
+            <ChevronDoubleDownIcon className="mr-1 h-3 w-3" />
             Full Evaluation
-            <ChevronDownIcon className="ml-1 h-3 w-3" />
           </a>
         )}
         <div className="flex items-center gap-4">
