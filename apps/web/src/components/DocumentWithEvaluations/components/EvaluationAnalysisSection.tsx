@@ -58,7 +58,7 @@ export function EvaluationAnalysisSection({
                   </Link>
                 </div>
                 <Link href={`/docs/${document.id}/evals/${evaluation.agentId}`}>
-                  <Button variant="secondary">
+                  <Button variant="outline" size="xs">
                     <ShieldUser className="mr-2 h-4 w-4" />
                     Open in Editor View
                   </Button>
@@ -90,7 +90,7 @@ export function EvaluationAnalysisSection({
                 <CollapsibleSection
                   id={`eval-${evaluation.agentId}-analysis`}
                   title="Analysis"
-                  defaultOpen={true}
+                  defaultOpen={false}
                   action={<CopyButton text={evaluation.analysis} />}
                 >
                   <div className="prose prose-sm max-w-none text-gray-600">
