@@ -1,30 +1,24 @@
 "use client";
 
-import {
-  Download,
-  ExternalLink,
-  Microscope,
-} from "lucide-react";
+import { Download, ExternalLink, ShieldUser } from "lucide-react";
 import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
+import { UI_LABELS } from "@/constants/ui-labels";
+import type { Document } from "@/shared/types/databaseTypes";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
 } from "@heroicons/react/20/solid";
 
-import { Button } from "@/components/ui/button";
-import { UI_LABELS } from "@/constants/ui-labels";
-import type { Document } from "@/shared/types/databaseTypes";
-
 interface DocumentActionsProps {
   document: Document;
-  showDetailedAnalysisLink?: boolean;
   isFullWidth?: boolean;
   onToggleFullWidth?: () => void;
 }
 
 export function DocumentActions({
   document,
-  showDetailedAnalysisLink = false,
   isFullWidth = false,
   onToggleFullWidth,
 }: DocumentActionsProps) {
@@ -37,11 +31,9 @@ export function DocumentActions({
         className="h-8 px-3 text-xs"
       >
         <Link href={`/docs/${document.id}`}>
-          <Microscope className="mr-1.5 h-3.5 w-3.5" />
+          <ShieldUser className="mr-1.5 h-3.5 w-3.5" />
           <span className="hidden sm:inline">
-            {showDetailedAnalysisLink
-              ? UI_LABELS.EVAL_EDITOR.label
-              : "Document Details"}
+            {UI_LABELS.EVAL_EDITOR.label}
           </span>
         </Link>
       </Button>

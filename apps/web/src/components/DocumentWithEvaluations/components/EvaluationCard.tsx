@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { HoverPopover } from "@/components/HoverPopover";
 import { cn } from "@/lib/utils";
 import type { Evaluation } from "@/shared/types/databaseTypes";
@@ -11,9 +13,7 @@ import { truncateSummary } from "@/shared/utils/text";
 import { ChevronDoubleDownIcon } from "@heroicons/react/24/outline";
 
 import { CommentToggle } from "../../EvaluationCard/shared/CommentToggle";
-import {
-  EvaluationActions,
-} from "../../EvaluationCard/shared/EvaluationActions";
+import { EvaluationActions } from "../../EvaluationCard/shared/EvaluationActions";
 import { EvaluationHeader } from "../../EvaluationCard/shared/EvaluationHeader";
 import { StatusBadge } from "../../StatusBadge";
 
@@ -122,7 +122,6 @@ export function EvaluationCard({
           <EvaluationActions
             documentId={documentId}
             agentId={review.agentId}
-            showDetails={true}
             showRerun={isOwner && !!onRerun}
             onRerun={
               isOwner && onRerun ? () => onRerun(review.agentId) : undefined
@@ -130,12 +129,12 @@ export function EvaluationCard({
             className="flex items-center gap-4"
           />
           {hasCompletedVersion && (
-            <a
+            <Link
               href={`/docs/${documentId}/evals/${review.agentId}/versions`}
               className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
             >
               v{review.versions?.[0]?.version || "1"}
-            </a>
+            </Link>
           )}
         </div>
       </div>

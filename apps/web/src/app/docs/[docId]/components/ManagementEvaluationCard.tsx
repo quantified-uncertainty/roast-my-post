@@ -131,7 +131,6 @@ export function ManagementEvaluationCard({
               isDeleting={isDeleting}
               showRerun={isOwner}
               showDelete={isOwner}
-              showDetails={true}
               detailsText="View Results"
               detailsStyle="button"
               className="flex items-center gap-2"
