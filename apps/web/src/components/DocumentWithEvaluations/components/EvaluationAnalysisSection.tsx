@@ -14,12 +14,12 @@ import type { Document, Evaluation } from "@/shared/types/databaseTypes";
 
 interface EvaluationAnalysisSectionProps {
   document: Document;
-  selectedEvaluations: Evaluation[];
+  evaluations: Evaluation[];
 }
 
 export function EvaluationAnalysisSection({
   document,
-  selectedEvaluations,
+  evaluations,
 }: EvaluationAnalysisSectionProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -29,7 +29,7 @@ export function EvaluationAnalysisSection({
       <div className="flex gap-8">
         {/* Main content */}
         <div className="flex-1 space-y-8">
-          {selectedEvaluations.map((evaluation) => (
+          {evaluations.map((evaluation) => (
             <div
               key={evaluation.agentId}
               id={`eval-${evaluation.agentId}`}
@@ -144,7 +144,7 @@ export function EvaluationAnalysisSection({
                 On this page
               </h3>
               <ul className="space-y-3">
-                {selectedEvaluations.map((evaluation) => (
+                {evaluations.map((evaluation) => (
                   <li key={evaluation.agentId}>
                     <a
                       href={`#eval-${evaluation.agentId}`}

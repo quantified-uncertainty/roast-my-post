@@ -208,11 +208,6 @@ export function EvaluationView({
     [displayComments]
   );
 
-  // Get selected evaluations for the analysis section
-  const selectedEvaluationsForAnalysis = document.reviews.filter((r) =>
-    evaluationState.selectedAgentIds.has(r.agentId)
-  );
-
   // (Scroll behavior logic moved into useScrollHeaderBehavior hook)
 
   return (
@@ -334,7 +329,7 @@ export function EvaluationView({
           <div ref={evaluationsSectionRef}>
             <EvaluationAnalysisSection
               document={document}
-              selectedEvaluations={selectedEvaluationsForAnalysis}
+              evaluations={document.reviews}
             />
           </div>
         </div>
