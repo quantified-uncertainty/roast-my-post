@@ -52,7 +52,7 @@ export function DocumentContent({
           isFullWidth
             ? `max-w-none [&_pre]:!max-w-[calc(100vw-${LAYOUT.COMMENT_COLUMN_WIDTH}px-${LAYOUT.CONTENT_SIDE_PADDING}px)] [&_pre]:overflow-x-auto`
             : "mx-auto"
-        } rounded-lg px-4`}
+        } rounded-lg`}
       >
         <SlateEditor
           content={contentWithMetadataPrepend}
