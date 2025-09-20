@@ -10,14 +10,12 @@ import { DocumentActions } from "./DocumentActions";
 
 interface DocumentMetadataProps {
   document: Document;
-  showDetailedAnalysisLink?: boolean;
   isFullWidth?: boolean;
   onToggleFullWidth?: () => void;
 }
 
 export function DocumentMetadata({
   document,
-  showDetailedAnalysisLink = false,
   isFullWidth = false,
   onToggleFullWidth,
 }: DocumentMetadataProps) {
@@ -50,7 +48,6 @@ export function DocumentMetadata({
 
         <DocumentActions
           document={document}
-          showDetailedAnalysisLink={showDetailedAnalysisLink}
           isFullWidth={isFullWidth}
           onToggleFullWidth={onToggleFullWidth}
         />
