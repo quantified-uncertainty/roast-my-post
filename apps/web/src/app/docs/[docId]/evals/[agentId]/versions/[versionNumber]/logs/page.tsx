@@ -6,7 +6,7 @@ import { auth } from "@/infrastructure/auth/auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
-import { VersionPageHeader } from "@/components/VersionPageHeader";
+import { DocEvalPageHeader } from "@/components/DocEvalPageHeader";
 import { VersionTabs } from "@/components/VersionTabs";
 import { TaskDisplayClient } from "./TaskDisplayClient";
 import { CopyButton } from "@/components/CopyButton";
@@ -114,11 +114,14 @@ export default async function VersionLogsPage({ params }: PageProps) {
         
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
-          <VersionPageHeader 
+          <DocEvalPageHeader
             title={`${agentName} Evaluation (v${versionNum})`}
             layout="with-sidebar"
             docId={docId}
             agentId={agentId}
+            showRerunButton={true}
+            showReaderButton={false}
+            isOwner={isOwner}
           />
 
           {/* Tab Navigation */}
