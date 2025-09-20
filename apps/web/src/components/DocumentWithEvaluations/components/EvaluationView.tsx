@@ -236,7 +236,6 @@ export function EvaluationView({
           {/* Document metadata header - now part of scrollable content */}
           <DocumentMetadata
             document={document}
-            showDetailedAnalysisLink
             isFullWidth={isFullWidth}
             onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
           />
