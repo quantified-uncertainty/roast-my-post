@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
+
 import { GradeBadge } from "@/components/GradeBadge";
-import { StatusBadge } from "@/components/StatusBadge";
 import { StaleBadge } from "@/components/StaleBadge";
 import type { EvaluationStatus } from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface EvaluationHeaderProps {
   agentName: string;
+  agentId: string;
   grade?: number | null;
   isStale?: boolean;
   isRerunning?: boolean;
@@ -21,6 +24,7 @@ interface EvaluationHeaderProps {
  */
 export function EvaluationHeader({
   agentName,
+  agentId,
   grade,
   isStale = false,
   isRerunning = false,
@@ -36,11 +40,14 @@ export function EvaluationHeader({
       {showGrade && isComplete && hasGrade && !isRerunning && (
         <GradeBadge grade={grade} variant="grayscale" size="xs" />
       )}
-      <span className="text-sm font-semibold text-gray-700">{agentName}</span>
+      <Link
+        href={`/agents/${agentId}`}
+        className="text-sm font-semibold text-gray-600 underline hover:text-blue-900"
+      >
+        {agentName}
+      </Link>
       {isStale && isComplete && <StaleBadge size="sm" />}
-      {isRerunning && (
-        <StatusBadge status={evaluationStatus} showText={true} />
-      )}
+      {isRerunning && <StatusBadge status={evaluationStatus} showText={true} />}
       {children}
     </div>
   );

@@ -5,7 +5,7 @@ import { prisma } from "@/infrastructure/database/prisma";
 import { evaluationWithCurrentJob } from "@/infrastructure/database/prisma/evaluation-includes";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
-import { PageHeader } from "@/components/PageHeader";
+import { DocEvalPageHeader } from "@/components/DocEvalPageHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { JobSummary, TaskDisplay } from "@/components/job";
 import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
@@ -86,9 +86,14 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
             isOwner={isOwner}
           />
           <div className="flex-1 overflow-y-auto">
-            <PageHeader 
+            <DocEvalPageHeader
               title={`${agentName} Evaluation`}
+              docId={docId}
+              agentId={agentId}
               layout="with-sidebar"
+              showRerunButton={true}
+              showReaderButton={true}
+              isOwner={isOwner}
             />
             <EvaluationTabsWrapper docId={docId} agentId={agentId} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -124,9 +129,14 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
         
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
-          <PageHeader 
+          <DocEvalPageHeader
             title={`${agentName} Evaluation`}
+            docId={docId}
+            agentId={agentId}
             layout="with-sidebar"
+            showRerunButton={true}
+            showReaderButton={true}
+            isOwner={isOwner}
           />
 
           {/* Tab Navigation */}

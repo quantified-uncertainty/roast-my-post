@@ -1,25 +1,24 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
-
+import { cn } from "@/lib/utils";
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
-import type { Comment } from "@roast/ai";
-import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
+import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
+import type { Comment } from "@roast/ai";
 
 import { LAYOUT } from "../constants";
-import { cn } from "@/lib/utils";
 import { EvaluationViewProps } from "../types";
-import { CommentsColumn } from "./CommentsColumn";
 import { CommentModalOptimized } from "./CommentModalOptimized";
+import { CommentsColumn } from "./CommentsColumn";
 import { DocumentContent } from "./DocumentContent";
+import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
-import { DocumentMetadata } from "./DocumentMetadata";
 
 /**
  * Maps comment levels to appropriate highlight colors
@@ -185,33 +184,33 @@ export function EvaluationView({
     onEvaluationStateChange,
   ]);
 
-  const highlights = useMemo(
-    () =>
-      displayComments
-        .filter(
-          (
-            comment
-          ): comment is typeof comment & {
-            highlight: NonNullable<typeof comment.highlight>;
-          } =>
-            comment.highlight != null &&
-            comment.highlight.startOffset != null &&
-            comment.highlight.endOffset != null
-        )
-        .map((comment, index) => ({
-          startOffset: comment.highlight.startOffset!,
-          endOffset: comment.highlight.endOffset!,
-          quotedText: comment.highlight.quotedText || "",
-          tag: index.toString(),
-          color: getLevelHighlightColor(comment.level),
-        })),
-    [displayComments]
-  );
+  const highlights = useMemo(() => {
+    const highlightsList: Array<{
+      startOffset: number;
+      endOffset: number;
+      quotedText: string;
+      tag: string;
+      color: string;
+    }> = [];
 
-  // Get selected evaluations for the analysis section
-  const selectedEvaluationsForAnalysis = document.reviews.filter((r) =>
-    evaluationState.selectedAgentIds.has(r.agentId)
-  );
+    displayComments.forEach((comment, index) => {
+      if (
+        comment.highlight != null &&
+        comment.highlight.startOffset != null &&
+        comment.highlight.endOffset != null
+      ) {
+        highlightsList.push({
+          startOffset: comment.highlight.startOffset,
+          endOffset: comment.highlight.endOffset,
+          quotedText: comment.highlight.quotedText || "",
+          tag: comment.id || `temp-${index}`, // Match the ID used in aiCommentsMap
+          color: getLevelHighlightColor(comment.level),
+        });
+      }
+    });
+
+    return highlightsList;
+  }, [displayComments]);
 
   // (Scroll behavior logic moved into useScrollHeaderBehavior hook)
 
@@ -241,7 +240,6 @@ export function EvaluationView({
           {/* Document metadata header - now part of scrollable content */}
           <DocumentMetadata
             document={document}
-            showDetailedAnalysisLink
             isFullWidth={isFullWidth}
             onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
           />
@@ -276,10 +274,22 @@ export function EvaluationView({
                 });
               }}
               onHighlightClick={(commentId) => {
-                onEvaluationStateChange?.({
-                  ...evaluationState,
-                  expandedCommentId: commentId,
-                });
+                const commentData = aiCommentsMap.get(commentId);
+
+                if (commentData) {
+                  // Enter navigation mode (same as when clicking sidebar comment)
+                  isNavigationMode.current = true;
+
+                  // Open modal immediately for instant response
+                  onEvaluationStateChange?.({
+                    ...evaluationState,
+                    modalComment: {
+                      comment: commentData.comment,
+                      agentName: commentData.agentName,
+                      commentId: commentId,
+                    },
+                  });
+                }
               }}
               isFullWidth={isFullWidth}
               onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
@@ -334,7 +344,7 @@ export function EvaluationView({
           <div ref={evaluationsSectionRef}>
             <EvaluationAnalysisSection
               document={document}
-              selectedEvaluations={selectedEvaluationsForAnalysis}
+              evaluations={document.reviews}
             />
           </div>
         </div>

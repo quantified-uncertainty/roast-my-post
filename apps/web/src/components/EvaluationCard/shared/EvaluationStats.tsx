@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
+
 import type { EvaluationStatus } from "@/components/StatusBadge";
 
 interface EvaluationStatsProps {
@@ -46,7 +48,7 @@ export function EvaluationStats({
       <Link
         key="versions"
         href={`/docs/${docId}/evals/${agentId}/versions/${versionNumber || versionCount}`}
-        className="text-blue-600 hover:text-blue-800"
+        className="hover:text-blue-800"
       >
         {versionCount} version{versionCount !== 1 ? "s" : ""}
       </Link>
@@ -88,11 +90,10 @@ export function EvaluationStats({
 
   // Created time
   if (createdAt) {
-    const date = typeof createdAt === "string" ? new Date(createdAt) : createdAt;
+    const date =
+      typeof createdAt === "string" ? new Date(createdAt) : createdAt;
     stats.push(
-      <span key="time">
-        {formatDistanceToNow(date, { addSuffix: true })}
-      </span>
+      <span key="time">{formatDistanceToNow(date, { addSuffix: true })}</span>
     );
   }
 

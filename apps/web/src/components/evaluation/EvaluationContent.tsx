@@ -131,10 +131,6 @@ export function EvaluationContent({
           priceInDollars={priceInDollars}
           durationInSeconds={durationInSeconds}
           createdAt={createdAt}
-          evaluationData={isOwner ? evaluationData : undefined}
-          documentId={evaluationData?.documentId}
-          evaluationId={evaluationData?.evaluationId}
-          isOnEvalPage={isOnEvalPage}
         />
 
         {/* Analysis Section */}

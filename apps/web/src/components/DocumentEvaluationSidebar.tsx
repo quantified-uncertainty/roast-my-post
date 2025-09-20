@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 
-import { FileDown, Microscope } from "lucide-react";
+import { Bot, FileDown, ShieldUser } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { UI_LABELS } from "@/constants/ui-labels";
 import { getEvaluationGrade } from "@/shared/utils/type-guards";
 import {
-  BeakerIcon,
-  BookOpenIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentTextIcon,
@@ -58,7 +56,6 @@ export function DocumentEvaluationSidebar({
   const [isEvaluationsOpen, setIsEvaluationsOpen] = useState(true);
 
   const isDocumentPage = pathname === `/docs/${docId}`;
-  const isReaderPage = pathname === `/docs/${docId}/reader`;
   const isExportPage = pathname === `/docs/${docId}/export`;
 
   return (
@@ -66,7 +63,7 @@ export function DocumentEvaluationSidebar({
       <div className="p-6">
         {/* Eval Editor Header */}
         <div className="mb-6 ml-2 flex cursor-default select-none items-center gap-2 text-sm font-semibold text-gray-500">
-          <Microscope className="h-5 w-5 text-gray-400" />
+          <ShieldUser className="h-5 w-5 text-gray-400" />
           {UI_LABELS.EVAL_EDITOR.label.toUpperCase()}
         </div>
         {/* Document Link */}
@@ -80,19 +77,6 @@ export function DocumentEvaluationSidebar({
         >
           <DocumentTextIcon className="h-4 w-4" />
           Overview
-        </Link>
-
-        {/* Reader View Link */}
-        <Link
-          href={`/docs/${docId}/reader`}
-          className={`mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            isReaderPage
-              ? "bg-blue-50 text-gray-900"
-              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-          }`}
-        >
-          <BookOpenIcon className="h-4 w-4" />
-          Reader View
         </Link>
 
         {/* Export Link */}
@@ -115,8 +99,8 @@ export function DocumentEvaluationSidebar({
             className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100"
           >
             <span className="flex items-center gap-2">
-              <BeakerIcon className="h-4 w-4" />
-              Evaluations
+              <Bot className="h-4 w-4" />
+              AI Evaluations
             </span>
             {isEvaluationsOpen ? (
               <ChevronDownIcon className="h-4 w-4" />

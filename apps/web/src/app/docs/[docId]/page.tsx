@@ -2,9 +2,9 @@ import { formatDistanceToNow } from "date-fns";
 import { BookOpen } from "lucide-react";
 // @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { Metadata } from "next";
 
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
@@ -13,8 +13,8 @@ import SlateEditor from "@/components/SlateEditor";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
-import { DocumentModel } from "@/models/Document";
 import { generateDocumentMetadata } from "@/lib/document-metadata";
+import { DocumentModel } from "@/models/Document";
 
 import { EvaluationManagement } from "./components/EvaluationManagement";
 import { PrivacySection } from "./components/PrivacySection";
@@ -175,7 +175,7 @@ export default async function DocumentPage({
                       Submitter's Notes
                     </h3>
                     <div className="prose prose-sm prose-blue max-w-none">
-                      <p className="text-blue-800 whitespace-pre-wrap">
+                      <p className="whitespace-pre-wrap text-blue-800">
                         {document.submitterNotes}
                       </p>
                     </div>
@@ -183,7 +183,7 @@ export default async function DocumentPage({
                 )}
 
                 {/* Document Preview Card */}
-                <div className="flex flex-1 flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-1 flex-col">
                   <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-900">
                       Document Preview
@@ -207,7 +207,7 @@ export default async function DocumentPage({
                     </div>
                   </div>
 
-                  <div className="prose prose-gray max-w-none flex-1">
+                  <div className="prose prose-gray max-w-none flex-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                     {document.content ? (
                       <div className="leading-relaxed text-gray-700">
                         <SlateEditor

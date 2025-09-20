@@ -4,7 +4,7 @@
 
 export const UI_LABELS = {
   EVAL_EDITOR: {
-    label: "Eval Editor",
+    label: "Editor View",
     description: "Edit and manage evaluations for this document",
   },
 } as const;
