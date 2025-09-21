@@ -1,12 +1,10 @@
 "use client";
 
+import { ShieldUser } from "lucide-react";
 import Link from "next/link";
-import {
-  ArrowPathIcon,
-  CommandLineIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+
 import { Button } from "@/components/ui/button";
+import { ArrowPathIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface EvaluationActionsProps {
   documentId: string;
@@ -17,7 +15,6 @@ interface EvaluationActionsProps {
   isDeleting?: boolean;
   showRerun?: boolean;
   showDelete?: boolean;
-  showDetails?: boolean;
   detailsText?: string;
   detailsStyle?: "link" | "button";
   className?: string;
@@ -35,8 +32,7 @@ export function EvaluationActions({
   isDeleting = false,
   showRerun = false,
   showDelete = false,
-  showDetails = true,
-  detailsText = "Details",
+  detailsText = "Editor View",
   detailsStyle = "link",
   className = "flex items-center gap-2",
 }: EvaluationActionsProps) {
@@ -69,35 +65,34 @@ export function EvaluationActions({
           {isDeleting ? "Deleting..." : "Delete"}
         </Button>
       )}
-      {showDetails &&
-        (detailsStyle === "button" ? (
-          <Button asChild size="xs">
-            <Link href={`/docs/${documentId}/evals/${agentId}`}>
-              <svg
-                className="h-3.5 w-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
-              {detailsText}
-            </Link>
-          </Button>
-        ) : (
-          <Link
-            href={`/docs/${documentId}/evals/${agentId}`}
-            className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
-          >
-            <CommandLineIcon className="mr-1 h-4 w-4" />
+      {detailsStyle === "button" ? (
+        <Button asChild size="xs">
+          <Link href={`/docs/${documentId}/evals/${agentId}`}>
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
             {detailsText}
           </Link>
-        ))}
+        </Button>
+      ) : (
+        <Link
+          href={`/docs/${documentId}/evals/${agentId}`}
+          className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
+        >
+          <ShieldUser className="mr-1 h-3 w-3" />
+          {detailsText}
+        </Link>
+      )}
     </div>
   );
 }

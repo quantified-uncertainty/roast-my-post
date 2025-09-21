@@ -1,7 +1,6 @@
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
 import { EvaluationTabs } from "./EvaluationTabs";
-import { RerunButtonClient } from "./RerunButtonClient";
 import { JobStatusIndicator } from "./JobStatusIndicator";
 import type { JobStatus } from "@roast/db";
 
@@ -29,8 +28,7 @@ export async function EvaluationTabsWrapper({
         documentId: docId,
         agentId: agentId
       },
-      select: { 
-        id: true,
+      select: {
         jobs: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -41,9 +39,8 @@ export async function EvaluationTabsWrapper({
       }
     })
   ]);
-  
+
   const isOwner = session?.user?.id === document?.submittedById;
-  const hasExistingEvaluation = !!evaluation;
   const latestJobStatus = evaluation?.jobs?.[0]?.status as JobStatus | undefined;
 
   return (
@@ -59,12 +56,6 @@ export async function EvaluationTabsWrapper({
             {isOwner && latestJobStatus && latestJobStatus !== "COMPLETED" && (
               <JobStatusIndicator status={latestJobStatus} size="md" showLabel />
             )}
-            <RerunButtonClient 
-              agentId={agentId}
-              documentId={docId}
-              isOwner={isOwner}
-              hasExistingEvaluation={hasExistingEvaluation}
-            />
           </div>
         </div>
       </div>
