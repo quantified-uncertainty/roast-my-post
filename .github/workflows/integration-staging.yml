@@ -1,0 +1,69 @@
+name: Integration Tests on Staging
+
+on:
+  workflow_run:
+    workflows: ["Docker Build and Push (Staging)"]
+    types:
+      - completed
+
+jobs:
+  verify-staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Smoke Tests Against Staging
+        run: |
+          echo "Running smoke tests against staging.roastmypost.org..."
+          curl -s -o /dev/null -w "%{http_code}" https://staging.roastmypost.org | tee status.txt
+          if grep -q "200" status.txt; then
+            echo "✅ Staging site is up"
+          else
+            echo "❌ Staging site check failed"
+            exit 1
+          fi
+
+  integration-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    needs: verify-staging
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: roast_my_post_test
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: pnpm/action-setup@v4
+
+      - run: pnpm install --frozen-lockfile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Run Integration Tests
+        run: pnpm turbo run test:ci-integration --filter='@roast/web'
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+          NEXTAUTH_URL: https://staging.roastmypost.org
+          AUTH_SECRET: test-secret-for-ci-only
+
+      - name: Run Playwright Tests
+        run: cd apps/web && npx playwright test --workers=2
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+          NEXTAUTH_URL: https://staging.roastmypost.org
+          AUTH_SECRET: test-secret-for-ci-only
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
