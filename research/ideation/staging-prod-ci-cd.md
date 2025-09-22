@@ -63,3 +63,15 @@ This document captures the proposed workflow for how code moves from PR → Stag
 - Tests run against **Staging** (`integration-on-merge.yml`).  
 - After staging verification & manual approval → merge `main` → `prod`.  
 - Production environment deploys from `prod`.  
+
+
+---                                                                                                                               
+                                                                                                                                  
+## 7. 🔧 Development Plan for Safe Rollout                                                                                        
+                                                                                                                                  
+To develop this new pipeline without impacting production:                                                                        
+                                                                                                                                  
+1. **Work in a feature branch** (e.g. `feature/staging-pipeline`) until tested.                                                   
+2. **Create a `staging` branch** and a GitHub Environment `Staging` with separate secrets.                                        
+                
+                           

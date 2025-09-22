@@ -4,7 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      # - staging # Temporarily disabled to conserve resources. Re-enable when staging pipeline is ready.
   workflow_dispatch:
 
 env:
