@@ -144,7 +144,7 @@ jobs:
           
           # Download ArgoCD CLI
           echo "Downloading ArgoCD CLI..."
-          curl -sSL -o /usr/local/bin/argocd https://${{ env.ARGOCD_SERVER }}/download/argocd-linux-amd64 || {
+          curl -sSL -o /usr/local/bin/argocd https://${{ ARGOCD_SERVER }}/download/argocd-linux-amd64 || {
             echo "Failed to download ArgoCD CLI"
             exit 1
           }
@@ -153,19 +153,19 @@ jobs:
           # ArgoCD CLI uses ARGOCD_AUTH_TOKEN env var automatically, but needs --server flag
           echo "Updating image tags to sha-${{ github.sha }}..."
           /usr/local/bin/argocd app set ${ARGOCD_APP} \
-            --server ${{ env.ARGOCD_SERVER }} \
+            --server ${{ ARGOCD_SERVER }} \
             --helm-set image.tag=sha-${{ github.sha }} \
             --helm-set workerImage.tag=sha-${{ github.sha }}
           
           # Trigger sync (may fail if auto-sync already started)
           echo "Triggering application sync (optional - may already be syncing)..."
           /usr/local/bin/argocd app sync ${ARGOCD_APP} \
-            --server ${{ env.ARGOCD_SERVER }} || echo "Sync already in progress or not needed"
+            --server ${{ ARGOCD_SERVER }} || echo "Sync already in progress or not needed"
           
           # Wait for health only (not sync to avoid OutOfSync during rolling updates)
           echo "Waiting for deployment to become healthy (timeout: 5 minutes)..."
           /usr/local/bin/argocd app wait ${ARGOCD_APP} \
-            --server ${{ env.ARGOCD_SERVER }} \
+            --server ${{ ARGOCD_SERVER }} \
             --timeout 300 \
             --health
           
@@ -173,7 +173,7 @@ jobs:
           echo "Verifying correct image version is deployed..."
           EXPECTED_TAG="sha-${{ github.sha }}"
           DEPLOYED_IMAGES=$(/usr/local/bin/argocd app get ${ARGOCD_APP} \
-            --server ${{ env.ARGOCD_SERVER }} \
+            --server ${{ ARGOCD_SERVER }} \
             --refresh \
             --output json | jq -r '.status.summary.images[]')
           
@@ -193,7 +193,7 @@ jobs:
           # Get final status for the logs
           echo "Final status:"
           /usr/local/bin/argocd app get ${ARGOCD_APP} \
-            --server ${{ env.ARGOCD_SERVER }} \
+            --server ${{ ARGOCD_SERVER }} \
             --output json | \
             jq -r '"Sync: " + .status.sync.status + ", Health: " + .status.health.status'
 
