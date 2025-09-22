@@ -2,17 +2,18 @@ name: Docker Build and Push
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
     tags:
       - 'v*'
   pull_request:
-    branches: [main, staging]
+    branches: [main]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   ARGOCD_SERVER: argo.k8s.quantifieduncertainty.org
+  ARGOCD_APP: roast-my-post
 
 jobs:
   build-and-push:
@@ -129,22 +130,20 @@ jobs:
     name: Update ArgoCD Deployment
     needs: build-and-push  # This waits for both matrix builds to complete
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'staging')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 10
-    environment: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
-    env:
-      ARGOCD_APP: ${{ github.ref_name == 'main' && 'roast-my-post' || 'roast-my-post-staging' }}
     
     steps:
       - name: Update ArgoCD image tags
         env:
+          ARGOCD_SERVER: ${{ env.ARGOCD_SERVER }}
           ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         run: |
           set -e  # Exit on any error
           
           # Download ArgoCD CLI
           echo "Downloading ArgoCD CLI..."
-          curl -sSL -o /usr/local/bin/argocd https://${{ARGOCD_SERVER}}/download/argocd-linux-amd64 || {
+          curl -sSL -o /usr/local/bin/argocd https://${ARGOCD_SERVER}/download/argocd-linux-amd64 || {
             echo "Failed to download ArgoCD CLI"
             exit 1
           }
@@ -153,19 +152,19 @@ jobs:
           # ArgoCD CLI uses ARGOCD_AUTH_TOKEN env var automatically, but needs --server flag
           echo "Updating image tags to sha-${{ github.sha }}..."
           /usr/local/bin/argocd app set ${ARGOCD_APP} \
-            --server ${{ARGOCD_SERVER}} \
+            --server ${ARGOCD_SERVER} \
             --helm-set image.tag=sha-${{ github.sha }} \
             --helm-set workerImage.tag=sha-${{ github.sha }}
           
           # Trigger sync (may fail if auto-sync already started)
           echo "Triggering application sync (optional - may already be syncing)..."
           /usr/local/bin/argocd app sync ${ARGOCD_APP} \
-            --server ${{ARGOCD_SERVER}} || echo "Sync already in progress or not needed"
+            --server ${ARGOCD_SERVER} || echo "Sync already in progress or not needed"
           
           # Wait for health only (not sync to avoid OutOfSync during rolling updates)
           echo "Waiting for deployment to become healthy (timeout: 5 minutes)..."
           /usr/local/bin/argocd app wait ${ARGOCD_APP} \
-            --server ${{ARGOCD_SERVER}} \
+            --server ${ARGOCD_SERVER} \
             --timeout 300 \
             --health
           
@@ -173,7 +172,7 @@ jobs:
           echo "Verifying correct image version is deployed..."
           EXPECTED_TAG="sha-${{ github.sha }}"
           DEPLOYED_IMAGES=$(/usr/local/bin/argocd app get ${ARGOCD_APP} \
-            --server ${{ARGOCD_SERVER}} \
+            --server ${ARGOCD_SERVER} \
             --refresh \
             --output json | jq -r '.status.summary.images[]')
           
@@ -193,7 +192,7 @@ jobs:
           # Get final status for the logs
           echo "Final status:"
           /usr/local/bin/argocd app get ${ARGOCD_APP} \
-            --server ${{ARGOCD_SERVER}} \
+            --server ${ARGOCD_SERVER} \
             --output json | \
             jq -r '"Sync: " + .status.sync.status + ", Health: " + .status.health.status'
 
