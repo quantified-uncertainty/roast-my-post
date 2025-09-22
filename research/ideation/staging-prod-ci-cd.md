@@ -73,8 +73,5 @@ To develop this new pipeline without impacting production:
                                                                                                                                   
 1. **Work in a feature branch** (e.g. `feature/staging-pipeline`) until tested.                                                   
 2. **Create a `staging` branch** and a GitHub Environment `Staging` with separate secrets.                                        
-3. **Add new workflows** (`docker-staging.yml`, `integration-staging.yml`) that only target the `staging` branch/env.             
-4. **Leave existing production workflows untouched** (`docker.yml` on `main`) while testing staging pipeline.                     
-5. **Trial deployments** into staging and confirm Docker builds, ArgoCD sync, Vercel deploy, integration tests.                   
-6. **Add manual promotion workflow** to merge from staging → prod, gated with human approval.                                     
-7. **Flip production deploy source** to `prod` branch and point Vercel prod to `prod` only once staging is stable. 
+                
+                           
