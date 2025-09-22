@@ -2,18 +2,16 @@ name: Docker Build and Push
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
     tags:
       - 'v*'
   pull_request:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  ARGOCD_SERVER: argo.k8s.quantifieduncertainty.org
-  ARGOCD_APP: roast-my-post
 
 jobs:
   build-and-push:
@@ -130,13 +128,16 @@ jobs:
     name: Update ArgoCD Deployment
     needs: build-and-push  # This waits for both matrix builds to complete
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'staging')
     timeout-minutes: 10
+    environment: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
+    env:
+      ARGOCD_SERVER: argo.k8s.quantifieduncertainty.org
+      ARGOCD_APP: ${{ github.ref_name == 'main' && 'roast-my-post' || 'roast-my-post-staging' }}
     
     steps:
       - name: Update ArgoCD image tags
         env:
-          ARGOCD_SERVER: ${{ env.ARGOCD_SERVER }}
           ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         run: |
           set -e  # Exit on any error
