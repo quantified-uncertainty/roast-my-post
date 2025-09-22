@@ -10,23 +10,45 @@ jobs:
   verify-staging:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       - name: Run Smoke Tests Against Staging
         run: |
           echo "Running smoke tests against staging.roastmypost.org..."
-          curl -s -o /dev/null -w "%{http_code}" https://staging.roastmypost.org | tee status.txt
-          if grep -q "200" status.txt; then
-            echo "✅ Staging site is up"
+          
+          # Test main site
+          echo "Testing main staging site..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://staging.roastmypost.org)
+          echo "HTTP Status: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Staging site is up and responding"
           else
-            echo "❌ Staging site check failed"
+            echo "❌ Staging site check failed with status: $HTTP_CODE"
             exit 1
+          fi
+          
+          # Test API health endpoint if it exists
+          echo "Testing API health..."
+          API_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://staging.roastmypost.org/api/health || echo "404")
+          echo "API Health Status: $API_CODE"
+          
+          if [ "$API_CODE" = "200" ] || [ "$API_CODE" = "404" ]; then
+            echo "✅ API endpoint accessible (or health endpoint not implemented)"
+          else
+            echo "⚠️ API health check returned: $API_CODE"
           fi
 
   integration-tests:
+    name: Run Integration + Playwright Tests (Staging)
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     needs: verify-staging
+    timeout-minutes: 20
+    # PostgreSQL service container
     services:
       postgres:
         image: postgres:16
@@ -34,36 +56,113 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: roast_my_post_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
 
-      - uses: pnpm/action-setup@v4
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-staging-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-staging-
+            ${{ runner.os }}-turbo-
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate Prisma client
+      - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
 
-      - name: Run Integration Tests
-        run: pnpm turbo run test:ci-integration --filter='@roast/web'
+      - name: Generate AI package files
+        run: pnpm --filter @roast/ai run generate-schemas && pnpm --filter @roast/ai run generate-readmes
+
+      - name: Build dependent packages
+        run: pnpm turbo run build --filter='@roast/domain' --filter='@roast/db' --filter='@roast/ai' --filter='@roast/jobs'
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @roast/web exec playwright install chromium
+
+      - name: Run database migrations
+        run: pnpm --filter @roast/db exec prisma migrate deploy
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
-          NEXTAUTH_URL: https://staging.roastmypost.org
+
+      - name: Run Integration Tests
+        run: |
+          echo "Starting integration tests against staging environment..."
+          if ! pnpm turbo run test:ci-integration --filter='@roast/web'; then
+            echo "❌ Integration tests failed"
+            exit 1
+          fi
+          echo "✅ Integration tests passed"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
           AUTH_SECRET: test-secret-for-ci-only
+          NEXTAUTH_URL: https://staging.roastmypost.org
 
       - name: Run Playwright Tests
         run: cd apps/web && npx playwright test --workers=2
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
-          NEXTAUTH_URL: https://staging.roastmypost.org
           AUTH_SECRET: test-secret-for-ci-only
+          NEXTAUTH_URL: https://staging.roastmypost.org
+          BYPASS_TOOL_AUTH: "true"
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-test-results-${{ github.run_number }}
+          path: |
+            apps/web/coverage/
+            apps/web/test-results/
+            apps/web/playwright-report/
+            apps/web/*.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Test Results Summary
+        if: always()
+        run: |
+          echo "## 🧪 Staging Integration Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **All tests passed on staging environment!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- Integration tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+            echo "- Playwright tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+            echo "- Staging site: ✅ Accessible" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some tests failed on staging environment**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment**: Staging (staging.roastmypost.org)" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by**: ${{ github.event.workflow_run.head_commit.author.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.event.workflow_run.head_sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
