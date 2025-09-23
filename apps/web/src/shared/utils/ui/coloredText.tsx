@@ -1,9 +1,8 @@
 import React from "react";
+
 import {
-  shouldParseXmlReplacements,
   parseXmlReplacements,
-  hasLegacyColorMarkers,
-  parseLegacyColorMarkers
+  shouldParseXmlReplacements,
 } from "./coloredTextUtils";
 
 /**
@@ -57,11 +56,6 @@ export function parseColoredText(text: string): React.ReactNode {
 
       return parts.length === 1 ? parts[0] : <>{parts}</>;
     }
-  }
-
-  // Check for legacy color markers
-  if (!hasLegacyColorMarkers(text)) {
-    return text;
   }
 
   // Regular expression to match color markers and arrows
