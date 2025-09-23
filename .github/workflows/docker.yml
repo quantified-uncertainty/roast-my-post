@@ -65,6 +65,22 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-,format=long
 
+      - name: Determine cache settings
+        id: cache
+        shell: bash
+        run: |
+          set -e
+          SCOPE="shared-${{ matrix.name }}"
+          echo "Using cache scope: ${SCOPE}"
+          echo "from=type=gha,scope=${SCOPE}" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Pull request event: disabling cache export"
+            echo "to=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Non-PR event: enabling cache export"
+            echo "to=type=gha,mode=min,scope=${SCOPE}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build and push Docker image (${{ matrix.name }})
         uses: docker/build-push-action@v5
         with:
@@ -75,10 +91,8 @@ jobs:
           load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
-            type=gha,scope=${{ matrix.name }}
-            type=gha,scope=shared
-          cache-to: type=gha,mode=min,scope=${{ matrix.name }}
+          cache-from: ${{ steps.cache.outputs.from }}
+          cache-to: ${{ steps.cache.outputs.to }}
           build-args: |
             BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             VCS_REF=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
