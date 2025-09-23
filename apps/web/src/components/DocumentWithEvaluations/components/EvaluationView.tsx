@@ -184,27 +184,32 @@ export function EvaluationView({
     onEvaluationStateChange,
   ]);
 
+  // Filter comments with valid highlights once
+  const commentsWithHighlights = useMemo(
+    () =>
+      displayComments.filter(
+        (
+          comment
+        ): comment is typeof comment & {
+          highlight: NonNullable<typeof comment.highlight>;
+        } =>
+          comment.highlight != null &&
+          comment.highlight.startOffset != null &&
+          comment.highlight.endOffset != null
+      ),
+    [displayComments]
+  );
+
   const highlights = useMemo(
     () =>
-      displayComments
-        .filter(
-          (
-            comment
-          ): comment is typeof comment & {
-            highlight: NonNullable<typeof comment.highlight>;
-          } =>
-            comment.highlight != null &&
-            comment.highlight.startOffset != null &&
-            comment.highlight.endOffset != null
-        )
-        .map((comment, index) => ({
-          startOffset: comment.highlight.startOffset!,
-          endOffset: comment.highlight.endOffset!,
-          quotedText: comment.highlight.quotedText || "",
-          tag: index.toString(),
-          color: getLevelHighlightColor(comment.level),
-        })),
-    [displayComments]
+      commentsWithHighlights.map((comment, index) => ({
+        startOffset: comment.highlight.startOffset!,
+        endOffset: comment.highlight.endOffset!,
+        quotedText: comment.highlight.quotedText || "",
+        tag: index.toString(),
+        color: getLevelHighlightColor(comment.level),
+      })),
+    [commentsWithHighlights]
   );
 
   // (Scroll behavior logic moved into useScrollHeaderBehavior hook)
@@ -270,12 +275,13 @@ export function EvaluationView({
               }}
               onHighlightClick={(tagIndex) => {
                 // tagIndex is the index as a string (e.g., "0", "1", etc.)
-                // We need to find the actual comment ID from displayComments
                 const commentIndex = parseInt(tagIndex);
-                const comment = displayComments[commentIndex];
+                const comment = commentsWithHighlights[commentIndex];
 
                 if (comment) {
-                  const actualCommentId = comment.id || `temp-${commentIndex}`;
+                  // Find the original index to correctly construct a temporary ID if needed
+                  const originalIndex = displayComments.indexOf(comment);
+                  const actualCommentId = comment.id || `temp-${originalIndex}`;
                   const commentData = aiCommentsMap.get(actualCommentId);
 
                   if (commentData) {
