@@ -48,7 +48,7 @@ const outputSchema = z.object({
   errors: z.array(z.object({
     text: z.string().describe('The EXACT incorrect text from the input'),
     correction: z.string().describe('Suggested correction'),
-    displayCorrection: z.string().describe('XML markup for displaying correction (e.g., "<r:replace from=\"teh\" to=\"the\"/>\")' ),
+    displayCorrection: z.string().describe('XML markup for displaying correction using Unit Separator (0x1F) as delimiter: <r:replace from[US]text[US]to[US]correction[US]/>' ),
     type: z.enum(['spelling', 'grammar']).describe('Type of error'),
     context: z.string().optional().describe('Surrounding context (20-30 chars each side)'),
     importance: z.number().min(0).max(100).describe('Importance score (0-100)'),
@@ -248,7 +248,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "recieved",
       "correction": "received",
-      "displayCorrection": "<r:replace from=\"recieved\" to=\"received\"/>",
+      "displayCorrection": "<r:replace from\u001Frecieved\u001Fto\u001Freceived\u001F/>",
       "type": "spelling",
       "context": "I recieved teh package",
       "importance": 30,
@@ -260,7 +260,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "teh",
       "correction": "the",
-      "displayCorrection": "<r:replace from=\"teh\" to=\"the\"/>",
+      "displayCorrection": "<r:replace from\u001Fteh\u001Fto\u001Fthe\u001F/>",
       "type": "spelling",
       "context": "recieved teh package yesterday",
       "importance": 15,
@@ -276,7 +276,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "are",
       "correction": "is",
-      "displayCorrection": "<r:replace from=\"are\" to=\"is\"/>",
+      "displayCorrection": "<r:replace from\u001Fare\u001Fto\u001Fis\u001F/>",
       "type": "grammar",
       "context": "engineers are working on",
       "importance": 45,
@@ -292,7 +292,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "Its",
       "correction": "It's",
-      "displayCorrection": "<r:replace from=\"Its\" to=\"It's\"/>",
+      "displayCorrection": "<r:replace from\u001FIts\u001Fto\u001FIt's\u001F/>",
       "type": "grammar",
       "context": "Its a beautiful",
       "importance": 40,
@@ -304,7 +304,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "it's",
       "correction": "its",
-      "displayCorrection": "<r:replace from=\"it's\" to=\"its\"/>",
+      "displayCorrection": "<r:replace from\u001Fit's\u001Fto\u001Fits\u001F/>",
       "type": "grammar",
       "context": "cat licked it's paws",
       "importance": 40,
@@ -320,7 +320,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "data is",
       "correction": "data are",
-      "displayCorrection": "<r:replace from=\"data is\" to=\"data are\"/>",
+      "displayCorrection": "<r:replace from\u001Fdata is\u001Fto\u001Fdata are\u001F/>",
       "type": "grammar",
       "context": "The data is compelling",
       "importance": 25,
@@ -344,7 +344,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   For each error, provide:
   1. text: The EXACT error text from input
   2. correction: The corrected version
-  3. displayCorrection: XML markup for display (e.g., "<r:replace from=\"teh\" to=\"the\"/>")
+  3. displayCorrection: XML markup using Unit Separator (0x1F): <r:replace from[US]text[US]to[US]correction[US]/>
   4. type: "spelling" or "grammar"
   5. context: ~20-30 characters on each side of the error
   6. importance: Score from 0-100
@@ -420,7 +420,7 @@ ${textWithLineNumbers}
                 },
                 displayCorrection: { 
                   type: "string", 
-                  description: "XML markup for displaying correction (e.g., '<r:replace from=\"teh\" to=\"the\"/>')" 
+                  description: "XML markup using Unit Separator (0x1F) as delimiter: <r:replace from[US]text[US]to[US]correction[US]/>" 
                 },
                 type: {
                   type: "string",

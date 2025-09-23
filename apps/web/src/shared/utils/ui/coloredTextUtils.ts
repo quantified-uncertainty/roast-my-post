@@ -21,12 +21,8 @@ export function unescapeHtml(text: string): string {
  * Checks if text contains XML replacement markup (escaped or unescaped)
  */
 export function shouldParseXmlReplacements(text: string): boolean {
-  const US = '\x1F';
-  // Check for both escaped and unescaped versions, with either quotes or Unit Separator
-  return text.includes('<r:replace') ||
-         text.includes('&lt;r:replace') ||
-         text.includes(`from${US}`) ||
-         text.includes(`to${US}`);
+  // Simply check for the r:replace tag, escaped or not
+  return text.includes('<r:replace') || text.includes('&lt;r:replace');
 }
 
 /**
@@ -50,15 +46,27 @@ export interface XmlReplacement {
 }
 
 /**
+ * Unescapes XML entities (for backward compatibility with old format)
+ */
+function unescapeXml(str: string): string {
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
  * Parses XML replacement markup from text
- * Uses ASCII Unit Separator (0x1F) as delimiter to avoid quote escaping issues
+ * Supports both new Unit Separator format and legacy quote format for backward compatibility
  * Handles both escaped (&lt;r:replace) and unescaped (<r:replace) formats
  */
 export function parseXmlReplacements(text: string): XmlReplacement[] {
   const replacements: XmlReplacement[] = [];
   const US = '\x1F'; // ASCII Unit Separator
 
-  // Pattern 1: HTML-escaped XML with Unit Separator
+  // Pattern 1: HTML-escaped XML with Unit Separator (NEW FORMAT)
   const escapedUSPattern = new RegExp(
     `&lt;r:replace\\s+from${US}(.*?)${US}to${US}(.*?)${US}/&gt;`,
     'g'
@@ -76,7 +84,7 @@ export function parseXmlReplacements(text: string): XmlReplacement[] {
     });
   }
 
-  // Pattern 2: Unescaped XML with Unit Separator
+  // Pattern 2: Unescaped XML with Unit Separator (NEW FORMAT)
   const unescapedUSPattern = new RegExp(
     `<r:replace\\s+from${US}(.*?)${US}to${US}(.*?)${US}/>`,
     'g'
@@ -95,6 +103,50 @@ export function parseXmlReplacements(text: string): XmlReplacement[] {
         original: fullMatch,
         from: from, // No escaping needed with US delimiter
         to: to,
+        startIndex: match.index,
+        endIndex: match.index + fullMatch.length
+      });
+    }
+  }
+
+  // Pattern 3: Legacy HTML-escaped XML with quotes (BACKWARD COMPATIBILITY)
+  const escapedQuotePattern = /&lt;r:replace\s+from="(.*?)"\s+to="(.*?)"\/&gt;/g;
+
+  while ((match = escapedQuotePattern.exec(text)) !== null) {
+    const [fullMatch, from, to] = match;
+
+    // Check if this wasn't already found
+    const alreadyFound = replacements.some(r =>
+      r.startIndex <= match.index && match.index < r.endIndex
+    );
+
+    if (!alreadyFound) {
+      replacements.push({
+        original: fullMatch,
+        from: unescapeXml(from),
+        to: unescapeXml(to),
+        startIndex: match.index,
+        endIndex: match.index + fullMatch.length
+      });
+    }
+  }
+
+  // Pattern 4: Legacy unescaped XML with quotes (BACKWARD COMPATIBILITY)
+  const unescapedQuotePattern = /<r:replace\s+from="(.*?)"\s+to="(.*?)"\s*\/>/g;
+
+  while ((match = unescapedQuotePattern.exec(text)) !== null) {
+    const [fullMatch, from, to] = match;
+
+    // Check if this wasn't already found
+    const alreadyFound = replacements.some(r =>
+      r.startIndex <= match.index && match.index < r.endIndex
+    );
+
+    if (!alreadyFound) {
+      replacements.push({
+        original: fullMatch,
+        from: unescapeXml(from),
+        to: unescapeXml(to),
         startIndex: match.index,
         endIndex: match.index + fullMatch.length
       });
