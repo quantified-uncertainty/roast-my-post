@@ -5,7 +5,6 @@ import {
 } from "vitest";
 
 import {
-  parseLegacyColorMarkers,
   parseXmlReplacements,
   shouldParseXmlReplacements,
   unescapeHtml,
@@ -132,60 +131,6 @@ describe("coloredTextUtils", () => {
       expect(result[0].original).toBe('&lt;r:replace from="a" to="b"/&gt;');
       expect(result[1].from).toBe("c");
       expect(result[1].original).toBe('<r:replace from="c" to="d"/>');
-    });
-  });
-
-  describe("parseLegacyColorMarkers", () => {
-    it("should parse red color markers", () => {
-      const text = "[[red]]incorrect[[/red]]";
-      const result = parseLegacyColorMarkers(text);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        type: "colored",
-        color: "red",
-        content: "incorrect",
-        startIndex: 0,
-        endIndex: 24,
-      });
-    });
-
-    it("should parse green color markers", () => {
-      const text = "[[green]]correct[[/green]]";
-      const result = parseLegacyColorMarkers(text);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        type: "colored",
-        color: "green",
-        content: "correct",
-        startIndex: 0,
-        endIndex: 26,
-      });
-    });
-
-    it("should parse arrows", () => {
-      const text = "before → after";
-      const result = parseLegacyColorMarkers(text);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        type: "arrow",
-        startIndex: 7,
-        endIndex: 8,
-      });
-    });
-
-    it("should parse mixed markers", () => {
-      const text = "[[red]]old[[/red]] → [[green]]new[[/green]]";
-      const result = parseLegacyColorMarkers(text);
-
-      expect(result).toHaveLength(3);
-      expect(result[0].type).toBe("colored");
-      expect(result[0].color).toBe("red");
-      expect(result[1].type).toBe("arrow");
-      expect(result[2].type).toBe("colored");
-      expect(result[2].color).toBe("green");
     });
   });
 });
