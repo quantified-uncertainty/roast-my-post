@@ -131,9 +131,14 @@ export function buildTitle(fact: VerifiedFact): string {
       const correctionMatch = conciseCorrection.match(/^(.+?)\s*→\s*(.+)$/);
       if (correctionMatch) {
         const [, wrongValue, correctValue] = correctionMatch;
-        // Generate XML format with Unit Separator
-        const US = '\x1F';
-        header = `<r:replace from${US}${wrongValue.trim()}${US}to${US}${correctValue.trim()}${US}/>`;
+        // Generate XML format with proper escaping
+        const escapeXml = (str: string) => str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&apos;');
+        header = `<r:replace from="${escapeXml(wrongValue.trim())}" to="${escapeXml(correctValue.trim())}"/>`;
       } else {
         // Fallback for non-arrow corrections
         header = conciseCorrection;

@@ -16,9 +16,15 @@ export function generateSpellingComment(error: SpellingGrammarError): string {
   const emoji = isSpelling ? '✏️' : '📝';
   const pluginLabel = isSpelling ? 'Spelling' : 'Grammar';
 
-  // Use ASCII Unit Separator (0x1F) as delimiter to avoid quote escaping issues
-  const US = '\x1F';
-  const diff = `<r:replace from${US}${error.text}${US}to${US}${error.correction}${US}/>`;
+  // Escape XML special characters properly
+  const escapeXml = (str: string) => str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+  const diff = `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction)}"/>`;
 
   // Use importance score to determine severity
   const severity = importanceToSeverity(error.importance);

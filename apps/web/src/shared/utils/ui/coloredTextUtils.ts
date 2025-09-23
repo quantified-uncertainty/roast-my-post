@@ -59,59 +59,16 @@ function unescapeXml(str: string): string {
 
 /**
  * Parses XML replacement markup from text
- * Supports both new Unit Separator format and legacy quote format for backward compatibility
  * Handles both escaped (&lt;r:replace) and unescaped (<r:replace) formats
+ * Properly unescapes XML entities in the content
  */
 export function parseXmlReplacements(text: string): XmlReplacement[] {
   const replacements: XmlReplacement[] = [];
-  const US = '\x1F'; // ASCII Unit Separator
 
-  // Pattern 1: HTML-escaped XML with Unit Separator (NEW FORMAT)
-  const escapedUSPattern = new RegExp(
-    `&lt;r:replace\\s+from${US}(.*?)${US}to${US}(.*?)${US}/&gt;`,
-    'g'
-  );
-
-  let match;
-  while ((match = escapedUSPattern.exec(text)) !== null) {
-    const [fullMatch, from, to] = match;
-    replacements.push({
-      original: fullMatch,
-      from: from, // No escaping needed with US delimiter
-      to: to,
-      startIndex: match.index,
-      endIndex: match.index + fullMatch.length
-    });
-  }
-
-  // Pattern 2: Unescaped XML with Unit Separator (NEW FORMAT)
-  const unescapedUSPattern = new RegExp(
-    `<r:replace\\s+from${US}(.*?)${US}to${US}(.*?)${US}/>`,
-    'g'
-  );
-
-  while ((match = unescapedUSPattern.exec(text)) !== null) {
-    const [fullMatch, from, to] = match;
-
-    // Check if this wasn't already found
-    const alreadyFound = replacements.some(r =>
-      r.startIndex <= match.index && match.index < r.endIndex
-    );
-
-    if (!alreadyFound) {
-      replacements.push({
-        original: fullMatch,
-        from: from, // No escaping needed with US delimiter
-        to: to,
-        startIndex: match.index,
-        endIndex: match.index + fullMatch.length
-      });
-    }
-  }
-
-  // Pattern 3: Legacy HTML-escaped XML with quotes (BACKWARD COMPATIBILITY)
+  // Pattern 1: HTML-escaped XML with quotes
   const escapedQuotePattern = /&lt;r:replace\s+from="(.*?)"\s+to="(.*?)"\/&gt;/g;
 
+  let match;
   while ((match = escapedQuotePattern.exec(text)) !== null) {
     const [fullMatch, from, to] = match;
 

@@ -329,9 +329,14 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
         if (error.displayCorrection) {
           return error.displayCorrection;
         }
-        // Fallback to generating from text/correction using Unit Separator
-        const US = '\x1F';
-        return `<r:replace from${US}${error.text}${US}to${US}${error.correction || '[suggestion needed]'}${US}/>`;
+        // Fallback to generating from text/correction with proper escaping
+        const escapeXml = (str: string) => str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&apos;');
+        return `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction || '[suggestion needed]')}"/>`;
       })(),
       level: error.type === "grammar" ? "warning" : "error",
       // Minimal description - required by CommentBuilder but not shown when header exists
