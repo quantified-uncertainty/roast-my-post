@@ -1,4 +1,5 @@
 import type { VerifiedFact } from '../VerifiedFact';
+import { escapeXml } from '../../../../shared/utils/xml';
 import { LIMITS, THRESHOLDS } from '../constants';
 
 /**
@@ -132,12 +133,6 @@ export function buildTitle(fact: VerifiedFact): string {
       if (correctionMatch) {
         const [, wrongValue, correctValue] = correctionMatch;
         // Generate XML format with proper escaping
-        const escapeXml = (str: string) => str
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&apos;');
         header = `<r:replace from="${escapeXml(wrongValue.trim())}" to="${escapeXml(correctValue.trim())}"/>`;
       } else {
         // Fallback for non-arrow corrections

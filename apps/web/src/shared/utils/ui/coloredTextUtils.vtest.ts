@@ -59,9 +59,8 @@ describe('coloredTextUtils', () => {
   });
 
   describe('parseXmlReplacements', () => {
-    it('should parse XML with Unit Separator delimiters', () => {
-      const US = '\x1F';
-      const text = `<r:replace from${US}incorrect${US}to${US}correct${US}/>`;
+    it('should parse unescaped XML replacements', () => {
+      const text = '<r:replace from="incorrect" to="correct"/>';
       const result = parseXmlReplacements(text);
 
       expect(result).toHaveLength(1);
@@ -69,9 +68,8 @@ describe('coloredTextUtils', () => {
       expect(result[0].to).toBe('correct');
     });
 
-    it('should parse escaped XML with Unit Separator delimiters', () => {
-      const US = '\x1F';
-      const text = `&lt;r:replace from${US}text with "quotes"${US}to${US}fixed text${US}/&gt;`;
+    it('should parse escaped XML replacements', () => {
+      const text = '&lt;r:replace from="text with &quot;quotes&quot;" to="fixed text"/&gt;';
       const result = parseXmlReplacements(text);
 
       expect(result).toHaveLength(1);
@@ -79,9 +77,8 @@ describe('coloredTextUtils', () => {
       expect(result[0].to).toBe('fixed text');
     });
 
-    it('should handle apostrophes without escaping', () => {
-      const US = '\x1F';
-      const text = `<r:replace from${US}it's${US}to${US}its${US}/>`;
+    it('should handle apostrophes with XML escaping', () => {
+      const text = '<r:replace from="it&apos;s" to="its"/>';
       const result = parseXmlReplacements(text);
 
       expect(result).toHaveLength(1);
@@ -89,9 +86,8 @@ describe('coloredTextUtils', () => {
       expect(result[0].to).toBe('its');
     });
 
-    it('should handle quotes without escaping', () => {
-      const US = '\x1F';
-      const text = `<r:replace from${US}say "hello"${US}to${US}say "hi"${US}/>`;
+    it('should handle quotes with XML escaping', () => {
+      const text = '<r:replace from="say &quot;hello&quot;" to="say &quot;hi&quot;"/>';
       const result = parseXmlReplacements(text);
 
       expect(result).toHaveLength(1);
@@ -100,8 +96,7 @@ describe('coloredTextUtils', () => {
     });
 
     it('should handle complex real-world example', () => {
-      const US = '\x1F';
-      const text = `✏️ [Spelling] &lt;r:replace from${US}shut it all down.'''${US}to${US}shut it all down.'${US}/&gt;`;
+      const text = '✏️ [Spelling] &lt;r:replace from="shut it all down.&apos;&apos;&apos;" to="shut it all down.&apos;"/&gt;';
       const result = parseXmlReplacements(text);
 
       expect(result).toHaveLength(1);
@@ -111,8 +106,7 @@ describe('coloredTextUtils', () => {
     });
 
     it('should handle multiple replacements', () => {
-      const US = '\x1F';
-      const text = `First <r:replace from${US}a${US}to${US}b${US}/> and <r:replace from${US}c${US}to${US}d${US}/> end`;
+      const text = 'First <r:replace from="a" to="b"/> and <r:replace from="c" to="d"/> end';
       const result = parseXmlReplacements(text);
 
       expect(result).toHaveLength(2);
@@ -123,15 +117,14 @@ describe('coloredTextUtils', () => {
     });
 
     it('should handle mixed escaped and unescaped', () => {
-      const US = '\x1F';
-      const text = `First &lt;r:replace from${US}a${US}to${US}b${US}/&gt; then <r:replace from${US}c${US}to${US}d${US}/>`;
+      const text = 'First &lt;r:replace from="a" to="b"/&gt; then <r:replace from="c" to="d"/>';
       const result = parseXmlReplacements(text);
 
       expect(result).toHaveLength(2);
       expect(result[0].from).toBe('a');
-      expect(result[0].original).toBe(`&lt;r:replace from${US}a${US}to${US}b${US}/&gt;`);
+      expect(result[0].original).toBe('&lt;r:replace from="a" to="b"/&gt;');
       expect(result[1].from).toBe('c');
-      expect(result[1].original).toBe(`<r:replace from${US}c${US}to${US}d${US}/>`);
+      expect(result[1].original).toBe('<r:replace from="c" to="d"/>');
     });
   });
 

@@ -1,5 +1,6 @@
 import type { SpellingGrammarError } from "./index";
 import { styleHeader, CommentSeverity, formatDiff, formatConciseCorrection, SEVERITY_STYLES, importanceToSeverity } from "./comment-styles";
+import { escapeXml } from "../../shared/utils/xml";
 
 /**
  * Generate a comment for a single spelling/grammar error
@@ -16,14 +17,7 @@ export function generateSpellingComment(error: SpellingGrammarError): string {
   const emoji = isSpelling ? '✏️' : '📝';
   const pluginLabel = isSpelling ? 'Spelling' : 'Grammar';
 
-  // Escape XML special characters properly
-  const escapeXml = (str: string) => str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-
+  // Generate the diff with properly escaped XML
   const diff = `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction)}"/>`;
 
   // Use importance score to determine severity

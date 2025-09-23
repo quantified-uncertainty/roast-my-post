@@ -4,6 +4,7 @@ import type {
   LanguageConventionOption,
   ToolChainResult,
 } from "../../../shared/types";
+import { escapeXml } from "../../../shared/utils/xml";
 import type {
   SpellingGrammarError,
 } from "../../../tools/check-spelling-grammar";
@@ -330,12 +331,6 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
           return error.displayCorrection;
         }
         // Fallback to generating from text/correction with proper escaping
-        const escapeXml = (str: string) => str
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&apos;');
         return `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction || '[suggestion needed]')}"/>`;
       })(),
       level: error.type === "grammar" ? "warning" : "error",
