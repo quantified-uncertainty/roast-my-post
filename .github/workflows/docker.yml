@@ -4,20 +4,20 @@ on:
   push:
     branches:
       - main
-      - staging
+      - prod
     tags:
       - 'v*'
   pull_request:
     branches:
       - main
-      - staging
+      - prod
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   ARGOCD_SERVER: argo.k8s.quantifieduncertainty.org
-  ARGOCD_APP: ${{ github.ref_name == 'staging' && 'roast-my-post-staging' || 'roast-my-post' }}
+  ARGOCD_APP: ${{ github.ref_name == 'main' && 'roast-my-post-staging' || 'roast-my-post' }}
 
 jobs:
   build-and-push:
@@ -134,7 +134,7 @@ jobs:
     name: Update ArgoCD Deployment
     needs: build-and-push  # This waits for both matrix builds to complete
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/main')
     timeout-minutes: 10
     
     steps:

@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-      - staging
+      - prod
   pull_request:
     branches:
       - main
-      - staging
+      - prod
   workflow_dispatch:
 
 env:

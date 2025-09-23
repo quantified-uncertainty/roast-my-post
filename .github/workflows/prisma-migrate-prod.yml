@@ -3,7 +3,7 @@ name: Prisma Migrate Production DB
 on:
   push:
     branches:
-      - main
+      - prod
     paths:
       - 'internal-packages/db/prisma/schema.prisma'
       - 'internal-packages/db/prisma/migrations/**'

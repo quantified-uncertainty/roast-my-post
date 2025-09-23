@@ -2,7 +2,7 @@ name: Integration Tests on Merge
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main, prod]
 
 jobs:
   run-integration-tests:
