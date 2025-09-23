@@ -17,7 +17,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   ARGOCD_SERVER: argo.k8s.quantifieduncertainty.org
-  ARGOCD_APP: ${{ github.ref_name == 'staging' && 'roast-my-post-staging' || 'roast-my-post' }}
+  ARGOCD_APP: ${{ github.ref_name == 'staging' ? 'roast-my-post-staging' : 'roast-my-post' }}
 
 jobs:
   build-and-push:
