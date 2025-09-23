@@ -1,22 +1,18 @@
 import React from "react";
-
-/**
- * Unescape XML entities
- */
-function unescapeXml(str: string): string {
-  return str
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-}
+import {
+  unescapeXml,
+  shouldParseXmlReplacements,
+  parseXmlReplacements,
+  hasLegacyColorMarkers,
+  parseLegacyColorMarkers
+} from "./coloredTextUtils";
 
 /**
  * Parse XML markup format like <r:replace from="x" to="y"/>
  */
 function parseXmlMarkup(text: string): React.ReactNode {
   // Match <r:replace from="..." to="..."/>
+  // This pattern matches any character except unescaped quotes inside the attribute values
   const replaceMatch = text.match(/<r:replace\s+from="([^"]*)"\s+to="([^"]*)"\s*\/>/);
   if (replaceMatch) {
     const [, from, to] = replaceMatch;
@@ -79,15 +75,58 @@ function parseXmlMarkup(text: string): React.ReactNode {
 /**
  * Parses text with color markers and XML markup, returns React elements with appropriate styling
  * Supports both legacy [[red]]text[[/red]] format and new <r:replace from="x" to="y"/> format
+ * Handles both HTML-escaped and unescaped XML
  */
 export function parseColoredText(text: string): React.ReactNode {
-  // Check if this is XML format
-  if (text.startsWith("<r:")) {
-    return parseXmlMarkup(text);
+  // Check if this contains XML replacement format (escaped or unescaped)
+  if (shouldParseXmlReplacements(text)) {
+    const replacements = parseXmlReplacements(text);
+
+    if (replacements.length > 0) {
+      const parts: React.ReactNode[] = [];
+      let lastIndex = 0;
+      let key = 0;
+
+      for (const replacement of replacements) {
+        // Add text before the replacement
+        if (replacement.startIndex > lastIndex) {
+          parts.push(text.substring(lastIndex, replacement.startIndex));
+        }
+
+        // Add the replacement with styling
+        parts.push(
+          <React.Fragment key={`xml-${key++}`}>
+            <span
+              className="text-gray-500"
+              style={{
+                textDecoration: "line-through",
+                textDecorationColor: "currentColor",
+                textDecorationThickness: "2px",
+              }}
+            >
+              {replacement.from}
+            </span>
+            <span className="text-gray-400"> → </span>
+            <span className="font-semibold text-gray-900">
+              {replacement.to}
+            </span>
+          </React.Fragment>
+        );
+
+        lastIndex = replacement.endIndex;
+      }
+
+      // Add any remaining text after the last replacement
+      if (lastIndex < text.length) {
+        parts.push(text.substring(lastIndex));
+      }
+
+      return parts.length === 1 ? parts[0] : <>{parts}</>;
+    }
   }
-  
-  // If no color markers or arrows, return plain text
-  if (!text.includes("[[") && !text.includes("→")) {
+
+  // Check for legacy color markers
+  if (!hasLegacyColorMarkers(text)) {
     return text;
   }
 
