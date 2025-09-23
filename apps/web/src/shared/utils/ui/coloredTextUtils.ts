@@ -16,17 +16,6 @@ export function unescapeHtml(text: string): string {
     .replace(/&amp;/g, '&');
 }
 
-/**
- * Unescapes XML entities (subset of HTML entities)
- */
-export function unescapeXml(str: string): string {
-  return str
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-}
 
 /**
  * Checks if text contains XML replacement markup (escaped or unescaped)

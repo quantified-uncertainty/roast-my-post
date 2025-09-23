@@ -4,7 +4,6 @@ import type {
   LanguageConventionOption,
   ToolChainResult,
 } from "../../../shared/types";
-import { escapeXml } from "../../../shared/utils/xml";
 import type {
   SpellingGrammarError,
 } from "../../../tools/check-spelling-grammar";
@@ -330,8 +329,9 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
         if (error.displayCorrection) {
           return error.displayCorrection;
         }
-        // Fallback to generating from text/correction
-        return `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction || '[suggestion needed]')}"/>`;
+        // Fallback to generating from text/correction using Unit Separator
+        const US = '\x1F';
+        return `<r:replace from${US}${error.text}${US}to${US}${error.correction || '[suggestion needed]'}${US}/>`;
       })(),
       level: error.type === "grammar" ? "warning" : "error",
       // Minimal description - required by CommentBuilder but not shown when header exists

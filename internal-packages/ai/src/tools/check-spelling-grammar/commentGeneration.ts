@@ -1,6 +1,5 @@
 import type { SpellingGrammarError } from "./index";
 import { styleHeader, CommentSeverity, formatDiff, formatConciseCorrection, SEVERITY_STYLES, importanceToSeverity } from "./comment-styles";
-import { escapeXml } from "../../shared/utils/xml";
 
 /**
  * Generate a comment for a single spelling/grammar error

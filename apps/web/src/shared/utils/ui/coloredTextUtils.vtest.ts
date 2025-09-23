@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   unescapeHtml,
-  unescapeXml,
   shouldParseXmlReplacements,
   hasLegacyColorMarkers,
   parseXmlReplacements,
@@ -26,21 +25,6 @@ describe('coloredTextUtils', () => {
 
     it('should handle text without entities', () => {
       expect(unescapeHtml('plain text')).toBe('plain text');
-    });
-  });
-
-  describe('unescapeXml', () => {
-    it('should unescape XML entities', () => {
-      expect(unescapeXml('&lt;tag&gt;')).toBe('<tag>');
-      expect(unescapeXml('&quot;quote&quot;')).toBe('"quote"');
-      expect(unescapeXml('&apos;apostrophe&apos;')).toBe("'apostrophe'");
-      expect(unescapeXml('&amp;')).toBe('&');
-    });
-
-    it('should not unescape HTML-specific entities', () => {
-      // unescapeXml doesn't handle &#39; or &#x27;
-      expect(unescapeXml('&#39;test&#39;')).toBe('&#39;test&#39;');
-      expect(unescapeXml('&#x27;test&#x27;')).toBe('&#x27;test&#x27;');
     });
   });
 
