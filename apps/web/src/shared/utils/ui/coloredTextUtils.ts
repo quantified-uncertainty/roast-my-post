@@ -47,39 +47,29 @@ export interface XmlReplacement {
 export function parseXmlReplacements(text: string): XmlReplacement[] {
   const replacements: XmlReplacement[] = [];
 
-  // Pattern 1: HTML-escaped XML with quotes
-  const escapedQuotePattern =
-    /&lt;r:replace\s+from="(.*?)"\s+to="(.*?)"\/&gt;/g;
+  // Pattern 1: HTML-escaped XML (when stored in HTML or database)
+  const escapedPattern = /&lt;r:replace\s+from="(.*?)"\s+to="(.*?)"\/&gt;/g;
 
   let match: RegExpExecArray | null;
-  while ((match = escapedQuotePattern.exec(text)) !== null) {
+  while ((match = escapedPattern.exec(text)) !== null) {
     const [fullMatch, from, to] = match;
-    const matchIndex = match.index;
-
-    // Check if this wasn't already found
-    const alreadyFound = replacements.some(
-      (r) => r.startIndex <= matchIndex && matchIndex < r.endIndex
-    );
-
-    if (!alreadyFound) {
-      replacements.push({
-        original: fullMatch,
-        from: unescapeXml(from),
-        to: unescapeXml(to),
-        startIndex: matchIndex,
-        endIndex: matchIndex + fullMatch.length,
-      });
-    }
+    replacements.push({
+      original: fullMatch,
+      from: unescapeXml(from),
+      to: unescapeXml(to),
+      startIndex: match.index,
+      endIndex: match.index + fullMatch.length,
+    });
   }
 
-  // Pattern 4: Legacy unescaped XML with quotes (BACKWARD COMPATIBILITY)
-  const unescapedQuotePattern = /<r:replace\s+from="(.*?)"\s+to="(.*?)"\s*\/>/g;
+  // Pattern 2: Unescaped XML (when in raw text)
+  const unescapedPattern = /<r:replace\s+from="(.*?)"\s+to="(.*?)"\s*\/>/g;
 
-  while ((match = unescapedQuotePattern.exec(text)) !== null) {
+  while ((match = unescapedPattern.exec(text)) !== null) {
     const [fullMatch, from, to] = match;
     const matchIndex = match.index;
 
-    // Check if this wasn't already found
+    // Check if this wasn't already found by the escaped pattern
     const alreadyFound = replacements.some(
       (r) => r.startIndex <= matchIndex && matchIndex < r.endIndex
     );
