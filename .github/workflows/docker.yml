@@ -6,7 +6,7 @@ on:
       - main
       - prod
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches:
       - main
@@ -65,6 +65,22 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-,format=long
 
+      - name: Determine cache settings
+        id: cache
+        shell: bash
+        run: |
+          set -e
+          SCOPE="shared-${{ matrix.name }}"
+          echo "Using cache scope: ${SCOPE}"
+          echo "from=type=gha,scope=${SCOPE}" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Pull request event: disabling cache export"
+            echo "to=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Non-PR event: enabling cache export"
+            echo "to=type=gha,mode=min,scope=${SCOPE}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build and push Docker image (${{ matrix.name }})
         uses: docker/build-push-action@v5
         with:
@@ -75,26 +91,23 @@ jobs:
           load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
-            type=gha,scope=${{ matrix.name }}
-            type=gha,scope=shared
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          cache-from: ${{ steps.cache.outputs.from }}
+          cache-to: ${{ steps.cache.outputs.to }}
           build-args: |
             BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             VCS_REF=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
-
 
       - name: Test Docker image - Basic functionality
         if: github.event_name == 'pull_request'
         run: |
           echo "Testing basic Docker image functionality..."
           docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} node -e "console.log('Basic Node.js test passed')"
-          
+
       - name: Test Docker image - Package availability
         if: github.event_name == 'pull_request'
         run: |
           echo "Testing package availability for ${{ matrix.name }} image..."
-          
+
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
             # Worker image - verify pnpm and Node.js
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} sh -c "
@@ -106,12 +119,12 @@ jobs:
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
               node -e "console.log('✓ Node.js available');"
           fi
-          
+
       - name: Test Docker image - Runtime validation
         if: github.event_name == 'pull_request'
         run: |
           echo "Running runtime validation for ${{ matrix.name }} image..."
-          
+
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
             # Worker image - verify process-jobs-adaptive command is available
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
@@ -121,7 +134,7 @@ jobs:
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} \
               node -e "console.log('✓ Runtime validation passed');"
           fi
-            
+
       - name: Test Worker-specific functionality
         if: github.event_name == 'pull_request' && matrix.suffix == '-worker'
         run: |
@@ -132,11 +145,11 @@ jobs:
 
   update-argocd:
     name: Update ArgoCD Deployment
-    needs: build-and-push  # This waits for both matrix builds to complete
+    needs: build-and-push # This waits for both matrix builds to complete
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/main')
     timeout-minutes: 10
-    
+
     steps:
       - name: Update ArgoCD image tags
         env:
@@ -144,7 +157,7 @@ jobs:
           ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
         run: |
           set -e  # Exit on any error
-          
+
           # Download ArgoCD CLI
           echo "Downloading ArgoCD CLI..."
           curl -sSL -o /usr/local/bin/argocd https://${ARGOCD_SERVER}/download/argocd-linux-amd64 || {
@@ -152,26 +165,26 @@ jobs:
             exit 1
           }
           chmod +x /usr/local/bin/argocd
-          
+
           # ArgoCD CLI uses ARGOCD_AUTH_TOKEN env var automatically, but needs --server flag
           echo "Updating image tags to sha-${{ github.sha }}..."
           /usr/local/bin/argocd app set ${ARGOCD_APP} \
             --server ${ARGOCD_SERVER} \
             --helm-set image.tag=sha-${{ github.sha }} \
             --helm-set workerImage.tag=sha-${{ github.sha }}
-          
+
           # Trigger sync (may fail if auto-sync already started)
           echo "Triggering application sync (optional - may already be syncing)..."
           /usr/local/bin/argocd app sync ${ARGOCD_APP} \
             --server ${ARGOCD_SERVER} || echo "Sync already in progress or not needed"
-          
+
           # Wait for health only (not sync to avoid OutOfSync during rolling updates)
           echo "Waiting for deployment to become healthy (timeout: 5 minutes)..."
           /usr/local/bin/argocd app wait ${ARGOCD_APP} \
             --server ${ARGOCD_SERVER} \
             --timeout 300 \
             --health
-          
+
           # Verify the correct SHA is actually deployed
           echo "Verifying correct image version is deployed..."
           EXPECTED_TAG="sha-${{ github.sha }}"
@@ -179,11 +192,11 @@ jobs:
             --server ${ARGOCD_SERVER} \
             --refresh \
             --output json | jq -r '.status.summary.images[]')
-          
+
           echo "Expected tag: ${EXPECTED_TAG}"
           echo "Deployed images:"
           echo "${DEPLOYED_IMAGES}"
-          
+
           # Check both web and worker images contain our SHA
           if echo "${DEPLOYED_IMAGES}" | grep -q "${EXPECTED_TAG}"; then
             echo "✅ Deployment successful! Correct version is running."
@@ -192,7 +205,7 @@ jobs:
             echo "Expected ${EXPECTED_TAG} but it's not in the deployed images"
             exit 1
           fi
-          
+
           # Get final status for the logs
           echo "Final status:"
           /usr/local/bin/argocd app get ${ARGOCD_APP} \
@@ -216,7 +229,7 @@ jobs:
         include:
           - suffix: ""
             name: "main"
-          - suffix: "-worker" 
+          - suffix: "-worker"
             name: "worker"
 
     steps:
@@ -224,10 +237,10 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:${{ github.ref_name }}
-          format: 'sarif'
-          output: 'trivy-results-${{ matrix.name }}.sarif'
+          format: "sarif"
+          output: "trivy-results-${{ matrix.name }}.sarif"
 
       - name: Upload Trivy scan results to GitHub Security tab (${{ matrix.name }})
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results-${{ matrix.name }}.sarif'
+          sarif_file: "trivy-results-${{ matrix.name }}.sarif"

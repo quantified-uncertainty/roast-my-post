@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Tool } from '../base/Tool';
 import { ToolContext } from '../base/Tool';
 import { generateForecastWithAggregation } from './generator';
+import { escapeXml } from '../../shared/utils/xml';
 
 // Define types explicitly to avoid inference issues with defaults
 export interface ForecasterInput {
@@ -94,7 +95,7 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
           // Format probabilities with % sign
           const fromProb = `${input.authorProbability}%`;
           const toProb = `${result.forecast.probability}%`;
-          displayCorrection = `<r:replace from="${fromProb}" to="${toProb}"/>`;
+          displayCorrection = `<r:replace from="${escapeXml(fromProb)}" to="${escapeXml(toProb)}"/>`;
         }
       }
       

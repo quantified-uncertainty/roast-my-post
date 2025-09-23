@@ -292,7 +292,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "Its",
       "correction": "It's",
-      "displayCorrection": "<r:replace from=\"Its\" to=\"It's\"/>",
+      "displayCorrection": "<r:replace from=\"Its\" to=\"It&apos;s\"/>",
       "type": "grammar",
       "context": "Its a beautiful",
       "importance": 40,
@@ -304,7 +304,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     {
       "text": "it's",
       "correction": "its",
-      "displayCorrection": "<r:replace from=\"it's\" to=\"its\"/>",
+      "displayCorrection": "<r:replace from=\"it&apos;s\" to=\"its\"/>",
       "type": "grammar",
       "context": "cat licked it's paws",
       "importance": 40,

@@ -132,7 +132,7 @@ export function buildTitle(fact: VerifiedFact): string {
       const correctionMatch = conciseCorrection.match(/^(.+?)\s*→\s*(.+)$/);
       if (correctionMatch) {
         const [, wrongValue, correctValue] = correctionMatch;
-        // Generate XML format
+        // Generate XML format with proper escaping
         header = `<r:replace from="${escapeXml(wrongValue.trim())}" to="${escapeXml(correctValue.trim())}"/>`;
       } else {
         // Fallback for non-arrow corrections

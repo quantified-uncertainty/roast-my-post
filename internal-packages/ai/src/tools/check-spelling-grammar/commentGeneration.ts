@@ -11,33 +11,31 @@ export function generateSpellingComment(error: SpellingGrammarError): string {
     const style = SEVERITY_STYLES[CommentSeverity.HIGH];
     return `⚠️ [Error] <span style="color: ${style.color}">Invalid spelling/grammar data</span>`;
   }
-  
+
   // Determine type and emoji
   const isSpelling = error.type === 'spelling';
   const emoji = isSpelling ? '✏️' : '📝';
   const pluginLabel = isSpelling ? 'Spelling' : 'Grammar';
-  
-  // Format the diff - prioritize displayCorrection if available
-  const diff = error.displayCorrection 
-    ? error.displayCorrection
-    : `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction)}"/>`;
-  
+
+  // Generate the diff with properly escaped XML
+  const diff = `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction)}"/>`;
+
   // Use importance score to determine severity
   const severity = importanceToSeverity(error.importance);
   const style = SEVERITY_STYLES[severity];
-  
+
   // Build the comment
-  let comment = `${emoji} [${pluginLabel}] <span style="color: ${style.color}">${diff}</span>`;
+  let comment = `${emoji} [${pluginLabel}] ${diff}`;
   
   // Add confidence indicator for low-confidence errors
   if (error.confidence && error.confidence < 70) {
     const confidenceEmoji = error.confidence < 50 ? '❓' : '❔';
-    comment += ` ${confidenceEmoji} <span style="opacity: 0.7">(${error.confidence}% confident)</span>`;
+    comment += ` ${confidenceEmoji} (${error.confidence}% confident)`;
   }
-  
+
   // Add description if available (for complex cases)
   if (error.description && error.description.trim()) {
-    comment += `<br><span style="opacity: 0.8; font-size: 0.9em">${error.description}</span>`;
+    comment += ` - ${error.description}`;
   }
   
   return comment;

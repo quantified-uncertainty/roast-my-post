@@ -323,6 +323,16 @@ Please ensure:
 - Type checking passes (`pnpm run typecheck`)
 - Code is linted (`pnpm run lint`)
 
+### Development Workflow
+
+- Branch from `main` for any new work.
+- Open a pull request (PR) to `main`:
+  - CI runs build and tests on the PR.
+- Merge to `main`:
+  - Builds and deploys to staging at https://staging.roastmypost.org.
+- Merge to `prod`:
+  - Builds and deploys to production at https://roastmypost.org.
+
 ## Security
 
 - Authentication required for all data-modifying operations

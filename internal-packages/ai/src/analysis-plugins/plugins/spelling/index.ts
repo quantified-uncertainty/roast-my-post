@@ -330,7 +330,7 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
         if (error.displayCorrection) {
           return error.displayCorrection;
         }
-        // Fallback to generating from text/correction
+        // Fallback to generating from text/correction with proper escaping
         return `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction || '[suggestion needed]')}"/>`;
       })(),
       level: error.type === "grammar" ? "warning" : "error",
