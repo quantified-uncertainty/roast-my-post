@@ -3,6 +3,7 @@ import { CheckMathHybridInput, CheckMathHybridOutput } from './types';
 import { inputSchema, outputSchema } from './schemas';
 import { checkMathWithMathJsTool } from '../check-math-with-mathjs';
 import { checkMathTool } from '../check-math';
+import { escapeXml } from '../../shared/utils/xml';
 
 export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHybridOutput> {
   config = {
@@ -53,14 +54,6 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
       // Extract display correction from either tool
       let displayCorrection: string | undefined;
       if (mathJsResult.status === 'verified_false' && mathJsResult.errorDetails?.actualValue && mathJsResult.errorDetails?.expectedValue) {
-        // Escape XML special characters
-        const escapeXml = (str: string) => str.replace(/[<>&"']/g, (c) => ({
-          '<': '&lt;',
-          '>': '&gt;',
-          '&': '&amp;',
-          '"': '&quot;',
-          "'": '&apos;'
-        })[c] || c);
         displayCorrection = `<r:replace from="${escapeXml(mathJsResult.errorDetails.actualValue)}" to="${escapeXml(mathJsResult.errorDetails.expectedValue)}"/>`;
       } else if (llmResult?.errorDetails?.displayCorrection) {
         displayCorrection = llmResult.errorDetails.displayCorrection;
