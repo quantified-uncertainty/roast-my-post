@@ -114,7 +114,8 @@ export {
 
 // Shared utilities
 export * from './shared/logger';
-export type { 
+export * from './shared/utils/xml';
+export type {
   Comment,
   CommentMetadata,
   ToolChainResult,

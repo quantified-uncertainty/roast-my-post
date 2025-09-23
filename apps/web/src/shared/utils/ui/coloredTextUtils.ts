@@ -2,6 +2,8 @@
  * Utility functions for parsing colored text and XML replacements
  */
 
+import { unescapeXml } from '@roast/ai';
+
 /**
  * Unescapes common HTML entities
  */
@@ -43,18 +45,6 @@ export interface XmlReplacement {
   startIndex: number;
   /** Ending index in the original text */
   endIndex: number;
-}
-
-/**
- * Unescapes XML entities (for backward compatibility with old format)
- */
-function unescapeXml(str: string): string {
-  return str
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
 }
 
 /**
