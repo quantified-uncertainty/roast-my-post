@@ -184,33 +184,28 @@ export function EvaluationView({
     onEvaluationStateChange,
   ]);
 
-  const highlights = useMemo(() => {
-    const highlightsList: Array<{
-      startOffset: number;
-      endOffset: number;
-      quotedText: string;
-      tag: string;
-      color: string;
-    }> = [];
-
-    displayComments.forEach((comment, index) => {
-      if (
-        comment.highlight != null &&
-        comment.highlight.startOffset != null &&
-        comment.highlight.endOffset != null
-      ) {
-        highlightsList.push({
-          startOffset: comment.highlight.startOffset,
-          endOffset: comment.highlight.endOffset,
+  const highlights = useMemo(
+    () =>
+      displayComments
+        .filter(
+          (
+            comment
+          ): comment is typeof comment & {
+            highlight: NonNullable<typeof comment.highlight>;
+          } =>
+            comment.highlight != null &&
+            comment.highlight.startOffset != null &&
+            comment.highlight.endOffset != null
+        )
+        .map((comment, index) => ({
+          startOffset: comment.highlight.startOffset!,
+          endOffset: comment.highlight.endOffset!,
           quotedText: comment.highlight.quotedText || "",
-          tag: comment.id || `temp-${index}`, // Match the ID used in aiCommentsMap
+          tag: index.toString(),
           color: getLevelHighlightColor(comment.level),
-        });
-      }
-    });
-
-    return highlightsList;
-  }, [displayComments]);
+        })),
+    [displayComments]
+  );
 
   // (Scroll behavior logic moved into useScrollHeaderBehavior hook)
 
@@ -273,22 +268,30 @@ export function EvaluationView({
                   hoveredCommentId: commentId,
                 });
               }}
-              onHighlightClick={(commentId) => {
-                const commentData = aiCommentsMap.get(commentId);
+              onHighlightClick={(tagIndex) => {
+                // tagIndex is the index as a string (e.g., "0", "1", etc.)
+                // We need to find the actual comment ID from displayComments
+                const commentIndex = parseInt(tagIndex);
+                const comment = displayComments[commentIndex];
 
-                if (commentData) {
-                  // Enter navigation mode (same as when clicking sidebar comment)
-                  isNavigationMode.current = true;
+                if (comment) {
+                  const actualCommentId = comment.id || `temp-${commentIndex}`;
+                  const commentData = aiCommentsMap.get(actualCommentId);
 
-                  // Open modal immediately for instant response
-                  onEvaluationStateChange?.({
-                    ...evaluationState,
-                    modalComment: {
-                      comment: commentData.comment,
-                      agentName: commentData.agentName,
-                      commentId: commentId,
-                    },
-                  });
+                  if (commentData) {
+                    // Enter navigation mode (same as when clicking sidebar comment)
+                    isNavigationMode.current = true;
+
+                    // Open modal immediately for instant response
+                    onEvaluationStateChange?.({
+                      ...evaluationState,
+                      modalComment: {
+                        comment: commentData.comment,
+                        agentName: commentData.agentName,
+                        commentId: actualCommentId,
+                      },
+                    });
+                  }
                 }
               }}
               isFullWidth={isFullWidth}
