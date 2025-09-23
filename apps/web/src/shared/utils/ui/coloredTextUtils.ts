@@ -68,13 +68,14 @@ export function parseXmlReplacements(text: string): XmlReplacement[] {
   // Pattern 1: HTML-escaped XML with quotes
   const escapedQuotePattern = /&lt;r:replace\s+from="(.*?)"\s+to="(.*?)"\/&gt;/g;
 
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = escapedQuotePattern.exec(text)) !== null) {
     const [fullMatch, from, to] = match;
+    const matchIndex = match.index;
 
     // Check if this wasn't already found
     const alreadyFound = replacements.some(r =>
-      r.startIndex <= match.index && match.index < r.endIndex
+      r.startIndex <= matchIndex && matchIndex < r.endIndex
     );
 
     if (!alreadyFound) {
@@ -82,8 +83,8 @@ export function parseXmlReplacements(text: string): XmlReplacement[] {
         original: fullMatch,
         from: unescapeXml(from),
         to: unescapeXml(to),
-        startIndex: match.index,
-        endIndex: match.index + fullMatch.length
+        startIndex: matchIndex,
+        endIndex: matchIndex + fullMatch.length
       });
     }
   }
@@ -93,10 +94,11 @@ export function parseXmlReplacements(text: string): XmlReplacement[] {
 
   while ((match = unescapedQuotePattern.exec(text)) !== null) {
     const [fullMatch, from, to] = match;
+    const matchIndex = match.index;
 
     // Check if this wasn't already found
     const alreadyFound = replacements.some(r =>
-      r.startIndex <= match.index && match.index < r.endIndex
+      r.startIndex <= matchIndex && matchIndex < r.endIndex
     );
 
     if (!alreadyFound) {
@@ -104,8 +106,8 @@ export function parseXmlReplacements(text: string): XmlReplacement[] {
         original: fullMatch,
         from: unescapeXml(from),
         to: unescapeXml(to),
-        startIndex: match.index,
-        endIndex: match.index + fullMatch.length
+        startIndex: matchIndex,
+        endIndex: matchIndex + fullMatch.length
       });
     }
   }
