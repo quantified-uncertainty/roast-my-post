@@ -5,12 +5,14 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { 
-  InformationCircleIcon, 
+import {
+  InformationCircleIcon,
   ExclamationTriangleIcon,
   XCircleIcon,
-  CheckCircleIcon 
+  CheckCircleIcon,
+  XMarkIcon
 } from "@heroicons/react/24/outline";
+import { parseColoredText } from "@/shared/utils/ui/coloredText";
 
 // Database comment type (different from the documentSchema Comment type)
 type DatabaseComment = {
@@ -40,20 +42,36 @@ interface EvaluationCommentsProps {
   documentContent?: string;
 }
 
-function getIconForLevel(level?: string | null) {
+function getLevelIndicator(level?: string | null) {
+  let bgColor = "bg-blue-400";
+  let content: React.ReactNode;
+
   switch (level) {
-    case 'error':
-      return XCircleIcon;
-    case 'warning':
-      return ExclamationTriangleIcon;
-    case 'success':
-      return CheckCircleIcon;
-    case 'debug':
-      return InformationCircleIcon; // Keep it subtle for debug
-    case 'info':
+    case "error":
+      bgColor = "bg-red-500";
+      content = <XMarkIcon className="h-3.5 w-3.5 text-white" />;
+      break;
+    case "warning":
+      bgColor = "bg-amber-500";
+      content = <span className="text-white font-bold text-xs leading-none">!</span>;
+      break;
+    case "success":
+      bgColor = "bg-green-500";
+      content = <CheckCircleIcon className="h-3.5 w-3.5 text-white" />;
+      break;
+    case "info":
+    case "debug":
     default:
-      return InformationCircleIcon;
+      bgColor = "bg-blue-500";
+      content = <span className="text-white font-bold text-xs leading-none">i</span>;
+      break;
   }
+
+  return (
+    <div className={`h-5 w-5 rounded-sm ${bgColor} flex flex-shrink-0 items-center justify-center`}>
+      {content}
+    </div>
+  );
 }
 
 export function EvaluationComments({
@@ -82,15 +100,12 @@ export function EvaluationComments({
           <div className="mb-4 flex items-center justify-between">
             <h3
               id={`comment-${index + 1}`}
-              className={`scroll-mt-4 text-lg font-semibold ${
-                comment.level === 'error' ? 'text-red-600' :
-                comment.level === 'warning' ? 'text-orange-600' :
-                comment.level === 'success' ? 'text-green-600' :
-                comment.level === 'debug' ? 'text-amber-600' :
-                'text-gray-800'
-              }`}
+              className="scroll-mt-4 flex items-center gap-2 text-lg font-semibold text-gray-900"
             >
-              {comment.header ? comment.header : `Comment ${index + 1}`}
+              {getLevelIndicator(comment.level)}
+              <span>
+                {comment.header ? parseColoredText(comment.header) : `Comment ${index + 1}`}
+              </span>
             </h3>
 
             {/* Info button */}
@@ -102,15 +117,7 @@ export function EvaluationComments({
                   className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
                   aria-label="Show comment details"
                 >
-{(() => {
-                    const IconComponent = getIconForLevel(comment.level);
-                    const iconColor = comment.level === 'error' ? 'text-red-500' :
-                                      comment.level === 'warning' ? 'text-orange-500' :
-                                      comment.level === 'success' ? 'text-green-500' :
-                                      comment.level === 'debug' ? 'text-amber-500' :
-                                      'text-gray-400';
-                    return <IconComponent className={`h-5 w-5 ${iconColor}`} />;
-                  })()}
+                  <InformationCircleIcon className="h-5 w-5 text-gray-400" />
                 </button>
 
                 {/* Tooltip with highlight details */}

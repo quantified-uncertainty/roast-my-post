@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { Loader2, Plus } from "lucide-react";
+import { Bot, Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
 import type { Evaluation } from "@/shared/types/databaseTypes";
 import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
-import { BeakerIcon } from "@heroicons/react/24/outline";
 
 import { ManagementEvaluationCard } from "./ManagementEvaluationCard";
 
@@ -158,7 +157,7 @@ export function EvaluationManagement({
                 >
                   <div className="flex flex-1 items-start gap-3">
                     <div className="p-1.5">
-                      <BeakerIcon className="h-4 w-4 text-gray-500" />
+                      <Bot className="h-4 w-4 text-gray-500" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
