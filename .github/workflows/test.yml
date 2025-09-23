@@ -2,9 +2,13 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - staging
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - staging
   workflow_dispatch:
 
 env:
@@ -136,7 +140,7 @@ jobs:
           # Always use test:ci-nocov since coverage is handled by sharded tests
           pnpm --filter @roast/web run test:ci-nocov
 
-  # Integration tests (3-4 minutes) - parallel with other jobs  
+  # Integration tests (3-4 minutes) - parallel with other jobs
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
@@ -320,7 +324,7 @@ jobs:
           echo "Integration Tests: ${{ needs.integration-tests.result }}"
           echo "Build: ${{ needs.build.result }}"
           echo "Docker Test: ${{ needs.docker-test.result }}"
-          
+
           # Check for failures or cancellations (skipped is OK)
           if [[ "${{ needs.unit-tests.result }}" == "failure" || "${{ needs.unit-tests.result }}" == "cancelled" || \
                 "${{ needs.integration-tests.result }}" == "failure" || "${{ needs.integration-tests.result }}" == "cancelled" || \
