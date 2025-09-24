@@ -19,6 +19,7 @@ import { DocumentContent } from "./DocumentContent";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+import { LocalCommentsUIProvider } from "../context/LocalCommentsUIContext";
 
 /**
  * Maps comment levels to appropriate highlight colors
@@ -261,92 +262,79 @@ export function EvaluationView({
               isFullWidth ? "px-5" : "justify-center"
             )}
           >
-            {/* Main content area */}
-            <DocumentContent
-              document={document}
-              contentWithMetadataPrepend={contentWithMetadataPrepend}
-              highlights={highlights}
-              hoveredCommentId={evaluationState.hoveredCommentId}
-              onHighlightHover={(commentId) => {
-                onEvaluationStateChange?.({
-                  ...evaluationState,
-                  hoveredCommentId: commentId,
-                });
-              }}
-              onHighlightClick={(tagIndex) => {
-                // tagIndex is the index as a string (e.g., "0", "1", etc.)
-                const commentIndex = parseInt(tagIndex);
-                const comment = commentsWithHighlights[commentIndex];
+            <LocalCommentsUIProvider>
+              {/* Main content area */}
+              <DocumentContent
+                document={document}
+                contentWithMetadataPrepend={contentWithMetadataPrepend}
+                highlights={highlights}
+                onHighlightClick={(tagIndex) => {
+                  // tagIndex is the index as a string (e.g., "0", "1", etc.)
+                  const commentIndex = parseInt(tagIndex);
+                  const comment = commentsWithHighlights[commentIndex];
 
-                if (comment) {
-                  // Find the original index to correctly construct a temporary ID if needed
-                  const originalIndex = displayComments.indexOf(comment);
-                  const actualCommentId = comment.id || `temp-${originalIndex}`;
-                  const commentData = aiCommentsMap.get(actualCommentId);
+                  if (comment) {
+                    // Find the original index to correctly construct a temporary ID if needed
+                    const originalIndex = displayComments.indexOf(comment);
+                    const actualCommentId =
+                      comment.id || `temp-${originalIndex}`;
+                    const commentData = aiCommentsMap.get(actualCommentId);
 
-                  if (commentData) {
-                    // Enter navigation mode (same as when clicking sidebar comment)
-                    isNavigationMode.current = true;
+                    if (commentData) {
+                      // Enter navigation mode (same as when clicking sidebar comment)
+                      isNavigationMode.current = true;
 
-                    // Open modal immediately for instant response
-                    onEvaluationStateChange?.({
-                      ...evaluationState,
-                      modalComment: {
-                        comment: commentData.comment,
-                        agentName: commentData.agentName,
-                        commentId: actualCommentId,
-                      },
-                    });
-                  }
-                }
-              }}
-              isFullWidth={isFullWidth}
-              onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
-              contentRef={contentRef}
-            />
-            {/* Comments column with filters and positioned comments */}
-            <div
-              style={{
-                width: `${LAYOUT.COMMENT_COLUMN_WIDTH}px`,
-                flexShrink: 0,
-                marginLeft: "2rem",
-              }}
-            >
-              <CommentsColumn
-                comments={displayComments}
-                contentRef={contentRef}
-                selectedCommentId={evaluationState.expandedCommentId}
-                hoveredCommentId={evaluationState.hoveredCommentId}
-                onCommentHover={(commentId) =>
-                  onEvaluationStateChange?.({
-                    ...evaluationState,
-                    hoveredCommentId: commentId,
-                  })
-                }
-                onCommentClick={(commentIndex, comment) => {
-                  const actualCommentId = comment.id || `temp-${commentIndex}`;
-                  const commentData = aiCommentsMap.get(actualCommentId);
-
-                  if (commentData) {
-                    // Enter navigation mode
-                    isNavigationMode.current = true;
-
-                    // Open modal immediately for instant response
-                    onEvaluationStateChange?.({
-                      ...evaluationState,
-                      modalComment: {
-                        comment: commentData.comment,
-                        agentName: commentData.agentName,
-                        commentId: actualCommentId,
-                      },
-                    });
+                      // Open modal immediately for instant response
+                      onEvaluationStateChange?.({
+                        ...evaluationState,
+                        modalComment: {
+                          comment: commentData.comment,
+                          agentName: commentData.agentName,
+                          commentId: actualCommentId,
+                        },
+                      });
+                    }
                   }
                 }}
-                evaluationState={evaluationState}
-                onEvaluationStateChange={onEvaluationStateChange}
-                showDebugComments={localShowDebugComments}
+                isFullWidth={isFullWidth}
+                contentRef={contentRef}
               />
-            </div>
+              {/* Comments column with filters and positioned comments */}
+              <div
+                style={{
+                  width: `${LAYOUT.COMMENT_COLUMN_WIDTH}px`,
+                  flexShrink: 0,
+                  marginLeft: "2rem",
+                }}
+              >
+                <CommentsColumn
+                  comments={displayComments}
+                  contentRef={contentRef}
+                  selectedCommentId={evaluationState.expandedCommentId}
+                  onCommentClick={(commentIndex, comment) => {
+                    const actualCommentId =
+                      comment.id || `temp-${commentIndex}`;
+                    const commentData = aiCommentsMap.get(actualCommentId);
+
+                    if (commentData) {
+                      // Enter navigation mode
+                      isNavigationMode.current = true;
+
+                      // Open modal immediately for instant response
+                      onEvaluationStateChange?.({
+                        ...evaluationState,
+                        modalComment: {
+                          comment: commentData.comment,
+                          agentName: commentData.agentName,
+                          commentId: actualCommentId,
+                        },
+                      });
+                    }
+                  }}
+                  showDebugComments={localShowDebugComments}
+                />
+              </div>
+            </LocalCommentsUIProvider>
           </div>
 
           {/* Evaluation Analysis Section */}

@@ -12,19 +12,9 @@ import Image from "next/image";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { remarkToSlate } from "remark-slate-transformer";
-import {
-  createEditor,
-  Descendant,
-  Element,
-  Node,
-  Text,
-} from "slate";
+import { createEditor, Descendant, Element, Node, Text } from "slate";
 import { withHistory } from "slate-history";
-import {
-  Editable,
-  Slate,
-  withReact,
-} from "slate-react";
+import { Editable, Slate, withReact } from "slate-react";
 import { unified } from "unified";
 
 import {
@@ -661,7 +651,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             startOffset: highlight?.startOffset,
             endOffset: highlight?.endOffset,
             tag: highlight?.tag,
-          });*/  
+          });*/
           continue; // Skip invalid highlights
         }
 
