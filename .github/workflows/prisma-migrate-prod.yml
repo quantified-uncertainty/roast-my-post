@@ -1,9 +1,10 @@
-name: Prisma Migrate Production DB
+name: Prisma Migrate Database
 
 on:
   push:
     branches:
       - prod
+      - main
     paths:
       - 'internal-packages/db/prisma/schema.prisma'
       - 'internal-packages/db/prisma/migrations/**'
@@ -12,6 +13,7 @@ on:
 jobs:
   backup:
     name: Backup Database
+    environment: ${{ github.ref_name == 'prod' && 'Production' || 'Staging' }}
     uses: ./.github/workflows/database-backup.yml
     with:
       backup_prefix: 'pre-migration'
@@ -21,7 +23,7 @@ jobs:
     name: Deploy Database Migrations
     needs: backup  # Only run after successful backup
     runs-on: ubuntu-latest
-    environment: Production
+    environment: ${{ github.ref_name == 'prod' && 'Production' || 'Staging' }}
     
     steps:
       - name: Checkout code
