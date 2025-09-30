@@ -1,12 +1,12 @@
-import { SystemAgentDefinition } from '../types';
-import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types';
+import { SystemAgentDefinition, PluginType } from "../types";
 
 export const forecastCheckerAgent: SystemAgentDefinition = {
-  id: 'system-forecast-checker',
-  name: 'Forecast Checker',
-  description: 'Analyzes predictions and forecasts for methodological soundness and logical consistency',
+  id: "system-forecast-checker",
+  name: "Forecast Checker",
+  description: "Makes forecasts on binary questions in the document.",
   providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.FORECAST],
+  isRecommended: true,
   readme: `# Forecast Checker
 
 An agent that evaluates predictions, forecasts, and future-oriented claims for methodological soundness, evidence quality, and logical consistency. Assesses both quantitative and qualitative forecasting approaches.
@@ -36,5 +36,5 @@ The agent analyzes forecasting content by:
 - **Overconfidence**: Unrealistic precision or certainty
 - **Poor calibration**: Misaligned confidence and accuracy
 - **Insufficient evidence**: Predictions without adequate support
-- **Methodology flaws**: Inappropriate forecasting techniques`
+- **Methodology flaws**: Inappropriate forecasting techniques`,
 };

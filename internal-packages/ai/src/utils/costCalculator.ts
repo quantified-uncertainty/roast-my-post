@@ -39,7 +39,7 @@ export type ModelName = keyof typeof OPENROUTER_PRICING;
 export function mapModelToCostModel(model: string): ModelName {
   const mapping: Record<string, ModelName> = {
     // Anthropic models
-    "claude-sonnet-4-20250514": "anthropic/claude-sonnet-4",
+    "claude-sonnet-4-5": "anthropic/claude-sonnet-4",
     "claude-sonnet-4": "anthropic/claude-sonnet-4",
     "anthropic/claude-sonnet-4": "anthropic/claude-sonnet-4",
 
@@ -50,7 +50,7 @@ export function mapModelToCostModel(model: string): ModelName {
     // Google models
     "gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
     "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
-    
+
     // Legacy Claude models
     "claude-3.7-sonnet-20241029": "anthropic/claude-3.7-sonnet",
     "claude-3.7-sonnet": "anthropic/claude-3.7-sonnet",
@@ -71,7 +71,7 @@ export function calculateApiCostInDollars(
 ): number {
   const costModel = mapModelToCostModel(model);
   const pricing = OPENROUTER_PRICING[costModel];
-  
+
   if (!pricing) {
     console.warn(`No pricing found for model: ${model}`);
     return 0;
@@ -80,10 +80,10 @@ export function calculateApiCostInDollars(
   // Calculate text token costs (convert from per million to actual tokens)
   const inputCost = (inputTokens / 1_000_000) * pricing.input;
   const outputCost = (outputTokens / 1_000_000) * pricing.output;
-  
+
   // Calculate image costs (convert from per thousand to actual images)
   const imageCost = (inputImages / 1_000) * pricing.imageInput;
-  
+
   return inputCost + outputCost + imageCost;
 }
 

@@ -1,11 +1,12 @@
-import { SystemAgentDefinition } from '../types';
-import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types';
+import { SystemAgentDefinition, PluginType } from "../types";
 
 export const linkCheckerAgent: SystemAgentDefinition = {
-  id: 'system-link-verifier',
-  name: 'Link Checker',
-  description: 'Validates external links in documents, checking for broken URLs, redirects, and accessibility issues',
+  id: "system-link-verifier",
+  name: "Link Checker",
+  description:
+    "Validates external links in documents, checking for broken URLs, redirects, and accessibility issues",
   providesGrades: false, // Plugin-based agents don't provide grades
+  isRecommended: true,
   pluginIds: [PluginType.LINK_ANALYSIS],
   readme: `# Link Checker
 

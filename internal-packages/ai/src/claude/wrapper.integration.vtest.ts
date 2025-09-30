@@ -1,15 +1,30 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { Anthropic } from '@anthropic-ai/sdk';
-import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
-import { RichLLMInteraction } from '../types';
-import { createMockClaudeError, expectValidLLMInteraction } from './testUtils';
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+
+import { Anthropic } from "@anthropic-ai/sdk";
+
+import { RichLLMInteraction } from "../types";
+import { createAnthropicClient } from "../utils/anthropic";
+import {
+  createMockClaudeError,
+  expectValidLLMInteraction,
+} from "./testUtils";
+import {
+  callClaude,
+  callClaudeWithTool,
+  MODEL_CONFIG,
+} from "./wrapper";
+
 // Mock the createAnthropicClient
 vi.mock('../utils/anthropic', () => ({
   createAnthropicClient: vi.fn(),
-  ANALYSIS_MODEL: 'claude-sonnet-4-20250514'
+  ANALYSIS_MODEL: 'claude-sonnet-4-5'
 }));
-
-import { createAnthropicClient } from '../utils/anthropic';
 
 describe('Claude Wrapper Integration Tests', () => {
   const mockCreateAnthropicClient = createAnthropicClient as any;

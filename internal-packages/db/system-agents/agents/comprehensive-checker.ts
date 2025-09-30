@@ -1,21 +1,11 @@
-import {
-  PluginType,
-} from "../../../ai/src/analysis-plugins/types/plugin-types";
-import { SystemAgentDefinition } from "../types";
+import { SystemAgentDefinition, PluginType } from "../types";
 
 export const comprehensiveCheckerAgent: SystemAgentDefinition = {
   id: "system-epistemic-verification",
   name: "Comprehensive Checker",
-  description:
-    "Combines all verification tools except Spelling & Grammar: Link Checker, Fact Checker, Math Checker, and Forecast Checker for thorough content validation",
+  description: "Combines Fact Checker, Math Checker, and Forecast Checker",
   providesGrades: false, // Plugin-based agents don't provide grades
-  isRecommended: true, // This is a recommended agent for comprehensive validation
-  pluginIds: [
-    PluginType.LINK_ANALYSIS,
-    PluginType.FACT_CHECK,
-    PluginType.MATH,
-    PluginType.FORECAST,
-  ], // Multiple plugins
+  pluginIds: [PluginType.FACT_CHECK, PluginType.MATH, PluginType.FORECAST], // Multiple plugins
   readme: `# Comprehensive Checker
 
 A thorough content validation agent that combines all verification tools except Spelling & Grammar checking. Runs Link Checker, Fact Checker, Math Checker, and Forecast Checker in parallel to provide complete content verification in a single pass.
