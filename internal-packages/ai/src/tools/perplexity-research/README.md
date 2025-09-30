@@ -35,7 +35,6 @@ Web-enhanced research using Perplexity Sonar models via OpenRouter
 
 ## Integration
 
-Works well with:
 - **Fact Checker Tool**: Verify claims against current sources
 - **Extract Forecasting Claims**: Research background for predictions
 - **Document Analysis**: Provide context for content evaluation

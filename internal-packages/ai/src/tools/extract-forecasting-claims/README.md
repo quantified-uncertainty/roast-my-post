@@ -32,8 +32,6 @@ Extracts predictions and converts them to binary (YES/NO) questions. Scores on t
 
 ## Integration
 
-Works well with:
-
 - **Perplexity Research Tool**: Research background for predictions
 - **Fact Checker Tool**: Verify underlying assumptions
 - **Document Analysis Tools**: Process longer documents with multiple predictions
