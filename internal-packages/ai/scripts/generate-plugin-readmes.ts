@@ -52,6 +52,7 @@ const READMES = {
 
 // Generate markdown files and collect content
 const readmeContent: Record<string, string> = {};
+const failures: string[] = [];
 
 for (const [id, config] of Object.entries(READMES)) {
   try {
@@ -68,8 +69,9 @@ for (const [id, config] of Object.entries(READMES)) {
 
     console.log(`✅ Generated markdown README for ${id} at ${markdownPath}`);
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
     console.error(`❌ Failed to generate README for ${id}:`, error);
-    process.exit(1);
+    failures.push(`${id}: ${errorMsg}`);
   }
 }
 
@@ -101,3 +103,10 @@ fs.writeFileSync(tsOutputPath, tsOutput, 'utf-8');
 console.log(`✅ Generated TypeScript module at ${tsOutputPath}`);
 console.log(`📋 Generated ${Object.keys(readmeContent).length} plugin README(s)`);
 console.log(`🔍 README hash: ${readmeHash}`);
+
+// Report all failures and exit with error if any occurred
+if (failures.length > 0) {
+  console.error('\n❌ Plugin README generation completed with failures:');
+  failures.forEach(failure => console.error(`  - ${failure}`));
+  process.exit(1);
+}

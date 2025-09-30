@@ -23,8 +23,12 @@ import { allTools } from '../src/tools/all-tools';
  * Auto-discover and load readme generators for tools
  * Looks for readme-generator.ts files in each tool directory
  */
-async function loadGenerators(): Promise<Record<string, () => string>> {
+async function loadGenerators(): Promise<{
+  generators: Record<string, () => string>;
+  failures: string[]
+}> {
   const generators: Record<string, () => string> = {};
+  const failures: string[] = [];
   const toolsDir = path.join(__dirname, '..', 'src', 'tools');
 
   for (const [id] of Object.entries(allTools)) {
@@ -35,20 +39,26 @@ async function loadGenerators(): Promise<Record<string, () => string>> {
         const module = await import(`../src/tools/${id}/readme-generator`);
         if (module.generateReadme && typeof module.generateReadme === 'function') {
           generators[id] = module.generateReadme;
+        } else {
+          const error = 'Generator module does not export generateReadme function';
+          console.error(`❌ Failed to load generator for ${id}: ${error}`);
+          failures.push(`${id}: ${error}`);
         }
       } catch (error) {
-        console.warn(`⚠️  Failed to load generator for ${id}:`, error);
+        console.error(`❌ Failed to load generator for ${id}:`, error);
+        failures.push(`${id}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }
 
-  return generators;
+  return { generators, failures };
 }
 
 // Main execution wrapped in async function
 async function main() {
   // Auto-discover generators
-  const TOOLS_WITH_GENERATORS = await loadGenerators();
+  const { generators: TOOLS_WITH_GENERATORS, failures: loadFailures } = await loadGenerators();
+  const generationFailures: string[] = [];
 
   // Generate or read README files
   const readmes: Record<string, string> = {};
@@ -67,7 +77,9 @@ async function main() {
         fs.writeFileSync(staticReadmePath, content, 'utf-8');
         console.log(`✅ Generated README for ${id} (programmatic)`);
       } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
         console.error(`❌ Failed to generate README for ${id}:`, error);
+        generationFailures.push(`${id}: ${errorMsg}`);
         readmes[id] = `# ${tool.config.name}\n\n*README generation failed*`;
       }
     }
@@ -116,6 +128,14 @@ export function getToolReadme(toolId: string): string {
   console.log(`✅ Generated TypeScript module at ${tsOutputPath}`);
   console.log(`📋 Generated ${Object.keys(readmes).length} README entries`);
   console.log(`🔍 README hash: ${readmeHash}`);
+
+  // Report all failures and exit with error if any occurred
+  const allFailures = [...loadFailures, ...generationFailures];
+  if (allFailures.length > 0) {
+    console.error('\n❌ README generation completed with failures:');
+    allFailures.forEach(failure => console.error(`  - ${failure}`));
+    process.exit(1);
+  }
 }
 
 // Run the script
