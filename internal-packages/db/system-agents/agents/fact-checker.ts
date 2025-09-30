@@ -1,10 +1,13 @@
-import { SystemAgentDefinition, PluginType } from "../types";
+import {
+  PluginType,
+  SystemAgentDefinition,
+} from "../types";
 
 export const factCheckerAgent: SystemAgentDefinition = {
   id: "system-fact-checker",
   name: "Fact Checker",
   description:
-    "Verifies factual claims and statements for accuracy using current knowledge",
+    "Verifies factual claims and statements for accuracy using available knowledge",
   providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.FACT_CHECK],
   isRecommended: true,
