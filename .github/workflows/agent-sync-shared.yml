@@ -1,0 +1,330 @@
+name: Sync System Agents
+
+on:
+  push:
+    branches:
+      - prod
+    paths:
+      - 'internal-packages/db/system-agents/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'Production'
+        type: choice
+        options:
+        - Production
+        - Staging
+      dry_run:
+        description: 'Dry run (show what would be synced without making changes)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  SYNC_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'Production' }}
+  SYNC_DRY_RUN: ${{ github.event.inputs.dry_run == true && 'true' || 'false' }}
+  SYNC_BACKUP_PREFIX: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
+
+jobs:
+  backup:
+    name: Backup Database
+    if: env.SYNC_DRY_RUN != 'true'
+    uses: ./.github/workflows/database-backup.yml
+    with:
+      backup_prefix: ${{ env.SYNC_BACKUP_PREFIX }}
+    secrets: inherit
+
+  sync-agents:
+    name: Sync System Agents
+    runs-on: ubuntu-latest
+    needs: [backup]
+    # Only require backup if it was supposed to run
+    if: always() && (needs.backup.result == 'success' || needs.backup.result == 'skipped')
+    environment: ${{ env.SYNC_ENVIRONMENT }}
+    
+    outputs:
+      sync_count: ${{ steps.sync.outputs.count }}
+      sync_status: ${{ steps.sync.outputs.status }}
+      backup_filename: ${{ needs.backup.outputs.backup_filename || 'none' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Show configuration
+        run: |
+          echo "## 🔍 Agent Sync Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| ------- | ----- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ env.SYNC_ENVIRONMENT }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dry Run | ${{ env.SYNC_DRY_RUN }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backup | ${{ needs.backup.outputs.backup_filename || 'N/A (dry run)' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Workflow | ${{ github.workflow }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: List current system agents
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "## Current System Agents" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cat > list_agents.js << 'EOF'
+          const { PrismaClient } = require('@roast/db/generated');
+          const prisma = new PrismaClient();
+          
+          async function main() {
+            const agents = await prisma.agent.findMany({
+              where: { isSystemManaged: true },
+              include: {
+                versions: {
+                  orderBy: { version: 'desc' },
+                  take: 1
+                }
+              },
+              orderBy: { id: 'asc' }
+            });
+            
+            console.log('| Agent ID | Name | Version | Plugin IDs |');
+            console.log('| -------- | ---- | ------- | ---------- |');
+            
+            for (const agent of agents) {
+              const version = agent.versions[0];
+              const pluginIds = version?.pluginIds?.join(', ') || 'None';
+              console.log(`| ${agent.id} | ${version?.name || 'Unknown'} | v${version?.version || 0} | ${pluginIds} |`);
+            }
+            
+            return agents.length;
+          }
+          
+          main()
+            .then(count => {
+              console.log('');
+              console.log(`Total: ${count} system-managed agent(s)`);
+              process.exit(0);
+            })
+            .catch(err => {
+              console.error('Failed to query agents:', err.message);
+              process.exit(1);
+            })
+            .finally(() => prisma.$disconnect());
+          EOF
+          
+          node list_agents.js >> $GITHUB_STEP_SUMMARY || echo "Failed to query current agents" >> $GITHUB_STEP_SUMMARY
+          rm -f list_agents.js
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Preview changes (dry run)
+        if: env.SYNC_DRY_RUN == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "### 🧪 Dry Run - Preview of Changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cat > dry_run_sync.js << 'EOF'
+          const { PrismaClient } = require('@roast/db/generated');
+          const { systemAgents } = require('./system-agents/agents');
+          const prisma = new PrismaClient();
+          
+          async function main() {
+            console.log(`🎯 Would sync ${systemAgents.length} agent(s)`);
+            console.log('');
+            
+            let updateCount = 0;
+            let createCount = 0;
+            let skipCount = 0;
+            
+            for (const agent of systemAgents) {
+              console.log(`📋 Agent: ${agent.id}`);
+              
+              const existingAgent = await prisma.agent.findUnique({
+                where: { id: agent.id },
+                include: { versions: { orderBy: { version: 'desc' }, take: 1 } }
+              });
+              
+              if (existingAgent) {
+                const latestVersion = existingAgent.versions[0];
+                const contentChanged = 
+                  latestVersion?.name !== agent.name ||
+                  latestVersion?.description !== agent.description ||
+                  latestVersion?.primaryInstructions !== agent.primaryInstructions ||
+                  latestVersion?.selfCritiqueInstructions !== agent.selfCritiqueInstructions ||
+                  JSON.stringify(latestVersion?.pluginIds || []) !== JSON.stringify(agent.pluginIds || []);
+                
+                if (contentChanged) {
+                  console.log(`  → Would UPDATE to version ${(latestVersion?.version || 0) + 1}`);
+                  console.log(`     Current: v${latestVersion?.version} - ${latestVersion?.name}`);
+                  console.log(`     New: v${(latestVersion?.version || 0) + 1} - ${agent.name}`);
+                  updateCount++;
+                } else {
+                  console.log(`  ✓ Already up to date (v${latestVersion?.version})`);
+                  skipCount++;
+                }
+              } else {
+                console.log(`  → Would CREATE new agent (v1)`);
+                console.log(`     Name: ${agent.name}`);
+                createCount++;
+              }
+              console.log('');
+            }
+            
+            console.log('---');
+            console.log(`Summary: ${createCount} to create, ${updateCount} to update, ${skipCount} unchanged`);
+          }
+          
+          main().catch(console.error).finally(() => prisma.$disconnect());
+          EOF
+          
+          cd internal-packages/db
+          node dry_run_sync.js | tee -a $GITHUB_STEP_SUMMARY
+          rm -f dry_run_sync.js
+
+      - name: Sync system agents (live run)
+        if: env.SYNC_DRY_RUN != 'true'
+        id: sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "### 🚀 Live Agent Sync" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cd internal-packages/db
+          
+          echo "Syncing all system agents..."
+          SYNC_OUTPUT=$(npx tsx system-agents/sync.ts 2>&1)
+          SYNC_STATUS=$?
+          echo "$SYNC_OUTPUT"
+          
+          # Parse and report results
+          if [ $SYNC_STATUS -eq 0 ]; then
+            echo "✅ **Agent synchronization completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            
+            # Extract counts from output
+            AGENT_COUNT=$(echo "$SYNC_OUTPUT" | grep -E "Synchronized|synced" | grep -o '[0-9]\+' | head -1)
+            echo "::set-output name=count::${AGENT_COUNT:-0}"
+            echo "::set-output name=status::success"
+            
+            # Show changes made
+            if echo "$SYNC_OUTPUT" | grep -qE "(Creating|Updating|Created|Updated)"; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "#### Changes Made:" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "$SYNC_OUTPUT" | grep -E "(→ Creating|→ Updating|✓ Created|✓ Updated)" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "ℹ️ No changes needed - all agents up to date" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **Agent synchronization failed!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### Error Output:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$SYNC_OUTPUT" | tail -20 >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            
+            echo "::set-output name=status::failed"
+            exit 1
+          fi
+
+      - name: Verify agent configurations
+        if: env.SYNC_DRY_RUN != 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cat > verify_agents.js << 'EOF'
+          const { PrismaClient } = require('@roast/db/generated');
+          const { systemAgents } = require('./system-agents/agents');
+          const prisma = new PrismaClient();
+          
+          async function main() {
+            const dbAgents = await prisma.agent.findMany({
+              where: { isSystemManaged: true },
+              include: {
+                versions: {
+                  orderBy: { version: 'desc' },
+                  take: 1
+                }
+              }
+            });
+            
+            console.log(`✅ Expected ${systemAgents.length} agent(s), found ${dbAgents.length} in database`);
+            
+            let allGood = true;
+            
+            for (const expectedAgent of systemAgents) {
+              const dbAgent = dbAgents.find(a => a.id === expectedAgent.id);
+              if (dbAgent) {
+                const version = dbAgent.versions[0];
+                console.log(`✅ ${expectedAgent.id}: v${version?.version} (${version?.name})`);
+              } else {
+                console.log(`❌ ${expectedAgent.id}: MISSING from database`);
+                allGood = false;
+              }
+            }
+            
+            // Check for unexpected agents
+            for (const dbAgent of dbAgents) {
+              if (!systemAgents.find(a => a.id === dbAgent.id)) {
+                console.log(`⚠️  ${dbAgent.id}: In database but not in code definitions`);
+              }
+            }
+            
+            process.exit(allGood ? 0 : 1);
+          }
+          
+          main().catch(console.error).finally(() => prisma.$disconnect());
+          EOF
+          
+          cd internal-packages/db
+          node verify_agents.js | tee -a $GITHUB_STEP_SUMMARY
+          rm -f verify_agents.js
+
+      - name: Final summary
+        if: always()
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ env.SYNC_DRY_RUN }}" == "true" ]; then
+            echo "### 🧪 Dry Run Completed" >> $GITHUB_STEP_SUMMARY
+            echo "No changes were made to the database." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ job.status }}" == "success" ]; then
+            echo "### ✅ Agent sync completed successfully!" >> $GITHUB_STEP_SUMMARY
+            if [ -n "${{ needs.backup.outputs.backup_filename }}" ]; then
+              echo "- **Backup created**: \`${{ needs.backup.outputs.backup_filename }}\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "### ❌ Agent sync failed!" >> $GITHUB_STEP_SUMMARY
+            if [ -n "${{ needs.backup.outputs.backup_filename }}" ]; then
+              echo "- **Backup available for restore**: \`${{ needs.backup.outputs.backup_filename }}\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
