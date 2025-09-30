@@ -2,6 +2,12 @@
 
 An automated link validation agent that checks all external URLs in documents for accessibility, validity, and potential issues. Provides detailed reporting on broken links, redirects, and connection problems.
 
+## Tools Used
+
+- **[Link Validator](/tools/link-validator)** - Extracts and validates all URLs from a text, checking their accessibility and returning detailed validation results
+
+
+
 ## Configuration
 
 **Processing Limits:**

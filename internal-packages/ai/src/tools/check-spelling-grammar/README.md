@@ -1,6 +1,10 @@
 # Check Spelling & Grammar
 
-A sophisticated proofreading tool that combines language convention detection with Claude-based error analysis. Features adjustable strictness levels and automatic US/UK English convention handling.
+Analyze text for spelling and grammar errors using Claude with advanced error detection
+
+## Tools Used
+
+- **[Detect Language Convention](/tools/detect-language-convention)** - Detect whether text uses US or UK English conventions
 
 ## How It Works
 

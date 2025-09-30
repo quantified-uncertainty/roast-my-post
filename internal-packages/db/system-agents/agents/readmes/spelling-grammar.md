@@ -2,6 +2,12 @@
 
 A sophisticated proofreading agent that combines language convention detection with Claude-based error analysis. Features adjustable strictness levels and automatic US/UK English convention handling.
 
+## Tools Used
+
+- **[Check Spelling & Grammar](/tools/check-spelling-grammar)** - Analyze text for spelling and grammar errors using Claude with advanced error detection
+
+
+
 ## Configuration
 
 **Error Processing:**

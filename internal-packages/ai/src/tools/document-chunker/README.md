@@ -1,6 +1,6 @@
 # Intelligent Document Chunker
 
-Markdown-aware document chunker that recursively splits text into optimized chunks while preserving document structure and context. Despite having multiple strategies in the code, currently only uses markdown-aware chunking.
+Splits documents into semantic chunks optimized for LLM analysis. Supports multiple strategies including markdown-aware, semantic, and hybrid chunking.
 
 ## How It Works
 

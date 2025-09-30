@@ -1,6 +1,6 @@
 # Extract Forecasting Claims
 
-AI tool for extracting and evaluating forecasting claims from text with multi-dimensional quality scoring.
+Extracts predictions and converts them to binary (YES/NO) questions. Scores on three dimensions: precision (how binary/specific), verifiability (can we check with public data), and importance (centrality to argument)
 
 ## What it does
 
@@ -33,6 +33,7 @@ AI tool for extracting and evaluating forecasting claims from text with multi-di
 ## Integration
 
 Works well with:
+
 - **Perplexity Research Tool**: Research background for predictions
 - **Fact Checker Tool**: Verify underlying assumptions
 - **Document Analysis Tools**: Process longer documents with multiple predictions

@@ -1,6 +1,6 @@
 # Check Mathematical Accuracy
 
-A pure LLM-based tool that analyzes mathematical statements for errors using Claude. Unlike the MathJS-based tools, this relies entirely on Claude's reasoning capabilities to verify calculations, logic, units, and notation.
+Analyze text for mathematical errors including calculations, logic, units, and notation using Claude
 
 ## How It Works
 

@@ -3,10 +3,19 @@
  * Generates documentation from actual plugin configuration
  */
 
+import { MathPlugin } from './index';
+import { generateToolsUsedSection } from '../../utils/readme-helpers';
+
 export function generateReadme(): string {
+  const plugin = new MathPlugin();
+  const tools = plugin.getToolDependencies();
+  const toolsSection = generateToolsUsedSection(tools);
+
   return `# Math Checker
 
 An agent that verifies mathematical statements, calculations, and formulas for accuracy. Combines computational verification with conceptual analysis to catch errors in arithmetic, algebra, statistics, and mathematical reasoning.
+
+${toolsSection}
 
 ## How It Works
 

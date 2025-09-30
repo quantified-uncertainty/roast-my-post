@@ -1,6 +1,10 @@
 # Extract Factual Claims
 
-AI-powered tool for extracting and categorizing factual claims from text with confidence scores and verifiability assessment.
+Extract and score verifiable factual claims from text
+
+## Tools Used
+
+- **[Fuzzy Text Locator](/tools/fuzzy-text-locator)** - Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text
 
 ## What it does
 

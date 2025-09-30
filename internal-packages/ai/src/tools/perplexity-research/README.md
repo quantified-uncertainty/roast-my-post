@@ -1,6 +1,6 @@
 # Perplexity Research
 
-AI-powered research assistant that searches current web information to gather context, sources, and insights on any topic.
+Web-enhanced research using Perplexity Sonar models via OpenRouter
 
 ## What it does
 

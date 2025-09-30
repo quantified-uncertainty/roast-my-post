@@ -2,6 +2,14 @@
 
 An agent that identifies and verifies factual claims in documents, checking them against current knowledge and reliable sources. Provides detailed verdicts on claim accuracy with evidence-based reasoning.
 
+## Tools Used
+
+- **[Extract Factual Claims](/tools/extract-factual-claims)** - Extract and score verifiable factual claims from text
+- **[Fact Checker](/tools/fact-checker)** - Verify the accuracy of specific factual claims
+- **[Fuzzy Text Locator](/tools/fuzzy-text-locator)** - Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text
+
+
+
 ## Configuration
 
 **Processing Limits:**

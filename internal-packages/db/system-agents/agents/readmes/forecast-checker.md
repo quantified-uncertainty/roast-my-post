@@ -2,6 +2,13 @@
 
 An agent that evaluates predictions, forecasts, and future-oriented claims for methodological soundness, evidence quality, and logical consistency. Assesses both quantitative and qualitative forecasting approaches.
 
+## Tools Used
+
+- **[Extract Forecasting Claims](/tools/extract-forecasting-claims)** - Extracts predictions and converts them to binary (YES/NO) questions. Scores on three dimensions: precision (how binary/specific), verifiability (can we check with public data), and importance (centrality to argument)
+- **[Simple Forecaster](/tools/forecaster)** - Generate probability forecasts using multiple independent Claude analyses
+
+
+
 ## Configuration
 
 **Forecast Generation:**

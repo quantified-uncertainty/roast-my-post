@@ -1,6 +1,6 @@
 # Fuzzy Text Locator
 
-Multi-strategy text location tool that finds text positions in documents using cascading search methods from exact matching to AI-powered semantic search.
+Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text
 
 ## What it does
 

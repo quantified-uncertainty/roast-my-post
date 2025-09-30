@@ -1,6 +1,11 @@
 # Hybrid Mathematical Checker
 
-A two-stage mathematical verification tool that combines computational and conceptual approaches. First attempts verification using MathJS (via an agentic Claude wrapper that can make multiple calculation attempts), then falls back to pure LLM analysis for statements that can't be computed.
+Simple wrapper: try MathJS first, then LLM as fallback
+
+## Tools Used
+
+- **[Check Math with MathJS](/tools/check-math-with-mathjs)** - Verify mathematical statements using an agentic approach with Claude and MathJS
+- **[Check Mathematical Accuracy](/tools/check-math)** - Analyze text for mathematical errors including calculations, logic, units, and notation using Claude
 
 ## How It Works
 

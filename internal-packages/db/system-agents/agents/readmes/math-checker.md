@@ -2,6 +2,13 @@
 
 An agent that verifies mathematical statements, calculations, and formulas for accuracy. Combines computational verification with conceptual analysis to catch errors in arithmetic, algebra, statistics, and mathematical reasoning.
 
+## Tools Used
+
+- **[Extract Mathematical Expressions](/tools/extract-math-expressions)** - Extract and analyze mathematical expressions from text, including error detection and complexity assessment
+- **[Hybrid Mathematical Checker](/tools/check-math-hybrid)** - Simple wrapper: try MathJS first, then LLM as fallback
+
+
+
 ## How It Works
 
 The agent analyzes mathematical content in documents by:

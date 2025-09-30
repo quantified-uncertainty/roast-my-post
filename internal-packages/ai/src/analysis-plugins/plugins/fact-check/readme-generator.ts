@@ -3,12 +3,20 @@
  * Generates documentation from actual plugin configuration
  */
 
+import { FactCheckPlugin } from './index';
+import { generateToolsUsedSection } from '../../utils/readme-helpers';
 import { LIMITS, THRESHOLDS } from './constants';
 
 export function generateReadme(): string {
+  const plugin = new FactCheckPlugin();
+  const tools = plugin.getToolDependencies();
+  const toolsSection = generateToolsUsedSection(tools);
+
   return `# Fact Checker
 
 An agent that identifies and verifies factual claims in documents, checking them against current knowledge and reliable sources. Provides detailed verdicts on claim accuracy with evidence-based reasoning.
+
+${toolsSection}
 
 ## Configuration
 

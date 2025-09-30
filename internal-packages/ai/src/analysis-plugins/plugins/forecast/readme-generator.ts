@@ -3,10 +3,19 @@
  * Generates documentation from actual plugin configuration
  */
 
+import { ForecastPlugin } from './index';
+import { generateToolsUsedSection } from '../../utils/readme-helpers';
+
 export function generateReadme(): string {
+  const plugin = new ForecastPlugin();
+  const tools = plugin.getToolDependencies();
+  const toolsSection = generateToolsUsedSection(tools);
+
   return `# Forecast Checker
 
 An agent that evaluates predictions, forecasts, and future-oriented claims for methodological soundness, evidence quality, and logical consistency. Assesses both quantitative and qualitative forecasting approaches.
+
+${toolsSection}
 
 ## Configuration
 

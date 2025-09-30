@@ -1,86 +1,41 @@
-# Forecaster Tool
+# Simple Forecaster
 
-A tool that generates probability forecasts using multiple independent Claude analyses.
+Generate probability forecasts using multiple independent Claude analyses
 
-## Overview
+## How It Works
 
-The Forecaster Tool asks Claude to make independent probability assessments of a given question, then aggregates them using statistical methods to produce a final forecast with confidence levels.
+Asks Claude to make multiple independent probability assessments of a given question, then aggregates them using statistical methods to produce a final forecast with confidence levels.
 
-## Usage
+The tool generates multiple independent forecasts (default: 6), removes statistical outliers, and aggregates results with confidence scoring based on forecast agreement.
 
-### API Endpoint
-```
-POST /api/tools/forecaster
-```
+## Parameters
 
-### Input Schema
-```typescript
-{
-  question: string;         // The question to forecast (1-500 chars)
-  context?: string;         // Additional context (max 1000 chars)
-  numForecasts?: number;    // Number of forecasts to generate (3-20, default: 6)
-  usePerplexity?: boolean;  // Whether to use Perplexity for research (default: false)
-}
-```
+- **question**: The question to forecast (1-500 characters)
+- **context**: Optional additional context (max 1000 characters)
+- **numForecasts**: Number of forecasts to generate (3-20, default: 6)
+- **usePerplexity**: Whether to use Perplexity for research (default: false)
 
-### Output Schema
-```typescript
-{
-  probability: number;      // Aggregated probability (0-100)
-  description: string;      // Description of the forecast and reasoning
-  confidence: 'low' | 'medium' | 'high';  // Based on forecast agreement
-  individualForecasts: Array<{
-    probability: number;
-    reasoning: string;
-  }>;
-  statistics: {
-    mean: number;
-    median: number;
-    stdDev: number;
-    agreement: number;    // % of forecasts within 10 points of median
-  };
-}
-```
+## Output
 
-## Example
+- **probability**: Aggregated probability (0-100)
+- **description**: Description of the forecast and reasoning
+- **confidence**: 'low' | 'medium' | 'high' based on forecast agreement
+- **individualForecasts**: Array of individual probability assessments with reasoning
+- **statistics**: Mean, median, standard deviation, and agreement metrics
 
-```typescript
-const response = await fetch('/api/tools/forecaster', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_TOKEN'
-  },
-  body: JSON.stringify({
-    question: "Will AGI be achieved by 2030?",
-    context: "Recent advances in LLMs have accelerated AI progress",
-    numForecasts: 6
-  })
-});
+## Confidence Levels
 
-const result = await response.json();
-// {
-//   success: true,
-//   toolId: 'forecaster',
-//   result: {
-//     probability: 35,
-//     description: "Based on 6 independent analyses...",
-//     confidence: 'medium',
-//     individualForecasts: [...],
-//     statistics: {...}
-//   }
-// }
-```
+- **High**: >66% of forecasts within 10 points of median
+- **Medium**: 33-66% agreement
+- **Low**: <33% agreement
 
 ## Cost
 
-Approximately $0.05 per forecast (6 Claude calls).
+Approximately $0.05 per forecast (6 Claude calls with default settings).
 
-## Implementation Details
+## Technical Details
 
 - Uses multiple independent Claude calls to reduce bias
 - Removes statistical outliers before aggregation
-- Confidence levels based on forecast agreement:
-  - High: >66% of forecasts within 10 points of median
-  - Medium: 33-66% agreement
-  - Low: <33% agreement
+- Agreement measured as percentage of forecasts within 10 points of median
+- Location: Implementation in `/internal-packages/ai/src/tools/forecaster/`

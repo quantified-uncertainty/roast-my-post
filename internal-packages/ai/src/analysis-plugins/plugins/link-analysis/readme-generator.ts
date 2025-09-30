@@ -3,15 +3,24 @@
  * Generates documentation from actual plugin configuration
  */
 
+import { LinkAnalysisPlugin } from './index';
+import { generateToolsUsedSection } from '../../utils/readme-helpers';
+
 // Extract config values from the link validator tool
 const URL_LIMIT = 50; // From extractUrlsWithPositions and generateLinkHighlights
 const TIMEOUT_SECONDS = 10;
 const MAX_REDIRECTS = 5;
 
 export function generateReadme(): string {
+  const plugin = new LinkAnalysisPlugin();
+  const tools = plugin.getToolDependencies();
+  const toolsSection = generateToolsUsedSection(tools);
+
   return `# Link Checker
 
 An automated link validation agent that checks all external URLs in documents for accessibility, validity, and potential issues. Provides detailed reporting on broken links, redirects, and connection problems.
+
+${toolsSection}
 
 ## Configuration
 

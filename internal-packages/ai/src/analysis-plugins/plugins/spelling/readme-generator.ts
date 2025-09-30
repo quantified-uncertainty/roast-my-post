@@ -11,11 +11,19 @@ import {
   LOW_CONFIDENCE_THRESHOLD,
   LOW_CONSISTENCY_THRESHOLD,
 } from './constants';
+import { SpellingPlugin } from './index';
+import { generateToolsUsedSection } from '../../utils/readme-helpers';
 
 export function generateReadme(): string {
+  const plugin = new SpellingPlugin();
+  const tools = plugin.getToolDependencies();
+  const toolsSection = generateToolsUsedSection(tools);
+
   return `# Spelling & Grammar Checker
 
 A sophisticated proofreading agent that combines language convention detection with Claude-based error analysis. Features adjustable strictness levels and automatic US/UK English convention handling.
+
+${toolsSection}
 
 ## Configuration
 
