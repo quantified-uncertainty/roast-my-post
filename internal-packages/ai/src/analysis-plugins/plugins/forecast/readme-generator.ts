@@ -8,6 +8,22 @@ export function generateReadme(): string {
 
 An agent that evaluates predictions, forecasts, and future-oriented claims for methodological soundness, evidence quality, and logical consistency. Assesses both quantitative and qualitative forecasting approaches.
 
+## Configuration
+
+**Forecast Generation:**
+- Number of forecasts per claim: **2** (for consensus)
+- Uses Perplexity for research: **false** (disabled by default)
+
+**Quality Scoring Dimensions (0-100):**
+- **Precision Score**: How specific and well-defined is the prediction?
+- **Verifiability Score**: How easily can the prediction be verified?
+- **Importance Score**: Significance and impact of the prediction
+- **Robustness Score**: How well-supported is the prediction?
+
+**Forecast Decision Threshold:**
+- Average quality score must be **high** across all dimensions for detailed analysis
+- Lower robustness increases likelihood of generating our own forecast (to check author's work)
+
 ## How It Works
 
 The agent analyzes forecasting content by:
@@ -16,6 +32,7 @@ The agent analyzes forecasting content by:
 3. Assessing methodological approaches and assumptions
 4. Checking for logical consistency and bias
 5. Reviewing uncertainty quantification and confidence intervals
+6. Optionally generating independent forecasts to compare with author's predictions
 
 ## Capabilities
 
@@ -25,6 +42,7 @@ The agent analyzes forecasting content by:
 - **Uncertainty assessment** - Evaluates confidence levels and ranges
 - **Bias detection** - Identifies overconfidence and systematic errors
 - **Logical consistency** - Checks internal coherence of predictions
+- **Comparative forecasting** - Generates independent predictions for validation
 
 ## Analysis Categories
 

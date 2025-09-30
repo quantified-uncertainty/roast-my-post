@@ -2,6 +2,22 @@
 
 An automated link validation agent that checks all external URLs in documents for accessibility, validity, and potential issues. Provides detailed reporting on broken links, redirects, and connection problems.
 
+## Configuration
+
+**Processing Limits:**
+- Maximum URLs to check per document: **50**
+- Timeout per URL check: **10 seconds**
+- Maximum redirects to follow: **5**
+
+**Grading:**
+- Grade = (Working Links / Total Links) × 100
+- 100% = All links working
+- 0% = All links broken
+
+**Automatic Processing:**
+- This plugin runs on **all documents** automatically (no routing needed)
+- No LLM usage - pure HTTP validation (zero cost)
+
 ## How It Works
 
 Extracts all external URLs from the document and validates each one by checking HTTP status codes and following redirects. The agent identifies broken links (404s), server errors (5xx), excessive redirects, and connection timeouts. Results are provided with exact text locations for easy correction.
@@ -15,14 +31,20 @@ Extracts all external URLs from the document and validates each one by checking 
 - **Bulk processing** - Efficiently validates multiple URLs with parallel checking
 - **Detailed reporting** - Provides exact link text and surrounding context for each issue
 
+## Error Categories
+
+- **404 Not Found**: Page doesn't exist
+- **5xx Server Errors**: Server-side problems
+- **Connection Timeouts**: Server too slow or unreachable
+- **Too Many Redirects**: Excessive redirect chains
+- **Network Errors**: DNS, SSL, or connection issues
+
 ## Technical Details
 
-- **URL limit:** 50 links by default (configurable)
-- **Timeout:** 10 seconds per URL check
-- **Redirect limit:** Maximum 5 redirects followed
 - **Supported protocols:** HTTP, HTTPS
-- **Grade calculation:** Based on percentage of working links (100% = grade 100)
-- **Error categories:** 404 Not Found, 5xx Server Errors, Connection Timeouts, Too Many Redirects
+- **Validation method:** HTTP HEAD requests with GET fallback
+- **User agent rotation:** Attempts multiple user agents to avoid bot detection
+- **Cost:** $0 (no LLM usage)
 
 ---
 *This documentation is programmatically generated from source code. Do not edit manually.*

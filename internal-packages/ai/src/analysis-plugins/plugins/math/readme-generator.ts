@@ -17,6 +17,34 @@ The agent analyzes mathematical content in documents by:
 4. Validating statistical claims and data interpretations
 5. Identifying conceptual errors in mathematical logic
 
+## When to Use
+
+This plugin is called when documents contain:
+- Equations and formulas (2+2=4, E=mc², etc.)
+- Statistical calculations or percentages
+- Back-of-the-envelope calculations
+- Mathematical reasoning or proofs
+- Numerical comparisons (X is 3x larger than Y)
+- Unit conversions
+- Any discussion involving mathematical relationships
+
+## Routing Examples
+
+**Should Process:**
+> "The population grew by 15% over the last decade, from 1.2M to 1.38M"
+
+*Reason: Contains percentage calculation that should be verified*
+
+**Should Process:**
+> "If we assume a 7% annual return, $10,000 invested today would be worth $19,672 in 10 years"
+
+*Reason: Contains compound interest calculation*
+
+**Should NOT Process:**
+> "Mathematics has been called the language of the universe"
+
+*Reason: Discusses math conceptually but contains no actual math*
+
 ## Capabilities
 
 - **Arithmetic verification** - Basic calculations, percentages, ratios
