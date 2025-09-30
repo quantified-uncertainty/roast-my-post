@@ -3,6 +3,7 @@ import {
   generateLinkHighlights,
   validateUrls,
   extractUrlsWithPositions,
+  linkValidator,
 } from "../../../tools/link-validator";
 import type { TextChunk } from "../../TextChunk";
 import type { AnalysisResult, SimpleAnalysisPlugin } from "../../types";
@@ -19,6 +20,7 @@ export class LinkAnalysisPlugin implements SimpleAnalysisPlugin {
   routingExamples = () => [];
   getCost = () => 0;
   getDebugInfo = () => ({ plugin: "LinkAnalysisPlugin", version: "1.0.0" });
+  getToolDependencies = () => [linkValidator];
 
   async analyze(_chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     try {

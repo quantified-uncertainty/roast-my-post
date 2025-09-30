@@ -385,6 +385,10 @@ Requirements:
       },
     };
   }
+
+  getToolDependencies() {
+    return [fuzzyTextLocatorTool];
+  }
 }
 
 // Export singleton instance

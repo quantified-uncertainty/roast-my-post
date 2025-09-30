@@ -544,5 +544,11 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
       llmInteractionsCount: this.llmCallCount,
     };
   }
+
+  getToolDependencies() {
+    return [
+      checkSpellingGrammarTool,
+    ];
+  }
 }
 
