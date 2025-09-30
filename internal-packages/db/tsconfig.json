@@ -17,8 +17,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "noEmit": false,
-    "incremental": true
+    "incremental": true,
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "generated"]
+  "exclude": ["node_modules", "dist", "generated"],
 }

@@ -1,11 +1,12 @@
-import { SystemAgentDefinition } from '../types';
-import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types';
+import { SystemAgentDefinition, PluginType } from "../types";
 
 export const mathCheckerAgent: SystemAgentDefinition = {
-  id: 'system-math-checker',
-  name: 'Math Checker',
-  description: 'Verifies mathematical statements, calculations, and formulas for correctness',
+  id: "system-math-checker",
+  name: "Math Checker",
+  description:
+    "Verifies mathematical statements, calculations, and formulas for correctness",
   providesGrades: false, // Plugin-based agents don't provide grades
+  isRecommended: true,
   pluginIds: [PluginType.MATH],
   readme: `# Math Checker
 
@@ -35,5 +36,5 @@ The agent analyzes mathematical content in documents by:
 - **Unit errors**: Dimensional inconsistencies or conversion mistakes  
 - **Logic errors**: Flawed mathematical reasoning or invalid steps
 - **Notation errors**: Incorrect mathematical symbols or expressions
-- **Conceptual errors**: Misunderstanding of mathematical principles`
+- **Conceptual errors**: Misunderstanding of mathematical principles`,
 };

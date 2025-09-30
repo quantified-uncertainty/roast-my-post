@@ -10,10 +10,20 @@ import {
   HeliconeSessionManager,
 } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
-import { ANALYSIS_MODEL } from "../types";
 // Document and Comment types are passed as parameters to avoid circular dependencies
 // LLMInteraction type removed - was unused
 import type { Comment } from "../shared/types";
+import { ANALYSIS_MODEL } from "../types";
+// Import plugin ID constants
+import { PLUGIN_IDS } from "./constants/plugin-ids";
+// Import core refactored components
+import {
+  IsolatedPluginExecutor,
+  PluginExecutor,
+  PluginFactory,
+  PluginRegistry,
+  PluginRouter,
+} from "./core";
 import {
   type JobLogSummary,
   PluginLogger,
@@ -32,13 +42,7 @@ import {
   type PluginSelection,
   PluginType,
 } from "./types/plugin-types";
-import { ChunkRouter } from "./utils/ChunkRouter";
 import { createChunksWithTool } from "./utils/createChunksWithTool";
-
-// Import core refactored components
-import { PluginRegistry, PluginRouter, PluginExecutor, IsolatedPluginExecutor, PluginFactory } from "./core";
-// Import plugin ID constants
-import { PLUGIN_IDS, type PluginId } from "./constants/plugin-ids";
 
 export interface PluginManagerConfig {
   sessionManager?: HeliconeSessionManager;
@@ -90,7 +94,7 @@ export class PluginManager {
   private startTime: number = 0;
   private pluginLogger: PluginLogger;
   private pluginSelection?: PluginSelection;
-  
+
   // New refactored components
   private registry: PluginRegistry;
   private router: PluginRouter;
@@ -105,7 +109,7 @@ export class PluginManager {
     this.pluginLogger = new PluginLogger(config.jobId);
     this.pluginSelection = config.pluginSelection;
     this.useIsolation = config.useIsolation || false;
-    
+
     // Initialize refactored components
     this.registry = new PluginRegistry();
     this.router = new PluginRouter();
@@ -114,18 +118,18 @@ export class PluginManager {
       timeoutMs: 300000,
       retryDelayMs: 1000,
     });
-    
+
     // Initialize isolation components if requested
     if (this.useIsolation) {
       this.factory = new PluginFactory();
       this.isolatedExecutor = new IsolatedPluginExecutor(this.factory);
       this.registerPluginsInFactory();
     }
-    
+
     // Register default plugins in the registry
     this.registerDefaultPlugins();
   }
-  
+
   /**
    * Register default plugins in the registry
    */
@@ -136,7 +140,7 @@ export class PluginManager {
     this.registry.register(PluginType.LINK_ANALYSIS, LinkPlugin);
     this.registry.register(PluginType.FACT_CHECK, FactCheckPlugin);
   }
-  
+
   /**
    * Register plugins in the isolation factory
    */
@@ -258,11 +262,11 @@ export class PluginManager {
       const chunksPerPlugin = new Map<string, typeof chunks>();
       for (const [pluginName, decision] of routingResult.decisions) {
         chunksPerPlugin.set(pluginName, decision.chunks);
-        
+
         // Log routing result
         this.pluginLogger.log({
           level: "info",
-          plugin: "PluginManager", 
+          plugin: "PluginManager",
           phase: "routing",
           message: `Plugin ${pluginName} assigned ${decision.chunks.length} chunks (${decision.reason})`,
           context: {
@@ -349,7 +353,7 @@ export class PluginManager {
             // Add timeout to prevent hanging
             const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
             let timeoutId: NodeJS.Timeout;
-            
+
             const timeoutPromise = new Promise<never>((_, reject) => {
               timeoutId = setTimeout(
                 () =>
@@ -558,7 +562,7 @@ export class PluginManager {
 
       tasks.push({
         name: "Plugin Analysis",
-        modelName: ANALYSIS_MODEL, // claude-sonnet-4-20250514
+        modelName: ANALYSIS_MODEL, // claude-sonnet-4-5
         priceInDollars: pluginResults.statistics.totalCost,
         timeInSeconds: pluginDuration / 1000,
         log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, generated ${pluginResults.statistics.totalComments} comments using ${plugins.length} plugins.`,
@@ -604,7 +608,10 @@ export class PluginManager {
         jobLogString: pluginResults.jobLogString,
       };
     } catch (error) {
-      logger.error("Document analysis failed:", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Document analysis failed:",
+        error instanceof Error ? error : new Error(String(error))
+      );
 
       // Return a graceful fallback result instead of throwing
       const errorMessage =
