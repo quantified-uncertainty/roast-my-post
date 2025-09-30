@@ -1,12 +1,13 @@
-import { SystemAgentDefinition } from '../types';
-import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types';
+import { SystemAgentDefinition, PluginType } from "../types";
 
 export const factCheckerAgent: SystemAgentDefinition = {
-  id: 'system-fact-checker',
-  name: 'Fact Checker',
-  description: 'Verifies factual claims and statements for accuracy using current knowledge',
+  id: "system-fact-checker",
+  name: "Fact Checker",
+  description:
+    "Verifies factual claims and statements for accuracy using current knowledge",
   providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.FACT_CHECK],
+  isRecommended: true,
   readme: `# Fact Checker
 
 An agent that identifies and verifies factual claims in documents, checking them against current knowledge and reliable sources. Provides detailed verdicts on claim accuracy with evidence-based reasoning.
@@ -36,5 +37,5 @@ The agent processes documents by:
 - **Partially True**: Contains accurate elements but is misleading or incomplete
 - **Outdated**: Was true but no longer current
 - **Unverifiable**: Cannot be verified with available information
-- **Misleading**: Technically true but presented in a deceptive way`
+- **Misleading**: Technically true but presented in a deceptive way`,
 };

@@ -1,5 +1,5 @@
 // Core types for AI package
-import { aiConfig } from './config';
+import { aiConfig } from "./config";
 
 export type LLMRole = "system" | "user" | "assistant";
 
@@ -30,13 +30,13 @@ export interface RichLLMInteraction {
 // Model configuration - use centralized config
 // Note: This is read at import time, so if env vars are set after import, it won't pick them up
 // For dynamic reading, use aiConfig.analysisModel directly
-export const ANALYSIS_MODEL = 'claude-sonnet-4-20250514';
+export const ANALYSIS_MODEL = "claude-sonnet-4-5";
 
 // Configuration for creating Anthropic client - use centralized config
 export function getAnthropicApiKey(): string | undefined {
   const apiKey = aiConfig.anthropicApiKey;
   if (!apiKey && !aiConfig.isBrowser()) {
-    console.error('ERROR: ANTHROPIC_API_KEY is not set');
+    console.error("ERROR: ANTHROPIC_API_KEY is not set");
   }
   return apiKey;
 }
@@ -75,17 +75,19 @@ export function validateConfiguration(): ConfigValidationResult {
 
   // Check required configurations - fail fast
   if (!aiConfig.anthropicApiKey) {
-    errors.push('ANTHROPIC_API_KEY is required');
+    errors.push("ANTHROPIC_API_KEY is required");
   }
 
   // Check Helicone configuration consistency
   if (aiConfig.helicone.enabled && !aiConfig.helicone.apiKey) {
-    errors.push('HELICONE_CACHE_ENABLED is true but HELICONE_API_KEY is not set');
+    errors.push(
+      "HELICONE_CACHE_ENABLED is true but HELICONE_API_KEY is not set"
+    );
   }
 
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 }

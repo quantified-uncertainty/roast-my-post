@@ -1,5 +1,4 @@
-import { SystemAgentDefinition } from '../types';
-import { PluginType } from '../../../ai/src/analysis-plugins/types/plugin-types';
+import { SystemAgentDefinition, PluginType } from '../types';
 
 export const spellingGrammarAgent: SystemAgentDefinition = {
   id: 'system-spelling-grammar',

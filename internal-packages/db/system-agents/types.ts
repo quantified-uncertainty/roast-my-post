@@ -1,4 +1,14 @@
-import { PluginType } from "../../ai/src/analysis-plugins/types/plugin-types";
+/**
+ * Plugin type enum for selecting which plugins to use
+ * Note: Duplicated from @roast/ai to avoid cross-package dependencies
+ */
+export enum PluginType {
+  MATH = 'math',
+  SPELLING = 'spelling',
+  FACT_CHECK = 'fact-check',
+  FORECAST = 'forecast',
+  LINK_ANALYSIS = 'link-analysis',
+}
 
 export interface SystemAgentDefinition {
   id: string;

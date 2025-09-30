@@ -31,14 +31,14 @@ This is an internal package. Add it to your package dependencies:
 ### Claude API Wrapper
 
 ```typescript
-import { callClaude, callClaudeWithTool, MODEL_CONFIG } from '@roast/ai';
+import { callClaude, callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
 
 // Basic Claude call
 const result = await callClaude({
   model: MODEL_CONFIG.analysis,
   system: "You are a helpful assistant",
   messages: [{ role: "user", content: "Hello!" }],
-  max_tokens: 1000
+  max_tokens: 1000,
 });
 
 // Claude with tool use
@@ -47,14 +47,16 @@ const toolResult = await callClaudeWithTool({
   messages: [{ role: "user", content: "..." }],
   toolName: "extract_data",
   toolDescription: "Extract structured data",
-  toolSchema: { /* Zod schema */ }
+  toolSchema: {
+    /* Zod schema */
+  },
 });
 ```
 
 ### Token Utilities
 
 ```typescript
-import { countTokens, estimateTokens, checkTokenLimits } from '@roast/ai';
+import { countTokens, estimateTokens, checkTokenLimits } from "@roast/ai";
 
 // Count tokens (uses Anthropic API when available)
 const tokenCount = await countTokens("Your text here");
@@ -69,34 +71,39 @@ const { withinLimit, percentUsed } = checkTokenLimits(tokenCount);
 ### Analysis Plugins
 
 ```typescript
-import { PluginManager, MathPlugin, SpellingPlugin, FactCheckPlugin } from '@roast/ai';
+import {
+  PluginManager,
+  MathPlugin,
+  SpellingPlugin,
+  FactCheckPlugin,
+} from "@roast/ai";
 
 // Create plugin manager
 const manager = new PluginManager({
-  jobId: "analysis-123"
+  jobId: "analysis-123",
 });
 
 // Analyze document with all plugins
 const result = await manager.analyzeDocument(document, {
-  targetHighlights: 10
+  targetHighlights: 10,
 });
 ```
 
 ### Document Analysis Tools
 
 ```typescript
-import { 
+import {
   documentChunker,
   extractMathExpressions,
   checkSpellingGrammar,
   extractFactualClaims,
-  fuzzyTextLocator 
-} from '@roast/ai';
+  fuzzyTextLocator,
+} from "@roast/ai";
 
 // Chunk a document intelligently
 const chunks = await documentChunker(text, {
   maxChunkSize: 1500,
-  preserveContext: true
+  preserveContext: true,
 });
 
 // Extract and check math
@@ -105,25 +112,27 @@ const mathResults = await checkMath(mathExpressions);
 
 // Check spelling and grammar
 const spellingErrors = await checkSpellingGrammar(text, {
-  languageConvention: 'US'
+  languageConvention: "US",
 });
 ```
 
 ### Helicone Integration
 
 ```typescript
-import { sessionContext, getHeliconeClient } from '@roast/ai';
+import { sessionContext, getHeliconeClient } from "@roast/ai";
 
 // Set session context for tracking
 sessionContext.setSession({
   sessionId: "unique-session-id",
   sessionName: "Analysis Session",
-  sessionPath: "/analysis/123"
+  sessionPath: "/analysis/123",
 });
 
 // Get cost data
 const client = getHeliconeClient();
-const costs = await client.getCosts({ /* filters */ });
+const costs = await client.getCosts({
+  /* filters */
+});
 ```
 
 ## Environment Variables
@@ -138,8 +147,8 @@ ANTHROPIC_API_KEY=your-api-key
 ### Optional Variables
 
 ```bash
-# Model selection (defaults to claude-sonnet-4-20250514)
-ANALYSIS_MODEL=claude-sonnet-4-20250514
+# Model selection (defaults to claude-sonnet-4-5)
+ANALYSIS_MODEL=claude-sonnet-4-5
 
 # Helicone integration for cost tracking and caching
 HELICONE_API_KEY=your-helicone-key        # Required if HELICONE_CACHE_ENABLED=true
@@ -153,11 +162,11 @@ HELICONE_CACHE_BUCKET_MAX_SIZE=20        # Max cached items (default: 20)
 The package provides strict configuration validation that fails fast on any configuration errors:
 
 ```typescript
-import { validateConfiguration } from '@roast/ai';
+import { validateConfiguration } from "@roast/ai";
 
 const config = validateConfiguration();
 if (!config.isValid) {
-  console.error('Configuration errors:', config.errors);
+  console.error("Configuration errors:", config.errors);
   process.exit(1);
 }
 ```
@@ -167,11 +176,13 @@ if (!config.isValid) {
 ## Development
 
 Run tests:
+
 ```bash
 pnpm test
 ```
 
 Type checking:
+
 ```bash
 pnpm typecheck
 ```
@@ -207,11 +218,11 @@ The package provides both named exports for specific components and namespace ex
 
 ```typescript
 // Individual imports
-import { callClaude, PluginManager, MathPlugin } from '@roast/ai';
+import { callClaude, PluginManager, MathPlugin } from "@roast/ai";
 
 // Tool imports
-import { checkMath, checkSpellingGrammar } from '@roast/ai';
+import { checkMath, checkSpellingGrammar } from "@roast/ai";
 
 // Type imports
-import type { Comment, DocumentLocation, LanguageConvention } from '@roast/ai';
+import type { Comment, DocumentLocation, LanguageConvention } from "@roast/ai";
 ```
