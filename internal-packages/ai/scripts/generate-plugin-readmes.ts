@@ -13,13 +13,40 @@ import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
 
-// Import readme generators
+// Import readme generators from plugins
 import { generateReadme as generateFactCheckReadme } from '../src/analysis-plugins/plugins/fact-check/readme-generator';
+import { generateReadme as generateMathReadme } from '../src/analysis-plugins/plugins/math/readme-generator';
+import { generateReadme as generateSpellingReadme } from '../src/analysis-plugins/plugins/spelling/readme-generator';
+import { generateReadme as generateForecastReadme } from '../src/analysis-plugins/plugins/forecast/readme-generator';
+import { generateReadme as generateLinkAnalysisReadme } from '../src/analysis-plugins/plugins/link-analysis/readme-generator';
+
+// Import agent-level readme generators
+import { generateReadme as generateComprehensiveReadme } from '../../db/system-agents/agents/readmes/comprehensive-checker-generator';
 
 const READMES = {
   'fact-checker': {
     generator: generateFactCheckReadme,
     markdownOutputPath: '../../db/system-agents/agents/readmes/fact-checker.md'
+  },
+  'math-checker': {
+    generator: generateMathReadme,
+    markdownOutputPath: '../../db/system-agents/agents/readmes/math-checker.md'
+  },
+  'spelling-grammar': {
+    generator: generateSpellingReadme,
+    markdownOutputPath: '../../db/system-agents/agents/readmes/spelling-grammar.md'
+  },
+  'forecast-checker': {
+    generator: generateForecastReadme,
+    markdownOutputPath: '../../db/system-agents/agents/readmes/forecast-checker.md'
+  },
+  'link-checker': {
+    generator: generateLinkAnalysisReadme,
+    markdownOutputPath: '../../db/system-agents/agents/readmes/link-checker.md'
+  },
+  'comprehensive-checker': {
+    generator: generateComprehensiveReadme,
+    markdownOutputPath: '../../db/system-agents/agents/readmes/comprehensive-checker.md'
   }
 };
 
