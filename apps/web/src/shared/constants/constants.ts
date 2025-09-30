@@ -4,12 +4,15 @@ export const EXTERNAL_URLS = {
   DISCORD: 'https://discord.gg/nsTnQTgtG6',
   GITHUB_REPO: 'https://github.com/quantified-uncertainty/roast-my-post',
   GITHUB_ISSUES: 'https://github.com/quantified-uncertainty/roast-my-post/issues',
-  
+
   // Organization
   QURI_WEBSITE: 'https://quantifieduncertainty.org',
-  
+
   // API Documentation Base URL
   API_BASE: process.env.NEXT_PUBLIC_API_URL || 'https://roastmypost.com/api',
+
+  // Source code paths
+  GITHUB_TOOLS_PATH: 'https://github.com/quantified-uncertainty/roast-my-post/tree/main/internal-packages/ai/src/tools',
 } as const;
 
 // Rate limiting constants (also defined in rate-limiter.ts)
