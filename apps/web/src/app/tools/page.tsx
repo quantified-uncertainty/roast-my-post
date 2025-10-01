@@ -43,9 +43,9 @@ export default function ToolsIndexPage() {
 
       <div className="space-y-8">
         {Object.entries(toolsByCategory).map(([category, categoryTools]) => {
-          const Icon = categoryIcons[category as keyof typeof categoryIcons];
-          const categoryColor = categoryColors[category as keyof typeof categoryColors];
-          
+          const Icon = categoryIcons[category as keyof typeof categoryIcons] || MagnifyingGlassIcon;
+          const categoryColor = categoryColors[category as keyof typeof categoryColors] || 'bg-gray-50 text-gray-700 border-gray-200';
+
           return (
             <div key={category} className="space-y-4">
               <div className="flex items-center gap-2">
