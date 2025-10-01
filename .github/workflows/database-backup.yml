@@ -35,7 +35,10 @@ on:
         description: 'Target environment'
         required: false
         default: 'Production'
-        type: string
+        type: choice
+        options:
+          - Staging
+          - Production
       backup_reason:
         description: 'Reason for manual backup'
         required: false
