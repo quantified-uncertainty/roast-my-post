@@ -26,6 +26,16 @@ on:
   # Manual trigger
   workflow_dispatch:
     inputs:
+      backup_prefix:
+        description: 'Prefix for backup filename'
+        required: false
+        default: 'pre-migration'
+        type: string
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'Production'
+        type: string
       backup_reason:
         description: 'Reason for manual backup'
         required: false
