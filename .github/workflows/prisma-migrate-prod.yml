@@ -13,10 +13,10 @@ on:
 jobs:
   backup:
     name: Backup Database
-    environment: ${{ github.ref_name == 'prod' && 'Production' || 'Staging' }}
     uses: ./.github/workflows/database-backup.yml
     with:
       backup_prefix: 'pre-migration'
+      environment: ${{ github.ref_name == 'prod' && 'Production' || 'Staging' }}
     secrets: inherit
 
   migrate:

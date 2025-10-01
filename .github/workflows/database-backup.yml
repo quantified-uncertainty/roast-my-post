@@ -9,6 +9,11 @@ on:
         required: false
         default: 'pre-migration'
         type: string
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'Production'
+        type: string
     outputs:
       backup_filename:
         description: 'Name of the backup file created'
@@ -31,7 +36,7 @@ jobs:
   backup:
     name: Create Database Backup
     runs-on: ubuntu-latest
-    environment: Production
+    environment: ${{ inputs.environment || 'Production' }}
     outputs:
       backup_filename: ${{ steps.create_backup.outputs.filename }}
     
