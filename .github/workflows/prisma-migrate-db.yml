@@ -9,21 +9,28 @@ on:
       - 'internal-packages/db/prisma/schema.prisma'
       - 'internal-packages/db/prisma/migrations/**'
   workflow_dispatch:
-
+    inputs:
+      environment:
+        description: 'Environment to run migrations on'
+        type: choice
+        options:
+          - Staging
+          - Production
+        required: true
 jobs:
   backup:
     name: Backup Database
     uses: ./.github/workflows/database-backup.yml
     with:
       backup_prefix: 'pre-migration'
-      environment: ${{ github.ref_name == 'prod' && 'Production' || 'Staging' }}
+      environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'prod' && 'Production' || 'Staging') }}
     secrets: inherit
 
   migrate:
     name: Deploy Database Migrations
     needs: backup  # Only run after successful backup
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'prod' && 'Production' || 'Staging' }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'prod' && 'Production' || 'Staging') }}
     
     steps:
       - name: Checkout code
