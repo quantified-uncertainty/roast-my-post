@@ -19,11 +19,9 @@ ${toolsSection}## How It Works
 
 Analyzes text to identify factual statements, then scores each claim across three dimensions: importance (how central to the argument), checkability (how easily fact-checked), and truth probability (estimated likelihood of being true). Assigns topic categories and confidence scores for each extraction.
 
-## Capabilities & Limitations
+## Limitations
 
-**Strengths:** Processes entire documents in a single operation. Provides importance, checkability, and truth probability scores (0-100). Categorizes claims by topic. Confidence scoring for extraction reliability.
-
-**Limitations:** May occasionally extract opinions as factual claims. Can miss context-dependent or implicit claims. Performance varies by domain and document structure.
+May occasionally extract opinions as factual claims. Can miss context-dependent or implicit claims. Performance varies by domain and document structure.
 
 ## Integration
 

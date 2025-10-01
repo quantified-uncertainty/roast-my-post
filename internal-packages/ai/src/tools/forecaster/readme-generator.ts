@@ -9,6 +9,7 @@ import {
 } from "../utils/readme-helpers";
 import { forecasterTool, DEFAULT_NUM_FORECASTS, MIN_NUM_FORECASTS, MAX_NUM_FORECASTS } from "./index";
 import { MODEL_CONFIG } from "../../claude/wrapper";
+import { getModelDisplayName } from "../../types";
 
 export function generateReadme(): string {
   const dependencies = getToolDependencies(forecasterTool);
@@ -37,7 +38,7 @@ Asks Claude to make multiple independent probability assessments of a given ques
 
 ## Technical Details
 
-- Uses multiple independent ${MODEL_CONFIG.forecasting} calls to reduce bias
+- Uses multiple independent ${getModelDisplayName(MODEL_CONFIG.forecasting)} calls to reduce bias
 - Removes statistical outliers before aggregation
 - Agreement measured as percentage of forecasts within 10 points of median
 - Default ${DEFAULT_NUM_FORECASTS} forecasts per question (configurable ${MIN_NUM_FORECASTS}-${MAX_NUM_FORECASTS})

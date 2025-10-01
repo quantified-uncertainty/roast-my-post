@@ -11,6 +11,7 @@ import {
   DEFAULT_MAX_ERRORS,
 } from "./index";
 import { MODEL_CONFIG } from "../../claude/wrapper";
+import { getModelDisplayName } from "../../types";
 
 export function generateReadme(): string {
   const dependencies = checkSpellingGrammarTool.getToolDependencies?.() ?? [];
@@ -42,17 +43,14 @@ First detects the document's language convention (US/UK/mixed) using the detect-
 }
 \`\`\`
 
-## Capabilities & Limitations
+## Limitations
 
-**Strengths:** Intelligent convention handling - can enforce specific US/UK spelling or adapt to mixed conventions. Three strictness levels for different use cases. Returns exact error text with concise corrections, importance scores, and confidence ratings. Provides explanations only for complex errors to reduce noise.
-
-**Limitations:** Uses ${MODEL_CONFIG.analysis} model. Limited to \`${DEFAULT_MAX_ERRORS}\` errors by default (configurable). Line numbers are approximate. For exact position finding, combine with fuzzy-text-locator tool.
+Uses ${getModelDisplayName(MODEL_CONFIG.analysis)} model. Limited to \`${DEFAULT_MAX_ERRORS}\` errors by default (configurable). Line numbers are approximate. For exact position finding, combine with fuzzy-text-locator tool.
 
 ## Technical Details
 
 - **Strictness levels:** minimal (importance ≥51), standard (≥26), thorough (≥0)
 - **Convention modes:** US, UK, or auto-detect with mixed convention support
 - **Error scoring:** importance (0-100), confidence (0-100), with contextual descriptions
-- **Location:** Implementation in \`/internal-packages/ai/src/tools/check-spelling-grammar/\`
 `;
 }

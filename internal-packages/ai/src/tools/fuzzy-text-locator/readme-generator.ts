@@ -20,11 +20,9 @@ ${toolsSection}## How It Works
 
 Uses cascading search strategies to find text within documents, trying faster methods first (exact match, quote normalization) before falling back to slower methods (fuzzy matching, LLM semantic search). Each match returns exact character positions with confidence scores (0.0-1.0).
 
-## Capabilities & Limitations
+## Limitations
 
-**Strengths:** Multiple search strategies (exact, quote-normalized, partial, fuzzy, LLM semantic). Handles typos, quote variations, truncated text, and paraphrasing. Fast performance for simple matches (<10ms). Character-precise positioning with confidence scoring. Comprehensive test suite with 80+ edge cases.
-
-**Limitations:** Performance decreases with document size. LLM fallback requires API access and adds 500-2000ms. Cannot handle severe paraphrasing without LLM fallback enabled.
+Performance decreases with document size. LLM fallback requires API access and adds 500-2000ms. Cannot handle severe paraphrasing without LLM fallback enabled.
 
 ## Technical Details
 

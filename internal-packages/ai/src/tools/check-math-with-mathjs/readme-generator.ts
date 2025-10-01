@@ -12,6 +12,7 @@ import {
   checkMathWithMathJsTool,
 } from "./index";
 import { MODEL_CONFIG } from "../../claude/wrapper";
+import { getModelDisplayName } from "../../types";
 
 export function generateReadme(): string {
   const dependencies = getToolDependencies(checkMathWithMathJsTool);
@@ -24,20 +25,9 @@ ${toolsSection}## How It Works
 
 The tool uses a mathematical calculator ([MathJS](https://mathjs.org/)) to verify numerical statements and calculations. It can handle arithmetic, algebra, trigonometry, unit conversions, and more.
 
-## Capabilities & Limitations
+## Limitations
 
-**Strengths:** 
-- Accurate numerical calculations using MathJS calculator
-- Handles unit conversions, trigonometry, logarithms, and complex expressions
-- Smart approximation detection - accepts reasonable rounding
-- Consistent results - same input always gives same answer
-- Can verify multi-step calculations and word problems
-
-**Limitations:**
-- Cannot handle symbolic mathematics (derivatives, integrals, proofs)
-- Limited to numerical computations and basic algebra
-- Uses ${MODEL_CONFIG.analysis} model for agent mode
-- May timeout on very complex calculations (${AGENT_TIMEOUT_MS / 1000}-second limit)
+Cannot handle symbolic mathematics (derivatives, integrals, proofs). Limited to numerical computations and basic algebra. Uses ${getModelDisplayName(MODEL_CONFIG.analysis)} model for agent mode. May timeout on very complex calculations (${AGENT_TIMEOUT_MS / 1000}-second limit).
 
 ## Two-Mode Design
 
@@ -67,10 +57,9 @@ The tool intelligently handles mathematical approximations based on the precisio
 ## Technical Details
 
 - Two-mode operation: Direct (simple equality) vs Agent (complex statements)
-- Uses ${MODEL_CONFIG.analysis} model for agent mode
+- Uses ${getModelDisplayName(MODEL_CONFIG.analysis)} model for agent mode
 - MathJS calculator for numerical computations
 - Smart approximation handling based on precision shown
 - Timeout: ${AGENT_TIMEOUT_MS / 1000} seconds for complex calculations
-- Location: Implementation in \`/internal-packages/ai/src/tools/check-math-with-mathjs/\`
 `;
 }

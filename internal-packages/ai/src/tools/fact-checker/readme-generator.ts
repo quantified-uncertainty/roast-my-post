@@ -19,11 +19,9 @@ ${toolsSection}## How It Works
 
 Uses Perplexity Research to gather current information and sources, then analyzes specific claims for accuracy and truthfulness. Returns structured verdicts (true, false, partially-true, unverifiable, or outdated) with detailed reasoning and supporting evidence.
 
-## Capabilities & Limitations
+## Limitations
 
-**Strengths:** Evidence-based verification with source citations. Provides nuanced verdicts beyond simple true/false. Suggests corrections for false claims. Includes confidence levels for reliability assessment.
-
-**Limitations:** Effectiveness depends on claim specificity and available evidence sources. Cannot verify highly specialized or very recent claims.
+Effectiveness depends on claim specificity and available evidence sources. Cannot verify highly specialized or very recent claims.
 
 ## Integration
 

@@ -31,6 +31,5 @@ Uses Claude to identify mathematical expressions that appear potentially incorre
 - Exclusions: Correct math, simple percentages, factual claims, predictions
 - Output: Expression text, error likelihood, context, character offsets
 - Uses Claude to identify potentially incorrect expressions
-- Location: Implementation in \`/internal-packages/ai/src/tools/extract-math-expressions/\`
 `;
 }
