@@ -30,10 +30,10 @@ env:
 jobs:
   backup:
     name: Backup Database
-    if: env.SYNC_DRY_RUN != 'true'
+    if: github.event.inputs.dry_run != true
     uses: ./.github/workflows/database-backup.yml
     with:
-      backup_prefix: ${{ env.SYNC_BACKUP_PREFIX }}
+      backup_prefix: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
     secrets: inherit
 
   sync-agents:
@@ -42,7 +42,7 @@ jobs:
     needs: [backup]
     # Only require backup if it was supposed to run
     if: always() && (needs.backup.result == 'success' || needs.backup.result == 'skipped')
-    environment: ${{ env.SYNC_ENVIRONMENT }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'Production' }}
     
     outputs:
       sync_count: ${{ steps.sync.outputs.count }}
