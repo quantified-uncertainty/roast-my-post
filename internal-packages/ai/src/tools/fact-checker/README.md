@@ -1,6 +1,10 @@
 # Fact Checker
 
-AI-powered tool for verifying the accuracy of specific factual claims with detailed evidence and reasoning.
+Verify the accuracy of specific factual claims
+
+## Tools Used
+
+- **[Perplexity Research](/api/tools/perplexity-research)** - Web-enhanced research using Perplexity Sonar models via OpenRouter
 
 ## What it does
 

@@ -1,6 +1,6 @@
 # Check Math with MathJS
 
-An agentic mathematical verification tool that gives Claude access to MathJS for computational verification. Claude acts as an agent that can make multiple calculation attempts using MathJS tools before providing a verdict. The tool now features **deterministic numeric comparison** at the code level for consistent approximation handling.
+Verify mathematical statements using an agentic approach with Claude and MathJS
 
 ## How It Works
 
@@ -29,14 +29,14 @@ The tool now includes code-level deterministic comparison logic that automatical
 
 ## Capabilities & Limitations
 
-**Strengths:** 
+**Strengths:**
 - Handles numerical computations, unit conversions, comparisons, and mathematical functions through MathJS
 - Deterministic approximation handling without relying on LLM interpretation
 - Can make multiple calculation attempts to verify different parts of a statement
 - Early detection of symbolic math to avoid unnecessary API calls
 - Consistent and predictable comparison behavior
 
-**Limitations:** 
+**Limitations:**
 - Cannot handle symbolic mathematics (derivatives, integrals, proofs)
 - Limited to 5 rounds of tool calls with 60-second timeout
 - Returns `cannot_verify` for symbolic expressions or incomplete statements

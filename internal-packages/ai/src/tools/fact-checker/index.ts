@@ -370,6 +370,10 @@ ${input.claim}
       `[FactChecker] Completed: ${output.result.verdict} verdict`
     );
   }
+
+  getToolDependencies() {
+    return [perplexityResearchTool];
+  }
 }
 
 // Export singleton instance

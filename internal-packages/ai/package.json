@@ -61,9 +61,10 @@
     "test:ci": "vitest run",
     "generate-schemas": "tsx scripts/generate-tool-schemas.ts",
     "generate-readmes": "tsx scripts/generate-tool-readmes.ts",
+    "generate-plugin-readmes": "tsx scripts/generate-plugin-readmes.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
     "check-readmes": "pnpm --filter @roast/web test generated-readmes.vtest.ts",
-    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes"
+    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes && pnpm run generate-plugin-readmes"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

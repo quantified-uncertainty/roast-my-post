@@ -8,6 +8,7 @@ import type {
 } from "../../../shared/types";
 import extractFactualClaimsTool from "../../../tools/extract-factual-claims";
 import factCheckerTool from "../../../tools/fact-checker";
+import fuzzyTextLocatorTool from "../../../tools/fuzzy-text-locator";
 import { TextChunk } from "../../TextChunk";
 import type {
   AnalysisResult,
@@ -66,6 +67,14 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         shouldProcess: true,
         reason: "Contains specific economic statistic that can be verified",
       },
+    ];
+  }
+
+  getToolDependencies() {
+    return [
+      extractFactualClaimsTool,
+      factCheckerTool,
+      fuzzyTextLocatorTool,
     ];
   }
 

@@ -1,6 +1,6 @@
 # Detect Language Convention
 
-Pure pattern-matching tool that detects US vs UK English conventions without LLM calls. Uses extensive dictionaries of spelling differences and weighted scoring to determine the dominant convention.
+Detect whether text uses US or UK English conventions
 
 ## How It Works
 

@@ -1,6 +1,6 @@
 # Link Validator
 
-Fast, comprehensive link checking tool that extracts and validates all external links in documents with detailed error classification.
+Extracts and validates all URLs from a text, checking their accessibility and returning detailed validation results
 
 ## What it does
 

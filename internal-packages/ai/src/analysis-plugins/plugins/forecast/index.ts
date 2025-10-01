@@ -893,5 +893,12 @@ The analysis may still be valid, but the highlighting won't be precise.`,
       llmInteractionsCount: this.llmInteractions.length,
     };
   }
+
+  getToolDependencies() {
+    return [
+      extractForecastingClaimsTool,
+      forecasterTool,
+    ];
+  }
 }
 

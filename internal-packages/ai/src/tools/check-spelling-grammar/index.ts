@@ -533,6 +533,10 @@ ${textWithLineNumbers}
       `(${JSON.stringify(errorBreakdown)}) in ${output.metadata?.processingTime || 0}ms`
     );
   }
+
+  getToolDependencies() {
+    return [detectLanguageConventionTool];
+  }
 }
 
 // Export singleton instance

@@ -102,6 +102,10 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
   override async afterExecute(output: CheckMathHybridOutput, context: ToolContext): Promise<void> {
     context.logger.info(`[CheckMathHybridTool] Verification result: ${output.status} (verified by: ${output.verifiedBy})`);
   }
+
+  getToolDependencies() {
+    return [checkMathWithMathJsTool, checkMathTool];
+  }
 }
 
 // Export singleton instance

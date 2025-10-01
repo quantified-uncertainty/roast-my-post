@@ -1,6 +1,6 @@
 # Extract Mathematical Expressions
 
-Specialized tool that extracts ONLY mathematical expressions likely to contain errors (20%+ chance of being wrong). Works alongside fact and forecast extractors to avoid duplication.
+Extract and analyze mathematical expressions from text, including error detection and complexity assessment
 
 ## How It Works
 

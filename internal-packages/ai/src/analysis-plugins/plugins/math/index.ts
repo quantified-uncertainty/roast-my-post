@@ -1069,6 +1069,13 @@ This expression was skipped because it's ${extractedExpression.expression.comple
       llmInteractionsCount: 0,
     };
   }
+
+  getToolDependencies() {
+    return [
+      extractMathExpressionsTool,
+      checkMathHybridTool,
+    ];
+  }
 }
 
 // Export MathAnalyzerJob as MathPlugin for compatibility
