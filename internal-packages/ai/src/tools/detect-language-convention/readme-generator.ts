@@ -2,11 +2,14 @@
  * Programmatic README generator for Detect Language Convention Tool
  */
 
-import { detectLanguageConventionTool } from './index';
-import { generateToolHeader, getToolDependencies, generateToolsUsedSection } from '../utils/readme-helpers';
+import {
+  generateToolHeader,
+  generateToolsUsedSection,
+} from "../utils/readme-helpers";
+import { detectLanguageConventionTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = getToolDependencies(detectLanguageConventionTool);
+  const dependencies = detectLanguageConventionTool.getToolDependencies?.() ?? [];
   const header = generateToolHeader(detectLanguageConventionTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 
@@ -20,7 +23,7 @@ Analyzes text against comprehensive US/UK word pair dictionaries (500+ word vari
 
 **Strengths:** Zero cost - no API usage. Deterministic and fast (<10ms). Returns confidence (0-1) and consistency scores. Provides evidence list showing which words were detected. Handles mixed conventions by calculating consistency metric. Analyzes up to 2000 characters by default (configurable).
 
-**Limitations:** Dictionary-based - won't catch words not in the dictionaries. Cannot detect Australian, Canadian, or other English variants. Requires sufficient distinctive words for accurate detection. May struggle with very short texts or texts without characteristic spellings.
+**Limitations:** Frequently fails to detect the correct language convention. Cannot detect Australian, Canadian, or other English variants. Requires sufficient distinctive words for accurate detection. 
 
 ## Technical Details
 

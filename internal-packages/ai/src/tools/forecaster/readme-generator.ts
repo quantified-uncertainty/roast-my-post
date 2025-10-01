@@ -2,11 +2,15 @@
  * Programmatic README generator for Forecaster Tool
  */
 
-import { forecasterTool } from './index';
-import { generateToolHeader, getToolDependencies, generateToolsUsedSection } from '../utils/readme-helpers';
+import {
+  generateToolHeader,
+  generateToolsUsedSection,
+} from "../utils/readme-helpers";
+import { forecasterTool } from "./index";
+import { MODEL_CONFIG } from "../../claude/wrapper";
 
 export function generateReadme(): string {
-  const dependencies = getToolDependencies(forecasterTool);
+  const dependencies = forecasterTool.getToolDependencies?.() ?? [];
   const header = generateToolHeader(forecasterTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 
@@ -14,16 +18,7 @@ export function generateReadme(): string {
 
 ${toolsSection}## How It Works
 
-Asks Claude to make multiple independent probability assessments of a given question, then aggregates them using statistical methods to produce a final forecast with confidence levels.
-
-The tool generates multiple independent forecasts (default: 6), removes statistical outliers, and aggregates results with confidence scoring based on forecast agreement.
-
-## Parameters
-
-- **question**: The question to forecast (1-500 characters)
-- **context**: Optional additional context (max 1000 characters)
-- **numForecasts**: Number of forecasts to generate (3-20, default: 6)
-- **usePerplexity**: Whether to use Perplexity for research (default: false)
+Asks Claude to make multiple independent probability assessments of a given question, then aggregates them by taking the mean to produce a final forecast.
 
 ## Output
 
@@ -39,15 +34,11 @@ The tool generates multiple independent forecasts (default: 6), removes statisti
 - **Medium**: 33-66% agreement
 - **Low**: <33% agreement
 
-## Cost
-
-Approximately $0.05 per forecast (6 Claude calls with default settings).
-
 ## Technical Details
 
-- Uses multiple independent Claude calls to reduce bias
+- Uses multiple independent ${MODEL_CONFIG.forecasting} calls to reduce bias
 - Removes statistical outliers before aggregation
 - Agreement measured as percentage of forecasts within 10 points of median
-- Location: Implementation in \`/internal-packages/ai/src/tools/forecaster/\`
+- Default 6 forecasts per question (configurable 3-20)
 `;
 }

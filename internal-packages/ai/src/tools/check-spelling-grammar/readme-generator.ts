@@ -2,11 +2,18 @@
  * Programmatic README generator for Check Spelling & Grammar Tool
  */
 
-import { checkSpellingGrammarTool } from './index';
-import { generateToolHeader, getToolDependencies, generateToolsUsedSection } from '../utils/readme-helpers';
+import {
+  generateToolHeader,
+  generateToolsUsedSection,
+} from "../utils/readme-helpers";
+import {
+  checkSpellingGrammarTool,
+  DEFAULT_MAX_ERRORS,
+} from "./index";
+import { MODEL_CONFIG } from "../../claude/wrapper";
 
 export function generateReadme(): string {
-  const dependencies = checkSpellingGrammarTool.getToolDependencies();
+  const dependencies = checkSpellingGrammarTool.getToolDependencies?.() ?? [];
   const header = generateToolHeader(checkSpellingGrammarTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 
@@ -14,13 +21,32 @@ export function generateReadme(): string {
 
 ${toolsSection}## How It Works
 
-First detects the document's language convention (US/UK/mixed) using the detect-language-convention tool, then sends text to Claude with detailed instructions for error detection. The tool uses importance scoring (0-100) and confidence levels to prioritize errors, with configurable strictness levels (minimal/standard/thorough) that adjust the error detection threshold.
+First detects the document's language convention (US/UK/mixed) using the detect-language-convention tool, then sends text to Claude with detailed instructions for error detection. The tool uses importance scoring and confidence levels to prioritize errors, with configurable strictness levels (minimal/standard/thorough) that adjust the error detection threshold.
+
+## Example
+
+**Input:** "The team of engineers are working on the project."
+
+**Output:**
+\`\`\`json
+{
+  "text": "are",
+  "correction": "is", 
+  "displayCorrection": "<r:replace from=\\"are\\" to=\\"is\\"/>",
+  "type": "grammar",
+  "context": "engineers are working on",
+  "importance": 45,
+  "confidence": 85,
+  "description": "The subject 'team' is singular and requires the singular verb 'is', not the plural 'are'.",
+  "lineNumber": 1
+}
+\`\`\`
 
 ## Capabilities & Limitations
 
 **Strengths:** Intelligent convention handling - can enforce specific US/UK spelling or adapt to mixed conventions. Three strictness levels for different use cases. Returns exact error text with concise corrections, importance scores, and confidence ratings. Provides explanations only for complex errors to reduce noise.
 
-**Limitations:** Costs ~$0.01-0.02 per check using Claude Haiku. Limited to 50 errors by default (configurable). Line numbers are approximate. For exact position finding, combine with fuzzy-text-locator tool.
+**Limitations:** Uses ${MODEL_CONFIG.analysis} model. Limited to \`${DEFAULT_MAX_ERRORS}\` errors by default (configurable). Line numbers are approximate. For exact position finding, combine with fuzzy-text-locator tool.
 
 ## Technical Details
 

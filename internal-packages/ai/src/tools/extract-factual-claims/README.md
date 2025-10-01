@@ -6,44 +6,25 @@ Extract and score verifiable factual claims from text
 
 - **[Fuzzy Text Locator](/tools/fuzzy-text-locator)** - Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text
 
-## What it does
+## How It Works
 
-- **Identifies Claims**: Extracts factual statements from text automatically
-- **Classifies Types**: Categorizes as factual, statistical, historical, scientific, or other
-- **Assesses Verifiability**: Determines if claims can be verified through external sources
-- **Provides Confidence**: Scores each claim for extraction reliability
-- **Handles Multiple Claims**: Processes entire documents in a single operation
+Analyzes text to identify factual statements, then scores each claim across three dimensions: importance (how central to the argument), checkability (how easily fact-checked), and truth probability (estimated likelihood of being true). Assigns topic categories and confidence scores for each extraction.
 
-## Claim Types
+## Capabilities & Limitations
 
-**Factual**: General statements about events, people, or things ("Paris is the capital of France")
-**Statistical**: Numerical data and measurements ("Unemployment rose 2.3% in 2023")
-**Historical**: Past events and dates ("World War II ended in 1945")
-**Scientific**: Research findings and technical facts ("Water boils at 100°C at sea level")
-**Other**: Claims that don't fit standard categories
+**Strengths:** Processes entire documents in a single operation. Provides importance, checkability, and truth probability scores (0-100). Categorizes claims by topic. Confidence scoring for extraction reliability.
 
-## Use Cases
-
-- **Research Analysis**: Extract claims from academic papers and reports
-- **Content Verification**: Identify statements needing fact-checking
-- **Information Organization**: Structure factual data from large documents
-- **Quality Assurance**: Review content for proper claim support
+**Limitations:** May occasionally extract opinions as factual claims. Can miss context-dependent or implicit claims. Performance varies by domain and document structure.
 
 ## Integration
 
 Works well with:
 - **Fact Checker Tool**: Verify extracted claims for accuracy
 - **Perplexity Research Tool**: Find sources for claim verification
-- **Link Validator Tool**: Check referenced sources
 
-## Important Notes
+## Technical Details
 
-- AI may extract opinions as factual claims - always review results
-- Cannot verify claim accuracy (only identifies and categorizes them)
-- Effectiveness varies with text complexity and writing style
-- Check confidence scores - higher scores indicate more reliable extraction
-- Best used as first pass before human review
-
-## Limitations
-
-May miss context-dependent or implicit claims. Performance varies by domain and document structure.
+- Extracts multiple claims in single operation
+- Scoring dimensions: importance, checkability, truth probability (0-100 each)
+- Topic categorization (economics, history, science, etc.)
+- Uses fuzzy-text-locator for precise text positioning

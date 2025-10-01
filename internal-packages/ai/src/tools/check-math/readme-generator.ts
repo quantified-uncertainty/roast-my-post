@@ -2,11 +2,15 @@
  * Programmatic README generator for Check Math Tool
  */
 
-import { checkMathTool } from './index';
-import { generateToolHeader, getToolDependencies, generateToolsUsedSection } from '../utils/readme-helpers';
+import {
+  generateToolHeader,
+  generateToolsUsedSection,
+} from "../utils/readme-helpers";
+import { checkMathTool } from "./index";
+import { MODEL_CONFIG } from "../../claude/wrapper";
 
 export function generateReadme(): string {
-  const dependencies = getToolDependencies(checkMathTool);
+  const dependencies = checkMathTool.getToolDependencies?.() ?? [];
   const header = generateToolHeader(checkMathTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 
@@ -20,13 +24,14 @@ The tool sends mathematical statements directly to Claude for analysis. Claude e
 
 **Strengths:** Can handle conceptual mathematics (derivatives, integrals, proofs), word problems, and complex reasoning. Provides detailed explanations and categorizes errors by type (calculation, logic, unit, notation, conceptual) and severity.
 
-**Limitations:** May make arithmetic errors on complex calculations since it doesn't use a calculator. Non-deterministic - the same input might produce slightly different explanations. Costs ~$0.02 per check as it uses Claude Haiku.
+**Limitations:** May make arithmetic errors on complex calculations since it doesn't use a calculator. Non-deterministic - the same input might produce slightly different explanations. Uses ${MODEL_CONFIG.analysis} model.
 
 ## Technical Details
 
-- **Response format:** Returns status (verified_true/verified_false/cannot_verify), explanation, reasoning, and optional error details with correction suggestions
-- **Error categorization:** Automatically classifies mathematical errors and assigns severity levels
-- **Cache seeding:** Uses deterministic cache seeds for more consistent responses
-- **Location:** Implementation in \`/internal-packages/ai/src/tools/check-math/\`
+- Uses ${MODEL_CONFIG.analysis} model for analysis
+- Response format: status (verified_true/verified_false/cannot_verify), explanation, reasoning, error details
+- Error categorization: calculation, logic, unit, notation, conceptual with severity levels
+- Uses deterministic cache seeds for more consistent responses
+- Location: Implementation in \`/internal-packages/ai/src/tools/check-math/\`
 `;
 }

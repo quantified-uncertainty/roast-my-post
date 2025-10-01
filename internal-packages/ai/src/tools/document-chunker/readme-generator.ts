@@ -2,11 +2,14 @@
  * Programmatic README generator for Document Chunker Tool
  */
 
-import { documentChunkerTool } from './index';
-import { generateToolHeader, getToolDependencies, generateToolsUsedSection } from '../utils/readme-helpers';
+import {
+  generateToolHeader,
+  generateToolsUsedSection,
+} from "../utils/readme-helpers";
+import { documentChunkerTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = getToolDependencies(documentChunkerTool);
+  const dependencies = documentChunkerTool.getToolDependencies?.() ?? [];
   const header = generateToolHeader(documentChunkerTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 
@@ -28,6 +31,5 @@ Parses markdown hierarchy to identify sections and headings, then recursively ch
 - **Default target:** 500 words per chunk (configurable via targetWords)
 - **Character limits:** maxChunkSize (default 1500), minChunkSize (default 200)
 - **Output:** Chunks with offsets, line numbers, type metadata, and heading context
-- **Location:** Implementation in \`/internal-packages/ai/src/tools/document-chunker/\`
 `;
 }

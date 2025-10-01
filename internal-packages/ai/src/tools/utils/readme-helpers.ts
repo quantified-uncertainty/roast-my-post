@@ -15,19 +15,6 @@ ${tool.config.description}`;
 }
 
 /**
- * Get tool dependencies if the method exists
- * Works with tools that may or may not implement getToolDependencies()
- */
-export function getToolDependencies(
-  tool: Tool<any, any> & { getToolDependencies?: () => Tool<any, any>[] }
-): Tool<any, any>[] {
-  if (typeof tool.getToolDependencies === 'function') {
-    return tool.getToolDependencies();
-  }
-  return [];
-}
-
-/**
  * Generate a "Tools Used" section for tools that depend on other tools
  * @param tools Array of tool instances this tool depends on
  * @returns Markdown section with tool links, or empty string if no tools
