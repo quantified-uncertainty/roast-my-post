@@ -1,13 +1,11 @@
-import { SystemAgentDefinition, PluginType } from "../types";
-import { pluginReadmes } from "../generated-plugin-readmes";
+import { PluginType } from "../types";
+import { createPluginBasedAgent } from "../utils/createPluginBasedAgent";
 
-export const mathCheckerAgent: SystemAgentDefinition = {
+export const mathCheckerAgent = createPluginBasedAgent({
   id: "system-math-checker",
   name: "Math Checker",
-  description:
-    "Verifies mathematical statements, calculations, and formulas for correctness",
-  providesGrades: false, // Plugin-based agents don't provide grades
-  isRecommended: true,
+  description: "Verifies mathematical statements, calculations, and formulas for correctness",
   pluginIds: [PluginType.MATH],
-  readme: pluginReadmes["math-checker"],
-};
+  readmeId: "math-checker",
+  isRecommended: true,
+});

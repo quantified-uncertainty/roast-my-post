@@ -1,13 +1,11 @@
-import { SystemAgentDefinition, PluginType } from "../types";
-import { pluginReadmes } from "../generated-plugin-readmes";
+import { PluginType } from "../types";
+import { createPluginBasedAgent } from "../utils/createPluginBasedAgent";
 
-export const linkCheckerAgent: SystemAgentDefinition = {
+export const linkCheckerAgent = createPluginBasedAgent({
   id: "system-link-verifier",
   name: "Link Checker",
-  description:
-    "Validates external links in documents, checking for broken URLs, redirects, and accessibility issues",
-  providesGrades: false, // Plugin-based agents don't provide grades
-  isRecommended: true,
+  description: "Validates external links in documents, checking for broken URLs, redirects, and accessibility issues",
   pluginIds: [PluginType.LINK_ANALYSIS],
-  readme: pluginReadmes["link-checker"],
-};
+  readmeId: "link-checker",
+  isRecommended: true,
+});

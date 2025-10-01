@@ -1,12 +1,11 @@
-import { SystemAgentDefinition, PluginType } from "../types";
-import { pluginReadmes } from "../generated-plugin-readmes";
+import { PluginType } from "../types";
+import { createPluginBasedAgent } from "../utils/createPluginBasedAgent";
 
-export const forecastCheckerAgent: SystemAgentDefinition = {
+export const forecastCheckerAgent = createPluginBasedAgent({
   id: "system-forecast-checker",
   name: "Forecast Checker",
   description: "Makes forecasts on binary questions in the document.",
-  providesGrades: false, // Plugin-based agents don't provide grades
   pluginIds: [PluginType.FORECAST],
+  readmeId: "forecast-checker",
   isRecommended: true,
-  readme: pluginReadmes["forecast-checker"],
-};
+});
