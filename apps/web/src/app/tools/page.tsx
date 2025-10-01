@@ -5,11 +5,11 @@
 
 import Link from 'next/link';
 import { toolRegistry } from '@roast/ai';
-import { MagnifyingGlassIcon, CpuChipIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CpuChipIcon, CheckCircleIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 const categoryIcons = {
-  extraction: MagnifyingGlassIcon,
-  checker: MagnifyingGlassIcon,
+  extraction: FunnelIcon,
+  checker: CheckCircleIcon,
   research: MagnifyingGlassIcon,
   utility: CpuChipIcon
 };
