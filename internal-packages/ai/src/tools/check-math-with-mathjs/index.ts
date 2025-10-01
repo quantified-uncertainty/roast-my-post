@@ -147,7 +147,7 @@ export class CheckMathWithMathJsTool extends Tool<
     description:
       "Verify mathematical statements using an agentic approach with Claude and MathJS",
     version: "2.0.0",
-    category: "analysis" as const,
+    category: "checker" as const,
     costEstimate:
       "~$0.02-0.05 per statement (uses Claude with multiple tool calls)",
     path: "/tools/check-math-with-mathjs",

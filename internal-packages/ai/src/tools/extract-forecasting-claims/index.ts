@@ -87,7 +87,7 @@ export class ExtractForecastingClaimsTool extends Tool<
     description:
       "Extracts predictions and converts them to binary (YES/NO) questions. Scores on three dimensions: precision (how binary/specific), verifiability (can we check with public data), and importance (centrality to argument)",
     version: "2.0.0",
-    category: "analysis" as const,
+    category: "extraction" as const,
     costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
     path: "/tools/extract-forecasting-claims",
     status: "stable" as const

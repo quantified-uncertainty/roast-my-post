@@ -48,7 +48,7 @@ export class LinkValidatorTool extends Tool<LinkValidatorInput, LinkValidatorOut
     name: 'Link Validator',
     description: 'Extracts and validates all URLs from a text, checking their accessibility and returning detailed validation results',
     version: '1.0.0',
-    category: 'analysis' as const,
+    category: 'checker' as const,
     costEstimate: 'Free (no LLM usage)',
     path: '/tools/link-validator',
     status: 'stable' as const

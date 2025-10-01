@@ -95,7 +95,7 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
     name: "Fact Checker",
     description: "Verify the accuracy of specific factual claims",
     version: "1.0.0",
-    category: "analysis" as const,
+    category: "checker" as const,
     costEstimate: "~$0.01-0.02 per claim",
     path: "/tools/fact-checker",
     status: "stable" as const,

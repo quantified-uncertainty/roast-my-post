@@ -8,13 +8,15 @@ import { toolRegistry } from '@roast/ai';
 import { MagnifyingGlassIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 
 const categoryIcons = {
-  analysis: MagnifyingGlassIcon,
+  extraction: MagnifyingGlassIcon,
+  checker: MagnifyingGlassIcon,
   research: MagnifyingGlassIcon,
   utility: CpuChipIcon
 };
 
 const categoryColors = {
-  analysis: 'bg-green-50 text-green-700 border-green-200',
+  extraction: 'bg-green-50 text-green-700 border-green-200',
+  checker: 'bg-blue-50 text-blue-700 border-blue-200',
   research: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   utility: 'bg-purple-50 text-purple-700 border-purple-200'
 };

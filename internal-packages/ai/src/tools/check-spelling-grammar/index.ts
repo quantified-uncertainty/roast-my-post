@@ -144,7 +144,7 @@ export class CheckSpellingGrammarTool extends Tool<
     description:
       "Analyze text for spelling and grammar errors using Claude with advanced error detection",
     version: "2.0.0",
-    category: "analysis" as const,
+    category: "checker" as const,
     costEstimate: "~$0.01-0.02 per check",
     path: "/tools/check-spelling-grammar",
     status: "stable" as const,

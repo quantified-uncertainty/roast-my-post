@@ -117,7 +117,7 @@ export class ExtractFactualClaimsTool extends Tool<
     name: "Extract Factual Claims",
     description: "Extract and score verifiable factual claims from text",
     version: "2.0.0",
-    category: "analysis" as const,
+    category: "extraction" as const,
     costEstimate: "~$0.01-0.03 per analysis (depends on text length)",
     path: "/tools/extract-factual-claims",
     status: "stable" as const,
