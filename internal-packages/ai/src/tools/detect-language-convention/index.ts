@@ -3,6 +3,9 @@ import { Tool, ToolContext } from '../base/Tool';
 import type { LanguageConvention } from '../../shared/types';
 import { detectLanguageConvention, detectDocumentType } from './conventionDetector';
 
+// Configuration constants
+export const DEFAULT_SAMPLE_SIZE = 2000;
+
 export interface DetectLanguageConventionInput {
   text: string;
   sampleSize?: number;
@@ -68,11 +71,11 @@ export class DetectLanguageConventionTool extends Tool<DetectLanguageConventionI
   ): Promise<DetectLanguageConventionOutput> {
     context.logger.info('Detecting language convention', {
       textLength: input.text.length,
-      sampleSize: input.sampleSize || 2000
+      sampleSize: input.sampleSize || DEFAULT_SAMPLE_SIZE
     });
 
     // Use the sample size to analyze a portion of the text
-    const sampleSize = Math.min(input.sampleSize || 2000, input.text.length);
+    const sampleSize = Math.min(input.sampleSize || DEFAULT_SAMPLE_SIZE, input.text.length);
     const sample = input.text.slice(0, sampleSize);
     
     // Detect language convention

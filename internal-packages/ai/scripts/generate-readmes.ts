@@ -66,34 +66,19 @@ async function loadGenerators(
 }
 
 /**
- * Generate README files from generators
+ * Generate README content from generators
  */
-function generateReadmeFiles(
-  generators: Record<string, () => string>,
-  getMarkdownPath: (id: string) => string,
-  outputDir: string
+function generateReadmeContent(
+  generators: Record<string, () => string>
 ): { content: Record<string, string>; failures: string[] } {
   const content: Record<string, string> = {};
   const failures: string[] = [];
-
-  // Ensure output directory exists
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
 
   for (const [id, generator] of Object.entries(generators)) {
     try {
       const readmeContent = generator();
       content[id] = readmeContent;
-
-      // Write markdown file
-      const markdownPath = getMarkdownPath(id);
-      const dir = path.dirname(markdownPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(markdownPath, readmeContent, 'utf-8');
-      console.log(`✅ Generated markdown README for ${id} at ${markdownPath}`);
+      console.log(`✅ Generated README content for ${id}`);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error(`❌ Failed to generate README for ${id}:`, error);
@@ -235,12 +220,8 @@ async function main() {
   // Load generators
   const { generators, failures: loadFailures } = await loadGenerators(ids, config.getGeneratorPath);
 
-  // Generate README files from generators
-  const { content: generatedContent, failures: generationFailures } = generateReadmeFiles(
-    generators,
-    config.getMarkdownPath,
-    config.outputDir
-  );
+  // Generate README content from generators
+  const { content: generatedContent, failures: generationFailures } = generateReadmeContent(generators);
 
   // For tools, also load static READMEs
   let allContent = generatedContent;

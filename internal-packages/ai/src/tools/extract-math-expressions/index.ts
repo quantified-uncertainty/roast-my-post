@@ -1,8 +1,18 @@
-import { z } from 'zod';
-import { Tool, ToolContext } from '../base/Tool';
-import { callClaudeWithTool } from '../../claude/wrapper';
-import { generateCacheSeed } from '../shared/cache-utils';
-import type { MathErrorType, MathSeverity } from '../shared/math-schemas';
+import { z } from "zod";
+
+import { callClaudeWithTool } from "../../claude/wrapper";
+import {
+  Tool,
+  ToolContext,
+} from "../base/Tool";
+import { generateCacheSeed } from "../shared/cache-utils";
+import type {
+  MathErrorType,
+  MathSeverity,
+} from "../shared/math-schemas";
+
+// Configuration constants
+export const ERROR_LIKELIHOOD_THRESHOLD = 20; // Minimum error likelihood percentage to extract expressions
 
 export interface ExtractedMathExpression {
   originalText: string;
@@ -15,7 +25,7 @@ export interface ExtractedMathExpression {
   contextImportanceScore: number; // 0-100
   errorSeverityScore: number; // 0-100
   simplifiedExplanation?: string;
-  verificationStatus: 'verified' | 'unverified' | 'unverifiable';
+  verificationStatus: "verified" | "unverified" | "unverifiable";
   severity?: MathSeverity;
 }
 
@@ -31,102 +41,178 @@ export interface ExtractMathExpressionsOutput {
 
 // Input schema
 const inputSchema = z.object({
-  text: z.string().min(1).max(50000).describe('The text to extract mathematical expressions from'),
-  verifyCalculations: z.boolean().optional().default(true).describe('Whether to verify calculations for errors'),
-  includeContext: z.boolean().optional().default(true).describe('Whether to include contextual information')
+  text: z
+    .string()
+    .min(1)
+    .max(50000)
+    .describe("The text to extract mathematical expressions from"),
+  verifyCalculations: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe("Whether to verify calculations for errors"),
+  includeContext: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe("Whether to include contextual information"),
 }) satisfies z.ZodType<ExtractMathExpressionsInput>;
 
 // Output schema
 const outputSchema = z.object({
-  expressions: z.array(z.object({
-    originalText: z.string().describe('The exact mathematical expression as it appears in the text'),
-    hasError: z.boolean().describe('Whether the expression contains an error'),
-    errorType: z.enum(['calculation', 'logic', 'unit', 'notation', 'conceptual']).optional().describe('Type of mathematical error'),
-    severity: z.enum(['critical', 'major', 'minor']).optional().describe('Severity of the error'),
-    errorExplanation: z.string().optional().describe('Explanation of the error'),
-    correctedVersion: z.string().optional().describe('Corrected version of the expression'),
-    displayCorrection: z.string().optional().describe('XML markup for displaying the correction (e.g., "<r:replace from=\"45\" to=\"234\"/>")'),
-    complexityScore: z.number().min(0).max(100).describe('How complex the mathematical expression is (0-100)'),
-    contextImportanceScore: z.number().min(0).max(100).describe('How important this expression is to the document context (0-100)'),
-    errorSeverityScore: z.number().min(0).max(100).describe('How severe the error is if present (0-100)'),
-    simplifiedExplanation: z.string().optional().describe('Simplified explanation of complex expressions'),
-    verificationStatus: z.enum(['verified', 'unverified', 'unverifiable']).describe('Whether the calculation was verified')
-  })).describe('List of extracted mathematical expressions')
+  expressions: z
+    .array(
+      z.object({
+        originalText: z
+          .string()
+          .describe(
+            "The exact mathematical expression as it appears in the text"
+          ),
+        hasError: z
+          .boolean()
+          .describe("Whether the expression contains an error"),
+        errorType: z
+          .enum(["calculation", "logic", "unit", "notation", "conceptual"])
+          .optional()
+          .describe("Type of mathematical error"),
+        severity: z
+          .enum(["critical", "major", "minor"])
+          .optional()
+          .describe("Severity of the error"),
+        errorExplanation: z
+          .string()
+          .optional()
+          .describe("Explanation of the error"),
+        correctedVersion: z
+          .string()
+          .optional()
+          .describe("Corrected version of the expression"),
+        displayCorrection: z
+          .string()
+          .optional()
+          .describe(
+            'XML markup for displaying the correction (e.g., "<r:replace from=\"45\" to=\"234\"/>")'
+          ),
+        complexityScore: z
+          .number()
+          .min(0)
+          .max(100)
+          .describe("How complex the mathematical expression is (0-100)"),
+        contextImportanceScore: z
+          .number()
+          .min(0)
+          .max(100)
+          .describe(
+            "How important this expression is to the document context (0-100)"
+          ),
+        errorSeverityScore: z
+          .number()
+          .min(0)
+          .max(100)
+          .describe("How severe the error is if present (0-100)"),
+        simplifiedExplanation: z
+          .string()
+          .optional()
+          .describe("Simplified explanation of complex expressions"),
+        verificationStatus: z
+          .enum(["verified", "unverified", "unverifiable"])
+          .describe("Whether the calculation was verified"),
+      })
+    )
+    .describe("List of extracted mathematical expressions"),
 }) satisfies z.ZodType<ExtractMathExpressionsOutput>;
 
-export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput, ExtractMathExpressionsOutput> {
+export class ExtractMathExpressionsTool extends Tool<
+  ExtractMathExpressionsInput,
+  ExtractMathExpressionsOutput
+> {
   config = {
-    id: 'extract-math-expressions',
-    name: 'Extract Mathematical Expressions',
-    description: 'Extract and analyze mathematical expressions from text, including error detection and complexity assessment',
-    version: '1.0.0',
-    category: 'analysis' as const,
-    costEstimate: '~$0.02 per extraction (1 Claude call)',
-    path: '/tools/extract-math-expressions',
-    status: 'stable' as const
+    id: "extract-math-expressions",
+    name: "Extract Mathematical Expressions",
+    description:
+      "Extract and analyze mathematical expressions from text, including error detection and complexity assessment",
+    version: "1.0.0",
+    category: "analysis" as const,
+    costEstimate: "~$0.02 per extraction (1 Claude call)",
+    path: "/tools/extract-math-expressions",
+    status: "stable" as const,
   };
-  
+
   inputSchema = inputSchema;
   outputSchema = outputSchema;
-  
-  async execute(input: ExtractMathExpressionsInput, context: ToolContext): Promise<ExtractMathExpressionsOutput> {
-    context.logger.info(`[ExtractMathExpressionsTool] Extracting math expressions from ${input.text.length} chars`);
-    
+
+  async execute(
+    input: ExtractMathExpressionsInput,
+    context: ToolContext
+  ): Promise<ExtractMathExpressionsOutput> {
+    context.logger.info(
+      `[ExtractMathExpressionsTool] Extracting math expressions from ${input.text.length} chars`
+    );
+
     try {
       const result = await this.extractExpressions(input);
-      
+
       return {
-        expressions: result.expressions
+        expressions: result.expressions,
       };
     } catch (error) {
-      context.logger.error('[ExtractMathExpressionsTool] Error extracting expressions:', error);
+      context.logger.error(
+        "[ExtractMathExpressionsTool] Error extracting expressions:",
+        error
+      );
       throw error;
     }
   }
-  
-  private async extractExpressions(input: ExtractMathExpressionsInput): Promise<{
+
+  private async extractExpressions(
+    input: ExtractMathExpressionsInput
+  ): Promise<{
     expressions: ExtractedMathExpression[];
   }> {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
-
     // Generate cache seed based on content for consistent caching
-    const cacheSeed = generateCacheSeed('math-extract', [
+    const cacheSeed = generateCacheSeed("math-extract", [
       input.text,
       input.verifyCalculations ?? true,
-      input.includeContext ?? true
+      input.includeContext ?? true,
     ]);
 
-    const result = await callClaudeWithTool<{ expressions: ExtractedMathExpression[] }>({
+    const result = await callClaudeWithTool<{
+      expressions: ExtractedMathExpression[];
+    }>({
       system: systemPrompt,
-      messages: [{
-        role: "user",
-        content: userPrompt
-      }],
+      messages: [
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
       max_tokens: 4000,
       temperature: 0,
       toolName: "extract_math_expressions",
-      toolDescription: "Extract ONLY mathematical expressions that appear to contain errors",
+      toolDescription:
+        "Extract ONLY mathematical expressions that appear to contain errors",
       toolSchema: this.getMathExtractionToolSchema(),
       enablePromptCaching: true,
-      cacheSeed
+      cacheSeed,
     });
 
     const expressions = result.toolResult?.expressions || [];
 
     return { expressions };
   }
-  
+
   private buildSystemPrompt(): string {
-    return `You are a mathematical analysis expert. Your task is to identify ONLY mathematical expressions that are likely INCORRECT (20%+ chance of being wrong).
+    return `You are a mathematical analysis expert. Your task is to identify ONLY mathematical expressions that are likely INCORRECT (${ERROR_LIKELIHOOD_THRESHOLD}%+ chance of being wrong).
 
 CRITICAL: You MUST use the extract_math_expressions tool to provide your analysis.
 
 CRITICAL: You work alongside Fact-Check and Forecast extractors. Stay in your lane!
 
 IMPORTANT FILTERING RULES:
-1. ONLY extract expressions you suspect are mathematically incorrect (20%+ chance)
+1. ONLY extract expressions you suspect are mathematically incorrect (${ERROR_LIKELIHOOD_THRESHOLD}%+ chance)
 2. DO NOT extract:
    - Simple correct percentages like "54%" or "increased by 30%"
    - Trivial arithmetic that is correct
@@ -180,15 +266,27 @@ Escape special XML characters (&, <, >, ", ') as needed.
 
 Remember: If you're not reasonably confident it's a MATH ERROR, don't include it.`;
   }
-  
+
   private buildUserPrompt(input: ExtractMathExpressionsInput): string {
     const requirements = [];
-    if (input.verifyCalculations) requirements.push('Verify calculations and ONLY include those likely to be incorrect.');
-    if (input.includeContext) requirements.push('Consider the context when assessing error importance.');
-    requirements.push('ONLY extract mathematical expressions that appear to have errors (20%+ chance of being wrong).');
-    requirements.push('DO NOT include trivial percentages, correct calculations, or non-mathematical claims.');
-    requirements.push('DO NOT extract factual statistics or future predictions - other plugins handle those.');
-    
+    if (input.verifyCalculations)
+      requirements.push(
+        "Verify calculations and ONLY include those likely to be incorrect."
+      );
+    if (input.includeContext)
+      requirements.push(
+        "Consider the context when assessing error importance."
+      );
+    requirements.push(
+      `ONLY extract mathematical expressions that appear to have errors (${ERROR_LIKELIHOOD_THRESHOLD}%+ chance of being wrong).`
+    );
+    requirements.push(
+      "DO NOT include trivial percentages, correct calculations, or non-mathematical claims."
+    );
+    requirements.push(
+      "DO NOT extract factual statistics or future predictions - other plugins handle those."
+    );
+
     return `<task>
   <instruction>Identify and extract ONLY mathematical expressions that are likely INCORRECT</instruction>
   
@@ -202,7 +300,7 @@ ${input.text}
   </parameters>
   
   <requirements>
-    ${requirements.join('\n    ')}
+    ${requirements.join("\n    ")}
   </requirements>
   
   <critical_reminders>
@@ -215,7 +313,7 @@ ${input.text}
   </critical_reminders>
 </task>`;
   }
-  
+
   private getMathExtractionToolSchema() {
     return {
       type: "object" as const,
@@ -228,7 +326,8 @@ ${input.text}
             properties: {
               originalText: {
                 type: "string",
-                description: "The exact mathematical expression as it appears in the text",
+                description:
+                  "The exact mathematical expression as it appears in the text",
               },
               hasError: {
                 type: "boolean",
@@ -236,7 +335,13 @@ ${input.text}
               },
               errorType: {
                 type: "string",
-                enum: ["calculation", "logic", "unit", "notation", "conceptual"],
+                enum: [
+                  "calculation",
+                  "logic",
+                  "unit",
+                  "notation",
+                  "conceptual",
+                ],
                 description: "Type of mathematical error",
               },
               severity: {
@@ -254,15 +359,18 @@ ${input.text}
               },
               displayCorrection: {
                 type: "string",
-                description: "XML markup for displaying the correction (e.g., '<r:replace from=\"45\" to=\"234\"/>')",
+                description:
+                  'XML markup for displaying the correction (e.g., \'<r:replace from="45" to="234"/>\')',
               },
               complexityScore: {
                 type: "number",
-                description: "How complex the mathematical expression is (0-100)",
+                description:
+                  "How complex the mathematical expression is (0-100)",
               },
               contextImportanceScore: {
                 type: "number",
-                description: "How important this expression is to the document context (0-100)",
+                description:
+                  "How important this expression is to the document context (0-100)",
               },
               errorSeverityScore: {
                 type: "number",
@@ -278,23 +386,42 @@ ${input.text}
                 description: "Whether the calculation was verified",
               },
             },
-            required: ["originalText", "hasError", "complexityScore", "contextImportanceScore", "errorSeverityScore", "verificationStatus"],
+            required: [
+              "originalText",
+              "hasError",
+              "complexityScore",
+              "contextImportanceScore",
+              "errorSeverityScore",
+              "verificationStatus",
+            ],
           },
         },
       },
       required: ["expressions"],
     };
   }
-  
-  override async beforeExecute(input: ExtractMathExpressionsInput, context: ToolContext): Promise<void> {
-    context.logger.info(`[ExtractMathExpressionsTool] Starting extraction for ${input.text.length} characters`);
+
+  override async beforeExecute(
+    input: ExtractMathExpressionsInput,
+    context: ToolContext
+  ): Promise<void> {
+    context.logger.info(
+      `[ExtractMathExpressionsTool] Starting extraction for ${input.text.length} characters`
+    );
   }
-  
-  override async afterExecute(output: ExtractMathExpressionsOutput, context: ToolContext): Promise<void> {
-    context.logger.info(`[ExtractMathExpressionsTool] Extracted ${output.expressions.length} expressions`);
-    const withErrors = output.expressions.filter(e => e.hasError).length;
+
+  override async afterExecute(
+    output: ExtractMathExpressionsOutput,
+    context: ToolContext
+  ): Promise<void> {
+    context.logger.info(
+      `[ExtractMathExpressionsTool] Extracted ${output.expressions.length} expressions`
+    );
+    const withErrors = output.expressions.filter((e) => e.hasError).length;
     if (withErrors > 0) {
-      context.logger.info(`[ExtractMathExpressionsTool] Found ${withErrors} expressions with errors`);
+      context.logger.info(
+        `[ExtractMathExpressionsTool] Found ${withErrors} expressions with errors`
+      );
     }
   }
 }

@@ -1,15 +1,22 @@
-import { z } from 'zod';
-import { Tool, ToolContext } from '../base/Tool';
-import { callClaudeWithTool } from '../../claude/wrapper';
-import { generateCacheSeed } from '../shared/cache-utils';
-import { detectLanguageConventionTool } from '../detect-language-convention';
-import type { LanguageConvention, LanguageConventionOption } from '../../shared/types';
+import { z } from "zod";
+
+import { callClaudeWithTool } from "../../claude/wrapper";
+import type {
+  LanguageConvention,
+  LanguageConventionOption,
+} from "../../shared/types";
+import {
+  Tool,
+  ToolContext,
+} from "../base/Tool";
+import { detectLanguageConventionTool } from "../detect-language-convention";
+import { generateCacheSeed } from "../shared/cache-utils";
 
 export interface SpellingGrammarError {
   text: string;
   correction: string;
   displayCorrection: string;
-  type: 'spelling' | 'grammar';
+  type: "spelling" | "grammar";
   context?: string;
   importance: number; // 0-100
   confidence: number; // 0-100
@@ -22,133 +29,218 @@ export interface CheckSpellingGrammarInput {
   context?: string;
   maxErrors?: number;
   convention?: LanguageConventionOption;
-  strictness?: 'minimal' | 'standard' | 'thorough'; // New option
+  strictness?: "minimal" | "standard" | "thorough"; // New option
 }
 
 export interface CheckSpellingGrammarOutput {
   errors: SpellingGrammarError[];
   metadata?: {
     totalErrorsFound: number;
-    convention: LanguageConvention | 'mixed';
+    convention: LanguageConvention | "mixed";
     processingTime?: number;
   };
 }
 
+// Configuration constants
+export const DEFAULT_MAX_ERRORS = 50;
+
 // Enhanced input schema
 const inputSchema = z.object({
-  text: z.string().min(1).max(500000).describe('The text to check for spelling and grammar errors'),
-  context: z.string().max(1000).optional().describe('Additional context about the text (e.g., academic paper, casual email, technical documentation)'),
-  maxErrors: z.number().min(1).max(100).optional().default(50).describe('Maximum number of errors to return'),
-  convention: z.enum(['US', 'UK', 'auto']).optional().default('auto').describe('Which English convention to use'),
-  strictness: z.enum(['minimal', 'standard', 'thorough']).optional().default('standard').describe('How strict the checking should be')
+  text: z
+    .string()
+    .min(1)
+    .max(500000)
+    .describe("The text to check for spelling and grammar errors"),
+  context: z
+    .string()
+    .max(1000)
+    .optional()
+    .describe(
+      "Additional context about the text (e.g., academic paper, casual email, technical documentation)"
+    ),
+  maxErrors: z
+    .number()
+    .min(1)
+    .max(100)
+    .optional()
+    .default(DEFAULT_MAX_ERRORS)
+    .describe("Maximum number of errors to return"),
+  convention: z
+    .enum(["US", "UK", "auto"])
+    .optional()
+    .default("auto")
+    .describe("Which English convention to use"),
+  strictness: z
+    .enum(["minimal", "standard", "thorough"])
+    .optional()
+    .default("standard")
+    .describe("How strict the checking should be"),
 }) satisfies z.ZodType<CheckSpellingGrammarInput>;
 
 // Enhanced output schema
 const outputSchema = z.object({
-  errors: z.array(z.object({
-    text: z.string().describe('The EXACT incorrect text from the input'),
-    correction: z.string().describe('Suggested correction'),
-    displayCorrection: z.string().describe('XML markup for displaying correction (e.g., "<r:replace from=\"teh\" to=\"the\"/>\")' ),
-    type: z.enum(['spelling', 'grammar']).describe('Type of error'),
-    context: z.string().optional().describe('Surrounding context (20-30 chars each side)'),
-    importance: z.number().min(0).max(100).describe('Importance score (0-100)'),
-    confidence: z.number().min(0).max(100).describe('Confidence in this error (0-100)'),
-    description: z.string().nullable().optional().describe('Explanation for complex cases (0 for obvious, 1-2 sentences otherwise)'),
-    lineNumber: z.number().optional().describe('Approximate line number where error occurs')
-  })).describe('List of errors found'),
-  metadata: z.object({
-    totalErrorsFound: z.number().describe('Total number of errors found (before limiting)'),
-    convention: z.enum(['US', 'UK', 'mixed']).describe('Detected or applied convention'),
-    processingTime: z.number().optional().describe('Processing time in milliseconds')
-  }).optional()
+  errors: z
+    .array(
+      z.object({
+        text: z.string().describe("The EXACT incorrect text from the input"),
+        correction: z.string().describe("Suggested correction"),
+        displayCorrection: z
+          .string()
+          .describe(
+            'XML markup for displaying correction (e.g., "<r:replace from=\"teh\" to=\"the\"/>\")'
+          ),
+        type: z.enum(["spelling", "grammar"]).describe("Type of error"),
+        context: z
+          .string()
+          .optional()
+          .describe("Surrounding context (20-30 chars each side)"),
+        importance: z
+          .number()
+          .min(0)
+          .max(100)
+          .describe("Importance score (0-100)"),
+        confidence: z
+          .number()
+          .min(0)
+          .max(100)
+          .describe("Confidence in this error (0-100)"),
+        description: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            "Explanation for complex cases (0 for obvious, 1-2 sentences otherwise)"
+          ),
+        lineNumber: z
+          .number()
+          .optional()
+          .describe("Approximate line number where error occurs"),
+      })
+    )
+    .describe("List of errors found"),
+  metadata: z
+    .object({
+      totalErrorsFound: z
+        .number()
+        .describe("Total number of errors found (before limiting)"),
+      convention: z
+        .enum(["US", "UK", "mixed"])
+        .describe("Detected or applied convention"),
+      processingTime: z
+        .number()
+        .optional()
+        .describe("Processing time in milliseconds"),
+    })
+    .optional(),
 });
 
-export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, CheckSpellingGrammarOutput> {
+export class CheckSpellingGrammarTool extends Tool<
+  CheckSpellingGrammarInput,
+  CheckSpellingGrammarOutput
+> {
   config = {
-    id: 'check-spelling-grammar',
-    name: 'Check Spelling & Grammar',
-    description: 'Analyze text for spelling and grammar errors using Claude with advanced error detection',
-    version: '2.0.0',
-    category: 'analysis' as const,
-    costEstimate: '~$0.01-0.02 per check',
-    path: '/tools/check-spelling-grammar',
-    status: 'stable' as const
+    id: "check-spelling-grammar",
+    name: "Check Spelling & Grammar",
+    description:
+      "Analyze text for spelling and grammar errors using Claude with advanced error detection",
+    version: "2.0.0",
+    category: "analysis" as const,
+    costEstimate: "~$0.01-0.02 per check",
+    path: "/tools/check-spelling-grammar",
+    status: "stable" as const,
   };
-  
+
   inputSchema = inputSchema;
   outputSchema = outputSchema as any;
-  
-  async execute(input: CheckSpellingGrammarInput, context: ToolContext): Promise<CheckSpellingGrammarOutput> {
+
+  async execute(
+    input: CheckSpellingGrammarInput,
+    context: ToolContext
+  ): Promise<CheckSpellingGrammarOutput> {
     const startTime = Date.now();
-    context.logger.info(`[CheckSpellingGrammarTool] Checking text (${input.text.length} chars, strictness: ${input.strictness || 'standard'})`);
-    
+    context.logger.info(
+      `[CheckSpellingGrammarTool] Checking text (${input.text.length} chars, strictness: ${input.strictness || "standard"})`
+    );
+
     try {
       // Detect convention if set to auto
-      let convention = input.convention || 'auto';
-      let detectedConvention: 'US' | 'UK' | 'mixed' = 'US';
-      
-      if (convention === 'auto') {
-        context.logger.info('[CheckSpellingGrammarTool] Auto-detecting language convention');
+      let convention = input.convention || "auto";
+      let detectedConvention: "US" | "UK" | "mixed" = "US";
+
+      if (convention === "auto") {
+        context.logger.info(
+          "[CheckSpellingGrammarTool] Auto-detecting language convention"
+        );
         const detectionResult = await detectLanguageConventionTool.execute(
           { text: input.text },
           context
         );
-        
+
         if (detectionResult.confidence > 0.5) {
           convention = detectionResult.convention;
           detectedConvention = detectionResult.convention;
-          context.logger.info(`[CheckSpellingGrammarTool] Detected ${convention} English (${Math.round(detectionResult.confidence * 100)}% confidence)`);
+          context.logger.info(
+            `[CheckSpellingGrammarTool] Detected ${convention} English (${Math.round(detectionResult.confidence * 100)}% confidence)`
+          );
         } else if (detectionResult.consistency < 0.3) {
-          detectedConvention = 'mixed';
-          context.logger.info('[CheckSpellingGrammarTool] Mixed conventions detected');
+          detectedConvention = "mixed";
+          context.logger.info(
+            "[CheckSpellingGrammarTool] Mixed conventions detected"
+          );
         }
       } else {
-        detectedConvention = convention as 'US' | 'UK';
+        detectedConvention = convention as "US" | "UK";
       }
-      
-      const result = await this.checkSpellingGrammar({ ...input, convention }, detectedConvention);
-      
+
+      const result = await this.checkSpellingGrammar(
+        { ...input, convention },
+        detectedConvention
+      );
+
       // Note: For accurate position finding, use the fuzzy-text-locator tool
       // with the lineNumber hint from the errors
-      
+
       return {
         errors: result.errors,
         metadata: {
           totalErrorsFound: result.totalFound,
           convention: detectedConvention,
-          processingTime: Date.now() - startTime
-        }
+          processingTime: Date.now() - startTime,
+        },
       };
     } catch (error) {
-      context.logger.error('[CheckSpellingGrammarTool] Error checking spelling/grammar:', error);
+      context.logger.error(
+        "[CheckSpellingGrammarTool] Error checking spelling/grammar:",
+        error
+      );
       throw error;
     }
   }
-  
+
   private async checkSpellingGrammar(
-    input: CheckSpellingGrammarInput, 
-    detectedConvention: 'US' | 'UK' | 'mixed'
+    input: CheckSpellingGrammarInput,
+    detectedConvention: "US" | "UK" | "mixed"
   ): Promise<{
     errors: SpellingGrammarError[];
     totalFound: number;
   }> {
     const strictnessSettings = {
       minimal: {
-        description: 'only clear spelling errors and major grammar mistakes',
-        threshold: 51
+        description: "only clear spelling errors and major grammar mistakes",
+        threshold: 51,
       },
       standard: {
-        description: 'spelling errors, grammar mistakes, and clarity issues',
-        threshold: 26
+        description: "spelling errors, grammar mistakes, and clarity issues",
+        threshold: 26,
       },
       thorough: {
-        description: 'all errors including minor style issues and word choice',
-        threshold: 0
-      }
+        description: "all errors including minor style issues and word choice",
+        threshold: 0,
+      },
     };
-    
-    const settings = strictnessSettings[input.strictness || 'standard'];
-    
+
+    const settings = strictnessSettings[input.strictness || "standard"];
+
     const systemPrompt = `<role>You are a professional proofreading assistant specializing in error detection.</role>
 
 <task>Identify spelling and grammar errors in the provided text with high precision.</task>
@@ -175,23 +267,27 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
 </critical_requirements>
 
 <convention_handling>
-  ${input.convention && input.convention !== 'auto' ? 
-    `<strict_mode>
+  ${
+    input.convention && input.convention !== "auto"
+      ? `<strict_mode>
       Use ${input.convention} English conventions EXCLUSIVELY.
-      Flag ANY words using ${input.convention === 'US' ? 'UK' : 'US'} spelling as errors.
+      Flag ANY words using ${input.convention === "US" ? "UK" : "US"} spelling as errors.
       
       Common differences to check:
-      - ${input.convention === 'US' ? 'organize/organization (not organise/organisation)' : 'organise/organisation (not organize/organization)'}
-      - ${input.convention === 'US' ? 'color/honor/favor (not colour/honour/favour)' : 'colour/honour/favour (not color/honor/favor)'}
-      - ${input.convention === 'US' ? 'center/theater (not centre/theatre)' : 'centre/theatre (not center/theater)'}
-      - ${input.convention === 'US' ? 'traveled/canceled (single L)' : 'travelled/cancelled (double L)'}
-      - ${input.convention === 'US' ? 'analyze/paralyze (not analyse/paralyse)' : 'analyse/paralyse (not analyze/paralyze)'}
-    </strict_mode>` : 
-    `<flexible_mode>
-      ${detectedConvention === 'mixed' ? 
-        'Mixed conventions detected. Do NOT flag consistent use of either US or UK spelling within the same word family.' :
-        `Predominant convention appears to be ${detectedConvention} English. Accept consistent use of this convention.`}
-    </flexible_mode>`}
+      - ${input.convention === "US" ? "organize/organization (not organise/organisation)" : "organise/organisation (not organize/organization)"}
+      - ${input.convention === "US" ? "color/honor/favor (not colour/honour/favour)" : "colour/honour/favour (not color/honor/favor)"}
+      - ${input.convention === "US" ? "center/theater (not centre/theatre)" : "centre/theatre (not center/theater)"}
+      - ${input.convention === "US" ? "traveled/canceled (single L)" : "travelled/cancelled (double L)"}
+      - ${input.convention === "US" ? "analyze/paralyze (not analyse/paralyse)" : "analyse/paralyse (not analyze/paralyze)"}
+    </strict_mode>`
+      : `<flexible_mode>
+      ${
+        detectedConvention === "mixed"
+          ? "Mixed conventions detected. Do NOT flag consistent use of either US or UK spelling within the same word family."
+          : `Predominant convention appears to be ${detectedConvention} English. Accept consistent use of this convention.`
+      }
+    </flexible_mode>`
+  }
 </convention_handling>
 
 <error_types>
@@ -200,10 +296,16 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     - Grammar errors affecting clarity (subject-verb disagreement, tense inconsistency)
     - Wrong word usage (their/there/they're, its/it's)
     - Missing or incorrect punctuation that changes meaning
-    ${input.convention && input.convention !== 'auto' ? 
-      `- Words using ${input.convention === 'US' ? 'UK' : 'US'} spelling conventions` : ''}
-    ${input.strictness === 'thorough' ? 
-      '- Style issues (wordiness, passive voice in formal contexts)\n    - Inconsistent capitalization or formatting' : ''}
+    ${
+      input.convention && input.convention !== "auto"
+        ? `- Words using ${input.convention === "US" ? "UK" : "US"} spelling conventions`
+        : ""
+    }
+    ${
+      input.strictness === "thorough"
+        ? "- Style issues (wordiness, passive voice in formal contexts)\n    - Inconsistent capitalization or formatting"
+        : ""
+    }
   </do_flag>
   
   <do_not_flag>
@@ -212,8 +314,11 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     - Proper nouns, names, or acronyms
     - Creative/intentional language use
     - Valid alternative spellings (if not in strict convention mode)
-    ${input.strictness === 'minimal' ? 
-      '- Minor style preferences\n    - Oxford comma usage\n    - Sentence fragments in informal contexts' : ''}
+    ${
+      input.strictness === "minimal"
+        ? "- Minor style preferences\n    - Oxford comma usage\n    - Sentence fragments in informal contexts"
+        : ""
+    }
   </do_not_flag>
 </error_types>
 
@@ -355,14 +460,17 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
 
     // Add line numbers to help LLM identify locations
     const addLineNumbers = (text: string): string => {
-      return text.split('\n').map((line, index) => `${index + 1}: ${line}`).join('\n');
+      return text
+        .split("\n")
+        .map((line, index) => `${index + 1}: ${line}`)
+        .join("\n");
     };
-    
+
     const textWithLineNumbers = addLineNumbers(input.text);
 
     const userPrompt = `<context>
-  ${input.context ? `<document_type>${input.context}</document_type>` : ''}
-  <strictness>${input.strictness || 'standard'}</strictness>
+  ${input.context ? `<document_type>${input.context}</document_type>` : ""}
+  <strictness>${input.strictness || "standard"}</strictness>
   <max_errors>${input.maxErrors || 50}</max_errors>
 </context>
 
@@ -379,25 +487,26 @@ ${textWithLineNumbers}
   6. Remember: ONLY report text that actually exists in the input
 </instructions>`;
 
-    
     // Generate cache seed
-    const cacheSeed = generateCacheSeed('spelling-v2', [
+    const cacheSeed = generateCacheSeed("spelling-v2", [
       input.text,
-      input.context || '',
+      input.context || "",
       input.maxErrors || 50,
-      input.convention || 'auto',
-      input.strictness || 'standard'
+      input.convention || "auto",
+      input.strictness || "standard",
     ]);
-    
-    const result = await callClaudeWithTool<{ 
-      errors: SpellingGrammarError[]; 
+
+    const result = await callClaudeWithTool<{
+      errors: SpellingGrammarError[];
       totalErrorsFound?: number;
     }>({
       system: systemPrompt,
-      messages: [{
-        role: "user",
-        content: userPrompt
-      }],
+      messages: [
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
       max_tokens: 2000,
       temperature: 0,
       toolName: "report_errors",
@@ -410,91 +519,103 @@ ${textWithLineNumbers}
             items: {
               type: "object",
               properties: {
-                text: { 
-                  type: "string", 
-                  description: "The EXACT incorrect text from the input - must be character-for-character identical" 
+                text: {
+                  type: "string",
+                  description:
+                    "The EXACT incorrect text from the input - must be character-for-character identical",
                 },
-                correction: { 
-                  type: "string", 
-                  description: "Suggested correction" 
+                correction: {
+                  type: "string",
+                  description: "Suggested correction",
                 },
-                displayCorrection: { 
-                  type: "string", 
-                  description: "XML markup for displaying correction (e.g., '<r:replace from=\"teh\" to=\"the\"/>')" 
+                displayCorrection: {
+                  type: "string",
+                  description:
+                    'XML markup for displaying correction (e.g., \'<r:replace from="teh" to="the"/>\')',
                 },
                 type: {
                   type: "string",
                   enum: ["spelling", "grammar"],
-                  description: "Type of error"
+                  description: "Type of error",
                 },
-                context: { 
-                  type: "string", 
-                  description: "~20-30 characters of context on each side of the error" 
+                context: {
+                  type: "string",
+                  description:
+                    "~20-30 characters of context on each side of the error",
                 },
-                importance: { 
-                  type: "number", 
+                importance: {
+                  type: "number",
                   description: "Importance score (0-100)",
                   minimum: 0,
-                  maximum: 100
+                  maximum: 100,
                 },
                 confidence: {
                   type: "number",
                   description: "Confidence in this error (0-100)",
                   minimum: 0,
-                  maximum: 100
+                  maximum: 100,
                 },
                 description: {
                   type: ["string", "null"],
-                  description: "Explanation for complex cases (null for obvious errors, 1-2 sentences otherwise)"
+                  description:
+                    "Explanation for complex cases (null for obvious errors, 1-2 sentences otherwise)",
                 },
                 lineNumber: {
                   type: "number",
-                  description: "The line number where the error appears (starting from 1)"
-                }
+                  description:
+                    "The line number where the error appears (starting from 1)",
+                },
               },
-              required: ["text", "correction", "displayCorrection", "type", "importance", "confidence"]
-            }
+              required: [
+                "text",
+                "correction",
+                "displayCorrection",
+                "type",
+                "importance",
+                "confidence",
+              ],
+            },
           },
           totalErrorsFound: {
             type: "number",
-            description: "Total number of errors found before limiting"
-          }
+            description: "Total number of errors found before limiting",
+          },
         },
-        required: ["errors"]
+        required: ["errors"],
       },
       enablePromptCaching: true,
-      cacheSeed
+      cacheSeed,
     });
 
     const rawErrors = result.toolResult.errors || [];
     const totalFound = result.toolResult.totalErrorsFound || rawErrors.length;
-    
+
     // Enhanced validation - only keep errors that exist exactly in the input
-    const validationResults = rawErrors.map(error => {
-      if (!error.text || typeof error.text !== 'string') {
-        return { error, valid: false, reason: 'missing or invalid text field' };
+    const validationResults = rawErrors.map((error) => {
+      if (!error.text || typeof error.text !== "string") {
+        return { error, valid: false, reason: "missing or invalid text field" };
       }
-      
+
       // Check if the error text exists EXACTLY in the input
       const exists = input.text.includes(error.text);
-      
+
       if (!exists) {
-        return { error, valid: false, reason: 'text not found in input' };
+        return { error, valid: false, reason: "text not found in input" };
       }
-      
-      return { error, valid: true, reason: 'valid' };
+
+      return { error, valid: true, reason: "valid" };
     });
-    
+
     // Log validation stats
-    const invalidCount = validationResults.filter(r => !r.valid).length;
+    const invalidCount = validationResults.filter((r) => !r.valid).length;
     if (invalidCount > 0) {
       console.warn(
         `[CheckSpellingGrammarTool] Filtered ${invalidCount} invalid errors out of ${rawErrors.length} total`
       );
-      
+
       // Log a sample of invalid errors for debugging
       validationResults
-        .filter(r => !r.valid)
+        .filter((r) => !r.valid)
         .slice(0, 3)
         .forEach(({ error, reason }) => {
           console.debug(
@@ -502,35 +623,44 @@ ${textWithLineNumbers}
           );
         });
     }
-    
+
     const errors = validationResults
-      .filter(r => r.valid)
-      .map(r => ({
+      .filter((r) => r.valid)
+      .map((r) => ({
         ...r.error,
         // Convert null description to undefined for cleaner output
-        description: r.error.description === null ? undefined : r.error.description
+        description:
+          r.error.description === null ? undefined : r.error.description,
       }));
 
     return { errors, totalFound };
   }
-  
-  
-  override async beforeExecute(input: CheckSpellingGrammarInput, context: ToolContext): Promise<void> {
+
+  override async beforeExecute(
+    input: CheckSpellingGrammarInput,
+    context: ToolContext
+  ): Promise<void> {
     context.logger.info(
       `[CheckSpellingGrammarTool] Starting check for ${input.text.length} characters ` +
-      `(mode: ${input.strictness || 'standard'}, convention: ${input.convention || 'auto'})`
+        `(mode: ${input.strictness || "standard"}, convention: ${input.convention || "auto"})`
     );
   }
-  
-  override async afterExecute(output: CheckSpellingGrammarOutput, context: ToolContext): Promise<void> {
-    const errorBreakdown = output.errors.reduce((acc, error) => {
-      acc[error.type] = (acc[error.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
+
+  override async afterExecute(
+    output: CheckSpellingGrammarOutput,
+    context: ToolContext
+  ): Promise<void> {
+    const errorBreakdown = output.errors.reduce(
+      (acc, error) => {
+        acc[error.type] = (acc[error.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
     context.logger.info(
       `[CheckSpellingGrammarTool] Found ${output.errors.length} errors ` +
-      `(${JSON.stringify(errorBreakdown)}) in ${output.metadata?.processingTime || 0}ms`
+        `(${JSON.stringify(errorBreakdown)}) in ${output.metadata?.processingTime || 0}ms`
     );
   }
 

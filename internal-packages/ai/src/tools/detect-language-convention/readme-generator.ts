@@ -7,7 +7,7 @@ import {
   generateToolsUsedSection,
   getToolDependencies,
 } from "../utils/readme-helpers";
-import { detectLanguageConventionTool } from "./index";
+import { detectLanguageConventionTool, DEFAULT_SAMPLE_SIZE } from "./index";
 
 export function generateReadme(): string {
   const dependencies = getToolDependencies(detectLanguageConventionTool);
@@ -22,7 +22,7 @@ Analyzes text against comprehensive US/UK word pair dictionaries (500+ word vari
 
 ## Capabilities & Limitations
 
-**Strengths:** Zero cost - no API usage. Deterministic and fast (<10ms). Returns confidence (0-1) and consistency scores. Provides evidence list showing which words were detected. Handles mixed conventions by calculating consistency metric. Analyzes up to 2000 characters by default (configurable).
+**Strengths:** Zero cost - no API usage. Deterministic and fast (<10ms). Returns confidence (0-1) and consistency scores. Provides evidence list showing which words were detected. Handles mixed conventions by calculating consistency metric. Analyzes up to ${DEFAULT_SAMPLE_SIZE} characters by default (configurable).
 
 **Limitations:** Frequently fails to detect the correct language convention. Cannot detect Australian, Canadian, or other English variants. Requires sufficient distinctive words for accurate detection. 
 

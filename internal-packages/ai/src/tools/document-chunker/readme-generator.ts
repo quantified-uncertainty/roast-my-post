@@ -7,7 +7,7 @@ import {
   generateToolsUsedSection,
   getToolDependencies,
 } from "../utils/readme-helpers";
-import { documentChunkerTool } from "./index";
+import { documentChunkerTool, DEFAULT_TARGET_WORDS, DEFAULT_MAX_CHUNK_SIZE, DEFAULT_MIN_CHUNK_SIZE } from "./index";
 
 export function generateReadme(): string {
   const dependencies = getToolDependencies(documentChunkerTool);
@@ -29,8 +29,8 @@ Parses markdown hierarchy to identify sections and headings, then recursively ch
 ## Technical Details
 
 - **Strategy:** Always uses markdown-aware chunking (ignores strategy parameter)
-- **Default target:** 500 words per chunk (configurable via targetWords)
-- **Character limits:** maxChunkSize (default 1500), minChunkSize (default 200)
+- **Default target:** ${DEFAULT_TARGET_WORDS} words per chunk (configurable via targetWords)
+- **Character limits:** maxChunkSize (default ${DEFAULT_MAX_CHUNK_SIZE}), minChunkSize (default ${DEFAULT_MIN_CHUNK_SIZE})
 - **Output:** Chunks with offsets, line numbers, type metadata, and heading context
 `;
 }

@@ -4,6 +4,11 @@ import { ToolContext } from '../base/Tool';
 import { generateForecastWithAggregation } from './generator';
 import { escapeXml } from '../../shared/utils/xml';
 
+// Configuration constants
+export const DEFAULT_NUM_FORECASTS = 6;
+export const MIN_NUM_FORECASTS = 3;
+export const MAX_NUM_FORECASTS = 20;
+
 // Define types explicitly to avoid inference issues with defaults
 export interface ForecasterInput {
   question: string;
@@ -36,7 +41,7 @@ export interface ForecasterOutput {
 const inputSchema = z.object({
   question: z.string().min(1).max(500).describe('The question to forecast'),
   context: z.string().max(1000).optional().describe('Additional context for the forecast'),
-  numForecasts: z.number().min(1).max(20).optional().default(6).describe('Number of independent forecasts to generate'),
+  numForecasts: z.number().min(MIN_NUM_FORECASTS).max(MAX_NUM_FORECASTS).optional().default(DEFAULT_NUM_FORECASTS).describe('Number of independent forecasts to generate'),
   usePerplexity: z.boolean().optional().default(false).describe('Whether to use Perplexity for research'),
   authorProbability: z.number().min(0).max(100).optional().describe('The author\'s probability estimate if available')
 }) satisfies z.ZodType<ForecasterInput>;
