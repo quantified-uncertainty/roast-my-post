@@ -24,13 +24,13 @@ on:
 
 env:
   SYNC_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'Production' }}
-  SYNC_DRY_RUN: ${{ github.event.inputs.dry_run == true && 'true' || 'false' }}
+  SYNC_DRY_RUN: ${{ (github.event.inputs.dry_run == 'true' || github.event.inputs.dry_run == true) && 'true' || 'false' }}
   SYNC_BACKUP_PREFIX: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
 
 jobs:
   backup:
     name: Backup Database
-    if: github.event.inputs.dry_run != true
+    if: github.event.inputs.dry_run != 'true' && github.event.inputs.dry_run != true
     uses: ./.github/workflows/database-backup.yml
     with:
       backup_prefix: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
