@@ -1,34 +1,41 @@
-name: Agent Sync (Reusable)
+name: Sync System Agents
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - main
+      - prod
+    paths:
+      - 'internal-packages/db/system-agents/**'
+  workflow_dispatch:
     inputs:
       environment:
         description: 'Target environment'
-        required: false
+        required: true
         default: 'Production'
-        type: string
+        type: choice
+        options:
+        - Production
+        - Staging
       dry_run:
         description: 'Dry run (show what would be synced without making changes)'
         required: false
-        default: 'false'
-        type: string
-      backup_prefix:
-        description: 'Prefix for backup filename'
-        required: false
-        default: 'agent-sync'
-        type: string
-    secrets:
-      DATABASE_URL:
-        required: true
+        default: false
+        type: boolean
+
+env:
+  SYNC_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref_name == 'main' && 'Staging' || 'Production') }}
+  SYNC_DRY_RUN: ${{ (github.event.inputs.dry_run == 'true' || github.event.inputs.dry_run == true) && 'true' || 'false' }}
+  SYNC_BACKUP_PREFIX: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
 
 jobs:
   backup:
     name: Backup Database
-    if: inputs.dry_run != 'true'
+    if: github.event.inputs.dry_run != 'true' && github.event.inputs.dry_run != true
     uses: ./.github/workflows/database-backup.yml
     with:
-      backup_prefix: ${{ inputs.backup_prefix }}
+      backup_prefix: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
+      environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref_name == 'main' && 'Staging' || 'Production') }}
     secrets: inherit
 
   sync-agents:
@@ -37,7 +44,7 @@ jobs:
     needs: [backup]
     # Only require backup if it was supposed to run
     if: always() && (needs.backup.result == 'success' || needs.backup.result == 'skipped')
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref_name == 'main' && 'Staging' || 'Production') }}
     
     outputs:
       sync_count: ${{ steps.sync.outputs.count }}
@@ -69,8 +76,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
           echo "| ------- | ----- |" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | ${{ inputs.environment }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dry Run | ${{ inputs.dry_run }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ env.SYNC_ENVIRONMENT }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dry Run | ${{ env.SYNC_DRY_RUN }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Backup | ${{ needs.backup.outputs.backup_filename || 'N/A (dry run)' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Triggered by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Workflow | ${{ github.workflow }} |" >> $GITHUB_STEP_SUMMARY
@@ -129,7 +136,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
       - name: Preview changes (dry run)
-        if: inputs.dry_run == 'true'
+        if: env.SYNC_DRY_RUN == 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -195,7 +202,7 @@ jobs:
           rm -f dry_run_sync.js
 
       - name: Sync system agents (live run)
-        if: inputs.dry_run != 'true'
+        if: env.SYNC_DRY_RUN != 'true'
         id: sync
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -243,7 +250,7 @@ jobs:
           fi
 
       - name: Verify agent configurations
-        if: inputs.dry_run != 'true'
+        if: env.SYNC_DRY_RUN != 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -306,7 +313,7 @@ jobs:
           echo "## 📋 Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ "${{ inputs.dry_run }}" == "true" ]; then
+          if [ "${{ env.SYNC_DRY_RUN }}" == "true" ]; then
             echo "### 🧪 Dry Run Completed" >> $GITHUB_STEP_SUMMARY
             echo "No changes were made to the database." >> $GITHUB_STEP_SUMMARY
           elif [ "${{ job.status }}" == "success" ]; then
