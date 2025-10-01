@@ -19,12 +19,6 @@ const categoryColors = {
   utility: 'bg-purple-50 text-purple-700 border-purple-200'
 };
 
-const statusColors = {
-  stable: 'bg-green-100 text-green-800',
-  beta: 'bg-yellow-100 text-yellow-800',
-  experimental: 'bg-red-100 text-red-800'
-};
-
 export default function ToolsIndexPage() {
   const tools = toolRegistry.getMetadata();
   const toolsByCategory = tools.reduce((acc, tool) => {
@@ -61,20 +55,14 @@ export default function ToolsIndexPage() {
                 {categoryTools.map(tool => {
                   // Link to docs page by default
                   const toolPath = `/tools/${tool.id}/docs`;
-                  const toolStatus = (tool.status as keyof typeof statusColors) || 'experimental';
-                  
+
                   return (
                     <Link
                       key={tool.id}
                       href={toolPath}
                       className={`block p-6 rounded-lg border-2 transition-all hover:shadow-lg ${categoryColor}`}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-lg font-semibold">{tool.name}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${statusColors[toolStatus]}`}>
-                          {toolStatus}
-                        </span>
-                      </div>
+                      <h3 className="text-lg font-semibold mb-2">{tool.name}</h3>
                       <p className="text-sm opacity-90">{tool.description}</p>
                     </Link>
                   );
