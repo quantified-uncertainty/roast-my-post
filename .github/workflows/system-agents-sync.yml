@@ -3,6 +3,7 @@ name: Sync System Agents
 on:
   push:
     branches:
+      - main
       - prod
     paths:
       - 'internal-packages/db/system-agents/**'
@@ -23,7 +24,7 @@ on:
         type: boolean
 
 env:
-  SYNC_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'Production' }}
+  SYNC_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref_name == 'main' && 'Staging' || 'Production') }}
   SYNC_DRY_RUN: ${{ (github.event.inputs.dry_run == 'true' || github.event.inputs.dry_run == true) && 'true' || 'false' }}
   SYNC_BACKUP_PREFIX: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
 
@@ -34,7 +35,7 @@ jobs:
     uses: ./.github/workflows/database-backup.yml
     with:
       backup_prefix: ${{ github.event_name == 'workflow_dispatch' && 'manual-agent-sync' || 'auto-agent-sync' }}
-      environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'Production' }}
+      environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref_name == 'main' && 'Staging' || 'Production') }}
     secrets: inherit
 
   sync-agents:
@@ -43,7 +44,7 @@ jobs:
     needs: [backup]
     # Only require backup if it was supposed to run
     if: always() && (needs.backup.result == 'success' || needs.backup.result == 'skipped')
-    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'Production' }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || (github.ref_name == 'main' && 'Staging' || 'Production') }}
     
     outputs:
       sync_count: ${{ steps.sync.outputs.count }}
