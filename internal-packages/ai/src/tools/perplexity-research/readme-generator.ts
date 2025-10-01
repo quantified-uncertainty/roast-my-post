@@ -5,11 +5,12 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import { perplexityResearchTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = perplexityResearchTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(perplexityResearchTool);
   const header = generateToolHeader(perplexityResearchTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

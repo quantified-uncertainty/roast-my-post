@@ -5,11 +5,12 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import fuzzyTextLocatorTool from "./index";
 
 export function generateReadme(): string {
-  const dependencies = fuzzyTextLocatorTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(fuzzyTextLocatorTool);
   const header = generateToolHeader(fuzzyTextLocatorTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

@@ -5,11 +5,12 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import { documentChunkerTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = documentChunkerTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(documentChunkerTool);
   const header = generateToolHeader(documentChunkerTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

@@ -5,11 +5,12 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import { extractForecastingClaimsTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = extractForecastingClaimsTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(extractForecastingClaimsTool);
   const header = generateToolHeader(extractForecastingClaimsTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

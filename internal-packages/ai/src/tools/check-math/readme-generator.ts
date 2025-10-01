@@ -5,12 +5,13 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import { checkMathTool } from "./index";
 import { MODEL_CONFIG } from "../../claude/wrapper";
 
 export function generateReadme(): string {
-  const dependencies = checkMathTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(checkMathTool);
   const header = generateToolHeader(checkMathTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

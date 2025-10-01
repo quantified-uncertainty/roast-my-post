@@ -5,11 +5,12 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import { detectLanguageConventionTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = detectLanguageConventionTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(detectLanguageConventionTool);
   const header = generateToolHeader(detectLanguageConventionTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

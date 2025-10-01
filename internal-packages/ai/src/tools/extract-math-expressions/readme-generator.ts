@@ -5,6 +5,7 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import {
   ERROR_LIKELIHOOD_THRESHOLD,
@@ -12,7 +13,7 @@ import {
 } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = extractMathExpressionsTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(extractMathExpressionsTool);
   const header = generateToolHeader(extractMathExpressionsTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

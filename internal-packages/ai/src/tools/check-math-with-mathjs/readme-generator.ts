@@ -5,6 +5,7 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import {
   AGENT_TIMEOUT_MS,
@@ -13,7 +14,7 @@ import {
 import { MODEL_CONFIG } from "../../claude/wrapper";
 
 export function generateReadme(): string {
-  const dependencies = checkMathWithMathJsTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(checkMathWithMathJsTool);
   const header = generateToolHeader(checkMathWithMathJsTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 

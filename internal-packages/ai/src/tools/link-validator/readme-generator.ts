@@ -5,11 +5,12 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import { linkValidator } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = linkValidator.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(linkValidator);
   const header = generateToolHeader(linkValidator);
   const toolsSection = generateToolsUsedSection(dependencies);
 

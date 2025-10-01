@@ -15,6 +15,21 @@ ${tool.config.description}`;
 }
 
 /**
+ * Get tool dependencies, handling tools that may or may not have the method
+ */
+export function getToolDependencies(tool: unknown): Tool<any, any>[] {
+  if (
+    tool &&
+    typeof tool === 'object' &&
+    'getToolDependencies' in tool &&
+    typeof (tool as { getToolDependencies?: () => Tool<any, any>[] }).getToolDependencies === 'function'
+  ) {
+    return (tool as { getToolDependencies: () => Tool<any, any>[] }).getToolDependencies();
+  }
+  return [];
+}
+
+/**
  * Generate a "Tools Used" section for tools that depend on other tools
  * @param tools Array of tool instances this tool depends on
  * @returns Markdown section with tool links, or empty string if no tools

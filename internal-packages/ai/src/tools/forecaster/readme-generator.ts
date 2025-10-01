@@ -5,12 +5,13 @@
 import {
   generateToolHeader,
   generateToolsUsedSection,
+  getToolDependencies,
 } from "../utils/readme-helpers";
 import { forecasterTool } from "./index";
 import { MODEL_CONFIG } from "../../claude/wrapper";
 
 export function generateReadme(): string {
-  const dependencies = forecasterTool.getToolDependencies?.() ?? [];
+  const dependencies = getToolDependencies(forecasterTool);
   const header = generateToolHeader(forecasterTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 
