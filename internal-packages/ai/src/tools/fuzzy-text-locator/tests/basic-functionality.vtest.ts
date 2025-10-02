@@ -326,8 +326,8 @@ This is the third line with some content.`;
     it('should have correct tool configuration', () => {
       const config = textLocationFinderTool.config;
 
-      expect(config.id).toBe('fuzzy-text-locator');
-      expect(config.name).toBe('Fuzzy Text Locator');
+      expect(config.id).toBe('smart-text-searcher');
+      expect(config.name).toBe('Smart Text Searcher');
       expect(config.category).toBe('utility');
       expect(config.status).toBe('stable');
     });

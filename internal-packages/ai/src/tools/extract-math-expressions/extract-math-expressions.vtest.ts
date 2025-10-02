@@ -26,9 +26,9 @@ describe('ExtractMathExpressionsTool', () => {
 
   describe('basic functionality', () => {
     it('should have correct configuration', () => {
-      expect(extractMathExpressionsTool.config.id).toBe('extract-math-expressions');
-      expect(extractMathExpressionsTool.config.name).toBe('Extract Mathematical Expressions');
-      expect(extractMathExpressionsTool.config.category).toBe('analysis');
+      expect(extractMathExpressionsTool.config.id).toBe('math-expressions-extractor');
+      expect(extractMathExpressionsTool.config.name).toBe('Math Expressions Extractor');
+      expect(extractMathExpressionsTool.config.category).toBe('extraction');
     });
 
     it('should validate input schema', () => {

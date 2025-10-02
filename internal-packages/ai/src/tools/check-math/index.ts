@@ -4,14 +4,15 @@ import { callClaudeWithTool, MODEL_CONFIG } from '../../claude/wrapper';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 // Session management is now automatic through the global session manager
 import { generateCacheSeed } from '../shared/cache-utils';
-import { 
-  mathStatusSchema, 
-  mathExplanationSchema, 
+import {
+  mathStatusSchema,
+  mathExplanationSchema,
   mathReasoningSchema,
   mathErrorDetailsSchema,
   MathVerificationStatus,
   MathErrorDetails
 } from '../shared/math-schemas';
+import { checkMathConfig } from '../configs';
 
 export interface CheckMathInput {
   statement: string;
@@ -48,17 +49,8 @@ const outputSchema = z.object({
 }) satisfies z.ZodType<CheckMathOutput>;
 
 export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
-  config = {
-    id: 'check-math',
-    name: 'Check Mathematical Accuracy',
-    description: 'Analyze text for mathematical errors including calculations, logic, units, and notation using Claude',
-    version: '1.0.0',
-    category: 'checker' as const,
-    costEstimate: '~$0.02 per check (1 Claude call with longer analysis)',
-    path: '/tools/check-math',
-    status: 'stable' as const
-  };
-  
+  config = checkMathConfig;
+
   inputSchema = inputSchema;
   outputSchema = outputSchema;
   

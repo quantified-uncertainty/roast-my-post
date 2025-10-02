@@ -13,21 +13,13 @@ import {
   CheckMathHybridInput,
   CheckMathHybridOutput,
 } from "./types";
+import { checkMathHybridConfig } from "../configs";
 
 export class CheckMathHybridTool extends Tool<
   CheckMathHybridInput,
   CheckMathHybridOutput
 > {
-  config = {
-    id: "check-math-hybrid",
-    name: "Hybrid Mathematical Checker",
-    description: "Simple wrapper: try MathJS first, then LLM as fallback",
-    version: "1.0.0",
-    category: "checker" as const,
-    costEstimate: "~$0.01-0.03 per check (computational + optional LLM)",
-    path: "/tools/check-math-hybrid",
-    status: "stable" as const,
-  };
+  config = checkMathHybridConfig;
 
   inputSchema = inputSchema as any;
   outputSchema = outputSchema as any;

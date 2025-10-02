@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import type { LanguageConvention } from '../../shared/types';
 import { detectLanguageConvention, detectDocumentType } from './conventionDetector';
+import { detectLanguageConventionConfig } from '../configs';
 
 // Configuration constants
 export const DEFAULT_SAMPLE_SIZE = 2000;
@@ -49,19 +50,8 @@ const outputSchema = z.object({
 });
 
 export class DetectLanguageConventionTool extends Tool<DetectLanguageConventionInput, DetectLanguageConventionOutput> {
-  config = {
-    id: 'detect-language-convention',
-    name: 'Detect Language Convention',
-    description: 'Detect whether text uses US or UK English conventions',
-    version: '1.0.0',
-    category: 'utility' as const,
-    path: '/tools/detect-language-convention',
-    status: 'stable' as const,
-    costEstimate: '~$0.00 (no LLM calls)',
-    inputSchema,
-    outputSchema,
-  };
-  
+  config = detectLanguageConventionConfig;
+
   inputSchema = inputSchema;
   outputSchema = outputSchema as any;
 

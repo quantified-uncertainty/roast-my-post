@@ -9,6 +9,7 @@ import {
   findTextLocation,
   TextLocationOptions,
 } from "./core";
+import { fuzzyTextLocatorConfig } from "../configs";
 
 export interface TextLocationFinderInput {
   documentText: string;
@@ -85,17 +86,7 @@ export class FuzzyTextLocatorTool extends Tool<
   TextLocationFinderInput,
   TextLocationFinderOutput
 > {
-  config: ToolConfig = {
-    id: "fuzzy-text-locator",
-    name: "Fuzzy Text Locator",
-    description:
-      "Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text",
-    version: "1.1.0",
-    category: "utility",
-    costEstimate: "Free (or minimal LLM cost if fallback is used)",
-    path: "/tools/fuzzy-text-locator",
-    status: "stable",
-  };
+  config: ToolConfig = fuzzyTextLocatorConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;

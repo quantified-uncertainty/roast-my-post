@@ -43,8 +43,8 @@ describe('Tool Configurations', () => {
 
     it('should have valid categories for all tools', () => {
       const tools = toolRegistry.getMetadata();
-      const validCategories = ['analysis', 'research', 'utility'];
-      
+      const validCategories = ['extraction', 'checker', 'research', 'utility'];
+
       tools.forEach(tool => {
         expect(tool.category).toBeDefined();
         expect(validCategories).toContain(tool.category);
@@ -82,21 +82,21 @@ describe('Tool Configurations', () => {
     // Test specific tools that have had issues in the past
     it('fuzzy-text-locator should have correct page path', () => {
       const tools = toolRegistry.getMetadata();
-      const fuzzyTextLocator = tools.find(tool => tool.id === 'fuzzy-text-locator');
-      
+      const fuzzyTextLocator = tools.find(tool => tool.id === 'smart-text-searcher');
+
       expect(fuzzyTextLocator).toBeDefined();
-      expect(fuzzyTextLocator!.path).toBe('/tools/fuzzy-text-locator');
-      expect(fuzzyTextLocator!.path).not.toBe('/api/tools/fuzzy-text-locator');
+      expect(fuzzyTextLocator!.path).toBe('/tools/smart-text-searcher');
+      expect(fuzzyTextLocator!.path).not.toBe('/api/tools/smart-text-searcher');
     });
 
     it('all major tools should have correct page paths', () => {
       const tools = toolRegistry.getMetadata();
       const majorToolIds = [
-        'check-spelling-grammar',
-        'check-math',
+        'spelling-grammar-checker',
+        'math-validator-llm',
         'fact-checker',
-        'fuzzy-text-locator',
-        'perplexity-research',
+        'smart-text-searcher',
+        'perplexity-researcher',
         'link-validator'
       ];
 

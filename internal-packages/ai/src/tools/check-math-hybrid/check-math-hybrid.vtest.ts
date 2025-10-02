@@ -36,9 +36,9 @@ describe('CheckMathHybridTool', () => {
 
   describe('basic functionality', () => {
     it('should have correct configuration', () => {
-      expect(checkMathHybridTool.config.id).toBe('check-math-hybrid');
-      expect(checkMathHybridTool.config.name).toBe('Hybrid Mathematical Checker');
-      expect(checkMathHybridTool.config.category).toBe('analysis');
+      expect(checkMathHybridTool.config.id).toBe('math-validator-hybrid');
+      expect(checkMathHybridTool.config.name).toBe('Math Validator (Hybrid)');
+      expect(checkMathHybridTool.config.category).toBe('checker');
     });
 
     it('should validate input schema', () => {

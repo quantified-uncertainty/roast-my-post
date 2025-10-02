@@ -15,6 +15,7 @@ import { createAnthropicClient } from "../../utils/anthropic";
 import type { ToolContext } from "../base/Tool";
 import { Tool } from "../base/Tool";
 import { generateCacheSeed } from "../shared/cache-utils";
+import { checkMathWithMathJsConfig } from "../configs";
 // Import MathJS parser utilities
 import {
   formatForMathJS,
@@ -142,16 +143,7 @@ export class CheckMathWithMathJsTool extends Tool<
   CheckMathAgenticOutput
 > {
   config = {
-    id: "check-math-with-mathjs",
-    name: "Check Math with MathJS",
-    description:
-      "Verify mathematical statements using an agentic approach with Claude and MathJS",
-    version: "2.0.0",
-    category: "checker" as const,
-    costEstimate:
-      "~$0.02-0.05 per statement (uses Claude with multiple tool calls)",
-    path: "/tools/check-math-with-mathjs",
-    status: "stable" as const,
+    ...checkMathWithMathJsConfig,
     examples: [
       "2 + 2 = 4",
       'The binomial coefficient "10 choose 3" equals 120',

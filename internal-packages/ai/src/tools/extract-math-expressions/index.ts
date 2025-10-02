@@ -10,6 +10,7 @@ import type {
   MathErrorType,
   MathSeverity,
 } from "../shared/math-schemas";
+import { extractMathExpressionsConfig } from "../configs";
 
 // Configuration constants
 export const ERROR_LIKELIHOOD_THRESHOLD = 20; // Minimum error likelihood percentage to extract expressions
@@ -126,17 +127,7 @@ export class ExtractMathExpressionsTool extends Tool<
   ExtractMathExpressionsInput,
   ExtractMathExpressionsOutput
 > {
-  config = {
-    id: "extract-math-expressions",
-    name: "Extract Mathematical Expressions",
-    description:
-      "Extract and analyze mathematical expressions from text, including error detection and complexity assessment",
-    version: "1.0.0",
-    category: "extraction" as const,
-    costEstimate: "~$0.02 per extraction (1 Claude call)",
-    path: "/tools/extract-math-expressions",
-    status: "stable" as const,
-  };
+  config = extractMathExpressionsConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;

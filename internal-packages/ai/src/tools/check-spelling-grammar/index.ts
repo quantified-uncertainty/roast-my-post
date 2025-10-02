@@ -11,6 +11,7 @@ import {
 } from "../base/Tool";
 import { detectLanguageConventionTool } from "../detect-language-convention";
 import { generateCacheSeed } from "../shared/cache-utils";
+import { checkSpellingGrammarConfig } from "../configs";
 
 export interface SpellingGrammarError {
   text: string;
@@ -138,17 +139,7 @@ export class CheckSpellingGrammarTool extends Tool<
   CheckSpellingGrammarInput,
   CheckSpellingGrammarOutput
 > {
-  config = {
-    id: "check-spelling-grammar",
-    name: "Check Spelling & Grammar",
-    description:
-      "Analyze text for spelling and grammar errors using Claude with advanced error detection",
-    version: "2.0.0",
-    category: "checker" as const,
-    costEstimate: "~$0.01-0.02 per check",
-    path: "/tools/check-spelling-grammar",
-    status: "stable" as const,
-  };
+  config = checkSpellingGrammarConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema as any;

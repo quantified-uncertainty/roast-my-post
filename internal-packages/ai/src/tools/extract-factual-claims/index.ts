@@ -8,6 +8,7 @@ import {
 } from "../base/Tool";
 import fuzzyTextLocatorTool from "../fuzzy-text-locator";
 import { generateCacheSeed } from "../shared/cache-utils";
+import { extractFactualClaimsConfig } from "../configs";
 
 // Create a Zod schema from the DocumentHighlight interface
 const highlightSchema = z.object({
@@ -112,16 +113,7 @@ export class ExtractFactualClaimsTool extends Tool<
   ExtractFactualClaimsInput,
   ExtractFactualClaimsOutput
 > {
-  config = {
-    id: "extract-factual-claims",
-    name: "Extract Factual Claims",
-    description: "Extract and score verifiable factual claims from text",
-    version: "2.0.0",
-    category: "extraction" as const,
-    costEstimate: "~$0.01-0.03 per analysis (depends on text length)",
-    path: "/tools/extract-factual-claims",
-    status: "stable" as const,
-  };
+  config = extractFactualClaimsConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;

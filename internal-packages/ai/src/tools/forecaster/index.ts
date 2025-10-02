@@ -3,6 +3,7 @@ import { Tool } from '../base/Tool';
 import { ToolContext } from '../base/Tool';
 import { generateForecastWithAggregation } from './generator';
 import { escapeXml } from '../../shared/utils/xml';
+import { forecasterConfig } from '../configs';
 
 // Configuration constants
 export const DEFAULT_NUM_FORECASTS = 6;
@@ -67,16 +68,7 @@ const outputSchema = z.object({
 }) satisfies z.ZodType<ForecasterOutput>;
 
 export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
-  config = {
-    id: 'forecaster',
-    name: 'Simple Forecaster',
-    description: 'Generate probability forecasts using multiple independent Claude analyses',
-    version: '1.0.0',
-    category: 'research' as const,
-    costEstimate: '~$0.05 per forecast (6 Claude calls)',
-    path: '/tools/forecaster',
-    status: 'experimental' as const
-  };
+  config = forecasterConfig;
   
   inputSchema = inputSchema;
   outputSchema = outputSchema;

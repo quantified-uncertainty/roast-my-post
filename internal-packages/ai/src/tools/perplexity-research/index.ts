@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { PerplexityClient } from './client';
+import { perplexityResearchConfig } from '../configs';
 
 // Define types for the tool
 export interface PerplexityResearchInput {
@@ -43,16 +44,7 @@ const outputSchema = z.object({
 }) satisfies z.ZodType<PerplexityResearchOutput>;
 
 export class PerplexityResearchTool extends Tool<PerplexityResearchInput, PerplexityResearchOutput> {
-  config = {
-    id: 'perplexity-research',
-    name: 'Perplexity Research',
-    description: 'Web-enhanced research using Perplexity Sonar models via OpenRouter',
-    version: '1.0.0',
-    category: 'research' as const,
-    costEstimate: '~$0.001-0.005 per query (via OpenRouter)',
-    path: '/api/tools/perplexity-research',
-    status: 'stable' as const
-  };
+  config = perplexityResearchConfig;
   
   inputSchema = inputSchema;
   outputSchema = outputSchema;

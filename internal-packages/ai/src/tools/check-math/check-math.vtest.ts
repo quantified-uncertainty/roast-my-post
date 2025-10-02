@@ -35,9 +35,9 @@ describe('CheckMathTool', () => {
 
   describe('basic functionality', () => {
     it('should have correct configuration', () => {
-      expect(CheckMathTool.config.id).toBe('check-math');
-      expect(CheckMathTool.config.name).toBe('Check Mathematical Accuracy');
-      expect(CheckMathTool.config.category).toBe('analysis');
+      expect(CheckMathTool.config.id).toBe('math-validator-llm');
+      expect(CheckMathTool.config.name).toBe('Math Validator (LLM)');
+      expect(CheckMathTool.config.category).toBe('checker');
     });
 
     it('should validate input schema', () => {

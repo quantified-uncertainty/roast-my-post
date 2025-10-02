@@ -4,6 +4,7 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
+import { documentChunkerConfig } from "../configs";
 
 // Configuration constants
 export const DEFAULT_TARGET_WORDS = 500;
@@ -107,17 +108,7 @@ export class DocumentChunkerTool extends Tool<
   DocumentChunkerInput,
   DocumentChunkerOutput
 > {
-  config = {
-    id: "document-chunker",
-    name: "Intelligent Document Chunker",
-    description:
-      "Splits documents into semantic chunks optimized for LLM analysis. Supports multiple strategies including markdown-aware, semantic, and hybrid chunking.",
-    version: "1.0.0",
-    category: "utility" as const,
-    costEstimate: "$0 (no LLM calls)",
-    path: "/tools/document-chunker",
-    status: "stable" as const,
-  };
+  config = documentChunkerConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;

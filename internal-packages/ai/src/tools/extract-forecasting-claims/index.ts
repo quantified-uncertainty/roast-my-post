@@ -9,6 +9,7 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { smallSystemPrompt } from "./prompts";
+import { extractForecastingClaimsConfig } from "../configs";
 
 // Define types for the tool
 
@@ -81,17 +82,7 @@ export class ExtractForecastingClaimsTool extends Tool<
   ExtractForecastingClaimsInput,
   ExtractForecastingClaimsOutput
 > {
-  config = {
-    id: "extract-forecasting-claims",
-    name: "Extract Forecasting Claims",
-    description:
-      "Extracts predictions and converts them to binary (YES/NO) questions. Scores on three dimensions: precision (how binary/specific), verifiability (can we check with public data), and importance (centrality to argument)",
-    version: "2.0.0",
-    category: "extraction" as const,
-    costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
-    path: "/tools/extract-forecasting-claims",
-    status: "stable" as const
-  };
+  config = extractForecastingClaimsConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;
