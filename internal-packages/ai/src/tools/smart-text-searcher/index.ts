@@ -5,11 +5,11 @@ import {
   ToolConfig,
   ToolContext,
 } from "../base/Tool";
+import { fuzzyTextSearcherConfig } from "../configs";
 import {
   findTextLocation,
   TextLocationOptions,
 } from "./core";
-import { fuzzyTextLocatorConfig } from "../configs";
 
 export interface TextLocationFinderInput {
   documentText: string;
@@ -86,7 +86,7 @@ export class FuzzyTextLocatorTool extends Tool<
   TextLocationFinderInput,
   TextLocationFinderOutput
 > {
-  config: ToolConfig = fuzzyTextLocatorConfig;
+  config: ToolConfig = fuzzyTextSearcherConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;

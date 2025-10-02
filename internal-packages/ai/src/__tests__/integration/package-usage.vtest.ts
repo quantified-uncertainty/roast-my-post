@@ -1,123 +1,135 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import {
+  beforeAll,
+  describe,
+  expect,
+  it,
+} from "vitest";
+
 /**
  * Integration tests for @roast/ai package usage
- * 
+ *
  * These tests verify that the package can be properly imported
  * and used as intended by consuming applications.
  */
-
-import { 
-  initializeAI,
+import {
   callClaude,
   callClaudeWithTool,
+  initializeAI,
   MathPlugin,
-  toolRegistry
-} from '../../index';
-import { PluginManager } from '../../server';
-import { checkSpellingGrammarTool } from '../../server';
+  toolRegistry,
+} from "../../index";
+import {
+  checkSpellingGrammarTool,
+  PluginManager,
+} from "../../server";
 
-describe('@roast/ai Package Integration', () => {
-  describe('Configuration', () => {
-    it('should initialize package with configuration', () => {
+describe("@roast/ai Package Integration", () => {
+  describe("Configuration", () => {
+    it("should initialize package with configuration", () => {
       expect(() => {
         initializeAI({
-          anthropicApiKey: 'test-key',
-          heliconeApiKey: 'test-key',
+          anthropicApiKey: "test-key",
+          heliconeApiKey: "test-key",
         });
       }).not.toThrow();
     });
   });
 
-  describe('Core Exports', () => {
-    it('should export Claude wrapper functions', () => {
+  describe("Core Exports", () => {
+    it("should export Claude wrapper functions", () => {
       expect(callClaude).toBeDefined();
-      expect(typeof callClaude).toBe('function');
+      expect(typeof callClaude).toBe("function");
       expect(callClaudeWithTool).toBeDefined();
-      expect(typeof callClaudeWithTool).toBe('function');
+      expect(typeof callClaudeWithTool).toBe("function");
     });
 
-
-    it('should export PluginManager', () => {
+    it("should export PluginManager", () => {
       expect(PluginManager).toBeDefined();
-      expect(typeof PluginManager).toBe('function');
+      expect(typeof PluginManager).toBe("function");
     });
 
-    it('should export plugins', () => {
+    it("should export plugins", () => {
       expect(MathPlugin).toBeDefined();
-      expect(typeof MathPlugin).toBe('function');
+      expect(typeof MathPlugin).toBe("function");
     });
 
-    it('should export tool registry', () => {
+    it("should export tool registry", () => {
       expect(toolRegistry).toBeDefined();
-      expect(toolRegistry['spelling-grammar-checker']).toBeDefined();
-      expect(toolRegistry['spelling-grammar-checker'].config).toBeDefined();
-      expect(toolRegistry['spelling-grammar-checker'].config.name).toBe('Spelling & Grammar Checker');
+      expect(toolRegistry["spelling-grammar-checker"]).toBeDefined();
+      expect(toolRegistry["spelling-grammar-checker"]).toBeDefined();
+      expect(toolRegistry["spelling-grammar-checker"].name).toBe(
+        "Spelling & Grammar Checker"
+      );
     });
 
-    it('should export server-side tools', () => {
+    it("should export server-side tools", () => {
       expect(checkSpellingGrammarTool).toBeDefined();
       expect(checkSpellingGrammarTool.config).toBeDefined();
-      expect(checkSpellingGrammarTool.config.name).toBe('Spelling & Grammar Checker');
+      expect(checkSpellingGrammarTool.config.name).toBe(
+        "Spelling & Grammar Checker"
+      );
     });
   });
 
-  describe('Plugin System', () => {
-    it('should create PluginManager instance', () => {
+  describe("Plugin System", () => {
+    it("should create PluginManager instance", () => {
       const manager = new PluginManager();
       expect(manager).toBeDefined();
       expect(manager.analyzeDocument).toBeDefined();
       expect(manager.analyzeDocumentSimple).toBeDefined();
     });
 
-    it('should have analysis methods', async () => {
+    it("should have analysis methods", async () => {
       const manager = new PluginManager();
-      expect(typeof manager.analyzeDocument).toBe('function');
-      expect(typeof manager.analyzeDocumentSimple).toBe('function');
+      expect(typeof manager.analyzeDocument).toBe("function");
+      expect(typeof manager.analyzeDocumentSimple).toBe("function");
     });
   });
 
-  describe('Backwards Compatibility', () => {
-    it('should fall back to environment variables when config not provided', () => {
-      process.env.ANTHROPIC_API_KEY = 'env-key';
-      process.env.SEARCH_MODEL = 'custom-model';
-      
+  describe("Backwards Compatibility", () => {
+    it("should fall back to environment variables when config not provided", () => {
+      process.env.ANTHROPIC_API_KEY = "env-key";
+      process.env.SEARCH_MODEL = "custom-model";
+
       // Reset config to test fallback
       initializeAI({});
-      
+
       // The models should use the environment variables
-      expect(process.env.SEARCH_MODEL).toBe('custom-model');
+      expect(process.env.SEARCH_MODEL).toBe("custom-model");
     });
   });
 });
 
-describe('Usage Examples', () => {
+describe("Usage Examples", () => {
   beforeAll(() => {
     // Initialize with test configuration
     initializeAI({
-      anthropicApiKey: 'test-api-key',
+      anthropicApiKey: "test-api-key",
     });
   });
 
-  it('should demonstrate basic tool usage pattern', () => {
+  it("should demonstrate basic tool usage pattern", () => {
     const input = {
-      text: 'This is a test sentense with a mispelling.',
-      convention: 'US' as const,
-      strictness: 'standard' as const,
+      text: "This is a test sentense with a mispelling.",
+      convention: "US" as const,
+      strictness: "standard" as const,
     };
 
     // Verify the tool has proper structure
-    expect(checkSpellingGrammarTool.config.name).toBe('Spelling & Grammar Checker');
+    expect(checkSpellingGrammarTool.config.name).toBe(
+      "Spelling & Grammar Checker"
+    );
     expect(checkSpellingGrammarTool.inputSchema).toBeDefined();
     expect(checkSpellingGrammarTool.outputSchema).toBeDefined();
   });
 
-  it('should demonstrate plugin usage pattern', async () => {
+  it("should demonstrate plugin usage pattern", async () => {
     const manager = new PluginManager();
-    
+
     // In a real app, you would analyze documents
     expect(manager.analyzeDocument).toBeDefined();
-    expect(typeof manager.analyzeDocument).toBe('function');
+    expect(typeof manager.analyzeDocument).toBe("function");
     expect(manager.analyzeDocumentSimple).toBeDefined();
-    expect(typeof manager.analyzeDocumentSimple).toBe('function');
+    expect(typeof manager.analyzeDocumentSimple).toBe("function");
   });
 });

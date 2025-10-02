@@ -9,9 +9,9 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
+import { spellingGrammarCheckerConfig } from "../configs";
 import { detectLanguageConventionTool } from "../language-convention-detector";
 import { generateCacheSeed } from "../shared/cache-utils";
-import { checkSpellingGrammarConfig } from "../configs";
 
 export interface SpellingGrammarError {
   text: string;
@@ -139,7 +139,7 @@ export class CheckSpellingGrammarTool extends Tool<
   CheckSpellingGrammarInput,
   CheckSpellingGrammarOutput
 > {
-  config = checkSpellingGrammarConfig;
+  config = spellingGrammarCheckerConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema as any;

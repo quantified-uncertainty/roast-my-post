@@ -3,6 +3,7 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
+import { mathValidatorHybridConfig } from "../configs";
 import { checkMathTool } from "../math-validator-llm";
 import { checkMathWithMathJsTool } from "../math-validator-mathjs";
 import {
@@ -13,13 +14,12 @@ import {
   CheckMathHybridInput,
   CheckMathHybridOutput,
 } from "./types";
-import { checkMathHybridConfig } from "../configs";
 
 export class CheckMathHybridTool extends Tool<
   CheckMathHybridInput,
   CheckMathHybridOutput
 > {
-  config = checkMathHybridConfig;
+  config = mathValidatorHybridConfig;
 
   inputSchema = inputSchema as any;
   outputSchema = outputSchema as any;

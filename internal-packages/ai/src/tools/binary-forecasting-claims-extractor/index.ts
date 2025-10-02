@@ -1,15 +1,13 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
-import { logger } from "../../shared/logger";
-import { generateCacheSeed } from "../shared/cache-utils";
-
 import {
   Tool,
   ToolContext,
 } from "../base/Tool";
+import { binaryForecastingClaimsExtractorConfig } from "../configs";
+import { generateCacheSeed } from "../shared/cache-utils";
 import { smallSystemPrompt } from "./prompts";
-import { extractForecastingClaimsConfig } from "../configs";
 
 // Define types for the tool
 
@@ -82,7 +80,7 @@ export class ExtractForecastingClaimsTool extends Tool<
   ExtractForecastingClaimsInput,
   ExtractForecastingClaimsOutput
 > {
-  config = extractForecastingClaimsConfig;
+  config = binaryForecastingClaimsExtractorConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;
@@ -134,7 +132,7 @@ export class ExtractForecastingClaimsTool extends Tool<
 ${text}
   </content>
   
-  ${additionalContext ? `<additional_context>\n${additionalContext}\n  </additional_context>\n  ` : ''}
+  ${additionalContext ? `<additional_context>\n${additionalContext}\n  </additional_context>\n  ` : ""}
   <parameters>
     <max_detailed_analysis>${maxDetailedAnalysis}</max_detailed_analysis>
     <min_quality_threshold>${minQualityThreshold}</min_quality_threshold>
@@ -145,13 +143,12 @@ ${text}
   </requirements>
 </task>`;
 
-
     // Generate cache seed for consistent responses
-    const cacheSeed = generateCacheSeed('forecast-extract', [
+    const cacheSeed = generateCacheSeed("forecast-extract", [
       text,
-      additionalContext || '',
+      additionalContext || "",
       minQualityThreshold || 0,
-      maxDetailedAnalysis || 30
+      maxDetailedAnalysis || 30,
     ]);
 
     const result = await callClaudeWithTool<{ forecasts: any[] }>(
@@ -268,12 +265,18 @@ ${text}
         // Validate using safeParse to handle errors gracefully
         const validationResult = forecastSchema.safeParse(forecast);
         if (!validationResult.success) {
-          context?.logger.warn(`Invalid forecast data, skipping:`, validationResult.error);
+          context?.logger.warn(
+            `Invalid forecast data, skipping:`,
+            validationResult.error
+          );
           return null;
         }
         return validationResult.data;
       })
-      .filter((forecast): forecast is NonNullable<typeof forecast> => forecast !== null); // Remove null entries
+      .filter(
+        (forecast): forecast is NonNullable<typeof forecast> =>
+          forecast !== null
+      ); // Remove null entries
 
     return {
       forecasts,

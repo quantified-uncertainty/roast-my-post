@@ -73,7 +73,7 @@ interface ToolPageClientProps {
 export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
   const [lastStatement, setLastStatement] = useState('');
 
-  const tool = toolRegistry[toolId as keyof Omit<typeof toolRegistry, 'getMetadata'>];
+  const toolConfig = toolRegistry[toolId];
 
   // Get tool schemas
   const schemas = toolSchemas[toolId as ToolId];
@@ -81,12 +81,10 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
     notFound();
   }
 
-  // Type guard to ensure tool is not the getMetadata function
-  if (!tool || typeof tool === 'function') {
+  // Type guard to ensure tool exists
+  if (!toolConfig) {
     notFound();
   }
-
-  const toolConfig = tool.config;
   const icon = toolIcons[toolId] || <BeakerIcon className="h-8 w-8 text-gray-600" />;
   const examples = exampleConfigs[toolId] || [];
   

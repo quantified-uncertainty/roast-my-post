@@ -5,12 +5,12 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
+import { mathExpressionsExtractorConfig } from "../configs";
 import { generateCacheSeed } from "../shared/cache-utils";
 import type {
   MathErrorType,
   MathSeverity,
 } from "../shared/math-schemas";
-import { extractMathExpressionsConfig } from "../configs";
 
 // Configuration constants
 export const ERROR_LIKELIHOOD_THRESHOLD = 20; // Minimum error likelihood percentage to extract expressions
@@ -127,7 +127,7 @@ export class ExtractMathExpressionsTool extends Tool<
   ExtractMathExpressionsInput,
   ExtractMathExpressionsOutput
 > {
-  config = extractMathExpressionsConfig;
+  config = mathExpressionsExtractorConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;

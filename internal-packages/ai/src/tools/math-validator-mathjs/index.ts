@@ -14,8 +14,8 @@ import { getCurrentHeliconeHeaders } from "../../helicone/simpleSessionManager";
 import { createAnthropicClient } from "../../utils/anthropic";
 import type { ToolContext } from "../base/Tool";
 import { Tool } from "../base/Tool";
+import { mathValidatorMathJsConfig } from "../configs";
 import { generateCacheSeed } from "../shared/cache-utils";
-import { checkMathWithMathJsConfig } from "../configs";
 // Import MathJS parser utilities
 import {
   formatForMathJS,
@@ -143,7 +143,7 @@ export class CheckMathWithMathJsTool extends Tool<
   CheckMathAgenticOutput
 > {
   config = {
-    ...checkMathWithMathJsConfig,
+    ...mathValidatorMathJsConfig,
     examples: [
       "2 + 2 = 4",
       'The binomial coefficient "10 choose 3" equals 120',

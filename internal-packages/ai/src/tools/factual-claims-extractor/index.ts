@@ -6,9 +6,9 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
-import fuzzyTextLocatorTool from "../smart-text-searcher";
+import { factualClaimsExtractorConfig } from "../configs";
 import { generateCacheSeed } from "../shared/cache-utils";
-import { extractFactualClaimsConfig } from "../configs";
+import fuzzyTextLocatorTool from "../smart-text-searcher";
 
 // Create a Zod schema from the DocumentHighlight interface
 const highlightSchema = z.object({
@@ -22,7 +22,11 @@ const highlightSchema = z.object({
 
 // Claim schema
 const extractedFactualClaimSchema = z.object({
-  exactText: z.string().describe("The EXACT text as it appears in the document - used for location finding"),
+  exactText: z
+    .string()
+    .describe(
+      "The EXACT text as it appears in the document - used for location finding"
+    ),
   claim: z
     .string()
     .describe(
@@ -113,7 +117,7 @@ export class ExtractFactualClaimsTool extends Tool<
   ExtractFactualClaimsInput,
   ExtractFactualClaimsOutput
 > {
-  config = extractFactualClaimsConfig;
+  config = factualClaimsExtractorConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;
@@ -151,13 +155,13 @@ Focus on concrete, verifiable factual claims only.`;
 
 ${input.text}
 
-${input.instructions ? `Additional instructions: ${input.instructions}` : ''}
+${input.instructions ? `Additional instructions: ${input.instructions}` : ""}
 
 Requirements:
 - Min quality threshold: ${input.minQualityThreshold ?? 50}
 - Max claims: ${input.maxClaims ?? 30}
 - Extract verifiable factual claims and score them appropriately`;
-    
+
     // Generate cache seed based on content for consistent caching
     const cacheSeed = generateCacheSeed("fact-extract", [
       input.text,
@@ -276,66 +280,62 @@ Requirements:
     }
 
     // Add location information to each claim
-    context.logger.info(
-      "[ExtractFactualClaims] Finding locations for claims"
-    );
+    context.logger.info("[ExtractFactualClaims] Finding locations for claims");
     for (const claim of allClaims) {
-        try {
-          const locationResult = await fuzzyTextLocatorTool.execute(
-            {
-              documentText: input.text,
-              searchText: claim.exactText,
-              options: {
-                normalizeQuotes: true,
-                partialMatch: false,
-                useLLMFallback: true,
-              },
+      try {
+        const locationResult = await fuzzyTextLocatorTool.execute(
+          {
+            documentText: input.text,
+            searchText: claim.exactText,
+            options: {
+              normalizeQuotes: true,
+              partialMatch: false,
+              useLLMFallback: true,
             },
-            context
-          );
-          if (locationResult.found && locationResult.location) {
-            claim.highlight = {
-              startOffset: locationResult.location.startOffset,
-              endOffset: locationResult.location.endOffset,
-              quotedText: locationResult.location.quotedText,
-              prefix: input.text
-                .substring(
-                  Math.max(0, locationResult.location.startOffset - 50),
-                  locationResult.location.startOffset
-                )
-                .trim(),
-              isValid: true,
-            };
-          } else {
-            claim.highlight = {
-              startOffset: 0,
-              endOffset: 0,
-              quotedText: claim.exactText,
-              isValid: false,
-              error: "Location not found in document",
-            };
-          }
-        } catch (error) {
-          context.logger.warn(
-            "[ExtractFactualClaims] Failed to find location for claim:",
-            {
-              claim: claim.exactText.substring(0, 100),
-              error: error instanceof Error ? error.message : "Unknown error",
-            }
-          );
-
+          },
+          context
+        );
+        if (locationResult.found && locationResult.location) {
+          claim.highlight = {
+            startOffset: locationResult.location.startOffset,
+            endOffset: locationResult.location.endOffset,
+            quotedText: locationResult.location.quotedText,
+            prefix: input.text
+              .substring(
+                Math.max(0, locationResult.location.startOffset - 50),
+                locationResult.location.startOffset
+              )
+              .trim(),
+            isValid: true,
+          };
+        } else {
           claim.highlight = {
             startOffset: 0,
             endOffset: 0,
-            quotedText: claim.exactText || claim.claim || "",
+            quotedText: claim.exactText,
             isValid: false,
-            error:
-              error instanceof Error
-                ? error.message
-                : "Location finding failed",
+            error: "Location not found in document",
           };
         }
+      } catch (error) {
+        context.logger.warn(
+          "[ExtractFactualClaims] Failed to find location for claim:",
+          {
+            claim: claim.exactText.substring(0, 100),
+            error: error instanceof Error ? error.message : "Unknown error",
+          }
+        );
+
+        claim.highlight = {
+          startOffset: 0,
+          endOffset: 0,
+          quotedText: claim.exactText || claim.claim || "",
+          isValid: false,
+          error:
+            error instanceof Error ? error.message : "Location finding failed",
+        };
       }
+    }
 
     // Filter claims based on quality threshold
     const qualityClaims = allClaims.filter((claim) => {

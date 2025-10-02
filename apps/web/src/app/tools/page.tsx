@@ -4,7 +4,7 @@
  */
 
 import Link from 'next/link';
-import { toolRegistry } from '@roast/ai';
+import { allToolConfigs } from '@roast/ai';
 import { MagnifyingGlassIcon, CpuChipIcon, CheckCircleIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 const categoryIcons = {
@@ -22,7 +22,7 @@ const categoryColors = {
 };
 
 export default function ToolsIndexPage() {
-  const tools = toolRegistry.getMetadata();
+  const tools = allToolConfigs;
   const toolsByCategory = tools.reduce((acc, tool) => {
     if (!acc[tool.category]) {
       acc[tool.category] = [];
