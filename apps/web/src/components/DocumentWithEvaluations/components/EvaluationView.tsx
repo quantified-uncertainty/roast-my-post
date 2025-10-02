@@ -248,7 +248,7 @@ export function EvaluationView({
       {/* Fixed Evaluation Cards Header Bar */}
       <Card
         className={cn(
-          "sticky top-0 z-50 mx-6 transition-all duration-200",
+          "sticky top-0 z-50 mx-6 mt-4 transition-all duration-200",
           !isHeaderVisible && "pointer-events-none h-0 overflow-hidden opacity-0"
         )}
       >
