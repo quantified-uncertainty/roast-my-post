@@ -27,7 +27,6 @@ export function usePlainTextOffsets(
   const nodeOffsets = useMemo(() => {
     const index = new Map<string, NodeOffsetInfo>();
     let offset = 0;
-    let plainText = "";
 
     // Ensure we only iterate if editor.children exists and is valid
     if (!editor.children || !Array.isArray(editor.children)) {
@@ -35,7 +34,12 @@ export function usePlainTextOffsets(
     }
 
     try {
-      // More careful traversal of the editor's node tree
+      // Check if editor has content before using Editor.string
+      if (!editor.children || editor.children.length === 0) {
+        return index; // Return empty map if no content
+      }
+
+      // Traverse nodes to get individual node offsets
       const collectTextNodes = (node: Node, path: Path) => {
         if (Text.isText(node)) {
           // Add this text node to our index
@@ -44,50 +48,14 @@ export function usePlainTextOffsets(
           const end = start + text.length;
           const pathKey = path.join(".");
 
-          // Add debugging for the problematic range
-
           index.set(pathKey, { path, start, end, text });
-          plainText += text;
           offset += text.length;
         } else if (Element.isElement(node)) {
-          // Add paragraph breaks for block elements to better match markdown structure
-          if (
-            Element.isElement(node) &&
-            node.type &&
-            (node.type.startsWith("heading") ||
-              node.type === "paragraph" ||
-              node.type === "block-quote")
-          ) {
-            // Only add breaks if we're not at the beginning
-            if (plainText.length > 0 && !plainText.endsWith("\n\n")) {
-              // Debug the newline addition
-              const _oldOffset = offset;
-              plainText += "\n\n";
-              offset += 2; // Account for the added newlines
-
-            }
-          }
-
           // Process children
           node.children.forEach((child, i) => {
-            // Create proper path for this child
             const childPath = [...path, i];
             collectTextNodes(child, childPath);
           });
-
-          // Add a block separator after certain elements
-          if (
-            Element.isElement(node) &&
-            node.type &&
-            (node.type.startsWith("heading") ||
-              node.type === "paragraph" ||
-              node.type === "block-quote")
-          ) {
-            if (!plainText.endsWith("\n\n")) {
-              plainText += "\n\n";
-              offset += 2;
-            }
-          }
         }
       };
 
@@ -96,11 +64,10 @@ export function usePlainTextOffsets(
         collectTextNodes(child, [i]);
       });
 
-      // Return the populated index
       return index;
     } catch (error) {
       // Handle potential errors during iteration if editor state is invalid
-      logger.error('Error calculating text offsets:', error);
+      logger.error("Error calculating text offsets:", error);
       return new Map<string, NodeOffsetInfo>();
     }
   }, [editor.children]);

@@ -1,0 +1,72 @@
+/**
+ * Programmatic README generator for Link Analysis Plugin
+ * Generates documentation from actual plugin configuration
+ */
+
+import { LinkAnalysisPlugin } from './index';
+import { generateToolsUsedSection } from '../../utils/readme-helpers';
+
+// Extract config values from the link validator tool
+const URL_LIMIT = 50; // From extractUrlsWithPositions and generateLinkHighlights
+const TIMEOUT_SECONDS = 10;
+const MAX_REDIRECTS = 5;
+
+export function generateReadme(): string {
+  const plugin = new LinkAnalysisPlugin();
+  const tools = plugin.getToolDependencies();
+  const toolsSection = generateToolsUsedSection(tools);
+
+  return `# Link Checker
+
+An automated link validation agent that checks all external URLs in documents for accessibility, validity, and potential issues. Provides detailed reporting on broken links, redirects, and connection problems.
+
+${toolsSection}
+
+## Configuration
+
+**Processing Limits:**
+- Maximum URLs to check per document: **${URL_LIMIT}**
+- Timeout per URL check: **${TIMEOUT_SECONDS} seconds**
+- Maximum redirects to follow: **${MAX_REDIRECTS}**
+
+**Grading:**
+- Grade = (Working Links / Total Links) × 100
+- 100% = All links working
+- 0% = All links broken
+
+**Automatic Processing:**
+- This plugin runs on **all documents** automatically (no routing needed)
+- No LLM usage - pure HTTP validation (zero cost)
+
+## How It Works
+
+Extracts all external URLs from the document and validates each one by checking HTTP status codes and following redirects. The agent identifies broken links (404s), server errors (5xx), excessive redirects, and connection timeouts. Results are provided with exact text locations for easy correction.
+
+## Capabilities
+
+- **Comprehensive URL extraction** - Finds all external links in markdown, HTML, and plain text formats
+- **Status code validation** - Checks HTTP/HTTPS responses and categorizes issues
+- **Redirect chain analysis** - Follows and reports redirect chains up to reasonable limits
+- **Timeout handling** - Gracefully handles slow or unresponsive servers
+- **Bulk processing** - Efficiently validates multiple URLs with parallel checking
+- **Detailed reporting** - Provides exact link text and surrounding context for each issue
+
+## Error Categories
+
+- **404 Not Found**: Page doesn't exist
+- **5xx Server Errors**: Server-side problems
+- **Connection Timeouts**: Server too slow or unreachable
+- **Too Many Redirects**: Excessive redirect chains
+- **Network Errors**: DNS, SSL, or connection issues
+
+## Technical Details
+
+- **Supported protocols:** HTTP, HTTPS
+- **Validation method:** HTTP HEAD requests with GET fallback
+- **User agent rotation:** Attempts multiple user agents to avoid bot detection
+- **Cost:** $0 (no LLM usage)
+
+---
+*This documentation is programmatically generated from source code. Do not edit manually.*
+`;
+}

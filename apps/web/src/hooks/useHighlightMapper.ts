@@ -12,10 +12,14 @@ export function useHighlightMapper(markdown: string, slateText: string) {
   return useMemo(() => {
     // Phase 2: Use diff-match-patch for robust offset mapping
     const dmp = new DiffMatchPatch();
-    const diffs = dmp.diff_main(markdown, slateText);
 
-    // Apply semantic cleanup to get more meaningful diffs
-    dmp.diff_cleanupSemantic(diffs);
+    // Configure diff-match-patch for maximum strictness and granularity
+    dmp.Diff_Timeout = 0;
+    dmp.Diff_EditCost = 4;
+
+    let diffs = dmp.diff_main(markdown, slateText, false);
+
+    dmp.diff_cleanupSemanticLossless(diffs);
 
     const mdToSlateOffset = new Map<number, number>();
     const slateToMdOffset = new Map<number, number>();

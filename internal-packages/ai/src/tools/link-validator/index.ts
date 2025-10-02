@@ -2,6 +2,7 @@ import { Tool, ToolContext } from "../base/Tool";
 import { z } from "zod";
 import { extractUrls } from "./urlExtractor";
 import { validateUrls, type LinkAnalysis } from "./urlValidator";
+import { linkValidatorConfig } from "../configs";
 
 // Schema for the tool input
 const inputSchema = z.object({
@@ -43,16 +44,7 @@ export type LinkValidatorInput = z.infer<typeof inputSchema>;
 export type LinkValidatorOutput = z.infer<typeof outputSchema>;
 
 export class LinkValidatorTool extends Tool<LinkValidatorInput, LinkValidatorOutput> {
-  config = {
-    id: 'link-validator',
-    name: 'Link Validator',
-    description: 'Extracts and validates all URLs from a text, checking their accessibility and returning detailed validation results',
-    version: '1.0.0',
-    category: 'analysis' as const,
-    costEstimate: 'Free (no LLM usage)',
-    path: '/tools/link-validator',
-    status: 'stable' as const
-  };
+  config = linkValidatorConfig;
   
   inputSchema = inputSchema;
   outputSchema = outputSchema as any;

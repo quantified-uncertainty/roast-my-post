@@ -1,11 +1,11 @@
 /**
  * Unified text location finder for document analysis
- * This is now a wrapper around the fuzzy-text-locator tool
+ * This is now a wrapper around the smart-text-searcher tool
  */
 
 import { getLineNumberAtPosition, getLineAtPosition } from "../../../analysis-plugins/utils/textHelpers";
 import { logger } from "../../../utils/logger";
-import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "../../../tools/fuzzy-text-locator/core";
+import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "../../../tools/smart-text-searcher/core";
 import { processTextLocationsInParallel } from "./parallelLocationUtils";
 
 /**
@@ -119,7 +119,7 @@ export interface TextLocationOptions {
 
 /**
  * Find the location of text in a document using multiple strategies
- * This now delegates to the unified fuzzy-text-locator tool
+ * This now delegates to the unified smart-text-searcher tool
  */
 export async function findTextLocation(
   searchText: string,

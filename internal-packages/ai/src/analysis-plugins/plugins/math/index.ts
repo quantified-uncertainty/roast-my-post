@@ -3,16 +3,16 @@ import type {
   Comment,
   ToolChainResult,
 } from "../../../shared/types";
-import { checkMathHybridTool } from "../../../tools/check-math-hybrid";
+import { checkMathHybridTool } from "../../../tools/math-validator-hybrid";
 import type {
   CheckMathHybridOutput,
-} from "../../../tools/check-math-hybrid/types";
+} from "../../../tools/math-validator-hybrid/types";
 import type {
   ExtractedMathExpression as ExtractedMathExpressionToolType,
-} from "../../../tools/extract-math-expressions";
+} from "../../../tools/math-expressions-extractor";
 import {
   extractMathExpressionsTool,
-} from "../../../tools/extract-math-expressions";
+} from "../../../tools/math-expressions-extractor";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,
@@ -1068,6 +1068,13 @@ This expression was skipped because it's ${extractedExpression.expression.comple
       totalCost: this.totalCost,
       llmInteractionsCount: 0,
     };
+  }
+
+  getToolDependencies() {
+    return [
+      extractMathExpressionsTool,
+      checkMathHybridTool,
+    ];
   }
 }
 

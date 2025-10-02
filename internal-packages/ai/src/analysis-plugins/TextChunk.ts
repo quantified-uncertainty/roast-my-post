@@ -4,7 +4,7 @@
 
 import { TextChunk as ITextChunk } from './types';
 import { LocationUtils } from '../utils/LocationUtils';
-import { findTextLocation, type TextLocationOptions } from '../tools/fuzzy-text-locator';
+import { findTextLocation, type TextLocationOptions } from '../tools/smart-text-searcher';
 import { logger } from '../shared/logger';
 
 export interface DocumentLocation {

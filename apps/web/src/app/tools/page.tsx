@@ -4,29 +4,25 @@
  */
 
 import Link from 'next/link';
-import { toolRegistry } from '@roast/ai';
-import { MagnifyingGlassIcon, CpuChipIcon } from '@heroicons/react/24/outline';
+import { allToolConfigs } from '@roast/ai';
+import { MagnifyingGlassIcon, CpuChipIcon, CheckCircleIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 const categoryIcons = {
-  analysis: MagnifyingGlassIcon,
+  extraction: FunnelIcon,
+  checker: CheckCircleIcon,
   research: MagnifyingGlassIcon,
   utility: CpuChipIcon
 };
 
 const categoryColors = {
-  analysis: 'bg-green-50 text-green-700 border-green-200',
+  extraction: 'bg-green-50 text-green-700 border-green-200',
+  checker: 'bg-blue-50 text-blue-700 border-blue-200',
   research: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   utility: 'bg-purple-50 text-purple-700 border-purple-200'
 };
 
-const statusColors = {
-  stable: 'bg-green-100 text-green-800',
-  beta: 'bg-yellow-100 text-yellow-800',
-  experimental: 'bg-red-100 text-red-800'
-};
-
 export default function ToolsIndexPage() {
-  const tools = toolRegistry.getMetadata();
+  const tools = allToolConfigs;
   const toolsByCategory = tools.reduce((acc, tool) => {
     if (!acc[tool.category]) {
       acc[tool.category] = [];
@@ -47,9 +43,9 @@ export default function ToolsIndexPage() {
 
       <div className="space-y-8">
         {Object.entries(toolsByCategory).map(([category, categoryTools]) => {
-          const Icon = categoryIcons[category as keyof typeof categoryIcons];
-          const categoryColor = categoryColors[category as keyof typeof categoryColors];
-          
+          const Icon = categoryIcons[category as keyof typeof categoryIcons] || MagnifyingGlassIcon;
+          const categoryColor = categoryColors[category as keyof typeof categoryColors] || 'bg-gray-50 text-gray-700 border-gray-200';
+
           return (
             <div key={category} className="space-y-4">
               <div className="flex items-center gap-2">
@@ -61,20 +57,14 @@ export default function ToolsIndexPage() {
                 {categoryTools.map(tool => {
                   // Link to docs page by default
                   const toolPath = `/tools/${tool.id}/docs`;
-                  const toolStatus = (tool.status as keyof typeof statusColors) || 'experimental';
-                  
+
                   return (
                     <Link
                       key={tool.id}
                       href={toolPath}
                       className={`block p-6 rounded-lg border-2 transition-all hover:shadow-lg ${categoryColor}`}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-lg font-semibold">{tool.name}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${statusColors[toolStatus]}`}>
-                          {toolStatus}
-                        </span>
-                      </div>
+                      <h3 className="text-lg font-semibold mb-2">{tool.name}</h3>
                       <p className="text-sm opacity-90">{tool.description}</p>
                     </Link>
                   );

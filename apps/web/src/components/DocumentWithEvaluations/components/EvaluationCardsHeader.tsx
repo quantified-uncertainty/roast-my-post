@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Bot } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type RefObject, useState } from "react";
+import { type RefObject, useState, memo } from "react";
 
 // import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,7 +39,7 @@ interface EvaluationCardsHeaderProps {
   onRerun?: (agentId: string) => void;
 }
 
-export function EvaluationCardsHeader({
+function EvaluationCardsHeaderComponent({
   document,
   evaluationState,
   onEvaluationStateChange,
@@ -273,3 +273,28 @@ export function EvaluationCardsHeader({
     </Accordion>
   );
 }
+
+// Prevent re-renders on hover-only state changes by comparing only relevant props
+const areEqual = (
+  prev: EvaluationCardsHeaderProps,
+  next: EvaluationCardsHeaderProps
+) => {
+  const selectedPrev = prev.evaluationState.selectedAgentIds;
+  const selectedNext = next.evaluationState.selectedAgentIds;
+
+  return (
+    prev.document === next.document &&
+    selectedPrev === selectedNext &&
+    prev.showDebugComments === next.showDebugComments &&
+    prev.isOwner === next.isOwner &&
+    prev.onRerun === next.onRerun &&
+    prev.scrollContainerRef === next.scrollContainerRef &&
+    prev.onToggleDebugComments === next.onToggleDebugComments &&
+    prev.onEvaluationStateChange === next.onEvaluationStateChange
+  );
+};
+
+export const EvaluationCardsHeader = memo(
+  EvaluationCardsHeaderComponent,
+  areEqual
+);

@@ -5,12 +5,12 @@ import type {
 } from "../../../shared/types";
 import type {
   ExtractedForecast as ExtractedForecastToolType,
-} from "../../../tools/extract-forecasting-claims";
+} from "../../../tools/binary-forecasting-claims-extractor";
 import {
   extractForecastingClaimsTool,
-} from "../../../tools/extract-forecasting-claims";
-import type { ForecasterOutput } from "../../../tools/forecaster";
-import forecasterTool from "../../../tools/forecaster";
+} from "../../../tools/binary-forecasting-claims-extractor";
+import type { ForecasterOutput } from "../../../tools/binary-forecaster";
+import forecasterTool from "../../../tools/binary-forecaster";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,
@@ -892,6 +892,13 @@ The analysis may still be valid, but the highlighting won't be precise.`,
       totalCost: this.totalCost,
       llmInteractionsCount: this.llmInteractions.length,
     };
+  }
+
+  getToolDependencies() {
+    return [
+      extractForecastingClaimsTool,
+      forecasterTool,
+    ];
   }
 }
 

@@ -1,0 +1,194 @@
+name: Prisma Migrate Database
+
+on:
+  push:
+    branches:
+      - prod
+      - main
+    paths:
+      - 'internal-packages/db/prisma/schema.prisma'
+      - 'internal-packages/db/prisma/migrations/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run migrations on'
+        type: choice
+        options:
+          - Staging
+          - Production
+        required: true
+jobs:
+  backup:
+    name: Backup Database
+    uses: ./.github/workflows/database-backup.yml
+    with:
+      backup_prefix: 'pre-migration'
+      environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'prod' && 'Production' || 'Staging') }}
+    secrets: inherit
+
+  migrate:
+    name: Deploy Database Migrations
+    needs: backup  # Only run after successful backup
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'prod' && 'Production' || 'Staging') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Show backup info
+        run: |
+          echo "✅ Database backed up successfully"
+          echo "Backup filename: ${{ needs.backup.outputs.backup_filename }}"
+          echo "Proceeding with migration..."
+
+      - name: Check pending migrations
+        id: check_migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "## Checking for pending migrations..." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get list of pending migrations
+          PENDING_OUTPUT=$(pnpm --filter @roast/db exec prisma migrate status 2>&1 || true)
+          echo "$PENDING_OUTPUT"
+          
+          # Extract pending migrations
+          if echo "$PENDING_OUTPUT" | grep -q "Following migration have not yet been applied:"; then
+            echo "### Pending Migrations:" >> $GITHUB_STEP_SUMMARY
+            echo "$PENDING_OUTPUT" | grep -A 20 "Following migration have not yet been applied:" | grep -E "^[0-9]{14}_" | while read -r migration; do
+              echo "- 📄 $migration" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "pending_migrations=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No pending migrations found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "pending_migrations=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "### Running migrations..." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run migrations and capture output
+          MIGRATION_OUTPUT=$(pnpm --filter @roast/db exec prisma migrate deploy 2>&1)
+          echo "$MIGRATION_OUTPUT"
+          
+          # Parse and format migration output
+          if echo "$MIGRATION_OUTPUT" | grep -q "Applying migration"; then
+            echo "### Applied Migrations:" >> $GITHUB_STEP_SUMMARY
+            echo "$MIGRATION_OUTPUT" | grep "Applying migration" | sed 's/Applying migration/- ✅ Applied:/' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for warnings or errors
+          if echo "$MIGRATION_OUTPUT" | grep -q -i "warning\|error"; then
+            echo "### ⚠️ Warnings/Errors:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$MIGRATION_OUTPUT" | grep -i "warning\|error" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Verify migration status
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "### Final Migration Status:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get final status
+          FINAL_STATUS=$(pnpm --filter @roast/db exec prisma migrate status 2>&1)
+          
+          if echo "$FINAL_STATUS" | grep -q "Database schema is up to date!"; then
+            echo "✅ **Database schema is up to date!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Database schema status unclear**" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$FINAL_STATUS" | tail -20 >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Show current migration count
+          MIGRATION_COUNT=$(find internal-packages/db/prisma/migrations -name "migration.sql" | wc -l)
+          echo "📊 **Total migrations in codebase**: $MIGRATION_COUNT" >> $GITHUB_STEP_SUMMARY
+
+      - name: List recent database migrations
+        if: success()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "### Recent Database Migrations:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Migration | Applied At | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| --------- | ---------- | ------ |" >> $GITHUB_STEP_SUMMARY
+          
+          # Create a script to query recent migrations
+          cat > get_migrations.js << 'EOF'
+          const { prisma } = require('@roast/db');
+          
+          async function main() {
+            const migrations = await prisma.$queryRaw`
+              SELECT migration_name, finished_at, applied_steps_count
+              FROM _prisma_migrations
+              ORDER BY finished_at DESC
+              LIMIT 10
+            `;
+            
+            migrations.forEach(m => {
+              const date = new Date(m.finished_at).toISOString().split('T')[0];
+              const status = m.applied_steps_count > 0 ? '✅ Applied' : '⏳ Pending';
+              console.log(`| ${m.migration_name} | ${date} | ${status} |`);
+            });
+          }
+          
+          main().catch(console.error).finally(() => prisma.$disconnect());
+          EOF
+          
+          node get_migrations.js >> $GITHUB_STEP_SUMMARY || echo "Failed to query migrations" >> $GITHUB_STEP_SUMMARY
+          rm -f get_migrations.js
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Migration summary
+        if: always()
+        run: |
+          echo "## 📋 Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "### ✅ Migration completed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### 🔍 Details:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Backup created**: \`${{ needs.backup.outputs.backup_filename }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Time**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Migration failed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### ⚠️ Recovery Information:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Backup available**: \`${{ needs.backup.outputs.backup_filename }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Restore command**: \`psql $DATABASE_URL < backup_file.sql\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Check the logs above for specific error details" >> $GITHUB_STEP_SUMMARY
+          fi

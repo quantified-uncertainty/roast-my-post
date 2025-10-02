@@ -5,24 +5,11 @@
  */
 
 import { toolRegistry } from '@roast/ai/server';
+import { allToolConfigs } from '@roast/ai';
 
 describe('Tool Examples Integration Tests', () => {
-  const toolsWithExamples = [
-    'check-math',
-    'check-math-hybrid', 
-    'check-math-with-mathjs',
-    'check-spelling-grammar',
-    'detect-language-convention',
-    'document-chunker',
-    'extract-factual-claims',
-    'extract-forecasting-claims',
-    'extract-math-expressions',
-    'fact-checker',
-    'forecaster-simple',
-    'fuzzy-text-locator',
-    'link-validator',
-    'perplexity-research'
-  ];
+  // Derive tool IDs from the registry instead of hardcoding
+  const toolsWithExamples = allToolConfigs.map(config => config.id);
 
   describe.each(toolsWithExamples)('%s examples', (toolId) => {
     let examples: any;

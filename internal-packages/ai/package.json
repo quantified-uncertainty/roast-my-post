@@ -13,9 +13,9 @@
       "types": "./src/server.ts",
       "default": "./src/server.ts"
     },
-    "./tools/fuzzy-text-locator/core": {
-      "types": "./dist/tools/fuzzy-text-locator/core.d.ts",
-      "default": "./dist/tools/fuzzy-text-locator/core.js"
+    "./tools/smart-text-searcher/core": {
+      "types": "./dist/tools/smart-text-searcher/core.d.ts",
+      "default": "./dist/tools/smart-text-searcher/core.js"
     },
     "./analysis-plugins/utils/textHelpers": {
       "types": "./dist/analysis-plugins/utils/textHelpers.d.ts",
@@ -61,9 +61,10 @@
     "test:ci": "vitest run",
     "generate-schemas": "tsx scripts/generate-tool-schemas.ts",
     "generate-readmes": "tsx scripts/generate-tool-readmes.ts",
+    "generate-plugin-readmes": "tsx scripts/generate-plugin-readmes.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
     "check-readmes": "pnpm --filter @roast/web test generated-readmes.vtest.ts",
-    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes"
+    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes && pnpm run generate-plugin-readmes"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

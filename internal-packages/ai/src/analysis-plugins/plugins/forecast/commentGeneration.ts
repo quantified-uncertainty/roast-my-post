@@ -1,6 +1,6 @@
-import type { ExtractedForecast } from "../../../tools/extract-forecasting-claims";
+import type { ExtractedForecast } from "../../../tools/binary-forecasting-claims-extractor";
 
-import type { ForecasterOutput } from "../../../tools/forecaster";
+import type { ForecasterOutput } from "../../../tools/binary-forecaster";
 // Removed unused imports - no longer need CommentSeverity or SEVERITY_STYLES
 
 interface ForecastWithPrediction {

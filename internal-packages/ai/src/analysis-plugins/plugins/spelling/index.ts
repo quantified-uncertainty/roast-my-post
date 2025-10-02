@@ -7,22 +7,22 @@ import type {
 import { escapeXml } from "../../../shared/utils/xml";
 import type {
   SpellingGrammarError,
-} from "../../../tools/check-spelling-grammar";
+} from "../../../tools/spelling-grammar-checker";
 import {
   checkSpellingGrammarTool,
-} from "../../../tools/check-spelling-grammar";
+} from "../../../tools/spelling-grammar-checker";
 import {
   generateDocumentSummary,
   type SpellingErrorWithLocation as ToolSpellingErrorWithLocation,
-} from "../../../tools/check-spelling-grammar/commentGeneration";
+} from "../../../tools/spelling-grammar-checker/commentGeneration";
 import {
   calculateGrade,
   countWords,
-} from "../../../tools/check-spelling-grammar/grading";
+} from "../../../tools/spelling-grammar-checker/grading";
 import {
   detectLanguageConvention,
   getConventionExamples,
-} from "../../../tools/detect-language-convention/conventionDetector";
+} from "../../../tools/language-convention-detector/conventionDetector";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,
@@ -543,6 +543,12 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
       totalCost: this.totalCost,
       llmInteractionsCount: this.llmCallCount,
     };
+  }
+
+  getToolDependencies() {
+    return [
+      checkSpellingGrammarTool,
+    ];
   }
 }
 

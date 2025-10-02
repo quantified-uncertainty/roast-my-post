@@ -25,7 +25,7 @@ describe('Generated Schemas', () => {
       'extract-math-expressions',
       'extract-forecasting-claims',
       'document-chunker',
-      'fuzzy-text-locator',
+      'smart-text-searcher',
       'detect-language-convention',
       'forecaster',
       'link-validator',

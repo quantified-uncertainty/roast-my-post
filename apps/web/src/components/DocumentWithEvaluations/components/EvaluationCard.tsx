@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 
-import { HoverPopover } from "@/components/HoverPopover";
 import { cn } from "@/lib/utils";
 import type { Evaluation } from "@/shared/types/databaseTypes";
 import {
@@ -42,7 +41,7 @@ export function EvaluationCard({
 
   const summary = review.summary || "No summary available";
   const truncatedSummary = truncateSummary(summary);
-  const isTruncated = truncatedSummary !== summary;
+  const _isTruncated = truncatedSummary !== summary;
 
   // Use shared utility for status content
   const statusContent = getEvaluationStatusContent(
@@ -90,13 +89,7 @@ export function EvaluationCard({
           hasCompletedVersion ? "text-gray-700" : "italic text-gray-500"
         )}
       >
-        {isTruncated ? (
-          <HoverPopover content={summary} contentClassName="w-[600px]">
-            <span>{statusContent}</span>
-          </HoverPopover>
-        ) : (
-          statusContent
-        )}
+        {statusContent}
       </div>
       {/* Footer */}
       <div className="mt-auto flex flex-row items-center justify-between">

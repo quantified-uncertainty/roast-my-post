@@ -12,19 +12,19 @@ export * from './shared/cache-utils';
 export * from './shared/math-schemas';
 
 // Individual tools - export the ones that are commonly used
-export { default as checkMathTool } from './check-math';
-export { default as checkMathWithMathJsTool } from './check-math-with-mathjs';
-export { default as checkMathHybridTool } from './check-math-hybrid';
+export { default as checkMathTool } from './math-validator-llm';
+export { default as checkMathWithMathJsTool } from './math-validator-mathjs';
+export { default as checkMathHybridTool } from './math-validator-hybrid';
 export { default as factCheckerTool } from './fact-checker';
-export { default as forecasterTool } from './forecaster';
-export { default as fuzzyTextLocatorTool } from './fuzzy-text-locator';
+export { default as forecasterTool } from './binary-forecaster';
+export { default as fuzzyTextLocatorTool } from './smart-text-searcher';
 export { default as documentChunkerTool } from './document-chunker';
-export { default as extractForecastingClaimsTool } from './extract-forecasting-claims';
-export { default as extractFactualClaimsTool } from './extract-factual-claims';
-export { default as checkSpellingGrammarTool } from './check-spelling-grammar';
-export { default as extractMathExpressionsTool } from './extract-math-expressions';
-export { detectLanguageConventionTool } from './detect-language-convention';
-export { default as perplexityResearchTool } from './perplexity-research';
+export { default as extractForecastingClaimsTool } from './binary-forecasting-claims-extractor';
+export { default as extractFactualClaimsTool } from './factual-claims-extractor';
+export { default as checkSpellingGrammarTool } from './spelling-grammar-checker';
+export { default as extractMathExpressionsTool } from './math-expressions-extractor';
+export { detectLanguageConventionTool } from './language-convention-detector';
+export { default as perplexityResearchTool } from './perplexity-researcher';
 export { linkValidator } from './link-validator';
 
 // Export link validator utilities and types
@@ -38,14 +38,14 @@ export {
 
 // Export tool-specific types
 export type { DocumentChunkerOutput } from './document-chunker';
-export type { TextLocationFinderOutput } from './fuzzy-text-locator';
-export type { CheckMathOutput } from './check-math';
-export type { CheckMathAgenticOutput as CheckMathWithMathJSOutput } from './check-math-with-mathjs/types';
-export type { CheckSpellingGrammarOutput, SpellingGrammarError } from './check-spelling-grammar';
-export type { ExtractFactualClaimsOutput, ExtractedFactualClaim } from './extract-factual-claims';
-export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './extract-forecasting-claims';
-export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './extract-math-expressions';
-export type { DetectLanguageConventionOutput } from './detect-language-convention';
+export type { TextLocationFinderOutput } from './smart-text-searcher';
+export type { CheckMathOutput } from './math-validator-llm';
+export type { CheckMathAgenticOutput as CheckMathWithMathJSOutput } from './math-validator-mathjs/types';
+export type { CheckSpellingGrammarOutput, SpellingGrammarError } from './spelling-grammar-checker';
+export type { ExtractFactualClaimsOutput, ExtractedFactualClaim } from './factual-claims-extractor';
+export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './binary-forecasting-claims-extractor';
+export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './math-expressions-extractor';
+export type { DetectLanguageConventionOutput } from './language-convention-detector';
 
 // Re-export shared math types
 export type { MathErrorDetails, MathVerificationStatus } from './shared/math-schemas';

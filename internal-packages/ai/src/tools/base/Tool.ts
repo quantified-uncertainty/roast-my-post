@@ -8,7 +8,7 @@ export interface ToolConfig {
   name: string;
   description: string;
   version: string;
-  category: 'analysis' | 'research' | 'utility';
+  category: 'extraction' | 'checker' | 'research' | 'utility';
   costEstimate?: string;
   path?: string; // UI route path
   status?: 'stable' | 'experimental' | 'beta';

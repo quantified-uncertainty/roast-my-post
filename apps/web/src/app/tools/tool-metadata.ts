@@ -4,25 +4,25 @@
  */
 
 export const toolMetadata = {
-  'check-math': {
+  'math-validator-llm': {
     buttonText: 'Check',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
     exampleText: 'Multiplication',
   },
-  'check-math-hybrid': {
+  'math-validator-hybrid': {
     buttonText: 'Check',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
     exampleText: 'Unit Conversion',
   },
-  'check-math-with-mathjs': {
+  'math-validator-mathjs': {
     buttonText: 'Check',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
     exampleText: 'Unit Math',
   },
-  'check-spelling-grammar': {
+  'spelling-grammar-checker': {
     buttonText: 'Check',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
@@ -34,18 +34,18 @@ export const toolMetadata = {
     exampleIndex: 1,
     exampleText: 'False Statement',
   },
-  'extract-factual-claims': {
+  'factual-claims-extractor': {
     buttonText: 'Extract',
     exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
-  'extract-forecasting-claims': {
+  'binary-forecasting-claims-extractor': {
     buttonText: 'Extract',
     exampleButtonType: 'descriptive' as const, // Full text examples
     exampleIndex: 1,
     exampleText: 'The S&P 500 will likely reach 6,000 points by the end of 2025',
   },
-  'detect-language-convention': {
+  'language-convention-detector': {
     buttonText: 'Process',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,
@@ -56,12 +56,12 @@ export const toolMetadata = {
     exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
-  'extract-math-expressions': {
+  'math-expressions-extractor': {
     buttonText: 'Extract',
     exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
-  'fuzzy-text-locator': {
+  'smart-text-searcher': {
     buttonText: 'Process',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 0,
@@ -72,13 +72,13 @@ export const toolMetadata = {
     exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },
-  'perplexity-research': {
+  'perplexity-researcher': {
     buttonText: 'Process',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 2, // Use a middle example
     exampleText: 'CRISPR safety advances and regulatory updates',
   },
-  'forecaster': {
+  'binary-forecaster': {
     buttonText: 'Process',
     exampleButtonType: 'descriptive' as const,
     exampleIndex: 1,

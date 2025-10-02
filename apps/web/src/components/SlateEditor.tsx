@@ -12,19 +12,9 @@ import Image from "next/image";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { remarkToSlate } from "remark-slate-transformer";
-import {
-  createEditor,
-  Descendant,
-  Element,
-  Node,
-  Text,
-} from "slate";
+import { createEditor, Descendant, Element, Node, Text, Editor } from "slate";
 import { withHistory } from "slate-history";
-import {
-  Editable,
-  Slate,
-  withReact,
-} from "slate-react";
+import { Editable, Slate, withReact } from "slate-react";
 import { unified } from "unified";
 
 import {
@@ -564,62 +554,20 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     }
   }, [content]);
 
-  // Extract plain text from nodes
-  const extractPlainText = useCallback((nodes: Node[]): string => {
-    let text = "";
-
-    const visit = (node: Node) => {
-      if (Text.isText(node)) {
-        text += node.text;
-      } else if (Element.isElement(node)) {
-        // Handle block elements structure for better matching with markdown
-        if (
-          node.type &&
-          (node.type.startsWith("heading") ||
-            node.type === "paragraph" ||
-            node.type === "block-quote")
-        ) {
-          // Add paragraph breaks for these block types
-          if (text.length > 0 && !text.endsWith("\n\n")) {
-            text += "\n\n";
-          }
-        }
-
-        // Visit all children
-        node.children.forEach(visit);
-
-        // Add trailing breaks for block elements
-        if (
-          node.type &&
-          (node.type.startsWith("heading") ||
-            node.type === "paragraph" ||
-            node.type === "block-quote")
-        ) {
-          if (!text.endsWith("\n\n")) {
-            text += "\n\n";
-          }
-        }
-      }
-    };
-
-    nodes.forEach(visit);
-    return text;
-  }, []);
-
   // Initialize editor
   useEffect(() => {
-    if (!initRef.current && value) {
+    if (!initRef.current && value && Editor) {
       editor.children = value;
       editor.onChange();
 
-      // Extract plain text for offset mapping
-      const plainText = extractPlainText(editor.children);
+      // Extract plain text for offset mapping AFTER editor is initialized
+      const plainText = Editor.string(editor, []);
       setSlateText(plainText);
 
       initRef.current = true;
       setInitialized(true);
     }
-  }, [editor, value, content, extractPlainText]);
+  }, [editor, value, content]);
 
   // Use our custom hooks for robust offset mapping
   const { mdToSlateOffset } = useHighlightMapper(content, slateText);
@@ -661,7 +609,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             startOffset: highlight?.startOffset,
             endOffset: highlight?.endOffset,
             tag: highlight?.tag,
-          });*/  
+          });*/
           continue; // Skip invalid highlights
         }
 
