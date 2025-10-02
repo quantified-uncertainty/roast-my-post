@@ -78,6 +78,8 @@ export function EvaluationCard({
             commentCount={review.comments?.length || 0}
             onChange={onToggle}
           />
+        ) : hasCompletedVersion && !hasComments ? (
+          <span className="text-xs text-gray-500">No Comments</span>
         ) : (
           <StatusBadge status={latestEvaluationStatus} />
         )}

@@ -74,6 +74,7 @@ export function EvaluationView({
 
   // Header expand/collapse tied to scroll (now handled inside header component as well)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
@@ -144,6 +145,33 @@ export function EvaluationView({
 
   // Track whether we're in "navigation mode" (using arrows) or "direct mode" (from URL)
   const isNavigationMode = useRef(false);
+
+  // Scroll listener to hide header when evaluations section reaches the top
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const evaluationsSection = evaluationsSectionRef.current;
+    if (!container || !evaluationsSection) return;
+
+    const handleScroll = () => {
+      const evalRect = evaluationsSection.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      // Hide header when top of evaluations section reaches top of container
+      // Add small offset (50px) so it triggers slightly before reaching the exact top
+      const isAtTop = evalRect.top <= containerRect.top + 50;
+      setIsHeaderVisible(!isAtTop);
+    };
+
+    // Check initial state
+    handleScroll();
+
+    // Listen for scroll events
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Handle URL-based navigation (when user shares a link or manually changes URL)
   const commentIdFromUrl = searchParams.get("comment");
@@ -218,7 +246,12 @@ export function EvaluationView({
   return (
     <div className="flex h-full flex-col">
       {/* Fixed Evaluation Cards Header Bar */}
-      <Card className="sticky top-0 z-50 mx-6">
+      <Card
+        className={cn(
+          "sticky top-0 z-50 mx-6 transition-all duration-200",
+          !isHeaderVisible && "pointer-events-none h-0 overflow-hidden opacity-0"
+        )}
+      >
         <EvaluationCardsHeader
           document={document}
           evaluationState={evaluationState}
