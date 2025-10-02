@@ -277,17 +277,6 @@ export function EvaluationView({
             isFullWidth={isFullWidth}
             onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
           />
-          {/* Submitter Notes - only show if notes exist */}
-          {document.submitterNotes && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <h3 className="mb-2 text-sm font-semibold text-blue-900">
-                Submitter's Notes
-              </h3>
-              <p className="whitespace-pre-wrap text-sm text-blue-800">
-                {document.submitterNotes}
-              </p>
-            </div>
-          )}
           {/* Document content and comments section */}
           <div
             className={cn(
