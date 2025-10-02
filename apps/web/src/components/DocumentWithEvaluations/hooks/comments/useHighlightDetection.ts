@@ -11,7 +11,7 @@ export interface UseHighlightDetectionResult {
 /**
  * Hook to detect when highlight elements are ready in the DOM.
  * Monitors for data-tag elements and maintains a cache for performance.
- * 
+ *
  * @param contentRef - Reference to the content container element
  * @param expectedCount - Expected number of highlights to wait for
  * @returns Object with highlight readiness state and cache
@@ -38,25 +38,28 @@ export function useHighlightDetection(
     const updateHighlightCacheFromDOM = (container: HTMLElement) => {
       const newCache = new Map<string, HTMLElement>();
       const elements = container.querySelectorAll("[data-tag]");
-      
+
       elements.forEach((el) => {
         const tag = el.getAttribute("data-tag");
         if (tag !== null) {
           newCache.set(tag, el as HTMLElement);
         }
       });
-      
+
       highlightCacheRef.current = newCache;
     };
 
     // Check if highlights already exist before resetting
-    const alreadyReady = checkHighlightsReady(contentRef.current, expectedCount);
-    
+    const alreadyReady = checkHighlightsReady(
+      contentRef.current,
+      expectedCount
+    );
+
     if (alreadyReady) {
       // Highlights already exist, just update cache
       updateHighlightCacheFromDOM(contentRef.current);
       setHighlightsReady(true);
-      
+
       if (!hasInitialized) {
         setHasInitialized(true);
       }
@@ -70,18 +73,15 @@ export function useHighlightDetection(
 
     const updateHighlightCache = () => {
       if (!contentRef.current || !isActive) return;
-      
+
       updateHighlightCacheFromDOM(contentRef.current);
-      
+
       // Check if we have enough highlights
-      const ready = checkHighlightsReady(
-        contentRef.current,
-        expectedCount
-      );
-      
+      const ready = checkHighlightsReady(contentRef.current, expectedCount);
+
       if (ready) {
         setHighlightsReady(true);
-        
+
         // Mark as initialized after a delay
         if (!hasInitialized) {
           initTimeoutRef.current = setTimeout(() => {
@@ -90,7 +90,7 @@ export function useHighlightDetection(
             }
           }, INITIALIZATION_DELAY);
         }
-        
+
         // Disconnect observer once ready
         if (observerRef.current) {
           observerRef.current.disconnect();
@@ -100,15 +100,20 @@ export function useHighlightDetection(
 
     // Helper to check if mutations contain highlight changes
     const hasHighlightChanges = (mutations: MutationRecord[]): boolean => {
-      return mutations.some(mutation => {
-        if (mutation.type === 'childList') {
+      return mutations.some((mutation) => {
+        if (mutation.type === "childList") {
           const addedNodes = Array.from(mutation.addedNodes);
-          return addedNodes.some(node => 
-            node instanceof Element && 
-            (node.hasAttribute('data-tag') || node.querySelector('[data-tag]'))
+          return addedNodes.some(
+            (node) =>
+              node instanceof Element &&
+              (node.hasAttribute("data-tag") ||
+                node.querySelector("[data-tag]"))
           );
         }
-        return mutation.type === 'attributes' && mutation.attributeName === 'data-tag';
+        return (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "data-tag"
+        );
       });
     };
 
@@ -123,7 +128,7 @@ export function useHighlightDetection(
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-tag']
+      attributeFilter: ["data-tag"],
     });
 
     // Initial check after a short delay

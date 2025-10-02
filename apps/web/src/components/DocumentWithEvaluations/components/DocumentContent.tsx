@@ -3,6 +3,7 @@
 import { RefObject } from "react";
 import SlateEditor from "@/components/SlateEditor";
 import { LAYOUT } from "../constants";
+import { useLocalCommentsUI } from "../context/LocalCommentsUIContext";
 import type { Document } from "@/shared/types/databaseTypes";
 
 interface DocumentContentProps {
@@ -15,11 +16,8 @@ interface DocumentContentProps {
     tag: string;
     color: string;
   }>;
-  hoveredCommentId: string | null;
-  onHighlightHover: (commentId: string | null) => void;
-  onHighlightClick: (commentId: string) => void;
+  onHighlightClick?: (commentId: string) => void;
   isFullWidth: boolean;
-  onToggleFullWidth: () => void;
   contentRef: RefObject<HTMLDivElement | null>;
 }
 
@@ -27,13 +25,11 @@ export function DocumentContent({
   document,
   contentWithMetadataPrepend,
   highlights,
-  hoveredCommentId,
-  onHighlightHover,
   onHighlightClick,
   isFullWidth,
-  onToggleFullWidth,
   contentRef,
 }: DocumentContentProps) {
+  const { hoveredCommentId, setHoveredCommentId } = useLocalCommentsUI();
   return (
     <div
       ref={contentRef}
@@ -56,7 +52,7 @@ export function DocumentContent({
       >
         <SlateEditor
           content={contentWithMetadataPrepend}
-          onHighlightHover={onHighlightHover}
+          onHighlightHover={(id) => setHoveredCommentId(id)}
           onHighlightClick={onHighlightClick}
           highlights={highlights}
           activeTag={hoveredCommentId}

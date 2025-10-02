@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from "vitest";
 
 /**
  * SlateEditor component tests
@@ -61,7 +61,7 @@ vi.mock("slate-history", () => ({
 }));
 
 vi.mock("slate", async () => {
-  const original = await vi.importActual("slate") as any;
+  const original = (await vi.importActual("slate")) as any;
   const mockEditor = {
     children: [] as any[],
     operations: [],
@@ -134,6 +134,20 @@ vi.mock("slate", async () => {
         (editor, node) =>
           original.Element.isElement(node) && !editor.isInline(node)
       ),
+      // Provide string/start/end for environments where tests use them
+      string: vi.fn((editor: any, _at?: any) => {
+        return original.Node.string({ children: editor.children } as any);
+      }),
+      start: vi.fn((editor: any, _at?: any) => ({ path: [0], offset: 0 })),
+      end: vi.fn((editor: any, _at?: any) => {
+        const fullText = original.Node.string({
+          children: editor.children,
+        } as any);
+        return {
+          path: [Math.max(0, editor.children.length - 1)],
+          offset: fullText.length,
+        } as any;
+      }),
     },
     Transforms: {
       ...original.Transforms,

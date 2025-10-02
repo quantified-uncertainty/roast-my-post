@@ -1,6 +1,11 @@
 // @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
-import { COMMENT_POSITIONING, TEXT_PROCESSING, LAYOUT, LIMITS } from '@/components/DocumentWithEvaluations/constants';
+import {
+  COMMENT_POSITIONING,
+  TEXT_PROCESSING,
+  LAYOUT,
+  LIMITS,
+} from "@/components/DocumentWithEvaluations/constants";
 
 import type { Comment } from "@/shared/types/databaseTypes";
 
@@ -41,10 +46,10 @@ export function calculateCommentPositions(
 
   const containerRect = container.getBoundingClientRect();
   const newPositions: Record<string, number> = {};
-  
+
   // Batch DOM reads for better performance
   const highlightRects = new Map<string, DOMRect>();
-  
+
   // Use cache if provided, otherwise query DOM
   if (highlightCache) {
     // Use cached elements
@@ -59,14 +64,14 @@ export function calculateCommentPositions(
     // Batch query all highlights at once
     const allHighlights = container.querySelectorAll("[data-tag]");
     const highlightsByTag = new Map<string, Element>();
-    
-    allHighlights.forEach(el => {
+
+    allHighlights.forEach((el) => {
       const tag = el.getAttribute("data-tag");
       if (tag !== null && !highlightsByTag.has(tag)) {
         highlightsByTag.set(tag, el);
       }
     });
-    
+
     // Batch read all rects
     highlightsByTag.forEach((element, tag) => {
       highlightRects.set(tag, element.getBoundingClientRect());
@@ -82,11 +87,17 @@ export function calculateCommentPositions(
       // Position relative to content container, accounting for scroll
       const relativeTop = rect.top - containerRect.top + container.scrollTop;
       // Position at the top of the highlight, not the center
-      const adjustedPosition = relativeTop - COMMENT_POSITIONING.HIGHLIGHT_ALIGNMENT_OFFSET;
+      const adjustedPosition =
+        relativeTop - COMMENT_POSITIONING.HIGHLIGHT_ALIGNMENT_OFFSET;
       newPositions[tag] = Math.max(0, adjustedPosition);
     } else {
       // Fallback position if highlight not found
-      const fallbackPosition = getFallbackPosition(comment, index, container, containerRect);
+      const fallbackPosition = getFallbackPosition(
+        comment,
+        index,
+        container,
+        containerRect
+      );
       newPositions[tag] = fallbackPosition;
     }
   });
@@ -107,11 +118,13 @@ export function calculateCommentPositions(
     // Check cache first
     const cached = heightCache.get(comment);
     const text = comment.description || "";
-    
+
     if (cached && cached.text === text) {
       // Account for hover state
       const isExpanded = hoveredCommentId === commentIndex.toString();
-      return isExpanded ? cached.height + COMMENT_POSITIONING.EXPANDED_EXTRA_HEIGHT : cached.height;
+      return isExpanded
+        ? cached.height + COMMENT_POSITIONING.EXPANDED_EXTRA_HEIGHT
+        : cached.height;
     }
 
     // Calculate and cache height
@@ -126,11 +139,16 @@ export function calculateCommentPositions(
 
     const displayLength = !isExpanded && text.length > 120 ? 120 : text.length;
     const lines = Math.ceil(displayLength / charsPerLine);
-    const extraHeight = isExpanded ? COMMENT_POSITIONING.EXPANDED_EXTRA_HEIGHT : 0;
+    const extraHeight = isExpanded
+      ? COMMENT_POSITIONING.EXPANDED_EXTRA_HEIGHT
+      : 0;
 
-    const height = baseHeight + (lines - 1) * lineHeight + COMMENT_POSITIONING.AGENT_NAME_HEIGHT;
+    const height =
+      baseHeight +
+      (lines - 1) * lineHeight +
+      COMMENT_POSITIONING.AGENT_NAME_HEIGHT;
     heightCache.set(comment, { text, height: height - extraHeight }); // Cache base height without expansion
-    
+
     return height + extraHeight;
   };
 
@@ -213,11 +231,20 @@ export function checkHighlightsReady(
   });
 
   // Check if we have enough unique tags for the comments
-  return uniqueTags.size >= Math.ceil(expectedCount * LIMITS.MIN_UNIQUE_TAGS_RATIO);
+  return (
+    uniqueTags.size >= Math.ceil(expectedCount * LIMITS.MIN_UNIQUE_TAGS_RATIO)
+  );
 }
 
 // Memoized truncation cache
-const truncationCache = new Map<string, { isHovered: boolean; maxLength: number; result: { text: string; isTruncated: boolean } }>();
+const truncationCache = new Map<
+  string,
+  {
+    isHovered: boolean;
+    maxLength: number;
+    result: { text: string; isTruncated: boolean };
+  }
+>();
 
 /**
  * Get comment display text based on hover state
@@ -238,7 +265,11 @@ export function getCommentDisplayText(
   // Check cache
   const cacheKey = `${text.substring(0, 50)}-${text.length}`;
   const cached = truncationCache.get(cacheKey);
-  if (cached && cached.isHovered === isHovered && cached.maxLength === maxLength) {
+  if (
+    cached &&
+    cached.isHovered === isHovered &&
+    cached.maxLength === maxLength
+  ) {
     return cached.result;
   }
 
@@ -247,9 +278,14 @@ export function getCommentDisplayText(
   const needsLineTruncation = lines.length > TEXT_PROCESSING.MAX_PREVIEW_LINES;
 
   // If we only need line truncation and the first N lines are short enough
-  if (needsLineTruncation && lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n").length <= maxLength) {
+  if (
+    needsLineTruncation &&
+    lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n").length <=
+      maxLength
+  ) {
     const result = {
-      text: lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n") + "...",
+      text:
+        lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n") + "...",
       isTruncated: true,
     };
     truncationCache.set(cacheKey, { isHovered, maxLength, result });
@@ -284,7 +320,10 @@ export function getCommentDisplayText(
 
       // Last resort: just take first N lines of the truncated text
       const result = {
-        text: truncatedLines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n") + "...",
+        text:
+          truncatedLines
+            .slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES)
+            .join("\n") + "...",
         isTruncated: true,
       };
       truncationCache.set(cacheKey, { isHovered, maxLength, result });
@@ -300,7 +339,9 @@ export function getCommentDisplayText(
   } catch (error) {
     // Fallback if markdown-truncate fails
     console.error("Markdown truncation failed:", error);
-    const fallbackText = lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n");
+    const fallbackText = lines
+      .slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES)
+      .join("\n");
     const result = {
       text:
         fallbackText.length > maxLength
