@@ -2,45 +2,26 @@
  * Programmatic README generator for Fact Checker Tool
  */
 
-import { factCheckerTool } from './index';
-import { generateToolHeader, getToolDependencies, generateToolsUsedSection } from '../utils/readme-helpers';
+import {
+  generateToolHeader,
+  generateToolsUsedSection,
+} from "../utils/readme-helpers";
+import { factCheckerTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = factCheckerTool.getToolDependencies();
+  const dependencies = factCheckerTool.getToolDependencies?.() ?? [];
   const header = generateToolHeader(factCheckerTool);
   const toolsSection = generateToolsUsedSection(dependencies);
 
   return `${header}
 
-${toolsSection}## What it does
+${toolsSection}## How It Works
 
-- **Verifies Claims**: Analyzes specific claims for accuracy and truthfulness
-- **Provides Verdicts**: Returns true, false, partially-true, unverifiable, or outdated
-- **Explains Reasoning**: Detailed explanations with supporting evidence
-- **Suggests Corrections**: Offers accurate alternatives for false claims
-- **Assesses Confidence**: Indicates reliability of the verification
+Uses Perplexity Research to gather current information and sources, then analyzes specific claims for accuracy and truthfulness. Returns structured verdicts (true, false, partially-true, unverifiable, or outdated) with detailed reasoning and supporting evidence.
 
-## Verification Process
+## Limitations
 
-1. Analyzes the claim against current knowledge and sources
-2. Determines accuracy with nuanced verdicts (not just true/false)
-3. Provides evidence and reasoning for the verdict
-4. Suggests corrections when claims are inaccurate or misleading
-
-## Verdict Types
-
-**True**: Claim is accurate and supported by reliable evidence
-**False**: Claim is demonstrably incorrect
-**Partially-true**: Claim contains accurate elements but is misleading or incomplete
-**Unverifiable**: Cannot be verified with available sources
-**Outdated**: Was true but no longer current
-
-## Use Cases
-
-- **Individual Claim Verification**: Check specific statements for accuracy
-- **Content Review**: Verify key claims in articles or documents
-- **Research Validation**: Confirm factual assertions in academic work
-- **Misinformation Detection**: Identify and correct false information
+Effectiveness depends on claim specificity and available evidence sources. Cannot verify highly specialized or very recent claims.
 
 ## Integration
 
@@ -50,15 +31,11 @@ Works with **Extract Factual Claims** tool:
 3. Verify selected claims for accuracy
 4. Generate comprehensive fact-check reports
 
-## Important Notes
+## Technical Details
 
-- Focuses on verifying specific claims (not extracting them)
-- Provides evidence-based reasoning for all verdicts
+- Uses Perplexity Research tool for web-enhanced information gathering
+- Provides structured verdict types: true, false, partially-true, unverifiable, outdated
+- Includes confidence scoring and correction suggestions
 - Best used for high-priority or controversial claims
-- Always includes confidence levels for reliability assessment
-
-## Limitations
-
-Effectiveness depends on claim specificity and available evidence sources. Cannot verify highly specialized or very recent claims.
 `;
 }

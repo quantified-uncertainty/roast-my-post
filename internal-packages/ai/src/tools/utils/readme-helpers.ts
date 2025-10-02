@@ -15,14 +15,16 @@ ${tool.config.description}`;
 }
 
 /**
- * Get tool dependencies if the method exists
- * Works with tools that may or may not implement getToolDependencies()
+ * Get tool dependencies, handling tools that may or may not have the method
  */
-export function getToolDependencies(
-  tool: Tool<any, any> & { getToolDependencies?: () => Tool<any, any>[] }
-): Tool<any, any>[] {
-  if (typeof tool.getToolDependencies === 'function') {
-    return tool.getToolDependencies();
+export function getToolDependencies(tool: unknown): Tool<any, any>[] {
+  if (
+    tool &&
+    typeof tool === 'object' &&
+    'getToolDependencies' in tool &&
+    typeof (tool as { getToolDependencies?: () => Tool<any, any>[] }).getToolDependencies === 'function'
+  ) {
+    return (tool as { getToolDependencies: () => Tool<any, any>[] }).getToolDependencies();
   }
   return [];
 }

@@ -1,17 +1,17 @@
 import { Tool } from './base/Tool';
-import forecasterTool from './forecaster';
+import forecasterTool from './binary-forecaster';
 import factCheckerTool from './fact-checker';
-import checkMathTool from './check-math';
-import checkMathWithMathJsTool from './check-math-with-mathjs';
-import checkMathHybridTool from './check-math-hybrid';
-import extractForecastingClaimsTool from './extract-forecasting-claims';
-import perplexityResearchTool from './perplexity-research';
-import extractFactualClaimsTool from './extract-factual-claims';
-import checkSpellingGrammarTool from './check-spelling-grammar';
-import extractMathExpressionsTool from './extract-math-expressions';
+import checkMathTool from './math-validator-llm';
+import checkMathWithMathJsTool from './math-validator-mathjs';
+import checkMathHybridTool from './math-validator-hybrid';
+import extractForecastingClaimsTool from './binary-forecasting-claims-extractor';
+import perplexityResearchTool from './perplexity-researcher';
+import extractFactualClaimsTool from './factual-claims-extractor';
+import checkSpellingGrammarTool from './spelling-grammar-checker';
+import extractMathExpressionsTool from './math-expressions-extractor';
 import documentChunkerTool from './document-chunker';
-import fuzzyTextLocatorTool from './fuzzy-text-locator';
-import { detectLanguageConventionTool } from './detect-language-convention';
+import fuzzyTextLocatorTool from './smart-text-searcher';
+import { detectLanguageConventionTool } from './language-convention-detector';
 import { linkValidator } from './link-validator';
 
 // Tool registry to manage all available tools
@@ -51,7 +51,7 @@ export class ToolRegistry {
     return Array.from(this.tools.values());
   }
   
-  getByCategory(category: 'analysis' | 'research' | 'utility'): Tool[] {
+  getByCategory(category: 'extraction' | 'checker' | 'research' | 'utility'): Tool[] {
     return this.getAll().filter(tool => tool.config.category === category);
   }
   

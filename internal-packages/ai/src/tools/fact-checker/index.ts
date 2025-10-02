@@ -1,13 +1,14 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
-import { perplexityResearchTool } from "../perplexity-research";
+import { perplexityResearchTool } from "../perplexity-researcher";
 import { generateCacheSeed } from "../shared/cache-utils";
 
 import {
   Tool,
   ToolContext,
 } from "../base/Tool";
+import { factCheckerConfig } from "../configs";
 
 const inputSchema = z.object({
   claim: z.string().min(1).max(1000).describe("The factual claim to verify"),
@@ -90,16 +91,7 @@ export interface FactCheckerOutput {
 }
 
 export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
-  config = {
-    id: "fact-checker",
-    name: "Fact Checker",
-    description: "Verify the accuracy of specific factual claims",
-    version: "1.0.0",
-    category: "analysis" as const,
-    costEstimate: "~$0.01-0.02 per claim",
-    path: "/tools/fact-checker",
-    status: "stable" as const,
-  };
+  config = factCheckerConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;

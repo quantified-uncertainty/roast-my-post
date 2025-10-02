@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { toolRegistry } from '@roast/ai';
+import { allToolConfigs } from '@roast/ai';
 
 describe('Tool Configurations', () => {
   describe('Tool Config Path Validation', () => {
     it('should have valid page paths for all tool configs', () => {
-      const tools = toolRegistry.getMetadata();
+      const tools = allToolConfigs;
       
       expect(tools.length).toBeGreaterThan(0);
       
@@ -22,7 +22,7 @@ describe('Tool Configurations', () => {
     });
 
     it('should have consistent tool IDs and paths', () => {
-      const tools = toolRegistry.getMetadata();
+      const tools = allToolConfigs;
       
       tools.forEach(tool => {
         // Tool ID should be kebab-case
@@ -42,9 +42,9 @@ describe('Tool Configurations', () => {
     });
 
     it('should have valid categories for all tools', () => {
-      const tools = toolRegistry.getMetadata();
-      const validCategories = ['analysis', 'research', 'utility'];
-      
+      const tools = allToolConfigs;
+      const validCategories = ['extraction', 'checker', 'research', 'utility'];
+
       tools.forEach(tool => {
         expect(tool.category).toBeDefined();
         expect(validCategories).toContain(tool.category);
@@ -52,7 +52,7 @@ describe('Tool Configurations', () => {
     });
 
     it('should have valid status for all tools', () => {
-      const tools = toolRegistry.getMetadata();
+      const tools = allToolConfigs;
       const validStatuses = ['stable', 'beta', 'experimental'];
       
       tools.forEach(tool => {
@@ -62,7 +62,7 @@ describe('Tool Configurations', () => {
     });
 
     it('should not have duplicate tool IDs', () => {
-      const tools = toolRegistry.getMetadata();
+      const tools = allToolConfigs;
       const toolIds = tools.map(tool => tool.id);
       const uniqueIds = new Set(toolIds);
       
@@ -70,7 +70,7 @@ describe('Tool Configurations', () => {
     });
 
     it('should not have duplicate tool paths', () => {
-      const tools = toolRegistry.getMetadata();
+      const tools = allToolConfigs;
       const toolPaths = tools.map(tool => tool.path);
       const uniquePaths = new Set(toolPaths);
       
@@ -81,22 +81,22 @@ describe('Tool Configurations', () => {
   describe('Individual Tool Config Validation', () => {
     // Test specific tools that have had issues in the past
     it('fuzzy-text-locator should have correct page path', () => {
-      const tools = toolRegistry.getMetadata();
-      const fuzzyTextLocator = tools.find(tool => tool.id === 'fuzzy-text-locator');
-      
+      const tools = allToolConfigs;
+      const fuzzyTextLocator = tools.find(tool => tool.id === 'smart-text-searcher');
+
       expect(fuzzyTextLocator).toBeDefined();
-      expect(fuzzyTextLocator!.path).toBe('/tools/fuzzy-text-locator');
-      expect(fuzzyTextLocator!.path).not.toBe('/api/tools/fuzzy-text-locator');
+      expect(fuzzyTextLocator!.path).toBe('/tools/smart-text-searcher');
+      expect(fuzzyTextLocator!.path).not.toBe('/api/tools/smart-text-searcher');
     });
 
     it('all major tools should have correct page paths', () => {
-      const tools = toolRegistry.getMetadata();
+      const tools = allToolConfigs;
       const majorToolIds = [
-        'check-spelling-grammar',
-        'check-math',
+        'spelling-grammar-checker',
+        'math-validator-llm',
         'fact-checker',
-        'fuzzy-text-locator',
-        'perplexity-research',
+        'smart-text-searcher',
+        'perplexity-researcher',
         'link-validator'
       ];
 
@@ -110,20 +110,21 @@ describe('Tool Configurations', () => {
   });
 
   describe('Tool Registry Structure', () => {
-    it('should have getMetadata method', () => {
-      expect(typeof toolRegistry.getMetadata).toBe('function');
+    it('should export allToolConfigs array', () => {
+      expect(Array.isArray(allToolConfigs)).toBe(true);
+      expect(allToolConfigs.length).toBeGreaterThan(0);
     });
 
-    it('should return consistent data from getMetadata', () => {
-      const tools1 = toolRegistry.getMetadata();
-      const tools2 = toolRegistry.getMetadata();
-      
+    it('should return consistent data', () => {
+      const tools1 = allToolConfigs;
+      const tools2 = allToolConfigs;
+
       expect(tools1).toEqual(tools2);
       expect(tools1.length).toBe(tools2.length);
     });
 
     it('should have all required fields for each tool', () => {
-      const tools = toolRegistry.getMetadata();
+      const tools = allToolConfigs;
       const requiredFields = ['id', 'name', 'path', 'description', 'category', 'status'];
       
       tools.forEach(tool => {

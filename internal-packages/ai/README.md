@@ -202,10 +202,10 @@ The package is organized into:
   - `/highlightExtraction` - Extract highlights from analysis
   - `/linkAnalysis` - Analyze and validate links in documents
 - `/tools` - Individual AI-powered analysis tools
-  - `check-math` - Mathematical expression validation
-  - `check-spelling-grammar` - Spelling and grammar checking
-  - `extract-factual-claims` - Factual claim extraction
-  - `fuzzy-text-locator` - Fuzzy text search and location
+  - `math-validator-llm` - Mathematical expression validation
+  - `spelling-grammar-checker` - Spelling and grammar checking
+  - `factual-claims-extractor` - Factual claim extraction
+  - `smart-text-searcher` - Smart text search and location
   - `document-chunker` - Intelligent document chunking
   - And many more...
 - `/shared` - Shared types and utilities

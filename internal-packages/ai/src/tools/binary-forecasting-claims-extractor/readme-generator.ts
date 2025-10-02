@@ -1,0 +1,34 @@
+/**
+ * Programmatic README generator for Extract Forecasting Claims Tool
+ */
+
+import {
+  generateToolHeader,
+  generateToolsUsedSection,
+  getToolDependencies,
+} from "../utils/readme-helpers";
+import { extractForecastingClaimsTool } from "./index";
+
+export function generateReadme(): string {
+  const dependencies = getToolDependencies(extractForecastingClaimsTool);
+  const header = generateToolHeader(extractForecastingClaimsTool);
+  const toolsSection = generateToolsUsedSection(dependencies);
+
+  return `${header}
+
+${toolsSection}## How It Works
+
+Extracts forecasting statements from text and converts them to binary (YES/NO) questions. Clarifies vague predictions for better precision. Scores each prediction across four dimensions: precision (how specific), verifiability (can we check with public data), importance (centrality to argument), and robustness (how well-supported).
+
+## Limitations
+
+May miss subtle predictions. Effectiveness varies with writing style and domain complexity. Scoring based on text analysis, not domain expertise. Cannot verify prediction accuracy (only evaluates quality).
+
+## Technical Details
+
+- Scoring dimensions: precision, verifiability, importance, robustness (0-100 each)
+- Score interpretation: 70-100 (excellent), 40-69 (moderate), 0-39 (poor)
+- Clarifies predictions to ensure they are specific and binary
+- Extracts probabilities, dates, and resolution criteria when present
+`;
+}

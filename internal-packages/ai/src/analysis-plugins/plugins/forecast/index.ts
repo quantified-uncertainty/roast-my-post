@@ -5,12 +5,12 @@ import type {
 } from "../../../shared/types";
 import type {
   ExtractedForecast as ExtractedForecastToolType,
-} from "../../../tools/extract-forecasting-claims";
+} from "../../../tools/binary-forecasting-claims-extractor";
 import {
   extractForecastingClaimsTool,
-} from "../../../tools/extract-forecasting-claims";
-import type { ForecasterOutput } from "../../../tools/forecaster";
-import forecasterTool from "../../../tools/forecaster";
+} from "../../../tools/binary-forecasting-claims-extractor";
+import type { ForecasterOutput } from "../../../tools/binary-forecaster";
+import forecasterTool from "../../../tools/binary-forecaster";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,

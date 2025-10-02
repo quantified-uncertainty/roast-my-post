@@ -4,6 +4,12 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
+import { documentChunkerConfig } from "../configs";
+
+// Configuration constants
+export const DEFAULT_TARGET_WORDS = 500;
+export const DEFAULT_MAX_CHUNK_SIZE = 1500;
+export const DEFAULT_MIN_CHUNK_SIZE = 200;
 
 // Define types for the tool
 export interface DocumentChunkerInput {
@@ -47,14 +53,14 @@ const inputSchema = z.object({
     .min(100)
     .max(10000)
     .optional()
-    .default(1500)
+    .default(DEFAULT_MAX_CHUNK_SIZE)
     .describe("Maximum size of each chunk in characters"),
   minChunkSize: z
     .number()
     .min(50)
     .max(1000)
     .optional()
-    .default(200)
+    .default(DEFAULT_MIN_CHUNK_SIZE)
     .describe("Minimum size of each chunk in characters"),
   preserveContext: z
     .boolean()
@@ -66,7 +72,7 @@ const inputSchema = z.object({
     .min(50)
     .max(2000)
     .optional()
-    .default(500)
+    .default(DEFAULT_TARGET_WORDS)
     .describe("Target word count for recursive markdown chunking"),
 });
 
@@ -102,17 +108,7 @@ export class DocumentChunkerTool extends Tool<
   DocumentChunkerInput,
   DocumentChunkerOutput
 > {
-  config = {
-    id: "document-chunker",
-    name: "Intelligent Document Chunker",
-    description:
-      "Splits documents into semantic chunks optimized for LLM analysis. Supports multiple strategies including markdown-aware, semantic, and hybrid chunking.",
-    version: "1.0.0",
-    category: "utility" as const,
-    costEstimate: "$0 (no LLM calls)",
-    path: "/tools/document-chunker",
-    status: "stable" as const,
-  };
+  config = documentChunkerConfig;
 
   inputSchema = inputSchema;
   outputSchema = outputSchema;
@@ -182,7 +178,7 @@ export class DocumentChunkerTool extends Tool<
     options: DocumentChunkerInput,
     warnings: string[]
   ): DocumentChunk[] {
-    const targetWords = options.targetWords || 500;
+    const targetWords = options.targetWords || DEFAULT_TARGET_WORDS;
     const sections = this.parseMarkdownHierarchy(text);
     const chunks = this.recursivelyChunkSections(sections, targetWords, options, [], text);
     
@@ -794,7 +790,7 @@ export class DocumentChunkerTool extends Tool<
     for (const sentence of sentences) {
       const potentialChunk = [...currentChunk, sentence].join(' ');
       
-      if (potentialChunk.length > (options.maxChunkSize || 1500)) {
+      if (potentialChunk.length > (options.maxChunkSize || DEFAULT_MAX_CHUNK_SIZE)) {
         // Flush current chunk
         if (currentChunk.length > 0) {
           const chunkText = currentChunk.join(' ');
@@ -860,7 +856,7 @@ export class DocumentChunkerTool extends Tool<
     let chunkId = 0;
 
     for (const paragraph of paragraphs) {
-      if (paragraph.trim().length >= (options.minChunkSize || 200)) {
+      if (paragraph.trim().length >= (options.minChunkSize || DEFAULT_MIN_CHUNK_SIZE)) {
         const { startLine, endLine } = this.getLineNumbers(
           text,
           currentOffset,
@@ -898,7 +894,7 @@ export class DocumentChunkerTool extends Tool<
     warnings: string[]
   ): DocumentChunk[] {
     const chunks: DocumentChunk[] = [];
-    const chunkSize = options.maxChunkSize || 1500;
+    const chunkSize = options.maxChunkSize || DEFAULT_MAX_CHUNK_SIZE;
     let position = 0;
     let chunkId = 0;
 
@@ -1001,8 +997,8 @@ export class DocumentChunkerTool extends Tool<
   private hasGoodDistribution(chunks: DocumentChunk[], options: DocumentChunkerInput): boolean {
     const sizes = chunks.map(c => c.text.length);
     const avg = sizes.reduce((a, b) => a + b, 0) / sizes.length;
-    const maxSize = options.maxChunkSize || 1500;
-    const minSize = options.minChunkSize || 200;
+    const maxSize = options.maxChunkSize || DEFAULT_MAX_CHUNK_SIZE;
+    const minSize = options.minChunkSize || DEFAULT_MIN_CHUNK_SIZE;
     
     // Check if most chunks are within reasonable bounds
     const goodChunks = sizes.filter(s => s >= minSize && s <= maxSize).length;

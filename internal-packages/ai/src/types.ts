@@ -32,6 +32,19 @@ export interface RichLLMInteraction {
 // For dynamic reading, use aiConfig.analysisModel directly
 export const ANALYSIS_MODEL = "claude-sonnet-4-5";
 
+// Model ID to display name mapping
+export const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  "claude-sonnet-4-5": "Claude Sonnet 4.5",
+  "claude-sonnet-4": "Claude Sonnet 4",
+  "claude-3-5-sonnet-20241022": "Claude 3.5 Sonnet",
+  "claude-3-haiku-20240307": "Claude 3 Haiku",
+  "claude-3-opus-20240229": "Claude 3 Opus",
+};
+
+export function getModelDisplayName(modelId: string): string {
+  return MODEL_DISPLAY_NAMES[modelId] || modelId;
+}
+
 // Configuration for creating Anthropic client - use centralized config
 export function getAnthropicApiKey(): string | undefined {
   const apiKey = aiConfig.anthropicApiKey;
