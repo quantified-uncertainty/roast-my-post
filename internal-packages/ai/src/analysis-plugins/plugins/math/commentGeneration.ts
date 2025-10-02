@@ -1,6 +1,6 @@
 import type {
   ExtractedMathExpression,
-} from "../../../tools/extract-math-expressions";
+} from "../../../tools/math-expressions-extractor";
 import type { ExtractedMathExpression as ExtractedMathExpressionClass } from "./index";
 import { CommentSeverity, SEVERITY_STYLES } from "../../utils/comment-styles";
 

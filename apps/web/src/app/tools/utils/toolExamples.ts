@@ -12,7 +12,7 @@ export interface ToolExample {
 }
 
 export const toolExamples: Record<string, ToolExample[]> = {
-  'check-math': [
+  'math-validator-llm': [
     { 
       label: 'Basic Addition', 
       values: { statement: '2 + 2 = 4' }
@@ -35,7 +35,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'check-math-hybrid': [
+  'math-validator-hybrid': [
     { 
       label: 'Simple Math', 
       values: { statement: '2 + 2 = 4' }
@@ -58,7 +58,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'check-math-with-mathjs': [
+  'math-validator-mathjs': [
     { 
       label: 'Basic Arithmetic', 
       values: { statement: '2 + 2 = 4' }
@@ -81,7 +81,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'check-spelling-grammar': [
+  'spelling-grammar-checker': [
     { 
       label: 'Common Typos', 
       values: { text: 'This is a exmaple of bad speling and grammer.' }
@@ -96,7 +96,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'detect-language-convention': [
+  'language-convention-detector': [
     { 
       label: 'British English', 
       values: { text: 'colour behaviour analyse centre theatre honour programme' }
@@ -111,7 +111,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'extract-factual-claims': [
+  'factual-claims-extractor': [
     { 
       label: 'Scientific Facts', 
       values: { 
@@ -132,7 +132,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'extract-forecasting-claims': [
+  'binary-forecasting-claims-extractor': [
     { 
       label: 'Technology Predictions', 
       values: { 
@@ -153,7 +153,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'extract-math-expressions': [
+  'math-expressions-extractor': [
     { 
       label: 'Physics Equations', 
       values: { 
@@ -174,7 +174,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'fuzzy-text-locator': [
+  'smart-text-searcher': [
     { 
       label: 'Find Repeated Phrase', 
       values: { 
@@ -268,7 +268,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'perplexity-research': [
+  'perplexity-researcher': [
     { 
       label: 'Tech Research', 
       values: { query: 'What are the latest developments in quantum computing?' }
@@ -287,7 +287,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
   
-  'forecaster': [
+  'binary-forecaster': [
     {
       label: 'Technology Timeline',
       values: { 

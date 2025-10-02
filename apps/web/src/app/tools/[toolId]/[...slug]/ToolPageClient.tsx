@@ -24,20 +24,20 @@ import { FieldConfig } from '../../components/types';
 
 // Map tool IDs to their icons
 const toolIcons: Record<string, React.ReactElement> = {
-  'check-math': <CalculatorIcon className="h-8 w-8 text-blue-600" />,
-  'check-math-hybrid': <CalculatorIcon className="h-8 w-8 text-purple-600" />,
-  'check-math-with-mathjs': <CalculatorIcon className="h-8 w-8 text-green-600" />,
-  'check-spelling-grammar': <DocumentTextIcon className="h-8 w-8 text-red-600" />,
-  'detect-language-convention': <LanguageIcon className="h-8 w-8 text-indigo-600" />,
+  'math-validator-llm': <CalculatorIcon className="h-8 w-8 text-blue-600" />,
+  'math-validator-hybrid': <CalculatorIcon className="h-8 w-8 text-purple-600" />,
+  'math-validator-mathjs': <CalculatorIcon className="h-8 w-8 text-green-600" />,
+  'spelling-grammar-checker': <DocumentTextIcon className="h-8 w-8 text-red-600" />,
+  'language-convention-detector': <LanguageIcon className="h-8 w-8 text-indigo-600" />,
   'document-chunker': <DocumentMagnifyingGlassIcon className="h-8 w-8 text-orange-600" />,
-  'extract-factual-claims': <ClipboardDocumentCheckIcon className="h-8 w-8 text-teal-600" />,
-  'extract-forecasting-claims': <ChartBarIcon className="h-8 w-8 text-yellow-600" />,
-  'extract-math-expressions': <CalculatorIcon className="h-8 w-8 text-pink-600" />,
+  'factual-claims-extractor': <ClipboardDocumentCheckIcon className="h-8 w-8 text-teal-600" />,
+  'binary-forecasting-claims-extractor': <ChartBarIcon className="h-8 w-8 text-yellow-600" />,
+  'math-expressions-extractor': <CalculatorIcon className="h-8 w-8 text-pink-600" />,
   'fact-checker': <ScaleIcon className="h-8 w-8 text-emerald-600" />,
-  'forecaster': <ChartBarIcon className="h-8 w-8 text-blue-600" />,
-  'fuzzy-text-locator': <MagnifyingGlassIcon className="h-8 w-8 text-violet-600" />,
+  'binary-forecaster': <ChartBarIcon className="h-8 w-8 text-blue-600" />,
+  'smart-text-searcher': <MagnifyingGlassIcon className="h-8 w-8 text-violet-600" />,
   'link-validator': <LinkIcon className="h-8 w-8 text-cyan-600" />,
-  'perplexity-research': <CloudIcon className="h-8 w-8 text-slate-600" />,
+  'perplexity-researcher': <CloudIcon className="h-8 w-8 text-slate-600" />,
 };
 
 // Types for tool results
@@ -50,9 +50,9 @@ type ToolResult = Record<string, unknown>;
 
 // Tool-specific result renderers
 const toolResultRenderers: Record<string, (result: ToolResult, extra?: ToolResultExtra) => React.ReactElement> = {
-  'check-math': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="basic" />,
-  'check-math-hybrid': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="hybrid" />,
-  'check-math-with-mathjs': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="mathjs" />,
+  'math-validator-llm': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="basic" />,
+  'math-validator-hybrid': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="hybrid" />,
+  'math-validator-mathjs': (result, extra) => <MathCheckDisplay result={result} statement={extra?.statement || ''} variant="mathjs" />,
   // Add more custom renderers as needed
   // Default renderer for tools without custom display
   'default': (result) => (
@@ -99,7 +99,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
   // Tool-specific field configurations
   const getToolSpecificFieldConfig = (toolId: string, name: string, prop: unknown) => {
     const toolSpecificConfigs: Record<string, Record<string, unknown>> = {
-      'forecaster': {
+      'binary-forecaster': {
         'question': {
           type: 'textarea',
           rows: 3,
@@ -121,7 +121,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           defaultValue: false,
         },
       },
-      'check-spelling-grammar': {
+      'spelling-grammar-checker': {
         'text': {
           type: 'textarea',
           rows: 8,
@@ -192,7 +192,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           max: 2000,
         },
       },
-      'perplexity-research': {
+      'perplexity-researcher': {
         'query': {
           type: 'textarea',
           rows: 3,
@@ -220,7 +220,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           defaultValue: false,
         },
       },
-      'fuzzy-text-locator': {
+      'smart-text-searcher': {
         'documentText': {
           type: 'textarea',
           rows: 8,
@@ -275,49 +275,49 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           max: 50,
         },
       },
-      'detect-language-convention': {
+      'language-convention-detector': {
         'text': {
           type: 'textarea',
           rows: 6,
           placeholder: 'Enter text to analyze for US vs UK English conventions...',
         },
       },
-      'extract-factual-claims': {
+      'factual-claims-extractor': {
         'text': {
           type: 'textarea',
           rows: 8,
           placeholder: 'Enter text to extract factual claims from...',
         },
       },
-      'extract-forecasting-claims': {
+      'binary-forecasting-claims-extractor': {
         'text': {
           type: 'textarea',
           rows: 8,
           placeholder: 'Enter text to extract forecasting claims from...',
         },
       },
-      'extract-math-expressions': {
+      'math-expressions-extractor': {
         'text': {
           type: 'textarea',
           rows: 8,
           placeholder: 'Enter text to extract math expressions from...',
         },
       },
-      'check-math': {
+      'math-validator-llm': {
         'statement': {
           type: 'textarea',
           rows: 3,
           placeholder: 'Enter a mathematical statement to verify...',
         },
       },
-      'check-math-hybrid': {
+      'math-validator-hybrid': {
         'statement': {
           type: 'textarea',
           rows: 3,
           placeholder: 'Enter a mathematical statement to verify...',
         },
       },
-      'check-math-with-mathjs': {
+      'math-validator-mathjs': {
         'statement': {
           type: 'textarea',
           rows: 3,
@@ -398,7 +398,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
         icon={icon}
         fields={fields}
         renderResult={(result) => {
-          if (toolId.includes('check-math')) {
+          if (toolId.includes('math-validator')) {
             return resultRenderer(result as ToolResult, { statement: lastStatement });
           }
           return resultRenderer(result as ToolResult);
@@ -414,8 +414,8 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           }
           return input;
         }}
-        submitButtonText={toolId.includes('check') ? 'Check' : toolId.includes('extract') ? 'Extract' : 'Process'}
-        loadingText={toolId.includes('check') ? 'Checking...' : toolId.includes('extract') ? 'Extracting...' : 'Processing...'}
+        submitButtonText={toolId.includes('checker') || toolId.includes('validator') ? 'Check' : toolId.includes('extractor') ? 'Extract' : 'Process'}
+        loadingText={toolId.includes('checker') || toolId.includes('validator') ? 'Checking...' : toolId.includes('extractor') ? 'Extracting...' : 'Processing...'}
       />
     );
   }

@@ -8,7 +8,7 @@ import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
 import { getRandomElement, getPercentileNumber } from "../../shared/types";
-import { perplexityResearchTool } from "../perplexity-research/index";
+import { perplexityResearchTool } from "../perplexity-researcher/index";
 
 interface ForecastResponse {
   probability: number;

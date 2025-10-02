@@ -3,8 +3,8 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
-import { checkMathTool } from "../check-math";
-import { checkMathWithMathJsTool } from "../check-math-with-mathjs";
+import { checkMathTool } from "../math-validator-llm";
+import { checkMathWithMathJsTool } from "../math-validator-mathjs";
 import {
   inputSchema,
   outputSchema,

@@ -6,7 +6,7 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
-import fuzzyTextLocatorTool from "../fuzzy-text-locator";
+import fuzzyTextLocatorTool from "../smart-text-searcher";
 import { generateCacheSeed } from "../shared/cache-utils";
 import { extractFactualClaimsConfig } from "../configs";
 

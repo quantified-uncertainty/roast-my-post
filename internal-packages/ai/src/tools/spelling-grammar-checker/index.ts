@@ -9,7 +9,7 @@ import {
   Tool,
   ToolContext,
 } from "../base/Tool";
-import { detectLanguageConventionTool } from "../detect-language-convention";
+import { detectLanguageConventionTool } from "../language-convention-detector";
 import { generateCacheSeed } from "../shared/cache-utils";
 import { checkSpellingGrammarConfig } from "../configs";
 

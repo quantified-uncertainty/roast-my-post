@@ -20,7 +20,7 @@ import { validateAndConvertHighlights } from "../highlightGeneration/highlightVa
 import type { LineBasedHighlight } from "../highlightGeneration/types";
 import { calculateLLMCost } from "../shared/costUtils";
 import { createLogDetails } from "../shared/llmUtils";
-import { findTextLocation, type TextLocationOptions } from '../../../tools/fuzzy-text-locator/core';
+import { findTextLocation, type TextLocationOptions } from '../../../tools/smart-text-searcher/core';
 import { getLineNumberAtPosition } from '../../../analysis-plugins/utils/textHelpers';
 import type { HighlightAnalysisOutputs, TaskResult } from "../shared/types";
 import { getHighlightExtractionPrompts } from "./prompts";

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
-import { perplexityResearchTool } from "../perplexity-research";
+import { perplexityResearchTool } from "../perplexity-researcher";
 import { generateCacheSeed } from "../shared/cache-utils";
 
 import {

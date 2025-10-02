@@ -3,41 +3,49 @@
  * This is the single source of truth for tool imports
  */
 
-import checkSpellingGrammarTool from './check-spelling-grammar';
-import extractFactualClaimsTool from './extract-factual-claims';
+import checkSpellingGrammarTool from './spelling-grammar-checker';
+import extractFactualClaimsTool from './factual-claims-extractor';
 import factCheckerTool from './fact-checker';
-import checkMathWithMathJsTool from './check-math-with-mathjs';
-import checkMathTool from './check-math';
-import checkMathHybridTool from './check-math-hybrid';
-import extractMathExpressionsTool from './extract-math-expressions';
-import extractForecastingClaimsTool from './extract-forecasting-claims';
+import checkMathWithMathJsTool from './math-validator-mathjs';
+import checkMathTool from './math-validator-llm';
+import checkMathHybridTool from './math-validator-hybrid';
+import extractMathExpressionsTool from './math-expressions-extractor';
+import extractForecastingClaimsTool from './binary-forecasting-claims-extractor';
 import documentChunkerTool from './document-chunker';
-import fuzzyTextLocatorTool from './fuzzy-text-locator';
-import { detectLanguageConventionTool } from './detect-language-convention';
-import forecasterTool from './forecaster';
+import fuzzyTextLocatorTool from './smart-text-searcher';
+import { detectLanguageConventionTool } from './language-convention-detector';
+import forecasterTool from './binary-forecaster';
 import { linkValidator } from './link-validator';
-import perplexityResearchTool from './perplexity-research';
+import perplexityResearchTool from './perplexity-researcher';
+import type { Tool } from './base/Tool';
+
+/**
+ * List of all tools - IDs are derived from each tool's config.id
+ */
+const toolsList = [
+  checkSpellingGrammarTool,
+  extractFactualClaimsTool,
+  factCheckerTool,
+  checkMathWithMathJsTool,
+  checkMathTool,
+  checkMathHybridTool,
+  extractMathExpressionsTool,
+  extractForecastingClaimsTool,
+  documentChunkerTool,
+  fuzzyTextLocatorTool,
+  detectLanguageConventionTool,
+  forecasterTool,
+  linkValidator,
+  perplexityResearchTool,
+] as const;
 
 /**
  * All tools mapped by their ID
- * The ID is derived from the tool's config.id
+ * The ID is derived from each tool's config.id (no hardcoding!)
  */
-export const allTools = {
-  'check-spelling-grammar': checkSpellingGrammarTool,
-  'extract-factual-claims': extractFactualClaimsTool,
-  'fact-checker': factCheckerTool,
-  'check-math-with-mathjs': checkMathWithMathJsTool,
-  'check-math': checkMathTool,
-  'check-math-hybrid': checkMathHybridTool,
-  'extract-math-expressions': extractMathExpressionsTool,
-  'extract-forecasting-claims': extractForecastingClaimsTool,
-  'document-chunker': documentChunkerTool,
-  'fuzzy-text-locator': fuzzyTextLocatorTool,
-  'detect-language-convention': detectLanguageConventionTool,
-  'forecaster': forecasterTool,
-  'link-validator': linkValidator,
-  'perplexity-research': perplexityResearchTool,
-} as const;
+export const allTools = Object.fromEntries(
+  toolsList.map(tool => [tool.config.id, tool])
+) as Record<string, Tool>;
 
 export type ToolId = keyof typeof allTools;
 

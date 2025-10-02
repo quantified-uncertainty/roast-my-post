@@ -5,7 +5,7 @@
 
 import { getLineNumberAtPosition, getLineAtPosition } from "../../../analysis-plugins/utils/textHelpers";
 import { logger } from "../../../utils/logger";
-import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "../../../tools/fuzzy-text-locator/core";
+import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "../../../tools/smart-text-searcher/core";
 import { processTextLocationsInParallel } from "./parallelLocationUtils";
 
 /**

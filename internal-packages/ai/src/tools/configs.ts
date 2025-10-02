@@ -203,23 +203,6 @@ const toolMetadata = [
 
 // Tool registry for client-side use
 export const toolRegistry = {
-  // Old directory-based IDs (for backward compatibility with URLs)
-  'check-math': checkMathTool,
-  'check-math-with-mathjs': checkMathWithMathJsTool,
-  'check-math-hybrid': checkMathHybridTool,
-  'fact-checker': factCheckerTool,
-  'forecaster': forecasterTool,
-  'fuzzy-text-locator': fuzzyTextLocatorTool,
-  'document-chunker': documentChunkerTool,
-  'extract-forecasting-claims': extractForecastingClaimsTool,
-  'extract-factual-claims': extractFactualClaimsTool,
-  'check-spelling-grammar': checkSpellingGrammarTool,
-  'extract-math-expressions': extractMathExpressionsTool,
-  'detect-language-convention': detectLanguageConventionTool,
-  'perplexity-research': perplexityResearchTool,
-  'link-validator': linkValidatorTool,
-
-  // Also add new IDs (for forward compatibility)
   [checkMathConfig.id]: checkMathTool,
   [checkMathWithMathJsConfig.id]: checkMathWithMathJsTool,
   [checkMathHybridConfig.id]: checkMathHybridTool,

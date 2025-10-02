@@ -2,12 +2,12 @@ import { logger } from "../../../shared/logger";
 import type { DocumentLocation } from "../../../shared/types";
 import type {
   ExtractedFactualClaim,
-} from "../../../tools/extract-factual-claims";
+} from "../../../tools/factual-claims-extractor";
 import type {
   FactCheckerOutput,
   FactCheckResult,
 } from "../../../tools/fact-checker";
-import fuzzyTextLocatorTool from "../../../tools/fuzzy-text-locator";
+import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import type { ToolContext } from "../../../tools/base/Tool";
 import { TextChunk } from "../../TextChunk";
 import { THRESHOLDS } from "./constants";
