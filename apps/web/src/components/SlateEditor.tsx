@@ -556,7 +556,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
   // Initialize editor
   useEffect(() => {
-    if (!initRef.current && value) {
+    if (!initRef.current && value && Editor) {
       editor.children = value;
       editor.onChange();
 
