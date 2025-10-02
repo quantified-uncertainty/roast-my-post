@@ -7,15 +7,15 @@ vi.mock('../../claude/wrapper', () => ({
   callClaudeWithTool: vi.fn()
 }));
 
-// Mock fuzzy text locator
-vi.mock('../fuzzy-text-locator', () => ({
+// Mock smart text searcher
+vi.mock('../smart-text-searcher', () => ({
   default: {
     execute: vi.fn()
   }
 }));
 
 import { callClaudeWithTool } from '../../claude/wrapper';
-import fuzzyTextLocatorTool from '../fuzzy-text-locator';
+import fuzzyTextLocatorTool from '../smart-text-searcher';
 
 describe('ExtractFactualClaimsTool - Highlight Feature', () => {
   const tool = new ExtractFactualClaimsTool();

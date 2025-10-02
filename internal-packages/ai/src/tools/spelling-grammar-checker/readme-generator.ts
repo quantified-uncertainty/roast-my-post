@@ -45,7 +45,7 @@ First detects the document's language convention (US/UK/mixed) using the detect-
 
 ## Limitations
 
-Uses ${getModelDisplayName(MODEL_CONFIG.analysis)} model. Limited to \`${DEFAULT_MAX_ERRORS}\` errors by default (configurable). Line numbers are approximate. For exact position finding, combine with fuzzy-text-locator tool.
+Uses ${getModelDisplayName(MODEL_CONFIG.analysis)} model. Limited to \`${DEFAULT_MAX_ERRORS}\` errors by default (configurable). Line numbers are approximate. For exact position finding, combine with smart-text-searcher tool.
 
 ## Technical Details
 

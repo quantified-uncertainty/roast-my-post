@@ -188,7 +188,7 @@ export class CheckSpellingGrammarTool extends Tool<
         detectedConvention
       );
 
-      // Note: For accurate position finding, use the fuzzy-text-locator tool
+      // Note: For accurate position finding, use the smart-text-searcher tool
       // with the lineNumber hint from the errors
 
       return {

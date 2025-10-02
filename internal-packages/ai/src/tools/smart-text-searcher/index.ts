@@ -115,7 +115,7 @@ export class FuzzyTextLocatorTool extends Tool<
         partialMatch: input.options?.partialMatch ?? false,
         useLLMFallback: input.options?.useLLMFallback ?? false,
         llmContext: input.context,
-        pluginName: "fuzzy-text-locator",
+        pluginName: "smart-text-searcher",
         lineNumberHint: input.lineNumberHint,
       };
 

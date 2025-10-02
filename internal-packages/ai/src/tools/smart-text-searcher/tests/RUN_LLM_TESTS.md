@@ -12,7 +12,7 @@ Simply set the environment variable when running tests:
 RUN_LLM_TESTS=true npm test comprehensive-search.test.ts
 
 # Or for Vitest directly
-RUN_LLM_TESTS=true vitest src/tools/fuzzy-text-locator/tests/comprehensive-search.vtest.ts
+RUN_LLM_TESTS=true vitest src/tools/smart-text-searcher/tests/comprehensive-search.vtest.ts
 ```
 
 ## Requirements

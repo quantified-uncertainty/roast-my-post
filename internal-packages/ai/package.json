@@ -13,9 +13,9 @@
       "types": "./src/server.ts",
       "default": "./src/server.ts"
     },
-    "./tools/fuzzy-text-locator/core": {
-      "types": "./dist/tools/fuzzy-text-locator/core.d.ts",
-      "default": "./dist/tools/fuzzy-text-locator/core.js"
+    "./tools/smart-text-searcher/core": {
+      "types": "./dist/tools/smart-text-searcher/core.d.ts",
+      "default": "./dist/tools/smart-text-searcher/core.js"
     },
     "./analysis-plugins/utils/textHelpers": {
       "types": "./dist/analysis-plugins/utils/textHelpers.d.ts",

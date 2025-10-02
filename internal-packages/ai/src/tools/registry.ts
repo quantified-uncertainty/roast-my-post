@@ -51,7 +51,7 @@ export class ToolRegistry {
     return Array.from(this.tools.values());
   }
   
-  getByCategory(category: 'analysis' | 'research' | 'utility'): Tool[] {
+  getByCategory(category: 'extraction' | 'checker' | 'research' | 'utility'): Tool[] {
     return this.getAll().filter(tool => tool.config.category === category);
   }
   

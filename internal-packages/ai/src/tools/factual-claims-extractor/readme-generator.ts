@@ -34,6 +34,6 @@ Works well with:
 - Extracts multiple claims in single operation
 - Scoring dimensions: importance, checkability, truth probability (0-100 each)
 - Topic categorization (economics, history, science, etc.)
-- Uses fuzzy-text-locator for precise text positioning
+- Uses smart-text-searcher for precise text positioning
 `;
 }
