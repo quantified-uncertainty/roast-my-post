@@ -94,7 +94,7 @@ export const binaryForecastingClaimsExtractorConfig: ToolConfig = {
   id: "binary-forecasting-claims-extractor",
   name: "Binary Forecasting Claims Extractor",
   description:
-    "Extracts predictions and converts them to binary (YES/NO) questions. Scores on three dimensions: precision (how binary/specific), verifiability (can we check with public data), and importance (centrality to argument)",
+    "Extracts predictions and converts them to binary (YES/NO) questions. Scores on four dimensions: precision (how binary/specific), verifiability (can we check with public data), importance (centrality to argument), and robustness (how well-supported)",
   version: "2.0.0",
   category: "extraction",
   costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
