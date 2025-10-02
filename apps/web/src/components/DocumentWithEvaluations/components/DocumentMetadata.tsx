@@ -20,7 +20,7 @@ export function DocumentMetadata({
   onToggleFullWidth,
 }: DocumentMetadataProps) {
   return (
-    <div className={`flex ${isFullWidth ? "px-5" : "justify-center"}`}>
+    <div className={`flex ${isFullWidth ? "" : "justify-center"}`}>
       <div
         className="flex w-full items-center justify-between"
         style={!isFullWidth ? { maxWidth: "calc(48rem + 700px + 2rem)" } : {}}

@@ -1,17 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
 import {
   clearTruncationCache,
   getTruncationCacheSize,
 } from "@/shared/utils/ui/commentPositioning";
-import { HEADER_HEIGHT_PX } from "@/shared/utils/ui/constants";
 
 import { EvaluationView } from "./components";
 import { EmptyEvaluationsView } from "./components/EmptyEvaluationsView";
-import type { DocumentWithReviewsProps, EvaluationState } from "./types";
+import type {
+  DocumentWithReviewsProps,
+  EvaluationState,
+} from "./types";
 
 export function DocumentWithEvaluations({
   document,
@@ -95,7 +101,7 @@ export function DocumentWithEvaluations({
   }, []);
 
   return (
-    <div className="flex h-full flex-col mt-4">
+    <div className="mt-2 flex h-full flex-col">
       {hasEvaluations && evaluationState ? (
         <EvaluationView
           evaluationState={evaluationState}

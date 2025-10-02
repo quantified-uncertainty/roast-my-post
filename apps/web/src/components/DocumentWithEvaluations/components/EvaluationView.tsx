@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -12,6 +20,7 @@ import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 import type { Comment } from "@roast/ai";
 
 import { LAYOUT } from "../constants";
+import { LocalCommentsUIProvider } from "../context/LocalCommentsUIContext";
 import { EvaluationViewProps } from "../types";
 import { CommentModalOptimized } from "./CommentModalOptimized";
 import { CommentsColumn } from "./CommentsColumn";
@@ -19,7 +28,6 @@ import { DocumentContent } from "./DocumentContent";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
-import { LocalCommentsUIProvider } from "../context/LocalCommentsUIContext";
 
 /**
  * Maps comment levels to appropriate highlight colors
@@ -166,10 +174,10 @@ export function EvaluationView({
     handleScroll();
 
     // Listen for scroll events
-    container.addEventListener('scroll', handleScroll, { passive: true });
+    container.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -248,8 +256,9 @@ export function EvaluationView({
       {/* Fixed Evaluation Cards Header Bar */}
       <Card
         className={cn(
-          "sticky top-0 z-50 mx-6 mt-4 transition-all duration-200",
-          !isHeaderVisible && "pointer-events-none h-0 overflow-hidden opacity-0"
+          "sticky top-0 z-50 mx-6 mt-2 transition-all duration-200",
+          !isHeaderVisible &&
+            "pointer-events-none h-0 overflow-hidden opacity-0"
         )}
       >
         <EvaluationCardsHeader
@@ -269,7 +278,7 @@ export function EvaluationView({
         {/* Unified scroll container for all content */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 pt-4"
+          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-8 pt-4"
         >
           {/* Document metadata header - now part of scrollable content */}
           <DocumentMetadata
@@ -281,7 +290,7 @@ export function EvaluationView({
           <div
             className={cn(
               "flex min-h-screen",
-              isFullWidth ? "px-5" : "justify-center"
+              isFullWidth ? "" : "justify-center"
             )}
           >
             <LocalCommentsUIProvider>
