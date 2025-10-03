@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { formatDistanceToNow } from "date-fns";
+import { ROUTES } from "@/constants/routes";
 import type { Agent, AgentVersion } from "@roast/ai";
 
 interface AgentVersionsClientProps {
@@ -39,7 +40,7 @@ export default function AgentVersionsClient({
     const selectedVersion = versions.find((v) => v.id === versionId);
     if (!selectedVersion) return;
 
-    const newUrl = `/agents/${agent.id}/versions?version=${selectedVersion.version}`;
+    const newUrl = `${ROUTES.AGENTS.VERSIONS(agent.id)}?version=${selectedVersion.version}`;
     router.push(newUrl, { scroll: false });
   };
 
