@@ -20,8 +20,8 @@ export default async function Home() {
               Get AI-Powered Feedback on Your Writing
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Upload your article and get detailed feedback from specialized AI agents. 
-              Each agent provides unique insights to help improve your writing.
+              Upload your article and get detailed feedback from specialized AI evaluators.
+              Each evaluator provides unique insights to help improve your writing.
             </p>
             <div className="flex justify-center space-x-4">
               <Link
@@ -58,7 +58,7 @@ export default async function Home() {
                 <span className="text-2xl font-bold text-blue-600">2</span>
               </div>
               <h3 className="text-xl font-semibold mb-2">AI Analysis</h3>
-              <p className="text-gray-600">Our agents analyze your content</p>
+              <p className="text-gray-600">Our evaluators analyze your content</p>
             </div>
             <div className="text-center">
               <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -77,15 +77,15 @@ export default async function Home() {
           <h2 className="text-3xl font-bold text-center mb-12">Flexible AI Analysis</h2>
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-lg text-gray-600 mb-8">
-              Our platform uses customizable AI agents that can be tailored to provide 
-              specific types of feedback on your writing. Each agent can be configured 
+              Our platform uses customizable AI evaluators that can be tailored to provide
+              specific types of feedback on your writing. Each evaluator can be configured
               with unique instructions to focus on different aspects of your work.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-gray-50 rounded-lg p-6">
                 <div className="text-3xl mb-3">🎯</div>
                 <h3 className="text-xl font-semibold mb-2">Focused Analysis</h3>
-                <p className="text-gray-600">Agents provide targeted feedback based on their instructions</p>
+                <p className="text-gray-600">Evaluators provide targeted feedback based on their instructions</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-6">
                 <div className="text-3xl mb-3">💬</div>
@@ -99,10 +99,10 @@ export default async function Home() {
               </div>
             </div>
             <Link
-              href="/agents"
+              href="/evaluators"
               className="text-blue-600 hover:text-blue-700 font-semibold"
             >
-              Browse available agents →
+              Browse available evaluators →
             </Link>
           </div>
         </div>

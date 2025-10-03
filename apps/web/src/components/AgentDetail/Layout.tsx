@@ -141,7 +141,7 @@ export function AgentDetailLayout({
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                Agent {exportType} copied to clipboard!
+                Evaluator {exportType} copied to clipboard!
               </p>
             </div>
           </div>
@@ -232,10 +232,10 @@ export function AgentDetailLayout({
                   Import
                 </Button>
               </Link>
-              <Link href={`/agents/${agent.id}/edit`}>
+              <Link href={ROUTES.AGENTS.EDIT(agent.id)}>
                 <Button variant="secondary" className="flex items-center gap-2">
                   <Pencil className="h-4 w-4" />
-                  Edit Agent
+                  Edit Evaluator
                 </Button>
               </Link>
             </>

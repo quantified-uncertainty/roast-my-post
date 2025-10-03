@@ -33,11 +33,11 @@ export function AgentSchemaDoc() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/agents"
+            href="/evaluators"
             className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Agents
+            Back to Evaluators
           </Link>
           <div className="flex items-start justify-between">
             <div>
@@ -94,13 +94,13 @@ export function AgentSchemaDoc() {
           <p>
             Need help creating an agent? Use the{" "}
             <Link
-              href="/agents/new"
+              href="/evaluators/new"
               className="text-blue-600 hover:text-blue-800"
             >
               Agent Creator
             </Link>{" "}
             or{" "}
-            <Link href="/agents" className="text-blue-600 hover:text-blue-800">
+            <Link href="/evaluators" className="text-blue-600 hover:text-blue-800">
               Import
             </Link>{" "}
             an existing configuration.

@@ -62,7 +62,7 @@ export function EvaluationsTab({
     <div className="w-full space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">
-          Agent Evaluations
+          Evaluator Evaluations
           {evalsBatchFilter && (
             <span className="ml-2 rounded-md bg-blue-100 px-2 py-1 text-sm font-medium text-blue-800">
               Batch:{" "}

@@ -38,12 +38,12 @@ export function TestTab({
     <div className="space-y-6">
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          Test Agent Performance
+          Test Evaluator Performance
         </h3>
         <p className="mb-6 text-sm text-gray-600">
-          Run evaluation tests to benchmark your agent's performance. This will
+          Run evaluation tests to benchmark your evaluator's performance. This will
           create new evaluations on documents that have been previously
-          evaluated by this agent.
+          evaluated by this evaluator.
         </p>
 
         {testSuccess && (
@@ -136,7 +136,7 @@ export function TestTab({
               type="text"
               id="name"
               name="name"
-              placeholder="e.g., Agent v2.1 benchmark"
+              placeholder="e.g., Evaluator v2.1 benchmark"
               className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">

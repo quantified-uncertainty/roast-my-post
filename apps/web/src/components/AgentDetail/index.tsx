@@ -166,7 +166,7 @@ export default function AgentDetail({
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                Agent {exportType} copied to clipboard!
+                Evaluator {exportType} copied to clipboard!
               </p>
             </div>
           </div>

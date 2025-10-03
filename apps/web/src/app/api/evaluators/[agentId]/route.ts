@@ -14,8 +14,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     const result = await agentService.getAgentWithOwner(agentId, userId);
 
     if (result.isError()) {
-      logger.error("Error fetching agent", result.error(), { 
-        endpoint: "/api/agents/[agentId]",
+      logger.error("Error fetching agent", result.error(), {
+        endpoint: "/api/evaluators/[agentId]",
         agentId,
         userId
       });
@@ -32,8 +32,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
 
     return NextResponse.json(agent);
   } catch (error) {
-    logger.error("Error fetching agent", error, { 
-      endpoint: "/api/agents/[agentId]",
+    logger.error("Error fetching agent", error, {
+      endpoint: "/api/evaluators/[agentId]",
       agentId: params.agentId
     });
     return NextResponse.json(

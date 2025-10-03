@@ -13,18 +13,18 @@ export const ROUTES = {
 
   // Agent routes
   AGENTS: {
-    LIST: '/agents',
-    NEW: '/agents/new',
-    DETAIL: (agentId: string) => `/agents/${agentId}`,
-    DETAILS: (agentId: string) => `/agents/${agentId}/details`,
-    EVALS: (agentId: string) => `/agents/${agentId}/evals`,
-    JOBS: (agentId: string) => `/agents/${agentId}/jobs`,
-    TEST: (agentId: string) => `/agents/${agentId}/test`,
-    BATCHES: (agentId: string) => `/agents/${agentId}/batches`,
-    EXPORT: (agentId: string) => `/agents/${agentId}/export`,
-    VERSIONS: (agentId: string) => `/agents/${agentId}/versions`,
-    EDIT: (agentId: string) => `/agents/${agentId}/edit`,
-    IMPORT_YAML: (agentId: string) => `/agents/${agentId}/import-yaml`,
+    LIST: '/evaluators',
+    NEW: '/evaluators/new',
+    DETAIL: (agentId: string) => `/evaluators/${agentId}`,
+    DETAILS: (agentId: string) => `/evaluators/${agentId}/details`,
+    EVALS: (agentId: string) => `/evaluators/${agentId}/evals`,
+    JOBS: (agentId: string) => `/evaluators/${agentId}/jobs`,
+    TEST: (agentId: string) => `/evaluators/${agentId}/test`,
+    BATCHES: (agentId: string) => `/evaluators/${agentId}/batches`,
+    EXPORT: (agentId: string) => `/evaluators/${agentId}/export`,
+    VERSIONS: (agentId: string) => `/evaluators/${agentId}/versions`,
+    EDIT: (agentId: string) => `/evaluators/${agentId}/edit`,
+    IMPORT_YAML: (agentId: string) => `/evaluators/${agentId}/import-yaml`,
   },
 
   // Document routes
@@ -50,7 +50,7 @@ export const ROUTES = {
   USERS: {
     PROFILE: (userId: string) => `/users/${userId}`,
     DOCUMENTS: (userId: string) => `/users/${userId}/documents`,
-    AGENTS: (userId: string) => `/users/${userId}/agents`,
+    AGENTS: (userId: string) => `/users/${userId}/evaluators`,
   },
 
   // Settings routes
@@ -64,7 +64,7 @@ export const ROUTES = {
   MONITOR: {
     DASHBOARD: '/monitor',
     QUEUE: '/monitor/queue',
-    AGENTS: '/monitor/agents',
+    AGENTS: '/monitor/evaluators',
     JOBS: '/monitor/jobs',
     DOCUMENTS: '/monitor/documents',
   },
@@ -72,11 +72,11 @@ export const ROUTES = {
   // API routes
   API: {
     AGENTS: {
-      LIST: '/api/agents',
-      DETAIL: (agentId: string) => `/api/agents/${agentId}`,
-      JOBS: (agentId: string) => `/api/agents/${agentId}/jobs`,
-      BATCHES: (agentId: string) => `/api/agents/${agentId}/batches`,
-      EVALUATIONS: (agentId: string) => `/api/agents/${agentId}/evaluations`,
+      LIST: '/api/evaluators',
+      DETAIL: (agentId: string) => `/api/evaluators/${agentId}`,
+      JOBS: (agentId: string) => `/api/evaluators/${agentId}/jobs`,
+      BATCHES: (agentId: string) => `/api/evaluators/${agentId}/batches`,
+      EVALUATIONS: (agentId: string) => `/api/evaluators/${agentId}/evaluations`,
     },
     DOCS: {
       LIST: '/api/docs',

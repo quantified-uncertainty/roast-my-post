@@ -132,7 +132,7 @@ export function ExportTab({
               htmlFor="export-version"
               className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Agent Version
+              Evaluator Version
             </label>
             <select
               id="export-version"
@@ -255,7 +255,7 @@ export function ExportTab({
             <li>All comments with highlight positions</li>
             <li>Job execution details and costs</li>
             <li>Complete LLM interactions (prompts and responses)</li>
-            <li>Agent configuration and instructions</li>
+            <li>Evaluator configuration and instructions</li>
           </ul>
         </div>
       </div>

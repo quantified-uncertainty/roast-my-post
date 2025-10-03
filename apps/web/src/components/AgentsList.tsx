@@ -18,18 +18,18 @@ export default function AgentsList({ agents, showNewAgentButton = false }: Agent
     <div className="mx-auto max-w-6xl p-8">
       <h1 className="mb-2 flex items-center gap-2 text-3xl font-bold">
         <Bot className="inline-block h-7 w-7 align-text-bottom text-gray-500" />
-        Evaluation Agents
+        Evaluators
       </h1>
       <p className="mb-8 text-gray-600">
-        Select an agent to explore its capabilities and usage details.
+        Select an evaluator to explore its capabilities and usage details.
         {showNewAgentButton && (
           <>
             {" "}
             <Link
-              href="/agents/new"
+              href="/evaluators/new"
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
             >
-              Make a new agent
+              Make a new evaluator
             </Link>
           </>
         )}
@@ -40,7 +40,7 @@ export default function AgentsList({ agents, showNewAgentButton = false }: Agent
           return (
             <Link
               key={agent.id}
-              href={`/agents/${agent.id}`}
+              href={`/evaluators/${agent.id}`}
               className="group block"
             >
               <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">

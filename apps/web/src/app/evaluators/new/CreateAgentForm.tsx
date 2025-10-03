@@ -274,7 +274,7 @@ export default function CreateAgentForm() {
                 </p>
               </div>
               <Link
-                href="/agents/readme"
+                href="/evaluators/readme"
                 className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
               >
                 <BookOpenIcon className="h-4 w-4" />
@@ -418,7 +418,7 @@ export default function CreateAgentForm() {
               )}
 
               <div className="flex justify-end gap-3">
-                <Link href="/agents">
+                <Link href="/evaluators">
                   <Button variant="secondary">Cancel</Button>
                 </Link>
                 <Button type="submit" disabled={isSubmitting}>
@@ -487,7 +487,7 @@ readme: |
                     {isCreatingFromYaml ? "Creating..." : "Create Agent"}
                   </Button>
 
-                  <Link href="/agents">
+                  <Link href="/evaluators">
                     <Button variant="secondary">Cancel</Button>
                   </Link>
                 </div>
@@ -645,7 +645,7 @@ readme: |
                     <div className="mt-3 pt-3 border-t border-blue-200">
                       <p className="text-blue-700">
                         Need help? Check out the{" "}
-                        <Link href="/agents/readme" className="font-medium underline hover:text-blue-800">
+                        <Link href="/evaluators/readme" className="font-medium underline hover:text-blue-800">
                           complete agent documentation
                         </Link>{" "}
                         for detailed field descriptions and examples.
