@@ -12,7 +12,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import MARKDOWN_CONTENT from "./agent-schema-documentation.md";
+import MARKDOWN_CONTENT from "./evaluator-schema-documentation.md";
 
 export function AgentSchemaDoc() {
   const [copied, setCopied] = useState(false);

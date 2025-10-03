@@ -19,13 +19,13 @@ const documentationSections = [
   {
     title: "Evaluator Documentation for Humans",
     description: "Understanding and creating AI evaluators for document evaluation",
-    href: "/help/agents-humans",
+    href: "/help/evaluators-humans",
     icon: UserGroupIcon,
   },
   {
     title: "Evaluator Documentation for LLMs",
     description: "Technical specification for AI evaluators and their capabilities",
-    href: "/help/agents-llms",
+    href: "/help/evaluators-llms",
     icon: ChatBubbleLeftRightIcon,
   },
   {
