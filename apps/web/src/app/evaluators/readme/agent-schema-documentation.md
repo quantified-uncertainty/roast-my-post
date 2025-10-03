@@ -1,22 +1,22 @@
-# Agent Schema Documentation
+# Evaluator Schema Documentation
 
-**Complete guide to creating and configuring AI agents for document evaluation in RoastMyPost**
+**Complete guide to creating and configuring AI evaluators for document evaluation in RoastMyPost**
 
 > **For Claude Code**: System-specific analysis and helper scripts are in `/claude/README.md`
 
 ## Quick Start Guide
 
-Creating an effective agent requires substantial detail and examples. While you only need three core fields, the instructions should be comprehensive:
+Creating an effective evaluator requires substantial detail and examples. While you only need three core fields, the instructions should be comprehensive:
 
 1. **name**: Descriptive title
 2. **purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
-3. **description**: 1-2 sentences explaining what the agent does
+3. **description**: 1-2 sentences explaining what the evaluator does
 
 Optional but highly recommended: 4. **primaryInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples) 5. **selfCritiqueInstructions**: Criteria for self-evaluation scoring (optional) 6. **readme**: Human-readable documentation for users and future modifiers
 
-**Important Schema Update (June 2025)**: We've simplified the instruction fields. All analysis, summary, comment, and grading instructions should now be consolidated into `primaryInstructions`. The separate fields (`summaryInstructions`, `commentInstructions`, `gradeInstructions`, `analysisInstructions`) have been removed. If your agent needs to provide grades, include grading criteria within `primaryInstructions`.\n\n### Migration Example\n\nBefore (old schema):\n`yaml\nprimaryInstructions: "You are an expert evaluator..."\nsummaryInstructions: "Provide a concise summary..."\ncommentInstructions: "For each section, identify..."\ngradeInstructions: "Grade on a scale of 0-100..."\n`\n\nAfter (new schema):\n`yaml\nprimaryInstructions: |\n  You are an expert evaluator...\n  \n  ## Summary Generation\n  Provide a concise summary...\n  \n  ## Comment Guidelines\n  For each section, identify...\n  IMPORTANT: When highlighting text:\n  - Keep highlights SHORT and focused (max 1000 characters)\n  - Select only the most relevant portion of text\n  \n  ## Grading Criteria\n  Grade on a scale of 0-100...\n`
+**Important Schema Update (June 2025)**: We've simplified the instruction fields. All analysis, summary, comment, and grading instructions should now be consolidated into `primaryInstructions`. The separate fields (`summaryInstructions`, `commentInstructions`, `gradeInstructions`, `analysisInstructions`) have been removed. If your evaluator needs to provide grades, include grading criteria within `primaryInstructions`.\n\n### Migration Example\n\nBefore (old schema):\n`yaml\nprimaryInstructions: "You are an expert evaluator..."\nsummaryInstructions: "Provide a concise summary..."\ncommentInstructions: "For each section, identify..."\ngradeInstructions: "Grade on a scale of 0-100..."\n`\n\nAfter (new schema):\n`yaml\nprimaryInstructions: |\n  You are an expert evaluator...\n  \n  ## Summary Generation\n  Provide a concise summary...\n  \n  ## Comment Guidelines\n  For each section, identify...\n  IMPORTANT: When highlighting text:\n  - Keep highlights SHORT and focused (max 1000 characters)\n  - Select only the most relevant portion of text\n  \n  ## Grading Criteria\n  Grade on a scale of 0-100...\n`
 
-### Realistic Agent Example (Abbreviated):
+### Realistic Evaluator Example (Abbreviated):
 
 ```yaml
 name: "Technical Documentation Reviewer"
@@ -265,7 +265,7 @@ After generating their analysis, agents automatically score the quality of their
 - **Usefulness**: Will the feedback help improve the document?
 - **Adherence**: Did they follow their agent instructions properly?
 
-The agent provides:
+The evaluator provides:
 
 1. A numerical score from 1-100
 2. Explanation of what aspects were strong
@@ -274,18 +274,18 @@ The agent provides:
 ### Benefits
 
 - **Quality Calibration**: Provides a quantitative measure of evaluation quality
-- **Transparency**: Makes the agent's confidence in their work explicit
+- **Transparency**: Makes the evaluator's confidence in their work explicit
 - **Continuous Improvement**: Helps identify patterns in evaluation quality
-- **User Trust**: Allows users to gauge how well the agent performed its task
-- **Performance Tracking**: Enables measurement of agent effectiveness over time
+- **User Trust**: Allows users to gauge how well the evaluator performed its task
+- **Performance Tracking**: Enables measurement of evaluator effectiveness over time
 
 ### In the UI
 
-Self-critique appears as a separate tab in the document evaluation view, alongside Analysis, Comments, and Thinking. Users can see both the numerical score and the agent's explanation of their self-assessment.
+Self-critique appears as a separate tab in the document evaluation view, alongside Analysis, Comments, and Thinking. Users can see both the numerical score and the evaluator's explanation of their self-assessment.
 
 ### Writing Instructions for Self-Critique
 
-You can customize the scoring criteria by providing `selfCritiqueInstructions` in your agent configuration. This field should specify the exact scale and criteria for quality scoring. If not provided, the system uses default criteria focusing on completeness, evidence, fairness, clarity, usefulness, and adherence to instructions.
+You can customize the scoring criteria by providing `selfCritiqueInstructions` in your evaluator configuration. This field should specify the exact scale and criteria for quality scoring. If not provided, the system uses default criteria focusing on completeness, evidence, fairness, clarity, usefulness, and adherence to instructions.
 
 ---
 
@@ -296,10 +296,10 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 #### `name`
 
 - **Type**: string (minimum 3 characters)
-- **Purpose**: Display name for the agent
+- **Purpose**: Display name for the evaluator
 - **Guidelines**:
   - Should be descriptive and memorable
-  - Reflect the agent's specific role or expertise
+  - Reflect the evaluator's specific role or expertise
   - Avoid generic names like "Helper" or "Assistant"
 - **Examples**:
   - "Academic Research Evaluator"
@@ -310,8 +310,8 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 #### `purpose`
 
 - **Type**: enum (ASSESSOR | ADVISOR | ENRICHER | EXPLAINER)
-- **Purpose**: Defines the agent's primary role and capabilities
-- **Guidelines**: Choose based on the agent's main function:
+- **Purpose**: Defines the evaluator's primary role and capabilities
+- **Guidelines**: Choose based on the evaluator's main function:
   - ASSESSOR: When the primary goal is evaluation/scoring
   - ADVISOR: When the focus is on improvement suggestions
   - ENRICHER: When adding external information/context
@@ -320,10 +320,10 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 #### `description`
 
 - **Type**: string (minimum 30 characters)
-- **Purpose**: Brief explanation of what the agent does
+- **Purpose**: Brief explanation of what the evaluator does
 - **Guidelines**:
   - Should be 1-2 sentences
-  - Explain the agent's expertise and focus
+  - Explain the evaluator's expertise and focus
   - Mention target use cases or document types
 - **Examples**:
   - "Evaluates research papers for clarity, methodology, and impact potential using academic standards."
@@ -334,8 +334,8 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 #### `primaryInstructions`
 
 - **Type**: string (required, minimum 30 characters)
-- **Purpose**: Comprehensive instructions for all agent behaviors
-- **Typical Length**: 5,000-50,000 words for high-quality agents
+- **Purpose**: Comprehensive instructions for all evaluator behaviors
+- **Typical Length**: 5,000-50,000 words for high-quality evaluators
 - **Guidelines**:
   - Define comprehensive expertise and background
   - Include 50+ detailed examples of evaluations
@@ -343,7 +343,7 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - Cover edge cases and special scenarios
   - Include domain-specific knowledge
   - **NEW**: Include all specialized instructions (summary format, comment style, grading criteria) in sections within this field
-- **Essential Components** (ALL agents should include these sections):
+- **Essential Components** (ALL evaluators should include these sections):
 
   ```xml
   <role>Detailed background, expertise, experience</role>
@@ -380,7 +380,7 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - Each comment should have a clear title and 100-300 word explanation
 
   ## Grading Criteria (if applicable)
-  <!-- Only include this section if the agent should provide numerical grades -->
+  <!-- Only include this section if the evaluator should provide numerical grades -->
   Evaluate the document on a 0-100 scale based on:
   - [Dimension 1 - 30%]: Specific criteria and what constitutes excellence
   - [Dimension 2 - 25%]: Another criterion with clear standards
@@ -449,8 +449,8 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 #### `readme`
 
 - **Type**: string
-- **Purpose**: Human-readable documentation about the agent
-- **Display**: Shown in the Overview tab of the agent detail page
+- **Purpose**: Human-readable documentation about the evaluator
+- **Display**: Shown in the Overview tab of the evaluator detail page
 - **Format**: Standard Markdown with proper formatting
 - **Important Formatting Requirements**:
   - **Line breaks**: Add two spaces at the end of lines to create line breaks within paragraphs
@@ -458,21 +458,21 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - **Example**: `✅ Feature one  ` (note the two trailing spaces)
   - Without proper formatting, bullet points may render on a single line
 - **Recommended Content**:
-  - What the agent does and when to use it
+  - What the evaluator does and when to use it
   - Capabilities and limitations
   - Sample outputs and expected behavior
-  - Technical notes for LLMs modifying the agent
+  - Technical notes for LLMs modifying the evaluator
   - Version history and design decisions
 - **Example Structure**:
 
   ```markdown
-  # Agent Name
+  # Evaluator Name
 
-  ## What This Agent Does
+  ## What This Evaluator Does
 
   Brief explanation of purpose and capabilities
 
-  ## When to Use This Agent
+  ## When to Use This Evaluator
 
   - Specific use cases
   - Types of documents it works best with
@@ -482,7 +482,7 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - ✅ What it does well
   - ❌ What it doesn't do
 
-  ## For LLMs Modifying This Agent
+  ## For LLMs Modifying This Evaluator
 
   - Architecture notes
   - Key design decisions
@@ -1242,7 +1242,7 @@ Identify which instruction fields are actually providing unique value:
 ```python
 # Questions to ask:
 - Are separate instruction sections needed within primaryInstructions?
-- Does the agent need specialized behavior for different outputs?
+- Does the evaluator need specialized behavior for different outputs?
 - Could all instructions be unified into a single comprehensive guide?
 ```
 
@@ -1295,16 +1295,16 @@ primaryInstructions: |
 
 ---
 
-## Tips for LLM-Assisted Agent Creation
+## Tips for LLM-Assisted Evaluator Creation
 
-When using this documentation with an LLM to create agents:
+When using this documentation with an LLM to create evaluators:
 
 ### Effective Prompting Template
 
 ```
-Create an agent using the RoastMyPost Agent Schema with these requirements:
+Create an evaluator using the RoastMyPost Evaluator Schema with these requirements:
 
-Agent Type: [ASSESSOR/ADVISOR/ENRICHER/EXPLAINER]
+Evaluator Type: [ASSESSOR/ADVISOR/ENRICHER/EXPLAINER]
 Domain: [Specific field or expertise area]
 Target Documents: [Types of content to evaluate]
 Key Focus: [Primary evaluation criteria]
@@ -1369,4 +1369,4 @@ VOICE AND PERSPECTIVE: Always use third-person perspective:
 
 ---
 
-_This documentation provides comprehensive guidance for creating effective AI agents in RoastMyPost. Remember: start simple, test thoroughly, and add complexity only when it demonstrably improves results._
+_This documentation provides comprehensive guidance for creating effective AI evaluators in RoastMyPost. Remember: start simple, test thoroughly, and add complexity only when it demonstrably improves results._

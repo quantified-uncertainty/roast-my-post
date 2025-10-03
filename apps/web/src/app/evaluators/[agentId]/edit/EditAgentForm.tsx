@@ -16,6 +16,7 @@ import { z } from "zod";
 import { agentFormFields } from "@/components/agent/agentFormFields";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
+import { ROUTES } from "@/constants/routes";
 import {
   type AgentInput,
   AgentInputSchema,
@@ -74,7 +75,7 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
         const response = await fetch(`/api/agents/${agentId}`);
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch agent: ${response.statusText}`);
+          throw new Error(`Failed to fetch evaluator: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -124,7 +125,7 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
         setLoading(false);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load agent data"
+          err instanceof Error ? err.message : "Failed to load evaluator data"
         );
         setLoading(false);
       }
@@ -146,19 +147,19 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
       const updateResult = await updateAgent(dataToSend);
 
       if (!updateResult?.data) {
-        setFormError("root", { message: "Failed to update agent" });
+        setFormError("root", { message: "Failed to update evaluator" });
         return;
       }
 
       if (updateResult.data.success) {
-        router.push(`/agents/${agentId}`);
+        router.push(ROUTES.AGENTS.DETAIL(agentId));
         router.refresh(); // Force a refresh to show the updated data
       } else {
         const errorMessage =
           updateResult.data.error ||
           (typeof updateResult.validationErrors === "string"
             ? updateResult.validationErrors
-            : "Failed to update agent");
+            : "Failed to update evaluator");
         setFormError("root", { message: errorMessage });
       }
     } catch (err) {
@@ -181,7 +182,7 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 text-lg font-semibold">
-            Loading agent data...
+            Loading evaluator data...
           </div>
         </div>
       </div>
@@ -197,8 +198,8 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
               <h3 className="text-sm font-medium text-red-800">Error</h3>
               <div className="mt-2 text-sm text-red-700">{error}</div>
               <div className="mt-4">
-                <Link href={`/agents/${agentId}`}>
-                  <Button>Back to Agent</Button>
+                <Link href={ROUTES.AGENTS.DETAIL(agentId)}>
+                  <Button>Back to Evaluator</Button>
                 </Link>
               </div>
             </div>
@@ -213,9 +214,9 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
       <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900">Edit Agent</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Edit Evaluator</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Update your agent (this will create a new version)
+              Update your evaluator (this will create a new version)
             </p>
 
             {importNotice && (
@@ -338,7 +339,7 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
                   Mark as Deprecated
                 </label>
                 <p className="text-gray-500">
-                  This will mark your agent as deprecated. Users will see a warning that this agent is no longer recommended for use.
+                  This will mark your evaluator as deprecated. Users will see a warning that this evaluator is no longer recommended for use.
                 </p>
               </div>
             </div>
@@ -357,11 +358,11 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
             )}
 
             <div className="flex justify-end gap-3">
-              <Link href={`/agents/${agentId}`}>
+              <Link href={ROUTES.AGENTS.DETAIL(agentId)}>
                 <Button variant="secondary">Cancel</Button>
               </Link>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Agent"}
+                {isSubmitting ? "Saving..." : "Save Evaluator"}
               </Button>
             </div>
           </form>

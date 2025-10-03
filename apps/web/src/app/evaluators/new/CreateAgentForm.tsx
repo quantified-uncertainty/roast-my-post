@@ -11,6 +11,7 @@ import * as yaml from "js-yaml";
 import { agentFormFields } from "@/components/agent/agentFormFields";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
+import { ROUTES } from "@/constants/routes";
 import {
   type AgentInput,
   AgentInputSchema as agentSchema,
@@ -170,18 +171,18 @@ export default function CreateAgentForm() {
       const createResult = await createAgent(result);
 
       if (!createResult) {
-        setError("root", { message: "Failed to create agent" });
+        setError("root", { message: "Failed to create evaluator" });
         return;
       }
 
       if (createResult.data?.success && createResult.data?.id) {
-        router.push(`/agents/${createResult.data.id}`);
+        router.push(ROUTES.AGENTS.DETAIL(createResult.data.id));
       } else {
         const errorMessage =
           createResult.data?.error ||
           (typeof createResult.validationErrors === "string"
             ? createResult.validationErrors
-            : "Failed to create agent");
+            : "Failed to create evaluator");
         alert(errorMessage);
       }
     } catch (error) {
@@ -203,18 +204,18 @@ export default function CreateAgentForm() {
       const createResult = await createAgent(result);
 
       if (!createResult) {
-        setError("root", { message: "Failed to create agent" });
+        setError("root", { message: "Failed to create evaluator" });
         return;
       }
 
       if (createResult.data?.success && createResult.data?.id) {
-        router.push(`/agents/${createResult.data.id}`);
+        router.push(ROUTES.AGENTS.DETAIL(createResult.data.id));
       } else {
         const errorMessage =
           createResult.data?.error ||
           (typeof createResult.validationErrors === "string"
             ? createResult.validationErrors
-            : "Failed to create agent");
+            : "Failed to create evaluator");
         setError("root", { message: errorMessage });
       }
     } catch (error) {
@@ -267,10 +268,10 @@ export default function CreateAgentForm() {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900">
-                  Add New Agent
+                  Add New Evaluator
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  Create a new evaluation agent
+                  Create a new evaluator
                 </p>
               </div>
               <Link
@@ -278,7 +279,7 @@ export default function CreateAgentForm() {
                 className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
               >
                 <BookOpenIcon className="h-4 w-4" />
-                Agent Documentation
+                Evaluator Documentation
               </Link>
             </div>
           </div>
@@ -422,7 +423,7 @@ export default function CreateAgentForm() {
                   <Button variant="secondary">Cancel</Button>
                 </Link>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Save Agent"}
+                  {isSubmitting ? "Saving..." : "Save Evaluator"}
                 </Button>
               </div>
             </form>
@@ -460,8 +461,8 @@ export default function CreateAgentForm() {
                     id="yaml-text"
                     value={yamlText}
                     onChange={(e) => setYamlText(e.target.value)}
-                    placeholder="name: My Agent
-description: A helpful agent that does amazing things
+                    placeholder="name: My Evaluator
+description: A helpful evaluator that does amazing things
 primaryInstructions: |
   You are an expert assistant...
 selfCritiqueInstructions: |
@@ -470,9 +471,9 @@ selfCritiqueInstructions: |
   - Completeness (30%)
   - Actionability (30%)
 readme: |
-  # My Agent
-  
-  This agent is designed to..."
+  # My Evaluator
+
+  This evaluator is designed to..."
                     className="h-96 w-full resize-none rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     disabled={isCreatingFromYaml}
                   />
@@ -484,7 +485,7 @@ readme: |
                     disabled={!canCreateFromYaml || isCreatingFromYaml}
                     className="flex items-center gap-2"
                   >
-                    {isCreatingFromYaml ? "Creating..." : "Create Agent"}
+                    {isCreatingFromYaml ? "Creating..." : "Create Evaluator"}
                   </Button>
 
                   <Link href="/evaluators">
@@ -646,7 +647,7 @@ readme: |
                       <p className="text-blue-700">
                         Need help? Check out the{" "}
                         <Link href="/evaluators/readme" className="font-medium underline hover:text-blue-800">
-                          complete agent documentation
+                          complete evaluator documentation
                         </Link>{" "}
                         for detailed field descriptions and examples.
                       </p>

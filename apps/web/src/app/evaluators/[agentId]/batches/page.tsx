@@ -46,7 +46,7 @@ export default function BatchesPage() {
   }, [agentId]);
 
   const setActiveTab = (tab: string) => {
-    router.push(`/agents/${agentId}/${tab}`);
+    router.push(`${ROUTES.AGENTS.DETAIL(agentId)}/${tab}`);
   };
 
   const setSelectedBatchFilter = (batchId: string | null) => {
@@ -73,7 +73,7 @@ export default function BatchesPage() {
   if (!agent) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-lg text-gray-600">Loading agent data...</div>
+        <div className="text-lg text-gray-600">Loading evaluator data...</div>
       </div>
     );
   }

@@ -60,7 +60,7 @@ export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
     <div className="bg-white rounded-lg shadow-md h-full flex flex-col">
       <div className="p-6 pb-0">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
-          Agent Configuration
+          Evaluator Configuration
         </h2>
         
         {/* Form/YAML Tabs */}
@@ -95,7 +95,7 @@ export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Agent Name <span className="text-red-500">*</span>
+                Evaluator Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -116,7 +116,7 @@ export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
                 value={config.description}
                 onChange={(e) => onChange({ ...config, description: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                placeholder="Brief description of the agent's purpose"
+                placeholder="Brief description of the evaluator's purpose"
               />
             </div>
 
@@ -129,7 +129,7 @@ export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
                 onChange={(e) => onChange({ ...config, primaryInstructions: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                 rows={10}
-                placeholder="Instructions for how the agent should evaluate documents..."
+                placeholder="Instructions for how the evaluator should evaluate documents..."
                 required
               />
             </div>
@@ -156,7 +156,7 @@ export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
                 className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
               />
               <label htmlFor="providesGrades" className="ml-2 text-sm text-gray-700">
-                Agent provides numerical grades
+                Evaluator provides numerical grades
               </label>
             </div>
           </div>
@@ -166,8 +166,8 @@ export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
               value={yamlValue}
               onChange={handleYamlChange}
               onValidationChange={handleYamlValidation}
-              placeholder={`name: My Agent
-description: A helpful agent that evaluates documents
+              placeholder={`name: My Evaluator
+description: A helpful evaluator that evaluates documents
 primaryInstructions: |
   You are an expert evaluator...
 selfCritiqueInstructions: |

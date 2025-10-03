@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/Button";
+import { ROUTES } from "@/constants/routes";
 
 interface YamlImportClientProps {
   agentId: string;
@@ -171,7 +172,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
         return;
       }
 
-      router.push(`/agents/${agentId}/edit?import=true`);
+      router.push(ROUTES.AGENTS.EDIT(agentId) + '?import=true');
     } catch (_error) {
       // Error is already handled by setError in the validation process
     } finally {
@@ -210,7 +211,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
       {/* Header */}
       <div className="mb-8">
         <Link
-          href={`/agents/${agentId}`}
+          href={ROUTES.AGENTS.DETAIL(agentId)}
           className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -257,8 +258,8 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
               id="yaml-text"
               value={yamlText}
               onChange={(e) => setYamlText(e.target.value)}
-              placeholder="name: My Agent
-description: A helpful agent that does amazing things
+              placeholder="name: My Evaluator
+description: A helpful evaluator that does amazing things
 primaryInstructions: |
   You are an expert assistant...
 selfCritiqueInstructions: |
@@ -267,9 +268,9 @@ selfCritiqueInstructions: |
   - Completeness (30%)
   - Actionability (30%)
 readme: |
-  # My Agent
-  
-  This agent is designed to..."
+  # My Evaluator
+
+  This evaluator is designed to..."
               className="h-96 w-full resize-none rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             />
@@ -286,10 +287,10 @@ readme: |
               ) : (
                 <Upload className="h-4 w-4" />
               )}
-              {loading ? "Importing..." : "Import to Agent"}
+              {loading ? "Importing..." : "Import to Evaluator"}
             </Button>
 
-            <Link href={`/agents/${agentId}`}>
+            <Link href={ROUTES.AGENTS.DETAIL(agentId)}>
               <Button variant="secondary">Cancel</Button>
             </Link>
           </div>

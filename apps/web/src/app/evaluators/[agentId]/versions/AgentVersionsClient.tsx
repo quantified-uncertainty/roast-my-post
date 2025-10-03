@@ -82,7 +82,7 @@ export default function AgentVersionsClient({
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <h3 className="mb-2 text-lg font-medium">No versions found</h3>
           <p className="mb-4 text-gray-500">
-            This agent doesn't have any versions yet.
+            This evaluator doesn't have any versions yet.
           </p>
         </div>
       ) : (
