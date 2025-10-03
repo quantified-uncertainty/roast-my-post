@@ -2,11 +2,14 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
 
 const apiDocumentation = `# API Documentation
 
-Roast My Post provides a RESTful API for programmatic access to document evaluation features.
+Roast My Post has a simple RESTful API for programmatic access to document evaluation features.
+
+**Note: This API is primarily for the RoastMyPost website. We don't recommend relying on it for production use. Contact us if you want to use it.**
 
 ## Authentication
 
@@ -40,15 +43,15 @@ For local development:
 http://localhost:3000/api
 \`\`\`
 
+## API Version
+
+Current version: **v1** (no version prefix in URLs)
+
+The API is under active development. Breaking changes will be announced via GitHub releases.
+
 ## Rate Limiting
 
-API requests are rate limited to prevent abuse:
-
-- **Standard endpoints**: 60 requests per minute
-- **Sensitive endpoints**: 10 requests per minute  
-- **Import endpoints**: 20 requests per hour
-
-Rate limits are enforced per IP address. When you exceed the rate limit, you'll receive a 429 response.
+Currently, there are no enforced rate limits on the API. However, please use the API responsibly to avoid overloading the service. Rate limits may be added in the future.
 
 ## Available Endpoints
 
@@ -68,13 +71,7 @@ No authentication required. Returns:
 
 ### Authentication
 
-#### Validate API Key
-\`\`\`http
-GET /validate-key
-Authorization: Bearer YOUR_API_KEY
-\`\`\`
-
-Returns user information if the API key is valid.
+API keys are validated automatically on each authenticated request. There is no separate validation endpoint.
 
 ### User Management
 
@@ -121,34 +118,6 @@ Authorization: Bearer YOUR_API_KEY
 
 **Note**: Requires session authentication.
 
-### Users
-
-#### List All Users
-\`\`\`http
-GET /users
-Authorization: Bearer YOUR_API_KEY
-\`\`\`
-
-Returns all users. If authenticated, includes \`isCurrentUser\` flag.
-
-#### Get User Details
-\`\`\`http
-GET /users/{userId}
-Authorization: Bearer YOUR_API_KEY
-\`\`\`
-
-#### Get User's Evaluator Count
-\`\`\`http
-GET /users/{userId}/agents/count
-Authorization: Bearer YOUR_API_KEY
-\`\`\`
-
-#### Get User's Document Count
-\`\`\`http
-GET /users/{userId}/documents/count
-Authorization: Bearer YOUR_API_KEY
-\`\`\`
-
 ### Documents
 
 #### Get Document by ID or Slug
@@ -166,9 +135,40 @@ Content-Type: application/json
 
 {
   "title": "Updated Title",
-  "content": "Updated content..."
+  "content": "Updated content...",
+  "intendedAgentIds": ["agent_123", "agent_456"] // optional
 }
 \`\`\`
+
+#### Delete Document
+\`\`\`http
+DELETE /documents/{slugOrId}
+Authorization: Bearer YOUR_API_KEY
+\`\`\`
+
+Deletes a document. User must be the document owner.
+
+#### Update Document Privacy
+\`\`\`http
+PATCH /documents/{slugOrId}/privacy
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "isPrivate": true
+}
+\`\`\`
+
+#### Export Document
+\`\`\`http
+GET /documents/{slugOrId}/export?format=json
+Authorization: Bearer YOUR_API_KEY
+\`\`\`
+
+Query parameters:
+- \`format\`: Export format (json, markdown, html) - default: json
+
+Exports document with all evaluations in specified format.
 
 #### Search Documents
 \`\`\`http
@@ -182,6 +182,8 @@ Query parameters:
 - \`offset\`: Pagination offset (default: 0)
 - \`searchContent\`: Search in document content too (default: false)
 
+Returns paginated results with total count for building pagination UI.
+
 #### Import Document from URL
 \`\`\`http
 POST /import
@@ -191,6 +193,23 @@ Content-Type: application/json
 {
   "url": "https://example.com/article",
   "agentIds": ["agent_123", "agent_456"] // optional
+}
+\`\`\`
+
+Response:
+\`\`\`json
+{
+  "success": true,
+  "documentId": "doc_xyz",
+  "document": { /* document details */ },
+  "evaluations": [
+    {
+      "agentId": "agent_123",
+      "evaluationId": "eval_abc",
+      "jobId": "job_123",
+      "status": "pending"
+    }
+  ]
 }
 \`\`\`
 
@@ -272,13 +291,43 @@ GET /evaluators/{agentId}/evaluations
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
+#### Get Evaluator Batches
+\`\`\`http
+GET /evaluators/{agentId}/batches
+Authorization: Bearer YOUR_API_KEY
+\`\`\`
+
+Returns recent evaluation batches for this evaluator with statistics:
+- Progress and completion status
+- Cost and duration metrics
+- Average grades
+- Job counts by status
+
+#### Get Evaluator Overview Statistics
+\`\`\`http
+GET /evaluators/{agentId}/overview
+Authorization: Bearer YOUR_API_KEY
+\`\`\`
+
+Returns comprehensive statistics including:
+- Total evaluations and unique documents
+- Average grade, cost, and processing time
+- Success rate and active jobs count
+- Recent evaluations
+
 ### Evaluations
 
 #### Get Document Evaluations
 \`\`\`http
-GET /documents/{slugOrId}/evaluations
+GET /documents/{slugOrId}/evaluations?status=completed&agentId=agent_123&limit=20&offset=0
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
+
+Query parameters:
+- \`status\`: Filter by status (pending, completed, failed) - optional
+- \`agentId\`: Filter by specific evaluator - optional
+- \`limit\`: Max results (default: 20, max: 100)
+- \`offset\`: Pagination offset (default: 0)
 
 #### Create Evaluation for Document
 \`\`\`http
@@ -291,28 +340,76 @@ Content-Type: application/json
 }
 \`\`\`
 
-Returns a job ID to track progress:
+Returns:
 \`\`\`json
 {
+  "evaluationId": "eval_xyz",
   "jobId": "job_xyz789",
-  "status": "pending"
+  "status": "pending",
+  "created": true
+}
+\`\`\`
+
+#### Create Multiple Evaluations (Batch)
+\`\`\`http
+POST /documents/{slugOrId}/evaluations
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "agentIds": ["agent_123", "agent_456"]
+}
+\`\`\`
+
+Returns:
+\`\`\`json
+{
+  "evaluations": [
+    {
+      "agentId": "agent_123",
+      "evaluationId": "eval_abc",
+      "jobId": "job_123",
+      "status": "pending",
+      "created": true
+    },
+    {
+      "agentId": "agent_456",
+      "evaluationId": "eval_def",
+      "jobId": "job_456",
+      "status": "pending",
+      "created": false
+    }
+  ],
+  "total": 2
 }
 \`\`\`
 
 ### Batch Operations
 
-#### Create Evaluation Batch
+#### Create Evaluation Batch for Existing Documents
 \`\`\`http
 POST /evaluators/{agentId}/eval-batch
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 
 {
-  "targetCount": 10 // Number of documents to evaluate
+  "targetCount": 10 // Number of random documents to re-evaluate
 }
 \`\`\`
 
-Creates multiple evaluation jobs for randomly selected documents.
+Or specify exact documents:
+\`\`\`http
+POST /evaluators/{agentId}/eval-batch
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "documentIds": ["doc_123", "doc_456"],
+  "name": "My Batch" // optional
+}
+\`\`\`
+
+Creates evaluation jobs for documents that already have evaluations by this evaluator.
 
 ### Jobs
 
@@ -347,7 +444,7 @@ Content-Type: application/json
   "isEphemeral": true,
   "trackingId": "exp_custom_name", // Optional, auto-generated if not provided
   "description": "Testing new review criteria",
-  "expirationHours": 24, // Default: 24, max: 168 (7 days)
+  "expiresInDays": 1, // Default: 1, max: 90 days
 
   // Option A: Use existing evaluator
   "agentId": "agent_123",
@@ -357,17 +454,18 @@ Content-Type: application/json
     "name": "Test Reviewer",
     "primaryInstructions": "Review instructions...",
     "selfCritiqueInstructions": "Optional self-critique...",
-    "providesGrades": true
+    "providesGrades": true,
+    "description": "Optional description"
   },
-  
+
   // For documents, choose one:
   "documentIds": ["doc_123"], // Existing docs
+  "targetCount": 5,           // Random selection from existing docs
   "ephemeralDocuments": {     // New temporary docs
     "inline": [{
       "title": "Test Doc",
       "content": "Content...",
-      "contentType": "text/plain",
-      "authors": ["John Doe"]
+      "author": "John Doe" // Note: singular 'author'
     }]
   }
 }
@@ -379,15 +477,15 @@ Response:
   "batch": {
     "id": "batch_abc123",
     "trackingId": "exp_7a8b9c",
+    "trackingUrl": "/experiments/exp_7a8b9c",
     "isEphemeral": true,
     "expiresAt": "2024-01-02T00:00:00Z",
     "jobCount": 2
   },
-  "evaluator": {
+  "agent": {
     "id": "exp_agent_def456",
     "isEphemeral": true
-  },
-  "jobs": [{"id": "job_xyz789", "status": "pending"}]
+  }
 }
 \`\`\`
 
@@ -397,37 +495,21 @@ GET /experiments/{trackingId}
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-Query parameters:
-- \`includeResults\`: Include evaluation results (default: false)
+Response includes:
+- Experiment metadata and status
+- Agent configuration (if ephemeral)
+- Job statistics and progress
+- Aggregate metrics (grades, costs, timing)
+- Individual results for each document
+- Actions available (rerun, extend, promote)
 
-Response:
-\`\`\`json
-{
-  "id": "batch_abc123",
-  "trackingId": "exp_7a8b9c",
-  "description": "Testing new review criteria",
-  "isEphemeral": true,
-  "expiresAt": "2024-01-02T00:00:00Z",
-  "evaluator": {
-    "id": "exp_agent_def456",
-    "name": "Test Reviewer",
-    "isEphemeral": true
-  },
-  "jobStats": {
-    "total": 2,
-    "completed": 1,
-    "failed": 0,
-    "running": 1,
-    "pending": 0
-  },
-  "aggregateMetrics": {
-    "averageGrade": 85.5,
-    "totalCost": 1250,
-    "totalTime": 45,
-    "successRate": 100
-  }
-}
+#### Delete Experiment
+\`\`\`http
+DELETE /experiments/{trackingId}
+Authorization: Bearer YOUR_API_KEY
 \`\`\`
+
+Deletes an ephemeral experiment and all associated ephemeral resources (agent, documents, evaluations). Cannot delete experiments with running jobs.
 
 #### List Experiments
 \`\`\`http
@@ -440,6 +522,8 @@ Query parameters:
 - \`includeExpired\`: Include expired experiments (default: false)
 - \`limit\`: Max results (default: 20, max: 100)
 - \`offset\`: Pagination offset
+
+Returns batches with job statistics and ephemeral resource counts.
 
 ### Admin Endpoints (Requires Admin Role)
 
@@ -481,7 +565,33 @@ All errors follow a consistent format:
 - \`401\`: Unauthorized (missing/invalid API key)
 - \`403\`: Forbidden (insufficient permissions)
 - \`404\`: Not Found
+- \`429\`: Too Many Requests (if rate limiting is enabled)
 - \`500\`: Internal Server Error
+
+## Common Response Patterns
+
+### Pagination
+Endpoints that return lists typically support pagination:
+\`\`\`json
+{
+  "items": [...],
+  "total": 150,
+  "limit": 20,
+  "offset": 0
+}
+\`\`\`
+
+### Job Status
+Job statuses follow this lifecycle:
+- \`pending\`: Job queued, not started
+- \`running\`: Job in progress
+- \`completed\`: Job finished successfully
+- \`failed\`: Job encountered an error
+
+### Numeric Values
+- Costs are in **cents** (e.g., 1250 = $12.50)
+- Grades are 0-100 scale
+- Durations are in seconds
 
 ## Code Examples
 
@@ -508,25 +618,27 @@ import_response = requests.post(
     }
 )
 import_data = import_response.json()
-doc_id = import_data["document"]["id"]
-job_id = import_data["jobs"][0]["id"] if import_data.get("jobs") else None
+doc_id = import_data["documentId"]
 
-# Check job status if evaluation was created
-if job_id:
+# Check if evaluations were created
+if import_data.get("evaluations"):
+    job_id = import_data["evaluations"][0]["jobId"]
+
+    # Poll job status
     while True:
         job_response = requests.get(
             f"{BASE_URL}/jobs/{job_id}",
             headers=headers
         )
         job = job_response.json()
-        
+
         if job["status"] in ["completed", "failed"]:
             break
-        
+
         time.sleep(5)
-    
+
     if job["status"] == "completed":
-        print(f"Evaluation complete! ID: {job['evaluationId']}")
+        print(f"Evaluation complete! ID: {job.get('evaluationId')}")
 \`\`\`
 
 ### JavaScript/TypeScript
@@ -545,30 +657,30 @@ async function importAndEvaluate(url: string, agentId: string) {
   const importRes = await fetch(\`\${BASE_URL}/import\`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       url,
-      agentIds: [agentId] 
+      agentIds: [agentId]
     })
   });
-  
+
   const importData = await importRes.json();
-  const docId = importData.document.id;
-  
-  // If jobs were created, poll for completion
-  if (importData.jobs && importData.jobs.length > 0) {
-    const jobId = importData.jobs[0].id;
-    
+  const docId = importData.documentId;
+
+  // If evaluations were created, poll for completion
+  if (importData.evaluations && importData.evaluations.length > 0) {
+    const jobId = importData.evaluations[0].jobId;
+
     let job;
     do {
       await new Promise(resolve => setTimeout(resolve, 5000));
-      
+
       const jobRes = await fetch(\`\${BASE_URL}/jobs/\${jobId}\`, { headers });
       job = await jobRes.json();
     } while (job.status === 'pending' || job.status === 'running');
-    
+
     return job;
   }
-  
+
   return importData;
 }
 
@@ -611,11 +723,12 @@ async function runExperiment() {
 
 - Some user management endpoints require session authentication (not API key)
 - Evaluator creation/update uses PUT method, not POST
-- No PATCH or DELETE methods for evaluators
-- Batch endpoint is \`/eval-batch\`, not \`/batches\`
+- No PATCH or DELETE methods for evaluators (only versioning via PUT)
+- Two batch endpoints: \`/evaluators/{id}/eval-batch\` for re-evaluations, \`/batches\` for experiments
 - No webhook support (poll job status instead)
-- Rate limit headers not included in responses
-- No SDK libraries yet (use HTTP directly)
+- Rate limiting not currently enforced
+- No official SDK libraries yet (use HTTP directly)
+- Costs are returned in cents (multiply dollars by 100)
 
 ## Support
 
@@ -627,14 +740,14 @@ export default function APIDocumentationPage() {
   return (
     <div className="rounded-lg bg-white p-8 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">
-          API Documentation
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
         <CopyMarkdownButton content={apiDocumentation} />
       </div>
-      
+
       <div className="prose prose-gray max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{apiDocumentation}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {apiDocumentation}
+        </ReactMarkdown>
       </div>
     </div>
   );
