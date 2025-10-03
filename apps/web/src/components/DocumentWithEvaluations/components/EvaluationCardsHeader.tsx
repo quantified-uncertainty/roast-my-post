@@ -103,8 +103,12 @@ function EvaluationCardsHeaderComponent({
   }) {
     const [showMoreOpen, setShowMoreOpen] = useState(false);
     const maxVisible = 4;
-    const visibleReviews = document.reviews.slice(0, maxVisible);
-    const hiddenReviews = document.reviews.slice(maxVisible);
+    // Filter out evaluations with 0 comments
+    const reviewsWithComments = document.reviews.filter(
+      (review) => review.comments && review.comments.length > 0
+    );
+    const visibleReviews = reviewsWithComments.slice(0, maxVisible);
+    const hiddenReviews = reviewsWithComments.slice(maxVisible);
     const hasHiddenReviews = hiddenReviews.length > 0;
 
     return (

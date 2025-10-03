@@ -8,7 +8,9 @@ import { notFound } from "next/navigation";
 
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
-import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
+import {
+  DocumentEvaluationSidebar,
+} from "@/components/DocumentEvaluationSidebar";
 import SlateEditor from "@/components/SlateEditor";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/infrastructure/auth/auth";
@@ -170,12 +172,12 @@ export default async function DocumentPage({
               <div className="flex flex-col lg:col-span-2">
                 {/* Submitter Notes Card - only show if notes exist */}
                 {document.submitterNotes && (
-                  <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-6 shadow-sm">
-                    <h3 className="mb-3 text-sm font-semibold text-blue-900">
+                  <div className="mb-6 rounded-lg border bg-gray-100 p-6 shadow-sm">
+                    <h3 className="mb-3 text-sm font-semibold">
                       Submitter's Notes
                     </h3>
-                    <div className="prose prose-sm prose-blue max-w-none">
-                      <p className="whitespace-pre-wrap text-blue-800">
+                    <div className="prose prose-sm max-w-none">
+                      <p className="whitespace-pre-wrap">
                         {document.submitterNotes}
                       </p>
                     </div>

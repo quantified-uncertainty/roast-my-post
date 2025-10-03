@@ -1,10 +1,12 @@
 "use client";
 
 import { RefObject } from "react";
+
 import SlateEditor from "@/components/SlateEditor";
+import type { Document } from "@/shared/types/databaseTypes";
+
 import { LAYOUT } from "../constants";
 import { useLocalCommentsUI } from "../context/LocalCommentsUIContext";
-import type { Document } from "@/shared/types/databaseTypes";
 
 interface DocumentContentProps {
   document: Document;
@@ -43,6 +45,17 @@ export function DocumentContent({
           : {}
       }
     >
+      {/* Submitter Notes - only show if notes exist */}
+      {document.submitterNotes && (
+        <div
+          className={`mb-4 rounded-lg bg-gray-200 p-4 ${isFullWidth ? "" : "mx-auto"}`}
+        >
+          <h3 className="mb-2 text-sm font-semibold">Submitter's Notes</h3>
+          <p className="whitespace-pre-wrap text-sm">
+            {document.submitterNotes}
+          </p>
+        </div>
+      )}
       <article
         className={`prose prose-lg prose-slate ${
           isFullWidth
