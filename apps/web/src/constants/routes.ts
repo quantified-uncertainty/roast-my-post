@@ -15,6 +15,7 @@ export const ROUTES = {
   AGENTS: {
     LIST: '/evaluators',
     NEW: '/evaluators/new',
+    README: '/evaluators/readme',
     DETAIL: (agentId: string) => `/evaluators/${agentId}`,
     DETAILS: (agentId: string) => `/evaluators/${agentId}/details`,
     EVALS: (agentId: string) => `/evaluators/${agentId}/evals`,

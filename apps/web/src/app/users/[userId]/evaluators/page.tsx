@@ -71,10 +71,10 @@ export default async function UserAgentsPage({
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {user.name || USER_DISPLAY.GUEST_NAME}'s Agents
+                  {user.name || USER_DISPLAY.GUEST_NAME}'s Evaluators
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  {agents.length} agent{agents.length !== 1 ? 's' : ''} created
+                  {agents.length} evaluator{agents.length !== 1 ? 's' : ''} created
                 </p>
               </div>
             </div>

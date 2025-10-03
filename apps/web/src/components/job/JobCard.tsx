@@ -3,6 +3,7 @@ import { JobStatusBadge, JobStatusIcon } from "./JobStatusBadge";
 import { formatCostFromDollars, formatDuration, formatRelativeDate } from "@/application/services/job/formatters";
 import { JobData } from "@/application/services/job/types";
 import { getDocumentInfo, getAgentInfo, getBatchInfo, getRetryText } from "@/application/services/job/transformers";
+import { ROUTES } from "@/constants/routes";
 
 interface JobCardProps {
   job: JobData & {
@@ -68,7 +69,7 @@ export function JobCard({
                 Evaluator: {agentInfo.name}
                 {agentInfo.id && (
                   <Link
-                    href={`/evaluators/${agentInfo.id}`}
+                    href={ROUTES.AGENTS.DETAIL(agentInfo.id)}
                     className="ml-1 text-blue-600 hover:text-blue-800"
                     onClick={(e) => e.stopPropagation()}
                   >

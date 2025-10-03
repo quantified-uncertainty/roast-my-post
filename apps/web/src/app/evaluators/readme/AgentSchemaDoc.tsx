@@ -13,6 +13,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import MARKDOWN_CONTENT from "./evaluator-schema-documentation.md";
+import { ROUTES } from "@/constants/routes";
 
 export function AgentSchemaDoc() {
   const [copied, setCopied] = useState(false);
@@ -94,13 +95,13 @@ export function AgentSchemaDoc() {
           <p>
             Need help creating an evaluator? Use the{" "}
             <Link
-              href="/evaluators/new"
+              href={ROUTES.AGENTS.NEW}
               className="text-blue-600 hover:text-blue-800"
             >
               Evaluator Creator
             </Link>{" "}
             or{" "}
-            <Link href="/evaluators" className="text-blue-600 hover:text-blue-800">
+            <Link href={ROUTES.AGENTS.LIST} className="text-blue-600 hover:text-blue-800">
               Import
             </Link>{" "}
             an existing configuration.

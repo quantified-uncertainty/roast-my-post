@@ -226,7 +226,7 @@ export function AgentDetailLayout({
 
           {isOwner && (
             <>
-              <Link href={`/agents/${agent.id}/import-yaml`}>
+              <Link href={ROUTES.AGENTS.IMPORT_YAML(agent.id)}>
                 <Button variant="secondary" className="flex items-center gap-2">
                   <Upload className="h-4 w-4" />
                   Import
@@ -311,7 +311,7 @@ export function AgentDetailLayout({
           )}
           {(isOwner || isAdmin) && (
             <TabLink
-              href={`/agents/${agent.id}/export`}
+              href={ROUTES.AGENTS.EXPORT(agent.id)}
               tabName="export"
               icon={<FileDown className="mr-2 h-5 w-5" />}
               label="Export"

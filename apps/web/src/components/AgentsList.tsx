@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Agent } from "@roast/ai";
 
 import { AgentBadges } from "./AgentBadges";
+import { ROUTES } from "@/constants/routes";
 
 interface AgentsListProps {
   agents: Agent[];
@@ -24,7 +25,7 @@ export default function AgentsList({ agents }: AgentsListProps) {
           return (
             <Link
               key={agent.id}
-              href={`/evaluators/${agent.id}`}
+              href={ROUTES.AGENTS.DETAIL(agent.id)}
               className="group block"
             >
               <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">

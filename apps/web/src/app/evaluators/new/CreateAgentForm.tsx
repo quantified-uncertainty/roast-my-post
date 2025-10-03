@@ -275,7 +275,7 @@ export default function CreateAgentForm() {
                 </p>
               </div>
               <Link
-                href="/evaluators/readme"
+                href={ROUTES.AGENTS.README}
                 className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
               >
                 <BookOpenIcon className="h-4 w-4" />
@@ -646,7 +646,7 @@ readme: |
                     <div className="mt-3 pt-3 border-t border-blue-200">
                       <p className="text-blue-700">
                         Need help? Check out the{" "}
-                        <Link href="/evaluators/readme" className="font-medium underline hover:text-blue-800">
+                        <Link href={ROUTES.AGENTS.README} className="font-medium underline hover:text-blue-800">
                           complete evaluator documentation
                         </Link>{" "}
                         for detailed field descriptions and examples.

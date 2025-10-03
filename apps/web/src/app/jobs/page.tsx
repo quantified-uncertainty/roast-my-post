@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@roast/db";
 import { formatDistanceToNow } from "date-fns";
 import { serializeJob } from "@/infrastructure/database/prisma-serializers";
+import { ROUTES } from "@/constants/routes";
 
 export const dynamic = 'force-dynamic';
 
@@ -99,7 +100,7 @@ export default async function JobsPage() {
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   <Link
-                    href={`/agents/${job.evaluation.agent.id}`}
+                    href={ROUTES.AGENTS.DETAIL(job.evaluation.agent.id)}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     {job.evaluation.agent.versions[0]?.name || "Unknown"}
