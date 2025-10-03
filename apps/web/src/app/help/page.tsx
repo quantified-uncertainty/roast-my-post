@@ -17,14 +17,14 @@ const documentationSections = [
     icon: RocketLaunchIcon,
   },
   {
-    title: "Agent Documentation for Humans",
-    description: "Understanding and creating AI agents for document evaluation",
+    title: "Evaluator Documentation for Humans",
+    description: "Understanding and creating AI evaluators for document evaluation",
     href: "/help/agents-humans",
     icon: UserGroupIcon,
   },
   {
-    title: "Agent Documentation for LLMs",
-    description: "Technical specification for AI agents and their capabilities",
+    title: "Evaluator Documentation for LLMs",
+    description: "Technical specification for AI evaluators and their capabilities",
     href: "/help/agents-llms",
     icon: ChatBubbleLeftRightIcon,
   },
@@ -37,7 +37,7 @@ const documentationSections = [
   {
     title: "Ephemeral Experiments",
     description:
-      "Create temporary experiments for testing agent configurations",
+      "Create temporary experiments for testing evaluator configurations",
     href: "/help/ephemeral-experiments",
     icon: BeakerIcon,
   },

@@ -247,32 +247,32 @@ export function AgentDetailLayout({
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           <TabLink
-            href={`/agents/${agent.id}`}
+            href={ROUTES.AGENTS.DETAIL(agent.id)}
             tabName="overview"
             icon={<User className="mr-2 h-5 w-5" />}
             label="Overview"
           />
           <TabLink
-            href={`/agents/${agent.id}/details`}
+            href={ROUTES.AGENTS.DETAILS(agent.id)}
             tabName="details"
             icon={<FileText className="mr-2 h-5 w-5" />}
             label="Details"
           />
           <TabLink
-            href={`/agents/${agent.id}/versions`}
+            href={ROUTES.AGENTS.VERSIONS(agent.id)}
             tabName="versions"
             icon={<Clock className="mr-2 h-5 w-5" />}
             label="Versions"
           />
           <TabLink
-            href={`/agents/${agent.id}/evals`}
+            href={ROUTES.AGENTS.EVALS(agent.id)}
             tabName="evals"
             icon={<BarChart3 className="mr-2 h-5 w-5" />}
             label="Evals"
           />
           {(isOwner || isAdmin) && (
             <Link
-              href={`/agents/${agent.id}/jobs`}
+              href={ROUTES.AGENTS.JOBS(agent.id)}
               className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
                 activeTab === "jobs"
                   ? "border-blue-500 text-blue-600"
@@ -286,7 +286,7 @@ export function AgentDetailLayout({
           {isOwner && (
             <>
               <Link
-                href={`/agents/${agent.id}/test`}
+                href={ROUTES.AGENTS.TEST(agent.id)}
                 className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
                   activeTab === "test"
                     ? "border-blue-500 text-blue-600"
@@ -297,7 +297,7 @@ export function AgentDetailLayout({
                 Test
               </Link>
               <Link
-                href={`/agents/${agent.id}/batches`}
+                href={ROUTES.AGENTS.BATCHES(agent.id)}
                 className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
                   activeTab === "batches"
                     ? "border-blue-500 text-blue-600"

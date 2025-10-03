@@ -17,7 +17,7 @@ export default function OverviewClient({ agent, agentId }: OverviewClientProps) 
   useEffect(() => {
     const fetchOverviewStats = async () => {
       try {
-        const response = await fetch(`/api/agents/${agentId}/overview`);
+        const response = await fetch(`/api/evaluators/${agentId}/overview`);
         if (response.ok) {
           const data = await response.json();
           setOverviewStats(data);

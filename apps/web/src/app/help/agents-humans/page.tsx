@@ -5,17 +5,17 @@ import remarkGfm from "remark-gfm";
 
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
 
-const agentDocumentationForHumans = `# Agent Documentation for Humans
+const agentDocumentationForHumans = `# Evaluator Documentation for Humans
 
-Learn how to create and use AI agents to evaluate your documents in Roast My Post.
+Learn how to create and use AI evaluators to evaluate your documents in Roast My Post.
 
-## What Are Agents?
+## What Are Evaluators?
 
-Agents are AI-powered evaluators that analyze your documents from specific perspectives. Think of them as expert reviewers, each with their own specialty and approach to providing feedback.
+Evaluators are AI-powered reviewers that analyze your documents from specific perspectives. Think of them as expert reviewers, each with their own specialty and approach to providing feedback.
 
-## What Can Agents Do?
+## What Can Evaluators Do?
 
-Agents can be configured to provide various types of feedback based on their instructions:
+Evaluators can be configured to provide various types of feedback based on their instructions:
 
 ### 🎯 Critical Evaluation
 - Point out flaws and weaknesses
@@ -23,7 +23,7 @@ Agents can be configured to provide various types of feedback based on their ins
 - Provide grades and scores
 - Best for: Academic papers, technical documentation, grant proposals
 
-**Example**: An academic review agent checks research papers for methodology flaws, citation quality, and logical consistency.
+**Example**: An academic review evaluator checks research papers for methodology flaws, citation quality, and logical consistency.
 
 ### 💡 Constructive Feedback
 - Offer actionable recommendations
@@ -39,7 +39,7 @@ Agents can be configured to provide various types of feedback based on their ins
 - Connect to related concepts
 - Best for: Educational content, research summaries, wiki articles
 
-**Example**: A context agent adds relevant background information and connects your content to broader trends.
+**Example**: A context evaluator adds relevant background information and connects your content to broader trends.
 
 ### 🔍 Clarification & Simplification
 - Break down complex concepts
@@ -49,36 +49,36 @@ Agents can be configured to provide various types of feedback based on their ins
 
 **Example**: A technical translator identifies jargon and provides plain-language explanations.
 
-## How to Use Existing Agents
+## How to Use Existing Evaluators
 
-1. **Browse Available Agents**
-   - Go to the [Agents page](/agents)
-   - Read agent descriptions to find ones matching your needs
+1. **Browse Available Evaluators**
+   - Go to the [Evaluators page](/evaluators)
+   - Read evaluator descriptions to find ones matching your needs
    - Check their descriptions and instructions to understand their approach
 
 2. **Submit Your Document**
    - Upload or paste your document
-   - Select one or more agents for evaluation
+   - Select one or more evaluators for evaluation
    - Click "Start Evaluation"
 
 3. **Review Feedback**
    - **Summary**: Quick overview of the evaluation
    - **Highlighted Comments**: Specific feedback on document sections
    - **Analysis**: Detailed evaluation narrative
-   - **Grades**: Numerical scores (if provided by the agent)
+   - **Grades**: Numerical scores (if provided by the evaluator)
 
-## Creating Your Own Agent
+## Creating Your Own Evaluator
 
-### Step 1: Define Your Agent's Identity
+### Step 1: Define Your Evaluator's Identity
 
 Start with the basics:
 - **Name**: Clear, descriptive title (e.g., "SEO Content Optimizer")
-- **Description**: 1-2 sentences explaining what your agent does
-- **Focus**: Define the specific type of analysis your agent will provide
+- **Description**: 1-2 sentences explaining what your evaluator does
+- **Focus**: Define the specific type of analysis your evaluator will provide
 
 ### Step 2: Write Primary Instructions
 
-This is where you define your agent's behavior. Structure your instructions clearly:
+This is where you define your evaluator's behavior. Structure your instructions clearly:
 
 \`\`\`markdown
 ## Role
@@ -92,7 +92,7 @@ When evaluating documents, you will:
 3. [Third key responsibility]
 
 ## Evaluation Framework
-[Describe the criteria or methodology your agent uses]
+[Describe the criteria or methodology your evaluator uses]
 
 ## Output Guidelines
 - Summary: [What to include in the 2-3 paragraph summary]
@@ -104,20 +104,20 @@ When evaluating documents, you will:
 
 Include 2-3 concrete examples showing:
 - Sample document excerpts
-- How your agent would comment on them
+- How your evaluator would comment on them
 - What text to highlight
 - The type of feedback to provide
 
 ### Step 4: Set Up Grading (Optional)
 
-If your agent provides grades:
+If your evaluator provides grades:
 - Define what scores mean (e.g., "90-100 = Excellent")
 - List specific criteria and their weights
 - Explain how to calculate overall scores
 
 ### Step 5: Write Self-Critique Instructions (Optional)
 
-Help your agent evaluate its own performance:
+Help your evaluator evaluate its own performance:
 \`\`\`markdown
 Rate your evaluation quality:
 - 90-100: Comprehensive, actionable, well-evidenced
@@ -129,18 +129,18 @@ Rate your evaluation quality:
 ## Best Practices
 
 ### DO:
-✅ Be specific about your agent's expertise and perspective
+✅ Be specific about your evaluator's expertise and perspective
 ✅ Include detailed examples in your instructions
 ✅ Define clear evaluation criteria
 ✅ Keep comments constructive and actionable
-✅ Test your agent on various document types
+✅ Test your evaluator on various document types
 
 ### DON'T:
 ❌ Make instructions too brief (aim for 1,000+ words)
-❌ Create agents that are too general
+❌ Create evaluators that are too general
 ❌ Forget to specify output format requirements
 ❌ Use overly critical or harsh language
-❌ Duplicate existing agents without adding value
+❌ Duplicate existing evaluators without adding value
 
 ## Advanced Features
 
@@ -149,8 +149,8 @@ Rate your evaluation quality:
 - Select the most relevant portion of text
 - Ensure highlights support your comments
 
-### Multi-Domain Agents
-Create agents that evaluate from multiple perspectives:
+### Multi-Domain Evaluators
+Create evaluators that evaluate from multiple perspectives:
 \`\`\`markdown
 <expertise_areas>
   <technical_accuracy>
@@ -166,18 +166,18 @@ Create agents that evaluate from multiple perspectives:
 \`\`\`
 
 ### Conditional Logic
-Make your agent adaptive:
+Make your evaluator adaptive:
 \`\`\`markdown
 If the document is a research paper:
   - Focus on methodology and evidence
   - Check citation quality
-  
+
 If the document is a blog post:
   - Prioritize readability and engagement
   - Evaluate SEO elements
 \`\`\`
 
-## Examples of Great Agents
+## Examples of Great Evaluators
 
 ### "Grant Proposal Assessor"
 - **Purpose**: ASSESSOR
@@ -196,17 +196,17 @@ If the document is a blog post:
 
 ## Getting Help
 
-- **Examples**: Check out [popular agents](/agents) for inspiration
-- **Community**: Join our [Discord](https://discord.gg/nsTnQTgtG6) to discuss agent creation
+- **Examples**: Check out [popular evaluators](/evaluators) for inspiration
+- **Community**: Join our [Discord](https://discord.gg/nsTnQTgtG6) to discuss evaluator creation
 
-Remember: The best agents are specialized, detailed, and provide actionable feedback. Start simple and refine based on results!`;
+Remember: The best evaluators are specialized, detailed, and provide actionable feedback. Start simple and refine based on results!`;
 
 export default function AgentsHumansPage() {
   return (
     <div className="rounded-lg bg-white p-8 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">
-          Agent Documentation for Humans
+          Evaluator Documentation for Humans
         </h1>
         <CopyMarkdownButton content={agentDocumentationForHumans} />
       </div>

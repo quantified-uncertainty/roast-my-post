@@ -74,9 +74,14 @@ export const ROUTES = {
     AGENTS: {
       LIST: '/api/evaluators',
       DETAIL: (agentId: string) => `/api/evaluators/${agentId}`,
-      JOBS: (agentId: string) => `/api/evaluators/${agentId}/jobs`,
-      BATCHES: (agentId: string) => `/api/evaluators/${agentId}/batches`,
+      REVIEW: (agentId: string) => `/api/evaluators/${agentId}/review`,
+      DOCUMENTS: (agentId: string) => `/api/evaluators/${agentId}/documents`,
       EVALUATIONS: (agentId: string) => `/api/evaluators/${agentId}/evaluations`,
+      BATCHES: (agentId: string) => `/api/evaluators/${agentId}/batches`,
+      JOBS: (agentId: string) => `/api/evaluators/${agentId}/jobs`,
+      OVERVIEW: (agentId: string) => `/api/evaluators/${agentId}/overview`,
+      EXPORT_DATA: (agentId: string) => `/api/evaluators/${agentId}/export-data`,
+      EVAL_BATCH: (agentId: string) => `/api/evaluators/${agentId}/eval-batch`,
     },
     DOCS: {
       LIST: '/api/docs',

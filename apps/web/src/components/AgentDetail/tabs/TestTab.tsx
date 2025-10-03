@@ -7,6 +7,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { Button } from "@/components/Button";
 import type { Agent } from "@roast/ai";
 import { DocumentSelector } from "./DocumentSelector";
+import { ROUTES } from "@/constants/routes";
 
 import type { ActiveTab } from "../types";
 
@@ -86,7 +87,7 @@ export function TestTab({
               }
 
               const response = await fetch(
-                `/api/agents/${agent.id}/eval-batch`,
+                ROUTES.API.AGENTS.EVAL_BATCH(agent.id),
                 {
                   method: "POST",
                   headers: {

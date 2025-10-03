@@ -10,6 +10,7 @@ import {
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@roast/ai";
+import { ROUTES } from "@/constants/routes";
 
 import type { BatchSummary } from "../types";
 
@@ -70,7 +71,7 @@ export function ExportTab({
 
       // Fetch the data
       const response = await fetch(
-        `/api/agents/${agent.id}/export-data?${params}`
+        `${ROUTES.API.AGENTS.EXPORT_DATA(agent.id)}?${params}`
       );
 
       if (!response.ok) {

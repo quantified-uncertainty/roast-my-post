@@ -4,28 +4,28 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
 
-const agentDocumentationForLLMs = `# Agent Documentation for LLMs
+const agentDocumentationForLLMs = `# Evaluator Documentation for LLMs
 
-This technical specification describes how to create and configure AI agents for document evaluation in Roast My Post.
+This technical specification describes how to create and configure AI evaluators for document evaluation in Roast My Post.
 
-## Agent Schema
+## Evaluator Schema
 
-Agents are defined using the following TypeScript interface:
+Evaluators are defined using the following TypeScript interface:
 
 \`\`\`typescript
-interface Agent {
+interface Evaluator {
   name: string;                      // Required: Descriptive title
   description: string;               // Required: 1-2 sentence explanation
   primaryInstructions?: string;      // Comprehensive behavior guide (5k-50k words)
   selfCritiqueInstructions?: string; // Self-evaluation scoring criteria
-  providesGrades?: boolean;          // Whether agent outputs numerical grades
+  providesGrades?: boolean;          // Whether evaluator outputs numerical grades
   readme?: string;                   // Human-readable documentation
 }
 \`\`\`
 
-## Agent Configuration
+## Evaluator Configuration
 
-Agents are flexible and can be configured for any evaluation purpose through their instructions. Rather than fixed types, agents can be tailored to:
+Evaluators are flexible and can be configured for any evaluation purpose through their instructions. Rather than fixed types, evaluators can be tailored to:
 
 - **Evaluate quality** and identify issues
 - **Offer suggestions** and actionable improvements
@@ -39,7 +39,7 @@ The \`primaryInstructions\` field should be structured XML-like sections for opt
 
 \`\`\`xml
 <role>
-Define the agent's expertise, background, and perspective.
+Define the evaluator's expertise, background, and perspective.
 Include specific credentials and experience.
 </role>
 
@@ -63,7 +63,7 @@ Include specific credentials and experience.
 
 ## Output Structure
 
-Agents must produce outputs in this exact JSON structure:
+Evaluators must produce outputs in this exact JSON structure:
 
 \`\`\`json
 {
@@ -109,9 +109,9 @@ Each comment should:
 ## Best Practices
 
 ### Instruction Length
-- Minimum: 1,000 words for basic agents
-- Recommended: 5,000-10,000 words for comprehensive agents
-- Maximum: 50,000 words for highly specialized agents
+- Minimum: 1,000 words for basic evaluators
+- Recommended: 5,000-10,000 words for comprehensive evaluators
+- Maximum: 50,000 words for highly specialized evaluators
 
 ### Including Examples
 Always include 3-5 detailed examples showing:
@@ -121,12 +121,12 @@ Always include 3-5 detailed examples showing:
 - Grade calculation (if applicable)
 
 ### Error Handling
-Agents should gracefully handle:
+Evaluators should gracefully handle:
 - Documents outside their expertise
 - Incomplete or malformed content
 - Edge cases and unusual formats
 
-## Agent Configuration Example
+## Evaluator Configuration Example
 
 \`\`\`yaml
 name: "Technical Documentation Reviewer"
@@ -184,14 +184,14 @@ selfCritiqueInstructions: |
 
 ## Integration Notes
 
-- Agents are invoked via the \`/api/agents/[agentId]/evaluate\` endpoint
+- Evaluators are invoked via the \`/api/evaluators/[agentId]/evaluate\` endpoint
 - Document content is provided as plain text with character positions preserved
 - Responses are validated against the schema before storage
 - Failed evaluations are retried with exponential backoff
 
 ## Version Control
 
-- Each agent modification creates a new version
+- Each evaluator modification creates a new version
 - Previous versions remain accessible for comparison
 - Version history tracks all changes to instructions
 `;
@@ -201,7 +201,7 @@ export default function AgentsLLMsPage() {
     <div className="rounded-lg bg-white p-8 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">
-          Agent Documentation for LLMs
+          Evaluator Documentation for LLMs
         </h1>
         <CopyMarkdownButton content={agentDocumentationForLLMs} />
       </div>
