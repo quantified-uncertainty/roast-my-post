@@ -332,6 +332,12 @@ export default function CreateDocumentForm() {
         // Sort agents: recommended first, then regular, then deprecated
         const sortedAgents = sortAgentsByBadgeStatus<Agent>(fetchedAgents);
         setAgents(sortedAgents);
+
+        // Auto-select recommended agents
+        const recommendedAgentIds = sortedAgents
+          .filter((agent) => agent.isRecommended)
+          .map((agent) => agent.id);
+        setSelectedAgentIds(recommendedAgentIds);
       } catch (error) {
         logger.error("Error fetching agents:", error);
       } finally {
@@ -477,15 +483,39 @@ export default function CreateDocumentForm() {
                 onChange={setImportIsPrivate}
               />
 
-              <AgentSelector
-                agents={agents}
-                selectedAgentIds={selectedAgentIds}
-                onToggleAgent={toggleAgent}
-                loading={loadingAgents}
-                title="Run evaluations after import"
-                actionText="will be queued after import"
-                layout="grid"
-              />
+              {loadingAgents ? (
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Run evaluations after import
+                  </label>
+                  <div className="flex items-center justify-center rounded-lg border border-gray-200 p-8">
+                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-600"></div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <AgentSelector
+                    agents={agents.filter((agent) => agent.isRecommended)}
+                    selectedAgentIds={selectedAgentIds}
+                    onToggleAgent={toggleAgent}
+                    loading={false}
+                    title="Recommended Evaluations"
+                    actionText="will be queued after import"
+                    layout="list"
+                  />
+                  {agents.filter((agent) => !agent.isRecommended).length > 0 && (
+                    <AgentSelector
+                      agents={agents.filter((agent) => !agent.isRecommended)}
+                      selectedAgentIds={selectedAgentIds}
+                      onToggleAgent={toggleAgent}
+                      loading={false}
+                      title="Other Evaluations"
+                      actionText="will be queued after import"
+                      layout="list"
+                    />
+                  )}
+                </>
+              )}
 
               {importError && (
                 <ErrorAlert title="Import failed" message={importError} />
@@ -609,15 +639,39 @@ export default function CreateDocumentForm() {
                   onChange={(value) => methods.setValue("isPrivate", value)}
                 />
 
-                <AgentSelector
-                  agents={agents}
-                  selectedAgentIds={selectedAgentIds}
-                  onToggleAgent={toggleAgent}
-                  loading={loadingAgents}
-                  title="Evaluations to run after creation"
-                  actionText="will be queued after creation"
-                  layout="list"
-                />
+                {loadingAgents ? (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Evaluations to run after creation
+                    </label>
+                    <div className="flex items-center justify-center rounded-lg border border-gray-200 p-8">
+                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-600"></div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <AgentSelector
+                      agents={agents.filter((agent) => agent.isRecommended)}
+                      selectedAgentIds={selectedAgentIds}
+                      onToggleAgent={toggleAgent}
+                      loading={false}
+                      title="Recommended Evaluations"
+                      actionText="will be queued after creation"
+                      layout="list"
+                    />
+                    {agents.filter((agent) => !agent.isRecommended).length > 0 && (
+                      <AgentSelector
+                        agents={agents.filter((agent) => !agent.isRecommended)}
+                        selectedAgentIds={selectedAgentIds}
+                        onToggleAgent={toggleAgent}
+                        loading={false}
+                        title="Other Evaluations"
+                        actionText="will be queued after creation"
+                        layout="list"
+                      />
+                    )}
+                  </>
+                )}
 
                 {errors.root && (
                   <ErrorAlert
