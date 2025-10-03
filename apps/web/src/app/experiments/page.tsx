@@ -263,7 +263,7 @@ export default function ExperimentsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         {/* Agent */}
                         <div>
-                          <span className="text-gray-500">Agent:</span>{' '}
+                          <span className="text-gray-500">Evaluator:</span>{' '}
                           <Link
                             href={`/agents/${experiment.agent.id}`}
                             className="text-purple-600 hover:text-purple-700"

@@ -91,7 +91,7 @@ export function DocumentSelector({
     return (
       <div className="rounded-md bg-gray-50 p-4">
         <p className="text-sm text-gray-600">
-          No documents have been evaluated by this agent yet.
+          No documents have been evaluated by this evaluator yet.
         </p>
       </div>
     );

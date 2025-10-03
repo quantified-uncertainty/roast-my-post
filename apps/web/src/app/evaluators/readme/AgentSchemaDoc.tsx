@@ -42,10 +42,10 @@ export function AgentSchemaDoc() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Agent Schema Documentation
+                Evaluator Schema Documentation
               </h1>
               <p className="mt-2 text-xl text-gray-600">
-                Complete guide to creating and configuring AI agents for
+                Complete guide to creating and configuring AI evaluators for
                 document evaluation
               </p>
             </div>
@@ -70,13 +70,13 @@ export function AgentSchemaDoc() {
           </h2>
           <p className="mb-4 text-blue-800">
             This documentation is designed to be copied as markdown and provided
-            to LLMs for agent creation assistance. Click the "Copy as Markdown"
+            to LLMs for evaluator creation assistance. Click the "Copy as Markdown"
             button above to get the full documentation in markdown format.
           </p>
           <div className="text-sm text-blue-700">
             <strong>Use Case:</strong> Paste this documentation into Claude,
             ChatGPT, or other LLMs along with your specific requirements to get
-            help creating well-structured agents.
+            help creating well-structured evaluators.
           </div>
         </div>
 
@@ -92,12 +92,12 @@ export function AgentSchemaDoc() {
         {/* Footer */}
         <div className="mt-12 border-t border-gray-200 pt-8 text-center text-gray-500">
           <p>
-            Need help creating an agent? Use the{" "}
+            Need help creating an evaluator? Use the{" "}
             <Link
               href="/evaluators/new"
               className="text-blue-600 hover:text-blue-800"
             >
-              Agent Creator
+              Evaluator Creator
             </Link>{" "}
             or{" "}
             <Link href="/evaluators" className="text-blue-600 hover:text-blue-800">

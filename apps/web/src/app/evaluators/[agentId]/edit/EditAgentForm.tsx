@@ -72,7 +72,7 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
         }
 
         // Fetch the current agent data from the server
-        const response = await fetch(`/api/agents/${agentId}`);
+        const response = await fetch(ROUTES.API.AGENTS.DETAIL(agentId));
 
         if (!response.ok) {
           throw new Error(`Failed to fetch evaluator: ${response.statusText}`);

@@ -241,7 +241,7 @@ export default function ExperimentDetailsPage() {
             <div className="space-y-4">
               {experiment.agent.isEphemeral && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Ephemeral Agent</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Ephemeral Evaluator</h3>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <Link 
                       href={`/agents/${experiment.agent.id}`}

@@ -128,7 +128,7 @@ export function EvaluationsTab({
       ) : evaluations.length === 0 ? (
         <div className="flex h-64 items-center justify-center">
           <div className="text-lg text-gray-600">
-            No evaluations have been performed by this agent yet.
+            No evaluations have been performed by this evaluator yet.
           </div>
         </div>
       ) : (

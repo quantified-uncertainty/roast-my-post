@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { EvaluationsTab } from "@/components/AgentDetail/tabs";
+import { ROUTES } from "@/constants/routes";
 import type { Agent } from "@roast/ai";
 import type {
   AgentEvaluation,
@@ -31,7 +32,7 @@ export default function EvalsClient({
     setEvalsLoading(true);
     try {
       const params = batchId ? `?batchId=${batchId}` : '';
-      const response = await fetch(`/api/agents/${_agentId}/evaluations${params}`);
+      const response = await fetch(ROUTES.API.AGENTS.EVALUATIONS(_agentId) + params);
       if (response.ok) {
         const data = await response.json();
         // API returns { evaluations: [...] }

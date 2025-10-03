@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ExportTab } from "@/components/AgentDetail/tabs";
+import { ROUTES } from "@/constants/routes";
 import type { Agent } from "@roast/ai";
 import type { BatchSummary } from "@/components/AgentDetail/types";
 
@@ -19,14 +20,14 @@ export default function ExportPage() {
     const fetchData = async () => {
       try {
         // Fetch agent data
-        const agentResponse = await fetch(`/api/agents/${agentId}`);
+        const agentResponse = await fetch(ROUTES.API.AGENTS.DETAIL(agentId));
         if (agentResponse.ok) {
           const agentData = await agentResponse.json();
           setAgent(agentData);
         }
 
         // Fetch batches
-        const batchesResponse = await fetch(`/api/agents/${agentId}/batches`);
+        const batchesResponse = await fetch(ROUTES.API.AGENTS.BATCHES(agentId));
         if (batchesResponse.ok) {
           const batchesData = await batchesResponse.json();
           setBatches(batchesData);
@@ -44,7 +45,7 @@ export default function ExportPage() {
   if (!agent) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-lg text-gray-600">Loading agent data...</div>
+        <div className="text-lg text-gray-600">Loading evaluator data...</div>
       </div>
     );
   }

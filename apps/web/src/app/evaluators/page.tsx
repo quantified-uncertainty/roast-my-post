@@ -1,10 +1,10 @@
 import AgentsList from "@/components/AgentsList";
-import { prisma } from "@/infrastructure/database/prisma";
 import { PageLayout } from "@/components/PageLayout";
-import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 import { auth } from "@/infrastructure/auth/auth";
+import { prisma } from "@/infrastructure/database/prisma";
+import { sortAgentsByBadgeStatus } from "@/shared/utils/agentSorting";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function AgentsPage() {
   const session = await auth();
@@ -48,10 +48,12 @@ export default async function AgentsPage() {
     });
   } catch (error: any) {
     // Handle missing table error gracefully for preview deployments
-    console.error('Failed to fetch agents:', error);
+    console.error("Failed to fetch agents:", error);
     // Return empty array if table doesn't exist
-    if (error?.code === 'P2021') {
-      console.log('Agent table not found - likely a preview deployment with fresh database');
+    if (error?.code === "P2021") {
+      console.log(
+        "Agent table not found - likely a preview deployment with fresh database"
+      );
     }
   }
 
@@ -60,7 +62,7 @@ export default async function AgentsPage() {
 
   return (
     <PageLayout>
-      <AgentsList agents={sortedAgents} showNewAgentButton={!!session?.user?.id} />
+      <AgentsList agents={sortedAgents} />
     </PageLayout>
   );
 }

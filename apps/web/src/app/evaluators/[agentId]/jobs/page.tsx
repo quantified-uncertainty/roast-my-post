@@ -71,7 +71,7 @@ export default function JobsPage() {
   if (!agent) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-lg text-gray-600">Loading agent data...</div>
+        <div className="text-lg text-gray-600">Loading evaluator data...</div>
       </div>
     );
   }

@@ -235,7 +235,7 @@ export default function JobsMonitorPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="font-medium text-gray-900">Agent</dt>
+                      <dt className="font-medium text-gray-900">Evaluator</dt>
                       <dd className="text-blue-600 hover:text-blue-800">
                         <Link href={`/agents/${selectedJob.evaluation.agent.id}`}>
                           {selectedJob.evaluation.agent.versions[0]?.name || 'Unknown Agent'}

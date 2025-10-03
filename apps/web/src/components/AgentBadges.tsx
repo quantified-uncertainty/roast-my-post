@@ -13,31 +13,43 @@ export function AgentBadges({
   isRecommended,
   isSystemManaged,
   providesGrades,
-  size = "sm"
+  size = "sm",
 }: AgentBadgesProps) {
-  const sizeClasses = size === "sm"
-    ? "px-2 py-1 text-xs"
-    : "px-3 py-1 text-sm";
+  const sizeClasses = size === "sm" ? "px-2 py-1 text-xs" : "px-3 py-1 text-sm";
 
   return (
     <>
       {isDeprecated && (
-        <div className={`inline-flex items-center rounded ${sizeClasses} font-medium bg-red-50 text-red-700`}>
+        <div
+          className={`inline-flex items-center rounded ${sizeClasses} bg-red-50 font-medium text-red-700`}
+        >
           ⚠ Deprecated
         </div>
       )}
       {isRecommended && (
-        <div className={`inline-flex items-center rounded ${sizeClasses} font-medium bg-yellow-50 text-yellow-700`}>
+        <div
+          className={`inline-flex items-center rounded ${sizeClasses} bg-yellow-50 font-medium text-yellow-700`}
+        >
           ★ Recommended
         </div>
       )}
-      {isSystemManaged && (
-        <div className={`inline-flex items-center rounded ${sizeClasses} font-medium bg-blue-50 text-blue-700`}>
+      {isSystemManaged ? (
+        <div
+          className={`inline-flex items-center rounded ${sizeClasses} bg-blue-50 font-medium text-blue-700`}
+        >
           System
+        </div>
+      ) : (
+        <div
+          className={`inline-flex items-center rounded ${sizeClasses} bg-amber-50 font-medium text-amber-700`}
+        >
+          Custom
         </div>
       )}
       {providesGrades && (
-        <div className={`inline-flex items-center rounded ${sizeClasses} font-medium bg-green-50 text-green-700`}>
+        <div
+          className={`inline-flex items-center rounded ${sizeClasses} bg-green-50 font-medium text-green-700`}
+        >
           ✓ Grades
         </div>
       )}

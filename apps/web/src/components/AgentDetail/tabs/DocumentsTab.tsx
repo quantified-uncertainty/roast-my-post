@@ -29,7 +29,7 @@ export function DocumentsTab({
       ) : documents.length === 0 ? (
         <div className="py-8 text-center">
           <div className="text-gray-500">
-            No documents have been evaluated by this agent yet.
+            No documents have been evaluated by this evaluator yet.
           </div>
         </div>
       ) : (

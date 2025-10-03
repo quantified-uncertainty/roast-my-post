@@ -58,7 +58,7 @@ export function JobsTab({
           <div className="text-lg text-gray-600">
             {selectedBatchFilter
               ? "No jobs found for this batch."
-              : "No jobs found for this agent."}
+              : "No jobs found for this evaluator."}
           </div>
         </div>
       ) : (
