@@ -7,6 +7,7 @@ import {
 import type { Agent } from "@roast/ai";
 import { logger } from "@/infrastructure/logging/logger";
 import type { AgentReview } from "@/shared/types/evaluationSchema";
+import { ROUTES } from "@/constants/routes";
 
 import type {
   ActiveTab,
@@ -57,7 +58,7 @@ export function useAgentDetail(agent: Agent) {
   useEffect(() => {
     async function fetchReview() {
       try {
-        const response = await fetch(`/api/agents/${agent.id}/review`);
+        const response = await fetch(ROUTES.API.AGENTS.REVIEW(agent.id));
         const data = await response.json();
         if (data.review) {
           setReview({
@@ -79,7 +80,7 @@ export function useAgentDetail(agent: Agent) {
   const fetchDocuments = useCallback(async () => {
     setDocumentsLoading(true);
     try {
-      const response = await fetch(`/api/agents/${agent.id}/documents`);
+      const response = await fetch(ROUTES.API.AGENTS.DOCUMENTS(agent.id));
       const data = await response.json();
       if (data.documents) {
         setDocuments(data.documents);
@@ -96,8 +97,8 @@ export function useAgentDetail(agent: Agent) {
     setEvalsLoading(true);
     try {
       const url = batchId
-        ? `/api/agents/${agent.id}/evaluations?batchId=${batchId}`
-        : `/api/agents/${agent.id}/evaluations`;
+        ? `${ROUTES.API.AGENTS.EVALUATIONS(agent.id)}?batchId=${batchId}`
+        : ROUTES.API.AGENTS.EVALUATIONS(agent.id);
       const response = await fetch(url);
       const data = await response.json();
       if (data.evaluations) {
@@ -114,7 +115,7 @@ export function useAgentDetail(agent: Agent) {
   const fetchBatches = useCallback(async () => {
     setBatchesLoading(true);
     try {
-      const response = await fetch(`/api/agents/${agent.id}/batches`);
+      const response = await fetch(ROUTES.API.AGENTS.BATCHES(agent.id));
       const data = await response.json();
       
       // Ensure we always have an array
@@ -140,8 +141,8 @@ export function useAgentDetail(agent: Agent) {
     setJobsLoading(true);
     try {
       const url = batchId
-        ? `/api/agents/${agent.id}/jobs?batchId=${batchId}`
-        : `/api/agents/${agent.id}/jobs`;
+        ? `${ROUTES.API.AGENTS.JOBS(agent.id)}?batchId=${batchId}`
+        : ROUTES.API.AGENTS.JOBS(agent.id);
       const response = await fetch(url);
       const data = await response.json();
       if (data.jobs) {
@@ -158,7 +159,7 @@ export function useAgentDetail(agent: Agent) {
   const fetchOverviewStats = useCallback(async () => {
     setOverviewLoading(true);
     try {
-      const response = await fetch(`/api/agents/${agent.id}/overview`);
+      const response = await fetch(ROUTES.API.AGENTS.OVERVIEW(agent.id));
       const data = await response.json();
       if (data.stats) {
         setOverviewStats(data.stats);

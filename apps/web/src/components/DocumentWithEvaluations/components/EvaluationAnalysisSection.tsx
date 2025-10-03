@@ -11,6 +11,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/constants/routes";
 import type { Document, Evaluation } from "@/shared/types/databaseTypes";
 
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
@@ -46,7 +47,7 @@ export function EvaluationAnalysisSection({
               <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-4">
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/agents/${evaluation.agentId}`}
+                    href={ROUTES.AGENTS.DETAIL(evaluation.agentId)}
                     className="flex items-center gap-2 text-lg font-semibold text-blue-800 hover:text-blue-900 hover:underline"
                   >
                     <Bot className="h-4 w-4" />

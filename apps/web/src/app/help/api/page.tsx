@@ -137,7 +137,7 @@ GET /users/{userId}
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-#### Get User's Agent Count
+#### Get User's Evaluator Count
 \`\`\`http
 GET /users/{userId}/agents/count
 Authorization: Bearer YOUR_API_KEY
@@ -199,25 +199,25 @@ Supports importing from:
 - EA Forum
 - General web pages (via content extraction)
 
-### Agents
+### Evaluators
 
-#### List Agents
+#### List Evaluators
 \`\`\`http
-GET /agents
+GET /evaluators
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-Returns all agents accessible to the user.
+Returns all evaluators accessible to the user.
 
-#### Get Agent Details
+#### Get Evaluator Details
 \`\`\`http
-GET /agents/{agentId}
+GET /evaluators/{agentId}
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-#### Create/Update Agent
+#### Create/Update Evaluator
 \`\`\`http
-PUT /agents
+PUT /evaluators
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 
@@ -231,44 +231,44 @@ Content-Type: application/json
 }
 \`\`\`
 
-**Note**: This creates a new agent or updates an existing one (creating a new version).
+**Note**: This creates a new evaluator or updates an existing one (creating a new version).
 
-#### Test Agent
+#### Test Evaluator
 \`\`\`http
-GET /agents/{agentId}/review?content=Sample%20text%20to%20test
+GET /evaluators/{agentId}/review?content=Sample%20text%20to%20test
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
 Returns a preview evaluation without saving it. Pass content as URL parameter.
 
-#### Export Agent Data
+#### Export Evaluator Data
 \`\`\`http
-GET /agents/{agentId}/export-data
+GET /evaluators/{agentId}/export-data
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-Exports agent configuration and all evaluations.
+Exports evaluator configuration and all evaluations.
 
-#### Get Agent Jobs
+#### Get Evaluator Jobs
 \`\`\`http
-GET /agents/{agentId}/jobs?batchId=batch_123
+GET /evaluators/{agentId}/jobs?batchId=batch_123
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
 Query parameters:
 - \`batchId\`: Filter by specific batch (optional)
 
-#### Get Agent Documents
+#### Get Evaluator Documents
 \`\`\`http
-GET /agents/{agentId}/documents
+GET /evaluators/{agentId}/documents
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-Returns documents evaluated by this agent.
+Returns documents evaluated by this evaluator.
 
-#### Get Agent Evaluations
+#### Get Evaluator Evaluations
 \`\`\`http
-GET /agents/{agentId}/evaluations
+GET /evaluators/{agentId}/evaluations
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
@@ -303,7 +303,7 @@ Returns a job ID to track progress:
 
 #### Create Evaluation Batch
 \`\`\`http
-POST /agents/{agentId}/eval-batch
+POST /evaluators/{agentId}/eval-batch
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 
@@ -335,7 +335,7 @@ Response includes status and results when complete:
 
 ### Ephemeral Experiments
 
-Create temporary experiments that automatically clean up after expiration. Perfect for testing agent configurations and evaluating content without permanent storage.
+Create temporary experiments that automatically clean up after expiration. Perfect for testing evaluator configurations and evaluating content without permanent storage.
 
 #### Create Ephemeral Experiment
 \`\`\`http
@@ -348,11 +348,11 @@ Content-Type: application/json
   "trackingId": "exp_custom_name", // Optional, auto-generated if not provided
   "description": "Testing new review criteria",
   "expirationHours": 24, // Default: 24, max: 168 (7 days)
-  
-  // Option A: Use existing agent
+
+  // Option A: Use existing evaluator
   "agentId": "agent_123",
-  
-  // Option B: Create ephemeral agent
+
+  // Option B: Create ephemeral evaluator
   "ephemeralAgent": {
     "name": "Test Reviewer",
     "primaryInstructions": "Review instructions...",
@@ -383,7 +383,7 @@ Response:
     "expiresAt": "2024-01-02T00:00:00Z",
     "jobCount": 2
   },
-  "agent": {
+  "evaluator": {
     "id": "exp_agent_def456",
     "isEphemeral": true
   },
@@ -408,7 +408,7 @@ Response:
   "description": "Testing new review criteria",
   "isEphemeral": true,
   "expiresAt": "2024-01-02T00:00:00Z",
-  "agent": {
+  "evaluator": {
     "id": "exp_agent_def456",
     "name": "Test Reviewer",
     "isEphemeral": true
@@ -610,8 +610,8 @@ async function runExperiment() {
 ## Notes & Limitations
 
 - Some user management endpoints require session authentication (not API key)
-- Agent creation/update uses PUT method, not POST
-- No PATCH or DELETE methods for agents
+- Evaluator creation/update uses PUT method, not POST
+- No PATCH or DELETE methods for evaluators
 - Batch endpoint is \`/eval-batch\`, not \`/batches\`
 - No webhook support (poll job status instead)
 - Rate limit headers not included in responses

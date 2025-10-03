@@ -113,7 +113,7 @@ export function DocumentEvaluationSidebar({
             <div className="mt-2 space-y-1">
               {evaluations
                 .sort((a, b) => {
-                  // Sort by agent name for consistent ordering
+                  // Sort by evaluator name for consistent ordering
                   const nameA =
                     a.agent?.name || a.agent?.versions?.[0]?.name || "";
                   const nameB =
@@ -124,7 +124,7 @@ export function DocumentEvaluationSidebar({
                   const agentName =
                     evaluation.agent?.name ||
                     evaluation.agent?.versions?.[0]?.name ||
-                    "Unknown Agent";
+                    "Unknown Evaluator";
                   const grade = getEvaluationGrade(evaluation);
                   const agentId = evaluation.agentId;
                   const isActive = currentAgentId === agentId;

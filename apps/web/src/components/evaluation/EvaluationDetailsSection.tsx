@@ -12,6 +12,7 @@ import {
 } from "@/application/services/job/formatters";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { GradeBadge } from "@/components/GradeBadge";
+import { ROUTES } from "@/constants/routes";
 
 import { EvaluationSection } from "./EvaluationSection";
 
@@ -65,7 +66,7 @@ export function EvaluationDetailsSection({
               <div className="flex-1">
                 <div className="mb-2 flex items-center gap-3">
                   {agentId ? (
-                    <Link href={`/agents/${agentId}`}>
+                    <Link href={ROUTES.AGENTS.DETAIL(agentId)}>
                       <h3 className="cursor-pointer text-lg font-semibold text-gray-900 hover:text-gray-700 hover:underline">
                         {agentName}
                       </h3>

@@ -109,7 +109,7 @@ export default function MonitorPage() {
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">System Monitor</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Real-time overview of job processing, evaluations, and system health across all documents and agents.
+          Real-time overview of job processing, evaluations, and system health across all documents and evaluators.
         </p>
       </div>
 
@@ -271,7 +271,7 @@ export default function MonitorPage() {
                 <span className="text-sm font-medium">{stats.documents.withEvaluations}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Active Agents</span>
+                <span className="text-sm text-gray-600">Active Evaluators</span>
                 <span className="text-sm font-medium">{stats.agents.active} / {stats.agents.total}</span>
               </div>
               <div className="flex justify-between">

@@ -9,6 +9,7 @@ import { EvaluationStats } from "@/components/EvaluationCard/shared/EvaluationSt
 import { GradeBadge } from "@/components/GradeBadge";
 import { StaleBadge } from "@/components/StaleBadge";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ROUTES } from "@/constants/routes";
 import type { Evaluation } from "@/shared/types/databaseTypes";
 import { getEvaluationStatus } from "@/shared/utils/evaluationStatus";
 import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
@@ -85,7 +86,7 @@ export function ManagementEvaluationCard({
       {/* Header section */}
       <div className="px-5 py-4">
         <div className="flex items-center justify-between">
-          {/* Left side - Agent info */}
+          {/* Left side - Evaluator info */}
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="p-1.5">
               <BotIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
@@ -93,7 +94,7 @@ export function ManagementEvaluationCard({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Link
-                  href={`/agents/${agentId}`}
+                  href={ROUTES.AGENTS.DETAIL(agentId)}
                   className="text-sm font-semibold text-gray-600 underline hover:text-blue-900"
                 >
                   {evaluation.agent.name}

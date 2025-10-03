@@ -13,8 +13,8 @@ import {
 const navigation = [
   { name: "Documentation Hub", href: "/help", icon: Squares2X2Icon },
   { name: "Getting Started", href: "/help/getting-started", icon: RocketLaunchIcon },
-  { name: "Agents for Humans", href: "/help/agents-humans", icon: UserGroupIcon },
-  { name: "Agents for LLMs", href: "/help/agents-llms", icon: ChatBubbleLeftRightIcon },
+  { name: "Evaluators for Humans", href: "/help/evaluators-humans", icon: UserGroupIcon },
+  { name: "Evaluators for LLMs", href: "/help/evaluators-llms", icon: ChatBubbleLeftRightIcon },
   { name: "API Documentation", href: "/help/api", icon: CodeBracketIcon },
 ];
 

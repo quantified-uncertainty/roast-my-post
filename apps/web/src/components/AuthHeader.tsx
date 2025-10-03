@@ -56,7 +56,7 @@ export default function AuthHeader() {
                   className="flex cursor-pointer items-center gap-2"
                 >
                   <Bot className="h-4 w-4" />
-                  My Agents
+                  My Evaluators
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

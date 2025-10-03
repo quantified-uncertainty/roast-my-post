@@ -24,7 +24,7 @@ Welcome! This guide will help you get up and running with Roast My Post in just 
 
 ### 3. Get Your First Evaluation
 - Select your document
-- Choose an agent from the list (try "General Writing Assessor" for starters)
+- Choose an evaluator from the list (try "General Writing Assessor" for starters)
 - Click "Evaluate"
 - Wait 30-60 seconds for results
 
@@ -36,7 +36,7 @@ After evaluation completes, you'll get:
 
 1. **Split View**
    - Left: Your original document
-   - Right: Agent's evaluation
+   - Right: Evaluator's evaluation
 
 2. **Summary Section**
    - Quick 2-3 paragraph overview
@@ -58,7 +58,7 @@ After evaluation completes, you'll get:
    - Component breakdown
    - Explanation of scoring
 
-## Choosing the Right Agent
+## Choosing the Right Evaluator
 
 ### For Academic Writing
 - **Academic Rigor Assessor**: Checks methodology, citations, arguments
@@ -82,11 +82,11 @@ After evaluation completes, you'll get:
 
 ## Pro Tips 🚀
 
-### 1. Use Multiple Agents
+### 1. Use Multiple Evaluators
 Different perspectives reveal different insights:
 \`\`\`
 Document → Academic Assessor → Find logical gaps
-         → Clarity Advisor → Improve readability  
+         → Clarity Advisor → Improve readability
          → Citation Enricher → Add references
 \`\`\`
 
@@ -96,15 +96,15 @@ Document → Academic Assessor → Find logical gaps
 3. Re-evaluate to see progress
 4. Compare versions side-by-side
 
-### 3. Create Custom Agents
+### 3. Create Custom Evaluators
 Once familiar with the system:
-- Go to Agents → "Create New"
+- Go to Evaluators → "Create New"
 - Define specific evaluation criteria
 - Tailor to your exact needs
 
 ### 4. Run Ephemeral Experiments
 Test new ideas without cluttering your workspace:
-- Create temporary agents that auto-delete
+- Create temporary evaluators that auto-delete
 - Test different evaluation approaches
 - Perfect for learning and experimentation
 - See [Ephemeral Experiments Guide](/help/ephemeral-experiments)
@@ -142,11 +142,11 @@ Test new ideas without cluttering your workspace:
 3. Apply "Code Example Validator"
 4. Use "Beginner-Friendly Explainer"
 
-### Testing New Agent Configurations
+### Testing New Evaluator Configurations
 1. Create an ephemeral experiment
 2. Define custom evaluation criteria
 3. Test on sample documents
-4. Compare results with existing agents
+4. Compare results with existing evaluators
 5. Auto-cleanup after 24 hours
 
 ## Understanding Limitations
@@ -175,14 +175,14 @@ Test new ideas without cluttering your workspace:
 - Try refreshing the page
 - Check for browser extensions blocking scripts
 
-### Agent Not Available?
-- Some agents have usage limits
-- Try a similar agent
+### Evaluator Not Available?
+- Some evaluators have usage limits
+- Try a similar evaluator
 - Create your own version
 
 ### Unexpected Results?
-- Check agent description matches your needs
-- Try a different agent type
+- Check evaluator description matches your needs
+- Try a different evaluator type
 - Adjust your document format
 
 ## Next Steps
@@ -201,7 +201,7 @@ Test new ideas without cluttering your workspace:
 ### Upgrade Your Experience
 - **Pro Plan**: More evaluations, priority processing
 - **Team Plan**: Collaboration features
-- **Enterprise**: Custom agents, SLA, support
+- **Enterprise**: Custom evaluators, SLA, support
 
 ## FAQ
 
@@ -218,7 +218,7 @@ A: Yes, documents are private by default. Only you can see them.
 A: Yes, export as PDF, Markdown, or JSON.
 
 **Q: How accurate are the evaluations?**
-A: Agents provide helpful perspectives but aren't perfect. Use them as tools, not absolute truth.
+A: Evaluators provide helpful perspectives but aren't perfect. Use them as tools, not absolute truth.
 
 ## Need Help?
 

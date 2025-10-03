@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
 
 interface Document {
   id: string;
@@ -31,7 +32,7 @@ export function DocumentSelector({
     setError(null);
     
     try {
-      const response = await fetch(`/api/agents/${agentId}/documents`);
+      const response = await fetch(ROUTES.API.AGENTS.DOCUMENTS(agentId));
       
       if (!response.ok) {
         throw new Error("Failed to fetch documents");
@@ -90,7 +91,7 @@ export function DocumentSelector({
     return (
       <div className="rounded-md bg-gray-50 p-4">
         <p className="text-sm text-gray-600">
-          No documents have been evaluated by this agent yet.
+          No documents have been evaluated by this evaluator yet.
         </p>
       </div>
     );

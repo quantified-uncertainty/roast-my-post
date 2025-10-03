@@ -26,7 +26,7 @@ export default function ImportPage() {
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const response = await fetch("/api/agents");
+        const response = await fetch("/api/evaluators");
         if (!response.ok) throw new Error("Failed to fetch agents");
         const data = await response.json();
         setAgents(data.agents || []);

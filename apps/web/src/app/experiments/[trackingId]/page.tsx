@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { 
+import { ROUTES } from '@/constants/routes';
+import {
   BeakerIcon,
   DocumentIcon,
   ClockIcon,
@@ -184,7 +185,7 @@ export default function ExperimentDetailsPage() {
             <div>
               Agent: 
               <Link 
-                href={`/agents/${experiment.agent.id}`}
+                href={ROUTES.AGENTS.DETAIL(experiment.agent.id)}
                 className="ml-1 text-purple-600 hover:text-purple-700"
               >
                 {experiment.agent.name}
@@ -241,10 +242,10 @@ export default function ExperimentDetailsPage() {
             <div className="space-y-4">
               {experiment.agent.isEphemeral && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Ephemeral Agent</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Ephemeral Evaluator</h3>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <Link 
-                      href={`/agents/${experiment.agent.id}`}
+                      href={ROUTES.AGENTS.DETAIL(experiment.agent.id)}
                       className="text-purple-600 hover:text-purple-700 font-medium"
                     >
                       {experiment.agent.name}

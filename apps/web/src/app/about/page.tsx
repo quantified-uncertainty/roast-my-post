@@ -5,13 +5,13 @@ import remarkGfm from "remark-gfm";
 const aboutContent = `
 # About Roast My Post
 
-Roast My Post is an open-source AI-powered platform for document analysis and evaluation. We help writers, researchers, and content creators get high-quality feedback on their work through specialized AI agents.
+Roast My Post is an open-source AI-powered platform for document analysis and evaluation. We help writers, researchers, and content creators get high-quality feedback on their work through specialized AI evaluators.
 
 ## What We Do
 
 Our platform allows you to:
 - Upload documents for AI-powered analysis
-- Create custom AI agents with specific evaluation criteria
+- Create custom AI evaluators with specific evaluation criteria
 - Get detailed feedback with inline comments and highlights
 - Track evaluation history and compare different perspectives
 - Export evaluations for further analysis
@@ -37,7 +37,7 @@ We use modern, reliable technologies:
 
 We aim to democratize access to high-quality content feedback by:
 1. Making AI evaluation tools accessible to everyone
-2. Supporting diverse evaluation perspectives through custom agents
+2. Supporting diverse evaluation perspectives through custom evaluators
 3. Building in public with full transparency
 4. Fostering a community of writers and evaluators
 

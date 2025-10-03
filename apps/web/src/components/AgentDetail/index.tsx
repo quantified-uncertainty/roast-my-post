@@ -166,7 +166,7 @@ export default function AgentDetail({
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                Agent {exportType} copied to clipboard!
+                Evaluator {exportType} copied to clipboard!
               </p>
             </div>
           </div>
@@ -249,7 +249,7 @@ export default function AgentDetail({
             )}
           </div>
 
-          <Link href={`/agents/${agent.id}/versions`}>
+          <Link href={ROUTES.AGENTS.VERSIONS(agent.id)}>
             <Button variant="secondary" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Version History
@@ -257,16 +257,16 @@ export default function AgentDetail({
           </Link>
           {isOwner && (
             <>
-              <Link href={`/agents/${agent.id}/import-yaml`}>
+              <Link href={ROUTES.AGENTS.IMPORT_YAML(agent.id)}>
                 <Button variant="secondary" className="flex items-center gap-2">
                   <Upload className="h-4 w-4" />
                   Import
                 </Button>
               </Link>
-              <Link href={`/agents/${agent.id}/edit`}>
+              <Link href={ROUTES.AGENTS.EDIT(agent.id)}>
                 <Button variant="secondary" className="flex items-center gap-2">
                   <Pencil className="h-4 w-4" />
-                  Edit Agent
+                  Edit Evaluator
                 </Button>
               </Link>
             </>
