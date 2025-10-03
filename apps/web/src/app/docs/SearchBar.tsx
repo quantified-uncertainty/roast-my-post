@@ -72,7 +72,7 @@ export default function SearchBar({
                 value={searchQuery}
                 onChange={handleSearchChange}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Search by title or agent name..."
+                placeholder="Search by title or evaluator name..."
                 className="pl-10"
               />
             </div>

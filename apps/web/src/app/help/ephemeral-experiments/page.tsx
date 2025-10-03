@@ -8,19 +8,19 @@ const ephemeralExperimentsGuide = `# Ephemeral Experiments Guide
 
 ## What are Ephemeral Experiments?
 
-Ephemeral experiments are temporary evaluation sessions that automatically clean themselves up after a specified time. Think of them as a "sandbox mode" for testing agent configurations and evaluating content without permanently storing the results.
+Ephemeral experiments are temporary evaluation sessions that automatically clean themselves up after a specified time. Think of them as a "sandbox mode" for testing evaluator configurations and evaluating content without permanently storing the results.
 
 ## Why Use Ephemeral Experiments?
 
 ### Perfect for:
-- **Testing New Ideas**: Try different agent instructions without cluttering your workspace
+- **Testing New Ideas**: Try different evaluator instructions without cluttering your workspace
 - **Quick Evaluations**: Get fast feedback on content without permanent storage
 - **Comparing Approaches**: Run side-by-side comparisons of different evaluation strategies
 - **Learning the Platform**: Experiment freely without worrying about cleanup
 
 ### Key Benefits:
 - ✨ **Automatic Cleanup**: Resources are deleted after expiration (default: 24 hours)
-- 🚀 **Fast Iteration**: Quickly test and refine agent configurations
+- 🚀 **Fast Iteration**: Quickly test and refine evaluator configurations
 - 📊 **Full Analytics**: Get complete results and metrics during the experiment
 - 🔒 **Private by Default**: Only you can see your experiments
 
@@ -47,8 +47,8 @@ curl -X POST https://roastmypost.com/api/batches \\
 
 ### Understanding Experiment Types
 
-#### 1. **Test Existing Agent**
-Use your production agent on test content:
+#### 1. **Test Existing Evaluator**
+Use your production evaluator on test content:
 \`\`\`json
 {
   "agentId": "agent_production",
@@ -62,8 +62,8 @@ Use your production agent on test content:
 }
 \`\`\`
 
-#### 2. **Test New Agent Configuration**
-Create a temporary agent with custom instructions:
+#### 2. **Test New Evaluator Configuration**
+Create a temporary evaluator with custom instructions:
 \`\`\`json
 {
   "isEphemeral": true,
@@ -77,12 +77,12 @@ Create a temporary agent with custom instructions:
 \`\`\`
 
 #### 3. **Full Sandbox Mode**
-Everything ephemeral - agent and documents:
+Everything ephemeral - evaluator and documents:
 \`\`\`json
 {
   "isEphemeral": true,
   "ephemeralAgent": {
-    "name": "Sandbox Agent",
+    "name": "Sandbox Evaluator",
     "primaryInstructions": "Test instructions..."
   },
   "ephemeralDocuments": {
@@ -105,7 +105,7 @@ curl https://roastmypost.com/api/experiments/exp_7a8b9c \\
 
 The results include:
 - **Overview**: Description, expiration time, status
-- **Agent Details**: Configuration used for the experiment
+- **Evaluator Details**: Configuration used for the experiment
 - **Job Statistics**: Progress and success rates
 - **Aggregate Metrics**: Average grades, total cost, completion time
 - **Individual Results**: Detailed evaluation for each document
@@ -127,11 +127,11 @@ Use descriptive tracking IDs and descriptions:
 - Week-long studies: up to 168 hours (7 days)
 
 ### 3. **Compare Side-by-Side**
-Run multiple experiments with the same documents but different agents to compare approaches.
+Run multiple experiments with the same documents but different evaluators to compare approaches.
 
 ## Common Use Cases
 
-### A/B Testing Agent Instructions
+### A/B Testing Evaluator Instructions
 
 Test if more detailed instructions improve evaluation quality:
 
@@ -157,7 +157,7 @@ print(f"Detailed: {exp_b['aggregateMetrics']['averageGrade']}")
 
 ### Testing Edge Cases
 
-Ensure your agent handles unusual content:
+Ensure your evaluator handles unusual content:
 
 \`\`\`javascript
 const edgeCases = [
@@ -190,7 +190,7 @@ const response = await fetch('/api/batches', {
 
 When an experiment expires:
 1. The batch record is deleted
-2. Ephemeral agents are removed (if created for the experiment)
+2. Ephemeral evaluators are removed (if created for the experiment)
 3. Ephemeral documents are deleted (if created for the experiment)
 4. All evaluations and jobs are removed
 5. Regular (non-ephemeral) resources are preserved
@@ -216,11 +216,11 @@ When an experiment expires:
 **Q: Can I extend an experiment's expiration?**  
 A: No, expiration times are fixed at creation. Create a new experiment if needed.
 
-**Q: Are experiment results included in my usage statistics?**  
+**Q: Are experiment results included in my usage statistics?**
 A: Yes, API usage and costs from experiments count toward your quotas.
 
-**Q: Can I convert an ephemeral experiment to permanent?**  
-A: No, but you can recreate the agent configuration as a permanent agent.
+**Q: Can I convert an ephemeral experiment to permanent?**
+A: No, but you can recreate the evaluator configuration as a permanent evaluator.
 
 **Q: What happens to running jobs when an experiment expires?**  
 A: The cleanup process waits for running jobs to complete before deletion.

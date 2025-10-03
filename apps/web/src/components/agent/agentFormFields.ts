@@ -16,14 +16,14 @@ export const agentFormFields: FormFieldConfig[] = [
     label: "Name",
     required: true,
     type: "text",
-    placeholder: "Agent name",
+    placeholder: "Evaluator name",
   },
   {
     name: "description",
     label: "Description",
     required: true,
     type: "textarea",
-    placeholder: "Describe what this agent does",
+    placeholder: "Describe what this evaluator does",
   },
   {
     name: "primaryInstructions",
@@ -42,7 +42,7 @@ export const agentFormFields: FormFieldConfig[] = [
     name: "providesGrades",
     label: "Provides Grades",
     type: "checkbox",
-    description: "Check if this agent should provide grades (0-100) for documents",
+    description: "Check if this evaluator should provide grades (0-100) for documents",
   },
   {
     name: "readme",
