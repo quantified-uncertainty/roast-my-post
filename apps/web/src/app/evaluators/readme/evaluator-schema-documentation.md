@@ -9,18 +9,17 @@
 Creating an effective evaluator requires substantial detail and examples. While you only need three core fields, the instructions should be comprehensive:
 
 1. **name**: Descriptive title
-2. **purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
-3. **description**: 1-2 sentences explaining what the evaluator does
+2. **description**: 1-2 sentences explaining what the evaluator does
 
-Optional but highly recommended: 4. **primaryInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples) 5. **selfCritiqueInstructions**: Criteria for self-evaluation scoring (optional) 6. **readme**: Human-readable documentation for users and future modifiers
-
-**Important Schema Update (June 2025)**: We've simplified the instruction fields. All analysis, summary, comment, and grading instructions should now be consolidated into `primaryInstructions`. The separate fields (`summaryInstructions`, `commentInstructions`, `gradeInstructions`, `analysisInstructions`) have been removed. If your evaluator needs to provide grades, include grading criteria within `primaryInstructions`.\n\n### Migration Example\n\nBefore (old schema):\n`yaml\nprimaryInstructions: "You are an expert evaluator..."\nsummaryInstructions: "Provide a concise summary..."\ncommentInstructions: "For each section, identify..."\ngradeInstructions: "Grade on a scale of 0-100..."\n`\n\nAfter (new schema):\n`yaml\nprimaryInstructions: |\n  You are an expert evaluator...\n  \n  ## Summary Generation\n  Provide a concise summary...\n  \n  ## Comment Guidelines\n  For each section, identify...\n  IMPORTANT: When highlighting text:\n  - Keep highlights SHORT and focused (max 1000 characters)\n  - Select only the most relevant portion of text\n  \n  ## Grading Criteria\n  Grade on a scale of 0-100...\n`
+Optional but highly recommended:
+3. **primaryInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples)
+4. **selfCritiqueInstructions**: Criteria for self-evaluation scoring (optional)
+5. **readme**: Human-readable documentation for users and future modifiers
 
 ### Realistic Evaluator Example (Abbreviated):
 
 ```yaml
 name: "Technical Documentation Reviewer"
-purpose: ASSESSOR
 description: "Evaluates technical documentation for clarity, completeness, and accuracy."
 primaryInstructions: |
   <role>
@@ -157,22 +156,21 @@ primaryInstructions: |
 
 ## Table of Contents
 
-1. [What is an Agent?](#what-is-an-agent)
-2. [Agent Types](#agent-types)
-3. [Schema Fields Reference](#schema-fields-reference)
-4. [Writing Effective Instructions](#writing-effective-instructions)
-5. [XML Structure for Claude](#xml-structure-for-claude)
-6. [Performance Optimization](#performance-optimization)
-7. [Real-World Examples](#real-world-examples)
-8. [Best Practices](#best-practices)
-9. [Common Patterns](#common-patterns)
-10. [Migrating to Simplified Schemas](#migrating-to-simplified-schemas)
+1. [What is an Evaluator?](#what-is-an-evaluator)
+2. [Schema Fields Reference](#schema-fields-reference)
+3. [Writing Effective Instructions](#writing-effective-instructions)
+4. [XML Structure for Claude](#xml-structure-for-claude)
+5. [Performance Optimization](#performance-optimization)
+6. [Real-World Examples](#real-world-examples)
+7. [Best Practices](#best-practices)
+8. [Common Patterns](#common-patterns)
+9. [Migrating to Simplified Schemas](#migrating-to-simplified-schemas)
 
 ---
 
-## What is an Agent?
+## What is an Evaluator?
 
-An **Agent** is an AI-powered evaluator that analyzes documents and provides structured feedback. Each agent has a specific purpose, personality, and set of instructions that guide how it evaluates content.
+An **Evaluator** is an AI-powered system that analyzes documents and provides structured feedback. Each evaluator has a specific purpose, personality, and set of instructions that guide how it evaluates content.
 
 ### Key Capabilities
 
@@ -195,60 +193,6 @@ Agents follow a four-step evaluation process:
 4. **Comments**: Agent creates specific feedback tied to text sections
 
 Each step builds on the previous one, creating a coherent evaluation that leverages chain-of-thought reasoning for improved quality. The self-critique step provides quantitative quality assessment and transparency about the evaluation's strengths and limitations.
-
----
-
-## Agent Types
-
-### ASSESSOR
-
-- **Purpose**: Evaluates and analyzes content, providing structured feedback and ratings
-- **Icon**: Scale/Balance
-- **Color**: Orange
-- **Use Cases**:
-  - Academic paper evaluation
-  - Quality assessment with scoring rubrics
-  - Performance reviews
-  - Competitive analysis
-- **Output Focus**: Grades, structured assessment, comparative evaluation
-
-### ADVISOR
-
-- **Purpose**: Provides recommendations and suggestions for improvement
-- **Icon**: Lightbulb
-- **Color**: Blue
-- **Use Cases**:
-  - Writing coaching
-  - Content improvement suggestions
-  - Strategic advice
-  - Optimization recommendations
-- **Output Focus**: Actionable suggestions, improvement roadmaps, constructive feedback
-
-### ENRICHER
-
-- **Purpose**: Adds context, references, and additional information to content
-- **Icon**: Search
-- **Color**: Green
-- **Use Cases**:
-  - Research augmentation
-  - Fact-checking and verification
-  - Resource discovery and linking
-  - Background context provision
-- **Output Focus**: External references, additional resources, contextual information
-
-### EXPLAINER
-
-- **Purpose**: Explains content to non-experts and provides summaries
-- **Icon**: Book
-- **Color**: Gray
-- **Use Cases**:
-  - Simplification for general audiences
-  - Educational summaries
-  - Accessibility improvements
-  - Knowledge translation
-- **Output Focus**: Clear explanations, simplified language, educational content
-
----
 
 ## Self-Critique Feature
 
@@ -306,16 +250,6 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - "Clarity Coach"
   - "EA Impact Assessor"
   - "Rationalist Critic"
-
-#### `purpose`
-
-- **Type**: enum (ASSESSOR | ADVISOR | ENRICHER | EXPLAINER)
-- **Purpose**: Defines the evaluator's primary role and capabilities
-- **Guidelines**: Choose based on the evaluator's main function:
-  - ASSESSOR: When the primary goal is evaluation/scoring
-  - ADVISOR: When the focus is on improvement suggestions
-  - ENRICHER: When adding external information/context
-  - EXPLAINER: When simplifying or educating
 
 #### `description`
 
@@ -523,7 +457,6 @@ High-quality agents require extensive instructions—typically 5,000 to 50,000 w
 ### Core Components of Comprehensive Instructions
 
 1. **Deep Role Definition** (500-1,000 words)
-
    - Detailed background and credentials
    - Specific areas of expertise
    - Years of experience in different domains
@@ -531,7 +464,6 @@ High-quality agents require extensive instructions—typically 5,000 to 50,000 w
    - Philosophical approach to evaluation
 
 2. **Extensive Examples** (60-80% of total content)
-
    - 50-100 real evaluation scenarios
    - Before/after comparisons
    - Edge cases and exceptions
@@ -539,7 +471,6 @@ High-quality agents require extensive instructions—typically 5,000 to 50,000 w
    - Graduated examples from simple to complex
 
 3. **Detailed Rubrics** (2,000-5,000 words)
-
    - Precise criteria for each evaluation dimension
    - Scoring guidelines with specific thresholds
    - Examples of work at each quality level
@@ -687,19 +618,16 @@ High-quality agents require extensive instructions—typically 5,000 to 50,000 w
 ### Building Comprehensive Instructions: A Process
 
 1. **Start with Expert Interviews**
-
    - What would a senior expert look for?
    - What are common mistakes in this domain?
    - What separates good from great?
 
 2. **Collect Real Examples**
-
    - Gather 100+ real documents
    - Identify patterns of excellence and failure
    - Create before/after improvements
 
 3. **Test and Iterate**
-
    - Run agent on diverse documents
    - Identify inconsistencies
    - Add examples to address gaps
@@ -809,11 +737,10 @@ Claude performs 30% better when document content comes before instructions:
 
 ## Real-World Examples
 
-### Academic Research Evaluator (ASSESSOR)
+### Academic Research Evaluator
 
 ```yaml
 name: "Academic Research Evaluator"
-purpose: ASSESSOR
 description: "Evaluates research papers using rigorous academic standards, focusing on methodology, novelty, and potential impact."
 primaryInstructions: |
   <role>
@@ -920,7 +847,7 @@ primaryInstructions: |
   </detailed_evaluation_examples>
 
   ## Grading Criteria
-  
+
 
   <grading_framework>
     <dimension name="methodology" weight="35">
@@ -1016,11 +943,10 @@ selfCritiqueInstructions: |
 - Citation analysis guidelines
 - Open science best practices
 
-### Clarity Coach (ADVISOR)
+### Clarity Coach
 
 ```yaml
 name: "Clarity Coach"
-purpose: ADVISOR
 description: "Helps improve writing clarity, structure, and readability for general audiences."
 primaryInstructions: |
   <role>
@@ -1048,11 +974,10 @@ primaryInstructions: |
   </tone>
 ```
 
-### EA Impact Assessor (ASSESSOR)
+### EA Impact Assessor
 
 ```yaml
 name: "EA Impact Evaluator"
-purpose: ASSESSOR
 description: "Evaluates proposals and research through an Effective Altruism framework, assessing impact, neglectedness, and tractability."
 primaryInstructions: |
   <role>
@@ -1107,14 +1032,12 @@ primaryInstructions: |
 ### Building High-Performance Agents
 
 1. **Research Phase** (1-2 weeks)
-
    - Interview domain experts
    - Collect 100+ sample documents
    - Identify evaluation patterns
    - Study existing rubrics and frameworks
 
 2. **Initial Development** (2-3 weeks)
-
    - Write comprehensive role definition
    - Create 30-50 initial examples
    - Develop detailed rubrics
@@ -1304,7 +1227,6 @@ When using this documentation with an LLM to create evaluators:
 ```
 Create an evaluator using the RoastMyPost Evaluator Schema with these requirements:
 
-Evaluator Type: [ASSESSOR/ADVISOR/ENRICHER/EXPLAINER]
 Domain: [Specific field or expertise area]
 Target Documents: [Types of content to evaluate]
 Key Focus: [Primary evaluation criteria]

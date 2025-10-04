@@ -1,9 +1,11 @@
 "use client";
 
+import { Bot, LogOut, Settings, User, UserCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { User, UserCircle, Settings, LogOut, Bot } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ROUTES } from "@/constants/routes";
 
 export default function AuthHeader() {
   const { data: session, status } = useSession();
@@ -43,20 +44,15 @@ export default function AuthHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuItem asChild>
                 <Link
-                  href={session.user?.id ? ROUTES.USERS.PROFILE(session.user.id) : '#'}
+                  href={
+                    session.user?.id
+                      ? ROUTES.USERS.PROFILE(session.user.id)
+                      : "#"
+                  }
                   className="flex cursor-pointer items-center gap-2"
                 >
                   <UserCircle className="h-4 w-4" />
                   Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={session.user?.id ? ROUTES.USERS.AGENTS(session.user.id) : '#'}
-                  className="flex cursor-pointer items-center gap-2"
-                >
-                  <Bot className="h-4 w-4" />
-                  My Evaluators
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -66,6 +62,19 @@ export default function AuthHeader() {
                 >
                   <Settings className="h-4 w-4" />
                   Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href={
+                    session.user?.id
+                      ? ROUTES.USERS.AGENTS(session.user.id)
+                      : "#"
+                  }
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <Bot className="h-4 w-4" />
+                  Custom Evaluators
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
