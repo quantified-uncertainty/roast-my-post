@@ -241,16 +241,21 @@ Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 
 {
-  "id": "agent_123", // optional, creates new if not provided
+  "agentId": "agent_123", // optional, creates new if not provided
   "name": "Technical Reviewer",
-  "purpose": "ASSESSOR", // ASSESSOR | ADVISOR | ENRICHER | EXPLAINER
   "description": "Reviews technical documentation",
   "primaryInstructions": "Detailed instructions...",
-  "providesGrades": true
+  "selfCritiqueInstructions": "Optional self-critique...", // optional
+  "providesGrades": true,
+  "extendedCapabilityId": "capability_id", // optional
+  "pluginIds": ["PLUGIN_TYPE"], // optional
+  "readme": "# Documentation", // optional
+  "isDeprecated": false, // optional
+  "isRecommended": true // optional
 }
 \`\`\`
 
-**Note**: This creates a new evaluator or updates an existing one (creating a new version).
+**Note**: This creates a new evaluator or updates an existing one (creating a new version). Requires session authentication.
 
 #### Test Evaluator
 \`\`\`http
@@ -419,14 +424,20 @@ GET /jobs/{jobId}
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-Response includes status and results when complete:
+Response includes status and metadata:
 \`\`\`json
 {
   "id": "job_xyz789",
-  "status": "completed", // pending | running | completed | failed
+  "status": "COMPLETED", // PENDING | RUNNING | COMPLETED | FAILED
   "createdAt": "2024-01-01T00:00:00Z",
   "completedAt": "2024-01-01T00:01:00Z",
-  "evaluationId": "eval_abc123"
+  "error": null,
+  "logs": [],
+  "priceInDollars": 0.05,
+  "durationInSeconds": 12,
+  "attempts": 1,
+  "originalJobId": null,
+  "tasks": []
 }
 \`\`\`
 
@@ -582,16 +593,17 @@ Endpoints that return lists typically support pagination:
 \`\`\`
 
 ### Job Status
-Job statuses follow this lifecycle:
-- \`pending\`: Job queued, not started
-- \`running\`: Job in progress
-- \`completed\`: Job finished successfully
-- \`failed\`: Job encountered an error
+Job statuses follow this lifecycle (uppercase):
+- \`PENDING\`: Job queued, not started
+- \`RUNNING\`: Job in progress
+- \`COMPLETED\`: Job finished successfully
+- \`FAILED\`: Job encountered an error
 
 ### Numeric Values
-- Costs are in **cents** (e.g., 1250 = $12.50)
-- Grades are 0-100 scale
-- Durations are in seconds
+- **Individual job costs**: Returned as dollars (decimal, e.g., 0.05 = $0.05)
+- **Aggregate costs** (in stats/batches): Returned as cents (integer, e.g., 1250 = $12.50)
+- **Grades**: 0-100 scale
+- **Durations**: Seconds
 
 ## Code Examples
 
@@ -632,13 +644,13 @@ if import_data.get("evaluations"):
         )
         job = job_response.json()
 
-        if job["status"] in ["completed", "failed"]:
+        if job["status"] in ["COMPLETED", "FAILED"]:
             break
 
         time.sleep(5)
 
-    if job["status"] == "completed":
-        print(f"Evaluation complete! ID: {job.get('evaluationId')}")
+    if job["status"] == "COMPLETED":
+        print(f"Evaluation complete! Cost: \${job['priceInDollars']}")
 \`\`\`
 
 ### JavaScript/TypeScript
@@ -676,7 +688,7 @@ async function importAndEvaluate(url: string, agentId: string) {
 
       const jobRes = await fetch(\`\${BASE_URL}/jobs/\${jobId}\`, { headers });
       job = await jobRes.json();
-    } while (job.status === 'pending' || job.status === 'running');
+    } while (job.status === 'PENDING' || job.status === 'RUNNING');
 
     return job;
   }
@@ -728,13 +740,9 @@ async function runExperiment() {
 - No webhook support (poll job status instead)
 - Rate limiting not currently enforced
 - No official SDK libraries yet (use HTTP directly)
-- Costs are returned in cents (multiply dollars by 100)
-
-## Support
-
-- **Issues**: [GitHub](https://github.com/quantified-uncertainty/roast-my-post/issues)
-- **Discord**: [Join our community](https://discord.gg/nsTnQTgtG6)
-- **Email**: api-support@quantifieduncertainty.org`;
+- Job costs are in dollars (decimal), aggregate costs are in cents (integer)
+- Job statuses are uppercase (PENDING, RUNNING, COMPLETED, FAILED)
+`;
 
 export default function APIDocumentationPage() {
   return (

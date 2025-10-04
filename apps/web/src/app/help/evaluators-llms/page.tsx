@@ -2,9 +2,12 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
 
 const agentDocumentationForLLMs = `# Evaluator Documentation for LLMs
+
+**Note: Custom evaluators are currently (particularly) experimental and likely to change. We don't recommend that you rely on them**
 
 This technical specification describes how to create and configure AI evaluators for document evaluation in Roast My Post.
 
@@ -205,9 +208,11 @@ export default function AgentsLLMsPage() {
         </h1>
         <CopyMarkdownButton content={agentDocumentationForLLMs} />
       </div>
-      
+
       <div className="prose prose-gray max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{agentDocumentationForLLMs}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {agentDocumentationForLLMs}
+        </ReactMarkdown>
       </div>
     </div>
   );

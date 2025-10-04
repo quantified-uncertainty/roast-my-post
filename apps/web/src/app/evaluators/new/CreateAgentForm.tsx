@@ -1,29 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { logger } from "@/infrastructure/logging/logger";
-import { useRouter } from "next/navigation";
-import { useForm, type FieldError } from "react-hook-form";
-import { z } from "zod";
+import { useEffect, useState } from "react";
+
 import * as yaml from "js-yaml";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { type FieldError, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { agentFormFields } from "@/components/agent/agentFormFields";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import { ROUTES } from "@/constants/routes";
+import { logger } from "@/infrastructure/logging/logger";
 import {
-  type AgentInput,
-  AgentInputSchema as agentSchema,
-} from "@roast/ai";
-import {
-  DocumentTextIcon,
-  CodeBracketIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ExclamationTriangleIcon,
   BookOpenIcon,
+  CheckCircleIcon,
+  CodeBracketIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
+import { type AgentInput, AgentInputSchema as agentSchema } from "@roast/ai";
 
 import { createAgent } from "./actions";
 
@@ -117,10 +115,13 @@ export default function CreateAgentForm() {
       });
 
       // Check description length
-      if (parsedObj.description && typeof parsedObj.description === 'string' && parsedObj.description.length < 30) {
+      if (
+        parsedObj.description &&
+        typeof parsedObj.description === "string" &&
+        parsedObj.description.length < 30
+      ) {
         warnings.push("Description should be at least 30 characters");
       }
-
 
       // Warn about extra fields that won't be saved
       if (extraFields.length > 0) {
@@ -155,15 +156,19 @@ export default function CreateAgentForm() {
     try {
       // Extract only the supported fields
       const agentData: AgentInput = {
-        name: validation.parsedData?.name || '',
-        description: validation.parsedData?.description || '',
+        name: validation.parsedData?.name || "",
+        description: validation.parsedData?.description || "",
         providesGrades: validation.parsedData?.providesGrades || false,
       };
 
       // Add optional fields if they exist
       OPTIONAL_FIELDS.forEach((field) => {
-        if (validation.parsedData && validation.parsedData[field] !== undefined) {
-          (agentData as Record<string, unknown>)[field] = validation.parsedData[field];
+        if (
+          validation.parsedData &&
+          validation.parsedData[field] !== undefined
+        ) {
+          (agentData as Record<string, unknown>)[field] =
+            validation.parsedData[field];
         }
       });
 
@@ -187,10 +192,12 @@ export default function CreateAgentForm() {
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join('\n');
+        const errorMessages = error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join("\n");
         alert(`Validation errors:\n${errorMessages}`);
       } else {
-        logger.error('Error creating agent from YAML:', error);
+        logger.error("Error creating agent from YAML:", error);
         alert("An unexpected error occurred");
       }
     } finally {
@@ -228,7 +235,7 @@ export default function CreateAgentForm() {
           }
         });
       } else {
-        logger.error('Error submitting form:', error);
+        logger.error("Error submitting form:", error);
         setError("root", { message: "An unexpected error occurred" });
       }
     }
@@ -258,7 +265,8 @@ export default function CreateAgentForm() {
     }
   };
 
-  const canCreateFromYaml = validation?.isValidYaml && validation.hasRequiredFields;
+  const canCreateFromYaml =
+    validation?.isValidYaml && validation.hasRequiredFields;
 
   return (
     <div className="min-h-screen bg-white">
@@ -268,18 +276,18 @@ export default function CreateAgentForm() {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900">
-                  Add New Evaluator
+                  Add New Custom Evaluator
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  Create a new evaluator
+                  Create a new custom evaluator
                 </p>
               </div>
               <Link
                 href={ROUTES.AGENTS.README}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
               >
                 <BookOpenIcon className="h-4 w-4" />
-                Evaluator Documentation
+                Custom Evaluator Documentation
               </Link>
             </div>
           </div>
@@ -290,7 +298,7 @@ export default function CreateAgentForm() {
               <button
                 type="button"
                 onClick={() => setMode("form")}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                   mode === "form"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -302,7 +310,7 @@ export default function CreateAgentForm() {
               <button
                 type="button"
                 onClick={() => setMode("yaml")}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                   mode === "yaml"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
@@ -317,10 +325,10 @@ export default function CreateAgentForm() {
           {mode === "form" ? (
             // Form Mode
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {agentFormFields.map((field) => (
+              {agentFormFields.map((field) =>
                 field.type === "checkbox" ? (
                   <div key={field.name} className="flex items-start">
-                    <div className="flex items-center h-5">
+                    <div className="flex h-5 items-center">
                       <input
                         {...register(field.name)}
                         type="checkbox"
@@ -329,87 +337,99 @@ export default function CreateAgentForm() {
                       />
                     </div>
                     <div className="ml-3 text-sm">
-                      <label htmlFor={field.name} className="font-medium text-gray-700">
+                      <label
+                        htmlFor={field.name}
+                        className="font-medium text-gray-700"
+                      >
                         {field.label}
                       </label>
                       {field.description && (
                         <p className="text-gray-500">{field.description}</p>
                       )}
                       {errors[field.name] && (
-                        <p className="mt-1 text-sm text-red-600">{errors[field.name]?.message}</p>
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors[field.name]?.message}
+                        </p>
                       )}
                     </div>
                   </div>
                 ) : (
-                <FormField
-                  key={field.name}
-                  name={field.name}
-                  label={field.label}
-                  required={field.required}
-                  error={errors[field.name] as FieldError | undefined}
-                >
-                  {field.type === "select" ? (
-                    <select
-                      {...register(field.name)}
-                      id={field.name}
-                      className={`form-select w-full ${errors[field.name] ? "border-red-500" : ""}`}
-                    >
-                      {field.options?.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : field.type === "multiselect" ? (
-                    <div className="space-y-2">
-                      {field.options?.map((option) => (
-                        <div key={option.value} className="flex items-start">
-                          <div className="flex items-center h-5">
-                            <input
-                              {...register(field.name)}
-                              type="checkbox"
-                              value={option.value}
-                              id={`${field.name}-${option.value}`}
-                              className="form-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
+                  <FormField
+                    key={field.name}
+                    name={field.name}
+                    label={field.label}
+                    required={field.required}
+                    error={errors[field.name] as FieldError | undefined}
+                  >
+                    {field.type === "select" ? (
+                      <select
+                        {...register(field.name)}
+                        id={field.name}
+                        className={`form-select w-full ${errors[field.name] ? "border-red-500" : ""}`}
+                      >
+                        {field.options?.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : field.type === "multiselect" ? (
+                      <div className="space-y-2">
+                        {field.options?.map((option) => (
+                          <div key={option.value} className="flex items-start">
+                            <div className="flex h-5 items-center">
+                              <input
+                                {...register(field.name)}
+                                type="checkbox"
+                                value={option.value}
+                                id={`${field.name}-${option.value}`}
+                                className="form-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div className="ml-3 text-sm">
+                              <label
+                                htmlFor={`${field.name}-${option.value}`}
+                                className="font-medium text-gray-700"
+                              >
+                                {option.label}
+                              </label>
+                            </div>
                           </div>
-                          <div className="ml-3 text-sm">
-                            <label htmlFor={`${field.name}-${option.value}`} className="font-medium text-gray-700">
-                              {option.label}
-                            </label>
-                          </div>
-                        </div>
-                      ))}
-                      {field.description && (
-                        <p className="text-sm text-gray-500">{field.description}</p>
-                      )}
-                    </div>
-                  ) : field.type === "textarea" ? (
-                    <textarea
-                      {...register(field.name)}
-                      id={field.name}
-                      rows={4}
-                      className={`form-textarea w-full ${errors[field.name] ? "border-red-500" : ""}`}
-                      placeholder={field.placeholder}
-                    />
-                  ) : (
-                    <input
-                      {...register(field.name)}
-                      type={field.type}
-                      id={field.name}
-                      className={`form-input w-full ${errors[field.name] ? "border-red-500" : ""}`}
-                      placeholder={field.placeholder}
-                    />
-                  )}
-                </FormField>
+                        ))}
+                        {field.description && (
+                          <p className="text-sm text-gray-500">
+                            {field.description}
+                          </p>
+                        )}
+                      </div>
+                    ) : field.type === "textarea" ? (
+                      <textarea
+                        {...register(field.name)}
+                        id={field.name}
+                        rows={4}
+                        className={`form-textarea w-full ${errors[field.name] ? "border-red-500" : ""}`}
+                        placeholder={field.placeholder}
+                      />
+                    ) : (
+                      <input
+                        {...register(field.name)}
+                        type={field.type}
+                        id={field.name}
+                        className={`form-input w-full ${errors[field.name] ? "border-red-500" : ""}`}
+                        placeholder={field.placeholder}
+                      />
+                    )}
+                  </FormField>
                 )
-              ))}
+              )}
 
               {errors.root && (
                 <div className="rounded-md bg-red-50 p-4">
                   <div className="flex">
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-red-800">Error</h3>
+                      <h3 className="text-sm font-medium text-red-800">
+                        Error
+                      </h3>
                       <div className="mt-2 text-sm text-red-700">
                         {errors.root.message}
                       </div>
@@ -507,7 +527,9 @@ readme: |
                           : "border-green-200 bg-green-50"
                     }`}
                   >
-                    <h3 className="mb-3 text-lg font-medium">Validation Results</h3>
+                    <h3 className="mb-3 text-lg font-medium">
+                      Validation Results
+                    </h3>
 
                     {/* YAML Syntax */}
                     <div className="mb-3">
@@ -518,7 +540,8 @@ readme: |
                           <XCircleIcon className="h-4 w-4 text-red-500" />
                         )}
                         <span className="text-sm font-medium">
-                          YAML Syntax: {validation.isValidYaml ? "Valid" : "Invalid"}
+                          YAML Syntax:{" "}
+                          {validation.isValidYaml ? "Valid" : "Invalid"}
                         </span>
                       </div>
                       {validation.yamlError && (
@@ -538,7 +561,9 @@ readme: |
                         )}
                         <span className="text-sm font-medium">
                           Required Fields:{" "}
-                          {validation.hasRequiredFields ? "Complete" : "Missing"}
+                          {validation.hasRequiredFields
+                            ? "Complete"
+                            : "Missing"}
                         </span>
                       </div>
                       {validation.missingFields.length > 0 && (
@@ -577,7 +602,6 @@ readme: |
                         </p>
                       </div>
 
-
                       <div>
                         <span className="font-medium text-gray-700">
                           Description:
@@ -593,9 +617,12 @@ readme: |
                             Instructions:
                           </span>
                           <p className="mt-1 max-h-24 overflow-y-auto rounded border bg-white p-2 text-gray-900">
-                            {validation.parsedData.primaryInstructions.slice(0, 200)}
-                            {validation.parsedData.primaryInstructions.length > 200 &&
-                              "..."}
+                            {validation.parsedData.primaryInstructions.slice(
+                              0,
+                              200
+                            )}
+                            {validation.parsedData.primaryInstructions.length >
+                              200 && "..."}
                           </p>
                         </div>
                       )}
@@ -610,8 +637,8 @@ readme: |
                               0,
                               100
                             )}
-                            {validation.parsedData.selfCritiqueInstructions.length >
-                              100 && "..."}
+                            {validation.parsedData.selfCritiqueInstructions
+                              .length > 100 && "..."}
                           </p>
                         </div>
                       )}
@@ -636,17 +663,28 @@ readme: |
                   <h3 className="mb-3 text-lg font-medium">Supported Fields</h3>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium text-blue-800">Required:</span>
-                      <p className="text-blue-700">{REQUIRED_FIELDS.join(", ")}</p>
+                      <span className="font-medium text-blue-800">
+                        Required:
+                      </span>
+                      <p className="text-blue-700">
+                        {REQUIRED_FIELDS.join(", ")}
+                      </p>
                     </div>
                     <div>
-                      <span className="font-medium text-blue-800">Optional:</span>
-                      <p className="text-blue-700">{OPTIONAL_FIELDS.join(", ")}</p>
+                      <span className="font-medium text-blue-800">
+                        Optional:
+                      </span>
+                      <p className="text-blue-700">
+                        {OPTIONAL_FIELDS.join(", ")}
+                      </p>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-blue-200">
+                    <div className="mt-3 border-t border-blue-200 pt-3">
                       <p className="text-blue-700">
                         Need help? Check out the{" "}
-                        <Link href={ROUTES.AGENTS.README} className="font-medium underline hover:text-blue-800">
+                        <Link
+                          href={ROUTES.AGENTS.README}
+                          className="font-medium underline hover:text-blue-800"
+                        >
                           complete evaluator documentation
                         </Link>{" "}
                         for detailed field descriptions and examples.

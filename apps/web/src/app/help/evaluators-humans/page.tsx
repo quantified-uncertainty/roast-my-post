@@ -5,7 +5,9 @@ import remarkGfm from "remark-gfm";
 
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
 
-const agentDocumentationForHumans = `# Evaluator Documentation for Humans
+const agentDocumentationForHumans = `# Custom Evaluator Documentation for Humans
+
+**Note: Custom evaluators are currently (particularly) experimental and likely to change. We don't recommend that you rely on them**
 
 Learn how to create and use AI evaluators to evaluate your documents in Roast My Post.
 
@@ -72,7 +74,7 @@ Evaluators can be configured to provide various types of feedback based on their
 ### Step 1: Define Your Evaluator's Identity
 
 Start with the basics:
-- **Name**: Clear, descriptive title (e.g., "SEO Content Optimizer")
+- **Name**: Clear, descriptive title (e.g., "Clarity Optimizer")
 - **Description**: 1-2 sentences explaining what your evaluator does
 - **Focus**: Define the specific type of analysis your evaluator will provide
 
@@ -129,18 +131,16 @@ Rate your evaluation quality:
 ## Best Practices
 
 ### DO:
-✅ Be specific about your evaluator's expertise and perspective
-✅ Include detailed examples in your instructions
-✅ Define clear evaluation criteria
-✅ Keep comments constructive and actionable
-✅ Test your evaluator on various document types
+✅ Be specific about your evaluator's expertise and perspective  
+✅ Include detailed examples in your instructions  
+✅ Define clear evaluation criteria  
+✅ Keep comments constructive and actionable  
+✅ Test your evaluator on various document types  
 
 ### DON'T:
-❌ Make instructions too brief (aim for 1,000+ words)
-❌ Create evaluators that are too general
-❌ Forget to specify output format requirements
-❌ Use overly critical or harsh language
-❌ Duplicate existing evaluators without adding value
+❌ Make instructions too brief (aim for 1,000+ words)  
+❌ Create evaluators that are too general  
+❌ Forget to specify output format requirements  
 
 ## Advanced Features
 
@@ -148,58 +148,7 @@ Rate your evaluation quality:
 - Keep highlights short and focused (under 1000 characters)
 - Select the most relevant portion of text
 - Ensure highlights support your comments
-
-### Multi-Domain Evaluators
-Create evaluators that evaluate from multiple perspectives:
-\`\`\`markdown
-<expertise_areas>
-  <technical_accuracy>
-    Evaluate code examples and technical claims
-  </technical_accuracy>
-  <readability>
-    Assess clarity and accessibility
-  </readability>
-  <completeness>
-    Check for missing information
-  </completeness>
-</expertise_areas>
-\`\`\`
-
-### Conditional Logic
-Make your evaluator adaptive:
-\`\`\`markdown
-If the document is a research paper:
-  - Focus on methodology and evidence
-  - Check citation quality
-
-If the document is a blog post:
-  - Prioritize readability and engagement
-  - Evaluate SEO elements
-\`\`\`
-
-## Examples of Great Evaluators
-
-### "Grant Proposal Assessor"
-- **Purpose**: ASSESSOR
-- **Strengths**: Detailed scoring rubric, checks against funder requirements
-- **Instructions**: 8,000 words with examples from successful grants
-
-### "Plain Language Advisor"
-- **Purpose**: ADVISOR
-- **Strengths**: Specific rewriting suggestions, readability metrics
-- **Instructions**: 5,000 words with before/after examples
-
-### "Academic Literature Enricher"
-- **Purpose**: ENRICHER
-- **Strengths**: Adds relevant citations, connects to current research
-- **Instructions**: 6,000 words with citation formatting examples
-
-## Getting Help
-
-- **Examples**: Check out [popular evaluators](/evaluators) for inspiration
-- **Community**: Join our [Discord](https://discord.gg/nsTnQTgtG6) to discuss evaluator creation
-
-Remember: The best evaluators are specialized, detailed, and provide actionable feedback. Start simple and refine based on results!`;
+!`;
 
 export default function AgentsHumansPage() {
   return (

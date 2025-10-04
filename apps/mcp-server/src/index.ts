@@ -1,28 +1,29 @@
 #!/usr/bin/env node
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 import { z } from "zod";
 
-// Load environment variables from root .env.local
-dotenv.config({ path: '../../apps/web/.env.local' });
-
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import {
-  StdioServerTransport,
-} from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { PrismaClient, Prisma } from "../../../internal-packages/db/generated/index.js";
-import type { 
+import type {
   Agent,
   AgentVersion,
   Document,
   Evaluation,
   EvaluationVersion,
-  Job
+  Job,
 } from "../../../internal-packages/db/generated/index.js";
+import {
+  Prisma,
+  PrismaClient,
+} from "../../../internal-packages/db/generated/index.js";
+
+// Load environment variables from root .env.local
+dotenv.config({ path: "../../apps/web/.env.local" });
 
 // Initialize Prisma client directly
 const globalForPrisma = globalThis as unknown as {
@@ -32,12 +33,13 @@ const globalForPrisma = globalThis as unknown as {
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' 
-      ? ['query', 'error', 'warn'] 
-      : ['error'],
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
   });
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
@@ -53,7 +55,6 @@ type EvaluationWithRelations = Evaluation & {
     job: Job | null;
   })[];
 };
-
 
 const GetAgentsArgsSchema = z.object({
   limit: z.number().optional().default(10),
@@ -146,7 +147,6 @@ const ListDocumentEvaluationsArgsSchema = z.object({
   agentIds: z.array(z.string()).optional(),
 });
 
-
 const GetDocumentArgsSchema = z.object({
   documentId: z.string(),
   includeStale: z.boolean().optional().default(false),
@@ -158,11 +158,11 @@ function getErrorMessage(status: number, context: string): string {
     case 404:
       return `${context} not found`;
     case 403:
-      return 'Access denied';
+      return "Access denied";
     case 401:
-      return 'Authentication required';
+      return "Authentication required";
     case 400:
-      return 'Invalid request';
+      return "Invalid request";
     default:
       return `Failed to ${context.toLowerCase()}`;
   }
@@ -318,7 +318,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "search_documents",
-        description: "Search documents using the server's search API (searches in titles, authors, platforms, URLs, and optionally content)",
+        description:
+          "Search documents using the server's search API (searches in titles, authors, platforms, URLs, and optionally content)",
         inputSchema: {
           type: "object",
           properties: {
@@ -332,11 +333,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             offset: {
               type: "number",
-              description: "Number of results to skip for pagination (default: 0)",
+              description:
+                "Number of results to skip for pagination (default: 0)",
             },
             searchContent: {
               type: "boolean",
-              description: "Whether to search in document content in addition to metadata (default: false)",
+              description:
+                "Whether to search in document content in addition to metadata (default: false)",
             },
           },
           required: ["query"],
@@ -399,11 +402,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             name: {
               type: "string",
               description: "Name of the agent",
-            },
-            purpose: {
-              type: "string",
-              enum: ["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"],
-              description: "Type/purpose of the agent",
             },
             description: {
               type: "string",
@@ -526,12 +524,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_evaluation",
-        description: "Get detailed evaluation data for a specific document and agent",
+        description:
+          "Get detailed evaluation data for a specific document and agent",
         inputSchema: {
           type: "object",
           properties: {
             documentId: {
-              type: "string",  
+              type: "string",
               description: "Document ID",
             },
             agentId: {
@@ -540,7 +539,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             includeAllVersions: {
               type: "boolean",
-              description: "Include all versions or just latest (default: false)",
+              description:
+                "Include all versions or just latest (default: false)",
             },
           },
           required: ["documentId", "agentId"],
@@ -557,7 +557,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Document ID",
             },
             agentId: {
-              type: "string", 
+              type: "string",
               description: "Agent ID",
             },
             reason: {
@@ -692,7 +692,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     agentVersion: agentVersion?.version || 0,
                     status: job?.status || "NO_JOB",
                     grade: latestVersion?.grade || null,
-                    cost: job?.priceInDollars ? parseFloat(job.priceInDollars.toString()) : 0,
+                    cost: job?.priceInDollars
+                      ? parseFloat(job.priceInDollars.toString())
+                      : 0,
                     createdAt: evaluation.createdAt,
                     error: job?.error || null,
                   };
@@ -752,7 +754,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             stats.evaluationsInPeriod++;
 
             if (evaluationVersion.job) {
-              stats.totalCost += evaluationVersion.job.priceInDollars ? parseFloat(evaluationVersion.job.priceInDollars.toString()) : 0;
+              stats.totalCost += evaluationVersion.job.priceInDollars
+                ? parseFloat(evaluationVersion.job.priceInDollars.toString())
+                : 0;
 
               if (evaluationVersion.job.status === "COMPLETED") {
                 successCount++;
@@ -910,7 +914,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "search_documents": {
-        const { query, limit, offset, searchContent } = SearchDocumentsArgsSchema.parse(args);
+        const { query, limit, offset, searchContent } =
+          SearchDocumentsArgsSchema.parse(args);
 
         try {
           if (!API_KEY) {
@@ -938,15 +943,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             limit: limit.toString(),
             offset: offset.toString(),
           });
-          
+
           if (searchContent) {
             params.append("searchContent", "true");
           }
 
           // Call the search endpoint
-          const result = await authenticatedFetch(`/api/documents/search?${params.toString()}`, {
-            method: "GET",
-          });
+          const result = await authenticatedFetch(
+            `/api/documents/search?${params.toString()}`,
+            {
+              method: "GET",
+            }
+          );
 
           // Format the results
           const formattedResults = {
@@ -955,25 +963,31 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             hasMore: result.hasMore,
             documentsFound: result.documents.length,
             searchType: searchContent ? "metadata + content" : "metadata only",
-            documents: result.documents.map((doc: {
-              id: string;
-              title?: string;
-              author?: string;
-              platforms?: string[];
-              url?: string;
-              publishedDate?: string;
-              evaluations?: Array<{ agentName: string; agentId: string; grade?: number | null }>;
-              versions?: Array<{ content?: string }>;
-            }) => ({
-              id: doc.id,
-              title: doc.title,
-              author: doc.author,
-              platforms: doc.platforms,
-              url: doc.url,
-              publishedDate: doc.publishedDate,
-              evaluations: doc.evaluations?.length || 0,
-              matchedIn: searchContent ? "metadata or content" : "metadata",
-            })),
+            documents: result.documents.map(
+              (doc: {
+                id: string;
+                title?: string;
+                author?: string;
+                platforms?: string[];
+                url?: string;
+                publishedDate?: string;
+                evaluations?: Array<{
+                  agentName: string;
+                  agentId: string;
+                  grade?: number | null;
+                }>;
+                versions?: Array<{ content?: string }>;
+              }) => ({
+                id: doc.id,
+                title: doc.title,
+                author: doc.author,
+                platforms: doc.platforms,
+                url: doc.url,
+                publishedDate: doc.publishedDate,
+                evaluations: doc.evaluations?.length || 0,
+                matchedIn: searchContent ? "metadata or content" : "metadata",
+              })
+            ),
           };
 
           return {
@@ -1070,7 +1084,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Cost and time tracking
           if (job) {
-            stats.totalCost += job.priceInDollars ? parseFloat(job.priceInDollars.toString()) : 0;
+            stats.totalCost += job.priceInDollars
+              ? parseFloat(job.priceInDollars.toString())
+              : 0;
             if (job.durationInSeconds) {
               totalProcessingTime += job.durationInSeconds;
               processedCount++;
@@ -1208,7 +1224,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             results.pendingCount++;
           }
 
-          results.totalCost += job.priceInDollars ? parseFloat(job.priceInDollars.toString()) : 0;
+          results.totalCost += job.priceInDollars
+            ? parseFloat(job.priceInDollars.toString())
+            : 0;
 
           results.evaluations.push({
             jobId: job.id,
@@ -1296,7 +1314,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             id: job.id,
             completedAt: job.completedAt,
             duration: job.durationInSeconds,
-            cost: job.priceInDollars ? parseFloat(job.priceInDollars.toString()) : 0,
+            cost: job.priceInDollars
+              ? parseFloat(job.priceInDollars.toString())
+              : 0,
             agent: (job as any).evaluation?.agent?.id,
             document: (job as any).evaluation?.document?.id,
           }));
@@ -1632,11 +1652,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            throw new Error(getErrorMessage(response.status, 'Document'));
+            throw new Error(getErrorMessage(response.status, "Document"));
           }
 
           const data = await response.json();
-          
+
           return {
             content: [
               {
@@ -1649,8 +1669,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return {
             content: [
               {
-                type: "text", 
-                text: `Error fetching document: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+                type: "text",
+                text: `Error fetching document: ${error instanceof Error ? error.message : "An unexpected error occurred"}`,
               },
             ],
           };
@@ -1658,7 +1678,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_evaluation": {
-        const { documentId, agentId, includeAllVersions } = GetEvaluationArgsSchema.parse(args);
+        const { documentId, agentId, includeAllVersions } =
+          GetEvaluationArgsSchema.parse(args);
 
         try {
           const response = await authenticatedFetch(
@@ -1666,11 +1687,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            throw new Error(getErrorMessage(response.status, 'Evaluation'));
+            throw new Error(getErrorMessage(response.status, "Evaluation"));
           }
 
           const data = await response.json();
-          
+
           return {
             content: [
               {
@@ -1684,7 +1705,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: `Error fetching evaluation: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+                text: `Error fetching evaluation: ${error instanceof Error ? error.message : "An unexpected error occurred"}`,
               },
             ],
           };
@@ -1707,13 +1728,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            const errorMsg = response.status === 403 ? 'You do not have permission to re-run this evaluation' :
-                           getErrorMessage(response.status, 'Evaluation or agent');
+            const errorMsg =
+              response.status === 403
+                ? "You do not have permission to re-run this evaluation"
+                : getErrorMessage(response.status, "Evaluation or agent");
             throw new Error(errorMsg);
           }
 
           const data = await response.json();
-          
+
           return {
             content: [
               {
@@ -1727,7 +1750,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: `Error re-running evaluation: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+                text: `Error re-running evaluation: ${error instanceof Error ? error.message : "An unexpected error occurred"}`,
               },
             ],
           };
@@ -1735,23 +1758,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "list_document_evaluations": {
-        const { documentId, includeStale, agentIds } = ListDocumentEvaluationsArgsSchema.parse(args);
+        const { documentId, includeStale, agentIds } =
+          ListDocumentEvaluationsArgsSchema.parse(args);
 
         try {
           const queryParams = new URLSearchParams();
-          if (includeStale) queryParams.set('includeStale', 'true');
-          if (agentIds && agentIds.length > 0) queryParams.set('agentIds', agentIds.join(','));
+          if (includeStale) queryParams.set("includeStale", "true");
+          if (agentIds && agentIds.length > 0)
+            queryParams.set("agentIds", agentIds.join(","));
 
           const response = await authenticatedFetch(
             `/api/documents/${documentId}/evaluations?${queryParams.toString()}`
           );
 
           if (!response.ok) {
-            throw new Error(getErrorMessage(response.status, 'Document'));
+            throw new Error(getErrorMessage(response.status, "Document"));
           }
 
           const data = await response.json();
-          
+
           return {
             content: [
               {
@@ -1765,13 +1790,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: `Error listing evaluations: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+                text: `Error listing evaluations: ${error instanceof Error ? error.message : "An unexpected error occurred"}`,
               },
             ],
           };
         }
       }
-
 
       case "verify_setup": {
         // Environment variables
@@ -1957,12 +1981,21 @@ async function main() {
     // Log startup configuration for debugging
     console.error("🔧 MCP Server Starting...");
     console.error(`📍 Process ID: ${process.pid}`);
-    console.error(`🔑 API Key: ${process.env.ROAST_MY_POST_MCP_USER_API_KEY ? 
-      process.env.ROAST_MY_POST_MCP_USER_API_KEY.substring(0, 10) + '...' + 
-      process.env.ROAST_MY_POST_MCP_USER_API_KEY.slice(-4) : 
-      '❌ NOT SET'}`);
-    console.error(`🌐 API URL: ${process.env.ROAST_MY_POST_MCP_API_BASE_URL || '❌ NOT SET'}`);
-    console.error(`🗄️  Database: ${process.env.DATABASE_URL ? '✅ Configured' : '❌ NOT SET'}`);
+    console.error(
+      `🔑 API Key: ${
+        process.env.ROAST_MY_POST_MCP_USER_API_KEY
+          ? process.env.ROAST_MY_POST_MCP_USER_API_KEY.substring(0, 10) +
+            "..." +
+            process.env.ROAST_MY_POST_MCP_USER_API_KEY.slice(-4)
+          : "❌ NOT SET"
+      }`
+    );
+    console.error(
+      `🌐 API URL: ${process.env.ROAST_MY_POST_MCP_API_BASE_URL || "❌ NOT SET"}`
+    );
+    console.error(
+      `🗄️  Database: ${process.env.DATABASE_URL ? "✅ Configured" : "❌ NOT SET"}`
+    );
 
     // Test database connection
     await prisma.$connect();
@@ -1973,14 +2006,14 @@ async function main() {
     console.error("🚀 RoastMyPost MCP server running on stdio");
 
     // Handle stdin EOF when parent process disconnects
-    process.stdin.on('end', async () => {
+    process.stdin.on("end", async () => {
       console.error("📌 Stdin closed, parent disconnected, shutting down...");
       await prisma.$disconnect();
       process.exit(0);
     });
 
     // Handle stdin errors
-    process.stdin.on('error', async (err) => {
+    process.stdin.on("error", async (err) => {
       console.error("📌 Stdin error, shutting down:", err.message);
       await prisma.$disconnect();
       process.exit(0);

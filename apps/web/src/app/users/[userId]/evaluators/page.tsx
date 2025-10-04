@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import AgentsList from "@/components/AgentsList";
 import { auth } from "@/infrastructure/auth/auth";
 import { prisma } from "@/infrastructure/database/prisma";
-import AgentsList from "@/components/AgentsList";
-import type { Agent } from "@roast/ai";
 import { USER_DISPLAY } from "@/shared/constants/constants";
+import type { Agent } from "@roast/ai";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function UserAgentsPage({
   params,
@@ -57,7 +59,8 @@ export default async function UserAgentsPage({
         version: latestVersion.version.toString(),
         description: latestVersion.description,
         primaryInstructions: latestVersion.primaryInstructions || undefined,
-        selfCritiqueInstructions: latestVersion.selfCritiqueInstructions || undefined,
+        selfCritiqueInstructions:
+          latestVersion.selfCritiqueInstructions || undefined,
         providesGrades: latestVersion.providesGrades ?? false,
         isSystemManaged: agent.isSystemManaged ?? false,
       };
@@ -71,15 +74,24 @@ export default async function UserAgentsPage({
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {user.name || USER_DISPLAY.GUEST_NAME}'s Evaluators
+                  {user.name || USER_DISPLAY.GUEST_NAME}'s Custom Evaluators
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  {agents.length} evaluator{agents.length !== 1 ? 's' : ''} created
+                  {agents.length} evaluator{agents.length !== 1 ? "s" : ""}{" "}
+                  created
                 </p>
               </div>
+              {_currentUserId === userId && (
+                <Link
+                  href="/evaluators/new"
+                  className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Make a new custom evaluator
+                </Link>
+              )}
             </div>
           </div>
-          
+
           <AgentsList agents={agents} />
         </div>
       </div>

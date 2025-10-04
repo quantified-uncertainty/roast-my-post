@@ -108,6 +108,7 @@ Search documents using the server's search API with full-text search capabilitie
 - `searchContent` (boolean, optional): Whether to search in document content in addition to metadata (default: false)
 
 **Features:**
+
 - Searches in titles, authors, platforms, URLs, and importUrl by default
 - Uses the new `searchableText` field for fast substring matching
 - Optionally searches document content with full-text search
@@ -196,7 +197,6 @@ Create a new version of an existing agent.
 
 - `agentId` (string, required): ID of the agent to update
 - `name` (string, required): Name of the agent
-- `purpose` (string, required): Type/purpose of the agent (ASSESSOR, ADVISOR, ENRICHER, EXPLAINER)
 - `description` (string, required): Description of what the agent does
 - `primaryInstructions` (string, required): Primary instructions for the agent
 - `selfCritiqueInstructions` (string, optional): Self-critique instructions
@@ -283,7 +283,7 @@ Re-run an evaluation for a specific document and agent.
 **Parameters:**
 
 - `documentId` (string, required): Document ID
-- `agentId` (string, required): Agent ID  
+- `agentId` (string, required): Agent ID
 - `reason` (string, optional): Optional reason for re-running
 
 **Example:**
@@ -315,7 +315,6 @@ List all evaluations for a document with summary information.
   "agentIds": ["safety-checker", "quality-reviewer"]
 }
 ```
-
 
 ## Authentication Setup
 
