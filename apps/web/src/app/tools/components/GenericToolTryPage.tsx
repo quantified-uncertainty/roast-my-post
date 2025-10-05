@@ -180,8 +180,15 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             <input
               id={field.name}
               type="number"
-              value={value || ''}
-              onChange={(e) => handleFieldChange(field.name, e.target.valueAsNumber || e.target.value)}
+              value={value === '' ? '' : value}
+              onChange={(e) => {
+                const val = e.target.value;
+                // Convert to number if valueType is number, otherwise keep as is
+                const converted = field.valueType === 'number' && val !== ''
+                  ? Number(val)
+                  : val;
+                handleFieldChange(field.name, converted);
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
               placeholder={field.placeholder}
               required={field.required}
