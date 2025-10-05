@@ -27,7 +27,7 @@ import {
 import { GenericToolDocsPage } from "../../components/GenericToolDocsPage";
 import { GenericToolTryPage } from "../../components/GenericToolTryPage";
 import { MathCheckDisplay } from "../../components/results/MathCheckDisplay";
-import { OpinionSpectrum } from "../../components/results/OpinionSpectrum";
+import { OpinionSpectrum2D, Opinion2DPoint } from "@/lib/OpinionSpectrum2D";
 import { FieldConfig } from "../../components/types";
 import { toolExamples as exampleConfigs } from "../../utils/toolExamples";
 
@@ -131,6 +131,44 @@ const toolResultRenderers: Record<
       };
     };
 
+    // Map model IDs to abbreviations
+    const getModelAbbrev = (modelId: string): string => {
+      const abbrevMap: Record<string, string> = {
+        "anthropic/claude-sonnet-4.5": "C4.5",
+        "anthropic/claude-sonnet-4": "C4",
+        "anthropic/claude-3.5-haiku-20241022": "H3.5",
+        "google/gemini-2.5-pro": "G2.5",
+        "openai/gpt-5": "GPT5",
+        "openai/gpt-5-mini": "5m",
+        "openai/gpt-4.1": "4.1",
+        "openai/gpt-4.1-mini-2025-04-14": "4.1m",
+        "deepseek/deepseek-chat-v3.1:free": "DS",
+        "x-ai/grok-4": "Grok4",
+      };
+      return abbrevMap[modelId] || modelId.split("/")[1]?.substring(0, 4) || "??";
+    };
+
+    // Group results by model
+    const groupedResults = (result.results || []).reduce((acc: any, r: any) => {
+      if (!acc[r.model]) {
+        acc[r.model] = [];
+      }
+      acc[r.model].push(r);
+      return acc;
+    }, {});
+
+    const hasMultipleRuns = Object.values(groupedResults).some((runs: any) => runs.length > 1);
+
+    // Convert results to Opinion2DPoint format for 2D visualization
+    const opinion2DData: Opinion2DPoint[] = (result.results || []).map((r: any, i: number) => ({
+      id: `${i}`,
+      name: r.model,
+      avatar: getModelAbbrev(r.model),
+      agreement: r.agreement,
+      confidence: r.confidence || 50, // Default to 50 if confidence not yet available
+      info: r.reasoning,
+    }));
+
     return (
       <div className="space-y-6">
         <div className="rounded-lg border bg-white p-6 shadow-sm">
@@ -161,22 +199,40 @@ const toolResultRenderers: Record<
             </div>
           </div>
 
-          {/* Opinion Spectrum Visualization */}
-          <OpinionSpectrum results={result.results || []} />
+          {/* 2D Opinion Spectrum Visualization */}
+          <div className="mb-8">
+            <h4 className="mb-4 font-semibold">Opinion Spectrum (Agreement vs Confidence)</h4>
+            <OpinionSpectrum2D data={opinion2DData} height="h-96" />
+          </div>
 
-          {/* Individual Model Results - Detailed List View */}
-          <div className="mt-8 space-y-3">
+          {/* Individual Model Results - Grouped by Model */}
+          <div className="mt-8 space-y-4">
             <h4 className="font-semibold">Model Responses</h4>
-            {result.results?.map((r: any, i: number) => {
-              const { label, color } = getAgreementLabelAndColor(r.agreement);
+            {Object.entries(groupedResults).map(([modelId, runs]: [string, any]) => {
+              const firstRun = runs[0];
+
+              // Calculate stats for multiple runs
+              const agreements = runs.map((r: any) => r.agreement);
+              const confidences = runs.map((r: any) => r.confidence);
+              const avgAgreement = agreements.reduce((a: number, b: number) => a + b, 0) / agreements.length;
+              const avgConfidence = confidences.reduce((a: number, b: number) => a + b, 0) / confidences.length;
+
+              const { label, color } = getAgreementLabelAndColor(avgAgreement);
+
               return (
-                <div key={i} className="rounded-lg border p-4">
-                  <div className="mb-2 flex items-start justify-between">
+                <div key={modelId} className="rounded-lg border-2 p-4">
+                  {/* Model Header */}
+                  <div className="mb-3 flex items-start justify-between">
                     <div>
-                      <span className="font-medium">{r.model}</span>
+                      <span className="font-medium text-lg">{modelId}</span>
                       <span className="ml-2 text-sm text-gray-500">
-                        ({r.provider})
+                        ({firstRun.provider})
                       </span>
+                      {hasMultipleRuns && (
+                        <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                          {runs.length} {runs.length === 1 ? 'run' : 'runs'}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <span
@@ -185,13 +241,69 @@ const toolResultRenderers: Record<
                         {label}
                       </span>
                       <span className="text-sm text-gray-500">
-                        ({r.agreement}%)
+                        ({Math.round(avgAgreement)}% avg)
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm italic text-gray-700">
-                    &ldquo;{r.reasoning}&rdquo;
-                  </p>
+
+                  {/* Average Stats for Multiple Runs */}
+                  {hasMultipleRuns && runs.length > 1 && (
+                    <div className="mb-3 rounded bg-gray-50 p-3 text-sm">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <span className="text-gray-600">Avg Agreement:</span>
+                          <span className="ml-2 font-semibold">{Math.round(avgAgreement)}%</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Avg Confidence:</span>
+                          <span className="ml-2 font-semibold">{Math.round(avgConfidence)}%</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Agreement Range:</span>
+                          <span className="ml-2 font-semibold">
+                            {Math.min(...agreements)}%-{Math.max(...agreements)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Individual Runs */}
+                  <div className="space-y-2">
+                    {runs.map((r: any, runIdx: number) => {
+                      const runLabel = getAgreementLabelAndColor(r.agreement);
+                      return (
+                        <div key={runIdx} className={`rounded-lg p-3 ${hasMultipleRuns && runs.length > 1 ? 'border bg-white' : ''}`}>
+                          {hasMultipleRuns && runs.length > 1 && (
+                            <div className="mb-2 text-xs font-semibold text-gray-500">
+                              Run #{runIdx + 1}
+                            </div>
+                          )}
+                          <div className="mb-2 flex items-center gap-4 text-sm">
+                            <span className="text-gray-600">
+                              Agreement: <span className="font-semibold text-gray-900">{r.agreement}%</span>
+                            </span>
+                            <span className="text-gray-600">
+                              Confidence: <span className="font-semibold text-gray-900">{r.confidence}%</span>
+                            </span>
+                          </div>
+                          <p className="text-sm italic text-gray-700">
+                            &ldquo;{r.reasoning}&rdquo;
+                          </p>
+                          {r.thinkingText && (
+                            <details className="mt-2">
+                              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                                View extended reasoning
+                              </summary>
+                              <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
+                                {r.thinkingText}
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
@@ -205,7 +317,7 @@ const toolResultRenderers: Record<
   default: (result) => (
     <div className="rounded-lg border bg-white p-6 shadow-sm">
       <h3 className="mb-4 text-lg font-semibold">Result</h3>
-      <pre className="overflow-x-auto rounded bg-gray-50 p-4">
+      <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm">
         {JSON.stringify(result, null, 2)}
       </pre>
     </div>
@@ -433,7 +545,13 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           type: "textarea",
           rows: 4,
           placeholder:
-            'Enter the claim to evaluate (e.g., "The US economy will grow by 40% in the next 5 years")',
+            'Enter the claim to evaluate (e.g., "AGI will be achieved by 2027")',
+        },
+        context: {
+          type: "textarea",
+          rows: 3,
+          placeholder:
+            "Optional: Add context like when/where this claim was made, relevant background information, domain expertise needed, or constraints on interpretation",
         },
         models: {
           type: "checkbox-group",
@@ -443,8 +561,12 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
               label: "Claude 4.5 Sonnet",
             },
             { value: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
+            { value: "anthropic/claude-3.5-haiku-20241022", label: "Claude 3.5 Haiku" },
             { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
             { value: "openai/gpt-5", label: "GPT-5" },
+            { value: "openai/gpt-5-mini", label: "GPT-5 Mini" },
+            { value: "openai/gpt-4.1", label: "GPT-4.1" },
+            { value: "openai/gpt-4.1-mini-2025-04-14", label: "GPT-4.1 Mini" },
             {
               value: "deepseek/deepseek-chat-v3.1:free",
               label: "DeepSeek Chat V3.1",
@@ -459,6 +581,19 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
             "deepseek/deepseek-chat-v3.1:free",
             "x-ai/grok-4",
           ],
+        },
+        runs: {
+          type: "select",
+          options: [
+            { value: "1", label: "1" },
+            { value: "2", label: "2" },
+            { value: "3", label: "3" },
+            { value: "4", label: "4" },
+            { value: "5", label: "5" },
+          ],
+          defaultValue: 1,
+          valueType: "number",
+          helperText: "Number of independent runs per model",
         },
       },
       "language-convention-detector": {
@@ -562,7 +697,8 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
             | "textarea"
             | "select"
             | "number"
-            | "checkbox",
+            | "checkbox"
+            | "checkbox-group",
           name,
           label:
             prop.title ||

@@ -76,6 +76,7 @@ export const OPENROUTER_MODELS = {
   CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
   GEMINI_2_5_PRO: 'google/gemini-2.5-pro',
   GPT_5: 'openai/gpt-5',
+  GPT_5_MINI: 'openai/gpt-5-mini',
   DEEPSEEK_CHAT_V3_1_FREE: 'deepseek/deepseek-chat-v3.1:free',
   GROK_4: 'x-ai/grok-4',
 
@@ -83,11 +84,13 @@ export const OPENROUTER_MODELS = {
   CLAUDE_3_5_SONNET: 'anthropic/claude-3.5-sonnet',
   CLAUDE_3_7_SONNET: 'anthropic/claude-3-7-sonnet-20250219',
   GPT_4_TURBO: 'openai/gpt-4-turbo',
+  GPT_4_1: 'openai/gpt-4.1',
   GPT_4_1_MINI: 'openai/gpt-4.1-mini-2025-04-14',
   GROK_BETA: 'x-ai/grok-beta',
 
   // Good value - Fast and cost-effective
   CLAUDE_HAIKU: 'anthropic/claude-3-haiku',
+  CLAUDE_3_5_HAIKU: 'anthropic/claude-3.5-haiku-20241022',
   GPT_35_TURBO: 'openai/gpt-3.5-turbo',
   DEEPSEEK_CHAT: 'deepseek/deepseek-chat',
 
