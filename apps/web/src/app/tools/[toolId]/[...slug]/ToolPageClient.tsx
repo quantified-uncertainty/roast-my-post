@@ -595,6 +595,23 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           valueType: "number",
           helperText: "Number of independent runs per model",
         },
+        reasoningLength: {
+          type: "number",
+          min: 10,
+          max: 100,
+          defaultValue: 15,
+          valueType: "number",
+          helperText: "Maximum length of reasoning text (10-100 characters)",
+        },
+        temperature: {
+          type: "number",
+          min: 0.0,
+          max: 2.0,
+          step: 0.1,
+          defaultValue: 1.0,
+          valueType: "number",
+          helperText: "Model temperature: lower = more deterministic, higher = more creative (0.0-2.0)",
+        },
       },
       "language-convention-detector": {
         text: {

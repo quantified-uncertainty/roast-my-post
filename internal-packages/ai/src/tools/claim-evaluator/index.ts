@@ -9,6 +9,8 @@ export interface ClaimEvaluatorInput {
   context?: string;
   models?: string[];
   runs?: number; // Number of times to run each model (1-5, default 1)
+  reasoningLength?: number; // Max length of reasoning text (10-100 chars, default 15)
+  temperature?: number; // Temperature for model responses (0.0-2.0, default 1.0)
 }
 
 export interface ModelEvaluation {
@@ -75,6 +77,19 @@ const inputSchema = z.object({
     .max(5)
     .optional()
     .describe("Number of times to run each model independently (1-5, default 1)"),
+  reasoningLength: z
+    .coerce.number()
+    .int()
+    .min(10)
+    .max(100)
+    .optional()
+    .describe("Maximum length of reasoning text in characters (10-100, default 15)"),
+  temperature: z
+    .coerce.number()
+    .min(0.0)
+    .max(2.0)
+    .optional()
+    .describe("Temperature for model responses - lower is more deterministic (0.0-2.0, default 1.0)"),
 });
 
 // Output schema
@@ -150,6 +165,8 @@ async function evaluateWithModel(
     ? '\n\nNote: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others.'
     : '';
 
+  const reasoningLength = input.reasoningLength || 15;
+
   const prompt = `You are evaluating the following claim:
 
 "${input.claim}"
@@ -166,7 +183,7 @@ CRITICAL: You must respond with ONLY a JSON object, nothing else. No explanatory
 Respond with a JSON object containing:
 1. "agreement": A number from 0 to 100
 2. "confidence": A number from 0 to 100
-3. "reasoning": A brief explanation (10-30 characters, like a tag or short phrase)
+3. "reasoning": A brief explanation (maximum ${reasoningLength} characters, like a tag or short phrase)
 
 Example response format:
 {
@@ -201,7 +218,7 @@ Your response must be valid JSON only.`;
           },
         ],
         max_tokens: 1000, // High limit for GPT-5 Responses API (uses tokens for reasoning FIRST, then content)
-        temperature: 1.0, // Higher temperature for more variation between runs
+        temperature: input.temperature ?? 1.0, // Configurable temperature (default 1.0 for variation between runs)
         // Force JSON output for models like GPT-5 that use Responses API
         ...(supportsResponseFormat ? { response_format: { type: 'json_object' } } : {}),
       },
@@ -268,7 +285,8 @@ Your response must be valid JSON only.`;
     }
     const agreement = Number(parsed.agreement);
     const confidence = Number(parsed.confidence);
-    const reasoning = String(parsed.reasoning || '').substring(0, 30);
+    const maxReasoningLength = input.reasoningLength || 15;
+    const reasoning = String(parsed.reasoning || '').substring(0, maxReasoningLength);
 
     if (isNaN(agreement) || agreement < 0 || agreement > 100) {
       const err = new Error(`Invalid agreement score: ${agreement}`);
@@ -285,7 +303,7 @@ Your response must be valid JSON only.`;
     }
 
     if (reasoning.length < 10) {
-      const err = new Error('Reasoning too short (must be 10-30 chars)');
+      const err = new Error(`Reasoning too short (must be at least 10 chars)`);
       (err as any).rawResponse = rawContent;
       (err as any).parsedData = parsed;
       throw err;
