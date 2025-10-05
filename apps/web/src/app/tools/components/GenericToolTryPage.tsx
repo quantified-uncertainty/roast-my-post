@@ -49,9 +49,15 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
 }: GenericToolTryPageProps<TInput, TOutput>) {
   // Initialize form state
   const getInitialValues = (): TInput => {
-    const values: Record<string, string | number | boolean> = {};
+    const values: Record<string, string | number | boolean | string[]> = {};
     fields.forEach(field => {
-      values[field.name] = field.defaultValue ?? (field.type === 'checkbox' ? false : '');
+      if (field.type === 'checkbox') {
+        values[field.name] = field.defaultValue ?? false;
+      } else if (field.type === 'checkbox-group') {
+        values[field.name] = field.defaultValue ?? [];
+      } else {
+        values[field.name] = field.defaultValue ?? '';
+      }
     });
     return values as TInput;
   };
@@ -74,7 +80,7 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
     execute(processedData);
   };
   
-  const handleFieldChange = (name: string, value: string | number | boolean) => {
+  const handleFieldChange = (name: string, value: string | number | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
@@ -230,7 +236,45 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             )}
           </div>
         );
-        
+
+      case 'checkbox-group':
+        return (
+          <div key={field.name}>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {field.label} {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <div className="space-y-2 border border-gray-200 rounded-md p-4 bg-gray-50">
+              {field.options?.map(option => {
+                const isChecked = Array.isArray(value) ? value.includes(option.value) : false;
+                return (
+                  <div key={option.value} className="flex items-center">
+                    <input
+                      id={`${field.name}-${option.value}`}
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const currentValues = Array.isArray(value) ? value : [];
+                        const newValues = e.target.checked
+                          ? [...currentValues, option.value]
+                          : currentValues.filter(v => v !== option.value);
+                        handleFieldChange(field.name, newValues);
+                      }}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded disabled:bg-gray-100"
+                      disabled={isLoading}
+                    />
+                    <label htmlFor={`${field.name}-${option.value}`} className="ml-2 block text-sm text-gray-700">
+                      {option.label}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            {field.helperText && (
+              <p className="mt-1 text-sm text-gray-500">{field.helperText}</p>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }

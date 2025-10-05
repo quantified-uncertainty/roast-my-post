@@ -16,6 +16,7 @@ export type { SimpleSessionConfig } from './helicone/simpleSessionManager';
 export * from './utils/tokenUtils';
 export * from './utils/anthropic';
 export * from './utils/retryUtils';
+export * from './utils/openrouter';
 export * from './types';
 
 // Configuration
