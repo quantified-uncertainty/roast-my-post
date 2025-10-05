@@ -8,6 +8,7 @@ interface ModelEvaluation {
   agreement: number; // 0-100
   agreementLevel?: string;
   reasoning: string;
+  thinkingText?: string; // Extended reasoning from GPT-5/o1/o3 models
 }
 
 interface OpinionSpectrumProps {
@@ -116,12 +117,13 @@ function ModelAvatar({ model, allModels, onHover, isHovered }: ModelAvatarProps)
 
       {isHovered && (
         <div
-          className="absolute bg-white border-2 border-gray-300 rounded-lg shadow-xl px-3 py-2 z-20 whitespace-nowrap"
+          className="absolute bg-white border-2 border-gray-300 rounded-lg shadow-xl px-3 py-2 z-20"
           style={{
             left: `${model.agreement}%`,
             transform: "translateX(-50%)",
             top: `${verticalOffset - 70}px`,
             minWidth: "200px",
+            maxWidth: "400px",
           }}
         >
           <div className="font-semibold text-sm">{model.model}</div>
@@ -129,9 +131,19 @@ function ModelAvatar({ model, allModels, onHover, isHovered }: ModelAvatarProps)
           <div className="text-sm font-medium text-blue-600 mb-1">
             {level}: {model.agreement}%
           </div>
-          <div className="text-xs text-gray-700 italic">
+          <div className="text-xs text-gray-700 italic mb-1">
             &ldquo;{model.reasoning}&rdquo;
           </div>
+          {model.thinkingText && (
+            <details className="mt-2">
+              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                View extended reasoning
+              </summary>
+              <div className="mt-1 text-xs text-gray-600 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {model.thinkingText}
+              </div>
+            </details>
+          )}
         </div>
       )}
     </div>

@@ -35,7 +35,8 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 - **results**: Array of model evaluations, each containing:
   - \`model\`: Model identifier (e.g., "anthropic/claude-3-haiku")
   - \`provider\`: Provider name (e.g., "anthropic", "openai")
-  - \`agreement\`: Score from 0-100
+  - \`agreement\`: Score from 0-100 (0=disagree, 100=agree)
+  - \`confidence\`: Score from 0-100 (0=very uncertain, 100=very confident)
   - \`reasoning\`: Brief explanation (10-30 characters)
 - **consensus**: Statistical summary:
   - \`mean\`: Average agreement across models
@@ -75,12 +76,14 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
       "model": "anthropic/claude-3-haiku",
       "provider": "anthropic",
       "agreement": 15,
+      "confidence": 85,
       "reasoning": "Unlikely growth rate"
     },
     {
       "model": "anthropic/claude-3-5-sonnet",
       "provider": "anthropic",
       "agreement": 20,
+      "confidence": 90,
       "reasoning": "Historically implausible"
     },
     // ... other models
