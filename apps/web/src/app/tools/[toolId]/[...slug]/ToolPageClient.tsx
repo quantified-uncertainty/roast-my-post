@@ -598,10 +598,10 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
         reasoningLength: {
           type: "number",
           min: 10,
-          max: 100,
+          max: 1000,
           defaultValue: 15,
           valueType: "number",
-          helperText: "Maximum length of reasoning text (10-100 characters)",
+          helperText: "Maximum length of reasoning text (10-1000 characters)",
         },
         temperature: {
           type: "number",

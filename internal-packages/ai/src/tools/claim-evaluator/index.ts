@@ -81,9 +81,9 @@ const inputSchema = z.object({
     .coerce.number()
     .int()
     .min(10)
-    .max(100)
+    .max(1000)
     .optional()
-    .describe("Maximum length of reasoning text in characters (10-100, default 15)"),
+    .describe("Maximum length of reasoning text in characters (10-1000, default 15)"),
   temperature: z
     .coerce.number()
     .min(0.0)
@@ -100,7 +100,7 @@ const outputSchema = z.object({
       provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
       agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
       confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
-      reasoning: z.string().min(10).max(100).describe("Brief reasoning (10-100 chars, configurable)"),
+      reasoning: z.string().min(10).max(1000).describe("Brief reasoning (10-1000 chars, configurable)"),
       rawResponse: z.string().optional().describe("Full raw response from model"),
       thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
       tokenUsage: z.object({
