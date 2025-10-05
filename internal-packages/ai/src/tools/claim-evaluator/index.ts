@@ -100,7 +100,7 @@ const outputSchema = z.object({
       provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
       agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
       confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
-      reasoning: z.string().min(10).max(30).describe("Brief reasoning (10-30 chars)"),
+      reasoning: z.string().min(10).max(100).describe("Brief reasoning (10-100 chars, configurable)"),
       rawResponse: z.string().optional().describe("Full raw response from model"),
       thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
       tokenUsage: z.object({
