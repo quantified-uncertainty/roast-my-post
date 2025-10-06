@@ -11,13 +11,37 @@ vi.mock('@/infrastructure/auth/auth', () => ({
   })
 }));
 
+// Mock Helicone cost tracking
+vi.mock('@roast/ai', async () => {
+  const actual = await vi.importActual('@roast/ai');
+  return {
+    ...actual,
+    fetchJobCostWithRetry: vi.fn().mockResolvedValue(null),
+    HeliconeSessionManager: {
+      forJob: vi.fn().mockReturnValue({
+        getHeaders: vi.fn().mockReturnValue({}),
+        generateRequestId: vi.fn().mockReturnValue('test-request-id')
+      })
+    },
+    setGlobalSessionManager: vi.fn()
+  };
+});
+
 // Mock the perplexity research tool
 vi.mock('@roast/ai/server', () => ({
   perplexityResearchTool: {
     config: {
       name: 'perplexity-research',
-      description: 'Research using Perplexity'
+      description: 'Research using Perplexity',
+      id: 'perplexity-research'
     },
+    run: vi.fn().mockResolvedValue({
+      summary: 'Test summary',
+      keyFindings: ['Finding 1', 'Finding 2'],
+      sources: [
+        { title: 'Source 1', url: 'https://example.com', snippet: 'Test snippet' }
+      ]
+    }),
     execute: vi.fn().mockResolvedValue({
       summary: 'Test summary',
       keyFindings: ['Finding 1', 'Finding 2'],
@@ -41,11 +65,13 @@ vi.mock('@/infrastructure/logging/logger', () => ({
 describe('Perplexity Research API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     process.env.OPENROUTER_API_KEY = 'test-key';
     process.env.HELICONE_API_KEY = 'test-helicone-key';
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     delete process.env.OPENROUTER_API_KEY;
     delete process.env.HELICONE_API_KEY;
   });
@@ -58,7 +84,12 @@ describe('Perplexity Research API Route', () => {
       })
     });
 
-    const response = await POST(request);
+    const responsePromise = POST(request);
+
+    // Fast-forward through the 5-second delay
+    await vi.advanceTimersByTimeAsync(5000);
+
+    const response = await responsePromise;
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -92,7 +123,7 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle tool execution errors', async () => {
     // Override tool mock for this test
-    vi.mocked(perplexityResearchTool.execute).mockRejectedValueOnce(new Error('API request failed'));
+    vi.mocked(perplexityResearchTool.run).mockRejectedValueOnce(new Error('API request failed'));
 
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
       method: 'POST',
@@ -101,7 +132,12 @@ describe('Perplexity Research API Route', () => {
       })
     });
 
-    const response = await POST(request);
+    const responsePromise = POST(request);
+
+    // Fast-forward through any timers
+    await vi.advanceTimersByTimeAsync(5000);
+
+    const response = await responsePromise;
     const data = await response.json();
 
     expect(response.status).toBe(500);
