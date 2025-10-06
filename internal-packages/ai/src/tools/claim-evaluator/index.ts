@@ -571,10 +571,6 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
           };
         });
 
-      if (successful.length === 0) {
-        throw new Error('All model evaluations failed');
-      }
-
       context.logger.info(
         `[ClaimEvaluator] ${successful.length}/${modelRuns.length} evaluations succeeded, ${failed.length} failed`
       );
@@ -583,7 +579,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
       return {
         results: successful,
-        failed: failed.length > 0 ? failed : undefined,
+        failed: failed,
         consensus,
       };
     } catch (error) {

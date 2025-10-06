@@ -218,16 +218,19 @@ describe('Claim Evaluator Tool E2E Tests', () => {
 
     it('should provide debug information for failed evaluations', async () => {
       // Use an invalid model to trigger failure
-      try {
-        await claimEvaluatorTool.execute({
-          claim: 'Test claim',
-          models: ['completely/invalid/model'],
-          runs: 1
-        }, testContext);
-      } catch (error: any) {
-        // Should fail with "All model evaluations failed"
-        expect(error.message).toContain('All model evaluations failed');
-      }
+      const result = await claimEvaluatorTool.execute({
+        claim: 'Test claim',
+        models: ['completely/invalid/model'],
+        runs: 1
+      }, testContext);
+
+      // Should return with all models failed
+      expect(result.results).toBeDefined();
+      expect(result.results.length).toBe(0);
+      expect(result.failed).toBeDefined();
+      expect(result.failed.length).toBe(1);
+      expect(result.failed[0].model).toBe('completely/invalid/model');
+      expect(result.failed[0].refusalReason).toBeDefined();
     }, 60000);
   });
 
