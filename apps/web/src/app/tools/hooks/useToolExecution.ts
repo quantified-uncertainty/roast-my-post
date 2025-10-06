@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { runToolWithAuth } from '../utils/runToolWithAuth';
+import { runToolWithAuth, ToolResponse } from '../utils/runToolWithAuth';
 
 export interface UseToolExecutionOptions<TInput, TOutput> {
   /**
@@ -35,6 +35,8 @@ export interface UseToolExecutionReturn<TInput, TOutput> {
   execute: (input: TInput) => Promise<void>;
   reset: () => void;
   setResult: (result: TOutput | null) => void;
+  cost: ToolResponse<TOutput>['cost'];
+  sessionId: string | undefined;
 }
 
 /**
@@ -58,6 +60,8 @@ export function useToolExecution<TInput, TOutput>(
   const [result, setResult] = useState<TOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cost, setCost] = useState<ToolResponse<TOutput>['cost']>(undefined);
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
 
   const execute = useCallback(async (input: TInput) => {
     // Validate input if validator provided
@@ -82,14 +86,16 @@ export function useToolExecution<TInput, TOutput>(
     try {
       // Execute the tool
       const response = await runToolWithAuth<TInput, TOutput>(apiPath, input);
-      
+
       // Process response if processor provided
-      const processedResponse = options?.processResponse 
-        ? options.processResponse(response)
-        : response;
-      
-      setResult(processedResponse);
-      options?.onExecuteComplete?.(processedResponse, undefined);
+      const processedResult = options?.processResponse
+        ? options.processResponse(response.result)
+        : response.result;
+
+      setResult(processedResult);
+      setCost(response.cost);
+      setSessionId(response.sessionId);
+      options?.onExecuteComplete?.(processedResult, undefined);
     } catch (err) {
       // Format error message
       const errorMessage = options?.formatError 
@@ -109,6 +115,8 @@ export function useToolExecution<TInput, TOutput>(
     setResult(null);
     setError(null);
     setIsLoading(false);
+    setCost(undefined);
+    setSessionId(undefined);
   }, []);
 
   return {
@@ -117,6 +125,8 @@ export function useToolExecution<TInput, TOutput>(
     error,
     execute,
     reset,
-    setResult
+    setResult,
+    cost,
+    sessionId
   };
 }

@@ -49,17 +49,29 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
 }: GenericToolTryPageProps<TInput, TOutput>) {
   // Initialize form state
   const getInitialValues = (): TInput => {
-    const values: Record<string, string | number | boolean> = {};
+    const values: Record<string, string | number | boolean | string[]> = {};
     fields.forEach(field => {
-      values[field.name] = field.defaultValue ?? (field.type === 'checkbox' ? false : '');
+      if (field.type === 'checkbox') {
+        values[field.name] = field.defaultValue ?? false;
+      } else if (field.type === 'checkbox-group') {
+        values[field.name] = field.defaultValue ?? [];
+      } else if (field.type === 'select' && field.valueType === 'number') {
+        // For numeric selects, ensure default value is a number
+        values[field.name] = typeof field.defaultValue === 'number'
+          ? field.defaultValue
+          : (field.defaultValue ? Number(field.defaultValue) : '');
+      } else {
+        values[field.name] = field.defaultValue ?? '';
+      }
     });
     return values as TInput;
   };
   
   const [formData, setFormData] = useState<TInput>(getInitialValues());
-  
+  const [showRawJSON, setShowRawJSON] = useState(false);
+
   // Use the hook for state management and execution
-  const { result, isLoading, error, execute } = useToolExecution<TInput, TOutput>(
+  const { result, isLoading, error, execute, cost, sessionId } = useToolExecution<TInput, TOutput>(
     `/api/tools/${toolId}`,
     {
       validateInput,
@@ -74,7 +86,7 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
     execute(processedData);
   };
   
-  const handleFieldChange = (name: string, value: string | number | boolean) => {
+  const handleFieldChange = (name: string, value: string | number | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
@@ -89,6 +101,11 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
         const value = formData[field.name];
         if (field.type === 'checkbox') {
           continue;
+        } else if (field.type === 'checkbox-group') {
+          // Validate checkbox-group: must have at least one selection
+          if (!value || !Array.isArray(value) || value.length === 0) {
+            return false;
+          }
         } else if (!value || (typeof value === 'string' && !value.trim())) {
           return false;
         }
@@ -168,8 +185,15 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             <input
               id={field.name}
               type="number"
-              value={value || ''}
-              onChange={(e) => handleFieldChange(field.name, e.target.valueAsNumber || e.target.value)}
+              value={value === '' ? '' : value}
+              onChange={(e) => {
+                const val = e.target.value;
+                // Convert to number if valueType is number, otherwise keep as is
+                const converted = field.valueType === 'number' && val !== ''
+                  ? Number(val)
+                  : val;
+                handleFieldChange(field.name, converted);
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
               placeholder={field.placeholder}
               required={field.required}
@@ -192,8 +216,13 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             </label>
             <select
               id={field.name}
-              value={value || ''}
-              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              value={String(value || '')}
+              onChange={(e) => {
+                const val = e.target.value;
+                // Convert to number if valueType is 'number'
+                const converted = field.valueType === 'number' ? Number(val) : val;
+                handleFieldChange(field.name, converted);
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
               required={field.required}
               disabled={isLoading}
@@ -230,7 +259,50 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             )}
           </div>
         );
-        
+
+      case 'checkbox-group': {
+        const isInvalid = field.required && (!value || !Array.isArray(value) || value.length === 0);
+        return (
+          <div key={field.name}>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {field.label} {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <div className={`space-y-2 border rounded-md p-4 ${isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
+              {field.options?.map(option => {
+                const isChecked = Array.isArray(value) ? value.includes(option.value) : false;
+                return (
+                  <div key={option.value} className="flex items-center">
+                    <input
+                      id={`${field.name}-${option.value}`}
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const currentValues = Array.isArray(value) ? value : [];
+                        const newValues = e.target.checked
+                          ? [...currentValues, option.value]
+                          : currentValues.filter(v => v !== option.value);
+                        handleFieldChange(field.name, newValues);
+                      }}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded disabled:bg-gray-100"
+                      disabled={isLoading}
+                    />
+                    <label htmlFor={`${field.name}-${option.value}`} className="ml-2 block text-sm text-gray-700">
+                      {option.label}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            {isInvalid && (
+              <p className="mt-1 text-sm text-red-600">Please select at least one option</p>
+            )}
+            {field.helperText && (
+              <p className="mt-1 text-sm text-gray-500">{field.helperText}</p>
+            )}
+          </div>
+        );
+      }
+
       default:
         return null;
     }
@@ -295,10 +367,82 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
           </form>
           
           <ErrorDisplay error={error} />
-          
+
           {result && (
             <div className="mt-8" data-testid="tool-result">
-              {renderResult(result)}
+              {/* Cost Information */}
+              {cost && (
+                <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Cost Information</h4>
+                      <div className="mt-2 space-y-1 text-sm text-blue-800">
+                        <div>
+                          <span className="font-medium">Total Cost:</span> ${cost.totalUSD.toFixed(6)}
+                        </div>
+                        <div>
+                          <span className="font-medium">Tokens:</span> {cost.tokens.total.toLocaleString()}
+                          <span className="text-blue-600 ml-1">
+                            ({cost.tokens.prompt.toLocaleString()} prompt + {cost.tokens.completion.toLocaleString()} completion)
+                          </span>
+                        </div>
+                        {sessionId && (
+                          <div className="text-xs text-blue-600">
+                            Session ID: {sessionId}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {cost.breakdown && cost.breakdown.length > 0 && (
+                      <div className="text-xs text-blue-700">
+                        <div className="font-medium mb-1">Models used:</div>
+                        {cost.breakdown.map((item, i) => (
+                          <div key={i} className="flex justify-between gap-4">
+                            <span>{item.model.split('/')[1] || item.model}</span>
+                            <span className="font-mono">${item.costUSD.toFixed(6)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* View Toggle */}
+              <div className="mb-4 flex gap-2">
+                <button
+                  onClick={() => setShowRawJSON(false)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    !showRawJSON
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Visual View
+                </button>
+                <button
+                  onClick={() => setShowRawJSON(true)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    showRawJSON
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Raw JSON
+                </button>
+              </div>
+
+              {/* Result Display */}
+              {showRawJSON ? (
+                <div className="rounded-lg border bg-white p-6 shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold">Full JSON Response</h3>
+                  <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm">
+                    {JSON.stringify(result, null, 2)}
+                  </pre>
+                </div>
+              ) : (
+                renderResult(result)
+              )}
             </div>
           )}
         </div>

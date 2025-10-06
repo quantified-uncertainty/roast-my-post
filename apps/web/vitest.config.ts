@@ -49,6 +49,7 @@ export default defineConfig({
       '**/*.e2e.test.{ts,tsx}',
       '**/*.e2e.vtest.{ts,tsx}',
       '**/*.llm.vtest.{ts,tsx}',
+      'src/__tests__/tools/claim-evaluator.integration.vtest.ts',
       '**/tests/playwright/**',
     ],
   },

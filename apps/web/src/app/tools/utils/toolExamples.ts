@@ -319,5 +319,36 @@ export const toolExamples: Record<string, ToolExample[]> = {
       },
       hint: 'Binary prediction without additional context'
     }
+  ],
+
+  'claim-evaluator': [
+    {
+      label: 'Economic Claim',
+      values: {
+        claim: 'The US economy will grow by 40% in the next 5 years'
+      },
+      hint: 'Ambitious economic growth prediction'
+    },
+    {
+      label: 'Technology Claim',
+      values: {
+        claim: 'AI will achieve human-level intelligence by 2030'
+      },
+      hint: 'AI capabilities prediction'
+    },
+    {
+      label: 'Climate Claim',
+      values: {
+        claim: 'Global average temperatures will increase by 2°C by 2050'
+      },
+      hint: 'Climate change prediction'
+    },
+    {
+      label: 'Simple Fact',
+      values: {
+        claim: 'Water boils at 100°C at sea level'
+      },
+      hint: 'Well-established scientific fact'
+    }
   ]
 };

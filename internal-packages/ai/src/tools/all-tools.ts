@@ -17,6 +17,7 @@ import { detectLanguageConventionTool } from './language-convention-detector';
 import forecasterTool from './binary-forecaster';
 import { linkValidator } from './link-validator';
 import perplexityResearchTool from './perplexity-researcher';
+import claimEvaluatorTool from './claim-evaluator';
 import type { Tool } from './base/Tool';
 
 /**
@@ -37,6 +38,7 @@ const toolsList = [
   forecasterTool,
   linkValidator,
   perplexityResearchTool,
+  claimEvaluatorTool,
 ] as const;
 
 /**
@@ -81,4 +83,5 @@ export {
   forecasterTool,
   linkValidator,
   perplexityResearchTool,
+  claimEvaluatorTool,
 };

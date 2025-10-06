@@ -12,7 +12,7 @@ import { Tool } from '@roast/ai';
 import { auth } from '@/infrastructure/auth/auth';
 import { logger } from '@/infrastructure/logging/logger';
 
-// Mock the AI logger
+// Mock the AI logger and Helicone
 vi.mock('@roast/ai', async () => ({
   ...await vi.importActual('@roast/ai'),
   logger: {
@@ -20,7 +20,15 @@ vi.mock('@roast/ai', async () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn()
-  }
+  },
+  fetchJobCostWithRetry: vi.fn().mockResolvedValue(null),
+  HeliconeSessionManager: {
+    forJob: vi.fn().mockReturnValue({
+      getHeaders: vi.fn().mockReturnValue({}),
+      generateRequestId: vi.fn().mockReturnValue('test-request-id')
+    })
+  },
+  setGlobalSessionManager: vi.fn()
 }));
 
 // Mock config module
@@ -59,7 +67,7 @@ describe('createToolAPIHandler', () => {
     inputSchema: {} as any,
     outputSchema: {} as any,
     execute: vi.fn().mockResolvedValue({ result: 'success' }),
-    run: vi.fn(),
+    run: vi.fn().mockResolvedValue({ result: 'success' }),
     validateAccess: vi.fn().mockResolvedValue(true),
     beforeExecute: vi.fn().mockResolvedValue(undefined),
     afterExecute: vi.fn().mockResolvedValue(undefined),
@@ -73,8 +81,13 @@ describe('createToolAPIHandler', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     // Reset environment variables
     delete process.env.BYPASS_TOOL_AUTH;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('Authentication', () => {
@@ -110,7 +123,12 @@ describe('createToolAPIHandler', () => {
       const mockAuth = vi.mocked(auth);
 
       const route = createToolAPIHandler(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const responsePromise = route(mockRequest({ test: 'data' }));
+
+      // Fast-forward through the 5-second delay
+      await vi.advanceTimersByTimeAsync(5000);
+
+      const response = await responsePromise;
       const data = await response.json();
 
       expect(mockAuth).not.toHaveBeenCalled();
@@ -131,13 +149,18 @@ describe('createToolAPIHandler', () => {
       } as any);
 
       const route = createToolAPIHandler(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const responsePromise = route(mockRequest({ test: 'data' }));
+
+      // Fast-forward through the 5-second delay
+      await vi.advanceTimersByTimeAsync(5000);
+
+      const response = await responsePromise;
       const data = await response.json();
 
       expect(mockAuth).toHaveBeenCalled();
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(mockTool.execute).toHaveBeenCalledWith(
+      expect(mockTool.run).toHaveBeenCalledWith(
         { test: 'data' },
         expect.objectContaining({
           userId: 'user-123',
@@ -181,22 +204,27 @@ describe('createToolAPIHandler', () => {
 
     it('should NOT bypass authentication in production even with BYPASS_TOOL_AUTH=true', async () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
-      
+
       // Clear the module cache and re-mock auth before importing
       vi.clearAllMocks();
       vi.resetModules();
-      
+
       // Re-mock auth module after reset
       vi.doMock('@/infrastructure/auth/auth', () => ({
         auth: vi.fn().mockResolvedValue(null)
       }));
-      
+
       // Re-import to get the mocked version
       const { createToolAPIHandler: createToolAPIHandlerProd } = await import('./createToolAPIHandler');
       const { auth: authProd } = await import('@/infrastructure/auth/auth');
-      
+
       const route = createToolAPIHandlerProd(mockTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const responsePromise = route(mockRequest({ test: 'data' }));
+
+      // Fast-forward through any timers
+      await vi.advanceTimersByTimeAsync(5000);
+
+      const response = await responsePromise;
       const data = await response.json();
 
       expect(authProd).toHaveBeenCalled();
@@ -208,13 +236,13 @@ describe('createToolAPIHandler', () => {
   describe('Error Handling', () => {
     it('should handle tool execution errors gracefully', async () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
-      
+
       const errorTool: Tool<any, any> = {
         config: mockTool.config,
         inputSchema: mockTool.inputSchema,
         outputSchema: mockTool.outputSchema,
         execute: vi.fn().mockRejectedValue(new Error('Tool execution failed')),
-        run: mockTool.run,
+        run: vi.fn().mockRejectedValue(new Error('Tool execution failed')),
         validateAccess: mockTool.validateAccess,
         beforeExecute: mockTool.beforeExecute,
         afterExecute: mockTool.afterExecute,
@@ -223,7 +251,12 @@ describe('createToolAPIHandler', () => {
       };
 
       const route = createToolAPIHandler(errorTool);
-      const response = await route(mockRequest({ test: 'data' }));
+      const responsePromise = route(mockRequest({ test: 'data' }));
+
+      // Fast-forward through any timers
+      await vi.advanceTimersByTimeAsync(5000);
+
+      const response = await responsePromise;
       const data = await response.json();
 
       expect(response.status).toBe(500);

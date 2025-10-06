@@ -26,6 +26,7 @@ export { default as extractMathExpressionsTool } from './math-expressions-extrac
 export { detectLanguageConventionTool } from './language-convention-detector';
 export { default as perplexityResearchTool } from './perplexity-researcher';
 export { linkValidator } from './link-validator';
+export { default as claimEvaluatorTool } from './claim-evaluator';
 
 // Export link validator utilities and types
 export { 
@@ -46,6 +47,7 @@ export type { ExtractFactualClaimsOutput, ExtractedFactualClaim } from './factua
 export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './binary-forecasting-claims-extractor';
 export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './math-expressions-extractor';
 export type { DetectLanguageConventionOutput } from './language-convention-detector';
+export type { ClaimEvaluatorOutput, ModelEvaluation } from './claim-evaluator';
 
 // Re-export shared math types
 export type { MathErrorDetails, MathVerificationStatus } from './shared/math-schemas';

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Tool } from '@roast/ai';
+import { Tool, HeliconeSessionManager, setGlobalSessionManager, fetchJobCostWithRetry } from '@roast/ai';
 import { logger } from '@/infrastructure/logging/logger';
 import { logger as aiLogger } from '@roast/ai';
 import { auth } from '@/infrastructure/auth/auth';
 import { config } from '@roast/domain';
+import crypto from 'crypto';
 
 /**
  * Creates an API route handler for a tool that users can execute.
@@ -61,17 +62,52 @@ export function createToolAPIHandler(tool: Tool<any, any>) {
         );
       }
       
-      // Execute the tool with user context
-      // Use AI package's logger to match expected interface
-      const result = await tool.execute(data, {
-        userId,
-        logger: aiLogger,
-      });
+      // Generate unique session ID for this tool execution
+      const sessionId = crypto.randomUUID();
 
-      return NextResponse.json({
-        success: true,
-        result,
-      });
+      // Create session manager for Helicone tracking
+      const sessionManager = HeliconeSessionManager.forJob(
+        sessionId,
+        `${tool.config.name} tool execution`,
+        {
+          toolId: tool.config.id,
+          userId,
+          environment: config.env.isDevelopment ? 'development' : 'production',
+        }
+      );
+
+      try {
+        // Set global session manager for automatic header propagation
+        setGlobalSessionManager(sessionManager);
+
+        // Execute the tool with user context
+        // Use tool.run() instead of tool.execute() to enable session tracking
+        const result = await tool.run(data, {
+          userId,
+          logger: aiLogger,
+        });
+
+        // Fetch cost data from Helicone (with retry logic)
+        // Wait for Helicone to process and index the requests
+        // Note: Helicone indexing can take 5-10 seconds
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        const costData = await fetchJobCostWithRetry(sessionId, 5, 2000);
+
+        return NextResponse.json({
+          success: true,
+          result,
+          cost: costData ? {
+            totalUSD: costData.totalCostUSD,
+            tokens: costData.tokenCounts,
+            breakdown: costData.breakdown,
+          } : null,
+          sessionId, // Include session ID for debugging
+        });
+      } finally {
+        // Always clear session manager after execution
+        setGlobalSessionManager(undefined);
+      }
     } catch (error) {
       logger.error(`${tool.config.name} tool error:`, error);
       
