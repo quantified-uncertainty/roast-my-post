@@ -220,6 +220,7 @@ function createEvaluationError(
     parsedData?: unknown;
     attemptedParse?: string;
     tokenUsage?: any;
+    refusalReason?: RefusalReason;
   }
 ): Error {
   const err = new Error(message);
@@ -236,6 +237,9 @@ function createEvaluationError(
   }
   if (context.tokenUsage) {
     (err as any).tokenUsage = context.tokenUsage;
+  }
+  if (context.refusalReason) {
+    (err as any).refusalReason = context.refusalReason;
   }
 
   return err;
@@ -264,24 +268,31 @@ async function evaluateWithModel(
 "${input.claim}"
 ${input.context ? `\nContext: ${input.context}` : ''}
 
-Rate your agreement and confidence:
+If the claim is meaningful and evaluable, rate your agreement and confidence:
 - Agreement: 0 (completely disagree/certainly false) to 100 (completely agree/certainly true)
 - Confidence: 0 (very uncertain/insufficient information) to 100 (very confident in your assessment)
+
+If you cannot or should not evaluate this claim, you may REFUSE by providing a "refusalReason" instead:
+- "Unclear": The claim is too vague, ambiguous, or imprecise to evaluate meaningfully
+- "MissingData": Insufficient information or data to make an informed assessment
+- "Policy": Against your policies or rules to evaluate
+- "Safety": Evaluating this claim could be harmful or dangerous
 
 ${input.context ? 'Consider the provided context (temporal, domain-specific, or situational) when forming your assessment.' : ''}${runNote}
 
 CRITICAL: You must respond with ONLY a JSON object, nothing else. No explanatory text before or after.
 
-Respond with a JSON object containing:
-1. "agreement": A number from 0 to 100
-2. "confidence": A number from 0 to 100
-3. "reasoning": A brief explanation (maximum ${reasoningLength} characters, like a tag or short phrase)
-
-Example response format:
+Response format (NORMAL evaluation):
 {
   "agreement": 75,
   "confidence": 85,
-  "reasoning": "Strong GDP indicators"
+  "reasoning": "Brief explanation (max ${reasoningLength} chars)"
+}
+
+Response format (REFUSAL):
+{
+  "refusalReason": "Unclear",
+  "reasoning": "Brief explanation of why you're refusing (max ${reasoningLength} chars)"
 }
 
 Your response must be valid JSON only.`;
@@ -378,6 +389,23 @@ Your response must be valid JSON only.`;
         }
       );
     }
+
+    // Check if model refused to evaluate
+    if (parsed.refusalReason) {
+      const validRefusalReasons: RefusalReason[] = ['Safety', 'Policy', 'MissingData', 'Unclear', 'Error'];
+      const refusalReason: RefusalReason = validRefusalReasons.includes(parsed.refusalReason)
+        ? parsed.refusalReason
+        : 'Unclear';
+
+      throw createEvaluationError(
+        `Model refused to evaluate: ${parsed.reasoning || refusalReason}`,
+        {
+          rawResponse: rawContent,
+          refusalReason,
+        }
+      );
+    }
+
     const agreement = Number(parsed.agreement);
     const confidence = Number(parsed.confidence);
     const maxReasoningLength = input.reasoningLength || DEFAULT_REASONING_LENGTH;
@@ -530,8 +558,8 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
             errorDetails = `Attempted to parse: ${error.attemptedParse}\n\n${errorDetails || ''}`;
           }
 
-          // Detect refusal reason based on error and response
-          const refusalReason = detectRefusalReason(error, rawResponse);
+          // Use explicit refusalReason from error if provided, otherwise detect from error message
+          const refusalReason = error?.refusalReason || detectRefusalReason(error, rawResponse);
 
           return {
             model: modelId,
