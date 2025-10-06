@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import {
   AlertTriangle,
   HelpCircle,
@@ -21,11 +20,20 @@ export interface Opinion2DPoint {
   id: string;
   name: string;
   avatar: string;
-  agreement: number; // 0 (strongly disagree) to 100 (strongly agree)
-  confidence: number; // 0 (low confidence) to 100 (high confidence)
+  agreement: number; // 0-100: strongly disagree to strongly agree
+  confidence: number; // 0-100: low to high confidence
   info?: string;
-  refusalReason?: RefusalReason; // If present, shows in refusals section instead of main chart
+  refusalReason?: RefusalReason;
 }
+
+// Icon mapping for refusal reasons
+const REFUSAL_ICONS: Record<RefusalReason, React.ComponentType<{ size?: number }>> = {
+  Safety: ShieldAlert,
+  Policy: Scale,
+  MissingData: HelpCircle,
+  Unclear: AlertTriangle,
+  Error: Zap,
+};
 
 // Calculate 2D offset for points that are close together
 function getRadialOffset(
@@ -393,116 +401,59 @@ export function OpinionSpectrum2D({
 
       {/* Refusals Section */}
       {refusals.length > 0 && (
-        <div className="mt-8">
-          <h3 className="mb-4 text-center text-sm font-semibold uppercase tracking-wide text-gray-500">
-            {(() => {
-              const hasErrors = refusals.some(
-                (r) => r.refusalReason === "Error"
-              );
-              const hasRefusals = refusals.some(
-                (r) => r.refusalReason !== "Error"
-              );
+        <div className="mt-4 border-t border-gray-200 pt-2">
+          <div className="flex items-center justify-center gap-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Errors
+            </h3>
+            <div className="flex flex-wrap items-center gap-6">
+              {(["Safety", "Policy", "MissingData", "Unclear", "Error"] as RefusalReason[]).map((reason) => {
+                const reasonModels = refusalsByReason[reason];
+                if (!reasonModels || reasonModels.length === 0) return null;
 
-              if (hasErrors && hasRefusals) return "Refusals and Errors";
-              if (hasErrors) return "Errors";
-              return "Refusals";
-            })()}
-          </h3>
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            {(
-              [
-                "Safety",
-                "Policy",
-                "MissingData",
-                "Unclear",
-                "Error",
-              ] as RefusalReason[]
-            ).map((reason) => {
-              const reasonModels = refusalsByReason[reason];
-              if (!reasonModels || reasonModels.length === 0) return null;
+                const IconComponent = REFUSAL_ICONS[reason];
 
-              // Icon component mapping
-              const iconMap: Record<
-                RefusalReason,
-                {
-                  Icon: React.ComponentType<{ size?: number }>;
-                  bgColor: string;
-                  textColor: string;
-                }
-              > = {
-                Safety: {
-                  Icon: ShieldAlert,
-                  bgColor: "bg-red-100",
-                  textColor: "text-red-600",
-                },
-                Policy: {
-                  Icon: Scale,
-                  bgColor: "bg-blue-100",
-                  textColor: "text-blue-600",
-                },
-                MissingData: {
-                  Icon: HelpCircle,
-                  bgColor: "bg-gray-200",
-                  textColor: "text-gray-600",
-                },
-                Unclear: {
-                  Icon: AlertTriangle,
-                  bgColor: "bg-yellow-100",
-                  textColor: "text-yellow-600",
-                },
-                Error: {
-                  Icon: Zap,
-                  bgColor: "bg-orange-100",
-                  textColor: "text-orange-600",
-                },
-              };
-
-              const iconConfig = iconMap[reason];
-              const IconComponent = iconConfig.Icon;
-
-              return (
-                <div
-                  key={reason}
-                  className="flex items-center gap-4 rounded-sm p-2"
-                >
-                  <div className="flex items-center">
-                    <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-gray-500 opacity-50`}
-                    >
-                      <IconComponent size={16} />
-                    </div>
-                    <span className="text-sm font-medium text-gray-500">
-                      {reason}
-                    </span>
-                  </div>
-                  <div className="flex gap-1">
-                    {reasonModels.map((person) => (
-                      <div key={person.id} className="relative">
-                        <div
-                          className={`flex h-8 w-auto cursor-pointer items-center justify-center rounded-full border-2 border-gray-200 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 transition-all ${hoveredId === person.id ? "z-10 scale-110 shadow-md" : "hover:scale-105"}`}
-                          onMouseEnter={() => setHoveredId(person.id)}
-                        >
-                          {person.avatar}
-                        </div>
-                        {hoveredId === person.id && (
-                          <Tooltip
-                            person={person}
-                            positioning={{
-                              top: "-90px",
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                            }}
-                            refusalReason={reason}
-                            onMouseEnter={() => setHoveredId(person.id)}
-                            onMouseLeave={() => setHoveredId(null)}
-                          />
-                        )}
+                return (
+                  <div key={reason} className="flex items-center gap-2 p-2">
+                    <div className="flex items-center">
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-gray-300`}
+                      >
+                        <IconComponent size={16} />
                       </div>
-                    ))}
+                      <span className="text-sm font-medium text-gray-400">
+                        {reason}
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      {reasonModels.map((person) => (
+                        <div key={person.id} className="relative">
+                          <div
+                            className={`flex h-8 w-auto cursor-pointer items-center justify-center rounded-full border-2 border-gray-200 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 transition-all ${hoveredId === person.id ? "z-10 scale-110 shadow-md" : "hover:scale-105"}`}
+                            onMouseEnter={() => setHoveredId(person.id)}
+                          >
+                            {person.avatar}
+                          </div>
+                          {hoveredId === person.id && (
+                            <Tooltip
+                              person={person}
+                              positioning={{
+                                top: "-90px",
+                                left: "50%",
+                                transform: "translateX(-50%)",
+                              }}
+                              refusalReason={reason}
+                              onMouseEnter={() => setHoveredId(person.id)}
+                              onMouseLeave={() => setHoveredId(null)}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

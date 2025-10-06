@@ -5,8 +5,8 @@ import {
   OpinionSpectrum2D,
 } from "@/lib/OpinionSpectrum2D";
 
-const SAMPLE_PEOPLE: Opinion2DPoint[] = [
-  // REFUSALS - Models that refuse to answer
+// Refusal examples
+const REFUSALS: Opinion2DPoint[] = [
   {
     id: "refusal1",
     name: "GPT-4o",
@@ -70,7 +70,10 @@ const SAMPLE_PEOPLE: Opinion2DPoint[] = [
     refusalReason: "Error",
     info: "An internal error occurred while processing this request.",
   },
+];
 
+// Base opinion data (without refusals)
+const BASE_OPINIONS: Opinion2DPoint[] = [
   // High confidence, agree
   {
     id: "1",
@@ -325,40 +328,54 @@ const SAMPLE_PEOPLE: Opinion2DPoint[] = [
 export default function OpinionSpectrum2DPrototype() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="mb-8 text-3xl font-bold">
+      <div className="mx-auto max-w-6xl space-y-12">
+        <h1 className="text-3xl font-bold">
           2D Opinion Spectrum Prototype
         </h1>
 
-        <div className="rounded-lg bg-white p-8 shadow-lg">
-          <OpinionSpectrum2D
-            data={SAMPLE_PEOPLE}
-            height="h-48"
-            showGridLines={true}
-            showAxisLabels={true}
-          />
-        </div>
-
         {/* Instructions */}
-        <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <h2 className="mb-2 font-semibold text-blue-900">How to use:</h2>
           <ul className="space-y-1 text-sm text-blue-800">
             <li>
-              • Hover over any avatar to see details including agreement and
-              confidence percentages
+              • Hover over avatars to see details including agreement and confidence percentages
             </li>
             <li>
-              • X-axis represents agreement level (left = disagree, right =
-              agree)
+              • X-axis: left = disagree, right = agree
             </li>
             <li>
-              • Y-axis represents confidence level (bottom = low, top = high)
+              • Y-axis: bottom = low confidence, top = high confidence
             </li>
             <li>
-              • Nearby avatars are clustered in circular patterns to avoid
-              overlap
+              • Nearby avatars are clustered in circular patterns to avoid overlap
             </li>
           </ul>
+        </div>
+
+        {/* Example 1: With Errors */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Example 1: With Errors/Refusals
+          </h2>
+          <div className="rounded-lg bg-white p-8 shadow-lg">
+            <OpinionSpectrum2D
+              data={[...REFUSALS, ...BASE_OPINIONS]}
+              height="h-48"
+            />
+          </div>
+        </div>
+
+        {/* Example 2: Without Errors */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Example 2: Without Errors (Clean Opinions Only)
+          </h2>
+          <div className="rounded-lg bg-white p-8 shadow-lg">
+            <OpinionSpectrum2D
+              data={BASE_OPINIONS}
+              height="h-48"
+            />
+          </div>
         </div>
       </div>
     </div>
