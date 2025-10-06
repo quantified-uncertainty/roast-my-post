@@ -27,7 +27,7 @@ import {
 import { GenericToolDocsPage } from "../../components/GenericToolDocsPage";
 import { GenericToolTryPage } from "../../components/GenericToolTryPage";
 import { MathCheckDisplay } from "../../components/results/MathCheckDisplay";
-import { OpinionSpectrum2D, Opinion2DPoint } from "@/lib/OpinionSpectrum2D";
+import { OpinionSpectrum2D, Opinion2DPoint, RefusalReason } from "@/lib/OpinionSpectrum2D";
 import { FieldConfig } from "../../components/types";
 import { toolExamples as exampleConfigs } from "../../utils/toolExamples";
 
@@ -159,15 +159,29 @@ const toolResultRenderers: Record<
 
     const hasMultipleRuns = Object.values(groupedResults).some((runs: any) => runs.length > 1);
 
-    // Convert results to Opinion2DPoint format for 2D visualization
-    const opinion2DData: Opinion2DPoint[] = (result.results || []).map((r: any, i: number) => ({
-      id: `${i}`,
+    // Convert successful results to Opinion2DPoint format for 2D visualization
+    const successfulOpinions: Opinion2DPoint[] = (result.results || []).map((r: any, i: number) => ({
+      id: `success-${i}`,
       name: r.model,
       avatar: getModelAbbrev(r.model),
       agreement: r.agreement,
       confidence: r.confidence ?? 50, // Default to 50 if confidence is null/undefined (but preserve 0)
       info: r.reasoning,
     }));
+
+    // Convert failed evaluations to Opinion2DPoint format with refusal reasons
+    const failedOpinions: Opinion2DPoint[] = (result.failed || []).map((f: any, i: number) => ({
+      id: `failed-${i}`,
+      name: f.model,
+      avatar: getModelAbbrev(f.model),
+      agreement: 0,
+      confidence: 0,
+      info: f.error, // Show error message as info
+      refusalReason: f.refusalReason as RefusalReason,
+    }));
+
+    // Combine successful and failed results
+    const opinion2DData: Opinion2DPoint[] = [...successfulOpinions, ...failedOpinions];
 
     return (
       <div className="space-y-6">

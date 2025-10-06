@@ -3,6 +3,14 @@ import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
 import { createOpenRouterClient, OPENROUTER_MODELS } from "../../utils/openrouter";
 
+// Refusal reason types (matches OpinionSpectrum2D)
+export type RefusalReason =
+  | "Safety"
+  | "Policy"
+  | "MissingData"
+  | "Unclear"
+  | "Error";
+
 // Input/Output types
 export interface ClaimEvaluatorInput {
   claim: string;
@@ -34,6 +42,7 @@ export interface FailedEvaluation {
   model: string;
   provider: string;
   error: string;
+  refusalReason: RefusalReason; // Categorized refusal/error reason
   rawResponse?: string; // The response that failed to parse (if any)
   errorDetails?: string; // Additional error context
 }
@@ -118,6 +127,7 @@ const outputSchema = z.object({
       model: z.string().describe("Model identifier"),
       provider: z.string().describe("Provider name"),
       error: z.string().describe("Error message"),
+      refusalReason: z.enum(["Safety", "Policy", "MissingData", "Unclear", "Error"]).describe("Categorized refusal/error reason"),
       rawResponse: z.string().optional().describe("Raw response that failed to parse"),
       errorDetails: z.string().optional().describe("Additional error context"),
     })
@@ -168,6 +178,36 @@ function sanitizeResponse(response: string | undefined): string | undefined {
   // Remove potential API keys (basic pattern matching)
   // Matches common patterns like sk-xxx, key_xxx, etc.
   return truncated.replace(/\b(sk-|key_|api[_-]?key[_-]?)[a-zA-Z0-9_-]{20,}\b/gi, '[REDACTED]');
+}
+
+/**
+ * Detect the reason for a refusal or error based on error message and response content
+ */
+function detectRefusalReason(error: Error, rawResponse?: string): RefusalReason {
+  const combined = `${error.message} ${rawResponse || ''}`.toLowerCase();
+
+  // Safety refusals: harmful content, violence, illegal activities
+  if (/safety|harmful|dangerous|violat.*guideline|inappropriate|offensive/i.test(combined)) {
+    return 'Safety';
+  }
+
+  // Policy refusals: model policies, content restrictions
+  if (/policy|cannot.*evaluat|against.*rule|not.*allowed|unable to (provide|assist|answer)/i.test(combined)) {
+    return 'Policy';
+  }
+
+  // Missing data: insufficient information, lack of access
+  if (/insufficient.*data|don't have access|missing.*information|lack.*context|no.*data|cannot access|don't possess/i.test(combined)) {
+    return 'MissingData';
+  }
+
+  // Unclear: ambiguous claims, vague questions
+  if (/unclear|ambiguous|vague|not.*specific|too.*broad|imprecise/i.test(combined)) {
+    return 'Unclear';
+  }
+
+  // Default to Error for technical failures (JSON parse, network, timeout, etc.)
+  return 'Error';
 }
 
 /**
@@ -490,10 +530,14 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
             errorDetails = `Attempted to parse: ${error.attemptedParse}\n\n${errorDetails || ''}`;
           }
 
+          // Detect refusal reason based on error and response
+          const refusalReason = detectRefusalReason(error, rawResponse);
+
           return {
             model: modelId,
             provider: extractProvider(modelId),
             error: errorMessage,
+            refusalReason,
             rawResponse,
             errorDetails,
           };
