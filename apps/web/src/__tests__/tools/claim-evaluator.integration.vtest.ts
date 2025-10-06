@@ -209,6 +209,9 @@ describe('Claim Evaluator Tool E2E Tests', () => {
           expect(f.model).toBeDefined();
           expect(f.provider).toBeDefined();
           expect(f.error).toBeDefined();
+          // Should have refusalReason categorization
+          expect(f.refusalReason).toBeDefined();
+          expect(['Safety', 'Policy', 'MissingData', 'Unclear', 'Error']).toContain(f.refusalReason);
         });
       }
     }, 60000);
