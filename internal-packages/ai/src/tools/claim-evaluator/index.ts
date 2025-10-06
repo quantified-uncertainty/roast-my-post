@@ -541,11 +541,9 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
             rawResponse = error.rawResponse;
           }
 
-          // Also capture thinking text if it was a thinking model
+          // Capture thinking text if it was a thinking model (but don't include stack traces)
           if (error?.thinkingText) {
-            errorDetails = `Thinking: ${error.thinkingText}\n\n${error?.stack || ''}`;
-          } else if (error?.stack) {
-            errorDetails = error.stack;
+            errorDetails = `Thinking: ${error.thinkingText}`;
           }
 
           // Add parsed data if available (for validation errors)
