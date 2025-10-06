@@ -48,6 +48,9 @@ export interface ClaimEvaluatorOutput {
   };
 }
 
+// Constants
+const DEFAULT_REASONING_LENGTH = 15; // Default max length for reasoning text in characters
+
 // Top 6 models for claim evaluation (matches UI checkbox defaults)
 const DEFAULT_MODELS = [
   OPENROUTER_MODELS.CLAUDE_SONNET_4_5,         // Claude 4.5 Sonnet (Latest)
@@ -150,6 +153,55 @@ export function getAgreementLabel(agreement: number): string {
 }
 
 /**
+ * Sanitize response content to prevent exposure of sensitive data
+ * Truncates long responses and removes potential API keys or tokens
+ */
+function sanitizeResponse(response: string | undefined): string | undefined {
+  if (!response) return response;
+
+  // Truncate very long responses to prevent log bloat
+  const MAX_LENGTH = 500;
+  const truncated = response.length > MAX_LENGTH
+    ? response.substring(0, MAX_LENGTH) + '...[truncated]'
+    : response;
+
+  // Remove potential API keys (basic pattern matching)
+  // Matches common patterns like sk-xxx, key_xxx, etc.
+  return truncated.replace(/\b(sk-|key_|api[_-]?key[_-]?)[a-zA-Z0-9_-]{20,}\b/gi, '[REDACTED]');
+}
+
+/**
+ * Create a standardized evaluation error with sanitized context
+ */
+function createEvaluationError(
+  message: string,
+  context: {
+    rawResponse?: string;
+    parsedData?: unknown;
+    attemptedParse?: string;
+    tokenUsage?: any;
+  }
+): Error {
+  const err = new Error(message);
+
+  // Attach sanitized context
+  if (context.rawResponse) {
+    (err as any).rawResponse = sanitizeResponse(context.rawResponse);
+  }
+  if (context.parsedData) {
+    (err as any).parsedData = context.parsedData;
+  }
+  if (context.attemptedParse) {
+    (err as any).attemptedParse = sanitizeResponse(context.attemptedParse);
+  }
+  if (context.tokenUsage) {
+    (err as any).tokenUsage = context.tokenUsage;
+  }
+
+  return err;
+}
+
+/**
  * Evaluate a claim with a single model via OpenRouter
  */
 async function evaluateWithModel(
@@ -165,7 +217,7 @@ async function evaluateWithModel(
     ? '\n\nNote: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others.'
     : '';
 
-  const reasoningLength = input.reasoningLength || 15;
+  const reasoningLength = input.reasoningLength || DEFAULT_REASONING_LENGTH;
 
   const prompt = `You are evaluating the following claim:
 
@@ -240,10 +292,10 @@ Your response must be valid JSON only.`;
     rawTokenUsage = completion.usage;
 
     if (!rawContent) {
-      const err = new Error('No response from model');
-      (err as any).rawResponse = rawContent;
-      (err as any).tokenUsage = rawTokenUsage;
-      throw err;
+      throw createEvaluationError('No response from model', {
+        rawResponse: rawContent,
+        tokenUsage: rawTokenUsage,
+      });
     }
 
     // Capture token usage
@@ -278,35 +330,38 @@ Your response must be valid JSON only.`;
     try {
       parsed = JSON.parse(jsonContent);
     } catch (parseError: any) {
-      // Attach raw response to parse error
-      parseError.rawResponse = rawContent;
-      parseError.attemptedParse = jsonContent;
-      throw parseError;
+      throw createEvaluationError(
+        `JSON parse error: ${parseError.message}`,
+        {
+          rawResponse: rawContent,
+          attemptedParse: jsonContent,
+        }
+      );
     }
     const agreement = Number(parsed.agreement);
     const confidence = Number(parsed.confidence);
-    const maxReasoningLength = input.reasoningLength || 15;
+    const maxReasoningLength = input.reasoningLength || DEFAULT_REASONING_LENGTH;
     const reasoning = String(parsed.reasoning || '').substring(0, maxReasoningLength);
 
     if (isNaN(agreement) || agreement < 0 || agreement > 100) {
-      const err = new Error(`Invalid agreement score: ${agreement}`);
-      (err as any).rawResponse = rawContent;
-      (err as any).parsedData = parsed;
-      throw err;
+      throw createEvaluationError(`Invalid agreement score: ${agreement}`, {
+        rawResponse: rawContent,
+        parsedData: parsed,
+      });
     }
 
     if (isNaN(confidence) || confidence < 0 || confidence > 100) {
-      const err = new Error(`Invalid confidence score: ${confidence}`);
-      (err as any).rawResponse = rawContent;
-      (err as any).parsedData = parsed;
-      throw err;
+      throw createEvaluationError(`Invalid confidence score: ${confidence}`, {
+        rawResponse: rawContent,
+        parsedData: parsed,
+      });
     }
 
     if (reasoning.length < 10) {
-      const err = new Error(`Reasoning too short (must be at least 10 chars)`);
-      (err as any).rawResponse = rawContent;
-      (err as any).parsedData = parsed;
-      throw err;
+      throw createEvaluationError('Reasoning too short (must be at least 10 chars)', {
+        rawResponse: rawContent,
+        parsedData: parsed,
+      });
     }
 
     return {
@@ -323,8 +378,10 @@ Your response must be valid JSON only.`;
   } catch (error: any) {
     context.logger.error(`[ClaimEvaluator] Error with ${model}:`, error.message);
 
-    // Attach raw response to error for caller to extract
-    error.rawResponse = error.rawResponse || rawContent;
+    // Attach sanitized raw response to error for caller to extract (if not already attached)
+    if (!error.rawResponse && rawContent) {
+      error.rawResponse = sanitizeResponse(rawContent);
+    }
     error.thinkingText = rawThinking;
     error.tokenUsage = rawTokenUsage;
 

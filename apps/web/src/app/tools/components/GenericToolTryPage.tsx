@@ -101,6 +101,11 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
         const value = formData[field.name];
         if (field.type === 'checkbox') {
           continue;
+        } else if (field.type === 'checkbox-group') {
+          // Validate checkbox-group: must have at least one selection
+          if (!value || !Array.isArray(value) || value.length === 0) {
+            return false;
+          }
         } else if (!value || (typeof value === 'string' && !value.trim())) {
           return false;
         }
@@ -255,13 +260,14 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
           </div>
         );
 
-      case 'checkbox-group':
+      case 'checkbox-group': {
+        const isInvalid = field.required && (!value || !Array.isArray(value) || value.length === 0);
         return (
           <div key={field.name}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {field.label} {field.required && <span className="text-red-500">*</span>}
             </label>
-            <div className="space-y-2 border border-gray-200 rounded-md p-4 bg-gray-50">
+            <div className={`space-y-2 border rounded-md p-4 ${isInvalid ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
               {field.options?.map(option => {
                 const isChecked = Array.isArray(value) ? value.includes(option.value) : false;
                 return (
@@ -287,11 +293,15 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
                 );
               })}
             </div>
+            {isInvalid && (
+              <p className="mt-1 text-sm text-red-600">Please select at least one option</p>
+            )}
             {field.helperText && (
               <p className="mt-1 text-sm text-gray-500">{field.helperText}</p>
             )}
           </div>
         );
+      }
 
       default:
         return null;
