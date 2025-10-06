@@ -381,8 +381,9 @@ Your response must be valid JSON only.`;
     try {
       parsed = JSON.parse(jsonContent);
     } catch (parseError: any) {
+      // Don't expose JSON parsing details to end users
       throw createEvaluationError(
-        `JSON parse error: ${parseError.message}`,
+        'Failed to produce valid JSON',
         {
           rawResponse: rawContent,
           attemptedParse: jsonContent,
@@ -541,9 +542,11 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
             rawResponse = error.rawResponse;
           }
 
-          // Capture thinking text if it was a thinking model (but don't include stack traces)
+          // Also capture thinking text if it was a thinking model
           if (error?.thinkingText) {
-            errorDetails = `Thinking: ${error.thinkingText}`;
+            errorDetails = `Thinking: ${error.thinkingText}\n\n${error?.stack || ''}`;
+          } else if (error?.stack) {
+            errorDetails = error.stack;
           }
 
           // Add parsed data if available (for validation errors)
