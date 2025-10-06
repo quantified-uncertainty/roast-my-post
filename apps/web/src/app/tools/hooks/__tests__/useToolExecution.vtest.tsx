@@ -24,10 +24,11 @@ describe('useToolExecution', () => {
   });
 
   it('should execute successfully and update state', async () => {
-    const mockResponse = { result: 'success' };
+    const mockResult = { result: 'success' };
+    const mockResponse = { result: mockResult, cost: null, sessionId: 'test-session' };
     mockRunToolWithAuth.mockResolvedValueOnce(mockResponse);
 
-    const { result } = renderHook(() => 
+    const { result } = renderHook(() =>
       useToolExecution<{ text: string }, { result: string }>('/api/test')
     );
 
@@ -36,7 +37,7 @@ describe('useToolExecution', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.result).toEqual(mockResponse);
+      expect(result.current.result).toEqual(mockResult);
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
     });
@@ -84,13 +85,14 @@ describe('useToolExecution', () => {
   });
 
   it('should process response when processor is provided', async () => {
-    const mockResponse = { result: 'original' };
+    const mockResult = { result: 'original' };
+    const mockResponse = { result: mockResult, cost: null, sessionId: 'test-session' };
     const processedResponse = { result: 'processed' };
     mockRunToolWithAuth.mockResolvedValueOnce(mockResponse);
 
     const processResponse = vi.fn(() => processedResponse);
 
-    const { result } = renderHook(() => 
+    const { result } = renderHook(() =>
       useToolExecution<{ text: string }, { result: string }>('/api/test', {
         processResponse
       })
@@ -101,19 +103,20 @@ describe('useToolExecution', () => {
     });
 
     await waitFor(() => {
-      expect(processResponse).toHaveBeenCalledWith(mockResponse);
+      expect(processResponse).toHaveBeenCalledWith(mockResult);
       expect(result.current.result).toEqual(processedResponse);
     });
   });
 
   it('should call lifecycle callbacks', async () => {
-    const mockResponse = { result: 'success' };
+    const mockResult = { result: 'success' };
+    const mockResponse = { result: mockResult, cost: null, sessionId: 'test-session' };
     mockRunToolWithAuth.mockResolvedValueOnce(mockResponse);
 
     const onExecuteStart = vi.fn();
     const onExecuteComplete = vi.fn();
 
-    const { result } = renderHook(() => 
+    const { result } = renderHook(() =>
       useToolExecution<{ text: string }, { result: string }>('/api/test', {
         onExecuteStart,
         onExecuteComplete
@@ -126,7 +129,7 @@ describe('useToolExecution', () => {
 
     await waitFor(() => {
       expect(onExecuteStart).toHaveBeenCalled();
-      expect(onExecuteComplete).toHaveBeenCalledWith(mockResponse, undefined);
+      expect(onExecuteComplete).toHaveBeenCalledWith(mockResult, undefined);
     });
   });
 
