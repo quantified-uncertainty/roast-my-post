@@ -6,6 +6,40 @@ import {
 } from "@/lib/OpinionSpectrum2D";
 
 const SAMPLE_PEOPLE: Opinion2DPoint[] = [
+  // BUG REPLICATION: Low confidence values (0-10) that should show at bottom
+  {
+    id: "bug1",
+    name: "DeepSeek V3.1",
+    avatar: "DS",
+    agreement: 50,
+    confidence: 0,
+    info: "Insufficient context - showing confidence: 0%",
+  },
+  {
+    id: "bug2",
+    name: "Claude 4.5",
+    avatar: "C4.5",
+    agreement: 50,
+    confidence: 5,
+    info: "No context given - showing confidence: 5%",
+  },
+  {
+    id: "bug3",
+    name: "Grok 4",
+    avatar: "Grok4",
+    agreement: 50,
+    confidence: 0,
+    info: "No context - showing confidence: 0%",
+  },
+  {
+    id: "bug4",
+    name: "Haiku 3.5",
+    avatar: "H3.5",
+    agreement: 0,
+    confidence: 10,
+    info: "Insufficient context - showing confidence: 10%",
+  },
+
   // High confidence, agree
   {
     id: "1",

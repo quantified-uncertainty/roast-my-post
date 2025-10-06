@@ -165,7 +165,7 @@ const toolResultRenderers: Record<
       name: r.model,
       avatar: getModelAbbrev(r.model),
       agreement: r.agreement,
-      confidence: r.confidence || 50, // Default to 50 if confidence not yet available
+      confidence: r.confidence ?? 50, // Default to 50 if confidence is null/undefined (but preserve 0)
       info: r.reasoning,
     }));
 
