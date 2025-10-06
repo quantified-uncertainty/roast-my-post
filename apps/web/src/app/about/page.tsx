@@ -3,43 +3,26 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const aboutContent = `
-# About Roast My Post
+# About RoastMyPost
 
-Roast My Post is an open-source AI-powered platform for document analysis and evaluation. We help writers, researchers, and content creators get high-quality feedback on their work through specialized AI agents.
+RoastMyPost is an open-source AI-powered platform for document analysis and evaluation. It hosts a variety of llm-powered evaluators that can be used to evaluate documents.
 
 ## What We Do
 
-Our platform allows you to:
+With RoastMyPost, you can:
 - Upload documents for AI-powered analysis
-- Create custom AI agents with specific evaluation criteria
 - Get detailed feedback with inline comments and highlights
 - Track evaluation history and compare different perspectives
-- Export evaluations for further analysis
+- Export evaluations for review and analysis
+- Create custom AI evaluators with specific evaluation criteria
 
 ## Open Source
 
-Roast My Post is proudly open source and built by the community. We believe in transparent development and welcome contributions from developers, researchers, and users.
+RoastMyPost is open source. We believe in transparent development and welcome contributions from developers, researchers, and users.
 
 - **GitHub Repository**: [github.com/quantified-uncertainty/roast-my-post](https://github.com/quantified-uncertainty/roast-my-post)
 - **License**: MIT
 - **Contributing**: See our [contribution guidelines](https://github.com/quantified-uncertainty/roast-my-post/blob/main/CONTRIBUTING.md)
-
-## Technology Stack
-
-We use modern, reliable technologies:
-- Next.js 15 with App Router
-- PostgreSQL with Prisma ORM
-- Anthropic Claude API for AI evaluations
-- TypeScript for type safety
-- Tailwind CSS for styling
-
-## Our Mission
-
-We aim to democratize access to high-quality content feedback by:
-1. Making AI evaluation tools accessible to everyone
-2. Supporting diverse evaluation perspectives through custom agents
-3. Building in public with full transparency
-4. Fostering a community of writers and evaluators
 
 ## The Team
 

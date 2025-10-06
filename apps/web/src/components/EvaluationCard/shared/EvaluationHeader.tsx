@@ -6,6 +6,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { StaleBadge } from "@/components/StaleBadge";
 import type { EvaluationStatus } from "@/components/StatusBadge";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ROUTES } from "@/constants/routes";
 
 interface EvaluationHeaderProps {
   agentName: string;
@@ -20,7 +21,7 @@ interface EvaluationHeaderProps {
 
 /**
  * Shared header component for evaluation cards
- * Shows agent name, grade/status badge, and stale/rerunning indicators
+ * Shows evaluator name, grade/status badge, and stale/rerunning indicators
  */
 export function EvaluationHeader({
   agentName,
@@ -41,7 +42,7 @@ export function EvaluationHeader({
         <GradeBadge grade={grade} variant="grayscale" size="xs" />
       )}
       <Link
-        href={`/agents/${agentId}`}
+        href={ROUTES.AGENTS.DETAIL(agentId)}
         className="text-sm font-semibold text-gray-600 underline hover:text-blue-900"
       >
         {agentName}

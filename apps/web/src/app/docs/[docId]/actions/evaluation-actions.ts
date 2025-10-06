@@ -147,7 +147,7 @@ export async function deleteEvaluation(
     // Revalidate relevant pages
     revalidatePath(`/docs/${documentId}`);
     revalidatePath(`/docs/${documentId}/evals/${agentId}`);
-    revalidatePath(`/agents/${agentId}`);
+    revalidatePath(`/evaluators/${agentId}`);
 
     return { success: true };
   } catch (error) {

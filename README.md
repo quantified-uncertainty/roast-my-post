@@ -4,7 +4,7 @@ An AI-powered document evaluation platform that provides intelligent analysis, c
 
 ## Key Features
 
-- **Multi-Agent Evaluations**: Deploy various AI agents (Assessors, Advisors, Enrichers, Explainers) to analyze documents from different angles
+- **Multi-Agent Evaluations**: Deploy various AI agents to analyze documents from different angles
 - **Interactive Annotations**: AI agents provide inline comments and highlights with importance ratings and grades
 - **Document Versioning**: Track changes and evaluations across multiple versions of documents
 - **Batch Processing**: Queue and process multiple evaluations asynchronously with retry logic

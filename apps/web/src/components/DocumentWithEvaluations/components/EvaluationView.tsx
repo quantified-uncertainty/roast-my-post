@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -12,6 +20,7 @@ import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 import type { Comment } from "@roast/ai";
 
 import { LAYOUT } from "../constants";
+import { LocalCommentsUIProvider } from "../context/LocalCommentsUIContext";
 import { EvaluationViewProps } from "../types";
 import { CommentModalOptimized } from "./CommentModalOptimized";
 import { CommentsColumn } from "./CommentsColumn";
@@ -19,7 +28,6 @@ import { DocumentContent } from "./DocumentContent";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
-import { LocalCommentsUIProvider } from "../context/LocalCommentsUIContext";
 
 /**
  * Maps comment levels to appropriate highlight colors
@@ -74,6 +82,7 @@ export function EvaluationView({
 
   // Header expand/collapse tied to scroll (now handled inside header component as well)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
@@ -144,6 +153,33 @@ export function EvaluationView({
 
   // Track whether we're in "navigation mode" (using arrows) or "direct mode" (from URL)
   const isNavigationMode = useRef(false);
+
+  // Scroll listener to hide header when evaluations section reaches the top
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const evaluationsSection = evaluationsSectionRef.current;
+    if (!container || !evaluationsSection) return;
+
+    const handleScroll = () => {
+      const evalRect = evaluationsSection.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      // Hide header when top of evaluations section reaches top of container
+      // Add small offset (50px) so it triggers slightly before reaching the exact top
+      const isAtTop = evalRect.top <= containerRect.top + 50;
+      setIsHeaderVisible(!isAtTop);
+    };
+
+    // Check initial state
+    handleScroll();
+
+    // Listen for scroll events
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   // Handle URL-based navigation (when user shares a link or manually changes URL)
   const commentIdFromUrl = searchParams.get("comment");
@@ -218,7 +254,13 @@ export function EvaluationView({
   return (
     <div className="flex h-full flex-col">
       {/* Fixed Evaluation Cards Header Bar */}
-      <Card className="sticky top-0 z-50 mx-6">
+      <Card
+        className={cn(
+          "sticky top-0 z-50 mx-6 mt-2 transition-all duration-200",
+          !isHeaderVisible &&
+            "pointer-events-none h-0 overflow-hidden opacity-0"
+        )}
+      >
         <EvaluationCardsHeader
           document={document}
           evaluationState={evaluationState}
@@ -236,7 +278,7 @@ export function EvaluationView({
         {/* Unified scroll container for all content */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 pt-4"
+          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-8 pt-4"
         >
           {/* Document metadata header - now part of scrollable content */}
           <DocumentMetadata
@@ -244,22 +286,11 @@ export function EvaluationView({
             isFullWidth={isFullWidth}
             onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
           />
-          {/* Submitter Notes - only show if notes exist */}
-          {document.submitterNotes && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <h3 className="mb-2 text-sm font-semibold text-blue-900">
-                Submitter's Notes
-              </h3>
-              <p className="whitespace-pre-wrap text-sm text-blue-800">
-                {document.submitterNotes}
-              </p>
-            </div>
-          )}
           {/* Document content and comments section */}
           <div
             className={cn(
               "flex min-h-screen",
-              isFullWidth ? "px-5" : "justify-center"
+              isFullWidth ? "" : "justify-center"
             )}
           >
             <LocalCommentsUIProvider>

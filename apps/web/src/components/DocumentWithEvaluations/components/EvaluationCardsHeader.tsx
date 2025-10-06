@@ -103,8 +103,12 @@ function EvaluationCardsHeaderComponent({
   }) {
     const [showMoreOpen, setShowMoreOpen] = useState(false);
     const maxVisible = 4;
-    const visibleReviews = document.reviews.slice(0, maxVisible);
-    const hiddenReviews = document.reviews.slice(maxVisible);
+    // Filter out evaluations with 0 comments
+    const reviewsWithComments = document.reviews.filter(
+      (review) => review.comments && review.comments.length > 0
+    );
+    const visibleReviews = reviewsWithComments.slice(0, maxVisible);
+    const hiddenReviews = reviewsWithComments.slice(maxVisible);
     const hasHiddenReviews = hiddenReviews.length > 0;
 
     return (
@@ -144,7 +148,7 @@ function EvaluationCardsHeaderComponent({
             <PopoverTrigger asChild>
               <div
                 className="inline-flex h-8 flex-shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md border border-gray-200 bg-white px-3 text-xs transition-all duration-200 hover:border-gray-300 hover:bg-gray-200"
-                title={`Show ${hiddenReviews.length} more evaluation agents`}
+                title={`Show ${hiddenReviews.length} more evaluators`}
               >
                 <ChevronDownIcon className="mr-1.5 h-3.5 w-3.5" />
                 Show {hiddenReviews.length} More
@@ -153,7 +157,7 @@ function EvaluationCardsHeaderComponent({
             <PopoverContent className="w-80 p-2" align="end">
               <div className="space-y-1">
                 <div className="px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Agents
+                  Evaluators
                 </div>
                 {hiddenReviews.map((review) => {
                   const isActive = evaluationState.selectedAgentIds.has(

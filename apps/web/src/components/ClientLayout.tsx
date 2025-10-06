@@ -60,11 +60,11 @@ export default function ClientLayout({
                     Explore
                   </Link>
                   <Link
-                    href="/agents"
+                    href="/evaluators"
                     className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
                   >
                     <Bot className="h-5 w-5" />
-                    Agents
+                    Evaluators
                   </Link>
                   <Link
                     href="/tools"

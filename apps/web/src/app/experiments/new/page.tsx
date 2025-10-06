@@ -119,7 +119,7 @@ export default function NewExperimentPage() {
             New Experiment
           </h1>
           <p className="mt-2 text-gray-600">
-            Create a temporary agent and test it on selected documents. All data will be automatically 
+            Create a temporary evaluator and test it on selected documents. All data will be automatically
             deleted after the expiration period.
           </p>
         </div>

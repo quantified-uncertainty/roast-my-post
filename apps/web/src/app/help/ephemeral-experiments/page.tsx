@@ -2,29 +2,54 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
 
-const ephemeralExperimentsGuide = `# Ephemeral Experiments Guide
+const ephemeralExperimentsGuide = `# Custom Evaluator Experiments
+
+**Note: This feature allows you to test custom evaluators without creating permanent records.**
 
 ## What are Ephemeral Experiments?
 
-Ephemeral experiments are temporary evaluation sessions that automatically clean themselves up after a specified time. Think of them as a "sandbox mode" for testing agent configurations and evaluating content without permanently storing the results.
+Ephemeral experiments are temporary evaluation sessions that automatically clean themselves up after a specified time. Think of them as a "sandbox mode" for testing evaluator configurations and evaluating content without permanently storing the results.
 
 ## Why Use Ephemeral Experiments?
 
 ### Perfect for:
-- **Testing New Ideas**: Try different agent instructions without cluttering your workspace
+- **Testing New Ideas**: Try different evaluator instructions without cluttering your workspace
 - **Quick Evaluations**: Get fast feedback on content without permanent storage
 - **Comparing Approaches**: Run side-by-side comparisons of different evaluation strategies
 - **Learning the Platform**: Experiment freely without worrying about cleanup
 
 ### Key Benefits:
-- ✨ **Automatic Cleanup**: Resources are deleted after expiration (default: 24 hours)
-- 🚀 **Fast Iteration**: Quickly test and refine agent configurations
+- ✨ **Automatic Cleanup**: Resources are deleted after expiration (default: 7 days)
+- 🚀 **Fast Iteration**: Quickly test and refine evaluator configurations
 - 📊 **Full Analytics**: Get complete results and metrics during the experiment
 - 🔒 **Private by Default**: Only you can see your experiments
 
 ## Getting Started
+
+### Using the Web Interface
+
+The easiest way to create an experiment is through the web UI:
+
+1. **Navigate to [/experiments/new](/experiments/new)**
+2. **Configure Your Evaluator**:
+   - Name: Give your evaluator a descriptive name
+   - Primary Instructions: Define how the evaluator should assess content
+   - Self-Critique Instructions (optional): Add self-reflection capabilities
+   - Grading: Enable if you want numeric scores
+3. **Set Experiment Settings**:
+   - Tracking ID (optional): Custom identifier for the experiment
+   - Description: Note what you're testing
+   - Expiration: Choose when to auto-delete (default: 7 days)
+4. **Select Documents**:
+   - **Search Existing**: Pick from your document library
+   - **URLs**: Import documents from web URLs
+   - **Inline Content**: Paste content directly
+5. **Create Experiment**: Click to launch
+
+Your experiment will run immediately, and you'll be redirected to the results page where you can monitor progress in real-time.
 
 ### Using the API
 
@@ -47,8 +72,8 @@ curl -X POST https://roastmypost.com/api/batches \\
 
 ### Understanding Experiment Types
 
-#### 1. **Test Existing Agent**
-Use your production agent on test content:
+#### 1. **Test Existing Evaluator**
+Use your production evaluator on test content:
 \`\`\`json
 {
   "agentId": "agent_production",
@@ -62,8 +87,8 @@ Use your production agent on test content:
 }
 \`\`\`
 
-#### 2. **Test New Agent Configuration**
-Create a temporary agent with custom instructions:
+#### 2. **Test New Evaluator Configuration**
+Create a temporary evaluator with custom instructions:
 \`\`\`json
 {
   "isEphemeral": true,
@@ -77,12 +102,12 @@ Create a temporary agent with custom instructions:
 \`\`\`
 
 #### 3. **Full Sandbox Mode**
-Everything ephemeral - agent and documents:
+Everything ephemeral - evaluator and documents:
 \`\`\`json
 {
   "isEphemeral": true,
   "ephemeralAgent": {
-    "name": "Sandbox Agent",
+    "name": "Sandbox Evaluator",
     "primaryInstructions": "Test instructions..."
   },
   "ephemeralDocuments": {
@@ -105,7 +130,7 @@ curl https://roastmypost.com/api/experiments/exp_7a8b9c \\
 
 The results include:
 - **Overview**: Description, expiration time, status
-- **Agent Details**: Configuration used for the experiment
+- **Evaluator Details**: Configuration used for the experiment
 - **Job Statistics**: Progress and success rates
 - **Aggregate Metrics**: Average grades, total cost, completion time
 - **Individual Results**: Detailed evaluation for each document
@@ -122,16 +147,16 @@ Use descriptive tracking IDs and descriptions:
 \`\`\`
 
 ### 2. **Set Appropriate Expiration**
-- Quick tests: 1-6 hours
-- Day-long experiments: 24 hours (default)
-- Week-long studies: up to 168 hours (7 days)
+- Quick tests: 1-2 days
+- Standard experiments: 7 days (default)
+- Extended studies: up to 7 days maximum
 
 ### 3. **Compare Side-by-Side**
-Run multiple experiments with the same documents but different agents to compare approaches.
+Run multiple experiments with the same documents but different evaluators to compare approaches.
 
 ## Common Use Cases
 
-### A/B Testing Agent Instructions
+### A/B Testing Evaluator Instructions
 
 Test if more detailed instructions improve evaluation quality:
 
@@ -157,7 +182,7 @@ print(f"Detailed: {exp_b['aggregateMetrics']['averageGrade']}")
 
 ### Testing Edge Cases
 
-Ensure your agent handles unusual content:
+Ensure your evaluator handles unusual content:
 
 \`\`\`javascript
 const edgeCases = [
@@ -180,17 +205,16 @@ const response = await fetch('/api/batches', {
 
 ## Limitations
 
-1. **No URL Import**: Currently, you cannot import documents from URLs for ephemeral experiments
-2. **Access Control**: Experiments are private to the creator
-3. **Rate Limits**: Maximum 10 experiments per hour per user
-4. **Size Limits**: Maximum 100 documents per experiment
-5. **Expiration**: Maximum 7 days (168 hours)
+1. **Access Control**: Experiments are private to the creator
+2. **Rate Limits**: Maximum 10 experiments per hour per user
+3. **Size Limits**: Maximum 100 documents per experiment
+4. **Expiration**: Maximum 7 days (168 hours)
 
 ## Cleanup Process
 
 When an experiment expires:
 1. The batch record is deleted
-2. Ephemeral agents are removed (if created for the experiment)
+2. Ephemeral evaluators are removed (if created for the experiment)
 3. Ephemeral documents are deleted (if created for the experiment)
 4. All evaluations and jobs are removed
 5. Regular (non-ephemeral) resources are preserved
@@ -216,21 +240,15 @@ When an experiment expires:
 **Q: Can I extend an experiment's expiration?**  
 A: No, expiration times are fixed at creation. Create a new experiment if needed.
 
-**Q: Are experiment results included in my usage statistics?**  
+**Q: Are experiment results included in my usage statistics?**
 A: Yes, API usage and costs from experiments count toward your quotas.
 
-**Q: Can I convert an ephemeral experiment to permanent?**  
-A: No, but you can recreate the agent configuration as a permanent agent.
+**Q: Can I convert an ephemeral experiment to permanent?**
+A: No, but you can recreate the evaluator configuration as a permanent evaluator.
 
-**Q: What happens to running jobs when an experiment expires?**  
+**Q: What happens to running jobs when an experiment expires?**
 A: The cleanup process waits for running jobs to complete before deletion.
-
-## Getting Help
-
-- **API Documentation**: [Full API Reference](/help/api#ephemeral-experiments)
-- **Support**: [Discord Community](https://discord.gg/nsTnQTgtG6)
-- **Issues**: [GitHub](https://github.com/quantified-uncertainty/roast-my-post/issues)
-- **Email**: support@quantifieduncertainty.org`;
+`;
 
 export default function EphemeralExperimentsPage() {
   return (
@@ -241,7 +259,7 @@ export default function EphemeralExperimentsPage() {
         </h1>
         <CopyMarkdownButton content={ephemeralExperimentsGuide} />
       </div>
-      
+
       <div className="prose prose-gray max-w-none">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {ephemeralExperimentsGuide}

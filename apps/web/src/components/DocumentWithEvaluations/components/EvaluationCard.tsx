@@ -61,7 +61,7 @@ export function EvaluationCard({
       )}
     >
       {/* Header Row */}
-      <div className="mb-2.5 flex items-start justify-between">
+      <div className="flex items-start justify-between">
         <EvaluationHeader
           agentName={review.agent.name}
           agentId={review.agentId}
@@ -78,18 +78,11 @@ export function EvaluationCard({
             commentCount={review.comments?.length || 0}
             onChange={onToggle}
           />
+        ) : hasCompletedVersion && !hasComments ? (
+          <span className="text-xs text-gray-500">No Comments</span>
         ) : (
           <StatusBadge status={latestEvaluationStatus} />
         )}
-      </div>
-      {/* Summary or Status Message */}
-      <div
-        className={cn(
-          "mb-2.5 min-h-[36px] text-sm",
-          hasCompletedVersion ? "text-gray-700" : "italic text-gray-500"
-        )}
-      >
-        {statusContent}
       </div>
       {/* Footer */}
       <div className="mt-auto flex flex-row items-center justify-between">

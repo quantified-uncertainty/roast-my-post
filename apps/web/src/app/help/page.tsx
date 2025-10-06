@@ -17,29 +17,31 @@ const documentationSections = [
     icon: RocketLaunchIcon,
   },
   {
-    title: "Agent Documentation for Humans",
-    description: "Understanding and creating AI agents for document evaluation",
-    href: "/help/agents-humans",
+    title: "Custom Evaluators for (Written for Humans)",
+    description:
+      "Understanding and creating custom evaluators for document evaluation",
+    href: "/help/evaluators-humans",
     icon: UserGroupIcon,
   },
   {
-    title: "Agent Documentation for LLMs",
-    description: "Technical specification for AI agents and their capabilities",
-    href: "/help/agents-llms",
+    title: "Custom Evaluators (Written for LLMs)",
+    description:
+      "Technical specification for AI evaluators and their capabilities",
+    href: "/help/evaluators-llms",
     icon: ChatBubbleLeftRightIcon,
   },
   {
-    title: "API Documentation",
-    description: "Complete API reference for developers",
-    href: "/help/api",
-    icon: CodeBracketIcon,
-  },
-  {
-    title: "Ephemeral Experiments",
+    title: "Custom Evaluator Experiments",
     description:
-      "Create temporary experiments for testing agent configurations",
+      "Create temporary experiments for testing evaluator configurations",
     href: "/help/ephemeral-experiments",
     icon: BeakerIcon,
+  },
+  {
+    title: "API Documentation",
+    description: "API reference for developers",
+    href: "/help/api",
+    icon: CodeBracketIcon,
   },
 ];
 

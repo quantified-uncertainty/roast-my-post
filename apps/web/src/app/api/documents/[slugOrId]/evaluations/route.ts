@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { logger } from "@/infrastructure/logging/logger";
 import { prisma } from "@roast/db";
 
 // Schema for querying evaluations
@@ -15,57 +15,62 @@ const queryEvaluationsSchema = z.object({
 
 async function createEvaluation(documentId: string, agentId: string) {
   return await prisma.$transaction(async (tx) => {
-    const { getServices } = await import("@/application/services/ServiceFactory");
+    const { getServices } = await import(
+      "@/application/services/ServiceFactory"
+    );
     const transactionalServices = getServices().createTransactionalServices(tx);
-    
+
     // Check if evaluation already exists
     const existing = await tx.evaluation.findFirst({
-      where: { documentId, agentId }
+      where: { documentId, agentId },
     });
-    
+
     if (existing) {
       // Create new job for re-evaluation using JobService
       const job = await transactionalServices.jobService.createJob(existing.id);
-      
+
       return { evaluation: existing, job, created: false };
     }
-    
+
     // Create new evaluation
     const evaluation = await tx.evaluation.create({
       data: {
         documentId,
         agentId,
-      }
+      },
     });
-    
+
     // Create job using JobService
     const job = await transactionalServices.jobService.createJob(evaluation.id);
-    
+
     return { evaluation, job, created: true };
   });
 }
 
 // GET /api/documents/{documentId}/evaluations
-export async function GET(request: NextRequest, { params }: { params: Promise<{ slugOrId: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ slugOrId: string }> }
+) {
   try {
     // Authenticate request
     const userId = await authenticateRequest(request);
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const resolvedParams = await params;
     const { slugOrId: documentId } = resolvedParams;
     const url = new URL(request.url);
     const queryParams = Object.fromEntries(url.searchParams);
-    
-    const { status, agentId, limit, offset } = queryEvaluationsSchema.parse(queryParams);
+
+    const { status, agentId, limit, offset } =
+      queryEvaluationsSchema.parse(queryParams);
 
     // Verify document exists and user has access
-    const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+    const { PrivacyService } = await import(
+      "@/infrastructure/auth/privacy-service"
+    );
     const document = await prisma.document.findUnique({
       where: { id: documentId },
     });
@@ -76,7 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         { status: 404 }
       );
     }
-    
+
     // Check if user can view this document
     const canView = await PrivacyService.canViewDocument(documentId, userId);
     if (!canView) {
@@ -91,7 +96,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       documentId: string;
       agentId?: string;
     }
-    
+
     const where: EvaluationWhereClause = { documentId };
     if (agentId) where.agentId = agentId;
 
@@ -102,17 +107,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         agent: {
           include: {
             versions: {
-              orderBy: { createdAt: 'desc' },
+              orderBy: { createdAt: "desc" },
               take: 1,
               select: {
                 name: true,
                 description: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         versions: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           take: 1,
           select: {
             id: true,
@@ -120,18 +125,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             analysis: true,
             grade: true,
             createdAt: true,
-          }
+          },
         },
         jobs: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           take: 1,
           select: {
             status: true,
             createdAt: true,
-          }
-        }
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip: offset,
       take: limit,
     });
@@ -142,17 +147,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Filter by status if provided
     let filteredEvaluations = evaluations;
     if (status) {
-      filteredEvaluations = evaluations.filter(evaluation => {
+      filteredEvaluations = evaluations.filter((evaluation) => {
         const latestJob = evaluation.jobs[0];
-        if (!latestJob) return status === 'pending';
-        
+        if (!latestJob) return status === "pending";
+
         switch (status) {
-          case 'pending':
-            return latestJob.status === 'PENDING' || latestJob.status === 'RUNNING';
-          case 'completed':
-            return latestJob.status === 'COMPLETED';
-          case 'failed':
-            return latestJob.status === 'FAILED';
+          case "pending":
+            return (
+              latestJob.status === "PENDING" || latestJob.status === "RUNNING"
+            );
+          case "completed":
+            return latestJob.status === "COMPLETED";
+          case "failed":
+            return latestJob.status === "FAILED";
           default:
             return true;
         }
@@ -160,21 +167,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Format response
-    const formattedEvaluations = filteredEvaluations.map(evaluation => ({
+    const formattedEvaluations = filteredEvaluations.map((evaluation) => ({
       id: evaluation.id,
       agentId: evaluation.agentId,
       agent: {
-        name: evaluation.agent.versions[0]?.name || 'Unknown Agent',
-        description: evaluation.agent.versions[0]?.description || '',
+        name: evaluation.agent.versions[0]?.name || "Unknown Evaluator",
+        description: evaluation.agent.versions[0]?.description || "",
       },
-      status: evaluation.jobs[0]?.status?.toLowerCase() || 'pending',
+      status: evaluation.jobs[0]?.status?.toLowerCase() || "pending",
       createdAt: evaluation.createdAt.toISOString(),
-      latestVersion: evaluation.versions[0] ? {
-        summary: evaluation.versions[0].summary,
-        analysis: evaluation.versions[0].analysis,
-        grade: evaluation.versions[0].grade,
-        createdAt: evaluation.versions[0].createdAt.toISOString(),
-      } : null,
+      latestVersion: evaluation.versions[0]
+        ? {
+            summary: evaluation.versions[0].summary,
+            analysis: evaluation.versions[0].analysis,
+            grade: evaluation.versions[0].grade,
+            createdAt: evaluation.versions[0].createdAt.toISOString(),
+          }
+        : null,
     }));
 
     return NextResponse.json({
@@ -182,7 +191,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       total: status ? filteredEvaluations.length : total,
     });
   } catch (error) {
-    logger.error('Error fetching evaluations:', error);
+    logger.error("Error fetching evaluations:", error);
     return NextResponse.json(
       { error: "Failed to fetch evaluations" },
       { status: 500 }
@@ -191,20 +200,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 // POST /api/documents/{documentId}/evaluations
-export async function POST(request: NextRequest, { params }: { params: Promise<{ slugOrId: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ slugOrId: string }> }
+) {
   try {
     // Authenticate request
     const userId = await authenticateRequest(request);
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const resolvedParams = await params;
     const { slugOrId: documentId } = resolvedParams;
-    
+
     // Parse request body
     let body;
     try {
@@ -217,7 +226,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Validate request body
-    if (!body || (typeof body !== 'object')) {
+    if (!body || typeof body !== "object") {
       return NextResponse.json(
         { error: "Request body is required" },
         { status: 400 }
@@ -225,20 +234,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Check if this is a batch request
-    const isBatch = 'agentIds' in body;
-    
+    const isBatch = "agentIds" in body;
+
     if (isBatch) {
       const { agentIds } = body;
-      
+
       if (!Array.isArray(agentIds) || agentIds.length === 0) {
         return NextResponse.json(
           { error: "agentIds must be a non-empty array" },
           { status: 400 }
         );
       }
-      
+
       // Verify document exists and user has access
-      const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+      const { PrivacyService } = await import(
+        "@/infrastructure/auth/privacy-service"
+      );
       const document = await prisma.document.findUnique({
         where: { id: documentId },
       });
@@ -249,7 +260,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           { status: 404 }
         );
       }
-      
+
       // Check if user can modify this document (must be owner)
       if (document.submittedById !== userId) {
         return NextResponse.json(
@@ -261,15 +272,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       // Verify all agents exist
       const agents = await prisma.agent.findMany({
         where: { id: { in: agentIds } },
-        select: { id: true }
+        select: { id: true },
       });
 
-      const foundAgentIds = new Set(agents.map(a => a.id));
-      const missingAgentIds = agentIds.filter((id: string) => !foundAgentIds.has(id));
+      const foundAgentIds = new Set(agents.map((a) => a.id));
+      const missingAgentIds = agentIds.filter(
+        (id: string) => !foundAgentIds.has(id)
+      );
 
       if (missingAgentIds.length > 0) {
         return NextResponse.json(
-          { error: `Agents not found: ${missingAgentIds.join(', ')}` },
+          { error: `Evaluators not found: ${missingAgentIds.join(", ")}` },
           { status: 400 }
         );
       }
@@ -287,10 +300,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             created: result.created,
           });
         } catch {
-          console.error(`Failed to create evaluation for agent ${agentId}`);
+          console.error(`Failed to create evaluation for evaluator ${agentId}`);
           results.push({
             agentId,
-            error: 'Failed to create evaluation',
+            error: "Failed to create evaluation",
           });
         }
       }
@@ -301,8 +314,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       });
     } else {
       const { agentId } = body;
-      
-      if (!agentId || typeof agentId !== 'string') {
+
+      if (!agentId || typeof agentId !== "string") {
         return NextResponse.json(
           { error: "agentId is required and must be a string" },
           { status: 400 }
@@ -310,7 +323,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
 
       // Verify document exists and user has access
-      const { PrivacyService } = await import('@/infrastructure/auth/privacy-service');
+      const { PrivacyService } = await import(
+        "@/infrastructure/auth/privacy-service"
+      );
       const document = await prisma.document.findUnique({
         where: { id: documentId },
       });
@@ -321,7 +336,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           { status: 404 }
         );
       }
-      
+
       // Check if user can modify this document (must be owner)
       if (document.submittedById !== userId) {
         return NextResponse.json(
@@ -337,7 +352,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       if (!agent) {
         return NextResponse.json(
-          { error: "Agent not found" },
+          { error: "Evaluator not found" },
           { status: 404 }
         );
       }
@@ -353,7 +368,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           created: result.created,
         });
       } catch {
-        logger.error('Failed to create evaluation');
+        logger.error("Failed to create evaluation");
         return NextResponse.json(
           { error: "Failed to create evaluation" },
           { status: 500 }
@@ -361,7 +376,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
     }
   } catch (error) {
-    logger.error('Error in POST /evaluations:', error);
+    logger.error("Error in POST /evaluations:", error);
     return NextResponse.json(
       { error: "An error occurred. Please try again." },
       { status: 500 }

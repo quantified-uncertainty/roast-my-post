@@ -20,18 +20,18 @@ export function DocumentMetadata({
   onToggleFullWidth,
 }: DocumentMetadataProps) {
   return (
-    <div className={`flex ${isFullWidth ? "px-5" : "justify-center"}`}>
+    <div className={`flex ${isFullWidth ? "" : "justify-center"}`}>
       <div
         className="flex w-full items-center justify-between"
         style={!isFullWidth ? { maxWidth: "calc(48rem + 700px + 2rem)" } : {}}
       >
         <div className="flex items-center gap-4 text-sm text-gray-600">
           <PrivacyBadge isPrivate={!!document.isPrivate} variant="text" />
-          {document.submittedBy && (
+          {!document.isPrivate && document.submittedBy && (
             <>
               <span className="text-gray-300">•</span>
               <span>
-                Uploaded by{" "}
+                Submitted by{" "}
                 <Link
                   href={ROUTES.USERS.PROFILE(document.submittedBy.id)}
                   className="text-blue-600 hover:underline"

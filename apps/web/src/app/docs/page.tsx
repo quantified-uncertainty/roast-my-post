@@ -1,6 +1,6 @@
 import DocumentsLayoutClient from "@/components/DocumentsLayoutClient";
-import { DocumentModel } from "@/models/Document";
 import { auth } from "@/infrastructure/auth/auth";
+import { DocumentModel } from "@/models/Document";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +28,11 @@ export default async function DocumentsPage({
     });
   } catch (error: any) {
     // Handle missing table error gracefully for preview deployments
-    console.error('Failed to fetch documents:', error);
-    if (error?.code === 'P2021') {
-      console.log('Database table not found - likely a preview deployment with fresh database');
+    console.error("Failed to fetch documents:", error);
+    if (error?.code === "P2021") {
+      console.log(
+        "Database table not found - likely a preview deployment with fresh database"
+      );
     }
   }
 
@@ -44,7 +46,7 @@ export default async function DocumentsPage({
       totalCount={totalCount}
       hasSearched={hasSearched}
       title="Public Documents"
-      subtitle="Explore and review community documents"
+      subtitle="These documents are publicly visible. However, only the submitters can edit their evaluations."
       showPrivacyBadges={false}
       currentUserId={session?.user?.id}
     />

@@ -2,19 +2,38 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  CodeBracketIcon, 
-  UserGroupIcon, 
-  RocketLaunchIcon,
+
+import {
+  BeakerIcon,
   ChatBubbleLeftRightIcon,
-  Squares2X2Icon
+  CodeBracketIcon,
+  RocketLaunchIcon,
+  Squares2X2Icon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
   { name: "Documentation Hub", href: "/help", icon: Squares2X2Icon },
-  { name: "Getting Started", href: "/help/getting-started", icon: RocketLaunchIcon },
-  { name: "Agents for Humans", href: "/help/agents-humans", icon: UserGroupIcon },
-  { name: "Agents for LLMs", href: "/help/agents-llms", icon: ChatBubbleLeftRightIcon },
+  {
+    name: "Getting Started",
+    href: "/help/getting-started",
+    icon: RocketLaunchIcon,
+  },
+  {
+    name: "Evaluators for Humans",
+    href: "/help/evaluators-humans",
+    icon: UserGroupIcon,
+  },
+  {
+    name: "Evaluators for LLMs",
+    href: "/help/evaluators-llms",
+    icon: ChatBubbleLeftRightIcon,
+  },
+  {
+    name: "Custom Evaluator Experiments",
+    href: "/help/ephemeral-experiments",
+    icon: BeakerIcon,
+  },
   { name: "API Documentation", href: "/help/api", icon: CodeBracketIcon },
 ];
 

@@ -173,7 +173,7 @@ export default function DocumentsResults({
                                     key={agentId}
                                     className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
                                   >
-                                    {evaluation?.agent.name || "Unknown Agent"}
+                                    {evaluation?.agent.name || "Unknown Evaluator"}
                                     {hasGrade && (
                                       <GradeBadge
                                         grade={grade ?? null}
