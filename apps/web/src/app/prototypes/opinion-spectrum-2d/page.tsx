@@ -377,6 +377,19 @@ export default function OpinionSpectrum2DPrototype() {
             />
           </div>
         </div>
+
+        {/* Example 3: All Failed (Only Errors) */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Example 3: All Responses Failed
+          </h2>
+          <div className="rounded-lg bg-white p-8 shadow-lg">
+            <OpinionSpectrum2D
+              data={REFUSALS}
+              height="h-48"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

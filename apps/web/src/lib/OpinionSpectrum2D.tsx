@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import {
   AlertTriangle,
   HelpCircle,
@@ -27,7 +28,10 @@ export interface Opinion2DPoint {
 }
 
 // Icon mapping for refusal reasons
-const REFUSAL_ICONS: Record<RefusalReason, React.ComponentType<{ size?: number }>> = {
+const REFUSAL_ICONS: Record<
+  RefusalReason,
+  React.ComponentType<{ size?: number }>
+> = {
   Safety: ShieldAlert,
   Policy: Scale,
   MissingData: HelpCircle,
@@ -277,6 +281,264 @@ export interface OpinionSpectrum2DProps {
   className?: string;
 }
 
+// Helper function to get agreement label and color
+function getAgreementLabelAndColor(agreement: number): {
+  label: string;
+  color: string;
+} {
+  if (agreement >= 80)
+    return { label: "Strongly Agree", color: "border-green-500 text-green-700" };
+  if (agreement >= 60)
+    return { label: "Agree", color: "border-green-400 text-green-600" };
+  if (agreement >= 40)
+    return { label: "Neutral", color: "border-gray-400 text-gray-600" };
+  if (agreement >= 20)
+    return { label: "Disagree", color: "border-red-400 text-red-600" };
+  return { label: "Strongly Disagree", color: "border-red-500 text-red-700" };
+}
+
+export interface ClaimEvaluationResult {
+  results: Array<{
+    model: string;
+    provider: string;
+    agreement: number;
+    confidence: number;
+    reasoning: string;
+    thinkingText?: string;
+  }>;
+  failed?: Array<{
+    model: string;
+    provider: string;
+    error: string;
+    refusalReason: RefusalReason;
+  }>;
+  consensus?: {
+    mean: number;
+    stdDev: number;
+    range: { min: number; max: number };
+  };
+}
+
+export interface ClaimEvaluationDisplayProps {
+  result: ClaimEvaluationResult;
+  getModelAbbrev: (modelId: string) => string;
+}
+
+export function ClaimEvaluationDisplay({
+  result,
+  getModelAbbrev,
+}: ClaimEvaluationDisplayProps) {
+  // Convert successful results to Opinion2DPoint format
+  const successfulOpinions: Opinion2DPoint[] = (result.results || []).map(
+    (r, i) => ({
+      id: `success-${i}`,
+      name: r.model,
+      avatar: getModelAbbrev(r.model),
+      agreement: r.agreement,
+      confidence: r.confidence ?? 50,
+      info: r.reasoning,
+    })
+  );
+
+  // Convert failed evaluations to Opinion2DPoint format
+  const failedOpinions: Opinion2DPoint[] = (result.failed || []).map((f, i) => ({
+    id: `failed-${i}`,
+    name: f.model,
+    avatar: getModelAbbrev(f.model),
+    agreement: 0,
+    confidence: 0,
+    info: f.error,
+    refusalReason: f.refusalReason,
+  }));
+
+  // Combine successful and failed results
+  const opinion2DData: Opinion2DPoint[] = [
+    ...successfulOpinions,
+    ...failedOpinions,
+  ];
+
+  // Group results by model
+  const groupedResults = (result.results || []).reduce(
+    (acc: any, r: any) => {
+      if (!acc[r.model]) {
+        acc[r.model] = [];
+      }
+      acc[r.model].push(r);
+      return acc;
+    },
+    {}
+  );
+
+  const hasMultipleRuns = Object.values(groupedResults).some(
+    (runs: any) => runs.length > 1
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-lg font-semibold">
+          Claim Evaluation Results
+        </h3>
+
+        {/* Consensus Summary - only show if we have successful results */}
+        {successfulOpinions.length > 0 && result.consensus && (
+          <div className="mb-6 rounded-lg bg-blue-50 p-4">
+            <h4 className="mb-2 font-semibold">Consensus</h4>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Mean Agreement:</span>
+                <span className="ml-2 font-semibold">
+                  {result.consensus.mean}%
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Std Dev:</span>
+                <span className="ml-2 font-semibold">
+                  {result.consensus.stdDev}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Range:</span>
+                <span className="ml-2 font-semibold">
+                  {result.consensus.range.min}% - {result.consensus.range.max}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2D Opinion Spectrum Visualization */}
+        <div className="mb-8">
+          <h4 className="mb-4 font-semibold">
+            Opinion Spectrum (Agreement vs Confidence)
+          </h4>
+          <OpinionSpectrum2D data={opinion2DData} height="h-96" />
+        </div>
+
+        {/* Individual Model Results - Grouped by Model */}
+        <div className="mt-8 space-y-4">
+          <h4 className="font-semibold">Model Responses</h4>
+          {Object.entries(groupedResults).map(([modelId, runs]: [string, any]) => {
+            const firstRun = runs[0];
+
+            // Calculate stats for multiple runs
+            const agreements = runs.map((r: any) => r.agreement);
+            const confidences = runs.map((r: any) => r.confidence);
+            const avgAgreement =
+              agreements.reduce((a: number, b: number) => a + b, 0) /
+              agreements.length;
+            const avgConfidence =
+              confidences.reduce((a: number, b: number) => a + b, 0) /
+              confidences.length;
+
+            const { label, color } = getAgreementLabelAndColor(avgAgreement);
+
+            return (
+              <div key={modelId} className="rounded-lg border-2 p-4">
+                {/* Model Header */}
+                <div className="mb-3 flex items-start justify-between">
+                  <div>
+                    <span className="text-lg font-medium">{modelId}</span>
+                    <span className="ml-2 text-sm text-gray-500">
+                      ({firstRun.provider})
+                    </span>
+                    {hasMultipleRuns && (
+                      <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                        {runs.length} {runs.length === 1 ? "run" : "runs"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full border px-3 py-1 text-sm font-semibold ${color}`}
+                    >
+                      {label}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ({Math.round(avgAgreement)}% avg)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Average Stats for Multiple Runs */}
+                {hasMultipleRuns && runs.length > 1 && (
+                  <div className="mb-3 rounded bg-gray-50 p-3 text-sm">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <span className="text-gray-600">Avg Agreement:</span>
+                        <span className="ml-2 font-semibold">
+                          {Math.round(avgAgreement)}%
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Avg Confidence:</span>
+                        <span className="ml-2 font-semibold">
+                          {Math.round(avgConfidence)}%
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Agreement Range:</span>
+                        <span className="ml-2 font-semibold">
+                          {Math.min(...agreements)}%-{Math.max(...agreements)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Individual Runs */}
+                <div className="space-y-2">
+                  {runs.map((r: any, runIdx: number) => {
+                    return (
+                      <div
+                        key={runIdx}
+                        className={`rounded-lg p-3 ${hasMultipleRuns && runs.length > 1 ? "border bg-white" : ""}`}
+                      >
+                        {hasMultipleRuns && runs.length > 1 && (
+                          <div className="mb-2 text-xs font-semibold text-gray-500">
+                            Run #{runIdx + 1}
+                          </div>
+                        )}
+                        <div className="mb-2 flex items-center gap-4 text-sm">
+                          <span className="text-gray-600">
+                            Agreement:{" "}
+                            <span className="font-semibold text-gray-900">
+                              {r.agreement}%
+                            </span>
+                          </span>
+                          <span className="text-gray-600">
+                            Confidence:{" "}
+                            <span className="font-semibold text-gray-900">
+                              {r.confidence}%
+                            </span>
+                          </span>
+                        </div>
+                        <p className="text-sm italic text-gray-700">
+                          &ldquo;{r.reasoning}&rdquo;
+                        </p>
+                        {r.thinkingText && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                              View extended reasoning
+                            </summary>
+                            <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
+                              {r.thinkingText}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function OpinionSpectrum2D({
   data,
   height = "h-64",
@@ -291,6 +553,9 @@ export function OpinionSpectrum2D({
   // Split data into regular opinions and refusals
   const regularData = data.filter((p) => !p.refusalReason);
   const refusals = data.filter((p) => p.refusalReason);
+
+  // Check if all responses failed (only refusals, no regular data)
+  const allResponsesFailed = regularData.length === 0 && refusals.length > 0;
 
   // Group refusals by reason
   const refusalsByReason = refusals.reduce(
@@ -308,93 +573,108 @@ export function OpinionSpectrum2D({
       <div className="flex gap-4">
         {/* Main visualization area */}
         <div className="flex-1">
-          {/* Top label */}
-          {showAxisLabels && (
-            <div className="mb-6 text-center text-sm font-semibold text-gray-400">
-              ↑ High Confidence
+          {allResponsesFailed ? (
+            /* All Responses Failed State */
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <AlertTriangle className="mb-2 h-8 w-16 text-gray-300" />
+              <h4 className="mb-2 text-xl font-semibold text-gray-600">
+                All Responses Failed
+              </h4>
+              <p className="text-gray-400">
+                There is no data to display in the chart.
+              </p>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Top label */}
+              {showAxisLabels && (
+                <div className="mb-6 text-center text-sm font-semibold text-gray-400">
+                  ↑ High Confidence
+                </div>
+              )}
 
-          {/* 2D Grid container */}
-          <div className={`relative w-full ${height} rounded`}>
-            {/* Grid lines */}
-            {showGridLines && (
-              <div className="absolute inset-0">
-                {/* Vertical lines */}
-                {[0, 100].map((pos) => (
-                  <div
-                    key={`v-${pos}`}
-                    className="absolute h-full"
-                    style={{
-                      left: `${pos}%`,
-                      borderLeft: "1px solid #ddd",
-                    }}
-                  />
-                ))}
-                {/* Horizontal lines */}
-                {[0, 100].map((pos) => (
-                  <div
-                    key={`h-${pos}`}
-                    className="absolute w-full"
-                    style={{
-                      bottom: `${pos}%`,
-                      borderTop: "1px solid #ddd",
-                    }}
-                  />
-                ))}
-                {/* Center cross-hair (darker than outer border) */}
+              {/* 2D Grid container */}
+              <div className={`relative w-full ${height} rounded`}>
+                {/* Grid lines */}
+                {showGridLines && (
+                  <div className="absolute inset-0">
+                    {/* Vertical lines */}
+                    {[0, 100].map((pos) => (
+                      <div
+                        key={`v-${pos}`}
+                        className="absolute h-full"
+                        style={{
+                          left: `${pos}%`,
+                          borderLeft: "1px solid #ddd",
+                        }}
+                      />
+                    ))}
+                    {/* Horizontal lines */}
+                    {[0, 100].map((pos) => (
+                      <div
+                        key={`h-${pos}`}
+                        className="absolute w-full"
+                        style={{
+                          bottom: `${pos}%`,
+                          borderTop: "1px solid #ddd",
+                        }}
+                      />
+                    ))}
+                    {/* Center cross-hair (darker than outer border) */}
+                    <div
+                      className="absolute w-full"
+                      style={{
+                        bottom: "50%",
+                        borderTop: "2px solid #aaa",
+                      }}
+                    />
+                    <div
+                      className="absolute h-full"
+                      style={{
+                        left: "50%",
+                        borderLeft: "1px solid #ddd",
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Avatars - only show non-refused */}
                 <div
-                  className="absolute w-full"
-                  style={{
-                    bottom: "50%",
-                    borderTop: "2px solid #aaa",
-                  }}
-                />
-                <div
-                  className="absolute h-full"
-                  style={{
-                    left: "50%",
-                    borderLeft: "1px solid #ddd",
-                  }}
-                />
+                  className="absolute inset-0"
+                  onMouseLeave={() => setHoveredId(null)}
+                >
+                  {regularData.map((person) => (
+                    <Avatar
+                      key={person.id}
+                      person={person}
+                      allPeople={regularData}
+                      onHover={() => setHoveredId(person.id)}
+                      isHovered={hoveredId === person.id}
+                      proximityThreshold={proximityThreshold}
+                      clusterRadius={clusterRadius}
+                    />
+                  ))}
+                </div>
               </div>
-            )}
 
-            {/* Avatars - only show non-refused */}
-            <div
-              className="absolute inset-0"
-              onMouseLeave={() => setHoveredId(null)}
-            >
-              {regularData.map((person) => (
-                <Avatar
-                  key={person.id}
-                  person={person}
-                  allPeople={regularData}
-                  onHover={() => setHoveredId(person.id)}
-                  isHovered={hoveredId === person.id}
-                  proximityThreshold={proximityThreshold}
-                  clusterRadius={clusterRadius}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* X-axis labels */}
-          {showAxisLabels && (
-            <div className="relative mt-4 h-6 text-sm font-semibold">
-              <span className="absolute left-0 text-red-600">
-                ← Strongly Disagree
-              </span>
-              <span className="absolute right-0 text-green-600">
-                Strongly Agree →
-              </span>
-            </div>
-          )}
-          {/* Bottom label */}
-          {showAxisLabels && (
-            <div className="mt-2 text-center text-sm font-semibold text-gray-400">
-              ↓ Low Confidence
-            </div>
+              {/* X-axis labels */}
+              {showAxisLabels && (
+                <div className="relative mt-4 h-6 text-sm font-semibold">
+                  <span className="absolute left-0 text-red-600">
+                    ← Strongly Disagree
+                  </span>
+                  <span className="absolute right-0 text-green-600">
+                    Strongly Agree →
+                  </span>
+                </div>
+              )}
+              {/* Bottom label */}
+              {showAxisLabels && (
+                <div className="mt-2 text-center text-sm font-semibold text-gray-400">
+                  ↓ Low Confidence
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -407,7 +687,15 @@ export function OpinionSpectrum2D({
               Errors
             </h3>
             <div className="flex flex-wrap items-center gap-6">
-              {(["Safety", "Policy", "MissingData", "Unclear", "Error"] as RefusalReason[]).map((reason) => {
+              {(
+                [
+                  "Safety",
+                  "Policy",
+                  "MissingData",
+                  "Unclear",
+                  "Error",
+                ] as RefusalReason[]
+              ).map((reason) => {
                 const reasonModels = refusalsByReason[reason];
                 if (!reasonModels || reasonModels.length === 0) return null;
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { notFound } from "next/navigation";
 
+import { ClaimEvaluationDisplay } from "@/lib/OpinionSpectrum2D";
 import {
   BeakerIcon,
   CalculatorIcon,
@@ -27,7 +28,6 @@ import {
 import { GenericToolDocsPage } from "../../components/GenericToolDocsPage";
 import { GenericToolTryPage } from "../../components/GenericToolTryPage";
 import { MathCheckDisplay } from "../../components/results/MathCheckDisplay";
-import { OpinionSpectrum2D, Opinion2DPoint, RefusalReason } from "@/lib/OpinionSpectrum2D";
 import { FieldConfig } from "../../components/types";
 import { toolExamples as exampleConfigs } from "../../utils/toolExamples";
 
@@ -103,34 +103,6 @@ const toolResultRenderers: Record<
     />
   ),
   "claim-evaluator": (result: any) => {
-    // Helper to get agreement level label and color
-    const getAgreementLabelAndColor = (agreement: number) => {
-      if (agreement >= 80)
-        return {
-          label: "Strongly Agree",
-          color: "text-green-600 bg-green-50 border-green-200",
-        };
-      if (agreement >= 60)
-        return {
-          label: "Agree",
-          color: "text-green-500 bg-green-50 border-green-100",
-        };
-      if (agreement >= 40)
-        return {
-          label: "Neutral",
-          color: "text-gray-600 bg-gray-50 border-gray-200",
-        };
-      if (agreement >= 20)
-        return {
-          label: "Disagree",
-          color: "text-orange-500 bg-orange-50 border-orange-100",
-        };
-      return {
-        label: "Strongly Disagree",
-        color: "text-red-600 bg-red-50 border-red-200",
-      };
-    };
-
     // Map model IDs to abbreviations
     const getModelAbbrev = (modelId: string): string => {
       const abbrevMap: Record<string, string> = {
@@ -145,186 +117,12 @@ const toolResultRenderers: Record<
         "deepseek/deepseek-chat-v3.1:free": "DS",
         "x-ai/grok-4": "Grok4",
       };
-      return abbrevMap[modelId] || modelId.split("/")[1]?.substring(0, 4) || "??";
+      return (
+        abbrevMap[modelId] || modelId.split("/")[1]?.substring(0, 4) || "??"
+      );
     };
 
-    // Group results by model
-    const groupedResults = (result.results || []).reduce((acc: any, r: any) => {
-      if (!acc[r.model]) {
-        acc[r.model] = [];
-      }
-      acc[r.model].push(r);
-      return acc;
-    }, {});
-
-    const hasMultipleRuns = Object.values(groupedResults).some((runs: any) => runs.length > 1);
-
-    // Convert successful results to Opinion2DPoint format for 2D visualization
-    const successfulOpinions: Opinion2DPoint[] = (result.results || []).map((r: any, i: number) => ({
-      id: `success-${i}`,
-      name: r.model,
-      avatar: getModelAbbrev(r.model),
-      agreement: r.agreement,
-      confidence: r.confidence ?? 50, // Default to 50 if confidence is null/undefined (but preserve 0)
-      info: r.reasoning,
-    }));
-
-    // Convert failed evaluations to Opinion2DPoint format with refusal reasons
-    const failedOpinions: Opinion2DPoint[] = (result.failed || []).map((f: any, i: number) => ({
-      id: `failed-${i}`,
-      name: f.model,
-      avatar: getModelAbbrev(f.model),
-      agreement: 0,
-      confidence: 0,
-      info: f.error, // Show error message as info
-      refusalReason: f.refusalReason as RefusalReason,
-    }));
-
-    // Combine successful and failed results
-    const opinion2DData: Opinion2DPoint[] = [...successfulOpinions, ...failedOpinions];
-
-    return (
-      <div className="space-y-6">
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold">Claim Evaluation Results</h3>
-
-          {/* Consensus Summary */}
-          <div className="mb-6 rounded-lg bg-blue-50 p-4">
-            <h4 className="mb-2 font-semibold">Consensus</h4>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Mean Agreement:</span>
-                <span className="ml-2 font-semibold">
-                  {result.consensus?.mean}%
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Std Dev:</span>
-                <span className="ml-2 font-semibold">
-                  {result.consensus?.stdDev}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Range:</span>
-                <span className="ml-2 font-semibold">
-                  {result.consensus?.range?.min}% - {result.consensus?.range?.max}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2D Opinion Spectrum Visualization */}
-          <div className="mb-8">
-            <h4 className="mb-4 font-semibold">Opinion Spectrum (Agreement vs Confidence)</h4>
-            <OpinionSpectrum2D data={opinion2DData} height="h-96" />
-          </div>
-
-          {/* Individual Model Results - Grouped by Model */}
-          <div className="mt-8 space-y-4">
-            <h4 className="font-semibold">Model Responses</h4>
-            {Object.entries(groupedResults).map(([modelId, runs]: [string, any]) => {
-              const firstRun = runs[0];
-
-              // Calculate stats for multiple runs
-              const agreements = runs.map((r: any) => r.agreement);
-              const confidences = runs.map((r: any) => r.confidence);
-              const avgAgreement = agreements.reduce((a: number, b: number) => a + b, 0) / agreements.length;
-              const avgConfidence = confidences.reduce((a: number, b: number) => a + b, 0) / confidences.length;
-
-              const { label, color } = getAgreementLabelAndColor(avgAgreement);
-
-              return (
-                <div key={modelId} className="rounded-lg border-2 p-4">
-                  {/* Model Header */}
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      <span className="font-medium text-lg">{modelId}</span>
-                      <span className="ml-2 text-sm text-gray-500">
-                        ({firstRun.provider})
-                      </span>
-                      {hasMultipleRuns && (
-                        <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
-                          {runs.length} {runs.length === 1 ? 'run' : 'runs'}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`rounded-full border px-3 py-1 text-sm font-semibold ${color}`}
-                      >
-                        {label}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        ({Math.round(avgAgreement)}% avg)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Average Stats for Multiple Runs */}
-                  {hasMultipleRuns && runs.length > 1 && (
-                    <div className="mb-3 rounded bg-gray-50 p-3 text-sm">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <span className="text-gray-600">Avg Agreement:</span>
-                          <span className="ml-2 font-semibold">{Math.round(avgAgreement)}%</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Avg Confidence:</span>
-                          <span className="ml-2 font-semibold">{Math.round(avgConfidence)}%</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Agreement Range:</span>
-                          <span className="ml-2 font-semibold">
-                            {Math.min(...agreements)}%-{Math.max(...agreements)}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Individual Runs */}
-                  <div className="space-y-2">
-                    {runs.map((r: any, runIdx: number) => {
-                      const runLabel = getAgreementLabelAndColor(r.agreement);
-                      return (
-                        <div key={runIdx} className={`rounded-lg p-3 ${hasMultipleRuns && runs.length > 1 ? 'border bg-white' : ''}`}>
-                          {hasMultipleRuns && runs.length > 1 && (
-                            <div className="mb-2 text-xs font-semibold text-gray-500">
-                              Run #{runIdx + 1}
-                            </div>
-                          )}
-                          <div className="mb-2 flex items-center gap-4 text-sm">
-                            <span className="text-gray-600">
-                              Agreement: <span className="font-semibold text-gray-900">{r.agreement}%</span>
-                            </span>
-                            <span className="text-gray-600">
-                              Confidence: <span className="font-semibold text-gray-900">{r.confidence}%</span>
-                            </span>
-                          </div>
-                          <p className="text-sm italic text-gray-700">
-                            &ldquo;{r.reasoning}&rdquo;
-                          </p>
-                          {r.thinkingText && (
-                            <details className="mt-2">
-                              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                                View extended reasoning
-                              </summary>
-                              <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
-                                {r.thinkingText}
-                              </div>
-                            </details>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
+    return <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbrev} />;
   },
   // Add more custom renderers as needed
   // Default renderer for tools without custom display
@@ -575,7 +373,10 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
               label: "Claude 4.5 Sonnet",
             },
             { value: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
-            { value: "anthropic/claude-3.5-haiku-20241022", label: "Claude 3.5 Haiku" },
+            {
+              value: "anthropic/claude-3.5-haiku-20241022",
+              label: "Claude 3.5 Haiku",
+            },
             { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
             { value: "openai/gpt-5", label: "GPT-5" },
             { value: "openai/gpt-5-mini", label: "GPT-5 Mini" },
@@ -624,7 +425,8 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           step: 0.1,
           defaultValue: 1.0,
           valueType: "number",
-          helperText: "Model temperature: lower = more deterministic, higher = more creative (0.0-2.0)",
+          helperText:
+            "Model temperature: lower = more deterministic, higher = more creative (0.0-2.0)",
         },
       },
       "language-convention-detector": {
