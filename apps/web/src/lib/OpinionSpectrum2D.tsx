@@ -2,6 +2,21 @@
 
 import { useState } from "react";
 
+import {
+  AlertTriangle,
+  HelpCircle,
+  Scale,
+  ShieldAlert,
+  Zap,
+} from "lucide-react";
+
+export type RefusalReason =
+  | "Safety"
+  | "Policy"
+  | "MissingData"
+  | "Unclear"
+  | "Error";
+
 export interface Opinion2DPoint {
   id: string;
   name: string;
@@ -9,6 +24,7 @@ export interface Opinion2DPoint {
   agreement: number; // 0 (strongly disagree) to 100 (strongly agree)
   confidence: number; // 0 (low confidence) to 100 (high confidence)
   info?: string;
+  refusalReason?: RefusalReason; // If present, shows in refusals section instead of main chart
 }
 
 // Calculate 2D offset for points that are close together
@@ -51,6 +67,68 @@ function getRadialOffset(
     x: Math.cos(angle) * effectiveRadius,
     y: Math.sin(angle) * effectiveRadius,
   };
+}
+
+// Shared tooltip component
+interface TooltipProps {
+  person: Opinion2DPoint;
+  borderColor?: string;
+  darkTextColor?: string;
+  positioning: React.CSSProperties;
+  showMetrics?: boolean;
+  refusalReason?: RefusalReason;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}
+
+function Tooltip({
+  person,
+  borderColor = "#9ca3af",
+  darkTextColor,
+  positioning,
+  showMetrics = false,
+  refusalReason,
+  onMouseEnter,
+  onMouseLeave,
+}: TooltipProps) {
+  return (
+    <div
+      className="absolute z-20 w-64 rounded-lg border-2 bg-white px-3 py-2 shadow-xl"
+      style={{
+        ...positioning,
+        borderColor: borderColor,
+      }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="text-sm font-semibold">{person.name}</div>
+      {person.info && (
+        <div className="mt-1 text-xs text-gray-600">{person.info}</div>
+      )}
+      {showMetrics ? (
+        <div className="mt-1 text-xs text-gray-500">
+          Agreement:{" "}
+          <span className="font-semibold" style={{ color: darkTextColor }}>
+            {person.agreement}%
+          </span>{" "}
+          | Confidence:{" "}
+          <span
+            className="font-semibold"
+            style={{
+              color: `rgb(${150 - Math.round(person.confidence * 1.5)}, ${150 - Math.round(person.confidence * 1.5)}, ${150 - Math.round(person.confidence * 1.5)})`,
+            }}
+          >
+            {person.confidence}%
+          </span>
+        </div>
+      ) : refusalReason ? (
+        <div className="mt-1 text-xs text-gray-500">
+          Refusal:{" "}
+          <span className="font-semibold text-gray-700">{refusalReason}</span>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 interface AvatarProps {
@@ -161,37 +239,21 @@ function Avatar({
       </div>
 
       {isHovered && (
-        <div
-          className="absolute z-20 max-w-xs rounded-lg border-2 bg-white px-3 py-2 shadow-xl"
-          style={{
+        <Tooltip
+          person={person}
+          borderColor={borderColor}
+          darkTextColor={darkTextColor}
+          positioning={{
             left: person.agreement < 50 ? `${person.agreement}%` : "auto",
             right:
               person.agreement >= 50 ? `${100 - person.agreement}%` : "auto",
             top: `${100 - person.confidence}%`,
             transform: `translate(${person.agreement < 50 ? offset.x : -offset.x}px, calc(-50% - ${offset.y}px - 70px))`,
-            borderColor: borderColor,
           }}
-        >
-          <div className="text-sm font-semibold">{person.name}</div>
-          {person.info && (
-            <div className="text-xs text-gray-600">{person.info}</div>
-          )}
-          <div className="mt-1 text-xs text-gray-500">
-            Agreement:{" "}
-            <span className="font-semibold" style={{ color: darkTextColor }}>
-              {person.agreement}%
-            </span>{" "}
-            | Confidence:{" "}
-            <span
-              className="font-semibold"
-              style={{
-                color: `rgb(${150 - Math.round(person.confidence * 1.5)}, ${150 - Math.round(person.confidence * 1.5)}, ${150 - Math.round(person.confidence * 1.5)})`,
-              }}
-            >
-              {person.confidence}%
-            </span>
-          </div>
-        </div>
+          showMetrics={true}
+          onMouseEnter={() => {}}
+          onMouseLeave={() => {}}
+        />
       )}
     </>
   );
@@ -217,6 +279,21 @@ export function OpinionSpectrum2D({
   className = "",
 }: OpinionSpectrum2DProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  // Split data into regular opinions and refusals
+  const regularData = data.filter((p) => !p.refusalReason);
+  const refusals = data.filter((p) => p.refusalReason);
+
+  // Group refusals by reason
+  const refusalsByReason = refusals.reduce(
+    (acc, person) => {
+      const reason = person.refusalReason!;
+      if (!acc[reason]) acc[reason] = [];
+      acc[reason].push(person);
+      return acc;
+    },
+    {} as Record<RefusalReason, Opinion2DPoint[]>
+  );
 
   return (
     <div className={className}>
@@ -275,16 +352,16 @@ export function OpinionSpectrum2D({
               </div>
             )}
 
-            {/* Avatars */}
+            {/* Avatars - only show non-refused */}
             <div
               className="absolute inset-0"
               onMouseLeave={() => setHoveredId(null)}
             >
-              {data.map((person) => (
+              {regularData.map((person) => (
                 <Avatar
                   key={person.id}
                   person={person}
-                  allPeople={data}
+                  allPeople={regularData}
                   onHover={() => setHoveredId(person.id)}
                   isHovered={hoveredId === person.id}
                   proximityThreshold={proximityThreshold}
@@ -313,6 +390,122 @@ export function OpinionSpectrum2D({
           )}
         </div>
       </div>
+
+      {/* Refusals Section */}
+      {refusals.length > 0 && (
+        <div className="mt-8">
+          <h3 className="mb-4 text-center text-sm font-semibold uppercase tracking-wide text-gray-500">
+            {(() => {
+              const hasErrors = refusals.some(
+                (r) => r.refusalReason === "Error"
+              );
+              const hasRefusals = refusals.some(
+                (r) => r.refusalReason !== "Error"
+              );
+
+              if (hasErrors && hasRefusals) return "Refusals and Errors";
+              if (hasErrors) return "Errors";
+              return "Refusals";
+            })()}
+          </h3>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            {(
+              [
+                "Safety",
+                "Policy",
+                "MissingData",
+                "Unclear",
+                "Error",
+              ] as RefusalReason[]
+            ).map((reason) => {
+              const reasonModels = refusalsByReason[reason];
+              if (!reasonModels || reasonModels.length === 0) return null;
+
+              // Icon component mapping
+              const iconMap: Record<
+                RefusalReason,
+                {
+                  Icon: React.ComponentType<{ size?: number }>;
+                  bgColor: string;
+                  textColor: string;
+                }
+              > = {
+                Safety: {
+                  Icon: ShieldAlert,
+                  bgColor: "bg-red-100",
+                  textColor: "text-red-600",
+                },
+                Policy: {
+                  Icon: Scale,
+                  bgColor: "bg-blue-100",
+                  textColor: "text-blue-600",
+                },
+                MissingData: {
+                  Icon: HelpCircle,
+                  bgColor: "bg-gray-200",
+                  textColor: "text-gray-600",
+                },
+                Unclear: {
+                  Icon: AlertTriangle,
+                  bgColor: "bg-yellow-100",
+                  textColor: "text-yellow-600",
+                },
+                Error: {
+                  Icon: Zap,
+                  bgColor: "bg-orange-100",
+                  textColor: "text-orange-600",
+                },
+              };
+
+              const iconConfig = iconMap[reason];
+              const IconComponent = iconConfig.Icon;
+
+              return (
+                <div
+                  key={reason}
+                  className="flex items-center gap-4 rounded-sm p-2"
+                >
+                  <div className="flex items-center">
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-gray-500 opacity-50`}
+                    >
+                      <IconComponent size={16} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-500">
+                      {reason}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    {reasonModels.map((person) => (
+                      <div key={person.id} className="relative">
+                        <div
+                          className={`flex h-8 w-auto cursor-pointer items-center justify-center rounded-full border-2 border-gray-200 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 transition-all ${hoveredId === person.id ? "z-10 scale-110 shadow-md" : "hover:scale-105"}`}
+                          onMouseEnter={() => setHoveredId(person.id)}
+                        >
+                          {person.avatar}
+                        </div>
+                        {hoveredId === person.id && (
+                          <Tooltip
+                            person={person}
+                            positioning={{
+                              top: "-90px",
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                            }}
+                            refusalReason={reason}
+                            onMouseEnter={() => setHoveredId(person.id)}
+                            onMouseLeave={() => setHoveredId(null)}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
