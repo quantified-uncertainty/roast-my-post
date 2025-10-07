@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
-import { createOpenRouterClient, OPENROUTER_MODELS } from "../../utils/openrouter";
+import { createOpenRouterClient, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
 
 // Refusal reason types (matches OpinionSpectrum2D)
 export type RefusalReason =
@@ -11,13 +11,37 @@ export type RefusalReason =
   | "Unclear"
   | "Error";
 
+// Token usage type (from OpenAI SDK)
+export interface TokenUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+// Extended message type with optional reasoning fields
+export interface MessageWithReasoning {
+  content?: string | null;
+  reasoning?: string;
+  reasoning_content?: string;
+}
+
+// Custom error type for evaluations with attached context
+export interface EvaluationError extends Error {
+  rawResponse?: string;
+  parsedData?: unknown;
+  attemptedParse?: string;
+  tokenUsage?: TokenUsage;
+  refusalReason?: RefusalReason;
+  thinkingText?: string;
+}
+
 // Input/Output types
 export interface ClaimEvaluatorInput {
   claim: string;
   context?: string;
   models?: string[];
   runs?: number; // Number of times to run each model (1-5, default 1)
-  reasoningLength?: number; // Max length of reasoning text (10-100 chars, default 15)
+  explanationLength?: number; // Max words for explanation text (3-200 words, default 5)
   temperature?: number; // Temperature for model responses (0.0-2.0, default 1.0)
 }
 
@@ -50,22 +74,15 @@ export interface FailedEvaluation {
 export interface ClaimEvaluatorOutput {
   results: ModelEvaluation[];
   failed?: FailedEvaluation[]; // Models that failed to evaluate
-  consensus: {
-    mean: number;
-    stdDev: number;
-    range: { min: number; max: number };
-  };
 }
 
 // Constants
-const DEFAULT_REASONING_LENGTH = 15; // Default max length for reasoning text in characters
+const DEFAULT_EXPLANATION_LENGTH = 50; // Default max words for explanation text
 
-// Top 6 models for claim evaluation (matches UI checkbox defaults)
+// Default models for claim evaluation
 const DEFAULT_MODELS = [
-  OPENROUTER_MODELS.CLAUDE_SONNET_4_5,         // Claude 4.5 Sonnet (Latest)
-  OPENROUTER_MODELS.CLAUDE_SONNET_4,           // Claude Sonnet 4
-  OPENROUTER_MODELS.GEMINI_2_5_PRO,            // Gemini 2.5 Pro
-  OPENROUTER_MODELS.GPT_5,                     // GPT-5
+  OPENROUTER_MODELS.CLAUDE_SONNET_4_5,         // Claude Sonnet 4.5 (Latest)
+  OPENROUTER_MODELS.GPT_5_MINI,                // GPT-5 Mini
   OPENROUTER_MODELS.DEEPSEEK_CHAT_V3_1_FREE,   // DeepSeek Chat V3.1
   OPENROUTER_MODELS.GROK_4,                    // Grok 4
 ];
@@ -89,19 +106,19 @@ const inputSchema = z.object({
     .max(5)
     .optional()
     .describe("Number of times to run each model independently (1-5, default 1)"),
-  reasoningLength: z
+  explanationLength: z
     .coerce.number()
     .int()
-    .min(10)
-    .max(1000)
+    .min(3)
+    .max(200)
     .optional()
-    .describe("Maximum length of reasoning text in characters (10-1000, default 15)"),
+    .describe("Explanation Length (Max Words): Maximum words per explanation (3-200, default 50)"),
   temperature: z
     .coerce.number()
     .min(0.0)
-    .max(2.0)
+    .max(1.0)
     .optional()
-    .describe("Temperature for model responses - lower is more deterministic (0.0-2.0, default 1.0)"),
+    .describe("Temperature for model responses - lower is more consistent, higher is more varied (0.0-1.0, default 0.7). Automatically scaled per provider."),
 });
 
 // Output schema
@@ -112,7 +129,7 @@ const outputSchema = z.object({
       provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
       agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
       confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
-      reasoning: z.string().min(10).max(1000).describe("Brief reasoning (10-1000 chars, configurable)"),
+      reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by reasoningLength in words)"),
       rawResponse: z.string().optional().describe("Full raw response from model"),
       thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
       tokenUsage: z.object({
@@ -132,14 +149,6 @@ const outputSchema = z.object({
       errorDetails: z.string().optional().describe("Additional error context"),
     })
   ).optional().describe("Models that failed to evaluate"),
-  consensus: z.object({
-    mean: z.number().describe("Mean agreement across all models"),
-    stdDev: z.number().describe("Standard deviation of agreement scores"),
-    range: z.object({
-      min: z.number(),
-      max: z.number(),
-    }),
-  }),
 }) satisfies z.ZodType<ClaimEvaluatorOutput>;
 
 /**
@@ -219,34 +228,34 @@ function createEvaluationError(
     rawResponse?: string;
     parsedData?: unknown;
     attemptedParse?: string;
-    tokenUsage?: any;
+    tokenUsage?: TokenUsage;
     refusalReason?: RefusalReason;
   }
-): Error {
-  const err = new Error(message);
+): EvaluationError {
+  const err = new Error(message) as EvaluationError;
 
   // Attach sanitized context
   if (context.rawResponse) {
-    (err as any).rawResponse = sanitizeResponse(context.rawResponse);
+    err.rawResponse = sanitizeResponse(context.rawResponse);
   }
   if (context.parsedData) {
-    (err as any).parsedData = context.parsedData;
+    err.parsedData = context.parsedData;
   }
   if (context.attemptedParse) {
-    (err as any).attemptedParse = sanitizeResponse(context.attemptedParse);
+    err.attemptedParse = sanitizeResponse(context.attemptedParse);
   }
   if (context.tokenUsage) {
-    (err as any).tokenUsage = context.tokenUsage;
+    err.tokenUsage = context.tokenUsage;
   }
   if (context.refusalReason) {
-    (err as any).refusalReason = context.refusalReason;
+    err.refusalReason = context.refusalReason;
   }
 
   return err;
 }
 
 /**
- * Evaluate a claim with a single model via OpenRouter
+ * Evaluate a claim with a single model via OpenRouter with timeout
  */
 async function evaluateWithModel(
   client: ReturnType<typeof createOpenRouterClient>,
@@ -256,12 +265,39 @@ async function evaluateWithModel(
 ): Promise<ModelEvaluation> {
   context.logger.info(`[ClaimEvaluator] Evaluating with ${model}`);
 
+  // Create timeout promise (120 seconds)
+  const TIMEOUT_MS = 120000;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(createEvaluationError(`Model evaluation timed out after ${TIMEOUT_MS / 1000}s`, {
+        refusalReason: 'Error',
+      }));
+    }, TIMEOUT_MS);
+  });
+
+  // Race between evaluation and timeout
+  return Promise.race([
+    evaluateWithModelImpl(client, input, model, context),
+    timeoutPromise,
+  ]);
+}
+
+/**
+ * Implementation of model evaluation (wrapped with timeout)
+ */
+async function evaluateWithModelImpl(
+  client: ReturnType<typeof createOpenRouterClient>,
+  input: ClaimEvaluatorInput,
+  model: string,
+  context: ToolContext
+): Promise<ModelEvaluation> {
+
   // For runs > 1, add slight prompt variation to encourage independent thinking
   const runNote = (input.runs && input.runs > 1)
     ? '\n\nNote: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others.'
     : '';
 
-  const reasoningLength = input.reasoningLength || DEFAULT_REASONING_LENGTH;
+  const explanationLength = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
 
   const prompt = `You are evaluating the following claim:
 
@@ -286,20 +322,20 @@ Response format (NORMAL evaluation):
 {
   "agreement": 75,
   "confidence": 85,
-  "reasoning": "Brief explanation (max ${reasoningLength} chars)"
+  "reasoning": "Brief explanation (max ${explanationLength} words)"
 }
 
 Response format (REFUSAL):
 {
   "refusalReason": "Unclear",
-  "reasoning": "Brief explanation of why you're refusing (max ${reasoningLength} chars)"
+  "reasoning": "Brief explanation of why you're refusing (max ${explanationLength} words)"
 }
 
 Your response must be valid JSON only.`;
 
   let rawContent: string | undefined;
   let rawThinking: string | undefined;
-  let rawTokenUsage: any;
+  let rawTokenUsage: TokenUsage | undefined;
 
   try {
     // Only use response_format for models that support it well
@@ -311,6 +347,10 @@ Your response must be valid JSON only.`;
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
     const uniquePrompt = `${prompt}\n\n<!-- Evaluation ID: ${uniqueId} -->`;
 
+    // Normalize temperature from user-facing 0-1 scale to provider-specific range
+    const userTemperature = input.temperature ?? 0.7; // Default 0.7 (balanced)
+    const actualTemperature = normalizeTemperature(userTemperature, model);
+
     const completion = await client.chat.completions.create(
       {
         model,
@@ -321,7 +361,7 @@ Your response must be valid JSON only.`;
           },
         ],
         max_tokens: 1000, // High limit for GPT-5 Responses API (uses tokens for reasoning FIRST, then content)
-        temperature: input.temperature ?? 1.0, // Configurable temperature (default 1.0 for variation between runs)
+        temperature: actualTemperature, // Normalized per provider (Anthropic 0-1, others 0-2)
         // Force JSON output for models like GPT-5 that use Responses API
         ...(supportsResponseFormat ? { response_format: { type: 'json_object' } } : {}),
       },
@@ -332,15 +372,15 @@ Your response must be valid JSON only.`;
           'X-No-Cache': 'true',
           'Helicone-Cache-Enabled': 'false',
           'Helicone-Cache-Seed': uniqueId, // Unique seed ensures no cache reuse
-        } as any,
+        } as Record<string, string>,
       }
     );
 
-    const message = completion.choices[0]?.message;
+    const message = completion.choices[0]?.message as MessageWithReasoning | undefined;
     rawContent = message?.content || undefined;
     // Capture reasoning from both GPT-5 (reasoning) and o1/o3 (reasoning_content)
-    rawThinking = (message as any)?.reasoning || (message as any)?.reasoning_content || undefined;
-    rawTokenUsage = completion.usage;
+    rawThinking = message?.reasoning || message?.reasoning_content || undefined;
+    rawTokenUsage = completion.usage as TokenUsage | undefined;
 
     if (!rawContent) {
       throw createEvaluationError('No response from model', {
@@ -380,7 +420,7 @@ Your response must be valid JSON only.`;
     let parsed;
     try {
       parsed = JSON.parse(jsonContent);
-    } catch (parseError: any) {
+    } catch (parseError: unknown) {
       // Don't expose JSON parsing details to end users
       throw createEvaluationError(
         'Failed to produce valid JSON',
@@ -409,8 +449,11 @@ Your response must be valid JSON only.`;
 
     const agreement = Number(parsed.agreement);
     const confidence = Number(parsed.confidence);
-    const maxReasoningLength = input.reasoningLength || DEFAULT_REASONING_LENGTH;
-    const reasoning = String(parsed.reasoning || '').substring(0, maxReasoningLength);
+    const maxExplanationWords = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
+    // Truncate reasoning to max word count (not characters)
+    const reasoningText = String(parsed.reasoning || '');
+    const words = reasoningText.split(/\s+/).filter(w => w.length > 0);
+    const reasoning = words.slice(0, maxExplanationWords).join(' ');
 
     if (isNaN(agreement) || agreement < 0 || agreement > 100) {
       throw createEvaluationError(`Invalid agreement score: ${agreement}`, {
@@ -444,47 +487,21 @@ Your response must be valid JSON only.`;
       thinkingText: rawThinking, // Extended thinking (o1/o3)
       tokenUsage,
     };
-  } catch (error: any) {
-    context.logger.error(`[ClaimEvaluator] Error with ${model}:`, error.message);
+  } catch (error: unknown) {
+    const err = error as EvaluationError;
+    context.logger.error(`[ClaimEvaluator] Error with ${model}:`, err.message);
 
     // Attach sanitized raw response to error for caller to extract (if not already attached)
-    if (!error.rawResponse && rawContent) {
-      error.rawResponse = sanitizeResponse(rawContent);
+    if (!err.rawResponse && rawContent) {
+      err.rawResponse = sanitizeResponse(rawContent);
     }
-    error.thinkingText = rawThinking;
-    error.tokenUsage = rawTokenUsage;
+    err.thinkingText = rawThinking;
+    err.tokenUsage = rawTokenUsage;
 
-    throw error; // Let caller handle failure
+    throw err; // Let caller handle failure
   }
 }
 
-/**
- * Calculate consensus statistics
- */
-function calculateConsensus(results: ModelEvaluation[]) {
-  if (results.length === 0) {
-    return {
-      mean: 0,
-      stdDev: 0,
-      range: { min: 0, max: 0 },
-    };
-  }
-
-  const scores = results.map(r => r.agreement);
-  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-
-  const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
-  const stdDev = Math.sqrt(variance);
-
-  return {
-    mean: Math.round(mean * 10) / 10, // Round to 1 decimal
-    stdDev: Math.round(stdDev * 10) / 10,
-    range: {
-      min: Math.min(...scores),
-      max: Math.max(...scores),
-    },
-  };
-}
 
 export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluatorOutput> {
   config = claimEvaluatorConfig;
@@ -542,22 +559,23 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
             rawResponse = error.rawResponse;
           }
 
-          // Also capture thinking text if it was a thinking model
+          // Capture thinking text if available (for reasoning models like o1/o3)
           if (error?.thinkingText) {
-            errorDetails = `Thinking: ${error.thinkingText}\n\n${error?.stack || ''}`;
-          } else if (error?.stack) {
-            errorDetails = error.stack;
+            errorDetails = `Thinking: ${error.thinkingText}`;
           }
 
-          // Add parsed data if available (for validation errors)
+          // Add parsed data if available (for validation errors) - sanitized for end users
           if (error?.parsedData) {
-            errorDetails = `Parsed data: ${JSON.stringify(error.parsedData, null, 2)}\n\n${errorDetails || ''}`;
+            errorDetails = `Parsed data: ${JSON.stringify(error.parsedData, null, 2)}${errorDetails ? '\n\n' + errorDetails : ''}`;
           }
 
-          // Add attempted parse if available (for JSON parse errors)
+          // Add attempted parse if available (for JSON parse errors) - already sanitized
           if (error?.attemptedParse && error.attemptedParse !== rawResponse) {
-            errorDetails = `Attempted to parse: ${error.attemptedParse}\n\n${errorDetails || ''}`;
+            errorDetails = `Attempted to parse: ${error.attemptedParse}${errorDetails ? '\n\n' + errorDetails : ''}`;
           }
+
+          // Note: Stack traces are intentionally excluded from errorDetails for security
+          // They are logged server-side but not exposed to clients
 
           // Use explicit refusalReason from error if provided, otherwise detect from error message
           const refusalReason = error?.refusalReason || detectRefusalReason(error, rawResponse);
@@ -576,12 +594,9 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
         `[ClaimEvaluator] ${successful.length}/${modelRuns.length} evaluations succeeded, ${failed.length} failed`
       );
 
-      const consensus = calculateConsensus(successful);
-
       return {
         results: successful,
         failed: failed,
-        consensus,
       };
     } catch (error) {
       context.logger.error('[ClaimEvaluator] Error:', error);
@@ -605,7 +620,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     context: ToolContext
   ): Promise<void> {
     context.logger.info(
-      `[ClaimEvaluator] Completed. Mean: ${output.consensus.mean}%, StdDev: ${output.consensus.stdDev}`
+      `[ClaimEvaluator] Completed with ${output.results.length} successful evaluations`
     );
   }
 }

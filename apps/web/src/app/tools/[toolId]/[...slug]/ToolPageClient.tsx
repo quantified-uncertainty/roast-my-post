@@ -370,7 +370,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           options: [
             {
               value: "anthropic/claude-sonnet-4.5",
-              label: "Claude 4.5 Sonnet",
+              label: "Claude Sonnet 4.5",
             },
             { value: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
             {
@@ -390,9 +390,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           ],
           defaultValue: [
             "anthropic/claude-sonnet-4.5",
-            "anthropic/claude-sonnet-4",
-            "google/gemini-2.5-pro",
-            "openai/gpt-5",
+            "openai/gpt-5-mini",
             "deepseek/deepseek-chat-v3.1:free",
             "x-ai/grok-4",
           ],
@@ -410,23 +408,23 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           valueType: "number",
           helperText: "Number of independent runs per model",
         },
-        reasoningLength: {
+        explanationLength: {
           type: "number",
-          min: 10,
-          max: 1000,
-          defaultValue: 15,
+          min: 3,
+          max: 200,
+          defaultValue: 50,
           valueType: "number",
-          helperText: "Maximum length of reasoning text (10-1000 characters)",
+          helperText: "Maximum words per explanation (3-200)",
         },
         temperature: {
           type: "number",
           min: 0.0,
-          max: 2.0,
+          max: 1.0,
           step: 0.1,
-          defaultValue: 1.0,
+          defaultValue: 0.7,
           valueType: "number",
-          helperText:
-            "Model temperature: lower = more deterministic, higher = more creative (0.0-2.0)",
+          tooltip:
+            "Controls response randomness. 0 = very consistent (same answer each time), 1 = maximum variety (diverse perspectives). Automatically scaled per model provider (Anthropic 0-1, OpenAI/Google/xAI 0-2).",
         },
       },
       "language-convention-detector": {
@@ -549,9 +547,13 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
               : (prop.default as string | number | boolean | undefined),
           min: (toolSpecific.min as number) || prop.minimum,
           max: (toolSpecific.max as number) || prop.maximum,
+          step: (toolSpecific.step as number) || undefined,
           options: toolSpecific.options as
             | Array<{ value: string; label: string }>
             | undefined,
+          helperText: (toolSpecific.helperText as string) || undefined,
+          tooltip: (toolSpecific.tooltip as string) || undefined,
+          valueType: (toolSpecific.valueType as 'string' | 'number') || undefined,
         });
       });
     }
