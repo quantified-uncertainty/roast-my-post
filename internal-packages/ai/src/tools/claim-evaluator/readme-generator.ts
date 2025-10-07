@@ -21,12 +21,10 @@ ${toolsSection}## How It Works
 
 Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each model independently rates its agreement with the claim (0-100) and provides brief reasoning.
 
-## Default Models (Top 6)
+## Default Models
 
-- **${OPENROUTER_MODELS.CLAUDE_SONNET_4_5}** - Claude 4.5 Sonnet (Latest)
-- **${OPENROUTER_MODELS.CLAUDE_SONNET_4}** - Claude Sonnet 4
-- **${OPENROUTER_MODELS.GEMINI_2_5_PRO}** - Gemini 2.5 Pro
-- **${OPENROUTER_MODELS.GPT_5}** - GPT-5
+- **${OPENROUTER_MODELS.CLAUDE_SONNET_4_5}** - Claude Sonnet 4.5 (Latest)
+- **${OPENROUTER_MODELS.GPT_5_MINI}** - GPT-5 Mini
 - **${OPENROUTER_MODELS.DEEPSEEK_CHAT_V3_1_FREE}** - DeepSeek Chat V3.1
 - **${OPENROUTER_MODELS.GROK_4}** - Grok 4
 
@@ -37,11 +35,7 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
   - \`provider\`: Provider name (e.g., "anthropic", "openai")
   - \`agreement\`: Score from 0-100 (0=disagree, 100=agree)
   - \`confidence\`: Score from 0-100 (0=very uncertain, 100=very confident)
-  - \`reasoning\`: Brief explanation (10-30 characters)
-- **consensus**: Statistical summary:
-  - \`mean\`: Average agreement across models
-  - \`stdDev\`: Standard deviation (lower = higher consensus)
-  - \`range\`: Min and max agreement scores
+  - \`reasoning\`: Brief explanation (max words configurable, default 5)
 
 ## Technical Details
 
@@ -85,14 +79,9 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
       "agreement": 20,
       "confidence": 90,
       "reasoning": "Historically implausible"
-    },
+    }
     // ... other models
-  ],
-  "consensus": {
-    "mean": 18.5,
-    "stdDev": 4.2,
-    "range": { "min": 15, "max": 25 }
-  }
+  ]
 }
 \`\`\`
 `;
