@@ -535,6 +535,16 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     const models = input.models || DEFAULT_MODELS;
     const runs = input.runs || 1;
 
+    // Cost protection: limit total evaluations to prevent excessive API usage
+    const MAX_EVALUATIONS = 20;
+    const totalEvaluations = models.length * runs;
+    if (totalEvaluations > MAX_EVALUATIONS) {
+      throw new Error(
+        `Too many evaluations requested: ${totalEvaluations} (max ${MAX_EVALUATIONS}). ` +
+        `Reduce models (${models.length}) or runs (${runs}).`
+      );
+    }
+
     context.logger.info(
       `[ClaimEvaluator] Evaluating claim with ${models.length} models, ${runs} run(s) each`
     );
