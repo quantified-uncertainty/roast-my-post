@@ -172,6 +172,18 @@ export const linkValidatorConfig: ToolConfig = {
   status: "stable",
 };
 
+export const claimEvaluatorConfig: ToolConfig = {
+  id: "claim-evaluator",
+  name: "Claim Evaluator",
+  description:
+    "Evaluate claims by polling multiple LLM models in parallel (Claude, GPT, Grok) via OpenRouter. Each model provides an agreement score (0-100) and brief reasoning.",
+  version: "1.0.0",
+  category: "research",
+  costEstimate: "~$0.01-0.05 per claim (4+ model calls via OpenRouter)",
+  path: "/tools/claim-evaluator",
+  status: "experimental",
+};
+
 // ============================================================================
 // Tool Configs List (for client-side metadata)
 // ============================================================================
@@ -191,6 +203,7 @@ export const allToolConfigs = [
   languageConventionDetectorConfig,
   perplexityResearcherConfig,
   linkValidatorConfig,
+  claimEvaluatorConfig,
 ];
 
 // ============================================================================

@@ -60,9 +60,8 @@ export function createToolAPIHandler(tool: Tool<any, any>) {
           { status: 400 }
         );
       }
-      
+
       // Execute the tool with user context
-      // Use AI package's logger to match expected interface
       const result = await tool.execute(data, {
         userId,
         logger: aiLogger,

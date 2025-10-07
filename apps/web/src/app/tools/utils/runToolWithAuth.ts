@@ -1,7 +1,26 @@
+export interface ToolResponse<TResult = unknown> {
+  result: TResult;
+  cost?: {
+    totalUSD: number;
+    tokens: {
+      prompt: number;
+      completion: number;
+      total: number;
+    };
+    breakdown?: Array<{
+      model: string;
+      costUSD: number;
+      tokens: number;
+      requestCount: number;
+    }>;
+  } | null;
+  sessionId?: string;
+}
+
 export async function runToolWithAuth<TData = unknown, TResult = unknown>(
-  toolPath: string, 
+  toolPath: string,
   data: TData
-): Promise<TResult> {
+): Promise<ToolResponse<TResult>> {
   const response = await fetch(toolPath, {
     method: 'POST',
     headers: {
@@ -12,7 +31,7 @@ export async function runToolWithAuth<TData = unknown, TResult = unknown>(
 
   if (!response.ok) {
     const responseText = await response.text();
-    
+
     let error;
     try {
       error = JSON.parse(responseText);
@@ -27,5 +46,9 @@ export async function runToolWithAuth<TData = unknown, TResult = unknown>(
     throw new Error(result.error || 'Tool execution failed');
   }
 
-  return result.result;
+  return {
+    result: result.result,
+    cost: result.cost,
+    sessionId: result.sessionId,
+  };
 }
