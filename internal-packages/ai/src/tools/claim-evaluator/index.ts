@@ -147,7 +147,7 @@ const outputSchema = z.object({
       provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
       agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
       confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
-      reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by reasoningLength in words)"),
+      reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
       rawResponse: z.string().optional().describe("Full raw response from model"),
       thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
       tokenUsage: z.object({
@@ -253,9 +253,9 @@ function extractAndParseJSON(rawContent: string): unknown {
   }
 
   // Try to extract JSON object if there's text before/after it
-  // Look for { ... } pattern
+  // Look for { ... } pattern (non-greedy to avoid capturing multiple JSON objects)
   if (!jsonContent.startsWith('{')) {
-    const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
+    const jsonMatch = jsonContent.match(/\{[\s\S]*?\}/);
     if (jsonMatch) {
       jsonContent = jsonMatch[0];
     }

@@ -73,7 +73,7 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   const [showRawJSON, setShowRawJSON] = useState(false);
 
   // Use the hook for state management and execution
-  const { result, isLoading, error, execute, cost, sessionId } = useToolExecution<TInput, TOutput>(
+  const { result, isLoading, error, execute } = useToolExecution<TInput, TOutput>(
     `/api/tools/${toolId}`,
     {
       validateInput,
