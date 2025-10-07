@@ -310,12 +310,13 @@ async function evaluateWithModel(
 ): Promise<ModelEvaluation> {
   context.logger.info(`[ClaimEvaluator] Evaluating with ${model}`);
 
-  // Create timeout promise (120 seconds)
-  const TIMEOUT_MS = 120000;
+  // Create timeout promise (configurable via env, default 120 seconds)
+  const TIMEOUT_MS = Number(process.env.MODEL_EVAL_TIMEOUT_MS) || 120000;
   let timeoutHandle: NodeJS.Timeout | undefined;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutHandle = setTimeout(() => {
+      context.logger.warn(`[ClaimEvaluator] Timeout for ${model} after ${TIMEOUT_MS / 1000}s`);
       reject(createEvaluationError(`Model evaluation timed out after ${TIMEOUT_MS / 1000}s`, {
         refusalReason: 'Error',
       }));
@@ -457,7 +458,7 @@ Your response must be valid JSON only.`;
     } catch (parseError: unknown) {
       // Don't expose JSON parsing details to end users
       throw createEvaluationError(
-        'Failed to produce valid JSON',
+        'Model returned invalid JSON',
         {
           rawResponse: rawContent,
           attemptedParse: rawContent.trim(),
@@ -580,12 +581,13 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
           // Capture thinking text if available (for reasoning models like o1/o3)
           if (error?.thinkingText) {
-            errorDetails = `Thinking: ${error.thinkingText}`;
+            errorDetails = `Thinking: ${sanitizeResponse(error.thinkingText)}`;
           }
 
           // Add parsed data if available (for validation errors) - sanitized for end users
           if (error?.parsedData) {
-            errorDetails = `Parsed data: ${JSON.stringify(error.parsedData, null, 2)}${errorDetails ? '\n\n' + errorDetails : ''}`;
+            const parsedStr = JSON.stringify(error.parsedData, null, 2);
+            errorDetails = `Parsed data: ${sanitizeResponse(parsedStr)}${errorDetails ? '\n\n' + errorDetails : ''}`;
           }
 
           // Add attempted parse if available (for JSON parse errors) - already sanitized
