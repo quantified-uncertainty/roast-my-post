@@ -87,6 +87,9 @@ const DEFAULT_MODELS = [
   OPENROUTER_MODELS.GROK_4,                    // Grok 4
 ];
 
+// Valid model IDs (all available OpenRouter models)
+const VALID_MODEL_IDS = Object.values(OPENROUTER_MODELS);
+
 // Input schema
 const inputSchema = z.object({
   claim: z.string().min(1).max(1000).describe("The claim to evaluate"),
@@ -96,9 +99,9 @@ const inputSchema = z.object({
     .optional()
     .describe("Additional context about the claim (when/where made, background, domain knowledge, constraints)"),
   models: z
-    .array(z.string())
+    .array(z.enum(VALID_MODEL_IDS as [string, ...string[]]))
     .optional()
-    .describe("List of OpenRouter model IDs to use (defaults to top 6 reasoning models)"),
+    .describe("List of OpenRouter model IDs to use (defaults to top reasoning models)"),
   runs: z
     .coerce.number()
     .int()
