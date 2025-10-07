@@ -5,7 +5,75 @@ import {
   OpinionSpectrum2D,
 } from "@/lib/OpinionSpectrum2D";
 
-const SAMPLE_PEOPLE: Opinion2DPoint[] = [
+// Refusal examples
+const REFUSALS: Opinion2DPoint[] = [
+  {
+    id: "refusal1",
+    name: "GPT-4o",
+    avatar: "GPT4",
+    agreement: 0,
+    confidence: 0,
+    refusalReason: "Unclear",
+    info: "The claim is unclear and I don't have enough context to evaluate it meaningfully.",
+  },
+  {
+    id: "refusal2",
+    name: "Claude 4.5m",
+    avatar: "C4.5m",
+    agreement: 0,
+    confidence: 0,
+    refusalReason: "Unclear",
+    info: "The terms in this claim are too vague for me to assess.",
+  },
+  {
+    id: "refusal3",
+    name: "DeepSeek",
+    avatar: "DS",
+    agreement: 0,
+    confidence: 0,
+    refusalReason: "Policy",
+    info: "I cannot evaluate claims about illegal activities.",
+  },
+  {
+    id: "refusal4",
+    name: "Sonnet 5m",
+    avatar: "5m",
+    agreement: 0,
+    confidence: 0,
+    refusalReason: "MissingData",
+    info: "I don't have access to real-time data needed to evaluate this claim.",
+  },
+  {
+    id: "refusal5",
+    name: "Grok 4",
+    avatar: "Grok4",
+    agreement: 0,
+    confidence: 0,
+    refusalReason: "MissingData",
+    info: "This requires specialized domain knowledge I don't possess.",
+  },
+  {
+    id: "refusal6",
+    name: "GPT-5",
+    avatar: "GPT5",
+    agreement: 0,
+    confidence: 0,
+    refusalReason: "Safety",
+    info: "This request violates my safety guidelines.",
+  },
+  {
+    id: "refusal7",
+    name: "Gemini 2.5",
+    avatar: "G2.5",
+    agreement: 0,
+    confidence: 0,
+    refusalReason: "Error",
+    info: "An internal error occurred while processing this request.",
+  },
+];
+
+// Base opinion data (without refusals)
+const BASE_OPINIONS: Opinion2DPoint[] = [
   // High confidence, agree
   {
     id: "1",
@@ -260,40 +328,67 @@ const SAMPLE_PEOPLE: Opinion2DPoint[] = [
 export default function OpinionSpectrum2DPrototype() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="mb-8 text-3xl font-bold">
+      <div className="mx-auto max-w-6xl space-y-12">
+        <h1 className="text-3xl font-bold">
           2D Opinion Spectrum Prototype
         </h1>
 
-        <div className="rounded-lg bg-white p-8 shadow-lg">
-          <OpinionSpectrum2D
-            data={SAMPLE_PEOPLE}
-            height="h-48"
-            showGridLines={true}
-            showAxisLabels={true}
-          />
-        </div>
-
         {/* Instructions */}
-        <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <h2 className="mb-2 font-semibold text-blue-900">How to use:</h2>
           <ul className="space-y-1 text-sm text-blue-800">
             <li>
-              • Hover over any avatar to see details including agreement and
-              confidence percentages
+              • Hover over avatars to see details including agreement and confidence percentages
             </li>
             <li>
-              • X-axis represents agreement level (left = disagree, right =
-              agree)
+              • X-axis: left = disagree, right = agree
             </li>
             <li>
-              • Y-axis represents confidence level (bottom = low, top = high)
+              • Y-axis: bottom = low confidence, top = high confidence
             </li>
             <li>
-              • Nearby avatars are clustered in circular patterns to avoid
-              overlap
+              • Nearby avatars are clustered in circular patterns to avoid overlap
             </li>
           </ul>
+        </div>
+
+        {/* Example 1: With Errors */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Example 1: With Errors/Refusals
+          </h2>
+          <div className="rounded-lg bg-white p-8 shadow-lg">
+            <OpinionSpectrum2D
+              data={[...REFUSALS, ...BASE_OPINIONS]}
+              height="h-48"
+            />
+          </div>
+        </div>
+
+        {/* Example 2: Without Errors */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Example 2: Without Errors (Clean Opinions Only)
+          </h2>
+          <div className="rounded-lg bg-white p-8 shadow-lg">
+            <OpinionSpectrum2D
+              data={BASE_OPINIONS}
+              height="h-48"
+            />
+          </div>
+        </div>
+
+        {/* Example 3: All Failed (Only Errors) */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Example 3: All Responses Failed
+          </h2>
+          <div className="rounded-lg bg-white p-8 shadow-lg">
+            <OpinionSpectrum2D
+              data={REFUSALS}
+              height="h-48"
+            />
+          </div>
         </div>
       </div>
     </div>

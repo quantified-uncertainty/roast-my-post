@@ -72,7 +72,7 @@ function ReadmeSection({ content, toolId }: ReadmeSectionProps) {
           </a>
         </div>
       </div>
-      <div className="px-6 py-4 prose prose-gray max-w-none">
+      <div className="px-6 py-4 prose prose-gray max-w-none prose-code:before:content-none prose-code:after:content-none prose-pre:my-0 prose-pre:p-0 prose-pre:bg-transparent">
         <MarkdownRenderer>{content}</MarkdownRenderer>
       </div>
     </div>

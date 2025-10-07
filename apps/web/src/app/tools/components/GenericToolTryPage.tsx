@@ -7,6 +7,8 @@ import { ErrorDisplay, SubmitButton, TextAreaField } from './common';
 import { useToolExecution } from '../hooks/useToolExecution';
 import { AuthenticatedToolPage } from './AuthenticatedToolPage';
 import { FieldConfig } from './types';
+import { HelpCircle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput = unknown> {
   toolId: keyof typeof toolSchemas;
@@ -71,7 +73,7 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   const [showRawJSON, setShowRawJSON] = useState(false);
 
   // Use the hook for state management and execution
-  const { result, isLoading, error, execute, cost, sessionId } = useToolExecution<TInput, TOutput>(
+  const { result, isLoading, error, execute } = useToolExecution<TInput, TOutput>(
     `/api/tools/${toolId}`,
     {
       validateInput,
@@ -179,9 +181,27 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
       case 'number':
         return (
           <div key={field.name}>
-            <label htmlFor={field.name} className="block text-sm font-medium text-gray-700 mb-1">
-              {field.label} {field.required && <span className="text-red-500">*</span>}
-            </label>
+            <div className="flex items-center gap-1 mb-1">
+              <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+                {field.label} {field.required && <span className="text-red-500">*</span>}
+              </label>
+              {field.tooltip && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      aria-label="More information"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="text-sm" align="start">
+                    {field.tooltip}
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
             <input
               id={field.name}
               type="number"
@@ -200,7 +220,7 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
               disabled={isLoading}
               min={field.min}
               max={field.max}
-              step={field.step}
+              step={field.step || 'any'}
             />
             {field.helperText && (
               <p className="mt-1 text-sm text-gray-500">{field.helperText}</p>
@@ -370,44 +390,6 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
 
           {result && (
             <div className="mt-8" data-testid="tool-result">
-              {/* Cost Information */}
-              {cost && (
-                <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold text-blue-900">Cost Information</h4>
-                      <div className="mt-2 space-y-1 text-sm text-blue-800">
-                        <div>
-                          <span className="font-medium">Total Cost:</span> ${cost.totalUSD.toFixed(6)}
-                        </div>
-                        <div>
-                          <span className="font-medium">Tokens:</span> {cost.tokens.total.toLocaleString()}
-                          <span className="text-blue-600 ml-1">
-                            ({cost.tokens.prompt.toLocaleString()} prompt + {cost.tokens.completion.toLocaleString()} completion)
-                          </span>
-                        </div>
-                        {sessionId && (
-                          <div className="text-xs text-blue-600">
-                            Session ID: {sessionId}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {cost.breakdown && cost.breakdown.length > 0 && (
-                      <div className="text-xs text-blue-700">
-                        <div className="font-medium mb-1">Models used:</div>
-                        {cost.breakdown.map((item, i) => (
-                          <div key={i} className="flex justify-between gap-4">
-                            <span>{item.model.split('/')[1] || item.model}</span>
-                            <span className="font-mono">${item.costUSD.toFixed(6)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* View Toggle */}
               <div className="mb-4 flex gap-2">
                 <button

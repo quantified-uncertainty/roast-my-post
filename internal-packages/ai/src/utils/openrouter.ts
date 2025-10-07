@@ -103,3 +103,47 @@ export const OPENROUTER_MODELS = {
 } as const;
 
 export type OpenRouterModel = typeof OPENROUTER_MODELS[keyof typeof OPENROUTER_MODELS];
+
+/**
+ * Temperature range configuration by provider
+ * Different providers support different temperature ranges
+ */
+export const PROVIDER_TEMPERATURE_RANGES = {
+  anthropic: { min: 0, max: 1.0 },
+  openai: { min: 0, max: 2.0 },
+  google: { min: 0, max: 2.0 },
+  'x-ai': { min: 0, max: 2.0 },
+  deepseek: { min: 0, max: 2.0 },
+} as const;
+
+export type ProviderName = keyof typeof PROVIDER_TEMPERATURE_RANGES;
+
+/**
+ * Extract provider name from OpenRouter model ID
+ * @param modelId - Full model ID (e.g., "anthropic/claude-3-haiku")
+ * @returns Provider name (e.g., "anthropic")
+ */
+export function getProviderFromModel(modelId: string): ProviderName {
+  if (modelId.includes('claude') || modelId.startsWith('anthropic/')) return 'anthropic';
+  if (modelId.includes('gpt') || modelId.includes('openai') || modelId.startsWith('openai/')) return 'openai';
+  if (modelId.includes('gemini') || modelId.startsWith('google/')) return 'google';
+  if (modelId.includes('grok') || modelId.startsWith('x-ai/')) return 'x-ai';
+  if (modelId.includes('deepseek') || modelId.startsWith('deepseek/')) return 'deepseek';
+  return 'openai'; // Default fallback to OpenAI's range
+}
+
+/**
+ * Normalize temperature from user-facing 0-1 scale to provider-specific range
+ * @param userTemp - User-provided temperature (0-1 scale)
+ * @param modelId - Full model ID to determine provider
+ * @returns Actual temperature value for the provider's API
+ *
+ * @example
+ * normalizeTemperature(0.7, 'anthropic/claude-3-haiku') // Returns 0.7 (Anthropic max is 1.0)
+ * normalizeTemperature(0.7, 'openai/gpt-4') // Returns 1.4 (OpenAI max is 2.0)
+ */
+export function normalizeTemperature(userTemp: number, modelId: string): number {
+  const provider = getProviderFromModel(modelId);
+  const range = PROVIDER_TEMPERATURE_RANGES[provider];
+  return userTemp * range.max;
+}

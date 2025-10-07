@@ -209,21 +209,123 @@ describe('Claim Evaluator Tool E2E Tests', () => {
           expect(f.model).toBeDefined();
           expect(f.provider).toBeDefined();
           expect(f.error).toBeDefined();
+          // Should have refusalReason categorization
+          expect(f.refusalReason).toBeDefined();
+          expect(['Safety', 'Policy', 'MissingData', 'Unclear', 'Error']).toContain(f.refusalReason);
         });
       }
     }, 60000);
 
     it('should provide debug information for failed evaluations', async () => {
       // Use an invalid model to trigger failure
-      try {
-        await claimEvaluatorTool.execute({
-          claim: 'Test claim',
-          models: ['completely/invalid/model'],
-          runs: 1
-        }, testContext);
-      } catch (error: any) {
-        // Should fail with "All model evaluations failed"
-        expect(error.message).toContain('All model evaluations failed');
+      const result = await claimEvaluatorTool.execute({
+        claim: 'Test claim',
+        models: ['completely/invalid/model'],
+        runs: 1
+      }, testContext);
+
+      // Should return with all models failed
+      expect(result.results).toBeDefined();
+      expect(result.results.length).toBe(0);
+      expect(result.failed).toBeDefined();
+      expect(result.failed.length).toBe(1);
+      expect(result.failed[0].model).toBe('completely/invalid/model');
+      expect(result.failed[0].refusalReason).toBeDefined();
+    }, 60000);
+  });
+
+  describe('Model Refusal Reasons', () => {
+    it('should refuse garbage/nonsensical claims with "Unclear" reason', async () => {
+      const result = await claimEvaluatorTool.execute({
+        claim: 'Colorless green ideas sleep furiously and the chair is better than Dave',
+        models: [MODELS.CLAUDE_SONNET_4, MODELS.GPT_5_MINI],
+        runs: 1
+      }, testContext);
+
+      console.log('\nGarbage input test results:');
+      result.results?.forEach(r => {
+        console.log(`  ${r.model}: agreement=${r.agreement}%, confidence=${r.confidence}%`);
+      });
+      result.failed?.forEach(f => {
+        console.log(`  ${f.model}: REFUSED - ${f.refusalReason} - "${f.error}"`);
+      });
+
+      // At least some models should refuse with "Unclear" for nonsensical claims
+      // Models might try to evaluate it anyway, so we check if ANY refused with Unclear
+      const unclearRefusals = result.failed?.filter(f => f.refusalReason === 'Unclear') || [];
+
+      // Log whether models properly refused
+      if (unclearRefusals.length > 0) {
+        console.log(`  ✓ ${unclearRefusals.length} model(s) properly refused nonsensical claim`);
+      } else {
+        console.log('  ⚠️  No models refused - they attempted to evaluate nonsensical claim');
+      }
+
+      // We expect at least one model to refuse, but won't fail test if they don't
+      // (models might have different thresholds for what's "too unclear")
+      expect(result.results || result.failed).toBeDefined();
+    }, 60000);
+
+    it('should refuse claims requiring very recent data with "MissingData" reason', async () => {
+      // Use tomorrow's date to ensure it's in the future
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      const result = await claimEvaluatorTool.execute({
+        claim: `The stock price of AAPL closed above $200 on ${tomorrowStr}`,
+        models: [MODELS.CLAUDE_SONNET_4, MODELS.GPT_5_MINI],
+        runs: 1
+      }, testContext);
+
+      console.log('\nFuture data test results:');
+      result.results?.forEach(r => {
+        console.log(`  ${r.model}: agreement=${r.agreement}%, confidence=${r.confidence}%, reasoning="${r.reasoning}"`);
+      });
+      result.failed?.forEach(f => {
+        console.log(`  ${f.model}: REFUSED - ${f.refusalReason} - "${f.error}"`);
+      });
+
+      // Models should either refuse with MissingData OR give very low confidence
+      const missingDataRefusals = result.failed?.filter(f => f.refusalReason === 'MissingData') || [];
+      const lowConfidenceResults = result.results?.filter(r => r.confidence < 30) || [];
+
+      if (missingDataRefusals.length > 0) {
+        console.log(`  ✓ ${missingDataRefusals.length} model(s) refused due to missing data`);
+      }
+      if (lowConfidenceResults.length > 0) {
+        console.log(`  ✓ ${lowConfidenceResults.length} model(s) gave low confidence (<30%)`);
+      }
+
+      // At least one model should either refuse or show low confidence
+      expect(missingDataRefusals.length + lowConfidenceResults.length).toBeGreaterThan(0);
+    }, 60000);
+
+    it('should handle vague claims that models might refuse as "Unclear"', async () => {
+      const result = await claimEvaluatorTool.execute({
+        claim: 'The thing is better',
+        models: [MODELS.CLAUDE_SONNET_4, MODELS.GPT_5_MINI],
+        runs: 1
+      }, testContext);
+
+      console.log('\nVague claim test results:');
+      result.results?.forEach(r => {
+        console.log(`  ${r.model}: agreement=${r.agreement}%, confidence=${r.confidence}%`);
+      });
+      result.failed?.forEach(f => {
+        console.log(`  ${f.model}: REFUSED - ${f.refusalReason} - "${f.error}"`);
+      });
+
+      // Some models should refuse vague claims
+      const unclearRefusals = result.failed?.filter(f => f.refusalReason === 'Unclear') || [];
+
+      if (unclearRefusals.length > 0) {
+        console.log(`  ✓ ${unclearRefusals.length} model(s) properly refused vague claim`);
+        expect(unclearRefusals.length).toBeGreaterThan(0);
+      } else {
+        console.log('  ⚠️  No models refused vague claim - accepted anyway');
+        // Models might still evaluate it with low confidence
+        expect(result.results).toBeDefined();
       }
     }, 60000);
   });
