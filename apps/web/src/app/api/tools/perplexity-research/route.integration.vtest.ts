@@ -123,7 +123,7 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle tool execution errors', async () => {
     // Override tool mock for this test
-    vi.mocked(perplexityResearchTool.run).mockRejectedValueOnce(new Error('API request failed'));
+    vi.mocked(perplexityResearchTool.execute).mockRejectedValueOnce(new Error('API request failed'));
 
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
       method: 'POST',

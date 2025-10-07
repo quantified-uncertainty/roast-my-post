@@ -160,7 +160,7 @@ describe('createToolAPIHandler', () => {
       expect(mockAuth).toHaveBeenCalled();
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(mockTool.run).toHaveBeenCalledWith(
+      expect(mockTool.execute).toHaveBeenCalledWith(
         { test: 'data' },
         expect.objectContaining({
           userId: 'user-123',
