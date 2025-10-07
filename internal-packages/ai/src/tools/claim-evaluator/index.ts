@@ -121,6 +121,21 @@ const inputSchema = z.object({
     .describe("Temperature for model responses - lower is more consistent, higher is more varied (0.0-1.0, default 0.7). Automatically scaled per provider."),
 });
 
+// Schema for model's parsed JSON response (before we process it)
+const parsedResponseSchema = z.union([
+  // Normal evaluation response
+  z.object({
+    agreement: z.number().min(0).max(100),
+    confidence: z.number().min(0).max(100),
+    reasoning: z.string().min(10),
+  }),
+  // Refusal response
+  z.object({
+    refusalReason: z.enum(['Safety', 'Policy', 'MissingData', 'Unclear', 'Error']),
+    reasoning: z.string(),
+  }),
+]);
+
 // Output schema
 const outputSchema = z.object({
   results: z.array(
@@ -220,6 +235,33 @@ function detectRefusalReason(error: Error, rawResponse?: string): RefusalReason 
 }
 
 /**
+ * Extract and parse JSON from raw content, handling markdown code blocks and extra text
+ */
+function extractAndParseJSON(rawContent: string): unknown {
+  let jsonContent = rawContent.trim();
+
+  // Remove markdown code blocks if present
+  if (jsonContent.startsWith('```')) {
+    // Extract content between ``` markers
+    const match = jsonContent.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (match) {
+      jsonContent = match[1].trim();
+    }
+  }
+
+  // Try to extract JSON object if there's text before/after it
+  // Look for { ... } pattern
+  if (!jsonContent.startsWith('{')) {
+    const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonContent = jsonMatch[0];
+    }
+  }
+
+  return JSON.parse(jsonContent);
+}
+
+/**
  * Create a standardized evaluation error with sanitized context
  */
 function createEvaluationError(
@@ -267,19 +309,28 @@ async function evaluateWithModel(
 
   // Create timeout promise (120 seconds)
   const TIMEOUT_MS = 120000;
+  let timeoutHandle: NodeJS.Timeout | undefined;
+
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => {
+    timeoutHandle = setTimeout(() => {
       reject(createEvaluationError(`Model evaluation timed out after ${TIMEOUT_MS / 1000}s`, {
         refusalReason: 'Error',
       }));
     }, TIMEOUT_MS);
   });
 
-  // Race between evaluation and timeout
-  return Promise.race([
-    evaluateWithModelImpl(client, input, model, context),
-    timeoutPromise,
-  ]);
+  try {
+    // Race between evaluation and timeout
+    return await Promise.race([
+      evaluateWithModelImpl(client, input, model, context),
+      timeoutPromise,
+    ]);
+  } finally {
+    // Always clear timeout to prevent memory leak
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
 }
 
 /**
@@ -397,91 +448,56 @@ Your response must be valid JSON only.`;
     } : undefined;
 
     // Parse JSON response - handle markdown code blocks and extra text
-    let jsonContent = rawContent.trim();
-
-    // Remove markdown code blocks if present
-    if (jsonContent.startsWith('```')) {
-      // Extract content between ``` markers
-      const match = jsonContent.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-      if (match) {
-        jsonContent = match[1].trim();
-      }
-    }
-
-    // Try to extract JSON object if there's text before/after it
-    // Look for { ... } pattern
-    if (!jsonContent.startsWith('{')) {
-      const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        jsonContent = jsonMatch[0];
-      }
-    }
-
-    let parsed;
+    let parsed: unknown;
     try {
-      parsed = JSON.parse(jsonContent);
+      parsed = extractAndParseJSON(rawContent);
     } catch (parseError: unknown) {
       // Don't expose JSON parsing details to end users
       throw createEvaluationError(
         'Failed to produce valid JSON',
         {
           rawResponse: rawContent,
-          attemptedParse: jsonContent,
+          attemptedParse: rawContent.trim(),
         }
       );
     }
 
-    // Check if model refused to evaluate
-    if (parsed.refusalReason) {
-      const validRefusalReasons: RefusalReason[] = ['Safety', 'Policy', 'MissingData', 'Unclear', 'Error'];
-      const refusalReason: RefusalReason = validRefusalReasons.includes(parsed.refusalReason)
-        ? parsed.refusalReason
-        : 'Unclear';
-
+    // Validate parsed response with Zod
+    const validationResult = parsedResponseSchema.safeParse(parsed);
+    if (!validationResult.success) {
       throw createEvaluationError(
-        `Model refused to evaluate: ${parsed.reasoning || refusalReason}`,
+        'Invalid response format',
         {
           rawResponse: rawContent,
-          refusalReason,
+          parsedData: parsed,
         }
       );
     }
 
-    const agreement = Number(parsed.agreement);
-    const confidence = Number(parsed.confidence);
+    const validatedData = validationResult.data;
+
+    // Check if model refused to evaluate
+    if ('refusalReason' in validatedData) {
+      throw createEvaluationError(
+        `Model refused to evaluate: ${validatedData.reasoning || validatedData.refusalReason}`,
+        {
+          rawResponse: rawContent,
+          refusalReason: validatedData.refusalReason,
+        }
+      );
+    }
+
+    // Extract and truncate reasoning to max word count
     const maxExplanationWords = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
-    // Truncate reasoning to max word count (not characters)
-    const reasoningText = String(parsed.reasoning || '');
-    const words = reasoningText.split(/\s+/).filter(w => w.length > 0);
+    const words = validatedData.reasoning.trim().split(/\s+/).filter(w => w.length > 0);
     const reasoning = words.slice(0, maxExplanationWords).join(' ');
-
-    if (isNaN(agreement) || agreement < 0 || agreement > 100) {
-      throw createEvaluationError(`Invalid agreement score: ${agreement}`, {
-        rawResponse: rawContent,
-        parsedData: parsed,
-      });
-    }
-
-    if (isNaN(confidence) || confidence < 0 || confidence > 100) {
-      throw createEvaluationError(`Invalid confidence score: ${confidence}`, {
-        rawResponse: rawContent,
-        parsedData: parsed,
-      });
-    }
-
-    if (reasoning.length < 10) {
-      throw createEvaluationError('Reasoning too short (must be at least 10 chars)', {
-        rawResponse: rawContent,
-        parsedData: parsed,
-      });
-    }
 
     return {
       model,
       provider: extractProvider(model),
-      agreement,
-      confidence,
-      agreementLevel: getAgreementLabel(agreement),
+      agreement: validatedData.agreement,
+      confidence: validatedData.confidence,
+      agreementLevel: getAgreementLabel(validatedData.agreement),
       reasoning,
       rawResponse: rawContent, // Full raw response
       thinkingText: rawThinking, // Extended thinking (o1/o3)

@@ -314,6 +314,8 @@ export interface ClaimEvaluationResult {
     provider: string;
     error: string;
     refusalReason: RefusalReason;
+    rawResponse?: string;
+    errorDetails?: string;
   }>;
   consensus?: {
     mean: number;
@@ -326,6 +328,30 @@ export interface ClaimEvaluationDisplayProps {
   result: ClaimEvaluationResult;
   getModelAbbrev: (modelId: string) => string;
 }
+
+// Type for grouped successful results
+type ModelEvaluationGroup = {
+  model: string;
+  provider: string;
+  agreement: number;
+  confidence: number;
+  reasoning: string;
+  thinkingText?: string;
+};
+
+type GroupedResults = Record<string, ModelEvaluationGroup[]>;
+
+// Type for grouped failed results
+type FailedEvaluationGroup = {
+  model: string;
+  provider: string;
+  error: string;
+  refusalReason: RefusalReason;
+  rawResponse?: string;
+  errorDetails?: string;
+};
+
+type GroupedFailed = Record<string, FailedEvaluationGroup[]>;
 
 export function ClaimEvaluationDisplay({
   result,
@@ -363,25 +389,25 @@ export function ClaimEvaluationDisplay({
   ];
 
   // Group results by model (successful only)
-  const groupedResults = (result.results || []).reduce((acc: any, r: any) => {
+  const groupedResults: GroupedResults = (result.results || []).reduce((acc, r) => {
     if (!acc[r.model]) {
       acc[r.model] = [];
     }
     acc[r.model].push(r);
     return acc;
-  }, {});
+  }, {} as GroupedResults);
 
   // Group failed results by model
-  const groupedFailed = (result.failed || []).reduce((acc: any, f: any) => {
+  const groupedFailed: GroupedFailed = (result.failed || []).reduce((acc, f) => {
     if (!acc[f.model]) {
       acc[f.model] = [];
     }
     acc[f.model].push(f);
     return acc;
-  }, {});
+  }, {} as GroupedFailed);
 
   const hasMultipleRuns = Object.values(groupedResults).some(
-    (runs: any) => runs.length > 1
+    (runs) => runs.length > 1
   );
 
   return (
