@@ -566,17 +566,17 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
         modelRuns.map(({ model }) => evaluateWithModel(client, input, model, context))
       );
 
-      // Filter out failures and extract successful results
-      const successful = results
-        .filter((r): r is PromiseFulfilledResult<ModelEvaluation> => r.status === 'fulfilled')
-        .map(r => r.value);
+      // Process results, maintaining index correspondence with modelRuns
+      const successful: ModelEvaluation[] = [];
+      const failed: FailedEvaluation[] = [];
 
-      // Capture failed evaluations with details
-      const failed: FailedEvaluation[] = results
-        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-        .map((r) => {
-          const resultIndex = results.indexOf(r);
-          const modelId = modelRuns[resultIndex].model;
+      results.forEach((r, i) => {
+        const modelId = modelRuns[i].model;
+
+        if (r.status === 'fulfilled') {
+          successful.push(r.value);
+        } else {
+          // r.status === 'rejected'
           const error = r.reason;
 
           // Try to extract useful error information
@@ -611,15 +611,16 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
           // Use explicit refusalReason from error if provided, otherwise detect from error message
           const refusalReason = error?.refusalReason || detectRefusalReason(error, rawResponse);
 
-          return {
+          failed.push({
             model: modelId,
             provider: extractProvider(modelId),
             error: errorMessage,
             refusalReason,
             rawResponse,
             errorDetails,
-          };
-        });
+          });
+        }
+      });
 
       context.logger.info(
         `[ClaimEvaluator] ${successful.length}/${modelRuns.length} evaluations succeeded, ${failed.length} failed`
