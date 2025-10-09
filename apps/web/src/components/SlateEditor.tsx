@@ -322,13 +322,15 @@ const renderLeaf = ({
   // Apply highlight styling if this is a highlighted section
   if (leaf.highlight) {
     // Use leaf.isActive if available, otherwise fall back to tag comparison
-    const isActive = leaf.isActive || leaf.tag === activeTag;
-    const isHovered = leaf.tag === hoveredTag;
+    const tagList: string[] = leaf.tags || [leaf.tag];
+
+    const isActive = leaf.isActive || tagList.includes(activeTag as string);
 
     el = (
       <span
         {...leafAttributes}
         data-tag={leaf.tag}
+        data-tags={JSON.stringify(tagList)}
         id={`highlight-${leaf.tag}`}
         style={{
           textDecoration: "underline",
@@ -598,51 +600,76 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       if (!nodeInfo) return [];
 
-      for (const highlight of highlights) {
+      // Group highlights by their range (startOffset-endOffset)
+      const highlightsByRange = new Map<string, typeof highlights>();
+      highlights.forEach((highlight) => {
         if (
           highlight?.startOffset === undefined ||
           highlight?.endOffset === undefined ||
           highlight?.startOffset < 0 ||
           highlight?.endOffset <= highlight?.startOffset
         ) {
-          /*console.warn(`Skipping invalid highlight ${highlight.tag}:`, {
-            startOffset: highlight?.startOffset,
-            endOffset: highlight?.endOffset,
-            tag: highlight?.tag,
-          });*/
-          continue; // Skip invalid highlights
+          return; // Skip invalid highlights
         }
 
-        const tag = highlight.tag || "";
+        const rangeKey = `${highlight.startOffset}-${highlight.endOffset}`;
+        if (!highlightsByRange.has(rangeKey)) {
+          highlightsByRange.set(rangeKey, []);
+        }
+        highlightsByRange.get(rangeKey)!.push(highlight);
+      });
+
+      // Process each range group
+      for (const [, rangeHighlights] of highlightsByRange) {
+        const primaryHighlight = rangeHighlights[0];
+        const tags = rangeHighlights.map((h) => h.tag);
 
         // Map markdown offsets to slate offsets using diff-match-patch
-        let slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
-        let slateEndOffset = mdToSlateOffset.get(highlight.endOffset);
+        let slateStartOffset = mdToSlateOffset.get(
+          primaryHighlight.startOffset
+        );
+        let slateEndOffset = mdToSlateOffset.get(primaryHighlight.endOffset);
 
         // If direct mapping fails, try nearby offsets (more robust approach)
         if (slateStartOffset === undefined) {
-          // Look for nearby offsets within a reasonable window (5 chars)
           for (let i = 1; i <= 5; i++) {
-            if (mdToSlateOffset.get(highlight.startOffset - i) !== undefined) {
-              slateStartOffset = mdToSlateOffset.get(highlight.startOffset - i);
+            if (
+              mdToSlateOffset.get(primaryHighlight.startOffset - i) !==
+              undefined
+            ) {
+              slateStartOffset = mdToSlateOffset.get(
+                primaryHighlight.startOffset - i
+              );
               break;
             }
-            if (mdToSlateOffset.get(highlight.startOffset + i) !== undefined) {
-              slateStartOffset = mdToSlateOffset.get(highlight.startOffset + i);
+            if (
+              mdToSlateOffset.get(primaryHighlight.startOffset + i) !==
+              undefined
+            ) {
+              slateStartOffset = mdToSlateOffset.get(
+                primaryHighlight.startOffset + i
+              );
               break;
             }
           }
         }
 
         if (slateEndOffset === undefined) {
-          // Look for nearby offsets within a reasonable window (5 chars)
           for (let i = 1; i <= 5; i++) {
-            if (mdToSlateOffset.get(highlight.endOffset - i) !== undefined) {
-              slateEndOffset = mdToSlateOffset.get(highlight.endOffset - i);
+            if (
+              mdToSlateOffset.get(primaryHighlight.endOffset - i) !== undefined
+            ) {
+              slateEndOffset = mdToSlateOffset.get(
+                primaryHighlight.endOffset - i
+              );
               break;
             }
-            if (mdToSlateOffset.get(highlight.endOffset + i) !== undefined) {
-              slateEndOffset = mdToSlateOffset.get(highlight.endOffset + i);
+            if (
+              mdToSlateOffset.get(primaryHighlight.endOffset + i) !== undefined
+            ) {
+              slateEndOffset = mdToSlateOffset.get(
+                primaryHighlight.endOffset + i
+              );
               break;
             }
           }
@@ -651,7 +678,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         if (slateStartOffset === undefined || slateEndOffset === undefined) {
           // Fall back approach - but ONLY highlight if the node contains the expected offset range
           const nodeText = node.text;
-          let highlightText = highlight.quotedText || "";
+          let highlightText = primaryHighlight.quotedText || "";
 
           // Calculate the node's position in the overall document
           const nodeStartInDoc = nodeInfo.start;
@@ -659,13 +686,13 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
           // Check if this highlight's offsets fall within this node
           if (
-            highlight.startOffset >= nodeStartInDoc &&
-            highlight.startOffset < nodeEndInDoc
+            primaryHighlight.startOffset >= nodeStartInDoc &&
+            primaryHighlight.startOffset < nodeEndInDoc
           ) {
             // Calculate relative position within this node
-            const relativeStart = highlight.startOffset - nodeStartInDoc;
+            const relativeStart = primaryHighlight.startOffset - nodeStartInDoc;
             const relativeEnd = Math.min(
-              highlight.endOffset - nodeStartInDoc,
+              primaryHighlight.endOffset - nodeStartInDoc,
               nodeText.length
             );
 
@@ -688,26 +715,14 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
                 anchor: { path, offset: relativeStart },
                 focus: { path, offset: relativeEnd },
                 highlight: true,
-                tag,
-                color: highlight.color || "yellow-200",
-                isActive: tag === activeTag,
+                tag: primaryHighlight.tag,
+                tags: tags,
+                color: primaryHighlight.color || "yellow-200",
+                isActive: tags.includes(activeTag as string),
               });
               continue;
             }
           }
-
-          // If we can't find it at the expected location, skip this highlight
-          /*console.warn(
-            `Failed to render highlight ${highlight.tag} at expected location:`,
-            {
-              startOffset: highlight.startOffset,
-              endOffset: highlight.endOffset,
-              quotedText: highlight.quotedText?.substring(0, 50) + "...",
-              reason: "Text not found at expected offset",
-              nodeTextPreview: node.text.substring(0, 100) + "...",
-              nodeInfo: nodeInfo,
-            }
-          );*/
           continue;
         }
 
@@ -734,9 +749,10 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               anchor: { path, offset: highlightStart },
               focus: { path, offset: highlightEnd },
               highlight: true,
-              tag,
-              color: highlight.color || "yellow-200",
-              isActive: tag === activeTag,
+              tag: primaryHighlight.tag,
+              tags: tags,
+              color: primaryHighlight.color || "yellow-200",
+              isActive: tags.includes(activeTag as string),
             });
           }
         }
