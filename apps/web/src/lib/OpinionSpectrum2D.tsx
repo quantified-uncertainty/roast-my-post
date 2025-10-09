@@ -300,10 +300,25 @@ function getAgreementLabelAndColor(agreement: number): {
   return { label: "Strongly Disagree", color: "border-red-500 text-red-700" };
 }
 
-// Base evaluation fields
-interface BaseEvaluation {
+// Successful response details
+interface SuccessfulResponse {
+  agreement: number;
+  confidence: number;
+  reasoning: string;
+}
+
+// Failed response details
+interface FailedResponse {
+  error: string;
+  refusalReason: RefusalReason;
+  errorDetails?: string;
+}
+
+// Evaluation result
+interface EvaluationResult {
   model: string;
   provider: string;
+  hasError: boolean;
   responseTimeMs?: number;
   rawResponse?: string;
   thinkingText?: string;
@@ -312,26 +327,9 @@ interface BaseEvaluation {
     completionTokens: number;
     totalTokens: number;
   };
+  successfulResponse?: SuccessfulResponse;
+  failedResponse?: FailedResponse;
 }
-
-// Successful evaluation
-interface SuccessfulEvaluation extends BaseEvaluation {
-  status: 'success';
-  agreement: number;
-  confidence: number;
-  reasoning: string;
-}
-
-// Failed evaluation
-interface FailedEvaluation extends BaseEvaluation {
-  status: 'failed';
-  error: string;
-  refusalReason: RefusalReason;
-  errorDetails?: string;
-}
-
-// Unified evaluation result
-type EvaluationResult = SuccessfulEvaluation | FailedEvaluation;
 
 export interface ClaimEvaluationResult {
   evaluations: EvaluationResult[];
@@ -348,8 +346,8 @@ export interface ClaimEvaluationDisplayProps {
 }
 
 // Type aliases for grouped results
-type GroupedResults = Record<string, SuccessfulEvaluation[]>;
-type GroupedFailed = Record<string, FailedEvaluation[]>;
+type GroupedResults = Record<string, (EvaluationResult & { successfulResponse: SuccessfulResponse })[]>;
+type GroupedFailed = Record<string, (EvaluationResult & { failedResponse: FailedResponse })[]>;
 
 export function ClaimEvaluationDisplay({
   result,
@@ -359,10 +357,12 @@ export function ClaimEvaluationDisplay({
 
   // Split evaluations into successful and failed
   const successfulEvaluations = result.evaluations.filter(
-    (e): e is SuccessfulEvaluation => e.status === 'success'
+    (e): e is EvaluationResult & { successfulResponse: SuccessfulResponse } =>
+      !e.hasError && !!e.successfulResponse
   );
   const failedEvaluations = result.evaluations.filter(
-    (e): e is FailedEvaluation => e.status === 'failed'
+    (e): e is EvaluationResult & { failedResponse: FailedResponse } =>
+      e.hasError && !!e.failedResponse
   );
 
   // Convert successful results to Opinion2DPoint format
@@ -371,9 +371,9 @@ export function ClaimEvaluationDisplay({
       id: `success-${i}`,
       name: r.model,
       avatar: getModelAbbrev(r.model),
-      agreement: r.agreement,
-      confidence: r.confidence ?? 50,
-      info: r.reasoning,
+      agreement: r.successfulResponse.agreement,
+      confidence: r.successfulResponse.confidence ?? 50,
+      info: r.successfulResponse.reasoning,
     })
   );
 
@@ -385,8 +385,8 @@ export function ClaimEvaluationDisplay({
       avatar: getModelAbbrev(f.model),
       agreement: 0,
       confidence: 0,
-      info: f.error,
-      refusalReason: f.refusalReason,
+      info: f.failedResponse.error,
+      refusalReason: f.failedResponse.refusalReason,
     })
   );
 
@@ -497,8 +497,8 @@ export function ClaimEvaluationDisplay({
               const firstRun = runs[0];
 
               // Calculate stats for multiple runs
-              const agreements = runs.map((r: any) => r.agreement);
-              const confidences = runs.map((r: any) => r.confidence);
+              const agreements = runs.map((r: any) => r.successfulResponse.agreement);
+              const confidences = runs.map((r: any) => r.successfulResponse.confidence);
               const avgAgreement =
                 agreements.reduce((a: number, b: number) => a + b, 0) /
                 agreements.length;
@@ -581,18 +581,18 @@ export function ClaimEvaluationDisplay({
                             <span className="text-gray-600">
                               Agreement:{" "}
                               <span className="font-semibold text-gray-900">
-                                {r.agreement}%
+                                {r.successfulResponse.agreement}%
                               </span>
                             </span>
                             <span className="text-gray-600">
                               Confidence:{" "}
                               <span className="font-semibold text-gray-900">
-                                {r.confidence}%
+                                {r.successfulResponse.confidence}%
                               </span>
                             </span>
                           </div>
                           <p className="text-sm italic text-gray-700">
-                            &ldquo;{r.reasoning}&rdquo;
+                            &ldquo;{r.successfulResponse.reasoning}&rdquo;
                           </p>
                           {r.thinkingText && (
                             <details className="mt-2">
@@ -618,7 +618,7 @@ export function ClaimEvaluationDisplay({
               const firstFailure = failures[0];
 
               // Get icon for refusal reason
-              const RefusalIcon = REFUSAL_ICONS[firstFailure.refusalReason as RefusalReason] || AlertTriangle;
+              const RefusalIcon = REFUSAL_ICONS[firstFailure.failedResponse.refusalReason as RefusalReason] || AlertTriangle;
 
               return (
                 <div
@@ -643,7 +643,7 @@ export function ClaimEvaluationDisplay({
                         <RefusalIcon size={20} />
                       </div>
                       <span className="rounded-full border-2 border-red-400 bg-white px-3 py-1 text-sm font-semibold text-red-700">
-                        {firstFailure.refusalReason}
+                        {firstFailure.failedResponse.refusalReason}
                       </span>
                     </div>
                   </div>
@@ -662,7 +662,7 @@ export function ClaimEvaluationDisplay({
                             </div>
                           )}
                           <p className="text-sm italic text-gray-700">
-                            &ldquo;{f.error}&rdquo;
+                            &ldquo;{f.failedResponse.error}&rdquo;
                           </p>
                           {f.rawResponse && (
                             <details className="mt-2">
@@ -674,13 +674,13 @@ export function ClaimEvaluationDisplay({
                               </div>
                             </details>
                           )}
-                          {f.errorDetails && (
+                          {f.failedResponse.errorDetails && (
                             <details className="mt-2">
                               <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                                 View error details
                               </summary>
                               <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
-                                {f.errorDetails}
+                                {f.failedResponse.errorDetails}
                               </div>
                             </details>
                           )}

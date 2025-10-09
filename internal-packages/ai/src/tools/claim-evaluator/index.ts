@@ -87,10 +87,25 @@ const parsedResponseSchema = z.union([
   }),
 ]);
 
-// Base fields shared by all evaluations
-const baseEvaluationSchema = z.object({
+// Successful response details
+const successfulResponseSchema = z.object({
+  agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
+  confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
+  reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
+});
+
+// Failed response details
+const failedResponseSchema = z.object({
+  error: z.string().describe("Error message"),
+  refusalReason: z.enum(["Safety", "Policy", "MissingData", "Unclear", "Error"]).describe("Categorized refusal/error reason"),
+  errorDetails: z.string().optional().describe("Additional error context"),
+});
+
+// Evaluation result schema
+const evaluationResultSchema = z.object({
   model: z.string().describe("Model identifier"),
   provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
+  hasError: z.boolean().describe("True if evaluation failed, false if successful"),
   responseTimeMs: z.number().optional().describe("Time taken for LLM to respond in milliseconds"),
   rawResponse: z.string().optional().describe("Full raw response from model (or error response)"),
   thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
@@ -99,29 +114,12 @@ const baseEvaluationSchema = z.object({
     completionTokens: z.number(),
     totalTokens: z.number(),
   }).optional().describe("Token usage statistics"),
-});
-
-// Successful evaluation schema
-const successfulEvaluationSchema = baseEvaluationSchema.extend({
-  status: z.literal('success'),
-  agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
-  confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
-  reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
-});
-
-// Failed evaluation schema
-const failedEvaluationSchema = baseEvaluationSchema.extend({
-  status: z.literal('failed'),
-  error: z.string().describe("Error message"),
-  refusalReason: z.enum(["Safety", "Policy", "MissingData", "Unclear", "Error"]).describe("Categorized refusal/error reason"),
-  errorDetails: z.string().optional().describe("Additional error context"),
-});
-
-// Unified evaluation result (discriminated union)
-const evaluationResultSchema = z.discriminatedUnion('status', [
-  successfulEvaluationSchema,
-  failedEvaluationSchema,
-]);
+  successfulResponse: successfulResponseSchema.optional().describe("Present when hasError is false"),
+  failedResponse: failedResponseSchema.optional().describe("Present when hasError is true"),
+}).refine(
+  (data) => data.hasError === !!data.failedResponse && !data.hasError === !!data.successfulResponse,
+  { message: "hasError must match presence of response fields: hasError=true requires failedResponse, hasError=false requires successfulResponse" }
+);
 
 // Output schema
 const outputSchema = z.object({
@@ -295,17 +293,19 @@ async function evaluateWithModelImpl(
     const reasoning = words.slice(0, maxExplanationWords).join(' ');
 
     return {
-      status: 'success' as const,
+      hasError: false,
       model,
       provider: extractProvider(model),
-      agreement: validatedData.agreement,
-      confidence: validatedData.confidence,
-      agreementLevel: getAgreementLabel(validatedData.agreement),
-      reasoning,
       responseTimeMs, // Time taken for LLM to respond
       rawResponse: rawContent, // Full raw response
       thinkingText: rawThinking, // Extended thinking (o1/o3)
       tokenUsage,
+      successfulResponse: {
+        agreement: validatedData.agreement,
+        confidence: validatedData.confidence,
+        agreementLevel: getAgreementLabel(validatedData.agreement),
+        reasoning,
+      },
     };
   } catch (error: unknown) {
     const err = error as EvaluationError;
@@ -430,22 +430,24 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
           const refusalReason = error?.refusalReason || detectRefusalReason(error, rawResponse);
 
           evaluations.push({
-            status: 'failed' as const,
+            hasError: true,
             model: modelId,
             provider: extractProvider(modelId),
-            error: errorMessage,
-            refusalReason,
-            rawResponse,
-            errorDetails,
             responseTimeMs,
+            rawResponse,
             thinkingText,
             tokenUsage,
+            failedResponse: {
+              error: errorMessage,
+              refusalReason,
+              errorDetails,
+            },
           });
         }
       });
 
-      const successCount = evaluations.filter(e => e.status === 'success').length;
-      const failedCount = evaluations.filter(e => e.status === 'failed').length;
+      const successCount = evaluations.filter(e => !e.hasError).length;
+      const failedCount = evaluations.filter(e => e.hasError).length;
 
       context.logger.info(
         `[ClaimEvaluator] ${successCount}/${modelRuns.length} evaluations succeeded, ${failedCount} failed`
@@ -475,7 +477,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     output: ClaimEvaluatorOutput,
     context: ToolContext
   ): Promise<void> {
-    const successCount = output.evaluations.filter(e => e.status === 'success').length;
+    const successCount = output.evaluations.filter(e => !e.hasError).length;
     context.logger.info(
       `[ClaimEvaluator] Completed with ${successCount} successful evaluations`
     );

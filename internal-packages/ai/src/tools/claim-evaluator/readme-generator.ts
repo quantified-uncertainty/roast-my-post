@@ -30,8 +30,10 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 
 ## Output
 
-- **evaluations**: Array of all model evaluations (both successful and failed), each with:
-  - \`status\`: Either 'success' or 'failed'
+> **Note**: Each evaluation has a \`hasError\` boolean that determines its structure. When \`hasError\` is false, \`successfulResponse\` is present. When \`hasError\` is true, \`failedResponse\` is present.
+
+- **evaluations**: Array of all model evaluations (both successful and failed). Each evaluation has these common fields:
+  - \`hasError\`: Boolean indicating if evaluation failed (true) or succeeded (false)
   - \`model\`: Model identifier (e.g., "anthropic/claude-3-haiku")
   - \`provider\`: Provider name (e.g., "anthropic", "openai")
   - \`responseTimeMs\`: Time taken for LLM to respond (optional)
@@ -39,15 +41,17 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
   - \`thinkingText\`: Extended thinking/reasoning for o1/o3 models (optional)
   - \`tokenUsage\`: Token usage statistics (optional)
 
-**For successful evaluations (status: 'success'):**
-  - \`agreement\`: Score from 0-100 (0=disagree, 100=agree)
-  - \`confidence\`: Score from 0-100 (0=very uncertain, 100=very confident)
-  - \`reasoning\`: Brief explanation (max words configurable, default 50)
+**For successful evaluations (hasError: false):**
+  - \`successfulResponse\`: Object containing:
+    - \`agreement\`: Score from 0-100 (0=disagree, 100=agree)
+    - \`confidence\`: Score from 0-100 (0=very uncertain, 100=very confident)
+    - \`reasoning\`: Brief explanation (max words configurable, default 50)
 
-**For failed evaluations (status: 'failed'):**
-  - \`error\`: Error message
-  - \`refusalReason\`: Categorized reason ('Safety', 'Policy', 'MissingData', 'Unclear', 'Error')
-  - \`errorDetails\`: Additional error context (optional)
+**For failed evaluations (hasError: true):**
+  - \`failedResponse\`: Object containing:
+    - \`error\`: Error message
+    - \`refusalReason\`: Categorized reason ('Safety', 'Policy', 'MissingData', 'Unclear', 'Error')
+    - \`errorDetails\`: Additional error context (optional)
 
 ## Technical Details
 
@@ -55,7 +59,7 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 - Helicone integration for request tracking and caching
 - Parallel execution using \`Promise.allSettled()\`
 - Both successful and failed evaluations are included in results
-- Structured JSON responses with discriminated union (status field)
+- Structured JSON responses with \`hasError\` boolean and optional response fields
 - Custom models can be specified via the \`models\` parameter
 - Response times tracked for performance monitoring
 
@@ -80,29 +84,35 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 {
   "evaluations": [
     {
-      "status": "success",
+      "hasError": false,
       "model": "anthropic/claude-3-haiku",
       "provider": "anthropic",
-      "agreement": 15,
-      "confidence": 85,
-      "reasoning": "Unlikely growth rate given historical economic data",
-      "responseTimeMs": 1234
+      "responseTimeMs": 1234,
+      "successfulResponse": {
+        "agreement": 15,
+        "confidence": 85,
+        "reasoning": "Unlikely growth rate given historical economic data"
+      }
     },
     {
-      "status": "success",
+      "hasError": false,
       "model": "anthropic/claude-3-5-sonnet",
       "provider": "anthropic",
-      "agreement": 20,
-      "confidence": 90,
-      "reasoning": "Historically implausible; requires 7% annual growth",
-      "responseTimeMs": 2156
+      "responseTimeMs": 2156,
+      "successfulResponse": {
+        "agreement": 20,
+        "confidence": 90,
+        "reasoning": "Historically implausible; requires 7% annual growth"
+      }
     },
     {
-      "status": "failed",
+      "hasError": true,
       "model": "some-unavailable-model",
       "provider": "openai",
-      "error": "Model evaluation timed out after 120s",
-      "refusalReason": "Error"
+      "failedResponse": {
+        "error": "Model evaluation timed out after 120s",
+        "refusalReason": "Error"
+      }
     }
     // ... other models
   ]

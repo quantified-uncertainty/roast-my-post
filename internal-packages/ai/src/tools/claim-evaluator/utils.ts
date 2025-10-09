@@ -44,10 +44,26 @@ export interface ClaimEvaluatorInput {
   temperature?: number; // Temperature for model responses (0.0-2.0, default 1.0)
 }
 
-// Base fields shared by all evaluations (success or failed)
-interface BaseEvaluation {
+// Successful response details
+export interface SuccessfulResponse {
+  agreement: number; // 0-100
+  confidence: number; // 0-100
+  agreementLevel?: string; // Human-readable label (e.g., "Strongly Disagree")
+  reasoning: string; // Brief reasoning (configurable by explanationLength)
+}
+
+// Failed response details
+export interface FailedResponse {
+  error: string;
+  refusalReason: RefusalReason; // Categorized refusal/error reason
+  errorDetails?: string; // Additional error context
+}
+
+// Evaluation result with either success or failure response
+export interface EvaluationResult {
   model: string;
   provider: string;
+  hasError: boolean; // True if evaluation failed, false if successful
   responseTimeMs?: number; // Time taken for LLM to respond in milliseconds
   rawResponse?: string; // Full text response from model (or error response)
   thinkingText?: string; // Extended thinking/reasoning (for o1, o3, etc)
@@ -56,30 +72,14 @@ interface BaseEvaluation {
     completionTokens: number;
     totalTokens: number;
   };
+  successfulResponse?: SuccessfulResponse; // Present when hasError is false
+  failedResponse?: FailedResponse; // Present when hasError is true
 }
-
-// Successful evaluation with agreement scores
-export interface SuccessfulEvaluation extends BaseEvaluation {
-  status: 'success';
-  agreement: number; // 0-100
-  confidence: number; // 0-100
-  agreementLevel?: string; // Human-readable label (e.g., "Strongly Disagree")
-  reasoning: string; // Brief reasoning (configurable by explanationLength)
-}
-
-// Failed evaluation with error details
-export interface FailedEvaluation extends BaseEvaluation {
-  status: 'failed';
-  error: string;
-  refusalReason: RefusalReason; // Categorized refusal/error reason
-  errorDetails?: string; // Additional error context
-}
-
-// Unified evaluation result (discriminated union)
-export type EvaluationResult = SuccessfulEvaluation | FailedEvaluation;
 
 // Legacy types for backwards compatibility during migration
-export type ModelEvaluation = SuccessfulEvaluation;
+export type ModelEvaluation = EvaluationResult;
+export type SuccessfulEvaluation = EvaluationResult & { hasError: false; successfulResponse: SuccessfulResponse };
+export type FailedEvaluation = EvaluationResult & { hasError: true; failedResponse: FailedResponse };
 
 export interface ClaimEvaluatorOutput {
   evaluations: EvaluationResult[];

@@ -58,7 +58,7 @@ function parseJsonSchema(schema: any): SchemaField[] {
 /**
  * Format a property type for display
  */
-function formatType(prop: any): string {
+function formatType(prop: any, depth: number = 0): string {
   if (prop.enum) {
     return prop.enum.map((v: string) => `"${v}"`).join(' | ');
   }
@@ -71,10 +71,54 @@ function formatType(prop: any): string {
   }
 
   if (prop.type === 'object') {
+    // Always expand objects with properties
+    if (prop.properties) {
+      return formatObjectInline(prop, depth);
+    }
     return 'object';
   }
 
   return prop.type || 'any';
+}
+
+/**
+ * Format nested object inline with indentation
+ */
+function formatObjectInline(schema: any, depth: number): string {
+  const properties = schema.properties || {};
+  const required = schema.required || [];
+  const indent = '  ';
+  const currentIndent = indent.repeat(depth + 1);
+  const lines: string[] = ['{'];
+
+  for (const [name, prop] of Object.entries<any>(properties)) {
+    const isRequired = required.includes(name);
+    const questionMark = isRequired ? '' : '?';
+    const typeStr = formatType(prop, depth + 1);
+    const desc = prop.description ? `  // ${prop.description}` : '';
+
+    // Handle multi-line nested objects
+    if (typeStr.includes('\n')) {
+      const nestedLines = typeStr.split('\n');
+      // First line: property name and opening brace
+      lines.push(`${currentIndent}${name}${questionMark}: ${nestedLines[0]}`);
+      // Subsequent lines: already have their relative indentation, add current level
+      for (let i = 1; i < nestedLines.length; i++) {
+        lines.push(currentIndent + nestedLines[i]);
+      }
+      // Add semicolon and comment after closing brace
+      if (desc) {
+        lines[lines.length - 1] = lines[lines.length - 1] + ';' + desc;
+      } else {
+        lines[lines.length - 1] = lines[lines.length - 1] + ';';
+      }
+    } else {
+      lines.push(`${currentIndent}${name}${questionMark}: ${typeStr};${desc}`);
+    }
+  }
+
+  lines.push(indent.repeat(depth) + '}');
+  return lines.join('\n');
 }
 
 /**
@@ -208,21 +252,96 @@ function DescriptionCell({
 }
 
 /**
- * Expandable array schema row
+ * Expandable array schema row with syntax highlighting
  */
 function ArraySchemaRow({ itemSchema }: { itemSchema: any }) {
+  const schemaContent = formatArrayItemSchema(itemSchema);
+
   return (
     <tr className="border-b border-gray-100 bg-gray-50">
       <td colSpan={4} className="py-3 px-3">
         <div className="ml-6">
           <div className="text-xs font-semibold text-gray-600 mb-2">Array Item Schema:</div>
-          <pre className="bg-white border border-gray-200 rounded p-3 text-xs font-mono overflow-x-auto">
-            {formatArrayItemSchema(itemSchema)}
+          <pre className="bg-[#1e293b] text-white border border-gray-200 rounded p-3 text-xs font-mono overflow-x-auto">
+            <code>{schemaContent}</code>
           </pre>
         </div>
       </td>
     </tr>
   );
+}
+
+/**
+ * Create an example object from a schema
+ */
+function createSchemaExample(schema: any): any {
+  if (!schema || schema.type !== 'object' || !schema.properties) {
+    return {};
+  }
+
+  const example: any = {};
+  const properties = schema.properties;
+  const required = schema.required || [];
+
+  for (const [name, prop] of Object.entries<any>(properties)) {
+    const isRequired = required.includes(name);
+
+    // Include all required fields and common optional fields
+    const includeField = isRequired ||
+      ['responseTimeMs', 'successfulResponse', 'failedResponse', 'tokenUsage'].includes(name);
+
+    if (includeField) {
+      example[name] = createExampleValue(prop, name);
+    }
+  }
+
+  return example;
+}
+
+/**
+ * Create an example value based on property type
+ */
+function createExampleValue(prop: any, fieldName?: string): any {
+  if (prop.enum) {
+    return prop.enum[0];
+  }
+
+  if (prop.type === 'string') {
+    // Provide meaningful examples based on field name
+    if (fieldName === 'model') return 'anthropic/claude-3-haiku';
+    if (fieldName === 'provider') return 'anthropic';
+    if (fieldName === 'error') return 'Model evaluation timed out after 120s';
+    if (fieldName === 'reasoning') return 'Brief reasoning text';
+    return prop.description || 'string';
+  }
+
+  if (prop.type === 'number' || prop.type === 'integer') {
+    // Provide meaningful examples based on field name
+    if (fieldName === 'agreement') return 75;
+    if (fieldName === 'confidence') return 85;
+    if (fieldName === 'responseTimeMs') return 1234;
+    if (fieldName === 'promptTokens' || fieldName === 'completionTokens') return 100;
+    if (fieldName === 'totalTokens') return 200;
+    if (prop.minimum !== undefined) return prop.minimum;
+    if (prop.maximum !== undefined) return Math.floor(prop.maximum / 2);
+    return 0;
+  }
+
+  if (prop.type === 'boolean') {
+    // Provide meaningful examples based on field name
+    if (fieldName === 'hasError') return false;
+    return false;
+  }
+
+  if (prop.type === 'array') {
+    return [];
+  }
+
+  if (prop.type === 'object' && prop.properties) {
+    return createSchemaExample(prop);
+  }
+
+  return null;
 }
 
 /**
