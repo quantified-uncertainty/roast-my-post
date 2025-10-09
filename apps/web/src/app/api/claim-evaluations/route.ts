@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@roast/db';
+import { prisma, generateId } from '@roast/db';
 import { auth } from '@/infrastructure/auth/auth';
 import { z } from 'zod';
 
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
 
     const evaluation = await prisma.claimEvaluation.create({
       data: {
+        id: generateId(16), // Use shorter IDs like documents
         userId: session.user.id,
         claim: data.claim,
         context: data.context,
