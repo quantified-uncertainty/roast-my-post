@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { getModelAbbreviation } from "../../constants/modelAbbreviations";
+
 interface ModelEvaluation {
   model: string;
   provider: string;
@@ -23,35 +25,6 @@ const AGREEMENT_COLORS = {
   "Disagree": "bg-orange-50 border-orange-200 text-orange-600",
   "Strongly Disagree": "bg-red-100 border-red-300 text-red-700",
 };
-
-// Model abbreviation helper
-function getModelAbbreviation(modelId: string): string {
-  const abbreviations: Record<string, string> = {
-    // Anthropic Claude models
-    "anthropic/claude-sonnet-4.5": "C4.5",
-    "anthropic/claude-sonnet-4": "CS4",
-    "anthropic/claude-4-sonnet-20250522": "CS4.5",
-    "anthropic/claude-3-7-sonnet-20250219": "C3.7",
-    "anthropic/claude-3.5-sonnet": "C3.5",
-    "anthropic/claude-3-haiku": "Haiku",
-    // Google models
-    "google/gemini-2.5-pro": "G2.5",
-    "google/gemini-pro": "Gem",
-    // OpenAI models
-    "openai/gpt-5": "GPT5",
-    "openai/gpt-4.1-mini-2025-04-14": "GP4.1",
-    "openai/gpt-4-turbo": "GP4T",
-    "openai/gpt-4": "GP4",
-    // xAI models
-    "x-ai/grok-4": "Grok4",
-    "x-ai/grok-beta": "Grok",
-    // DeepSeek models
-    "deepseek/deepseek-chat-v3.1": "DS3.1",
-    "deepseek/deepseek-chat": "DeepS",
-  };
-
-  return abbreviations[modelId] || modelId.split("/")[1]?.substring(0, 5) || modelId.substring(0, 5);
-}
 
 // Get agreement level from score
 function getAgreementLevel(agreement: number): string {

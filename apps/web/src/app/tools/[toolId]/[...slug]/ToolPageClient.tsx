@@ -5,6 +5,8 @@ import { useState } from "react";
 import { notFound } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+import { getModelAbbreviation, estimateTokenCount } from "../../constants/modelAbbreviations";
+
 import { ClaimEvaluationDisplay } from "@/lib/OpinionSpectrum2D";
 import {
   BeakerIcon,
@@ -32,6 +34,8 @@ import { MathCheckDisplay } from "../../components/results/MathCheckDisplay";
 import { FieldConfig } from "../../components/types";
 import { toolExamples as exampleConfigs } from "../../utils/toolExamples";
 
+const CONTEXT_PREVIEW_LENGTH = 300;
+
 // Claim Evaluator Result Component (separate to use hooks properly)
 function ClaimEvaluatorResult({
   result,
@@ -44,36 +48,14 @@ function ClaimEvaluatorResult({
 }) {
   const [showContextModal, setShowContextModal] = useState(false);
 
-  // Map model IDs to abbreviations
-  const getModelAbbrev = (modelId: string): string => {
-    const abbrevMap: Record<string, string> = {
-      "anthropic/claude-sonnet-4.5": "C4.5",
-      "anthropic/claude-sonnet-4": "C4",
-      "anthropic/claude-3.5-haiku-20241022": "H3.5",
-      "google/gemini-2.5-pro": "G2.5P",
-      "google/gemini-2.5-flash": "G2.5F",
-      "openai/gpt-5": "GPT5",
-      "openai/gpt-5-mini": "5m",
-      "openai/gpt-4.1": "4.1",
-      "openai/gpt-4.1-mini-2025-04-14": "4.1m",
-      "deepseek/deepseek-chat-v3.1": "DS",
-      "x-ai/grok-4": "Grok4",
-    };
-    return abbrevMap[modelId] || modelId.split("/")[1]?.substring(0, 4) || "??";
-  };
-
-  // Estimate token count (rough approximation: ~4 characters per token)
-  const estimateTokens = (text: string): number => {
-    return Math.ceil(text.length / 4);
-  };
-
-  const contextTokens = context ? estimateTokens(context) : 0;
-  const MAX_PREVIEW_LENGTH = 300;
+  // Use trimmed context to handle empty strings properly
+  const trimmedContext = context?.trim() || "";
+  const contextTokens = estimateTokenCount(trimmedContext);
   const contextPreview =
-    context.length > MAX_PREVIEW_LENGTH
-      ? context.slice(0, MAX_PREVIEW_LENGTH)
-      : context;
-  const hasMore = context.length > MAX_PREVIEW_LENGTH;
+    trimmedContext.length > CONTEXT_PREVIEW_LENGTH
+      ? trimmedContext.slice(0, CONTEXT_PREVIEW_LENGTH)
+      : trimmedContext;
+  const hasMore = trimmedContext.length > CONTEXT_PREVIEW_LENGTH;
 
   return (
     <>
@@ -86,11 +68,11 @@ function ClaimEvaluatorResult({
         </div>
       )}
 
-      {context && (
+      {trimmedContext && (
         <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-600">Context</h3>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-gray-400" aria-label={`Estimated ${contextTokens} tokens`}>
               {contextTokens.toLocaleString()} tokens
             </span>
           </div>
@@ -102,6 +84,8 @@ function ClaimEvaluatorResult({
             <button
               onClick={() => setShowContextModal(true)}
               className="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              aria-label="Show full context"
+              aria-expanded={showContextModal}
             >
               Show More
             </button>
@@ -110,19 +94,19 @@ function ClaimEvaluatorResult({
       )}
 
       <Dialog open={showContextModal} onOpenChange={setShowContextModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" aria-describedby="context-description">
           <DialogHeader>
             <DialogTitle>
               Full Context ({contextTokens.toLocaleString()} tokens)
             </DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
-            <p className="whitespace-pre-wrap text-gray-700">{context}</p>
+          <div className="mt-4" id="context-description">
+            <p className="whitespace-pre-wrap text-gray-700">{trimmedContext}</p>
           </div>
         </DialogContent>
       </Dialog>
 
-      <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbrev} />
+      <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbreviation} />
     </>
   );
 }
