@@ -357,6 +357,8 @@ export function ClaimEvaluationDisplay({
   result,
   getModelAbbrev,
 }: ClaimEvaluationDisplayProps) {
+  const [showRawJSON, setShowRawJSON] = useState(false);
+
   // Convert successful results to Opinion2DPoint format
   const successfulOpinions: Opinion2DPoint[] = (result.results || []).map(
     (r, i) => ({
@@ -412,49 +414,79 @@ export function ClaimEvaluationDisplay({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold">Claim Evaluation Results</h3>
-
-        {/* Consensus Summary - only show if we have successful results */}
-        {successfulOpinions.length > 0 && result.consensus && (
-          <div className="mb-6 rounded-lg bg-blue-50 p-4">
-            <h4 className="mb-2 font-semibold">Consensus</h4>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Mean Agreement:</span>
-                <span className="ml-2 font-semibold">
-                  {result.consensus.mean}%
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Std Dev:</span>
-                <span className="ml-2 font-semibold">
-                  {result.consensus.stdDev}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Range:</span>
-                <span className="ml-2 font-semibold">
-                  {result.consensus.range.min}% - {result.consensus.range.max}%
-                </span>
-              </div>
+      {/* Consensus Summary - only show if we have successful results */}
+      {successfulOpinions.length > 0 && result.consensus && (
+        <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-sm font-medium text-gray-600">Consensus</h3>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Mean Agreement:</span>
+              <span className="ml-2 font-semibold">
+                {result.consensus.mean}%
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">Std Dev:</span>
+              <span className="ml-2 font-semibold">
+                {result.consensus.stdDev}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">Range:</span>
+              <span className="ml-2 font-semibold">
+                {result.consensus.range.min}% - {result.consensus.range.max}%
+              </span>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* 2D Opinion Spectrum Visualization */}
-        <div className="mb-8">
-          <h4 className="mb-4 font-semibold">
-            Opinion Spectrum (Agreement vs Confidence)
-          </h4>
-          <OpinionSpectrum2D data={opinion2DData} height="h-96" />
+      {/* 2D Opinion Spectrum Visualization */}
+      <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <OpinionSpectrum2D
+          data={opinion2DData}
+          height="h-96"
+          proximityThreshold={5}
+          clusterRadius={20}
+        />
+      </div>
+
+      {/* Individual Model Results - Grouped by Model */}
+      <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-600">Model Responses</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowRawJSON(false)}
+              className={`rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
+                !showRawJSON
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Visual View
+            </button>
+            <button
+              onClick={() => setShowRawJSON(true)}
+              className={`rounded-lg px-3 py-1 text-sm font-medium transition-colors ${
+                showRawJSON
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Raw JSON
+            </button>
+          </div>
         </div>
 
-        {/* Individual Model Results - Grouped by Model */}
-        <div className="mt-8 space-y-4">
-          <h4 className="font-semibold">Model Responses</h4>
-          {/* Successful Results */}
-          {Object.entries(groupedResults).map(
+        {showRawJSON ? (
+          <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm">
+            {JSON.stringify(result, null, 2)}
+          </pre>
+        ) : (
+          <div className="space-y-4">
+            {/* Successful Results */}
+            {Object.entries(groupedResults).map(
             ([modelId, runs]: [string, any]) => {
               const firstRun = runs[0];
 
@@ -654,7 +686,8 @@ export function ClaimEvaluationDisplay({
               );
             }
           )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
