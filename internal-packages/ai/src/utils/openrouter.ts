@@ -75,9 +75,10 @@ export const OPENROUTER_MODELS = {
   CLAUDE_SONNET_4_5: 'anthropic/claude-sonnet-4.5',
   CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
   GEMINI_2_5_PRO: 'google/gemini-2.5-pro',
+  GEMINI_2_5_FLASH: 'google/gemini-2.5-flash',
   GPT_5: 'openai/gpt-5',
   GPT_5_MINI: 'openai/gpt-5-mini',
-  DEEPSEEK_CHAT_V3_1_FREE: 'deepseek/deepseek-chat-v3.1:free',
+  DEEPSEEK_CHAT_V3_1: 'deepseek/deepseek-chat-v3.1',
   GROK_4: 'x-ai/grok-4',
 
   // High performance - Established strong models

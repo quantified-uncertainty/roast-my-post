@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { notFound } from "next/navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { ClaimEvaluationDisplay } from "@/lib/OpinionSpectrum2D";
 import {
@@ -30,6 +31,101 @@ import { GenericToolTryPage } from "../../components/GenericToolTryPage";
 import { MathCheckDisplay } from "../../components/results/MathCheckDisplay";
 import { FieldConfig } from "../../components/types";
 import { toolExamples as exampleConfigs } from "../../utils/toolExamples";
+
+// Claim Evaluator Result Component (separate to use hooks properly)
+function ClaimEvaluatorResult({
+  result,
+  claim,
+  context,
+}: {
+  result: any;
+  claim: string;
+  context: string;
+}) {
+  const [showContextModal, setShowContextModal] = useState(false);
+
+  // Map model IDs to abbreviations
+  const getModelAbbrev = (modelId: string): string => {
+    const abbrevMap: Record<string, string> = {
+      "anthropic/claude-sonnet-4.5": "C4.5",
+      "anthropic/claude-sonnet-4": "C4",
+      "anthropic/claude-3.5-haiku-20241022": "H3.5",
+      "google/gemini-2.5-pro": "G2.5P",
+      "google/gemini-2.5-flash": "G2.5F",
+      "openai/gpt-5": "GPT5",
+      "openai/gpt-5-mini": "5m",
+      "openai/gpt-4.1": "4.1",
+      "openai/gpt-4.1-mini-2025-04-14": "4.1m",
+      "deepseek/deepseek-chat-v3.1": "DS",
+      "x-ai/grok-4": "Grok4",
+    };
+    return abbrevMap[modelId] || modelId.split("/")[1]?.substring(0, 4) || "??";
+  };
+
+  // Estimate token count (rough approximation: ~4 characters per token)
+  const estimateTokens = (text: string): number => {
+    return Math.ceil(text.length / 4);
+  };
+
+  const contextTokens = context ? estimateTokens(context) : 0;
+  const MAX_PREVIEW_LENGTH = 300;
+  const contextPreview =
+    context.length > MAX_PREVIEW_LENGTH
+      ? context.slice(0, MAX_PREVIEW_LENGTH)
+      : context;
+  const hasMore = context.length > MAX_PREVIEW_LENGTH;
+
+  return (
+    <>
+      {claim && (
+        <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
+          <h3 className="mb-3 text-sm font-medium text-gray-600">Claim</h3>
+          <p className="text-xl font-medium text-gray-900">
+            &ldquo;{claim}&rdquo;
+          </p>
+        </div>
+      )}
+
+      {context && (
+        <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-600">Context</h3>
+            <span className="text-sm text-gray-400">
+              {contextTokens.toLocaleString()} tokens
+            </span>
+          </div>
+          <p className="text-gray-700">
+            {contextPreview}
+            {hasMore && <span className="text-gray-400">...</span>}
+          </p>
+          {hasMore && (
+            <button
+              onClick={() => setShowContextModal(true)}
+              className="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            >
+              Show More
+            </button>
+          )}
+        </div>
+      )}
+
+      <Dialog open={showContextModal} onOpenChange={setShowContextModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Full Context ({contextTokens.toLocaleString()} tokens)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <p className="whitespace-pre-wrap text-gray-700">{context}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbrev} />
+    </>
+  );
+}
 
 // Map tool IDs to their icons
 const toolIcons: Record<string, React.ReactElement> = {
@@ -71,6 +167,8 @@ const toolIcons: Record<string, React.ReactElement> = {
 // Types for tool results
 interface ToolResultExtra {
   statement?: string;
+  claim?: string;
+  context?: string;
   [key: string]: unknown;
 }
 
@@ -102,28 +200,13 @@ const toolResultRenderers: Record<
       variant="mathjs"
     />
   ),
-  "claim-evaluator": (result: any) => {
-    // Map model IDs to abbreviations
-    const getModelAbbrev = (modelId: string): string => {
-      const abbrevMap: Record<string, string> = {
-        "anthropic/claude-sonnet-4.5": "C4.5",
-        "anthropic/claude-sonnet-4": "C4",
-        "anthropic/claude-3.5-haiku-20241022": "H3.5",
-        "google/gemini-2.5-pro": "G2.5",
-        "openai/gpt-5": "GPT5",
-        "openai/gpt-5-mini": "5m",
-        "openai/gpt-4.1": "4.1",
-        "openai/gpt-4.1-mini-2025-04-14": "4.1m",
-        "deepseek/deepseek-chat-v3.1:free": "DS",
-        "x-ai/grok-4": "Grok4",
-      };
-      return (
-        abbrevMap[modelId] || modelId.split("/")[1]?.substring(0, 4) || "??"
-      );
-    };
-
-    return <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbrev} />;
-  },
+  "claim-evaluator": (result: any, extra?: ToolResultExtra) => (
+    <ClaimEvaluatorResult
+      result={result}
+      claim={extra?.claim || ""}
+      context={extra?.context || ""}
+    />
+  ),
   // Add more custom renderers as needed
   // Default renderer for tools without custom display
   default: (result) => (
@@ -143,6 +226,8 @@ interface ToolPageClientProps {
 
 export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
   const [lastStatement, setLastStatement] = useState("");
+  const [lastClaim, setLastClaim] = useState("");
+  const [lastContext, setLastContext] = useState("");
 
   const toolConfig = toolRegistry[toolId];
 
@@ -378,12 +463,13 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
               label: "Claude 3.5 Haiku",
             },
             { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+            { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
             { value: "openai/gpt-5", label: "GPT-5" },
             { value: "openai/gpt-5-mini", label: "GPT-5 Mini" },
             { value: "openai/gpt-4.1", label: "GPT-4.1" },
             { value: "openai/gpt-4.1-mini-2025-04-14", label: "GPT-4.1 Mini" },
             {
-              value: "deepseek/deepseek-chat-v3.1:free",
+              value: "deepseek/deepseek-chat-v3.1",
               label: "DeepSeek Chat V3.1",
             },
             { value: "x-ai/grok-4", label: "Grok 4" },
@@ -391,7 +477,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           defaultValue: [
             "anthropic/claude-sonnet-4.5",
             "openai/gpt-5-mini",
-            "deepseek/deepseek-chat-v3.1:free",
+            "deepseek/deepseek-chat-v3.1",
             "x-ai/grok-4",
           ],
         },
@@ -588,6 +674,12 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
               statement: lastStatement,
             });
           }
+          if (toolId === "claim-evaluator") {
+            return resultRenderer(result as ToolResult, {
+              claim: lastClaim,
+              context: lastContext,
+            });
+          }
           return resultRenderer(result as ToolResult);
         }}
         exampleInputs={examples.map((ex) => ({
@@ -598,6 +690,14 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           // Store statement for math tools
           if (input.statement) {
             setLastStatement(input.statement as string);
+          }
+          // Store claim for claim-evaluator
+          if (input.claim) {
+            setLastClaim(input.claim as string);
+          }
+          // Store context for claim-evaluator
+          if (input.context) {
+            setLastContext(input.context as string);
           }
           return input;
         }}
@@ -615,6 +715,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
               ? "Extracting..."
               : "Processing..."
         }
+        hideViewToggle={toolId === "claim-evaluator"}
       />
     );
   }

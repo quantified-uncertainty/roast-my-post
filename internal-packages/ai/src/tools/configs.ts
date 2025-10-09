@@ -176,7 +176,7 @@ export const claimEvaluatorConfig: ToolConfig = {
   id: "claim-evaluator",
   name: "Claim Evaluator",
   description:
-    "Evaluate claims by polling multiple LLM models in parallel (Claude, GPT, Grok) via OpenRouter. Each model provides an agreement score (0-100) and brief reasoning.",
+    "Evaluate claims by polling multiple LLM models in parallel (Claude, GPT, Grok) via OpenRouter. Each model provides an agreement score (0-100), brief reasoning, and response time in milliseconds.",
   version: "1.0.0",
   category: "research",
   costEstimate: "~$0.01-0.05 per claim (4+ model calls via OpenRouter)",

@@ -390,6 +390,123 @@ export default function OpinionSpectrum2DPrototype() {
             />
           </div>
         </div>
+
+        {/* Example 4: AI by 2040 - Multiple Models */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Example 4: "AI will achieve human-level intelligence by 2040" - Multiple Models
+          </h2>
+          <div className="rounded-lg bg-white p-8 shadow-lg">
+            <OpinionSpectrum2D
+              data={[
+                {
+                  id: "claude1",
+                  name: "Claude Sonnet 4.5 (1)",
+                  avatar: "C1",
+                  agreement: 45,
+                  confidence: 30,
+                  info: "Defining 'human-level intelligence' is contentious. Progress in AI is rapid but unpredictable. 2040 is plausible for narrow benchmarks, less certain for general intelligence. High uncertainty due to definitional ambiguity, unforeseen breakthroughs or obstacles, and measurement challenges.",
+                },
+                {
+                  id: "gemini-pro",
+                  name: "Gemini 2.5 Pro",
+                  avatar: "G2.5P",
+                  agreement: 65,
+                  confidence: 60,
+                  info: "While 'human-level intelligence' is ill-defined, recent breakthroughs in large-scale AI have shortened many expert timelines. The 2040 target is ambitious given remaining scientific hurdles, but the current pace of progress and investment makes it a plausible, though highly uncertain, forecast.",
+                },
+                {
+                  id: "claude2",
+                  name: "Claude Sonnet 4.5 (2)",
+                  avatar: "C2",
+                  agreement: 45,
+                  confidence: 30,
+                  info: "\"Human-level intelligence\" lacks precise definition, making evaluation difficult. Current AI progress is rapid but uneven across capabilities. 2040 timeline is plausible for some definitions, unlikely for others. High uncertainty due to unpredictable breakthroughs, unclear metrics, and definitional ambiguity.",
+                },
+                {
+                  id: "gemini-flash1",
+                  name: "Gemini 2.5 Flash (1)",
+                  avatar: "G2.5F1",
+                  agreement: 55,
+                  confidence: 70,
+                  info: "Predicting human-level AI is highly complex. Progress is rapid, but defining and achieving 'human-level intelligence' within a specific timeframe is speculative due to varying definitions and unforeseen challenges.",
+                },
+                {
+                  id: "claude3",
+                  name: "Claude Sonnet 4.5 (3)",
+                  avatar: "C3",
+                  agreement: 45,
+                  confidence: 25,
+                  info: "Human-level intelligence lacks precise definition, making evaluation difficult. Current AI progress is rapid but narrow. 2040 timeline is plausible but highly uncertain given unpredictable breakthroughs, funding, and technical barriers. Definition ambiguity and trajectory uncertainty warrant low confidence despite moderate probability.",
+                },
+                {
+                  id: "claude4",
+                  name: "Claude Sonnet 4.5 (4)",
+                  avatar: "C4",
+                  agreement: 45,
+                  confidence: 25,
+                  info: "Highly uncertain due to ambiguity in 'human-level intelligence' definition and unpredictable AI progress. Current trends show rapid advancement, but fundamental breakthroughs needed remain unclear. Timeline plausible but speculative given definitional issues and technical uncertainties.",
+                },
+                {
+                  id: "gemini-flash2",
+                  name: "Gemini 2.5 Flash (2)",
+                  avatar: "G2.5F2",
+                  agreement: 60,
+                  confidence: 70,
+                  info: "Progress in AI is rapid, but defining 'human-level intelligence' is complex and achieving it across all cognitive domains by 2040 is ambitious.",
+                },
+                // Refusals
+                {
+                  id: "gemini-flash-refusal1",
+                  name: "Gemini 2.5 Flash (Refused)",
+                  avatar: "GFR1",
+                  agreement: 0,
+                  confidence: 0,
+                  refusalReason: "Unclear",
+                  info: "The definition of 'human-level intelligence' is highly subjective and lacks a universally agreed-upon metric for evaluation, making the claim difficult to assess meaningfully.",
+                },
+                {
+                  id: "gemini-pro-refusal1",
+                  name: "Gemini 2.5 Pro (Refused 1)",
+                  avatar: "GPR1",
+                  agreement: 0,
+                  confidence: 0,
+                  refusalReason: "Unclear",
+                  info: "The term 'human-level intelligence' lacks a clear, universally accepted definition and measurable benchmarks. Without a concrete standard for what constitutes this level of intelligence, the claim is too ambiguous to evaluate meaningfully.",
+                },
+                {
+                  id: "gemini-flash-refusal2",
+                  name: "Gemini 2.5 Flash (Refused 2)",
+                  avatar: "GFR2",
+                  agreement: 0,
+                  confidence: 0,
+                  refusalReason: "Unclear",
+                  info: "Human-level intelligence is not clearly defined in scope or measurable metrics, making the claim difficult to evaluate.",
+                },
+                {
+                  id: "gemini-pro-refusal2",
+                  name: "Gemini 2.5 Pro (Refused 2)",
+                  avatar: "GPR2",
+                  agreement: 0,
+                  confidence: 0,
+                  refusalReason: "Unclear",
+                  info: "The definition of \"human-level intelligence\" is highly ambiguous and lacks a scientific consensus or objective benchmark. Without a clear, measurable standard for what constitutes achieving this level of intelligence, the claim is too vague to evaluate meaningfully.",
+                },
+                {
+                  id: "gemini-pro-refusal3",
+                  name: "Gemini 2.5 Pro (Refused 3)",
+                  avatar: "GPR3",
+                  agreement: 0,
+                  confidence: 0,
+                  refusalReason: "Unclear",
+                  info: "The term 'human-level intelligence' lacks a precise, universally accepted, and measurable definition. Without specifying criteria (e.g., cognitive tasks, economic replacement, consciousness), the claim is too ambiguous to evaluate meaningfully, as different interpretations lead to vastly different conclusions.",
+                },
+              ]}
+              proximityThreshold={2}
+              height="h-48"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

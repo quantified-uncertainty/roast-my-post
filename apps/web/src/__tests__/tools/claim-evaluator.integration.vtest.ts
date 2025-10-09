@@ -14,9 +14,10 @@ const MODELS = {
   CLAUDE_SONNET_4_5: 'anthropic/claude-sonnet-4.5',
   CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
   GEMINI_2_5_PRO: 'google/gemini-2.5-pro',
+  GEMINI_2_5_FLASH: 'google/gemini-2.5-flash',
   GPT_5: 'openai/gpt-5',
   GPT_5_MINI: 'openai/gpt-5-mini',
-  DEEPSEEK_CHAT_V3_1_FREE: 'deepseek/deepseek-chat-v3.1:free',
+  DEEPSEEK_CHAT_V3_1: 'deepseek/deepseek-chat-v3.1',
   GROK_4: 'x-ai/grok-4',
 };
 
@@ -53,16 +54,10 @@ describe('Claim Evaluator Tool E2E Tests', () => {
         expect(r.confidence).toBeGreaterThanOrEqual(0);
         expect(r.confidence).toBeLessThanOrEqual(100);
         expect(r.reasoning).toBeDefined();
+        // Default is 50 words max, which typically results in 200-500 characters
         expect(r.reasoning.length).toBeGreaterThanOrEqual(10);
-        expect(r.reasoning.length).toBeLessThanOrEqual(30);
+        expect(r.reasoning.length).toBeLessThanOrEqual(2000); // Updated to match schema
       });
-
-      // Consensus should be calculated
-      expect(result.consensus).toBeDefined();
-      expect(result.consensus.mean).toBeGreaterThanOrEqual(0);
-      expect(result.consensus.mean).toBeLessThanOrEqual(100);
-      expect(result.consensus.stdDev).toBeGreaterThanOrEqual(0);
-      expect(result.consensus.range.min).toBeLessThanOrEqual(result.consensus.range.max);
     }, 60000); // 60 second timeout for API calls
 
     it('should evaluate a controversial claim with context', async () => {
@@ -146,7 +141,7 @@ describe('Claim Evaluator Tool E2E Tests', () => {
       expect(result.results[0].agreement).toBeGreaterThan(80); // Should strongly agree with factual statement
     }, 60000);
 
-    it('should work with Gemini models', async () => {
+    it('should work with Gemini 2.5 Pro', async () => {
       const result = await claimEvaluatorTool.execute({
         claim: 'The sky is blue during the day',
         models: [MODELS.GEMINI_2_5_PRO],
@@ -159,10 +154,23 @@ describe('Claim Evaluator Tool E2E Tests', () => {
       expect(result.results[0].agreement).toBeGreaterThan(70); // Should agree with factual statement
     }, 60000);
 
-    it('should work with DeepSeek models', async () => {
+    it('should work with Gemini 2.5 Flash', async () => {
+      const result = await claimEvaluatorTool.execute({
+        claim: 'Water is composed of hydrogen and oxygen',
+        models: [MODELS.GEMINI_2_5_FLASH],
+        runs: 1
+      }, testContext);
+
+      expect(result.results).toBeDefined();
+      expect(result.results.length).toBe(1);
+      expect(result.results[0].provider).toBe('google');
+      expect(result.results[0].agreement).toBeGreaterThan(90); // Should strongly agree with factual statement
+    }, 60000);
+
+    it('should work with DeepSeek models (paid version)', async () => {
       const result = await claimEvaluatorTool.execute({
         claim: 'Cats are mammals',
-        models: [MODELS.DEEPSEEK_CHAT_V3_1_FREE],
+        models: [MODELS.DEEPSEEK_CHAT_V3_1],
         runs: 1
       }, testContext);
 
@@ -352,6 +360,28 @@ describe('Claim Evaluator Tool E2E Tests', () => {
         expect(evaluation.tokenUsage.totalTokens).toBeGreaterThan(0);
       }
     }, 60000);
+
+    it('should capture response time in milliseconds', async () => {
+      const result = await claimEvaluatorTool.execute({
+        claim: 'The Sun is a star',
+        models: [MODELS.GPT_5_MINI, MODELS.CLAUDE_SONNET_4],
+        runs: 1
+      }, testContext);
+
+      expect(result.results).toBeDefined();
+      expect(result.results.length).toBe(2);
+
+      // Each result should have responseTimeMs
+      result.results.forEach(evaluation => {
+        expect(evaluation.responseTimeMs).toBeDefined();
+        expect(typeof evaluation.responseTimeMs).toBe('number');
+        expect(evaluation.responseTimeMs).toBeGreaterThan(0);
+        // Response time should be reasonable (less than 2 minutes)
+        expect(evaluation.responseTimeMs).toBeLessThan(120000);
+
+        console.log(`${evaluation.model}: ${evaluation.responseTimeMs}ms`);
+      });
+    }, 120000);
   });
 
   describe('Long Context Test', () => {

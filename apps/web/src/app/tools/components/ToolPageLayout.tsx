@@ -28,11 +28,12 @@ export function ToolPageLayout({
   const isTryPage = normalizedPath === `/tools/${toolId}/try`;
   
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
+          <ChevronLeftIcon className="h-4 w-4 mr-1" />
+          Back to Tools
+        </Link>
 
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -77,6 +78,7 @@ export function ToolPageLayout({
 
       {/* Content */}
       {children}
+      </div>
     </div>
   );
 }
