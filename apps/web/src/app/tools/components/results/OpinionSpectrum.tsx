@@ -46,7 +46,7 @@ function getModelAbbreviation(modelId: string): string {
     "x-ai/grok-4": "Grok4",
     "x-ai/grok-beta": "Grok",
     // DeepSeek models
-    "deepseek/deepseek-chat-v3.1:free": "DS3.1",
+    "deepseek/deepseek-chat-v3.1": "DS3.1",
     "deepseek/deepseek-chat": "DeepS",
   };
 

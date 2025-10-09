@@ -447,7 +447,12 @@ export function ClaimEvaluationDisplay({
           <h4 className="mb-4 font-semibold">
             Opinion Spectrum (Agreement vs Confidence)
           </h4>
-          <OpinionSpectrum2D data={opinion2DData} height="h-96" />
+          <OpinionSpectrum2D
+            data={opinion2DData}
+            height="h-96"
+            proximityThreshold={5}
+            clusterRadius={20}
+          />
         </div>
 
         {/* Individual Model Results - Grouped by Model */}
