@@ -3,82 +3,28 @@ import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
 import { createOpenRouterClient, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
 
-// Refusal reason types (matches OpinionSpectrum2D)
-export type RefusalReason =
-  | "Safety"
-  | "Policy"
-  | "MissingData"
-  | "Unclear"
-  | "Error";
+// Import from new modules
+import { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
+import {
+  RefusalReason,
+  TokenUsage,
+  MessageWithReasoning,
+  EvaluationError,
+  ClaimEvaluatorInput,
+  ModelEvaluation,
+  FailedEvaluation,
+  ClaimEvaluatorOutput,
+  extractProvider,
+  getAgreementLabel,
+  sanitizeResponse,
+  detectRefusalReason,
+  extractAndParseJSON,
+  createEvaluationError,
+} from "./utils";
 
-// Token usage type (from OpenAI SDK)
-export interface TokenUsage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-}
-
-// Extended message type with optional reasoning fields
-export interface MessageWithReasoning {
-  content?: string | null;
-  reasoning?: string;
-  reasoning_content?: string;
-}
-
-// Custom error type for evaluations with attached context
-export interface EvaluationError extends Error {
-  rawResponse?: string;
-  parsedData?: unknown;
-  attemptedParse?: string;
-  tokenUsage?: TokenUsage;
-  refusalReason?: RefusalReason;
-  thinkingText?: string;
-}
-
-// Input/Output types
-export interface ClaimEvaluatorInput {
-  claim: string;
-  context?: string;
-  models?: string[];
-  runs?: number; // Number of times to run each model (1-5, default 1)
-  explanationLength?: number; // Max words for explanation text (3-200 words, default 5)
-  temperature?: number; // Temperature for model responses (0.0-2.0, default 1.0)
-}
-
-export interface ModelEvaluation {
-  model: string;
-  provider: string;
-  agreement: number; // 0-100
-  confidence: number; // 0-100
-  agreementLevel?: string; // Human-readable label (e.g., "Strongly Disagree")
-  reasoning: string; // 10-30 characters
-  responseTimeMs?: number; // Time taken for LLM to respond in milliseconds
-  // Debug/raw data
-  rawResponse?: string; // Full text response from model
-  thinkingText?: string; // Extended thinking/reasoning (for o1, o3, etc)
-  tokenUsage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
-}
-
-export interface FailedEvaluation {
-  model: string;
-  provider: string;
-  error: string;
-  refusalReason: RefusalReason; // Categorized refusal/error reason
-  rawResponse?: string; // The response that failed to parse (if any)
-  errorDetails?: string; // Additional error context
-}
-
-export interface ClaimEvaluatorOutput {
-  results: ModelEvaluation[];
-  failed?: FailedEvaluation[]; // Models that failed to evaluate
-}
-
-// Constants
-const DEFAULT_EXPLANATION_LENGTH = 50; // Default max words for explanation text
+// Re-export everything for backwards compatibility
+export * from "./utils";
+export { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
 
 // Default models for claim evaluation
 const DEFAULT_MODELS = [
@@ -87,83 +33,6 @@ const DEFAULT_MODELS = [
   OPENROUTER_MODELS.DEEPSEEK_CHAT_V3_1,        // DeepSeek Chat V3.1
   OPENROUTER_MODELS.GROK_4,                    // Grok 4
 ];
-
-/**
- * Generate the LLM prompt for claim evaluation
- * Exported for preview/debugging purposes
- */
-export function generateClaimEvaluatorPrompt(input: Pick<ClaimEvaluatorInput, 'claim' | 'context' | 'explanationLength' | 'runs'>): string {
-  const runNote = (input.runs && input.runs > 1)
-    ? '\n\nIMPORTANT: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others. Use the full probability scale (0-100) based on your analysis.'
-    : '';
-
-  const explanationLength = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
-
-  return `You are evaluating the factual accuracy of this claim:
-
-"${input.claim}"
-${input.context ? `\nContext: ${input.context}` : ''}
-
-## Your Task
-
-Estimate the probability that this claim is TRUE (factually accurate), not whether you personally agree with it.
-
-**Think step-by-step before responding:**
-1. What is the base rate? (How often are claims like this true in general?)
-2. What specific evidence supports or contradicts this claim?
-3. Are there temporal factors? (Was it true then? Is it true now? Will it be true?)
-4. How would you break down complex claims into component parts?
-5. What is your overall probability estimate, and how confident are you in that estimate?
-
-## Probability Scale (0-100)
-
-- **0-10**: Almost certainly false
-- **20-30**: Probably false
-- **40-60**: Uncertain / toss-up (use this range when genuinely unsure)
-- **70-80**: Probably true
-- **90-100**: Almost certainly true
-
-**Calibration reminder**: Use the FULL scale. Avoid clustering around 50 or 90-100. Be appropriately uncertain when evidence is limited.
-
-## Confidence Scale (0-100)
-
-Confidence = How sure are you of your probability estimate?
-- **100**: Absolutely certain of this probability (rare - requires definitive proof)
-- **70-90**: High confidence (strong evidence, clear reasoning)
-- **40-60**: Moderate confidence (some uncertainty remains)
-- **0-30**: Low confidence (limited information, high uncertainty)
-
-Note: You can have 60% probability with 90% confidence, OR 60% probability with 30% confidence. These are independent dimensions.
-
-${input.context ? '\n## Context Considerations\n\nThe provided context may include temporal information (when the claim was made), domain knowledge, or situational details. Factor these into your base rate and evidence assessment.\n' : ''}${runNote}
-
-## Refusal Options
-
-If you cannot or should not evaluate this claim, use one of these refusal reasons:
-- **"Unclear"**: The claim is too vague, ambiguous, or imprecise to evaluate meaningfully
-- **"MissingData"**: Insufficient information or data to make an informed assessment
-- **"Policy"**: Against your policies or rules to evaluate
-- **"Safety"**: Evaluating this claim could be harmful or dangerous
-
-## Response Format
-
-CRITICAL: Respond with ONLY a JSON object. No explanatory text before or after.
-
-**For normal evaluation:**
-{
-  "agreement": 75,
-  "confidence": 85,
-  "reasoning": "Step-by-step reasoning (max ${explanationLength} words): Base rate ~70% for scientific consensus claims. Strong peer-reviewed evidence supports this. No significant contradicting evidence. Temporal factors not relevant. Final estimate: 75% with high confidence."
-}
-
-**For refusal:**
-{
-  "refusalReason": "Unclear",
-  "reasoning": "Brief explanation of why you're refusing (max ${explanationLength} words)"
-}
-
-Your response must be valid JSON only.`;
-}
 
 // Valid model IDs (all available OpenRouter models)
 const VALID_MODEL_IDS = Object.values(OPENROUTER_MODELS);
@@ -249,158 +118,6 @@ const outputSchema = z.object({
 }) satisfies z.ZodType<ClaimEvaluatorOutput>;
 
 /**
- * Extract provider name from OpenRouter model ID
- * e.g., "anthropic/claude-3-haiku" -> "anthropic"
- */
-function extractProvider(modelId: string): string {
-  const parts = modelId.split('/');
-  return parts[0] || 'unknown';
-}
-
-/**
- * Convert agreement score (0-100) to human-readable label
- */
-export function getAgreementLabel(agreement: number): string {
-  if (agreement >= 80) return 'Strongly Agree';
-  if (agreement >= 60) return 'Agree';
-  if (agreement >= 40) return 'Neutral';
-  if (agreement >= 20) return 'Disagree';
-  return 'Strongly Disagree';
-}
-
-/**
- * Sanitize response content to prevent exposure of sensitive data
- * Truncates long responses and removes potential API keys or tokens
- */
-function sanitizeResponse(response: string | undefined): string | undefined {
-  if (!response) return response;
-
-  // Truncate very long responses to prevent log bloat
-  const MAX_LENGTH = 500;
-  const truncated = response.length > MAX_LENGTH
-    ? response.substring(0, MAX_LENGTH) + '...[truncated]'
-    : response;
-
-  // Remove potential API keys (basic pattern matching)
-  // Matches common patterns like sk-xxx, key_xxx, etc.
-  return truncated.replace(/\b(sk-|key_|api[_-]?key[_-]?)[a-zA-Z0-9_-]{20,}\b/gi, '[REDACTED]');
-}
-
-/**
- * Detect the reason for a refusal or error based on error message and response content
- */
-function detectRefusalReason(error: Error, rawResponse?: string): RefusalReason {
-  const combined = `${error.message} ${rawResponse || ''}`.toLowerCase();
-
-  // Safety refusals: harmful content, violence, illegal activities
-  if (/safety|harmful|dangerous|violat.*guideline|inappropriate|offensive/i.test(combined)) {
-    return 'Safety';
-  }
-
-  // Policy refusals: model policies, content restrictions, OpenRouter data policies
-  if (/policy|cannot.*evaluat|against.*rule|not.*allowed|unable to (provide|assist|answer)|no endpoints found/i.test(combined)) {
-    return 'Policy';
-  }
-
-  // Missing data: insufficient information, lack of access
-  if (/insufficient.*data|don't have access|missing.*information|lack.*context|no.*data|cannot access|don't possess/i.test(combined)) {
-    return 'MissingData';
-  }
-
-  // Unclear: ambiguous claims, vague questions
-  if (/unclear|ambiguous|vague|not.*specific|too.*broad|imprecise/i.test(combined)) {
-    return 'Unclear';
-  }
-
-  // Default to Error for technical failures (JSON parse, network, timeout, etc.)
-  return 'Error';
-}
-
-/**
- * Extract and parse JSON from raw content, handling markdown code blocks and extra text
- */
-function extractAndParseJSON(rawContent: string): unknown {
-  let jsonContent = rawContent.trim();
-
-  // Remove markdown code blocks if present
-  if (jsonContent.startsWith('```')) {
-    // Extract content between ``` markers
-    const match = jsonContent.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-    if (match) {
-      jsonContent = match[1].trim();
-    }
-  }
-
-  // Try to extract JSON object if there's text before/after it
-  // Look for { ... } pattern (greedy to capture the full object)
-  if (!jsonContent.startsWith('{')) {
-    const jsonMatch = jsonContent.match(/(\{[\s\S]*\})/);
-    if (jsonMatch) {
-      jsonContent = jsonMatch[0];
-    }
-  }
-
-  // Some models may return JSON with literal newlines in string values
-  // This is invalid JSON - we need to escape them as a fallback
-  try {
-    return JSON.parse(jsonContent);
-  } catch (firstError) {
-    // If parsing fails, try to fix common issues with literal newlines in strings
-    // Replace literal newlines within quoted strings with \n escape sequences
-    const fixed = jsonContent.replace(
-      /"([^"]*)"(\s*[:,\]\}])/g,
-      (match, content, after) => {
-        // Escape literal newlines in the string content
-        const escaped = content.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-        return `"${escaped}"${after}`;
-      }
-    );
-
-    try {
-      return JSON.parse(fixed);
-    } catch (secondError) {
-      // If still failing, throw the original error for better debugging
-      throw firstError;
-    }
-  }
-}
-
-/**
- * Create a standardized evaluation error with sanitized context
- */
-function createEvaluationError(
-  message: string,
-  context: {
-    rawResponse?: string;
-    parsedData?: unknown;
-    attemptedParse?: string;
-    tokenUsage?: TokenUsage;
-    refusalReason?: RefusalReason;
-  }
-): EvaluationError {
-  const err = new Error(message) as EvaluationError;
-
-  // Attach sanitized context
-  if (context.rawResponse) {
-    err.rawResponse = sanitizeResponse(context.rawResponse);
-  }
-  if (context.parsedData) {
-    err.parsedData = context.parsedData;
-  }
-  if (context.attemptedParse) {
-    err.attemptedParse = sanitizeResponse(context.attemptedParse);
-  }
-  if (context.tokenUsage) {
-    err.tokenUsage = context.tokenUsage;
-  }
-  if (context.refusalReason) {
-    err.refusalReason = context.refusalReason;
-  }
-
-  return err;
-}
-
-/**
  * Evaluate a claim with a single model via OpenRouter with timeout
  */
 async function evaluateWithModel(
@@ -448,46 +165,8 @@ async function evaluateWithModelImpl(
   context: ToolContext
 ): Promise<ModelEvaluation> {
 
-  // For runs > 1, add slight prompt variation to encourage independent thinking
-  const runNote = (input.runs && input.runs > 1)
-    ? '\n\nNote: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others.'
-    : '';
-
-  const explanationLength = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
-
-  const prompt = `You are evaluating the following claim:
-
-"${input.claim}"
-${input.context ? `\nContext: ${input.context}` : ''}
-
-If the claim is meaningful and evaluable, rate your agreement and confidence:
-- Agreement: 0 (completely disagree/certainly false) to 100 (completely agree/certainly true)
-- Confidence: 0 (very uncertain/insufficient information) to 100 (very confident in your assessment)
-
-If you cannot or should not evaluate this claim, you may REFUSE by providing a "refusalReason" instead:
-- "Unclear": The claim is too vague, ambiguous, or imprecise to evaluate meaningfully
-- "MissingData": Insufficient information or data to make an informed assessment
-- "Policy": Against your policies or rules to evaluate
-- "Safety": Evaluating this claim could be harmful or dangerous
-
-${input.context ? 'Consider the provided context (temporal, domain-specific, or situational) when forming your assessment.' : ''}${runNote}
-
-CRITICAL: You must respond with ONLY a JSON object, nothing else. No explanatory text before or after.
-
-Response format (NORMAL evaluation):
-{
-  "agreement": 75,
-  "confidence": 85,
-  "reasoning": "Brief explanation (max ${explanationLength} words)"
-}
-
-Response format (REFUSAL):
-{
-  "refusalReason": "Unclear",
-  "reasoning": "Brief explanation of why you're refusing (max ${explanationLength} words)"
-}
-
-Your response must be valid JSON only.`;
+  // Generate prompt using the improved version from prompt.ts
+  const prompt = generateClaimEvaluatorPrompt(input);
 
   let rawContent: string | undefined;
   let rawThinking: string | undefined;

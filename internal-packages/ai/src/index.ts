@@ -41,6 +41,8 @@ export * from './tools/configs';
 // Export generated schemas and READMEs for client-side use
 export { toolSchemas, getToolSchema, type ToolId } from './tools/generated-schemas';
 export { toolReadmes, getToolReadme } from './tools/generated-readmes';
+// Export tool utilities for UI previews
+export { generateClaimEvaluatorPrompt } from './tools/claim-evaluator';
 export type { 
   Tool,
   ToolContext,
