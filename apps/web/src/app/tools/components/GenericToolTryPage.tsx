@@ -26,6 +26,7 @@ export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput =
   onExecuteComplete?: (result?: TOutput, error?: string) => void;
   onBeforeSubmit?: (input: TInput) => TInput;
   warning?: string;
+  hideViewToggle?: boolean;
 }
 
 /**
@@ -47,7 +48,8 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   formatError,
   onExecuteComplete,
   onBeforeSubmit,
-  warning
+  warning,
+  hideViewToggle = false,
 }: GenericToolTryPageProps<TInput, TOutput>) {
   // Initialize form state
   const getInitialValues = (): TInput => {
@@ -390,32 +392,34 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
 
           {result && (
             <div className="mt-8" data-testid="tool-result">
-              {/* View Toggle */}
-              <div className="mb-4 flex gap-2">
-                <button
-                  onClick={() => setShowRawJSON(false)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    !showRawJSON
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Visual View
-                </button>
-                <button
-                  onClick={() => setShowRawJSON(true)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    showRawJSON
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Raw JSON
-                </button>
-              </div>
+              {/* View Toggle - only show if not hidden */}
+              {!hideViewToggle && (
+                <div className="mb-4 flex gap-2">
+                  <button
+                    onClick={() => setShowRawJSON(false)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      !showRawJSON
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Visual View
+                  </button>
+                  <button
+                    onClick={() => setShowRawJSON(true)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      showRawJSON
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Raw JSON
+                  </button>
+                </div>
+              )}
 
               {/* Result Display */}
-              {showRawJSON ? (
+              {!hideViewToggle && showRawJSON ? (
                 <div className="rounded-lg border bg-white p-6 shadow-sm">
                   <h3 className="mb-4 text-lg font-semibold">Full JSON Response</h3>
                   <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm">
