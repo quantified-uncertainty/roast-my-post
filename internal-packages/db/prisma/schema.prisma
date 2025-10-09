@@ -39,12 +39,12 @@ model Session {
 }
 
 model User {
-  id               String           @id @default(cuid())
+  id               String             @id @default(cuid())
   name             String?
-  email            String?          @unique
+  email            String?            @unique
   emailVerified    DateTime?
   image            String?
-  role             UserRole         @default(USER)
+  role             UserRole           @default(USER)
   accounts         Account[]
   agents           Agent[]
   agentEvalBatches AgentEvalBatch[]
@@ -52,6 +52,7 @@ model User {
   documents        Document[]
   sessions         Session[]
   cancelledJobs    Job[]
+  claimEvaluations ClaimEvaluation[]
 }
 
 model VerificationToken {
@@ -311,4 +312,23 @@ enum JobStatus {
   COMPLETED
   FAILED
   CANCELLED
+}
+
+model ClaimEvaluation {
+  id                String                   @id @default(uuid())
+  userId            String
+  claim             String
+  context           String?
+  summaryMean       Float?
+  rawOutput         Json
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  claim_search_text Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(claim, ''::text) || ' ' || COALESCE(context, ''::text))"))
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, summaryMean])
+  @@index([claim_search_text], type: Gin)
 }

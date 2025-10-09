@@ -708,6 +708,34 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
             ? (input: any) => generateClaimEvaluatorPrompt(input)
             : undefined
         }
+        onSaveResult={
+          toolId === "claim-evaluator"
+            ? async (result: any) => {
+                const response = await fetch("/api/claim-evaluations", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    claim: lastClaim,
+                    context: lastContext || undefined,
+                    summaryMean: result.summary?.mean,
+                    rawOutput: result,
+                  }),
+                });
+
+                if (!response.ok) {
+                  throw new Error("Failed to save evaluation");
+                }
+
+                return response.json();
+              }
+            : undefined
+        }
+        saveButtonText="Save Evaluation"
+        getSavedResultUrl={
+          toolId === "claim-evaluator"
+            ? (id: string) => `/claim-evaluations/${id}`
+            : undefined
+        }
       />
     );
   }
