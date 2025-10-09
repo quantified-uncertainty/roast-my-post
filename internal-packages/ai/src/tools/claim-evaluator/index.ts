@@ -124,6 +124,9 @@ const evaluationResultSchema = z.object({
 // Output schema
 const outputSchema = z.object({
   evaluations: z.array(evaluationResultSchema).describe("Array of all model evaluations (both successful and failed)"),
+  summary: z.object({
+    mean: z.number().describe("Mean agreement score across all successful evaluations"),
+  }).optional().describe("Summary statistics of evaluations"),
 }) satisfies z.ZodType<ClaimEvaluatorOutput>;
 
 /**
