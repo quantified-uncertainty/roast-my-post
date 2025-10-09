@@ -30,21 +30,34 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 
 ## Output
 
-- **results**: Array of model evaluations, each containing:
+- **evaluations**: Array of all model evaluations (both successful and failed), each with:
+  - \`status\`: Either 'success' or 'failed'
   - \`model\`: Model identifier (e.g., "anthropic/claude-3-haiku")
   - \`provider\`: Provider name (e.g., "anthropic", "openai")
+  - \`responseTimeMs\`: Time taken for LLM to respond (optional)
+  - \`rawResponse\`: Full raw response from model (optional)
+  - \`thinkingText\`: Extended thinking/reasoning for o1/o3 models (optional)
+  - \`tokenUsage\`: Token usage statistics (optional)
+
+**For successful evaluations (status: 'success'):**
   - \`agreement\`: Score from 0-100 (0=disagree, 100=agree)
   - \`confidence\`: Score from 0-100 (0=very uncertain, 100=very confident)
-  - \`reasoning\`: Brief explanation (max words configurable, default 5)
+  - \`reasoning\`: Brief explanation (max words configurable, default 50)
+
+**For failed evaluations (status: 'failed'):**
+  - \`error\`: Error message
+  - \`refusalReason\`: Categorized reason ('Safety', 'Policy', 'MissingData', 'Unclear', 'Error')
+  - \`errorDetails\`: Additional error context (optional)
 
 ## Technical Details
 
 - All requests go through **OpenRouter** (not direct provider APIs)
 - Helicone integration for request tracking and caching
 - Parallel execution using \`Promise.allSettled()\`
-- Failed model requests are filtered out silently
-- Structured JSON responses ensure consistent format
+- Both successful and failed evaluations are included in results
+- Structured JSON responses with discriminated union (status field)
 - Custom models can be specified via the \`models\` parameter
+- Response times tracked for performance monitoring
 
 ## Use Cases
 
@@ -65,20 +78,31 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 **Output:**
 \`\`\`json
 {
-  "results": [
+  "evaluations": [
     {
+      "status": "success",
       "model": "anthropic/claude-3-haiku",
       "provider": "anthropic",
       "agreement": 15,
       "confidence": 85,
-      "reasoning": "Unlikely growth rate"
+      "reasoning": "Unlikely growth rate given historical economic data",
+      "responseTimeMs": 1234
     },
     {
+      "status": "success",
       "model": "anthropic/claude-3-5-sonnet",
       "provider": "anthropic",
       "agreement": 20,
       "confidence": 90,
-      "reasoning": "Historically implausible"
+      "reasoning": "Historically implausible; requires 7% annual growth",
+      "responseTimeMs": 2156
+    },
+    {
+      "status": "failed",
+      "model": "some-unavailable-model",
+      "provider": "openai",
+      "error": "Model evaluation timed out after 120s",
+      "refusalReason": "Error"
     }
     // ... other models
   ]
