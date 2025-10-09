@@ -53,6 +53,9 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
     - \`refusalReason\`: Categorized reason ('Safety', 'Policy', 'MissingData', 'Unclear', 'Error')
     - \`errorDetails\`: Additional error context (optional)
 
+- **summary** (optional): Aggregated statistics across all evaluations
+  - \`mean\`: Mean agreement score across all successful evaluations
+
 ## Technical Details
 
 - All requests go through **OpenRouter** (not direct provider APIs)
@@ -115,7 +118,10 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
       }
     }
     // ... other models
-  ]
+  ],
+  "summary": {
+    "mean": 17.5
+  }
 }
 \`\`\`
 `;
