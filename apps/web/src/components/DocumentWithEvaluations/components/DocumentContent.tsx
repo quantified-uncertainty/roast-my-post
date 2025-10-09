@@ -41,8 +41,12 @@ export function DocumentContent({
           ? {
               width: `calc(100% - ${LAYOUT.COMMENT_COLUMN_WIDTH}px)`,
               overflow: "hidden",
+              maxWidth: `calc(100vw - ${LAYOUT.COMMENT_COLUMN_WIDTH}px - ${LAYOUT.CONTENT_SIDE_PADDING}px)`,
             }
-          : {}
+          : {
+              maxWidth: `calc(100vw - ${LAYOUT.COMMENT_COLUMN_WIDTH}px - ${LAYOUT.CONTENT_SIDE_PADDING}px)`,
+              overflow: "hidden",
+            }
       }
     >
       {/* Submitter Notes - only show if notes exist */}
@@ -60,7 +64,7 @@ export function DocumentContent({
         className={`prose prose-lg prose-slate ${
           isFullWidth
             ? `max-w-none [&_pre]:!max-w-[calc(100vw-${LAYOUT.COMMENT_COLUMN_WIDTH}px-${LAYOUT.CONTENT_SIDE_PADDING}px)] [&_pre]:overflow-x-auto`
-            : "mx-auto"
+            : `mx-auto [&_pre]:!max-w-[calc(100vw-${LAYOUT.COMMENT_COLUMN_WIDTH}px-${LAYOUT.CONTENT_SIDE_PADDING}px)] [&_pre]:overflow-x-auto`
         } rounded-lg`}
       >
         <SlateEditor
