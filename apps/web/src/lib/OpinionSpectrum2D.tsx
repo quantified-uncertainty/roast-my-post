@@ -300,23 +300,41 @@ function getAgreementLabelAndColor(agreement: number): {
   return { label: "Strongly Disagree", color: "border-red-500 text-red-700" };
 }
 
+// Base evaluation fields
+interface BaseEvaluation {
+  model: string;
+  provider: string;
+  responseTimeMs?: number;
+  rawResponse?: string;
+  thinkingText?: string;
+  tokenUsage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
+// Successful evaluation
+interface SuccessfulEvaluation extends BaseEvaluation {
+  status: 'success';
+  agreement: number;
+  confidence: number;
+  reasoning: string;
+}
+
+// Failed evaluation
+interface FailedEvaluation extends BaseEvaluation {
+  status: 'failed';
+  error: string;
+  refusalReason: RefusalReason;
+  errorDetails?: string;
+}
+
+// Unified evaluation result
+type EvaluationResult = SuccessfulEvaluation | FailedEvaluation;
+
 export interface ClaimEvaluationResult {
-  results: Array<{
-    model: string;
-    provider: string;
-    agreement: number;
-    confidence: number;
-    reasoning: string;
-    thinkingText?: string;
-  }>;
-  failed?: Array<{
-    model: string;
-    provider: string;
-    error: string;
-    refusalReason: RefusalReason;
-    rawResponse?: string;
-    errorDetails?: string;
-  }>;
+  evaluations: EvaluationResult[];
   consensus?: {
     mean: number;
     stdDev: number;
@@ -329,29 +347,9 @@ export interface ClaimEvaluationDisplayProps {
   getModelAbbrev: (modelId: string) => string;
 }
 
-// Type for grouped successful results
-type ModelEvaluationGroup = {
-  model: string;
-  provider: string;
-  agreement: number;
-  confidence: number;
-  reasoning: string;
-  thinkingText?: string;
-};
-
-type GroupedResults = Record<string, ModelEvaluationGroup[]>;
-
-// Type for grouped failed results
-type FailedEvaluationGroup = {
-  model: string;
-  provider: string;
-  error: string;
-  refusalReason: RefusalReason;
-  rawResponse?: string;
-  errorDetails?: string;
-};
-
-type GroupedFailed = Record<string, FailedEvaluationGroup[]>;
+// Type aliases for grouped results
+type GroupedResults = Record<string, SuccessfulEvaluation[]>;
+type GroupedFailed = Record<string, FailedEvaluation[]>;
 
 export function ClaimEvaluationDisplay({
   result,
@@ -359,8 +357,16 @@ export function ClaimEvaluationDisplay({
 }: ClaimEvaluationDisplayProps) {
   const [showRawJSON, setShowRawJSON] = useState(false);
 
+  // Split evaluations into successful and failed
+  const successfulEvaluations = result.evaluations.filter(
+    (e): e is SuccessfulEvaluation => e.status === 'success'
+  );
+  const failedEvaluations = result.evaluations.filter(
+    (e): e is FailedEvaluation => e.status === 'failed'
+  );
+
   // Convert successful results to Opinion2DPoint format
-  const successfulOpinions: Opinion2DPoint[] = (result.results || []).map(
+  const successfulOpinions: Opinion2DPoint[] = successfulEvaluations.map(
     (r, i) => ({
       id: `success-${i}`,
       name: r.model,
@@ -372,7 +378,7 @@ export function ClaimEvaluationDisplay({
   );
 
   // Convert failed evaluations to Opinion2DPoint format
-  const failedOpinions: Opinion2DPoint[] = (result.failed || []).map(
+  const failedOpinions: Opinion2DPoint[] = failedEvaluations.map(
     (f, i) => ({
       id: `failed-${i}`,
       name: f.model,
@@ -391,7 +397,7 @@ export function ClaimEvaluationDisplay({
   ];
 
   // Group results by model (successful only)
-  const groupedResults: GroupedResults = (result.results || []).reduce((acc, r) => {
+  const groupedResults: GroupedResults = successfulEvaluations.reduce((acc, r) => {
     if (!acc[r.model]) {
       acc[r.model] = [];
     }
@@ -400,7 +406,7 @@ export function ClaimEvaluationDisplay({
   }, {} as GroupedResults);
 
   // Group failed results by model
-  const groupedFailed: GroupedFailed = (result.failed || []).reduce((acc, f) => {
+  const groupedFailed: GroupedFailed = failedEvaluations.reduce((acc, f) => {
     if (!acc[f.model]) {
       acc[f.model] = [];
     }

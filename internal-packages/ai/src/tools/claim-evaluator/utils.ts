@@ -44,16 +44,12 @@ export interface ClaimEvaluatorInput {
   temperature?: number; // Temperature for model responses (0.0-2.0, default 1.0)
 }
 
-export interface ModelEvaluation {
+// Base fields shared by all evaluations (success or failed)
+interface BaseEvaluation {
   model: string;
   provider: string;
-  agreement: number; // 0-100
-  confidence: number; // 0-100
-  agreementLevel?: string; // Human-readable label (e.g., "Strongly Disagree")
-  reasoning: string; // 10-30 characters
   responseTimeMs?: number; // Time taken for LLM to respond in milliseconds
-  // Debug/raw data
-  rawResponse?: string; // Full text response from model
+  rawResponse?: string; // Full text response from model (or error response)
   thinkingText?: string; // Extended thinking/reasoning (for o1, o3, etc)
   tokenUsage?: {
     promptTokens: number;
@@ -62,18 +58,31 @@ export interface ModelEvaluation {
   };
 }
 
-export interface FailedEvaluation {
-  model: string;
-  provider: string;
+// Successful evaluation with agreement scores
+export interface SuccessfulEvaluation extends BaseEvaluation {
+  status: 'success';
+  agreement: number; // 0-100
+  confidence: number; // 0-100
+  agreementLevel?: string; // Human-readable label (e.g., "Strongly Disagree")
+  reasoning: string; // Brief reasoning (configurable by explanationLength)
+}
+
+// Failed evaluation with error details
+export interface FailedEvaluation extends BaseEvaluation {
+  status: 'failed';
   error: string;
   refusalReason: RefusalReason; // Categorized refusal/error reason
-  rawResponse?: string; // The response that failed to parse (if any)
   errorDetails?: string; // Additional error context
 }
 
+// Unified evaluation result (discriminated union)
+export type EvaluationResult = SuccessfulEvaluation | FailedEvaluation;
+
+// Legacy types for backwards compatibility during migration
+export type ModelEvaluation = SuccessfulEvaluation;
+
 export interface ClaimEvaluatorOutput {
-  results: ModelEvaluation[];
-  failed?: FailedEvaluation[]; // Models that failed to evaluate
+  evaluations: EvaluationResult[];
 }
 
 // ============================================================================

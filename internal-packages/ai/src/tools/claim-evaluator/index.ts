@@ -13,6 +13,7 @@ import {
   ClaimEvaluatorInput,
   ModelEvaluation,
   FailedEvaluation,
+  EvaluationResult,
   ClaimEvaluatorOutput,
   extractProvider,
   getAgreementLabel,
@@ -86,35 +87,45 @@ const parsedResponseSchema = z.union([
   }),
 ]);
 
+// Base fields shared by all evaluations
+const baseEvaluationSchema = z.object({
+  model: z.string().describe("Model identifier"),
+  provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
+  responseTimeMs: z.number().optional().describe("Time taken for LLM to respond in milliseconds"),
+  rawResponse: z.string().optional().describe("Full raw response from model (or error response)"),
+  thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
+  tokenUsage: z.object({
+    promptTokens: z.number(),
+    completionTokens: z.number(),
+    totalTokens: z.number(),
+  }).optional().describe("Token usage statistics"),
+});
+
+// Successful evaluation schema
+const successfulEvaluationSchema = baseEvaluationSchema.extend({
+  status: z.literal('success'),
+  agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
+  confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
+  reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
+});
+
+// Failed evaluation schema
+const failedEvaluationSchema = baseEvaluationSchema.extend({
+  status: z.literal('failed'),
+  error: z.string().describe("Error message"),
+  refusalReason: z.enum(["Safety", "Policy", "MissingData", "Unclear", "Error"]).describe("Categorized refusal/error reason"),
+  errorDetails: z.string().optional().describe("Additional error context"),
+});
+
+// Unified evaluation result (discriminated union)
+const evaluationResultSchema = z.discriminatedUnion('status', [
+  successfulEvaluationSchema,
+  failedEvaluationSchema,
+]);
+
 // Output schema
 const outputSchema = z.object({
-  results: z.array(
-    z.object({
-      model: z.string().describe("Model identifier"),
-      provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
-      agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
-      confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
-      reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
-      responseTimeMs: z.number().optional().describe("Time taken for LLM to respond in milliseconds"),
-      rawResponse: z.string().optional().describe("Full raw response from model"),
-      thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
-      tokenUsage: z.object({
-        promptTokens: z.number(),
-        completionTokens: z.number(),
-        totalTokens: z.number(),
-      }).optional().describe("Token usage statistics"),
-    })
-  ).describe("Array of successful model evaluations with agreement scores (0-100), confidence scores (0-100), reasoning, and metadata"),
-  failed: z.array(
-    z.object({
-      model: z.string().describe("Model identifier"),
-      provider: z.string().describe("Provider name"),
-      error: z.string().describe("Error message"),
-      refusalReason: z.enum(["Safety", "Policy", "MissingData", "Unclear", "Error"]).describe("Categorized refusal/error reason"),
-      rawResponse: z.string().optional().describe("Raw response that failed to parse"),
-      errorDetails: z.string().optional().describe("Additional error context"),
-    })
-  ).optional().describe("Models that failed to evaluate"),
+  evaluations: z.array(evaluationResultSchema).describe("Array of all model evaluations (both successful and failed)"),
 }) satisfies z.ZodType<ClaimEvaluatorOutput>;
 
 /**
@@ -125,7 +136,7 @@ async function evaluateWithModel(
   input: ClaimEvaluatorInput,
   model: string,
   context: ToolContext
-): Promise<ModelEvaluation> {
+): Promise<EvaluationResult> {
   context.logger.info(`[ClaimEvaluator] Evaluating with ${model}`);
 
   // Create timeout promise (configurable via env, default 120 seconds)
@@ -163,7 +174,7 @@ async function evaluateWithModelImpl(
   input: ClaimEvaluatorInput,
   model: string,
   context: ToolContext
-): Promise<ModelEvaluation> {
+): Promise<EvaluationResult> {
 
   // Generate prompt using the improved version from prompt.ts
   const prompt = generateClaimEvaluatorPrompt(input);
@@ -284,6 +295,7 @@ async function evaluateWithModelImpl(
     const reasoning = words.slice(0, maxExplanationWords).join(' ');
 
     return {
+      status: 'success' as const,
       model,
       provider: extractProvider(model),
       agreement: validatedData.agreement,
@@ -355,14 +367,13 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
       );
 
       // Process results, maintaining index correspondence with modelRuns
-      const successful: ModelEvaluation[] = [];
-      const failed: FailedEvaluation[] = [];
+      const evaluations: EvaluationResult[] = [];
 
       results.forEach((r, i) => {
         const modelId = modelRuns[i].model;
 
         if (r.status === 'fulfilled') {
-          successful.push(r.value);
+          evaluations.push(r.value);
         } else {
           // r.status === 'rejected'
           const error = r.reason;
@@ -377,6 +388,9 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
           let rawResponse: string | undefined;
           let errorDetails: string | undefined;
+          let responseTimeMs: number | undefined;
+          let thinkingText: string | undefined;
+          let tokenUsage: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined;
 
           // Extract raw response from error if available (we attached it in evaluateWithModel)
           if (error?.rawResponse) {
@@ -385,7 +399,17 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
           // Capture thinking text if available (for reasoning models like o1/o3)
           if (error?.thinkingText) {
+            thinkingText = error.thinkingText;
             errorDetails = `Thinking: ${sanitizeResponse(error.thinkingText)}`;
+          }
+
+          // Capture token usage if available
+          if (error?.tokenUsage) {
+            tokenUsage = {
+              promptTokens: error.tokenUsage.prompt_tokens,
+              completionTokens: error.tokenUsage.completion_tokens,
+              totalTokens: error.tokenUsage.total_tokens,
+            };
           }
 
           // Add parsed data if available (for validation errors) - sanitized for end users
@@ -405,24 +429,30 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
           // Use explicit refusalReason from error if provided, otherwise detect from error message
           const refusalReason = error?.refusalReason || detectRefusalReason(error, rawResponse);
 
-          failed.push({
+          evaluations.push({
+            status: 'failed' as const,
             model: modelId,
             provider: extractProvider(modelId),
             error: errorMessage,
             refusalReason,
             rawResponse,
             errorDetails,
+            responseTimeMs,
+            thinkingText,
+            tokenUsage,
           });
         }
       });
 
+      const successCount = evaluations.filter(e => e.status === 'success').length;
+      const failedCount = evaluations.filter(e => e.status === 'failed').length;
+
       context.logger.info(
-        `[ClaimEvaluator] ${successful.length}/${modelRuns.length} evaluations succeeded, ${failed.length} failed`
+        `[ClaimEvaluator] ${successCount}/${modelRuns.length} evaluations succeeded, ${failedCount} failed`
       );
 
       return {
-        results: successful,
-        failed: failed,
+        evaluations,
       };
     } catch (error) {
       context.logger.error('[ClaimEvaluator] Error:', error);
@@ -445,8 +475,9 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     output: ClaimEvaluatorOutput,
     context: ToolContext
   ): Promise<void> {
+    const successCount = output.evaluations.filter(e => e.status === 'success').length;
     context.logger.info(
-      `[ClaimEvaluator] Completed with ${output.results.length} successful evaluations`
+      `[ClaimEvaluator] Completed with ${successCount} successful evaluations`
     );
   }
 }
