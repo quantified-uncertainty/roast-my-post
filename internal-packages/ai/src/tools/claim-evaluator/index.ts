@@ -52,6 +52,7 @@ export interface ModelEvaluation {
   confidence: number; // 0-100
   agreementLevel?: string; // Human-readable label (e.g., "Strongly Disagree")
   reasoning: string; // 10-30 characters
+  responseTimeMs?: number; // Time taken for LLM to respond in milliseconds
   // Debug/raw data
   rawResponse?: string; // Full text response from model
   thinkingText?: string; // Extended thinking/reasoning (for o1, o3, etc)
@@ -83,7 +84,7 @@ const DEFAULT_EXPLANATION_LENGTH = 50; // Default max words for explanation text
 const DEFAULT_MODELS = [
   OPENROUTER_MODELS.CLAUDE_SONNET_4_5,         // Claude Sonnet 4.5 (Latest)
   OPENROUTER_MODELS.GPT_5_MINI,                // GPT-5 Mini
-  OPENROUTER_MODELS.DEEPSEEK_CHAT_V3_1_FREE,   // DeepSeek Chat V3.1
+  OPENROUTER_MODELS.DEEPSEEK_CHAT_V3_1,        // DeepSeek Chat V3.1
   OPENROUTER_MODELS.GROK_4,                    // Grok 4
 ];
 
@@ -148,6 +149,7 @@ const outputSchema = z.object({
       agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
       confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
       reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
+      responseTimeMs: z.number().optional().describe("Time taken for LLM to respond in milliseconds"),
       rawResponse: z.string().optional().describe("Full raw response from model"),
       thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
       tokenUsage: z.object({
@@ -218,8 +220,8 @@ function detectRefusalReason(error: Error, rawResponse?: string): RefusalReason 
     return 'Safety';
   }
 
-  // Policy refusals: model policies, content restrictions
-  if (/policy|cannot.*evaluat|against.*rule|not.*allowed|unable to (provide|assist|answer)/i.test(combined)) {
+  // Policy refusals: model policies, content restrictions, OpenRouter data policies
+  if (/policy|cannot.*evaluat|against.*rule|not.*allowed|unable to (provide|assist|answer)|no endpoints found/i.test(combined)) {
     return 'Policy';
   }
 
@@ -253,15 +255,37 @@ function extractAndParseJSON(rawContent: string): unknown {
   }
 
   // Try to extract JSON object if there's text before/after it
-  // Look for { ... } pattern (non-greedy to avoid capturing multiple JSON objects)
+  // Look for { ... } pattern (greedy to capture the full object)
   if (!jsonContent.startsWith('{')) {
-    const jsonMatch = jsonContent.match(/\{[\s\S]*?\}/);
+    const jsonMatch = jsonContent.match(/(\{[\s\S]*\})/);
     if (jsonMatch) {
       jsonContent = jsonMatch[0];
     }
   }
 
-  return JSON.parse(jsonContent);
+  // Some models may return JSON with literal newlines in string values
+  // This is invalid JSON - we need to escape them as a fallback
+  try {
+    return JSON.parse(jsonContent);
+  } catch (firstError) {
+    // If parsing fails, try to fix common issues with literal newlines in strings
+    // Replace literal newlines within quoted strings with \n escape sequences
+    const fixed = jsonContent.replace(
+      /"([^"]*)"(\s*[:,\]\}])/g,
+      (match, content, after) => {
+        // Escape literal newlines in the string content
+        const escaped = content.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+        return `"${escaped}"${after}`;
+      }
+    );
+
+    try {
+      return JSON.parse(fixed);
+    } catch (secondError) {
+      // If still failing, throw the original error for better debugging
+      throw firstError;
+    }
+  }
 }
 
 /**
@@ -391,12 +415,9 @@ Your response must be valid JSON only.`;
   let rawContent: string | undefined;
   let rawThinking: string | undefined;
   let rawTokenUsage: TokenUsage | undefined;
+  let responseTimeMs: number | undefined;
 
   try {
-    // Only use response_format for models that support it well
-    // Gemini models struggle with this parameter and produce malformed JSON
-    const supportsResponseFormat = model.startsWith('openai/');
-
     // Add unique identifiers to prevent caching and ensure independent runs
     // Use timestamp + random string to guarantee uniqueness across parallel calls
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
@@ -406,6 +427,14 @@ Your response must be valid JSON only.`;
     const userTemperature = input.temperature ?? 0.7; // Default 0.7 (balanced)
     const actualTemperature = normalizeTemperature(userTemperature, model);
 
+    // Configure max_tokens based on model capabilities
+    // Gemini 2.5 models with thinking mode need significantly more tokens
+    // (thinking tokens + actual response tokens)
+    const isGemini = model.startsWith('google/gemini');
+    const maxTokens = isGemini ? 8000 : 1000;
+
+    // Track response time
+    const startTime = Date.now();
     const completion = await client.chat.completions.create(
       {
         model,
@@ -415,10 +444,11 @@ Your response must be valid JSON only.`;
             content: uniquePrompt,
           },
         ],
-        max_tokens: 1000, // High limit for GPT-5 Responses API (uses tokens for reasoning FIRST, then content)
+        max_tokens: maxTokens,
         temperature: actualTemperature, // Normalized per provider (Anthropic 0-1, others 0-2)
-        // Force JSON output for models like GPT-5 that use Responses API
-        ...(supportsResponseFormat ? { response_format: { type: 'json_object' } } : {}),
+        // Use OpenRouter's standard response_format parameter for JSON mode
+        // Works across all providers (OpenAI, Gemini, etc.) through OpenRouter
+        response_format: { type: 'json_object' },
       },
       {
         // Pass headers to disable caching (via request options)
@@ -430,6 +460,7 @@ Your response must be valid JSON only.`;
         } as Record<string, string>,
       }
     );
+    responseTimeMs = Date.now() - startTime;
 
     const message = completion.choices[0]?.message as MessageWithReasoning | undefined;
     rawContent = message?.content || undefined;
@@ -503,6 +534,7 @@ Your response must be valid JSON only.`;
       confidence: validatedData.confidence,
       agreementLevel: getAgreementLabel(validatedData.agreement),
       reasoning,
+      responseTimeMs, // Time taken for LLM to respond
       rawResponse: rawContent, // Full raw response
       thinkingText: rawThinking, // Extended thinking (o1/o3)
       tokenUsage,
@@ -581,6 +613,12 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
           // Try to extract useful error information
           let errorMessage = error?.message || String(error);
+
+          // Enhance OpenRouter privacy policy errors with helpful instructions
+          if (/no endpoints found.*data policy/i.test(errorMessage)) {
+            errorMessage = `${errorMessage}. To use free models, enable "Model Training" at https://openrouter.ai/settings/privacy. Note: Free models may use your data for training.`;
+          }
+
           let rawResponse: string | undefined;
           let errorDetails: string | undefined;
 
