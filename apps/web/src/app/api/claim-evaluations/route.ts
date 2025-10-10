@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, generateId } from '@roast/db';
 import { auth } from '@/infrastructure/auth/auth';
 import { logger } from '@/infrastructure/logging/logger';
+import { strictRateLimit, getClientIdentifier } from '@/infrastructure/http/rate-limiter';
 import { z } from 'zod';
 
 const saveSchema = z.object({
@@ -16,6 +17,13 @@ const saveSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request);
+    const { success } = await strictRateLimit.check(clientId);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -67,8 +75,19 @@ export async function GET(request: NextRequest) {
     const cursor = searchParams.get('cursor');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const search = searchParams.get('search');
-    const sortBy = searchParams.get('sortBy') || 'date'; // 'date' | 'agreement'
-    const order = searchParams.get('order') || 'desc'; // 'asc' | 'desc'
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const order = searchParams.get('order') || 'desc';
+
+    // Validate sortBy and order to prevent SQL injection
+    const validSortBy = ['date', 'agreement'];
+    const validOrder = ['asc', 'desc'];
+
+    if (!validSortBy.includes(sortBy)) {
+      return NextResponse.json({ error: 'Invalid sortBy parameter' }, { status: 400 });
+    }
+    if (!validOrder.includes(order)) {
+      return NextResponse.json({ error: 'Invalid order parameter' }, { status: 400 });
+    }
 
     // Build where clause
     type WhereClause = {
@@ -102,7 +121,13 @@ export async function GET(request: NextRequest) {
 
     // Use raw SQL for full-text search, otherwise use Prisma
     if (search && search.trim()) {
-      const searchQuery = search.trim().split(/\s+/).join(' & ');
+      // Escape special tsquery characters to prevent query errors
+      const searchQuery = search
+        .trim()
+        .replace(/[&|!()]/g, ' ') // Remove special tsquery operators
+        .split(/\s+/)
+        .filter(term => term.length > 0)
+        .join(' & ');
 
       // Build SQL query parts
       const orderClause = sortBy === 'agreement'

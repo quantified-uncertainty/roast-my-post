@@ -86,7 +86,7 @@ export function ClaimEvaluationsList() {
 
   // Fetch data from API
   const fetchData = useCallback(
-    async (reset = false) => {
+    async (reset = false, signal?: AbortSignal) => {
       if (loading || (!hasMore && !reset)) return;
 
       setLoading(true);
@@ -107,7 +107,7 @@ export function ClaimEvaluationsList() {
           params.set("cursor", nextCursor);
         }
 
-        const response = await fetch(`/api/claim-evaluations?${params}`);
+        const response = await fetch(`/api/claim-evaluations?${params}`, { signal });
         if (!response.ok) {
           throw new Error("Failed to fetch evaluations");
         }
@@ -118,6 +118,7 @@ export function ClaimEvaluationsList() {
         setNextCursor(data.nextCursor);
         setHasMore(data.hasMore);
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return; // Ignore aborted requests
         setError(err instanceof Error ? err.message : "Failed to load");
       } finally {
         setLoading(false);
@@ -128,11 +129,13 @@ export function ClaimEvaluationsList() {
 
   // Reset and fetch when search or sort changes
   useEffect(() => {
+    const abortController = new AbortController();
     setItems([]);
     setNextCursor(null);
     setHasMore(true);
-    fetchData(true);
-  }, [debouncedSearch, sortBy]);
+    fetchData(true, abortController.signal);
+    return () => abortController.abort();
+  }, [debouncedSearch, sortBy, fetchData]);
 
   // Infinite scroll handler
   const handleScroll = useCallback(() => {
@@ -200,7 +203,7 @@ export function ClaimEvaluationsList() {
         <div style={{ height: `${totalHeight}px`, position: "relative" }}>
           <div
             style={{ transform: `translateY(${offsetY}px)` }}
-            className="grid grid-cols-2 gap-2"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-2"
           >
             {visibleItems.map((item) => (
               <ClaimCard key={item.id} item={item} />
