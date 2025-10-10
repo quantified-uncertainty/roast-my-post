@@ -3,82 +3,29 @@ import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
 import { createOpenRouterClient, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
 
-// Refusal reason types (matches OpinionSpectrum2D)
-export type RefusalReason =
-  | "Safety"
-  | "Policy"
-  | "MissingData"
-  | "Unclear"
-  | "Error";
+// Import from new modules
+import { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
+import {
+  RefusalReason,
+  TokenUsage,
+  MessageWithReasoning,
+  EvaluationError,
+  ClaimEvaluatorInput,
+  ModelEvaluation,
+  FailedEvaluation,
+  EvaluationResult,
+  ClaimEvaluatorOutput,
+  extractProvider,
+  getAgreementLabel,
+  sanitizeResponse,
+  detectRefusalReason,
+  extractAndParseJSON,
+  createEvaluationError,
+} from "./utils";
 
-// Token usage type (from OpenAI SDK)
-export interface TokenUsage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-}
-
-// Extended message type with optional reasoning fields
-export interface MessageWithReasoning {
-  content?: string | null;
-  reasoning?: string;
-  reasoning_content?: string;
-}
-
-// Custom error type for evaluations with attached context
-export interface EvaluationError extends Error {
-  rawResponse?: string;
-  parsedData?: unknown;
-  attemptedParse?: string;
-  tokenUsage?: TokenUsage;
-  refusalReason?: RefusalReason;
-  thinkingText?: string;
-}
-
-// Input/Output types
-export interface ClaimEvaluatorInput {
-  claim: string;
-  context?: string;
-  models?: string[];
-  runs?: number; // Number of times to run each model (1-5, default 1)
-  explanationLength?: number; // Max words for explanation text (3-200 words, default 5)
-  temperature?: number; // Temperature for model responses (0.0-2.0, default 1.0)
-}
-
-export interface ModelEvaluation {
-  model: string;
-  provider: string;
-  agreement: number; // 0-100
-  confidence: number; // 0-100
-  agreementLevel?: string; // Human-readable label (e.g., "Strongly Disagree")
-  reasoning: string; // 10-30 characters
-  responseTimeMs?: number; // Time taken for LLM to respond in milliseconds
-  // Debug/raw data
-  rawResponse?: string; // Full text response from model
-  thinkingText?: string; // Extended thinking/reasoning (for o1, o3, etc)
-  tokenUsage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
-}
-
-export interface FailedEvaluation {
-  model: string;
-  provider: string;
-  error: string;
-  refusalReason: RefusalReason; // Categorized refusal/error reason
-  rawResponse?: string; // The response that failed to parse (if any)
-  errorDetails?: string; // Additional error context
-}
-
-export interface ClaimEvaluatorOutput {
-  results: ModelEvaluation[];
-  failed?: FailedEvaluation[]; // Models that failed to evaluate
-}
-
-// Constants
-const DEFAULT_EXPLANATION_LENGTH = 50; // Default max words for explanation text
+// Re-export everything for backwards compatibility
+export * from "./utils";
+export { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
 
 // Default models for claim evaluation
 const DEFAULT_MODELS = [
@@ -140,188 +87,44 @@ const parsedResponseSchema = z.union([
   }),
 ]);
 
+// Successful response details
+const successfulResponseSchema = z.object({
+  agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
+  confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
+  reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
+});
+
+// Failed response details
+const failedResponseSchema = z.object({
+  error: z.string().describe("Error message"),
+  refusalReason: z.enum(["Safety", "Policy", "MissingData", "Unclear", "Error"]).describe("Categorized refusal/error reason"),
+  errorDetails: z.string().optional().describe("Additional error context"),
+});
+
+// Evaluation result schema
+const evaluationResultSchema = z.object({
+  model: z.string().describe("Model identifier"),
+  provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
+  hasError: z.boolean().describe("True if evaluation failed, false if successful"),
+  responseTimeMs: z.number().optional().describe("Time taken for LLM to respond in milliseconds"),
+  rawResponse: z.string().optional().describe("Full raw response from model (or error response)"),
+  thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
+  tokenUsage: z.object({
+    promptTokens: z.number(),
+    completionTokens: z.number(),
+    totalTokens: z.number(),
+  }).optional().describe("Token usage statistics"),
+  successfulResponse: successfulResponseSchema.optional().describe("Present when hasError is false"),
+  failedResponse: failedResponseSchema.optional().describe("Present when hasError is true"),
+}).refine(
+  (data) => data.hasError === !!data.failedResponse && !data.hasError === !!data.successfulResponse,
+  { message: "hasError must match presence of response fields: hasError=true requires failedResponse, hasError=false requires successfulResponse" }
+);
+
 // Output schema
 const outputSchema = z.object({
-  results: z.array(
-    z.object({
-      model: z.string().describe("Model identifier"),
-      provider: z.string().describe("Provider name (e.g., 'anthropic', 'openai')"),
-      agreement: z.number().min(0).max(100).describe("Agreement score 0-100"),
-      confidence: z.number().min(0).max(100).describe("Confidence score 0-100"),
-      reasoning: z.string().min(1).max(2000).describe("Brief reasoning (configurable by explanationLength in words)"),
-      responseTimeMs: z.number().optional().describe("Time taken for LLM to respond in milliseconds"),
-      rawResponse: z.string().optional().describe("Full raw response from model"),
-      thinkingText: z.string().optional().describe("Extended thinking/reasoning (for o1/o3 models)"),
-      tokenUsage: z.object({
-        promptTokens: z.number(),
-        completionTokens: z.number(),
-        totalTokens: z.number(),
-      }).optional().describe("Token usage statistics"),
-    })
-  ),
-  failed: z.array(
-    z.object({
-      model: z.string().describe("Model identifier"),
-      provider: z.string().describe("Provider name"),
-      error: z.string().describe("Error message"),
-      refusalReason: z.enum(["Safety", "Policy", "MissingData", "Unclear", "Error"]).describe("Categorized refusal/error reason"),
-      rawResponse: z.string().optional().describe("Raw response that failed to parse"),
-      errorDetails: z.string().optional().describe("Additional error context"),
-    })
-  ).optional().describe("Models that failed to evaluate"),
+  evaluations: z.array(evaluationResultSchema).describe("Array of all model evaluations (both successful and failed)"),
 }) satisfies z.ZodType<ClaimEvaluatorOutput>;
-
-/**
- * Extract provider name from OpenRouter model ID
- * e.g., "anthropic/claude-3-haiku" -> "anthropic"
- */
-function extractProvider(modelId: string): string {
-  const parts = modelId.split('/');
-  return parts[0] || 'unknown';
-}
-
-/**
- * Convert agreement score (0-100) to human-readable label
- */
-export function getAgreementLabel(agreement: number): string {
-  if (agreement >= 80) return 'Strongly Agree';
-  if (agreement >= 60) return 'Agree';
-  if (agreement >= 40) return 'Neutral';
-  if (agreement >= 20) return 'Disagree';
-  return 'Strongly Disagree';
-}
-
-/**
- * Sanitize response content to prevent exposure of sensitive data
- * Truncates long responses and removes potential API keys or tokens
- */
-function sanitizeResponse(response: string | undefined): string | undefined {
-  if (!response) return response;
-
-  // Truncate very long responses to prevent log bloat
-  const MAX_LENGTH = 500;
-  const truncated = response.length > MAX_LENGTH
-    ? response.substring(0, MAX_LENGTH) + '...[truncated]'
-    : response;
-
-  // Remove potential API keys (basic pattern matching)
-  // Matches common patterns like sk-xxx, key_xxx, etc.
-  return truncated.replace(/\b(sk-|key_|api[_-]?key[_-]?)[a-zA-Z0-9_-]{20,}\b/gi, '[REDACTED]');
-}
-
-/**
- * Detect the reason for a refusal or error based on error message and response content
- */
-function detectRefusalReason(error: Error, rawResponse?: string): RefusalReason {
-  const combined = `${error.message} ${rawResponse || ''}`.toLowerCase();
-
-  // Safety refusals: harmful content, violence, illegal activities
-  if (/safety|harmful|dangerous|violat.*guideline|inappropriate|offensive/i.test(combined)) {
-    return 'Safety';
-  }
-
-  // Policy refusals: model policies, content restrictions, OpenRouter data policies
-  if (/policy|cannot.*evaluat|against.*rule|not.*allowed|unable to (provide|assist|answer)|no endpoints found/i.test(combined)) {
-    return 'Policy';
-  }
-
-  // Missing data: insufficient information, lack of access
-  if (/insufficient.*data|don't have access|missing.*information|lack.*context|no.*data|cannot access|don't possess/i.test(combined)) {
-    return 'MissingData';
-  }
-
-  // Unclear: ambiguous claims, vague questions
-  if (/unclear|ambiguous|vague|not.*specific|too.*broad|imprecise/i.test(combined)) {
-    return 'Unclear';
-  }
-
-  // Default to Error for technical failures (JSON parse, network, timeout, etc.)
-  return 'Error';
-}
-
-/**
- * Extract and parse JSON from raw content, handling markdown code blocks and extra text
- */
-function extractAndParseJSON(rawContent: string): unknown {
-  let jsonContent = rawContent.trim();
-
-  // Remove markdown code blocks if present
-  if (jsonContent.startsWith('```')) {
-    // Extract content between ``` markers
-    const match = jsonContent.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-    if (match) {
-      jsonContent = match[1].trim();
-    }
-  }
-
-  // Try to extract JSON object if there's text before/after it
-  // Look for { ... } pattern (greedy to capture the full object)
-  if (!jsonContent.startsWith('{')) {
-    const jsonMatch = jsonContent.match(/(\{[\s\S]*\})/);
-    if (jsonMatch) {
-      jsonContent = jsonMatch[0];
-    }
-  }
-
-  // Some models may return JSON with literal newlines in string values
-  // This is invalid JSON - we need to escape them as a fallback
-  try {
-    return JSON.parse(jsonContent);
-  } catch (firstError) {
-    // If parsing fails, try to fix common issues with literal newlines in strings
-    // Replace literal newlines within quoted strings with \n escape sequences
-    const fixed = jsonContent.replace(
-      /"([^"]*)"(\s*[:,\]\}])/g,
-      (match, content, after) => {
-        // Escape literal newlines in the string content
-        const escaped = content.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-        return `"${escaped}"${after}`;
-      }
-    );
-
-    try {
-      return JSON.parse(fixed);
-    } catch (secondError) {
-      // If still failing, throw the original error for better debugging
-      throw firstError;
-    }
-  }
-}
-
-/**
- * Create a standardized evaluation error with sanitized context
- */
-function createEvaluationError(
-  message: string,
-  context: {
-    rawResponse?: string;
-    parsedData?: unknown;
-    attemptedParse?: string;
-    tokenUsage?: TokenUsage;
-    refusalReason?: RefusalReason;
-  }
-): EvaluationError {
-  const err = new Error(message) as EvaluationError;
-
-  // Attach sanitized context
-  if (context.rawResponse) {
-    err.rawResponse = sanitizeResponse(context.rawResponse);
-  }
-  if (context.parsedData) {
-    err.parsedData = context.parsedData;
-  }
-  if (context.attemptedParse) {
-    err.attemptedParse = sanitizeResponse(context.attemptedParse);
-  }
-  if (context.tokenUsage) {
-    err.tokenUsage = context.tokenUsage;
-  }
-  if (context.refusalReason) {
-    err.refusalReason = context.refusalReason;
-  }
-
-  return err;
-}
 
 /**
  * Evaluate a claim with a single model via OpenRouter with timeout
@@ -331,7 +134,7 @@ async function evaluateWithModel(
   input: ClaimEvaluatorInput,
   model: string,
   context: ToolContext
-): Promise<ModelEvaluation> {
+): Promise<EvaluationResult> {
   context.logger.info(`[ClaimEvaluator] Evaluating with ${model}`);
 
   // Create timeout promise (configurable via env, default 120 seconds)
@@ -369,48 +172,10 @@ async function evaluateWithModelImpl(
   input: ClaimEvaluatorInput,
   model: string,
   context: ToolContext
-): Promise<ModelEvaluation> {
+): Promise<EvaluationResult> {
 
-  // For runs > 1, add slight prompt variation to encourage independent thinking
-  const runNote = (input.runs && input.runs > 1)
-    ? '\n\nNote: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others.'
-    : '';
-
-  const explanationLength = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
-
-  const prompt = `You are evaluating the following claim:
-
-"${input.claim}"
-${input.context ? `\nContext: ${input.context}` : ''}
-
-If the claim is meaningful and evaluable, rate your agreement and confidence:
-- Agreement: 0 (completely disagree/certainly false) to 100 (completely agree/certainly true)
-- Confidence: 0 (very uncertain/insufficient information) to 100 (very confident in your assessment)
-
-If you cannot or should not evaluate this claim, you may REFUSE by providing a "refusalReason" instead:
-- "Unclear": The claim is too vague, ambiguous, or imprecise to evaluate meaningfully
-- "MissingData": Insufficient information or data to make an informed assessment
-- "Policy": Against your policies or rules to evaluate
-- "Safety": Evaluating this claim could be harmful or dangerous
-
-${input.context ? 'Consider the provided context (temporal, domain-specific, or situational) when forming your assessment.' : ''}${runNote}
-
-CRITICAL: You must respond with ONLY a JSON object, nothing else. No explanatory text before or after.
-
-Response format (NORMAL evaluation):
-{
-  "agreement": 75,
-  "confidence": 85,
-  "reasoning": "Brief explanation (max ${explanationLength} words)"
-}
-
-Response format (REFUSAL):
-{
-  "refusalReason": "Unclear",
-  "reasoning": "Brief explanation of why you're refusing (max ${explanationLength} words)"
-}
-
-Your response must be valid JSON only.`;
+  // Generate prompt using the improved version from prompt.ts
+  const prompt = generateClaimEvaluatorPrompt(input);
 
   let rawContent: string | undefined;
   let rawThinking: string | undefined;
@@ -528,16 +293,19 @@ Your response must be valid JSON only.`;
     const reasoning = words.slice(0, maxExplanationWords).join(' ');
 
     return {
+      hasError: false,
       model,
       provider: extractProvider(model),
-      agreement: validatedData.agreement,
-      confidence: validatedData.confidence,
-      agreementLevel: getAgreementLabel(validatedData.agreement),
-      reasoning,
       responseTimeMs, // Time taken for LLM to respond
       rawResponse: rawContent, // Full raw response
       thinkingText: rawThinking, // Extended thinking (o1/o3)
       tokenUsage,
+      successfulResponse: {
+        agreement: validatedData.agreement,
+        confidence: validatedData.confidence,
+        agreementLevel: getAgreementLabel(validatedData.agreement),
+        reasoning,
+      },
     };
   } catch (error: unknown) {
     const err = error as EvaluationError;
@@ -599,14 +367,13 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
       );
 
       // Process results, maintaining index correspondence with modelRuns
-      const successful: ModelEvaluation[] = [];
-      const failed: FailedEvaluation[] = [];
+      const evaluations: EvaluationResult[] = [];
 
       results.forEach((r, i) => {
         const modelId = modelRuns[i].model;
 
         if (r.status === 'fulfilled') {
-          successful.push(r.value);
+          evaluations.push(r.value);
         } else {
           // r.status === 'rejected'
           const error = r.reason;
@@ -621,6 +388,9 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
           let rawResponse: string | undefined;
           let errorDetails: string | undefined;
+          let responseTimeMs: number | undefined;
+          let thinkingText: string | undefined;
+          let tokenUsage: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined;
 
           // Extract raw response from error if available (we attached it in evaluateWithModel)
           if (error?.rawResponse) {
@@ -629,7 +399,17 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
           // Capture thinking text if available (for reasoning models like o1/o3)
           if (error?.thinkingText) {
+            thinkingText = error.thinkingText;
             errorDetails = `Thinking: ${sanitizeResponse(error.thinkingText)}`;
+          }
+
+          // Capture token usage if available
+          if (error?.tokenUsage) {
+            tokenUsage = {
+              promptTokens: error.tokenUsage.prompt_tokens,
+              completionTokens: error.tokenUsage.completion_tokens,
+              totalTokens: error.tokenUsage.total_tokens,
+            };
           }
 
           // Add parsed data if available (for validation errors) - sanitized for end users
@@ -649,24 +429,32 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
           // Use explicit refusalReason from error if provided, otherwise detect from error message
           const refusalReason = error?.refusalReason || detectRefusalReason(error, rawResponse);
 
-          failed.push({
+          evaluations.push({
+            hasError: true,
             model: modelId,
             provider: extractProvider(modelId),
-            error: errorMessage,
-            refusalReason,
+            responseTimeMs,
             rawResponse,
-            errorDetails,
+            thinkingText,
+            tokenUsage,
+            failedResponse: {
+              error: errorMessage,
+              refusalReason,
+              errorDetails,
+            },
           });
         }
       });
 
+      const successCount = evaluations.filter(e => !e.hasError).length;
+      const failedCount = evaluations.filter(e => e.hasError).length;
+
       context.logger.info(
-        `[ClaimEvaluator] ${successful.length}/${modelRuns.length} evaluations succeeded, ${failed.length} failed`
+        `[ClaimEvaluator] ${successCount}/${modelRuns.length} evaluations succeeded, ${failedCount} failed`
       );
 
       return {
-        results: successful,
-        failed: failed,
+        evaluations,
       };
     } catch (error) {
       context.logger.error('[ClaimEvaluator] Error:', error);
@@ -689,8 +477,9 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     output: ClaimEvaluatorOutput,
     context: ToolContext
   ): Promise<void> {
+    const successCount = output.evaluations.filter(e => !e.hasError).length;
     context.logger.info(
-      `[ClaimEvaluator] Completed with ${output.results.length} successful evaluations`
+      `[ClaimEvaluator] Completed with ${successCount} successful evaluations`
     );
   }
 }

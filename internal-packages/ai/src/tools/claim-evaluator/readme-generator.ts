@@ -30,21 +30,38 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 
 ## Output
 
-- **results**: Array of model evaluations, each containing:
+> **Note**: Each evaluation has a \`hasError\` boolean that determines its structure. When \`hasError\` is false, \`successfulResponse\` is present. When \`hasError\` is true, \`failedResponse\` is present.
+
+- **evaluations**: Array of all model evaluations (both successful and failed). Each evaluation has these common fields:
+  - \`hasError\`: Boolean indicating if evaluation failed (true) or succeeded (false)
   - \`model\`: Model identifier (e.g., "anthropic/claude-3-haiku")
   - \`provider\`: Provider name (e.g., "anthropic", "openai")
-  - \`agreement\`: Score from 0-100 (0=disagree, 100=agree)
-  - \`confidence\`: Score from 0-100 (0=very uncertain, 100=very confident)
-  - \`reasoning\`: Brief explanation (max words configurable, default 5)
+  - \`responseTimeMs\`: Time taken for LLM to respond (optional)
+  - \`rawResponse\`: Full raw response from model (optional)
+  - \`thinkingText\`: Extended thinking/reasoning for o1/o3 models (optional)
+  - \`tokenUsage\`: Token usage statistics (optional)
+
+**For successful evaluations (hasError: false):**
+  - \`successfulResponse\`: Object containing:
+    - \`agreement\`: Score from 0-100 (0=disagree, 100=agree)
+    - \`confidence\`: Score from 0-100 (0=very uncertain, 100=very confident)
+    - \`reasoning\`: Brief explanation (max words configurable, default 50)
+
+**For failed evaluations (hasError: true):**
+  - \`failedResponse\`: Object containing:
+    - \`error\`: Error message
+    - \`refusalReason\`: Categorized reason ('Safety', 'Policy', 'MissingData', 'Unclear', 'Error')
+    - \`errorDetails\`: Additional error context (optional)
 
 ## Technical Details
 
 - All requests go through **OpenRouter** (not direct provider APIs)
 - Helicone integration for request tracking and caching
 - Parallel execution using \`Promise.allSettled()\`
-- Failed model requests are filtered out silently
-- Structured JSON responses ensure consistent format
+- Both successful and failed evaluations are included in results
+- Structured JSON responses with \`hasError\` boolean and optional response fields
 - Custom models can be specified via the \`models\` parameter
+- Response times tracked for performance monitoring
 
 ## Use Cases
 
@@ -65,20 +82,37 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 **Output:**
 \`\`\`json
 {
-  "results": [
+  "evaluations": [
     {
+      "hasError": false,
       "model": "anthropic/claude-3-haiku",
       "provider": "anthropic",
-      "agreement": 15,
-      "confidence": 85,
-      "reasoning": "Unlikely growth rate"
+      "responseTimeMs": 1234,
+      "successfulResponse": {
+        "agreement": 15,
+        "confidence": 85,
+        "reasoning": "Unlikely growth rate given historical economic data"
+      }
     },
     {
+      "hasError": false,
       "model": "anthropic/claude-3-5-sonnet",
       "provider": "anthropic",
-      "agreement": 20,
-      "confidence": 90,
-      "reasoning": "Historically implausible"
+      "responseTimeMs": 2156,
+      "successfulResponse": {
+        "agreement": 20,
+        "confidence": 90,
+        "reasoning": "Historically implausible; requires 7% annual growth"
+      }
+    },
+    {
+      "hasError": true,
+      "model": "some-unavailable-model",
+      "provider": "openai",
+      "failedResponse": {
+        "error": "Model evaluation timed out after 120s",
+        "refusalReason": "Error"
+      }
     }
     // ... other models
   ]

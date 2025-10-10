@@ -26,6 +26,7 @@ import {
   type ToolId,
   toolRegistry,
   toolSchemas,
+  generateClaimEvaluatorPrompt,
 } from "@roast/ai";
 
 import { GenericToolDocsPage } from "../../components/GenericToolDocsPage";
@@ -495,6 +496,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           valueType: "number",
           tooltip:
             "Controls response randomness. 0 = very consistent (same answer each time), 1 = maximum variety (diverse perspectives). Automatically scaled per model provider (Anthropic 0-1, OpenAI/Google/xAI 0-2).",
+          showPromptLink: true,
         },
       },
       "language-convention-detector": {
@@ -624,6 +626,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           helperText: (toolSpecific.helperText as string) || undefined,
           tooltip: (toolSpecific.tooltip as string) || undefined,
           valueType: (toolSpecific.valueType as 'string' | 'number') || undefined,
+          showPromptLink: (toolSpecific.showPromptLink as boolean) || undefined,
         });
       });
     }
@@ -700,6 +703,11 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
               : "Processing..."
         }
         hideViewToggle={toolId === "claim-evaluator"}
+        generatePrompt={
+          toolId === "claim-evaluator"
+            ? (input: any) => generateClaimEvaluatorPrompt(input)
+            : undefined
+        }
       />
     );
   }
