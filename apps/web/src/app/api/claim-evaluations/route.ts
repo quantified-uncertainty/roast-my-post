@@ -29,7 +29,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+
     const data = saveSchema.parse(body);
 
     const evaluation = await prisma.claimEvaluation.create({
@@ -73,7 +82,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const limitParam = parseInt(searchParams.get('limit') || '50');
+    const limit = Math.min(Math.max(1, isNaN(limitParam) ? 50 : limitParam), 100);
     const search = searchParams.get('search');
     const sortBy = searchParams.get('sortBy') || 'date';
     const order = searchParams.get('order') || 'desc';
@@ -121,39 +131,24 @@ export async function GET(request: NextRequest) {
 
     // Use raw SQL for full-text search, otherwise use Prisma
     if (search && search.trim()) {
-      // Escape special tsquery characters to prevent query errors
-      const searchQuery = search
-        .trim()
-        .replace(/[&|!()]/g, ' ') // Remove special tsquery operators
-        .split(/\s+/)
-        .filter(term => term.length > 0)
-        .join(' & ');
+      // Use plainto_tsquery for safe handling of user input (handles punctuation automatically)
+      const searchQuery = search.trim();
 
       // Build SQL query parts
       const orderClause = sortBy === 'agreement'
         ? 'ORDER BY "summaryMean" ' + order.toUpperCase() + ', "createdAt" ' + order.toUpperCase() + ', id DESC'
         : 'ORDER BY "createdAt" ' + order.toUpperCase() + ', id DESC';
 
-      if (cursor) {
-        evaluations = await prisma.$queryRawUnsafe(`
-          SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
-          FROM "ClaimEvaluation"
-          WHERE "userId" = $1
-          AND claim_search_text @@ to_tsquery('english', $2)
-          AND id < $3
-          ${orderClause}
-          LIMIT $4
-        `, session.user.id, searchQuery, cursor, limit + 1) as EvaluationResult[];
-      } else {
-        evaluations = await prisma.$queryRawUnsafe(`
-          SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
-          FROM "ClaimEvaluation"
-          WHERE "userId" = $1
-          AND claim_search_text @@ to_tsquery('english', $2)
-          ${orderClause}
-          LIMIT $3
-        `, session.user.id, searchQuery, limit + 1) as EvaluationResult[];
-      }
+      // Note: Cursor pagination is not reliable for full-text search results since
+      // the result set can change between queries. For search, we simply limit to 100 results.
+      evaluations = await prisma.$queryRawUnsafe(`
+        SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
+        FROM "ClaimEvaluation"
+        WHERE "userId" = $1
+        AND claim_search_text @@ plainto_tsquery('english', $2)
+        ${orderClause}
+        LIMIT $3
+      `, session.user.id, searchQuery, limit + 1) as EvaluationResult[];
     } else {
       // Add cursor pagination for non-search queries
       if (cursor) {

@@ -11,6 +11,11 @@ export async function GET(
     const { id } = await params;
     const session = await auth();
 
+    // Check authentication first
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const evaluation = await prisma.claimEvaluation.findUnique({
       where: { id },
       include: { user: { select: { name: true, email: true } } },
@@ -21,7 +26,7 @@ export async function GET(
     }
 
     // Check authorization - user must own the evaluation
-    if (evaluation.userId !== session?.user?.id) {
+    if (evaluation.userId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

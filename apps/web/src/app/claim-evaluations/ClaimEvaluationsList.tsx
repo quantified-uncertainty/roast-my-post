@@ -95,6 +95,12 @@ export function ClaimEvaluationsList() {
       setItems([]);
       setNextCursor(null);
       setHasMore(true);
+      setScrollTop(0); // Reset scroll position when dataset changes
+
+      // Also reset the actual scroll position in the DOM
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
 
       try {
         const params = new URLSearchParams({
@@ -284,7 +290,7 @@ export function ClaimEvaluationsList() {
 
 function ClaimCard({ item }: { item: ClaimEvaluation }) {
   // summaryMean is already 0-100, no need to multiply by 100
-  const agreementPercent = item.summaryMean
+  const agreementPercent = item.summaryMean !== null && item.summaryMean !== undefined
     ? Math.round(item.summaryMean)
     : null;
 
@@ -335,13 +341,16 @@ function ClaimCard({ item }: { item: ClaimEvaluation }) {
 
         {/* Evaluation count and agreement */}
         <div className="flex flex-shrink-0 items-center gap-3">
-          {/* Line visualization for each evaluation */}
+          {/* Dot visualization for each evaluation */}
           {sortedEvaluations.length > 0 && (
             <div
               className="flex items-center gap-0.5 opacity-20 transition-opacity hover:opacity-100"
               style={
                 sortedEvaluations.length > 5
                   ? {
+                      // Multi-row layout: dots flow right-to-left, bottom-to-top
+                      // This creates a compact grid where most recent evaluations
+                      // appear in the bottom-right and wrap upward
                       flexWrap: "wrap-reverse",
                       flexDirection: "row-reverse",
                       maxWidth: "60px", // Approximately 5 dots per row
@@ -349,6 +358,7 @@ function ClaimCard({ item }: { item: ClaimEvaluation }) {
                   : undefined
               }
             >
+              {/* For multi-row layouts, reverse array so most recent is bottom-right */}
               {(sortedEvaluations.length > 5
                 ? [...sortedEvaluations].reverse()
                 : sortedEvaluations
