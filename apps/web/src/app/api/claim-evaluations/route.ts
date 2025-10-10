@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, generateId } from '@roast/db';
 import { auth } from '@/infrastructure/auth/auth';
+import { logger } from '@/infrastructure/logging/logger';
 import { z } from 'zod';
 
 const saveSchema = z.object({
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ id: evaluation.id });
   } catch (error) {
-    console.error('Save claim evaluation error:', error);
+    logger.error('Save claim evaluation error', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -70,17 +71,34 @@ export async function GET(request: NextRequest) {
     const order = searchParams.get('order') || 'desc'; // 'asc' | 'desc'
 
     // Build where clause
-    const where: any = { userId: session.user.id };
+    type WhereClause = {
+      userId: string;
+      id?: { lt: string };
+    };
+    const where: WhereClause = { userId: session.user.id };
 
     // Build orderBy
-    const orderBy: any = [];
+    type OrderByClause = Array<{
+      summaryMean?: 'asc' | 'desc';
+      createdAt?: 'asc' | 'desc';
+      id?: 'desc';
+    }>;
+    const orderBy: OrderByClause = [];
     if (sortBy === 'agreement' && !search) {
       orderBy.push({ summaryMean: order as 'asc' | 'desc' });
     }
     orderBy.push({ createdAt: order as 'asc' | 'desc' });
     orderBy.push({ id: 'desc' }); // Tie-breaker for consistent pagination
 
-    let evaluations;
+    type EvaluationResult = {
+      id: string;
+      claim: string;
+      summaryMean: number | null;
+      createdAt: Date;
+      context: string | null;
+      rawOutput: unknown;
+    };
+    let evaluations: EvaluationResult[];
 
     // Use raw SQL for full-text search, otherwise use Prisma
     if (search && search.trim()) {
@@ -100,7 +118,7 @@ export async function GET(request: NextRequest) {
           AND id < $3
           ${orderClause}
           LIMIT $4
-        `, session.user.id, searchQuery, cursor, limit + 1) as any[];
+        `, session.user.id, searchQuery, cursor, limit + 1) as EvaluationResult[];
       } else {
         evaluations = await prisma.$queryRawUnsafe(`
           SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
@@ -109,7 +127,7 @@ export async function GET(request: NextRequest) {
           AND claim_search_text @@ to_tsquery('english', $2)
           ${orderClause}
           LIMIT $3
-        `, session.user.id, searchQuery, limit + 1) as any[];
+        `, session.user.id, searchQuery, limit + 1) as EvaluationResult[];
       }
     } else {
       // Add cursor pagination for non-search queries
@@ -147,7 +165,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('List claim evaluations error:', error);
+    logger.error('List claim evaluations error', error);
     return NextResponse.json(
       { error: 'Failed to list evaluations' },
       { status: 500 }

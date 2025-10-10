@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ClaimEvaluationDisplay, ClaimEvaluationResult } from '@/lib/OpinionSpectrum2D';
 import { getModelAbbreviation } from '../../tools/constants/modelAbbreviations';
@@ -32,7 +32,6 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     async function loadEvaluation() {

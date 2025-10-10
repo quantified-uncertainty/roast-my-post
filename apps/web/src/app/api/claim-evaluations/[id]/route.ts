@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@roast/db';
 import { auth } from '@/infrastructure/auth/auth';
+import { logger } from '@/infrastructure/logging/logger';
 
 export async function GET(
   request: NextRequest,
@@ -26,7 +27,7 @@ export async function GET(
 
     return NextResponse.json(evaluation);
   } catch (error) {
-    console.error('Get claim evaluation error:', error);
+    logger.error('Get claim evaluation error', error);
     return NextResponse.json(
       { error: 'Failed to fetch evaluation' },
       { status: 500 }

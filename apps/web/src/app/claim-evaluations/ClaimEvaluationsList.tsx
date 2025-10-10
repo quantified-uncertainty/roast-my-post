@@ -119,7 +119,6 @@ export function ClaimEvaluationsList() {
         setHasMore(data.hasMore);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load");
-        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -241,8 +240,6 @@ export function ClaimEvaluationsList() {
 }
 
 function ClaimCard({ item }: { item: ClaimEvaluation }) {
-  const [showErrorPopover, setShowErrorPopover] = useState(false);
-
   // summaryMean is already 0-100, no need to multiply by 100
   const agreementPercent = item.summaryMean
     ? Math.round(item.summaryMean)
@@ -256,16 +253,6 @@ function ClaimCard({ item }: { item: ClaimEvaluation }) {
         : agreementPercent <= 30
           ? "text-red-600"
           : "text-yellow-600";
-
-  // Count total evaluations from rawOutput
-  const evaluationCount = item.rawOutput?.evaluations?.length || 0;
-
-  // Calculate success/failure counts
-  const failedCount = item.rawOutput?.evaluations
-    ? item.rawOutput.evaluations.filter((e) => e.hasError).length
-    : 0;
-  const successCount = evaluationCount - failedCount;
-  const successRate = evaluationCount > 0 ? successCount / evaluationCount : 1;
 
   // Helper to get color based on agreement score
   const getAgreementColor = (agreement: number): string => {
