@@ -124,6 +124,9 @@ const evaluationResultSchema = z.object({
 // Output schema
 const outputSchema = z.object({
   evaluations: z.array(evaluationResultSchema).describe("Array of all model evaluations (both successful and failed)"),
+  summary: z.object({
+    mean: z.number().describe("Mean agreement score across all successful evaluations"),
+  }).optional().describe("Summary statistics of evaluations"),
 }) satisfies z.ZodType<ClaimEvaluatorOutput>;
 
 /**
@@ -453,8 +456,19 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
         `[ClaimEvaluator] ${successCount}/${modelRuns.length} evaluations succeeded, ${failedCount} failed`
       );
 
+      // Calculate summary statistics from successful evaluations
+      const successfulEvaluations = evaluations.filter(e => !e.hasError && e.successfulResponse);
+      let summary: { mean: number } | undefined;
+
+      if (successfulEvaluations.length > 0) {
+        const agreements = successfulEvaluations.map(e => e.successfulResponse!.agreement);
+        const mean = agreements.reduce((sum, val) => sum + val, 0) / agreements.length;
+        summary = { mean };
+      }
+
       return {
         evaluations,
+        summary,
       };
     } catch (error) {
       context.logger.error('[ClaimEvaluator] Error:', error);

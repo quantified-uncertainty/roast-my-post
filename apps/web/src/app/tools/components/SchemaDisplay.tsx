@@ -10,6 +10,7 @@ interface SchemaField {
   description?: string;
   constraints?: string;
   arrayItemSchema?: any; // For array types, store the items schema
+  objectSchema?: any; // For object types, store the object schema
 }
 
 interface SchemaDisplayProps {
@@ -49,6 +50,7 @@ function parseJsonSchema(schema: any): SchemaField[] {
       description: prop.description,
       constraints: constraints.length > 0 ? constraints.join(', ') : undefined,
       arrayItemSchema: prop.type === 'array' && prop.items ? prop.items : undefined,
+      objectSchema: prop.type === 'object' && prop.properties ? prop : undefined,
     });
   }
 
@@ -230,12 +232,12 @@ function SchemaToggleButton({
  */
 function DescriptionCell({
   description,
-  hasArraySchema,
+  hasSchema,
   showSchema,
   onToggleSchema
 }: {
   description?: string;
-  hasArraySchema: boolean;
+  hasSchema: boolean;
   showSchema: boolean;
   onToggleSchema: () => void;
 }) {
@@ -244,7 +246,7 @@ function DescriptionCell({
       <div>
         {description || <span className="text-gray-400 italic">No description</span>}
       </div>
-      {hasArraySchema && (
+      {hasSchema && (
         <SchemaToggleButton isVisible={showSchema} onToggle={onToggleSchema} />
       )}
     </td>
@@ -252,16 +254,17 @@ function DescriptionCell({
 }
 
 /**
- * Expandable array schema row with syntax highlighting
+ * Expandable schema row with syntax highlighting (for arrays and objects)
  */
-function ArraySchemaRow({ itemSchema }: { itemSchema: any }) {
-  const schemaContent = formatArrayItemSchema(itemSchema);
+function SchemaRow({ schema, schemaType }: { schema: any; schemaType: 'array' | 'object' }) {
+  const schemaContent = formatArrayItemSchema(schema);
+  const label = schemaType === 'array' ? 'Array Item Schema:' : 'Object Schema:';
 
   return (
     <tr className="border-b border-gray-100 bg-gray-50">
       <td colSpan={4} className="py-3 px-3">
         <div className="ml-6">
-          <div className="text-xs font-semibold text-gray-600 mb-2">Array Item Schema:</div>
+          <div className="text-xs font-semibold text-gray-600 mb-2">{label}</div>
           <pre className="bg-[#1e293b] text-white border border-gray-200 rounded p-3 text-xs font-mono overflow-x-auto">
             <code>{schemaContent}</code>
           </pre>
@@ -345,10 +348,11 @@ function createExampleValue(prop: any, fieldName?: string): any {
 }
 
 /**
- * Field row component with optional expandable array schema
+ * Field row component with optional expandable schema
  */
 function FieldRow({ field }: { field: SchemaField }) {
   const [showSchema, setShowSchema] = useState(false);
+  const hasSchema = !!(field.arrayItemSchema || field.objectSchema);
 
   return (
     <Fragment>
@@ -358,13 +362,16 @@ function FieldRow({ field }: { field: SchemaField }) {
         <RequiredBadgeCell required={field.required} />
         <DescriptionCell
           description={field.description}
-          hasArraySchema={!!field.arrayItemSchema}
+          hasSchema={hasSchema}
           showSchema={showSchema}
           onToggleSchema={() => setShowSchema(!showSchema)}
         />
       </tr>
       {field.arrayItemSchema && showSchema && (
-        <ArraySchemaRow itemSchema={field.arrayItemSchema} />
+        <SchemaRow schema={field.arrayItemSchema} schemaType="array" />
+      )}
+      {field.objectSchema && showSchema && (
+        <SchemaRow schema={field.objectSchema} schemaType="object" />
       )}
     </Fragment>
   );

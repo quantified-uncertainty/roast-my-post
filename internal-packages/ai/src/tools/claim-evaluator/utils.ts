@@ -83,6 +83,9 @@ export type FailedEvaluation = EvaluationResult & { hasError: true; failedRespon
 
 export interface ClaimEvaluatorOutput {
   evaluations: EvaluationResult[];
+  summary?: {
+    mean: number;
+  };
 }
 
 // ============================================================================

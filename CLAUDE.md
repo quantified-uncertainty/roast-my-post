@@ -33,6 +33,46 @@ import { config } from '@roast/domain'  // Type-safe config
 
 ## Critical Safety Rules
 
+### 🚨🚨🚨 DATABASE MIGRATION ABSOLUTE RULES 🚨🚨🚨
+
+**⚠️ CRITICAL: Development database is NOT disposable! Contains real user data!**
+
+**BEFORE running ANY database migration or schema change:**
+
+1. ✅ **CREATE BACKUP FIRST** (MANDATORY):
+   ```bash
+   mkdir -p ~/db-backups/roast-my-post
+   pg_dump -U postgres -d roast_my_post > ~/db-backups/backup_$(date +%Y%m%d_%H%M%S).sql
+   ```
+
+2. ✅ **VERIFY backup was created**:
+   ```bash
+   ls -lh ~/db-backups/roast-my-post/backup_*.sql | tail -1
+   ```
+
+3. ✅ **Only THEN** run the migration command
+
+**ABSOLUTELY FORBIDDEN COMMANDS** (These DESTROY ALL DATA):
+```bash
+❌ prisma migrate reset              # WIPES ENTIRE DATABASE
+❌ prisma migrate reset --force      # WIPES DATABASE WITHOUT CONFIRMATION
+❌ prisma db push --accept-data-loss # DROPS COLUMNS, DESTROYS DATA
+❌ Any command with --force flag     # Bypasses safety checks
+```
+
+**If you see these commands, you MUST:**
+1. **STOP IMMEDIATELY**
+2. **Ask user to create backup first**
+3. **Get explicit confirmation**
+4. **Never assume dev database is disposable**
+
+**Automatic Protection:**
+- `.claude/hooks/pre-db-migrate.sh` creates automatic backups
+- `.claude/hooks/pre-command.sh` blocks dangerous commands
+- Both hooks MUST remain enabled
+
+---
+
 ### 🚨 ABSOLUTE PROHIBITION: NEVER MERGE - NO EXCEPTIONS 🚨
 **This is the #1 most critical rule:**
 - **NEVER use `gh pr merge`** - This command is FORBIDDEN
