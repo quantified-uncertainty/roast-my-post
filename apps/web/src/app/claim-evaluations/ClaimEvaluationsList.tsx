@@ -84,13 +84,17 @@ export function ClaimEvaluationsList() {
 
   const visibleItems = filteredItems.slice(startIndex, endIndex);
 
-  // Fetch data from API
-  const fetchData = useCallback(
-    async (reset = false, signal?: AbortSignal) => {
-      if (loading || (!hasMore && !reset)) return;
+  // Reset and fetch when search or sort changes
+  useEffect(() => {
+    const abortController = new AbortController();
+    let cancelled = false;
 
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
+      setItems([]);
+      setNextCursor(null);
+      setHasMore(true);
 
       try {
         const params = new URLSearchParams({
@@ -103,39 +107,75 @@ export function ClaimEvaluationsList() {
           params.set("search", debouncedSearch);
         }
 
-        if (!reset && nextCursor) {
-          params.set("cursor", nextCursor);
-        }
+        const response = await fetch(`/api/claim-evaluations?${params}`, {
+          signal: abortController.signal
+        });
 
-        const response = await fetch(`/api/claim-evaluations?${params}`, { signal });
         if (!response.ok) {
           throw new Error("Failed to fetch evaluations");
         }
 
         const data: FetchResponse = await response.json();
 
-        setItems((prev) => (reset ? data.data : [...prev, ...data.data]));
-        setNextCursor(data.nextCursor);
-        setHasMore(data.hasMore);
+        if (!cancelled) {
+          setItems(data.data);
+          setNextCursor(data.nextCursor);
+          setHasMore(data.hasMore);
+        }
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return; // Ignore aborted requests
-        setError(err instanceof Error ? err.message : "Failed to load");
+        if (err instanceof Error && err.name === 'AbortError') return;
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    },
-    [loading, hasMore, nextCursor, sortBy, debouncedSearch]
-  );
+    };
 
-  // Reset and fetch when search or sort changes
-  useEffect(() => {
-    const abortController = new AbortController();
-    setItems([]);
-    setNextCursor(null);
-    setHasMore(true);
-    fetchData(true, abortController.signal);
-    return () => abortController.abort();
-  }, [debouncedSearch, sortBy, fetchData]);
+    fetchData();
+
+    return () => {
+      cancelled = true;
+      abortController.abort();
+    };
+  }, [debouncedSearch, sortBy]);
+
+  // Fetch more data for infinite scroll
+  const fetchMore = useCallback(async () => {
+    if (loading || !hasMore || !nextCursor) return;
+
+    setLoading(true);
+
+    try {
+      const params = new URLSearchParams({
+        limit: "50",
+        sortBy,
+        order: "desc",
+        cursor: nextCursor,
+      });
+
+      if (debouncedSearch) {
+        params.set("search", debouncedSearch);
+      }
+
+      const response = await fetch(`/api/claim-evaluations?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch evaluations");
+      }
+
+      const data: FetchResponse = await response.json();
+
+      setItems((prev) => [...prev, ...data.data]);
+      setNextCursor(data.nextCursor);
+      setHasMore(data.hasMore);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, hasMore, nextCursor, sortBy, debouncedSearch]);
 
   // Infinite scroll handler
   const handleScroll = useCallback(() => {
@@ -149,9 +189,9 @@ export function ClaimEvaluationsList() {
       200;
 
     if (scrolledToBottom && hasMore && !loading) {
-      fetchData();
+      fetchMore();
     }
-  }, [hasMore, loading, fetchData]);
+  }, [hasMore, loading, fetchMore]);
 
   // Measure container height
   useEffect(() => {
