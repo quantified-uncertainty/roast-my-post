@@ -321,6 +321,9 @@ model ClaimEvaluation {
   context           String?
   summaryMean       Float?
   rawOutput         Json
+  explanationLength Int?
+  temperature       Float?
+  prompt            String?
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
   claim_search_text Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(claim, ''::text) || ' ' || COALESCE(context, ''::text))"))

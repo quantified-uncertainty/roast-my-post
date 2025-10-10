@@ -29,7 +29,7 @@ export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput =
   warning?: string;
   hideViewToggle?: boolean;
   generatePrompt?: (input: TInput) => string; // Optional function to generate prompt for preview
-  onSaveResult?: (result: TOutput) => Promise<{ id: string }>;
+  onSaveResult?: (result: TOutput, input: TInput) => Promise<{ id: string }>;
   saveButtonText?: string;
   getSavedResultUrl?: (id: string) => string;
 }
@@ -110,7 +110,7 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
 
     setIsSaving(true);
     try {
-      const { id } = await onSaveResult(result);
+      const { id } = await onSaveResult(result, formData);
       setSavedId(id);
     } catch (err) {
       console.error('Failed to save result:', err);

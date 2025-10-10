@@ -8,6 +8,9 @@ const saveSchema = z.object({
   context: z.string().optional(),
   summaryMean: z.number().optional(),
   rawOutput: z.any(), // Full ClaimEvaluatorOutput
+  explanationLength: z.number().optional(),
+  temperature: z.number().optional(),
+  prompt: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -28,6 +31,9 @@ export async function POST(request: NextRequest) {
         context: data.context,
         summaryMean: data.summaryMean,
         rawOutput: data.rawOutput,
+        explanationLength: data.explanationLength,
+        temperature: data.temperature,
+        prompt: data.prompt,
       },
     });
 
@@ -66,18 +72,6 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const where: any = { userId: session.user.id };
 
-    // Add full-text search if query provided
-    if (search && search.trim()) {
-      where.claim_search_text = {
-        search: search.trim().split(/\s+/).join(' & '), // Convert to tsquery format
-      };
-    }
-
-    // Add cursor pagination
-    if (cursor) {
-      where.id = { lt: cursor };
-    }
-
     // Build orderBy
     const orderBy: any = [];
     if (sortBy === 'agreement' && !search) {
@@ -86,19 +80,57 @@ export async function GET(request: NextRequest) {
     orderBy.push({ createdAt: order as 'asc' | 'desc' });
     orderBy.push({ id: 'desc' }); // Tie-breaker for consistent pagination
 
-    const evaluations = await prisma.claimEvaluation.findMany({
-      where,
-      orderBy,
-      take: limit + 1, // Fetch one extra to check if there's more
-      select: {
-        id: true,
-        claim: true,
-        summaryMean: true,
-        createdAt: true,
-        context: true,
-        rawOutput: true,
-      },
-    });
+    let evaluations;
+
+    // Use raw SQL for full-text search, otherwise use Prisma
+    if (search && search.trim()) {
+      const searchQuery = search.trim().split(/\s+/).join(' & ');
+
+      // Build SQL query parts
+      const orderClause = sortBy === 'agreement'
+        ? 'ORDER BY "summaryMean" ' + order.toUpperCase() + ', "createdAt" ' + order.toUpperCase() + ', id DESC'
+        : 'ORDER BY "createdAt" ' + order.toUpperCase() + ', id DESC';
+
+      if (cursor) {
+        evaluations = await prisma.$queryRawUnsafe(`
+          SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
+          FROM "ClaimEvaluation"
+          WHERE "userId" = $1
+          AND claim_search_text @@ to_tsquery('english', $2)
+          AND id < $3
+          ${orderClause}
+          LIMIT $4
+        `, session.user.id, searchQuery, cursor, limit + 1) as any[];
+      } else {
+        evaluations = await prisma.$queryRawUnsafe(`
+          SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
+          FROM "ClaimEvaluation"
+          WHERE "userId" = $1
+          AND claim_search_text @@ to_tsquery('english', $2)
+          ${orderClause}
+          LIMIT $3
+        `, session.user.id, searchQuery, limit + 1) as any[];
+      }
+    } else {
+      // Add cursor pagination for non-search queries
+      if (cursor) {
+        where.id = { lt: cursor };
+      }
+
+      evaluations = await prisma.claimEvaluation.findMany({
+        where,
+        orderBy,
+        take: limit + 1,
+        select: {
+          id: true,
+          claim: true,
+          summaryMean: true,
+          createdAt: true,
+          context: true,
+          rawOutput: true,
+        },
+      });
+    }
 
     // Check if there are more results
     const hasMore = evaluations.length > limit;

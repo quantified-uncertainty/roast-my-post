@@ -710,7 +710,7 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
         }
         onSaveResult={
           toolId === "claim-evaluator"
-            ? async (result: any) => {
+            ? async (result: any, input: any) => {
                 const response = await fetch("/api/claim-evaluations", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -719,6 +719,9 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
                     context: lastContext || undefined,
                     summaryMean: result.summary?.mean,
                     rawOutput: result,
+                    explanationLength: input.explanationLength,
+                    temperature: input.temperature,
+                    prompt: input ? generateClaimEvaluatorPrompt(input) : undefined,
                   }),
                 });
 
