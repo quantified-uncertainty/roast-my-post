@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ClaimEvaluationDisplay, ClaimEvaluationResult } from '@/lib/OpinionSpectrum2D';
 import { getModelAbbreviation } from '../../tools/constants/modelAbbreviations';
+import { ModelResponseStatsTable } from '@/components/ModelResponseStatsTable';
 
 interface ClaimEvaluationPageProps {
   params: Promise<{ id: string }>;
@@ -149,6 +150,11 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
         <ClaimEvaluationDisplay
           result={evaluation.rawOutput as unknown as ClaimEvaluationResult}
           getModelAbbrev={getModelAbbreviation}
+        />
+
+        {/* Model Response Stats */}
+        <ModelResponseStatsTable
+          evaluations={(evaluation.rawOutput as unknown as ClaimEvaluationResult)?.evaluations || []}
         />
 
         {/* Parameters Section */}
