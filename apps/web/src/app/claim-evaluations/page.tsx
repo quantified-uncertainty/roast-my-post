@@ -1,4 +1,6 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { ClaimEvaluationsList } from './ClaimEvaluationsList';
 
 export const metadata = {
@@ -22,8 +24,15 @@ function LoadingSkeleton() {
 
 export default function ClaimEvaluationsPage() {
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Claim Evaluations</h1>
+    <div className="w-full px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Claim Evaluations</h1>
+        <Button asChild size="xs">
+          <Link href="/tools/claim-evaluator/try">
+            Create New Evaluation
+          </Link>
+        </Button>
+      </div>
 
       <Suspense fallback={<LoadingSkeleton />}>
         <ClaimEvaluationsList />

@@ -18,6 +18,9 @@ interface ClaimEvaluation {
   summaryMean: number | null;
   rawOutput: unknown;
   createdAt: string;
+  explanationLength: number | null;
+  temperature: number | null;
+  prompt: string | null;
   user: {
     name: string | null;
     email: string | null;
@@ -28,6 +31,7 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
   const [evaluation, setEvaluation] = useState<ClaimEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFullPrompt, setShowFullPrompt] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -112,7 +116,7 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
                   day: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
-                })}
+                })} by {evaluation.user.name || evaluation.user.email || 'Unknown'}
               </p>
             </div>
             {evaluation.summaryMean !== null && (
@@ -147,6 +151,46 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
           result={evaluation.rawOutput as unknown as ClaimEvaluationResult}
           getModelAbbrev={getModelAbbreviation}
         />
+
+        {/* Parameters Section */}
+        <div className="mt-6 rounded-lg border bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-sm font-medium text-gray-600">Evaluation Parameters</h3>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {evaluation.explanationLength !== null && (
+              <div>
+                <div className="text-xs text-gray-500">Explanation Length</div>
+                <div className="text-sm font-medium">{evaluation.explanationLength} words</div>
+              </div>
+            )}
+            {evaluation.temperature !== null && (
+              <div>
+                <div className="text-xs text-gray-500">Temperature</div>
+                <div className="text-sm font-medium">{evaluation.temperature}</div>
+              </div>
+            )}
+          </div>
+
+          {evaluation.prompt && (
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Prompt</div>
+              <div className="rounded bg-gray-50 p-3 border border-gray-200">
+                <pre className="whitespace-pre-wrap break-words font-mono text-xs text-gray-700">
+                  {showFullPrompt
+                    ? evaluation.prompt
+                    : evaluation.prompt.split('\n').slice(0, 4).join('\n')}
+                </pre>
+                {evaluation.prompt.split('\n').length > 4 && (
+                  <button
+                    onClick={() => setShowFullPrompt(!showFullPrompt)}
+                    className="mt-2 text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                  >
+                    {showFullPrompt ? 'Show less' : 'Show more'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

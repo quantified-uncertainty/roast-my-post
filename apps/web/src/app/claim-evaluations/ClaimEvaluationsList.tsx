@@ -1,9 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import Link from 'next/link';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { useDebounce } from '@/hooks/useDebounce';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import Link from "next/link";
+
+import { useDebounce } from "@/hooks/useDebounce";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 interface ClaimEvaluation {
   id: string;
@@ -12,7 +20,12 @@ interface ClaimEvaluation {
   createdAt: string;
   context?: string | null;
   rawOutput?: {
-    evaluations?: Array<{ modelId: string }>;
+    evaluations?: Array<{
+      hasError: boolean;
+      successfulResponse?: {
+        agreement: number;
+      };
+    }>;
   };
 }
 
@@ -22,13 +35,13 @@ interface FetchResponse {
   hasMore: boolean;
 }
 
-const ITEM_HEIGHT = 96; // Height of each list item in pixels
+const ITEM_HEIGHT = 40; // Height of each list item in pixels (single line)
 const BUFFER_SIZE = 5; // Extra items to render above/below viewport
 
 export function ClaimEvaluationsList() {
   const [items, setItems] = useState<ClaimEvaluation[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'agreement'>('date');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "agreement">("date");
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -55,7 +68,10 @@ export function ClaimEvaluationsList() {
   // Calculate visible range for virtual scrolling
   const { startIndex, endIndex, totalHeight, offsetY } = useMemo(() => {
     const totalHeight = filteredItems.length * ITEM_HEIGHT;
-    const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER_SIZE);
+    const startIndex = Math.max(
+      0,
+      Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER_SIZE
+    );
     const visibleCount = Math.ceil(containerHeight / ITEM_HEIGHT);
     const endIndex = Math.min(
       filteredItems.length,
@@ -78,22 +94,22 @@ export function ClaimEvaluationsList() {
 
       try {
         const params = new URLSearchParams({
-          limit: '50',
+          limit: "50",
           sortBy,
-          order: 'desc',
+          order: "desc",
         });
 
         if (debouncedSearch) {
-          params.set('search', debouncedSearch);
+          params.set("search", debouncedSearch);
         }
 
         if (!reset && nextCursor) {
-          params.set('cursor', nextCursor);
+          params.set("cursor", nextCursor);
         }
 
         const response = await fetch(`/api/claim-evaluations?${params}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch evaluations');
+          throw new Error("Failed to fetch evaluations");
         }
 
         const data: FetchResponse = await response.json();
@@ -102,8 +118,8 @@ export function ClaimEvaluationsList() {
         setNextCursor(data.nextCursor);
         setHasMore(data.hasMore);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load');
-        console.error('Fetch error:', err);
+        setError(err instanceof Error ? err.message : "Failed to load");
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -127,7 +143,8 @@ export function ClaimEvaluationsList() {
     setScrollTop(container.scrollTop);
 
     const scrolledToBottom =
-      container.scrollHeight - container.scrollTop - container.clientHeight < 200;
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      200;
 
     if (scrolledToBottom && hasMore && !loading) {
       fetchData();
@@ -165,7 +182,7 @@ export function ClaimEvaluationsList() {
         <div className="flex gap-2">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'date' | 'agreement')}
+            onChange={(e) => setSortBy(e.target.value as "date" | "agreement")}
             className="rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="date">Latest</option>
@@ -174,15 +191,18 @@ export function ClaimEvaluationsList() {
         </div>
       </div>
 
-      {/* Virtual scrolling container */}
+      {/* Virtual scrolling container - 2 column grid */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="overflow-y-auto rounded-lg border border-gray-200 bg-white"
-        style={{ height: '600px' }}
+        className="overflow-y-auto bg-white"
+        style={{ height: "600px" }}
       >
-        <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
-          <div style={{ transform: `translateY(${offsetY}px)` }}>
+        <div style={{ height: `${totalHeight}px`, position: "relative" }}>
+          <div
+            style={{ transform: `translateY(${offsetY}px)` }}
+            className="grid grid-cols-2 gap-2"
+          >
             {visibleItems.map((item) => (
               <ClaimCard key={item.id} item={item} />
             ))}
@@ -203,14 +223,15 @@ export function ClaimEvaluationsList() {
 
         {!loading && !error && filteredItems.length === 0 && (
           <div className="p-8 text-center text-gray-500">
-            {searchQuery ? 'No claims match your search' : 'No evaluations yet'}
+            {searchQuery ? "No claims match your search" : "No evaluations yet"}
           </div>
         )}
       </div>
 
       {/* Stats */}
       <div className="text-sm text-gray-500">
-        Showing {filteredItems.length} claim{filteredItems.length !== 1 ? 's' : ''}
+        Showing {filteredItems.length} claim
+        {filteredItems.length !== 1 ? "s" : ""}
         {searchQuery && items.length !== filteredItems.length && (
           <span> (filtered from {items.length})</span>
         )}
@@ -220,6 +241,8 @@ export function ClaimEvaluationsList() {
 }
 
 function ClaimCard({ item }: { item: ClaimEvaluation }) {
+  const [showErrorPopover, setShowErrorPopover] = useState(false);
+
   // summaryMean is already 0-100, no need to multiply by 100
   const agreementPercent = item.summaryMean
     ? Math.round(item.summaryMean)
@@ -227,52 +250,103 @@ function ClaimCard({ item }: { item: ClaimEvaluation }) {
 
   const agreementColor =
     agreementPercent === null
-      ? 'text-gray-400'
+      ? "text-gray-400"
       : agreementPercent >= 70
-        ? 'text-green-600'
+        ? "text-green-600"
         : agreementPercent <= 30
-          ? 'text-red-600'
-          : 'text-yellow-600';
+          ? "text-red-600"
+          : "text-yellow-600";
 
   // Count total evaluations from rawOutput
   const evaluationCount = item.rawOutput?.evaluations?.length || 0;
 
+  // Calculate success/failure counts
+  const failedCount = item.rawOutput?.evaluations
+    ? item.rawOutput.evaluations.filter((e) => e.hasError).length
+    : 0;
+  const successCount = evaluationCount - failedCount;
+  const successRate = evaluationCount > 0 ? successCount / evaluationCount : 1;
+
+  // Helper to get color based on agreement score
+  const getAgreementColor = (agreement: number): string => {
+    if (agreement >= 70) return "#22c55e"; // green-500
+    if (agreement >= 50) return "#eab308"; // yellow-500
+    if (agreement >= 30) return "#f97316"; // orange-500
+    return "#ef4444"; // red-500
+  };
+
+  // Sort evaluations: failed first, then by agreement (low to high)
+  const sortedEvaluations = item.rawOutput?.evaluations
+    ? [...item.rawOutput.evaluations].sort((a, b) => {
+        // Failed items first
+        if (a.hasError && !b.hasError) return -1;
+        if (!a.hasError && b.hasError) return 1;
+
+        // Both successful or both failed - sort by agreement (low to high)
+        const aAgreement = a.successfulResponse?.agreement ?? 50;
+        const bAgreement = b.successfulResponse?.agreement ?? 50;
+        return aAgreement - bAgreement;
+      })
+    : [];
+
   return (
     <Link
       href={`/claim-evaluations/${item.id}`}
-      className="block border-b border-gray-200 p-4 transition-colors hover:bg-gray-50"
+      className="block rounded-lg bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100"
       style={{ height: `${ITEM_HEIGHT}px` }}
     >
-      <div className="flex h-full items-start justify-between gap-4">
+      <div className="flex h-full items-center justify-between gap-4">
+        {/* Claim text - clickable, truncated to single line */}
         <div className="flex-1 overflow-hidden">
-          <p className="mb-1 line-clamp-2 font-medium text-gray-900">{item.claim}</p>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <span>
-              {new Date(item.createdAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-            {evaluationCount > 0 && (
-              <>
-                <span>•</span>
-                <span>{evaluationCount} {evaluationCount === 1 ? 'evaluation' : 'evaluations'}</span>
-              </>
-            )}
-          </div>
+          <p className="truncate text-sm font-medium text-gray-900 hover:text-indigo-600">
+            {item.claim}
+          </p>
         </div>
 
-        {agreementPercent !== null && (
-          <div className="flex-shrink-0 text-right">
-            <div className={`text-2xl font-bold ${agreementColor}`}>
-              {agreementPercent}%
+        {/* Evaluation count and agreement */}
+        <div className="flex flex-shrink-0 items-center gap-3">
+          {/* Line visualization for each evaluation */}
+          {sortedEvaluations.length > 0 && (
+            <div
+              className="flex items-center gap-0.5 opacity-20 transition-opacity hover:opacity-100"
+              style={
+                sortedEvaluations.length > 5
+                  ? {
+                      flexWrap: "wrap-reverse",
+                      flexDirection: "row-reverse",
+                      maxWidth: "60px", // Approximately 5 dots per row
+                    }
+                  : undefined
+              }
+            >
+              {(sortedEvaluations.length > 5
+                ? [...sortedEvaluations].reverse()
+                : sortedEvaluations
+              ).map((evaluation, idx) => (
+                <div
+                  key={idx}
+                  className="h-2 w-2 rounded-sm"
+                  style={{
+                    backgroundColor: evaluation.hasError
+                      ? "#9ca3af" // gray-400 for errors
+                      : getAgreementColor(
+                          evaluation.successfulResponse?.agreement ?? 50
+                        ),
+                  }}
+                  title={
+                    evaluation.hasError
+                      ? "Failed"
+                      : `${evaluation.successfulResponse?.agreement}% agreement`
+                  }
+                />
+              ))}
             </div>
-            <div className="text-xs text-gray-500">agreement</div>
+          )}
+
+          <div className={`text-sm font-bold ${agreementColor} w-6 text-right`}>
+            {agreementPercent !== null ? agreementPercent : ""}
           </div>
-        )}
+        </div>
       </div>
     </Link>
   );
