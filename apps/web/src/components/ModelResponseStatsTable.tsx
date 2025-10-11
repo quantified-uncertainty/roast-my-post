@@ -136,6 +136,42 @@ export function ModelResponseStatsTable({ evaluations }: ModelResponseStatsTable
               );
             })}
           </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-gray-300 bg-gray-50">
+              <td className="px-4 py-3 text-gray-900">
+                Total
+              </td>
+              <td className="px-4 py-3 text-right text-gray-900">
+                {(() => {
+                  const maxTime = Math.max(
+                    ...sortedEvaluations
+                      .map(e => e.responseTimeMs)
+                      .filter((t): t is number => t !== undefined)
+                  );
+                  return maxTime > 0 ? (maxTime / 1000).toFixed(2) : '-';
+                })()}
+              </td>
+              <td className="px-4 py-3 text-right text-gray-700">
+                -
+              </td>
+              <td className="px-4 py-3 text-right text-gray-700">
+                -
+              </td>
+              <td className="px-4 py-3 text-right text-gray-900">
+                {(() => {
+                  const totalCost = sortedEvaluations.reduce((sum, e) => {
+                    const cost = calculateCost(
+                      e.tokenUsage?.promptTokens,
+                      e.tokenUsage?.completionTokens,
+                      modelPricingMap[e.model]
+                    );
+                    return sum + (cost || 0);
+                  }, 0);
+                  return totalCost > 0 ? `$${totalCost.toFixed(6)}` : '-';
+                })()}
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>

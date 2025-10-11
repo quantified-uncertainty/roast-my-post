@@ -346,8 +346,14 @@ export interface ClaimEvaluationDisplayProps {
 }
 
 // Type aliases for grouped results
-type GroupedResults = Record<string, (EvaluationResult & { successfulResponse: SuccessfulResponse })[]>;
-type GroupedFailed = Record<string, (EvaluationResult & { failedResponse: FailedResponse })[]>;
+type GroupedResults = Record<
+  string,
+  (EvaluationResult & { successfulResponse: SuccessfulResponse })[]
+>;
+type GroupedFailed = Record<
+  string,
+  (EvaluationResult & { failedResponse: FailedResponse })[]
+>;
 
 export function ClaimEvaluationDisplay({
   result,
@@ -378,17 +384,15 @@ export function ClaimEvaluationDisplay({
   );
 
   // Convert failed evaluations to Opinion2DPoint format
-  const failedOpinions: Opinion2DPoint[] = failedEvaluations.map(
-    (f, i) => ({
-      id: `failed-${i}`,
-      name: f.model,
-      avatar: getModelAbbrev(f.model),
-      agreement: 0,
-      confidence: 0,
-      info: f.failedResponse.error,
-      refusalReason: f.failedResponse.refusalReason,
-    })
-  );
+  const failedOpinions: Opinion2DPoint[] = failedEvaluations.map((f, i) => ({
+    id: `failed-${i}`,
+    name: f.model,
+    avatar: getModelAbbrev(f.model),
+    agreement: 0,
+    confidence: 0,
+    info: f.failedResponse.error,
+    refusalReason: f.failedResponse.refusalReason,
+  }));
 
   // Combine successful and failed results
   const opinion2DData: Opinion2DPoint[] = [
@@ -396,27 +400,53 @@ export function ClaimEvaluationDisplay({
     ...failedOpinions,
   ];
 
-  // Group results by model (successful only)
-  const groupedResults: GroupedResults = successfulEvaluations.reduce((acc, r) => {
-    if (!acc[r.model]) {
-      acc[r.model] = [];
-    }
-    acc[r.model].push(r);
-    return acc;
-  }, {} as GroupedResults);
+  // Group ALL evaluations by model (both successful and failed)
+  type ModelGroup = {
+    modelId: string;
+    provider: string;
+    runs: (EvaluationResult & { successfulResponse: SuccessfulResponse })[];
+    failures: (EvaluationResult & { failedResponse: FailedResponse })[];
+  };
 
-  // Group failed results by model
-  const groupedFailed: GroupedFailed = failedEvaluations.reduce((acc, f) => {
-    if (!acc[f.model]) {
-      acc[f.model] = [];
-    }
-    acc[f.model].push(f);
-    return acc;
-  }, {} as GroupedFailed);
+  const allModelGroups: ModelGroup[] = Object.values(
+    result.evaluations.reduce(
+      (acc, evaluation) => {
+        const modelId = evaluation.model;
 
-  const hasMultipleRuns = Object.values(groupedResults).some(
-    (runs) => runs.length > 1
-  );
+        if (!acc[modelId]) {
+          acc[modelId] = {
+            modelId,
+            provider: evaluation.provider,
+            runs: [],
+            failures: [],
+          };
+        }
+
+        if (!evaluation.hasError && evaluation.successfulResponse) {
+          acc[modelId].runs.push(
+            evaluation as EvaluationResult & {
+              successfulResponse: SuccessfulResponse;
+            }
+          );
+        } else if (evaluation.hasError && evaluation.failedResponse) {
+          acc[modelId].failures.push(
+            evaluation as EvaluationResult & { failedResponse: FailedResponse }
+          );
+        }
+
+        return acc;
+      },
+      {} as Record<string, ModelGroup>
+    )
+  ).sort((a, b) => {
+    // Sort by provider first, then model name
+    if (a.provider !== b.provider) {
+      return a.provider.localeCompare(b.provider);
+    }
+    return a.modelId.localeCompare(b.modelId);
+  });
+
+  const hasMultipleRuns = allModelGroups.some((group) => group.runs.length > 1);
 
   return (
     <div className="space-y-6">
@@ -491,207 +521,219 @@ export function ClaimEvaluationDisplay({
           </pre>
         ) : (
           <div className="space-y-4">
-            {/* Successful Results */}
-            {Object.entries(groupedResults).map(
-            ([modelId, runs]: [string, any]) => {
-              const firstRun = runs[0];
+            {/* All Results - Sorted by provider then model */}
+            {allModelGroups.map((group) => {
+              if (group.runs.length > 0) {
+                const { modelId, runs } = group;
+                const firstRun = runs[0];
 
-              // Calculate stats for multiple runs
-              const agreements = runs.map((r: any) => r.successfulResponse.agreement);
-              const confidences = runs.map((r: any) => r.successfulResponse.confidence);
-              const avgAgreement =
-                agreements.reduce((a: number, b: number) => a + b, 0) /
-                agreements.length;
-              const avgConfidence =
-                confidences.reduce((a: number, b: number) => a + b, 0) /
-                confidences.length;
+                // Calculate stats for multiple runs
+                const agreements = runs.map(
+                  (r: any) => r.successfulResponse.agreement
+                );
+                const confidences = runs.map(
+                  (r: any) => r.successfulResponse.confidence
+                );
+                const avgAgreement =
+                  agreements.reduce((a: number, b: number) => a + b, 0) /
+                  agreements.length;
+                const avgConfidence =
+                  confidences.reduce((a: number, b: number) => a + b, 0) /
+                  confidences.length;
 
-              const { label, color } = getAgreementLabelAndColor(avgAgreement);
+                const { label, color } =
+                  getAgreementLabelAndColor(avgAgreement);
 
-              return (
-                <div key={modelId} className="rounded-lg border-2 p-4">
-                  {/* Model Header */}
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      <span className="text-lg font-medium">{modelId}</span>
-                      <span className="ml-2 text-sm text-gray-500">
-                        ({firstRun.provider})
-                      </span>
-                      {hasMultipleRuns && (
-                        <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
-                          {runs.length} {runs.length === 1 ? "run" : "runs"}
+                return (
+                  <div key={modelId} className="rounded-lg border-2 p-4">
+                    {/* Model Header */}
+                    <div className="mb-3 flex items-start justify-between">
+                      <div>
+                        <span className="text-lg font-medium">{modelId}</span>
+                        <span className="ml-2 text-sm text-gray-500">
+                          ({firstRun.provider})
                         </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`rounded-full border px-3 py-1 text-sm font-semibold ${color}`}
-                      >
-                        {label}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        ({Math.round(avgAgreement)}% avg)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Average Stats for Multiple Runs */}
-                  {hasMultipleRuns && runs.length > 1 && (
-                    <div className="mb-3 rounded bg-gray-50 p-3 text-sm">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <span className="text-gray-600">Avg Agreement:</span>
-                          <span className="ml-2 font-semibold">
-                            {Math.round(avgAgreement)}%
+                        {hasMultipleRuns && (
+                          <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                            {runs.length} {runs.length === 1 ? "run" : "runs"}
                           </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Avg Confidence:</span>
-                          <span className="ml-2 font-semibold">
-                            {Math.round(avgConfidence)}%
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">
-                            Agreement Range:
-                          </span>
-                          <span className="ml-2 font-semibold">
-                            {Math.min(...agreements)}%-{Math.max(...agreements)}
-                            %
-                          </span>
-                        </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-full border px-3 py-1 text-sm font-semibold ${color}`}
+                        >
+                          {label}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          ({Math.round(avgAgreement)}% avg)
+                        </span>
                       </div>
                     </div>
-                  )}
 
-                  {/* Individual Runs */}
-                  <div className="space-y-2">
-                    {runs.map((r: any, runIdx: number) => {
-                      return (
-                        <div
-                          key={runIdx}
-                          className={`rounded-lg p-3 ${hasMultipleRuns && runs.length > 1 ? "border bg-white" : ""}`}
-                        >
-                          {hasMultipleRuns && runs.length > 1 && (
-                            <div className="mb-2 text-xs font-semibold text-gray-500">
-                              Run #{runIdx + 1}
-                            </div>
-                          )}
-                          <div className="mb-2 flex items-center gap-4 text-sm">
+                    {/* Average Stats for Multiple Runs */}
+                    {hasMultipleRuns && runs.length > 1 && (
+                      <div className="mb-3 rounded bg-gray-50 p-3 text-sm">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
                             <span className="text-gray-600">
-                              Agreement:{" "}
-                              <span className="font-semibold text-gray-900">
-                                {r.successfulResponse.agreement}%
-                              </span>
+                              Avg Agreement:
                             </span>
-                            <span className="text-gray-600">
-                              Confidence:{" "}
-                              <span className="font-semibold text-gray-900">
-                                {r.successfulResponse.confidence}%
-                              </span>
+                            <span className="ml-2 font-semibold">
+                              {Math.round(avgAgreement)}%
                             </span>
                           </div>
-                          <p className="text-sm italic text-gray-700">
-                            &ldquo;{r.successfulResponse.reasoning}&rdquo;
-                          </p>
-                          {r.thinkingText && (
-                            <details className="mt-2">
-                              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                                View extended reasoning
-                              </summary>
-                              <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
-                                {r.thinkingText}
-                              </div>
-                            </details>
-                          )}
+                          <div>
+                            <span className="text-gray-600">
+                              Avg Confidence:
+                            </span>
+                            <span className="ml-2 font-semibold">
+                              {Math.round(avgConfidence)}%
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">
+                              Agreement Range:
+                            </span>
+                            <span className="ml-2 font-semibold">
+                              {Math.min(...agreements)}%-
+                              {Math.max(...agreements)}%
+                            </span>
+                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            }
-          )}
-          {/* Failed Results */}
-          {Object.entries(groupedFailed).map(
-            ([modelId, failures]: [string, any]) => {
-              const firstFailure = failures[0];
-
-              // Get icon for refusal reason
-              const RefusalIcon = REFUSAL_ICONS[firstFailure.failedResponse.refusalReason as RefusalReason] || AlertTriangle;
-
-              return (
-                <div
-                  key={`failed-${modelId}`}
-                  className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4"
-                >
-                  {/* Model Header */}
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      <span className="text-lg font-medium">{modelId}</span>
-                      <span className="ml-2 text-sm text-gray-500">
-                        ({firstFailure.provider})
-                      </span>
-                      {failures.length > 1 && (
-                        <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-                          {failures.length} {failures.length === 1 ? "failure" : "failures"}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-red-500">
-                        <RefusalIcon size={20} />
                       </div>
-                      <span className="rounded-full border-2 border-red-400 bg-white px-3 py-1 text-sm font-semibold text-red-700">
-                        {firstFailure.failedResponse.refusalReason}
-                      </span>
+                    )}
+
+                    {/* Individual Runs */}
+                    <div className="space-y-2">
+                      {runs.map((r: any, runIdx: number) => {
+                        return (
+                          <div
+                            key={runIdx}
+                            className={`rounded-lg p-3 ${hasMultipleRuns && runs.length > 1 ? "border bg-white" : ""}`}
+                          >
+                            {hasMultipleRuns && runs.length > 1 && (
+                              <div className="mb-2 text-xs font-semibold text-gray-500">
+                                Run #{runIdx + 1}
+                              </div>
+                            )}
+                            <div className="mb-2 flex items-center gap-4 text-sm">
+                              <span className="text-gray-600">
+                                Agreement:{" "}
+                                <span className="font-semibold text-gray-900">
+                                  {r.successfulResponse.agreement}%
+                                </span>
+                              </span>
+                              <span className="text-gray-600">
+                                Confidence:{" "}
+                                <span className="font-semibold text-gray-900">
+                                  {r.successfulResponse.confidence}%
+                                </span>
+                              </span>
+                            </div>
+                            <p className="text-sm italic text-gray-700">
+                              &ldquo;{r.successfulResponse.reasoning}&rdquo;
+                            </p>
+                            {r.thinkingText && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                                  View extended reasoning
+                                </summary>
+                                <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
+                                  {r.thinkingText}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
+                );
+              } else if (group.failures.length > 0) {
+                // Failed result
+                const { modelId, failures } = group;
+                const firstFailure = failures[0];
 
-                  {/* Individual Failures */}
-                  <div className="space-y-2">
-                    {failures.map((f: any, failIdx: number) => {
-                      return (
-                        <div
-                          key={failIdx}
-                          className={`rounded-lg p-3 ${failures.length > 1 ? "border border-gray-200 bg-white" : ""}`}
-                        >
-                          {failures.length > 1 && (
-                            <div className="mb-2 text-xs font-semibold text-gray-500">
-                              Failure #{failIdx + 1}
-                            </div>
-                          )}
-                          <p className="text-sm italic text-gray-700">
-                            &ldquo;{f.failedResponse.error}&rdquo;
-                          </p>
-                          {f.rawResponse && (
-                            <details className="mt-2">
-                              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                                View raw response
-                              </summary>
-                              <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
-                                {f.rawResponse}
-                              </div>
-                            </details>
-                          )}
-                          {f.failedResponse.errorDetails && (
-                            <details className="mt-2">
-                              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                                View error details
-                              </summary>
-                              <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
-                                {f.failedResponse.errorDetails}
-                              </div>
-                            </details>
-                          )}
+                // Get icon for refusal reason
+                const RefusalIcon =
+                  REFUSAL_ICONS[
+                    firstFailure.failedResponse.refusalReason as RefusalReason
+                  ] || AlertTriangle;
+
+                return (
+                  <div
+                    key={`failed-${modelId}`}
+                    className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4"
+                  >
+                    {/* Model Header */}
+                    <div className="mb-3 flex items-start justify-between">
+                      <div>
+                        <span className="text-lg font-medium">{modelId}</span>
+                        <span className="ml-2 text-sm text-gray-500">
+                          ({firstFailure.provider})
+                        </span>
+                        {failures.length > 1 && (
+                          <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                            {failures.length}{" "}
+                            {failures.length === 1 ? "failure" : "failures"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-red-500">
+                          <RefusalIcon size={20} />
                         </div>
-                      );
-                    })}
+                        <span className="rounded-full border-2 border-red-400 bg-white px-3 py-1 text-sm font-semibold text-red-700">
+                          {firstFailure.failedResponse.refusalReason}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Individual Failures */}
+                    <div className="space-y-2">
+                      {failures.map((f: any, failIdx: number) => {
+                        return (
+                          <div
+                            key={failIdx}
+                            className={`rounded-lg p-3 ${failures.length > 1 ? "border border-gray-200 bg-white" : ""}`}
+                          >
+                            {failures.length > 1 && (
+                              <div className="mb-2 text-xs font-semibold text-gray-500">
+                                Failure #{failIdx + 1}
+                              </div>
+                            )}
+                            <p className="text-sm italic text-gray-700">
+                              &ldquo;{f.failedResponse.error}&rdquo;
+                            </p>
+                            {f.rawResponse && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                                  View raw response
+                                </summary>
+                                <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
+                                  {f.rawResponse}
+                                </div>
+                              </details>
+                            )}
+                            {f.failedResponse.errorDetails && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                                  View error details
+                                </summary>
+                                <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">
+                                  {f.failedResponse.errorDetails}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            }
-          )}
+                );
+              }
+            })}
           </div>
         )}
       </div>

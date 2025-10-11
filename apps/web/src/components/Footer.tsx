@@ -41,6 +41,11 @@ export default function Footer() {
                   Help & Docs
                 </Link>
               </li>
+              <li>
+                <Link href="/claim-evaluations" className="text-sm text-gray-600 hover:text-gray-900">
+                  Claim Evaluations
+                </Link>
+              </li>
             </ul>
           </div>
 
