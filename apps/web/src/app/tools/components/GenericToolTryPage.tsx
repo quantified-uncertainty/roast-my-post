@@ -9,6 +9,7 @@ import { AuthenticatedToolPage } from './AuthenticatedToolPage';
 import { FieldConfig } from './types';
 import { HelpCircle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput = unknown> {
   toolId: keyof typeof toolSchemas;
@@ -27,6 +28,10 @@ export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput =
   onBeforeSubmit?: (input: TInput) => TInput;
   warning?: string;
   hideViewToggle?: boolean;
+  generatePrompt?: (input: TInput) => string; // Optional function to generate prompt for preview
+  onSaveResult?: (result: TOutput, input: TInput) => Promise<{ id: string }>;
+  saveButtonText?: string;
+  getSavedResultUrl?: (id: string) => string;
 }
 
 /**
@@ -50,6 +55,10 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   onBeforeSubmit,
   warning,
   hideViewToggle = false,
+  generatePrompt,
+  onSaveResult,
+  saveButtonText = 'Save',
+  getSavedResultUrl,
 }: GenericToolTryPageProps<TInput, TOutput>) {
   // Initialize form state
   const getInitialValues = (): TInput => {
@@ -70,9 +79,13 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
     });
     return values as TInput;
   };
-  
+
   const [formData, setFormData] = useState<TInput>(getInitialValues());
   const [showRawJSON, setShowRawJSON] = useState(false);
+  const [showPromptModal, setShowPromptModal] = useState(false);
+  const [promptContent, setPromptContent] = useState<string>('');
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Use the hook for state management and execution
   const { result, isLoading, error, execute } = useToolExecution<TInput, TOutput>(
@@ -88,6 +101,23 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
     e.preventDefault();
     const processedData = onBeforeSubmit ? onBeforeSubmit(formData) : formData;
     execute(processedData);
+    // Reset saved state when running a new evaluation
+    setSavedId(null);
+  };
+
+  const handleSave = async () => {
+    if (!result || !onSaveResult) return;
+
+    setIsSaving(true);
+    try {
+      const { id } = await onSaveResult(result, formData);
+      setSavedId(id);
+    } catch (err) {
+      console.error('Failed to save result:', err);
+      // Could add error toast here
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const handleFieldChange = (name: string, value: string | number | boolean | string[]) => {
@@ -97,7 +127,15 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   const loadExample = (example: Partial<TInput>) => {
     setFormData(prev => ({ ...prev, ...example }));
   };
-  
+
+  const handleShowPrompt = () => {
+    if (generatePrompt) {
+      const prompt = generatePrompt(formData);
+      setPromptContent(prompt);
+      setShowPromptModal(true);
+    }
+  };
+
   // Check if form is valid for submission
   const isFormValid = () => {
     for (const field of fields) {
@@ -154,6 +192,15 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
                   ))}
                 </div>
               </div>
+            )}
+            {field.showPromptLink && generatePrompt && (
+              <button
+                type="button"
+                onClick={handleShowPrompt}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                See prompt
+              </button>
             )}
           </div>
         );
@@ -227,9 +274,18 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             {field.helperText && (
               <p className="mt-1 text-sm text-gray-500">{field.helperText}</p>
             )}
+            {field.showPromptLink && generatePrompt && (
+              <button
+                type="button"
+                onClick={handleShowPrompt}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                See prompt
+              </button>
+            )}
           </div>
         );
-        
+
       case 'select':
         return (
           <div key={field.name}>
@@ -392,29 +448,63 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
 
           {result && (
             <div className="mt-8" data-testid="tool-result">
-              {/* View Toggle - only show if not hidden */}
-              {!hideViewToggle && (
-                <div className="mb-4 flex gap-2">
-                  <button
-                    onClick={() => setShowRawJSON(false)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      !showRawJSON
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    Visual View
-                  </button>
-                  <button
-                    onClick={() => setShowRawJSON(true)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      showRawJSON
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    Raw JSON
-                  </button>
+              {/* View Toggle and Save Button */}
+              {(!hideViewToggle || onSaveResult) && (
+                <div className="mb-4 flex gap-2 justify-between items-center">
+                  {!hideViewToggle && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowRawJSON(false)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          !showRawJSON
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        Visual View
+                      </button>
+                      <button
+                        onClick={() => setShowRawJSON(true)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          showRawJSON
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        Raw JSON
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Spacer when hideViewToggle but have save button */}
+                  {hideViewToggle && onSaveResult && <div />}
+
+                  {/* Save Button */}
+                  {onSaveResult && (
+                    <div className="flex gap-2 items-center">
+                      {savedId ? (
+                        <>
+                          <span className="text-sm text-green-600">✓ Saved</span>
+                          {getSavedResultUrl && (
+                            <a
+                              href={getSavedResultUrl(savedId)}
+                              className="px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                            >
+                              View Saved
+                            </a>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          onClick={handleSave}
+                          disabled={isSaving}
+                          className="px-4 py-2 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSaving ? 'Saving...' : saveButtonText}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -432,6 +522,20 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             </div>
           )}
         </div>
+
+        {/* Prompt Preview Modal */}
+        <Dialog open={showPromptModal} onOpenChange={setShowPromptModal}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Prompt Preview</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <pre className="whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm border border-gray-200">
+                {promptContent}
+              </pre>
+            </div>
+          </DialogContent>
+        </Dialog>
       </ToolPageLayout>
     </AuthenticatedToolPage>
   );

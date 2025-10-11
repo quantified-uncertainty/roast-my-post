@@ -15,4 +15,5 @@ export interface FieldConfig {
   examples?: string[];
   className?: string;
   valueType?: 'string' | 'number'; // For select fields: convert value to number if 'number'
+  showPromptLink?: boolean; // Show "See prompt" link below this field
 }
