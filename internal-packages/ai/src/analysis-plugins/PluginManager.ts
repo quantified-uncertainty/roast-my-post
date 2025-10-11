@@ -24,24 +24,15 @@ import {
   PluginRegistry,
   PluginRouter,
 } from "./core";
-import {
-  type JobLogSummary,
-  PluginLogger,
-} from "./PluginLogger";
+import { type JobLogSummary, PluginLogger } from "./PluginLogger";
 import { FactCheckPlugin } from "./plugins/fact-check";
 import { ForecastPlugin } from "./plugins/forecast";
 import { LinkPlugin } from "./plugins/link-analysis";
 // Import all plugins
 import { MathPlugin } from "./plugins/math";
 import { SpellingPlugin } from "./plugins/spelling";
-import {
-  AnalysisResult,
-  SimpleAnalysisPlugin,
-} from "./types";
-import {
-  type PluginSelection,
-  PluginType,
-} from "./types/plugin-types";
+import { AnalysisResult, SimpleAnalysisPlugin } from "./types";
+import { type PluginSelection, PluginType } from "./types/plugin-types";
 import { createChunksWithTool } from "./utils/createChunksWithTool";
 
 export interface PluginManagerConfig {
@@ -166,6 +157,7 @@ export class PluginManager {
 
     // Wrap in session tracking if available
     const runAnalysis = async () => {
+      console.log(`runAnalysis: this.sessionManager = ${this.sessionManager}`);
       if (this.sessionManager) {
         return this.sessionManager.withPath("/plugins", undefined, async () => {
           return this._runPluginAnalysis(text, plugins);
@@ -368,6 +360,9 @@ export class PluginManager {
 
             // Wrap plugin execution in session tracking
             const executePlugin = async () => {
+              console.log(`            const executePlugin = async () => {
+: this.sessionManager = ${this.sessionManager}`);
+
               if (this.sessionManager) {
                 // Use withPath instead of trackPlugin since we're already inside /plugins
                 return this.sessionManager.withPath(

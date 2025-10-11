@@ -66,6 +66,7 @@ export async function fetchDetailedJobCostFromHelicone(jobId: string): Promise<J
   try {
     // Get raw requests to access prompt/completion token breakdown
     const requests = await heliconeAPI.getSessionRequests(jobId);
+    console.log(`Job ${jobId}: fetched ${requests.length} requests from Helicone`);
     
     let totalCostUSD = 0;
     let promptTokens = 0;
@@ -75,21 +76,33 @@ export async function fetchDetailedJobCostFromHelicone(jobId: string): Promise<J
     // Group by model for breakdown
     const modelStats = new Map<string, { cost: number; tokens: number; count: number }>();
     
-    requests.forEach(req => {
+    requests.forEach((req, index) => {
       // Helicone returns costUSD, not cost
-      totalCostUSD += req.costUSD || 0;
-      promptTokens += req.prompt_tokens || 0;
-      completionTokens += req.completion_tokens || 0;
-      totalTokens += req.total_tokens || 0;
-      
+      const cost = req.costUSD || 0;
+      const pTokens = req.prompt_tokens || 0;
+      const cTokens = req.completion_tokens || 0;
+      const tTokens = req.total_tokens || 0;
+      console.log(
+        `Job ${jobId} req ${index + 1}: cost=${cost}, pTokens=${pTokens}, cTokens=${cTokens}, tTokens=${tTokens}`
+      );
+
+      totalCostUSD += cost;
+      promptTokens += pTokens;
+      completionTokens += cTokens;
+      totalTokens += tTokens;
+
       // Update model breakdown
       const existing = modelStats.get(req.model) || { cost: 0, tokens: 0, count: 0 };
       modelStats.set(req.model, {
-        cost: existing.cost + (req.costUSD || 0),
-        tokens: existing.tokens + (req.total_tokens || 0),
+        cost: existing.cost + cost,
+        tokens: existing.tokens + tTokens,
         count: existing.count + 1
       });
     });
+
+    console.log(
+      `Job ${jobId} totals: cost=${totalCostUSD}, promptTokens=${promptTokens}, completionTokens=${completionTokens}, totalTokens=${totalTokens}`
+    );
     
     const breakdown = Array.from(modelStats.entries()).map(([model, stats]) => ({
       model,

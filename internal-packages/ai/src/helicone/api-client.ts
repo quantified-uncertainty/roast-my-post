@@ -159,33 +159,55 @@ export class HeliconeAPIClient {
     }>;
   }> {
     const requests = await this.getSessionRequests(sessionId);
+    console.log(`[Cost-Check] Fetched ${requests.length} requests for session: ${sessionId}`);
     
-    const totalCost = requests.reduce((sum, req) => sum + (req.costUSD || 0), 0);
-    const totalTokens = requests.reduce((sum, req) => sum + (req.total_tokens || 0), 0);
-    
-    // Group by model
+    let totalCost = 0;
+    let totalTokens = 0;
     const modelStats = new Map<string, { cost: number; tokens: number; count: number }>();
     
-    requests.forEach(req => {
+    console.log('[Cost-Check] --- Processing Individual Requests and Calculating Totals ---');
+    requests.forEach((req, i) => {
+      const reqCost = req.costUSD || 0;
+      const reqTokens = req.total_tokens || 0;
+
+      console.log(`[Cost-Check] Req ${i + 1}: Model=${req.model}, Cost=${reqCost}, Tokens=${reqTokens} (P: ${req.prompt_tokens || 0}, C: ${req.completion_tokens || 0})`);
+      
+      // Update running totals
+      totalCost += reqCost;
+      totalTokens += reqTokens;
+      console.log(`[Cost-Check]   -> Running Total: Cost=${totalCost.toFixed(6)}, Tokens=${totalTokens}`);
+      
+      // Update model stats
       const existing = modelStats.get(req.model) || { cost: 0, tokens: 0, count: 0 };
       modelStats.set(req.model, {
-        cost: existing.cost + (req.costUSD || 0),
-        tokens: existing.tokens + (req.total_tokens || 0),
+        cost: existing.cost + reqCost,
+        tokens: existing.tokens + reqTokens,
         count: existing.count + 1
       });
     });
+    console.log('[Cost-Check] --- End of Request Processing ---');
+
+    console.log('[Cost-Check] --- Intermediate Model Stats Map ---');
+    console.log(modelStats);
+    console.log('[Cost-Check] ------------------------------------');
 
     const breakdown = Array.from(modelStats.entries()).map(([model, stats]) => ({
       model,
       ...stats
     }));
 
-    return {
+    const result = {
       totalCost,
       totalTokens,
       requestCount: requests.length,
       breakdown
     };
+
+    console.log(`[Cost-Check] --- Aggregated Session Summary for ${sessionId} ---`);
+    console.log(JSON.stringify(result, null, 2));
+    console.log('[Cost-Check] -------------------------------------------------');
+
+    return result;
   }
 
   /**

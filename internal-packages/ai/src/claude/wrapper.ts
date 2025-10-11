@@ -95,6 +95,12 @@ export async function callClaude(
     ...baseHeaders,
     'Helicone-Cache-Seed': options.cacheSeed
   } : baseHeaders;
+
+  logger.info('[callClaude] headers and options', {
+    options,
+    baseHeaders,
+    heliconeHeaders,
+  });
   
   const anthropic = createAnthropicClient(heliconeHeaders);
   

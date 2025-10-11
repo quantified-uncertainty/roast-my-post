@@ -1,31 +1,25 @@
 /**
  * Job Orchestrator
- * 
+ *
  * Coordinates the complete job processing workflow.
  * Handles document analysis, evaluation creation, session management.
  * Now uses @roast/ai workflows directly instead of dependency injection.
  */
 
-import type { JobWithRelations, JobEntity } from '@roast/db';
-import { prisma } from '@roast/db';
-import type { JobService } from './JobService';
-import type { Logger, JobProcessingResult, Document } from '../types';
-import { 
+import type { JobWithRelations, JobEntity } from "@roast/db";
+import { prisma } from "@roast/db";
+import type { JobService } from "./JobService";
+import type { Logger, JobProcessingResult, Document } from "../types";
+import {
   analyzeDocument,
   type TaskResult,
   Agent,
   PluginType,
-  ANALYSIS_MODEL
-} from '@roast/ai';
-import {
-  calculateApiCostInDollars,
-  mapModelToCostModel,
-} from '@roast/ai';
-import {
-  HeliconeSessionManager,
-  setGlobalSessionManager,
-} from '@roast/ai';
-import { fetchJobCostWithRetry } from '@roast/ai';
+  ANALYSIS_MODEL,
+} from "@roast/ai";
+import { calculateApiCostInDollars, mapModelToCostModel } from "@roast/ai";
+import { HeliconeSessionManager, setGlobalSessionManager } from "@roast/ai";
+import { fetchJobCostWithRetry } from "@roast/ai";
 
 export interface JobOrchestratorInterface {
   processJob(job: JobWithRelations): Promise<JobProcessingResult>;
@@ -49,15 +43,15 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Check if job was cancelled before we start processing
       const currentJob = await prisma.job.findUnique({
         where: { id: job.id },
-        select: { status: true }
+        select: { status: true },
       });
-      
-      if (currentJob?.status === 'CANCELLED') {
+
+      if (currentJob?.status === "CANCELLED") {
         this.logger.info(`Job ${job.id} was cancelled, skipping processing`);
         return {
           success: false,
-          job: { ...job, status: 'CANCELLED' as any },
-          error: new Error('Job was cancelled'),
+          job: { ...job, status: "CANCELLED" as any },
+          error: new Error("Job was cancelled"),
         };
       }
 
@@ -69,9 +63,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
       // Execute document analysis using @roast/ai workflows
       const analysisResult = await this.executeAnalysis(
-        documentForAnalysis, 
-        agent, 
-        job.id, 
+        documentForAnalysis,
+        agent,
+        job.id,
         sessionManager
       );
 
@@ -79,14 +73,17 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       await this.saveAnalysisResults(job, analysisResult, agent);
 
       // Calculate costs and duration
-      const priceInDollars = await this.calculateJobCost(job.id, analysisResult.tasks);
+      const priceInDollars = await this.calculateJobCost(
+        job.id,
+        analysisResult.tasks
+      );
       const durationInSeconds = (Date.now() - startTime) / 1000;
 
       // Create execution log
       const logContent = this.createExecutionLog(
-        job, 
-        analysisResult, 
-        priceInDollars, 
+        job,
+        analysisResult,
+        priceInDollars,
         durationInSeconds,
         startTime
       );
@@ -102,21 +99,19 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       return {
         success: true,
         job: completedJob,
-        logFilename: `${new Date().toISOString().replace(/[:.]/g, '-')}-job-${job.id}.md`,
+        logFilename: `${new Date().toISOString().replace(/[:.]/g, "-")}-job-${job.id}.md`,
         logContent,
       };
-
     } catch (error) {
       this.logger.error(`Job ${job.id} processing failed:`, error);
-      
+
       const failedJob = await this.jobService.markAsFailed(job.id, error);
-      
+
       return {
         success: false,
         job: failedJob,
         error: error instanceof Error ? error : new Error(String(error)),
       };
-
     } finally {
       // Always clear session manager
       if (sessionManager) {
@@ -130,16 +125,16 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    */
   async run(): Promise<boolean> {
     try {
-      this.logger.info('🔍 Looking for pending jobs...');
+      this.logger.info("🔍 Looking for pending jobs...");
       const job = await this.jobService.claimNextPendingJob();
 
       if (!job) {
-        this.logger.info('✅ No pending jobs found.');
+        this.logger.info("✅ No pending jobs found.");
         return false;
       }
 
       const result = await this.processJob(job);
-      
+
       if (result.success) {
         this.logger.info(`✅ Job ${job.id} completed successfully`);
       } else {
@@ -157,41 +152,44 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   /**
    * Setup Helicone session tracking for the job
    */
-  private async setupSessionTracking(job: JobWithRelations): Promise<HeliconeSessionManager | undefined> {
+  private async setupSessionTracking(
+    job: JobWithRelations
+  ): Promise<HeliconeSessionManager | undefined> {
     try {
       const documentVersion = job.evaluation.document.versions[0];
       const agentVersion = job.evaluation.agent.versions[0];
-      
+
       if (documentVersion && agentVersion) {
         // Use originalJobId for retries to group them under the same session
         const sessionId = job.originalJobId || job.id;
-        const truncatedTitle = documentVersion.title.length > 50 
-          ? documentVersion.title.slice(0, 50) + '...' 
-          : documentVersion.title;
-        
+        const truncatedTitle =
+          documentVersion.title.length > 50
+            ? documentVersion.title.slice(0, 50) + "..."
+            : documentVersion.title;
+
         const sessionManager = HeliconeSessionManager.forJob(
           sessionId,
           `${agentVersion.name} evaluating ${truncatedTitle}`,
           {
             JobId: job.id,
-            JobAttempt: job.originalJobId ? 'retry' : 'initial',
+            JobAttempt: job.originalJobId ? "retry" : "initial",
             DocumentId: job.evaluation.document.id,
             AgentId: job.evaluation.agent.id,
             AgentVersion: agentVersion.version.toString(),
             EvaluationId: job.evaluation.id,
-            UserId: job.evaluation.agent.submittedBy?.id || 'anonymous',
+            UserId: job.evaluation.agent.submittedBy?.id || "anonymous",
           }
         );
-        
+
         // Set as global for automatic header propagation
         setGlobalSessionManager(sessionManager);
         return sessionManager;
       }
     } catch (error) {
-      this.logger.warn('⚠️ Failed to create Helicone session manager:', error);
+      this.logger.warn("⚠️ Failed to create Helicone session manager:", error);
       // Continue without session tracking rather than failing the job
     }
-    
+
     return undefined;
   }
 
@@ -203,11 +201,11 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     const agentVersion = job.evaluation.agent.versions[0];
 
     if (!documentVersion) {
-      throw new Error('Document version not found');
+      throw new Error("Document version not found");
     }
 
     if (!agentVersion) {
-      throw new Error('Agent version not found');
+      throw new Error("Agent version not found");
     }
 
     // Prepare document for analysis using Prisma's computed fullContent field
@@ -216,9 +214,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       slug: job.evaluation.document.id,
       title: documentVersion.title,
       content: documentVersion.fullContent, // Use computed field directly
-      author: documentVersion.authors.join(', '),
+      author: documentVersion.authors.join(", "),
       publishedDate: job.evaluation.document.publishedDate.toISOString(),
-      url: documentVersion.urls[0] || '',
+      url: documentVersion.urls[0] || "",
       platforms: documentVersion.platforms,
       reviews: [],
       intendedAgents: documentVersion.intendedAgents,
@@ -231,7 +229,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       version: agentVersion.version.toString(),
       description: agentVersion.description,
       primaryInstructions: agentVersion.primaryInstructions || undefined,
-      selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
+      selfCritiqueInstructions:
+        agentVersion.selfCritiqueInstructions || undefined,
       providesGrades: agentVersion.providesGrades || false,
       extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
       pluginIds: (agentVersion.pluginIds || []) as PluginType[], // Cast to PluginType[] since DB stores as strings
@@ -244,14 +243,14 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * Execute the document analysis workflow
    */
   private async executeAnalysis(
-    documentForAnalysis: Document, 
-    agent: Agent, 
-    jobId: string, 
+    documentForAnalysis: Document,
+    agent: Agent,
+    jobId: string,
     sessionManager?: HeliconeSessionManager
   ) {
     // Track the analysis phase with session manager
-    return await (sessionManager 
-      ? sessionManager.trackAnalysis('document', async () => {
+    return await (sessionManager
+      ? sessionManager.trackAnalysis("document", async () => {
           return analyzeDocument(documentForAnalysis, agent, 500, 5, jobId);
         })
       : analyzeDocument(documentForAnalysis, agent, 500, 5, jobId));
@@ -260,18 +259,22 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   /**
    * Save analysis results to database
    */
-  private async saveAnalysisResults(job: JobWithRelations, analysisResult: any, agent: Agent) {
+  private async saveAnalysisResults(
+    job: JobWithRelations,
+    analysisResult: any,
+    agent: Agent
+  ) {
     const { tasks, ...evaluationOutputs } = analysisResult;
 
     // Get the latest version number for this evaluation
     const latestEvaluationVersion = await prisma.evaluationVersion.findFirst({
       where: { evaluationId: job.evaluation.id },
-      orderBy: { version: 'desc' },
+      orderBy: { version: "desc" },
       select: { version: true },
     });
-    
-    const nextVersion = latestEvaluationVersion?.version 
-      ? latestEvaluationVersion.version + 1 
+
+    const nextVersion = latestEvaluationVersion?.version
+      ? latestEvaluationVersion.version + 1
       : 1;
 
     const documentVersion = job.evaluation.document.versions[0];
@@ -316,7 +319,11 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     if (highlights.length > 0) {
       // Use fullContent (which includes markdownPrepend) for validation
       // since highlights were generated based on the full content
-      await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.fullContent);
+      await this.saveHighlights(
+        highlights,
+        evaluationVersion.id,
+        documentVersion.fullContent
+      );
       this.logger.info(`Saved ${highlights.length} highlights for evaluation`, {
         evaluationId: job.evaluation.id,
         highlightCount: highlights.length,
@@ -326,11 +333,15 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
   /**
    * Save highlights with validation
-   * 
+   *
    * Note: Highlights are linked to evaluations through comments (not directly).
    * This ensures every highlight has an associated comment for context.
    */
-  private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string) {
+  private async saveHighlights(
+    highlights: any[],
+    evaluationVersionId: string,
+    fullContent: string
+  ) {
     if (!highlights || highlights.length === 0) {
       return;
     }
@@ -339,17 +350,17 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Validate highlight by checking if quotedText matches document at specified offsets
       let isValid = true;
       let error: string | null = null;
-      
+
       if (!comment.highlight) {
         isValid = false;
-        error = 'Highlight is missing';
+        error = "Highlight is missing";
       } else {
         try {
           const actualText = fullContent.slice(
-            comment.highlight.startOffset, 
+            comment.highlight.startOffset,
             comment.highlight.endOffset
           );
-          
+
           if (actualText !== comment.highlight.quotedText) {
             isValid = false;
             error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
@@ -365,7 +376,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Only create highlight if we have highlight data
       if (!comment.highlight) {
         // Skip this comment if no highlight data
-        this.logger.warn(`Skipping comment without highlight data: ${comment.description}`);
+        this.logger.warn(
+          `Skipping comment without highlight data: ${comment.description}`
+        );
         continue;
       }
 
@@ -384,7 +397,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Create comment linked to highlight
       await prisma.evaluationComment.create({
         data: {
-          description: comment.description || 'No description',
+          description: comment.description || "No description",
           importance: comment.importance || null,
           grade: comment.grade || null,
           header: comment.header || null,
@@ -406,20 +419,33 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
     // Calculate cost from tasks
     for (const task of tasks) {
-      totalCost += task.priceInDollars || 0;
+      const price = task.priceInDollars || 0;
+      this.logger.info(`Job ${jobId}: task cost: ${price}`);
+      totalCost += price;
     }
+    this.logger.info(`Job ${jobId}: total from tasks: ${totalCost}`);
 
     // Try to get more accurate cost from Helicone if available
     try {
       const heliconeCostData = await fetchJobCostWithRetry(jobId);
-      if (heliconeCostData !== null && heliconeCostData.totalCostUSD > 0) {
-        // Use Helicone cost if available and non-zero
-        return heliconeCostData.totalCostUSD;
+      if (heliconeCostData !== null) {
+        this.logger.info(
+          `Job ${jobId}: helicone cost: ${heliconeCostData.totalCostUSD}`
+        );
+        if (heliconeCostData.totalCostUSD > 0) {
+          // Use Helicone cost if available and non-zero
+          return heliconeCostData.totalCostUSD;
+        }
+      } else {
+        this.logger.info(`Job ${jobId}: no helicone cost data`);
       }
     } catch (error) {
-      this.logger.warn('Failed to fetch Helicone cost, using calculated cost', { error });
+      this.logger.warn("Failed to fetch Helicone cost, using calculated cost", {
+        error,
+      });
     }
 
+    this.logger.info(`Job ${jobId}: final cost: ${totalCost}`);
     return totalCost;
   }
 
@@ -435,7 +461,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   ): string {
     const documentVersion = job.evaluation.document.versions[0];
     const agentVersion = job.evaluation.agent.versions[0];
-    
+
     const log = [
       `# Job Execution Log`,
       ``,
@@ -451,8 +477,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       ``,
       `## Analysis Summary`,
       `- Highlights generated: ${analysisResult.highlights?.length || 0}`,
-      `- Grade: ${analysisResult.grade || 'N/A'}`,
-      `- Self-critique: ${analysisResult.selfCritique ? 'Yes' : 'No'}`,
+      `- Grade: ${analysisResult.grade || "N/A"}`,
+      `- Self-critique: ${analysisResult.selfCritique ? "Yes" : "No"}`,
       ``,
       `## Task Breakdown`,
     ];
@@ -467,6 +493,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       }
     }
 
-    return log.join('\n');
+    return log.join("\n");
   }
 }

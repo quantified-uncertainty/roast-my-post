@@ -25,6 +25,7 @@ export class HeliconeSessionManager {
     private currentPath: string = '/',
     private currentProperties: Record<string, string>[] = []
   ) {
+    console.log(`[Helicone] new manager created for session: ${config.sessionId}, path: ${currentPath}`);
     // Validate session ID on construction
     if (!/^[\w-]+$/.test(config.sessionId)) {
       throw new Error(`Invalid session ID: ${config.sessionId}`);
@@ -40,6 +41,7 @@ export class HeliconeSessionManager {
     properties: Record<string, string> | undefined,
     fn: () => Promise<T>
   ): Promise<T> {
+    console.log(`[Helicone] withPath called for session ${this.config.sessionId}. Extending path with: ${path}`);
     // Validate path format - must start with /, contain only alphanumeric/hyphen/underscore, no double slashes
     if (!/^\/[\w\-]+(\/[\w\-]+)*$/.test(path) && path !== '/') {
       throw new Error(`Invalid path format: ${path}`);
@@ -47,6 +49,7 @@ export class HeliconeSessionManager {
     
     // Create new immutable path
     const newPath = this.currentPath === '/' ? path : this.currentPath + path;
+    console.log(`[Helicone] withPath new path for session ${this.config.sessionId}: ${newPath}`);
     
     // Create new immutable properties array
     const newProperties = properties 
@@ -69,6 +72,7 @@ export class HeliconeSessionManager {
       return await fn();
     } finally {
       // Restore previous global manager
+      console.log(`[Helicone] withPath restoring previous manager for session ${this.config.sessionId}`);
       setGlobalSessionManager(previousManager);
     }
   }
@@ -78,6 +82,7 @@ export class HeliconeSessionManager {
    * Call this when making API requests
    */
   getHeaders(): Record<string, string> {
+    console.log(`[Helicone] getHeaders called for session ${this.config.sessionId}, path: ${this.currentPath}`);
     const headers: Record<string, string> = {
       "Helicone-Session-Id": this.config.sessionId,
       "Helicone-Session-Name": this.sanitizeHeaderValue(this.config.sessionName),
@@ -99,6 +104,7 @@ export class HeliconeSessionManager {
       this.addProperties(headers, props);
     }
     
+    console.log(`[Helicone] getHeaders generated for session ${this.config.sessionId}:`, headers);
     return headers;
   }
   
@@ -117,6 +123,7 @@ export class HeliconeSessionManager {
     jobName: string,
     properties?: Record<string, string>
   ): HeliconeSessionManager {
+    console.log(`[Helicone] forJob creating manager for job: ${jobId}, name: ${jobName}`);
     return new HeliconeSessionManager({
       sessionId: jobId,
       sessionName: jobName,
@@ -131,10 +138,12 @@ export class HeliconeSessionManager {
     pluginName: string,
     fn: () => Promise<T>
   ): Promise<T> {
+    console.log(`[Helicone] trackPlugin called for ${pluginName}`);
     // Use global manager if it exists and is different from 'this'
     // This allows nested calls to build on the current path
     const globalManager = getGlobalSessionManager();
     const managerToUse = (globalManager && globalManager !== this) ? globalManager : this;
+    console.log(`[Helicone] trackPlugin using ${globalManager && globalManager !== this ? 'global' : 'local'} manager for session ${managerToUse.config.sessionId}`);
     return managerToUse.withPath(`/plugins/${pluginName}`, { plugin: pluginName }, fn);
   }
   
@@ -142,10 +151,12 @@ export class HeliconeSessionManager {
     toolName: string,
     fn: () => Promise<T>
   ): Promise<T> {
+    console.log(`[Helicone] trackTool called for ${toolName}`);
     // Use global manager if it exists and is different from 'this'
     // This allows nested calls to build on the current path
     const globalManager = getGlobalSessionManager();
     const managerToUse = (globalManager && globalManager !== this) ? globalManager : this;
+    console.log(`[Helicone] trackTool using ${globalManager && globalManager !== this ? 'global' : 'local'} manager for session ${managerToUse.config.sessionId}`);
     return managerToUse.withPath(`/tools/${toolName}`, { tool: toolName }, fn);
   }
   
@@ -153,10 +164,12 @@ export class HeliconeSessionManager {
     analysisType: string,
     fn: () => Promise<T>
   ): Promise<T> {
+    console.log(`[Helicone] trackAnalysis called for ${analysisType}`);
     // Use global manager if it exists and is different from 'this'
     // This allows nested calls to build on the current path
     const globalManager = getGlobalSessionManager();
     const managerToUse = (globalManager && globalManager !== this) ? globalManager : this;
+    console.log(`[Helicone] trackAnalysis using ${globalManager && globalManager !== this ? 'global' : 'local'} manager for session ${managerToUse.config.sessionId}`);
     return managerToUse.withPath(`/analysis/${analysisType}`, { analysis: analysisType }, fn);
   }
   
@@ -198,10 +211,17 @@ export class HeliconeSessionManager {
 let globalSessionManager: HeliconeSessionManager | undefined;
 
 export function setGlobalSessionManager(manager: HeliconeSessionManager | undefined) {
+  if (manager) {
+    console.log(`[Helicone] setGlobalSessionManager: SET to session ${manager.config.sessionId}`);
+  } else {
+    const oldSessionId = globalSessionManager?.config.sessionId;
+    console.log(`[Helicone] setGlobalSessionManager: CLEARED (was session ${oldSessionId || 'none'})`);
+  }
   globalSessionManager = manager;
 }
 
 export function getGlobalSessionManager(): HeliconeSessionManager | undefined {
+  console.log(`[Helicone] getGlobalSessionManager called. Current session: ${globalSessionManager?.config.sessionId || 'none'}`);
   return globalSessionManager;
 }
 
@@ -210,5 +230,6 @@ export function getGlobalSessionManager(): HeliconeSessionManager | undefined {
  * Returns empty object if no session is active
  */
 export function getCurrentHeliconeHeaders(): Record<string, string> {
+  console.log(`[Helicone] getCurrentHeliconeHeaders called for session: ${globalSessionManager?.config.sessionId || 'none'}`);
   return globalSessionManager?.getHeaders() || {};
 }
