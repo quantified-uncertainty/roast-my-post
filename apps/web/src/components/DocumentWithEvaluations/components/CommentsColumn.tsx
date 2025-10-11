@@ -7,6 +7,7 @@ import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 import { COMMENT_COLUMN_WIDTH } from "../constants";
+import { useColumnMinHeight } from "../hooks/comments/useColumnMinHeight";
 // import type { EvaluationState } from "../types";
 
 import { PositionedComment } from "./PositionedComment";
@@ -94,6 +95,12 @@ export function CommentsColumn({
     enabled: highlightsReady || isPartialReady,
   });
 
+  // Compute minimum height using the dedicated hook
+  const columnMinHeightPx = useColumnMinHeight({
+    comments: sortedComments,
+    commentPositions,
+  });
+
   // Memoize comment conversion to avoid repeated conversions
   const convertedComments = useMemo(() => {
     return visibleComments.map(({ item }) => dbCommentToAiComment(item));
@@ -148,7 +155,13 @@ export function CommentsColumn({
         ref={columnRef}
         style={{ width: `${COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}
       >
-        <div className="relative" style={{ minHeight: "100%" }}>
+        <div
+          className="relative"
+          style={{
+            minHeight:
+              columnMinHeightPx > 0 ? `${columnMinHeightPx}px` : "100%",
+          }}
+        >
           {/* No comments message */}
           {sortedComments.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
