@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ClaimEvaluationDisplay, ClaimEvaluationResult } from '@/lib/OpinionSpectrum2D';
 import { getModelAbbreviation } from '../../tools/constants/modelAbbreviations';
 import { ModelResponseStatsTable } from '@/components/ModelResponseStatsTable';
+import { EvaluationDots } from '../EvaluationDots';
+import { TagTree } from '../TagTree';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Split } from 'lucide-react';
 
 interface ClaimEvaluationPageProps {
   params: Promise<{ id: string }>;
@@ -22,10 +26,23 @@ interface ClaimEvaluation {
   explanationLength: number | null;
   temperature: number | null;
   prompt: string | null;
+  variationOf: string | null;
+  submitterNotes: string | null;
+  tags?: string[];
   user: {
     name: string | null;
     email: string | null;
   };
+  variations?: Array<{
+    id: string;
+    claim: string;
+    submitterNotes: string | null;
+    summaryMean: number | null;
+    createdAt: string;
+    rawOutput: unknown;
+    context: string | null;
+    tags: string[];
+  }>;
 }
 
 export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps) {
@@ -33,6 +50,8 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFullPrompt, setShowFullPrompt] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [claimSearch, setClaimSearch] = useState('');
 
   useEffect(() => {
     async function loadEvaluation() {
@@ -96,53 +115,149 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <Link
-            href="/claim-evaluations"
-            className="text-indigo-600 hover:text-indigo-700 mb-4 inline-block"
-          >
-            ← Back to Evaluations
-          </Link>
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Claim Evaluation</h1>
-              <p className="text-gray-500">
-                Created {new Date(evaluation.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })} by {evaluation.user.name || evaluation.user.email || 'Unknown'}
-              </p>
-            </div>
-            {evaluation.summaryMean !== null && (
-              <div className="text-right">
-                <div className="text-sm text-gray-600 mb-1">Summary Mean</div>
-                <div className="text-3xl font-bold text-indigo-600">
-                  {evaluation.summaryMean.toFixed(2)}
-                </div>
+    <>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="mb-6">
+            <Link
+              href="/claim-evaluations"
+              className="text-indigo-600 hover:text-indigo-700 mb-4 inline-block"
+            >
+              ← Back to Evaluations
+            </Link>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Claim Evaluation</h1>
+                <p className="text-gray-500">
+                  Created {new Date(evaluation.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })} by {evaluation.user.name || evaluation.user.email || 'Unknown'}
+                </p>
               </div>
-            )}
+              {evaluation.summaryMean !== null && (
+                <div className="text-right">
+                  <div className="text-sm text-gray-600 mb-1">Summary Mean</div>
+                  <div className="text-3xl font-bold text-indigo-600">
+                    {evaluation.summaryMean.toFixed(2)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Claim */}
+          <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
+            <h3 className="mb-3 text-sm font-medium text-gray-600">Claim</h3>
+            <p className="text-xl font-medium text-gray-900">
+              &ldquo;{evaluation.claim}&rdquo;
+            </p>
+          </div>
+
+          {/* Context (if provided) */}
+          {evaluation.context && (
+            <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
+              <h3 className="mb-3 text-sm font-medium text-gray-600">Context</h3>
+              <p className="text-gray-700 whitespace-pre-wrap">{evaluation.context}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Variation Comparison with Tag Tree - Full Width */}
+      {evaluation.variations && evaluation.variations.length > 0 && (
+        <div className="mb-6 px-4">
+          <div className="flex gap-4">
+            {/* Tag Tree Sidebar */}
+            <div className="w-64 flex-shrink-0">
+              <div className="sticky top-4 rounded-lg border bg-white shadow-sm p-4">
+                {/* Claim Search */}
+                <div className="mb-4">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search claims..."
+                      value={claimSearch}
+                      onChange={(e) => setClaimSearch(e.target.value)}
+                      className="w-full rounded border border-gray-300 py-1.5 pl-8 pr-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Tag Tree */}
+                <TagTree
+                  tags={[
+                    ...(evaluation.tags || []).map((t) => [t]),
+                    ...evaluation.variations.map((v) => v.tags),
+                  ]}
+                  selectedTags={selectedTags}
+                  onTagSelect={(tag) => {
+                    setSelectedTags((prev) =>
+                      prev.includes(tag)
+                        ? prev.filter((t) => t !== tag)
+                        : [...prev, tag]
+                    );
+                  }}
+                />
+                {(selectedTags.length > 0 || claimSearch) && (
+                  <button
+                    onClick={() => {
+                      setSelectedTags([]);
+                      setClaimSearch('');
+                    }}
+                    className="mt-2 text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Comparison Table */}
+            <div className="flex-1 min-w-0">
+              <VariationComparisonTable
+                currentEvaluation={evaluation}
+                variations={evaluation.variations}
+                selectedTags={selectedTags}
+                claimSearch={claimSearch}
+              />
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Claim */}
-        <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
-          <h3 className="mb-3 text-sm font-medium text-gray-600">Claim</h3>
-          <p className="text-xl font-medium text-gray-900">
-            &ldquo;{evaluation.claim}&rdquo;
-          </p>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto">
 
-        {/* Context (if provided) */}
-        {evaluation.context && (
-          <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-sm font-medium text-gray-600">Context</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{evaluation.context}</p>
+        {/* Variation Info (for single variations without children) */}
+        {(evaluation.variationOf || evaluation.submitterNotes) && (!evaluation.variations || evaluation.variations.length === 0) && (
+          <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-6 shadow-sm">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-blue-800">
+              <Split size={16} />
+              Variation Info
+            </h3>
+            {evaluation.submitterNotes && (
+              <div className="mb-3">
+                <div className="text-xs text-blue-600 mb-1">Notes</div>
+                <p className="text-gray-700">{evaluation.submitterNotes}</p>
+              </div>
+            )}
+            {evaluation.variationOf && (
+              <div>
+                <div className="text-xs text-blue-600 mb-1">Parent Evaluation</div>
+                <Link
+                  href={`/claim-evaluations/${evaluation.variationOf}`}
+                  className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                >
+                  View parent evaluation →
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -196,6 +311,224 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
             </div>
           )}
         </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+interface VariationComparisonTableProps {
+  currentEvaluation: ClaimEvaluation;
+  variations: Array<{
+    id: string;
+    claim: string;
+    submitterNotes: string | null;
+    summaryMean: number | null;
+    createdAt: string;
+    rawOutput: unknown;
+    context: string | null;
+    tags: string[];
+  }>;
+  selectedTags: string[];
+  claimSearch: string;
+}
+
+function VariationComparisonTable({ currentEvaluation, variations, selectedTags, claimSearch }: VariationComparisonTableProps) {
+  // Filter variations by selected tags and search (if any)
+  const filteredVariations = useMemo(() => {
+    let filtered = variations;
+
+    // Filter by tags
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((v) =>
+        selectedTags.every((tag) => v.tags.includes(tag))
+      );
+    }
+
+    // Filter by claim search
+    if (claimSearch.trim()) {
+      const searchLower = claimSearch.toLowerCase();
+      filtered = filtered.filter((v) =>
+        v.claim.toLowerCase().includes(searchLower) ||
+        v.submitterNotes?.toLowerCase().includes(searchLower) ||
+        v.context?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return filtered;
+  }, [variations, selectedTags, claimSearch]);
+
+  // Combine current evaluation with its filtered variations
+  const allEvaluations = [currentEvaluation, ...filteredVariations];
+
+  // Helper to calculate mean confidence from evaluations
+  const getMeanConfidence = (rawOutput: unknown): number | null => {
+    const output = rawOutput as any;
+    if (!output?.evaluations) return null;
+
+    const confidences = output.evaluations
+      .filter((e: any) => !e.hasError && e.successfulResponse?.confidence != null)
+      .map((e: any) => e.successfulResponse.confidence);
+
+    if (confidences.length === 0) return null;
+    return Math.round(confidences.reduce((a: number, b: number) => a + b, 0) / confidences.length);
+  };
+
+  return (
+    <div className="mb-6 rounded-lg border bg-white shadow-sm overflow-hidden">
+      <div className="bg-gray-50 px-6 py-4 border-b">
+        <h3 className="flex items-center gap-2 text-sm font-medium text-gray-900">
+          <Split size={16} />
+          Variation Comparison ({allEvaluations.length} total)
+        </h3>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Variation
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Claim
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Context
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tags
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Evaluations
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Agreement
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Δ
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Confidence
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {allEvaluations.map((evaluation, index) => {
+              const isCurrentEvaluation = evaluation.id === currentEvaluation.id;
+              const evaluations = (evaluation.rawOutput as any)?.evaluations || [];
+              const meanConfidence = getMeanConfidence(evaluation.rawOutput);
+
+              // Calculate delta from parent
+              const delta = !isCurrentEvaluation && evaluation.summaryMean !== null && currentEvaluation.summaryMean !== null
+                ? Math.round(evaluation.summaryMean - currentEvaluation.summaryMean)
+                : null;
+
+              // Color code delta: green for positive (increases agreement), red for negative
+              const getDeltaColor = (delta: number) => {
+                const absDelta = Math.abs(delta);
+                if (delta > 0) {
+                  // Positive delta - more agreement
+                  if (absDelta >= 20) return 'text-green-700 font-bold';
+                  if (absDelta >= 10) return 'text-green-600 font-semibold';
+                  return 'text-green-500';
+                } else {
+                  // Negative delta - less agreement
+                  if (absDelta >= 20) return 'text-red-700 font-bold';
+                  if (absDelta >= 10) return 'text-red-600 font-semibold';
+                  return 'text-red-500';
+                }
+              };
+
+              return (
+                <tr
+                  key={evaluation.id}
+                  className="hover:bg-gray-50"
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      {isCurrentEvaluation ? (
+                        <span className="text-sm font-medium text-indigo-600">
+                          Current
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/claim-evaluations/${evaluation.id}`}
+                          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                        >
+                          Variation {index}
+                        </Link>
+                      )}
+                    </div>
+                    {evaluation.submitterNotes && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {evaluation.submitterNotes}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-md">
+                      {evaluation.claim}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-600 max-w-md">
+                      {evaluation.context || <span className="text-gray-400 italic">None</span>}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1 max-w-xs">
+                      {'tags' in evaluation && evaluation.tags && evaluation.tags.length > 0 ? (
+                        evaluation.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700"
+                          >
+                            {tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 italic text-xs">None</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center">
+                      <EvaluationDots evaluations={evaluations} />
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {evaluation.summaryMean !== null ? (
+                      <span className="text-sm font-bold text-gray-900">
+                        {Math.round(evaluation.summaryMean)}%
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {delta !== null ? (
+                      <span className={`text-sm ${getDeltaColor(delta)}`}>
+                        {delta > 0 ? '+' : ''}{delta}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {meanConfidence !== null ? (
+                      <span className="text-sm text-gray-600">
+                        {meanConfidence}%
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

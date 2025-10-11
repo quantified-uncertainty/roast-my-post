@@ -38,6 +38,13 @@ const documentationSections = [
     icon: BeakerIcon,
   },
   {
+    title: "Claim Evaluations",
+    description:
+      "Test how LLM models evaluate claims with variations and tagging",
+    href: "/help/claim-evaluations",
+    icon: BeakerIcon,
+  },
+  {
     title: "API Documentation",
     description: "API reference for developers",
     href: "/help/api",

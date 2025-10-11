@@ -87,6 +87,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const sortBy = searchParams.get('sortBy') || 'date';
     const order = searchParams.get('order') || 'desc';
+    const tagsParam = searchParams.get('tags'); // Comma-separated tags
+    const tagsFilter = tagsParam ? tagsParam.split(',').map(t => t.trim()).filter(Boolean) : null;
 
     // Validate sortBy and order to prevent SQL injection
     const validSortBy = ['date', 'agreement'];
@@ -103,8 +105,17 @@ export async function GET(request: NextRequest) {
     type WhereClause = {
       userId: string;
       id?: { lt: string };
+      variationOf?: null;
+      tags?: { hasEvery: string[] };
     };
-    const where: WhereClause = { userId: session.user.id };
+    const where: WhereClause = {
+      userId: session.user.id,
+      variationOf: null, // Hide variations from main list
+    };
+
+    if (tagsFilter && tagsFilter.length > 0) {
+      where.tags = { hasEvery: tagsFilter };
+    }
 
     // Build orderBy
     type OrderByClause = Array<{
@@ -126,13 +137,25 @@ export async function GET(request: NextRequest) {
       createdAt: Date;
       context: string | null;
       rawOutput: unknown;
+      variationOf: string | null;
+      submitterNotes: string | null;
+      tags: string[];
     };
     let evaluations: EvaluationResult[];
 
     // Use raw SQL for full-text search, otherwise use Prisma
     if (search && search.trim()) {
-      // Use plainto_tsquery for safe handling of user input (handles punctuation automatically)
+      // Clean and prepare search query
       const searchQuery = search.trim();
+
+      // Split into words, add prefix matching to each word, and join with & (AND)
+      // This allows "SSRI" to match "SSRIs", "depress" to match "depression", etc.
+      const searchTerms = searchQuery
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(term => term.length > 0)
+        .map(term => term + ':*')
+        .join(' & ');
 
       // Build SQL query parts
       const orderClause = sortBy === 'agreement'
@@ -141,14 +164,19 @@ export async function GET(request: NextRequest) {
 
       // Note: Cursor pagination is not reliable for full-text search results since
       // the result set can change between queries. For search, we simply limit to 100 results.
+      const tagFilterClause = tagsFilter ? `AND tags @> ARRAY[${tagsFilter.map((_, i) => `$${i + 4}`).join(',')}]::TEXT[]` : '';
+      const queryParams = [session.user.id, searchTerms, limit + 1, ...(tagsFilter || [])];
+
       evaluations = await prisma.$queryRawUnsafe(`
-        SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
+        SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput", "variationOf", "submitterNotes", tags
         FROM "ClaimEvaluation"
         WHERE "userId" = $1
-        AND claim_search_text @@ plainto_tsquery('english', $2)
+        AND "variationOf" IS NULL
+        AND claim_search_text @@ to_tsquery('english', $2)
+        ${tagFilterClause}
         ${orderClause}
         LIMIT $3
-      `, session.user.id, searchQuery, limit + 1) as EvaluationResult[];
+      `, ...queryParams) as EvaluationResult[];
     } else {
       // Add cursor pagination for non-search queries
       if (cursor) {
@@ -166,6 +194,14 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           context: true,
           rawOutput: true,
+          variationOf: true,
+          submitterNotes: true,
+          tags: true,
+          _count: {
+            select: {
+              variations: true,
+            },
+          },
         },
       });
     }

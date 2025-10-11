@@ -34,6 +34,11 @@ const navigation = [
     href: "/help/ephemeral-experiments",
     icon: BeakerIcon,
   },
+  {
+    name: "Claim Evaluations",
+    href: "/help/claim-evaluations",
+    icon: BeakerIcon,
+  },
   { name: "API Documentation", href: "/help/api", icon: CodeBracketIcon },
 ];
 
