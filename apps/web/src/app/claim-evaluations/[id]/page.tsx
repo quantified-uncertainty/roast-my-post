@@ -54,6 +54,7 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
   const [showFullPrompt, setShowFullPrompt] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [claimSearch, setClaimSearch] = useState('');
+  const [isRegeneratingAnalysis, setIsRegeneratingAnalysis] = useState(false);
 
   useEffect(() => {
     async function loadEvaluation() {
@@ -90,6 +91,39 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
 
     loadEvaluation();
   }, [params]);
+
+  const handleRegenerateAnalysis = async () => {
+    if (!evaluation) return;
+
+    setIsRegeneratingAnalysis(true);
+    try {
+      const response = await fetch(`/api/claim-evaluations/${evaluation.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'regenerate-analysis' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate analysis');
+      }
+
+      const data = await response.json();
+
+      // Update the evaluation with new analysis
+      setEvaluation({
+        ...evaluation,
+        analysisText: data.analysisText,
+        analysisGeneratedAt: data.analysisGeneratedAt,
+      });
+    } catch (err) {
+      console.error('Error regenerating analysis:', err);
+      alert('Failed to regenerate analysis. Please try again.');
+    } finally {
+      setIsRegeneratingAnalysis(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -278,7 +312,16 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
         {evaluation.analysisText && (
           <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50 p-6 shadow-sm">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-sm font-semibold text-indigo-900">AI Analysis</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-semibold text-indigo-900">AI Analysis</h3>
+                <button
+                  onClick={handleRegenerateAnalysis}
+                  disabled={isRegeneratingAnalysis}
+                  className="text-xs px-2 py-1 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRegeneratingAnalysis ? 'Regenerating...' : 'Regenerate'}
+                </button>
+              </div>
               {evaluation.analysisGeneratedAt && (
                 <span className="text-xs text-indigo-600">
                   Generated {new Date(evaluation.analysisGeneratedAt).toLocaleString()}

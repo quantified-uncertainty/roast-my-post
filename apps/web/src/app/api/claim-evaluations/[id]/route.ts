@@ -280,3 +280,141 @@ export async function PATCH(
     );
   }
 }
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+
+    // Check if this is a regenerate analysis request
+    if (body.action === 'regenerate-analysis') {
+      // Fetch the evaluation and verify ownership
+      const evaluation = await prisma.claimEvaluation.findUnique({
+        where: { id },
+        select: {
+          userId: true,
+          claim: true,
+          context: true,
+          rawOutput: true,
+          variationOf: true,
+        },
+      });
+
+      if (!evaluation) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+
+      if (evaluation.userId !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      // Gather all related evaluations (parent, siblings, children)
+      const relatedEvaluations = await prisma.claimEvaluation.findMany({
+        where: {
+          OR: [
+            { id }, // Current evaluation
+            { variationOf: id }, // Children of current
+            { id: evaluation.variationOf || undefined }, // Parent
+            { variationOf: evaluation.variationOf || undefined }, // Siblings
+          ],
+        },
+        select: {
+          id: true,
+          claim: true,
+          context: true,
+          rawOutput: true,
+          summaryMean: true,
+          variationOf: true,
+        },
+      });
+
+      // Combine all evaluations from related claims
+      const allEvaluations: any[] = [];
+      for (const relatedEval of relatedEvaluations) {
+        const output = relatedEval.rawOutput as any;
+        if (output?.evaluations) {
+          allEvaluations.push(...output.evaluations);
+        }
+      }
+
+      // Calculate combined summary
+      const successfulEvals = allEvaluations.filter(e => !e.hasError && e.successfulResponse?.agreement != null);
+      const combinedMean = successfulEvals.length > 0
+        ? successfulEvals.reduce((sum, e) => sum + e.successfulResponse.agreement, 0) / successfulEvals.length
+        : null;
+
+      const combinedOutput = {
+        evaluations: allEvaluations,
+        summary: {
+          mean: combinedMean,
+          count: allEvaluations.length,
+        },
+      };
+
+      // Generate new analysis with all related data
+      let analysisText: string | null = null;
+      let analysisGeneratedAt: Date | null = null;
+
+      try {
+        logger.info(`Regenerating analysis for claim evaluation ${id} with ${relatedEvaluations.length} related evaluations`);
+        const analysis = await analyzeClaimEvaluation({
+          claim: evaluation.claim,
+          context: evaluation.context || undefined,
+          rawOutput: combinedOutput,
+        });
+        analysisText = analysis.analysisText;
+        analysisGeneratedAt = new Date();
+        logger.info(`Generated analysis successfully`);
+      } catch (error) {
+        logger.error('Failed to generate analysis:', error);
+        return NextResponse.json(
+          { error: 'Failed to generate analysis' },
+          { status: 500 }
+        );
+      }
+
+      // Update the evaluation with new analysis
+      await prisma.claimEvaluation.update({
+        where: { id },
+        data: {
+          analysisText,
+          analysisGeneratedAt,
+        },
+      });
+
+      logger.info(`Updated analysis for claim evaluation ${id}`);
+
+      return NextResponse.json({
+        analysisText,
+        analysisGeneratedAt,
+        relatedEvaluationsCount: relatedEvaluations.length,
+        totalEvaluationsAnalyzed: allEvaluations.length,
+      });
+    }
+
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+  } catch (error) {
+    logger.error('POST claim evaluation error', error);
+    return NextResponse.json(
+      { error: 'Failed to process request' },
+      { status: 500 }
+    );
+  }
+}
