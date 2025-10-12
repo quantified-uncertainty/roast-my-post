@@ -72,6 +72,11 @@ const inputSchema = z.object({
     .max(1.0)
     .optional()
     .describe("Temperature for model responses - lower is more consistent, higher is more varied (0.0-1.0, default 0.7). Automatically scaled per provider."),
+  promptTemplate: z
+    .string()
+    .max(50000)
+    .optional()
+    .describe("Custom prompt template using {{VARIABLE}} syntax. Available variables: {{CLAIM}}, {{CONTEXT}}, {{EXPLANATION_LENGTH}}, {{RUN_NOTE}}, {{CONTEXT_SECTION}}. If not provided, uses the default template."),
 });
 
 // Schema for model's parsed JSON response (before we process it)
@@ -202,7 +207,8 @@ async function evaluateWithModelImpl(
 ): Promise<EvaluationResult> {
 
   // Generate prompt using the improved version from prompt.ts
-  const prompt = generateClaimEvaluatorPrompt(input);
+  // Pass custom template if provided
+  const prompt = generateClaimEvaluatorPrompt(input, input.promptTemplate);
 
   let rawContent: string | undefined;
   let rawThinking: string | undefined;
@@ -363,7 +369,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     const runs = input.runs || 1;
 
     // Cost protection: limit total evaluations to prevent excessive API usage
-    const MAX_EVALUATIONS = 20;
+    const MAX_EVALUATIONS = 60;
     const totalEvaluations = models.length * runs;
     if (totalEvaluations > MAX_EVALUATIONS) {
       throw new Error(
