@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@roast/db';
 import { auth } from '@/infrastructure/auth/auth';
 import { logger } from '@/infrastructure/logging/logger';
-import { claimEvaluatorTool } from '@roast/ai/server';
+import { claimEvaluatorTool, analyzeClaimEvaluation } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
 import { logger as aiLogger } from '@roast/ai';
 import { z } from 'zod';
@@ -225,19 +225,43 @@ export async function PATCH(
       ? allAgreements.reduce((a, b) => a + b, 0) / allAgreements.length
       : null;
 
+    // Create updated output for analysis
+    const updatedOutput: ClaimEvaluatorOutput = {
+      ...existingOutput,
+      evaluations: mergedEvaluations,
+      summary: {
+        mean: newSummaryMean,
+        count: mergedEvaluations.length,
+      },
+    };
+
+    // Generate analysis
+    let analysisText: string | null = null;
+    let analysisGeneratedAt: Date | null = null;
+
+    try {
+      logger.info(`Regenerating analysis for claim evaluation ${id}`);
+      const analysis = await analyzeClaimEvaluation({
+        claim: existingEval.claim,
+        context: existingEval.context || undefined,
+        rawOutput: updatedOutput,
+      });
+      analysisText = analysis.analysisText;
+      analysisGeneratedAt = new Date();
+      logger.info(`Generated analysis successfully`);
+    } catch (error) {
+      logger.error('Failed to generate analysis:', error);
+      // Continue without analysis if it fails
+    }
+
     // Update the evaluation with merged data
     const updatedEval = await prisma.claimEvaluation.update({
       where: { id },
       data: {
-        rawOutput: {
-          ...existingOutput,
-          evaluations: mergedEvaluations,
-          summary: {
-            mean: newSummaryMean,
-            count: mergedEvaluations.length,
-          },
-        } as any,
+        rawOutput: updatedOutput as any,
         summaryMean: newSummaryMean,
+        analysisText,
+        analysisGeneratedAt,
       },
     });
 
@@ -248,6 +272,7 @@ export async function PATCH(
       addedEvaluations: allNewEvaluations.length,
       totalEvaluations: mergedEvaluations.length,
       newSummaryMean,
+      analysisText,
     });
   } catch (error) {
     logger.error('Add runs to claim evaluation error', error);

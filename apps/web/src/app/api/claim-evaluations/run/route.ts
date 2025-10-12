@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma, generateId } from '@roast/db';
-import { claimEvaluatorTool } from '@roast/ai/server';
+import { claimEvaluatorTool, analyzeClaimEvaluation } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
 import { logger as aiLogger } from '@roast/ai';
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
@@ -76,6 +76,25 @@ export async function POST(request: NextRequest) {
       }
     ) as ClaimEvaluatorOutput;
 
+    // Generate analysis
+    let analysisText: string | null = null;
+    let analysisGeneratedAt: Date | null = null;
+
+    try {
+      logger.info(`Generating analysis for claim evaluation`);
+      const analysis = await analyzeClaimEvaluation({
+        claim: data.claim,
+        context: data.context,
+        rawOutput: result,
+      });
+      analysisText = analysis.analysisText;
+      analysisGeneratedAt = new Date();
+      logger.info(`Generated analysis successfully`);
+    } catch (error) {
+      logger.error('Failed to generate analysis:', error);
+      // Continue without analysis if it fails
+    }
+
     // Save to database
     const evaluation = await prisma.claimEvaluation.create({
       data: {
@@ -91,6 +110,8 @@ export async function POST(request: NextRequest) {
         variationOf: data.variationOf,
         submitterNotes: data.submitterNotes,
         tags: data.tags || [],
+        analysisText,
+        analysisGeneratedAt,
       },
     });
 
@@ -99,6 +120,7 @@ export async function POST(request: NextRequest) {
     return successResponse({
       id: evaluation.id,
       result,
+      analysisText,
     });
   } catch (error) {
     logger.error('Error in claim evaluation run API:', error);

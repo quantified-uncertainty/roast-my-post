@@ -27,6 +27,7 @@ import {
 // Re-export everything for backwards compatibility
 export * from "./utils";
 export { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
+export { analyzeClaimEvaluation, type AnalyzeClaimEvaluationInput, type AnalyzeClaimEvaluationOutput } from "./analysis";
 
 // Default models for claim evaluation
 const DEFAULT_MODELS = [

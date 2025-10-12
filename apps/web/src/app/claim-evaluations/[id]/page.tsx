@@ -29,6 +29,8 @@ interface ClaimEvaluation {
   variationOf: string | null;
   submitterNotes: string | null;
   tags?: string[];
+  analysisText: string | null;
+  analysisGeneratedAt: string | null;
   user: {
     name: string | null;
     email: string | null;
@@ -271,6 +273,25 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
         <ModelResponseStatsTable
           evaluations={(evaluation.rawOutput as unknown as ClaimEvaluationResult)?.evaluations || []}
         />
+
+        {/* Analysis Section */}
+        {evaluation.analysisText && (
+          <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50 p-6 shadow-sm">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="text-sm font-semibold text-indigo-900">AI Analysis</h3>
+              {evaluation.analysisGeneratedAt && (
+                <span className="text-xs text-indigo-600">
+                  Generated {new Date(evaluation.analysisGeneratedAt).toLocaleString()}
+                </span>
+              )}
+            </div>
+            <div className="prose prose-sm prose-indigo max-w-none">
+              <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                {evaluation.analysisText}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Parameters Section */}
         <div className="mt-6 rounded-lg border bg-white p-6 shadow-sm">
