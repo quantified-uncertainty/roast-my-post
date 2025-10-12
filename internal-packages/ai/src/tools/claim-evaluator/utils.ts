@@ -42,6 +42,7 @@ export interface ClaimEvaluatorInput {
   runs?: number; // Number of times to run each model (1-5, default 1)
   explanationLength?: number; // Max words for explanation text (3-200 words, default 5)
   temperature?: number; // Temperature for model responses (0.0-2.0, default 1.0)
+  promptTemplate?: string; // Custom prompt template (optional, max 50000 chars)
 }
 
 // Successful response details
@@ -84,7 +85,8 @@ export type FailedEvaluation = EvaluationResult & { hasError: true; failedRespon
 export interface ClaimEvaluatorOutput {
   evaluations: EvaluationResult[];
   summary?: {
-    mean: number;
+    mean: number | null;
+    count?: number;
   };
 }
 

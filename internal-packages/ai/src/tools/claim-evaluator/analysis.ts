@@ -1,6 +1,6 @@
 import { callClaude } from "../../claude/wrapper";
 import { ANALYSIS_MODEL } from "../../types";
-import type { ClaimEvaluatorOutput } from "./types";
+import type { ClaimEvaluatorOutput } from "./utils";
 
 export interface AnalyzeClaimEvaluationInput {
   claim: string;
@@ -86,23 +86,23 @@ function buildEvaluationSummary(rawOutput: ClaimEvaluatorOutput): string {
     { successful: any[]; failed: any[] }
   >();
 
-  for (const eval of evaluations) {
-    if (!modelGroups.has(eval.model)) {
-      modelGroups.set(eval.model, { successful: [], failed: [] });
+  for (const evaluation of evaluations) {
+    if (!modelGroups.has(evaluation.model)) {
+      modelGroups.set(evaluation.model, { successful: [], failed: [] });
     }
-    const group = modelGroups.get(eval.model)!;
+    const group = modelGroups.get(evaluation.model)!;
 
-    if (!eval.hasError && eval.successfulResponse) {
-      group.successful.push(eval);
-    } else if (eval.hasError && eval.failedResponse) {
-      group.failed.push(eval);
+    if (!evaluation.hasError && evaluation.successfulResponse) {
+      group.successful.push(evaluation);
+    } else if (evaluation.hasError && evaluation.failedResponse) {
+      group.failed.push(evaluation);
     }
   }
 
   // Build summary text
   const lines: string[] = [];
   lines.push(`Total evaluations: ${evaluations.length}`);
-  lines.push(`Mean agreement: ${summary.mean !== null && summary.mean !== undefined ? summary.mean.toFixed(1) : 'N/A'}%`);
+  lines.push(`Mean agreement: ${summary?.mean !== null && summary?.mean !== undefined ? summary.mean.toFixed(1) : 'N/A'}%`);
   lines.push("");
 
   // Sort models by provider for grouping
