@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ClaimEvaluationDisplay, ClaimEvaluationResult } from '@/lib/OpinionSpectrum2D';
 import { getModelAbbreviation } from '../../tools/constants/modelAbbreviations';
 import { ModelResponseStatsTable } from '@/components/ModelResponseStatsTable';
@@ -328,10 +330,10 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
                 </span>
               )}
             </div>
-            <div className="prose prose-sm prose-indigo max-w-none">
-              <div className="text-sm text-gray-800 whitespace-pre-wrap">
+            <div className="prose prose-sm prose-indigo max-w-none text-gray-800">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {evaluation.analysisText}
-              </div>
+              </ReactMarkdown>
             </div>
           </div>
         )}
