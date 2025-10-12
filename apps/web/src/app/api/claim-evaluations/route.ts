@@ -75,10 +75,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Claim evaluations are public - no authentication required
     const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = session?.user?.id || null;
 
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
@@ -101,17 +100,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid order parameter' }, { status: 400 });
     }
 
-    // Build where clause
+    // Build where clause - filter by user if provided, otherwise show all
     type WhereClause = {
-      userId: string;
+      userId?: string;
       id?: { lt: string };
       variationOf?: null;
       tags?: { hasEvery: string[] };
     };
     const where: WhereClause = {
-      userId: session.user.id,
       variationOf: null, // Hide variations from main list
     };
+
+    // Optionally filter by user if userId query param is provided
+    const userIdFilter = searchParams.get('userId');
+    if (userIdFilter) {
+      where.userId = userIdFilter;
+    }
 
     if (tagsFilter && tagsFilter.length > 0) {
       where.tags = { hasEvery: tagsFilter };
@@ -164,18 +168,24 @@ export async function GET(request: NextRequest) {
 
       // Note: Cursor pagination is not reliable for full-text search results since
       // the result set can change between queries. For search, we simply limit to 100 results.
-      const tagFilterClause = tagsFilter ? `AND tags @> ARRAY[${tagsFilter.map((_, i) => `$${i + 4}`).join(',')}]::TEXT[]` : '';
-      const queryParams = [session.user.id, searchTerms, limit + 1, ...(tagsFilter || [])];
+      const userFilterClause = userIdFilter ? `AND "userId" = $1` : '';
+      const tagFilterClause = tagsFilter ? `AND tags @> ARRAY[${tagsFilter.map((_, i) => `$${userIdFilter ? i + 4 : i + 3}`).join(',')}]::TEXT[]` : '';
+      const queryParams = [
+        ...(userIdFilter ? [userIdFilter] : []),
+        searchTerms,
+        limit + 1,
+        ...(tagsFilter || [])
+      ];
 
       evaluations = await prisma.$queryRawUnsafe(`
         SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput", "variationOf", "submitterNotes", tags
         FROM "ClaimEvaluation"
-        WHERE "userId" = $1
-        AND "variationOf" IS NULL
-        AND claim_search_text @@ to_tsquery('english', $2)
+        WHERE "variationOf" IS NULL
+        ${userFilterClause}
+        AND claim_search_text @@ to_tsquery('english', $${userIdFilter ? 2 : 1})
         ${tagFilterClause}
         ${orderClause}
-        LIMIT $3
+        LIMIT $${userIdFilter ? 3 : 2}
       `, ...queryParams) as EvaluationResult[];
     } else {
       // Add cursor pagination for non-search queries

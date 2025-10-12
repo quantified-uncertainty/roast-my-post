@@ -20,6 +20,7 @@ const runSchema = z.object({
   variationOf: z.string().optional(),
   submitterNotes: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  promptTemplate: z.string().max(50000).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
         runs: data.runs,
         temperature: data.temperature,
         explanationLength: data.explanationLength,
+        promptTemplate: data.promptTemplate,
       },
       {
         userId,

@@ -20,13 +20,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const session = await auth();
 
-    // Check authentication first
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    // Claim evaluations are public - no authentication required for viewing
     const evaluation = await prisma.claimEvaluation.findUnique({
       where: { id },
       include: {
@@ -49,11 +44,6 @@ export async function GET(
 
     if (!evaluation) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-
-    // Check authorization - user must own the evaluation
-    if (evaluation.userId !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     return NextResponse.json(evaluation);
