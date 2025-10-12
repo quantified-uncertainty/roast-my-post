@@ -374,10 +374,20 @@ export async function POST(
 
       try {
         logger.info(`Regenerating analysis for claim evaluation ${id} with ${relatedEvaluations.length} related evaluations`);
+
+        // Build variations array for better analysis
+        const variationsData = relatedEvaluations.map(relEval => ({
+          claim: relEval.claim,
+          context: relEval.context || undefined,
+          evaluations: (relEval.rawOutput as any)?.evaluations || [],
+          summaryMean: relEval.summaryMean,
+        }));
+
         const analysis = await analyzeClaimEvaluation({
           claim: evaluation.claim,
           context: evaluation.context || undefined,
           rawOutput: combinedOutput,
+          variations: variationsData.length > 1 ? variationsData : undefined,
         });
         analysisText = analysis.analysisText;
         analysisGeneratedAt = new Date();
