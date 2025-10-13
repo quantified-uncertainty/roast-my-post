@@ -20,7 +20,7 @@ const POSITION_UPDATE_DELAY = 16; // ~60fps
 /**
  * Hook to calculate and manage comment positions based on highlight elements.
  * Includes caching and debouncing for performance optimization.
- * 
+ *
  * @param comments - Array of comments to position
  * @param contentRef - Reference to the content container
  * @param options - Configuration options including hover state and cache
@@ -33,7 +33,7 @@ export function useCommentPositions(
 ): UseCommentPositionsResult {
   const { hoveredCommentId, highlightCache, enabled } = options;
   const [positions, setPositions] = useState<Record<string, number>>({});
-  
+
   // Performance optimization refs
   const positionCacheRef = useRef<Record<string, number>>({});
   const lastHoveredIdRef = useRef<string | null>(null);
@@ -57,9 +57,9 @@ export function useCommentPositions(
       // Check if recalculation is needed
       const hoveredChanged = lastHoveredIdRef.current !== hoveredCommentId;
       const cacheEmpty = Object.keys(positionCacheRef.current).length === 0;
-      
+
       lastHoveredIdRef.current = hoveredCommentId;
-      
+
       if (!hoveredChanged && !cacheEmpty) {
         // Use cached positions if hover hasn't changed
         setPositions(positionCacheRef.current);
@@ -80,7 +80,14 @@ export function useCommentPositions(
       positionCacheRef.current = newPositions;
       setPositions(newPositions);
     }, POSITION_UPDATE_DELAY);
-  }, [comments, contentRef, hoveredCommentId, highlightCache, enabled, clearPendingCalculation]);
+  }, [
+    comments,
+    contentRef,
+    hoveredCommentId,
+    highlightCache,
+    enabled,
+    clearPendingCalculation,
+  ]);
 
   // Calculate positions when dependencies change
   useEffect(() => {
@@ -94,7 +101,7 @@ export function useCommentPositions(
     if (!enabled || !contentRef.current) return;
 
     let resizeTimeout: NodeJS.Timeout;
-    
+
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {

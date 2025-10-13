@@ -17,10 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
 
-import {
-  MARKDOWN_COMPONENTS,
-  MARKDOWN_PLUGINS,
-} from "../config/markdown";
+import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
 import {
   COMMENT_BG_DEFAULT,
   COMMENT_MARGIN_LEFT,
@@ -105,7 +102,9 @@ export function PositionedComment({
         break;
       case "warning":
         bgColor = isHovered ? "bg-amber-500" : "bg-amber-400";
-        content = <span className="text-white font-bold text-sm leading-none">!</span>;
+        content = (
+          <span className="text-sm font-bold leading-none text-white">!</span>
+        );
         break;
       case "success":
         bgColor = isHovered ? "bg-green-500" : "bg-green-300";
@@ -114,7 +113,9 @@ export function PositionedComment({
       case "info":
       default:
         bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
-        content = <span className="text-white font-bold text-sm leading-none">i</span>;
+        content = (
+          <span className="text-sm font-bold leading-none text-white">i</span>
+        );
         break;
     }
 

@@ -1,16 +1,8 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -237,17 +229,18 @@ export function EvaluationView({
     [displayComments]
   );
 
-  const highlights = useMemo(
-    () =>
-      commentsWithHighlights.map((comment, index) => ({
+  const highlights = useMemo(() => {
+    return commentsWithHighlights.map((comment) => {
+      const originalIndex = displayComments.indexOf(comment);
+      return {
         startOffset: comment.highlight.startOffset!,
         endOffset: comment.highlight.endOffset!,
         quotedText: comment.highlight.quotedText || "",
-        tag: index.toString(),
+        tag: originalIndex.toString(),
         color: getLevelHighlightColor(comment.level),
-      })),
-    [commentsWithHighlights]
-  );
+      };
+    });
+  }, [commentsWithHighlights, displayComments]);
 
   // (Scroll behavior logic moved into useScrollHeaderBehavior hook)
 

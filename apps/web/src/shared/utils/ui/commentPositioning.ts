@@ -62,13 +62,20 @@ export function calculateCommentPositions(
     });
   } else {
     // Batch query all highlights at once
-    const allHighlights = container.querySelectorAll("[data-tag]");
+    const allHighlights = container.querySelectorAll("[data-tags]");
     const highlightsByTag = new Map<string, Element>();
 
     allHighlights.forEach((el) => {
-      const tag = el.getAttribute("data-tag");
-      if (tag !== null && !highlightsByTag.has(tag)) {
-        highlightsByTag.set(tag, el);
+      const tagsAttr = el.getAttribute("data-tags");
+      if (tagsAttr) {
+        try {
+          const tags = JSON.parse(tagsAttr) as string[];
+          tags.forEach((t) => {
+            if (!highlightsByTag.has(t)) highlightsByTag.set(t, el);
+          });
+        } catch (_e) {
+          // ignore malformed JSON
+        }
       }
     });
 
@@ -218,15 +225,20 @@ export function checkHighlightsReady(
   if (expectedCount === 0) return true;
 
   // Single query for all highlights
-  const highlightElements = container.querySelectorAll("[data-tag]");
+  const highlightElements = container.querySelectorAll("[data-tags]");
   if (highlightElements.length === 0) return false;
 
   // Get unique tag numbers from the highlights
   const uniqueTags = new Set<string>();
   highlightElements.forEach((el) => {
-    const tag = el.getAttribute("data-tag");
-    if (tag !== null) {
-      uniqueTags.add(tag);
+    const tagsAttr = el.getAttribute("data-tags");
+    if (tagsAttr) {
+      try {
+        const tags = JSON.parse(tagsAttr) as string[];
+        tags.forEach((t) => uniqueTags.add(t));
+      } catch (_e) {
+        // ignore malformed JSON
+      }
     }
   });
 
