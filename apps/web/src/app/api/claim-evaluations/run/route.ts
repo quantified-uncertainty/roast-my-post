@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       }
     ) as ClaimEvaluatorOutput;
 
-    // Generate analysis
+    // Generate analysis (continue without analysis if it fails - analysis is a nice-to-have on creation)
     let analysisText: string | null = null;
     let analysisGeneratedAt: Date | null = null;
 
@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
       analysisGeneratedAt = new Date();
       logger.info(`Generated analysis successfully`);
     } catch (error) {
-      logger.error('Failed to generate analysis:', error);
-      // Continue without analysis if it fails
+      logger.error('Failed to generate analysis (non-fatal):', error);
+      // Continue without analysis - analysis generation failing should not prevent evaluation creation
     }
 
     // Save to database
