@@ -6,6 +6,7 @@ import { claimEvaluatorTool, analyzeClaimEvaluation } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
 import { logger as aiLogger } from '@roast/ai';
 import { z } from 'zod';
+import { strictRateLimit, getClientIdentifier } from '@/infrastructure/http/rate-limiter';
 
 const addRunsSchema = z.object({
   runs: z.array(z.object({
@@ -19,6 +20,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Rate limiting for public endpoint
+    const clientId = getClientIdentifier(request);
+    const { success } = await strictRateLimit.check(clientId);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { id } = await params;
 
     // Claim evaluations are public - no authentication required for viewing
@@ -91,21 +99,24 @@ export async function DELETE(
 
     // Delete all variations first, then the parent evaluation
     // This is necessary because the schema has onDelete: SetNull instead of Cascade
+    // Use transaction to ensure atomicity
     const variationCount = evaluation._count.variations;
 
-    if (variationCount > 0) {
-      await prisma.claimEvaluation.deleteMany({
-        where: { variationOf: id },
+    await prisma.$transaction(async (tx) => {
+      if (variationCount > 0) {
+        await tx.claimEvaluation.deleteMany({
+          where: { variationOf: id },
+        });
+        logger.info(`Deleted ${variationCount} variations of claim evaluation ${id}`);
+      }
+
+      // Delete the evaluation itself
+      await tx.claimEvaluation.delete({
+        where: { id },
       });
-      logger.info(`Deleted ${variationCount} variations of claim evaluation ${id}`);
-    }
 
-    // Delete the evaluation itself
-    await prisma.claimEvaluation.delete({
-      where: { id },
+      logger.info(`Deleted claim evaluation ${id}`);
     });
-
-    logger.info(`Deleted claim evaluation ${id}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -225,7 +236,8 @@ export async function PATCH(
       },
     };
 
-    // Generate analysis
+    // Generate analysis (before transaction to avoid long-running LLM calls in transaction)
+    // Continue without analysis if it fails - this is a PATCH operation for adding runs, analysis is secondary
     let analysisText: string | null = null;
     let analysisGeneratedAt: Date | null = null;
 
@@ -240,19 +252,21 @@ export async function PATCH(
       analysisGeneratedAt = new Date();
       logger.info(`Generated analysis successfully`);
     } catch (error) {
-      logger.error('Failed to generate analysis:', error);
-      // Continue without analysis if it fails
+      logger.error('Failed to generate analysis (non-fatal):', error);
+      // Continue without analysis - the runs were successfully added, analysis is a nice-to-have
     }
 
-    // Update the evaluation with merged data
-    const updatedEval = await prisma.claimEvaluation.update({
-      where: { id },
-      data: {
-        rawOutput: updatedOutput as any,
-        summaryMean: newSummaryMean,
-        analysisText,
-        analysisGeneratedAt,
-      },
+    // Update the evaluation with merged data in a transaction
+    const updatedEval = await prisma.$transaction(async (tx) => {
+      return await tx.claimEvaluation.update({
+        where: { id },
+        data: {
+          rawOutput: updatedOutput as any,
+          summaryMean: newSummaryMean,
+          analysisText,
+          analysisGeneratedAt,
+        },
+      });
     });
 
     logger.info(`Added ${allNewEvaluations.length} evaluations to claim evaluation ${id}`);
@@ -281,150 +295,3 @@ export async function PATCH(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON in request body' },
-        { status: 400 }
-      );
-    }
-
-    // Check if this is a regenerate analysis request
-    if (body.action === 'regenerate-analysis') {
-      // Fetch the evaluation and verify ownership
-      const evaluation = await prisma.claimEvaluation.findUnique({
-        where: { id },
-        select: {
-          userId: true,
-          claim: true,
-          context: true,
-          rawOutput: true,
-          variationOf: true,
-        },
-      });
-
-      if (!evaluation) {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
-      }
-
-      if (evaluation.userId !== session.user.id) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-
-      // Gather all related evaluations (parent, siblings, children)
-      const relatedEvaluations = await prisma.claimEvaluation.findMany({
-        where: {
-          OR: [
-            { id }, // Current evaluation
-            { variationOf: id }, // Children of current
-            { id: evaluation.variationOf || undefined }, // Parent
-            { variationOf: evaluation.variationOf || undefined }, // Siblings
-          ],
-        },
-        select: {
-          id: true,
-          claim: true,
-          context: true,
-          rawOutput: true,
-          summaryMean: true,
-          variationOf: true,
-        },
-      });
-
-      // Combine all evaluations from related claims
-      const allEvaluations: any[] = [];
-      for (const relatedEval of relatedEvaluations) {
-        const output = relatedEval.rawOutput as any;
-        if (output?.evaluations) {
-          allEvaluations.push(...output.evaluations);
-        }
-      }
-
-      // Calculate combined summary
-      const successfulEvals = allEvaluations.filter(e => !e.hasError && e.successfulResponse?.agreement != null);
-      const combinedMean = successfulEvals.length > 0
-        ? successfulEvals.reduce((sum, e) => sum + e.successfulResponse.agreement, 0) / successfulEvals.length
-        : null;
-
-      const combinedOutput = {
-        evaluations: allEvaluations,
-        summary: {
-          mean: combinedMean,
-          count: allEvaluations.length,
-        },
-      };
-
-      // Generate new analysis with all related data
-      let analysisText: string | null = null;
-      let analysisGeneratedAt: Date | null = null;
-
-      try {
-        logger.info(`Regenerating analysis for claim evaluation ${id} with ${relatedEvaluations.length} related evaluations`);
-
-        // Build variations array for better analysis
-        const variationsData = relatedEvaluations.map(relEval => ({
-          claim: relEval.claim,
-          context: relEval.context || undefined,
-          evaluations: (relEval.rawOutput as any)?.evaluations || [],
-          summaryMean: relEval.summaryMean,
-        }));
-
-        const analysis = await analyzeClaimEvaluation({
-          claim: evaluation.claim,
-          context: evaluation.context || undefined,
-          rawOutput: combinedOutput,
-          variations: variationsData.length > 1 ? variationsData : undefined,
-        });
-        analysisText = analysis.analysisText;
-        analysisGeneratedAt = new Date();
-        logger.info(`Generated analysis successfully`);
-      } catch (error) {
-        logger.error('Failed to generate analysis:', error);
-        return NextResponse.json(
-          { error: 'Failed to generate analysis' },
-          { status: 500 }
-        );
-      }
-
-      // Update the evaluation with new analysis
-      await prisma.claimEvaluation.update({
-        where: { id },
-        data: {
-          analysisText,
-          analysisGeneratedAt,
-        },
-      });
-
-      logger.info(`Updated analysis for claim evaluation ${id}`);
-
-      return NextResponse.json({
-        analysisText,
-        analysisGeneratedAt,
-        relatedEvaluationsCount: relatedEvaluations.length,
-        totalEvaluationsAnalyzed: allEvaluations.length,
-      });
-    }
-
-    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
-  } catch (error) {
-    logger.error('POST claim evaluation error', error);
-    return NextResponse.json(
-      { error: 'Failed to process request' },
-      { status: 500 }
-    );
-  }
-}

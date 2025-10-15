@@ -99,16 +99,16 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
 
     setIsRegeneratingAnalysis(true);
     try {
-      const response = await fetch(`/api/claim-evaluations/${evaluation.id}`, {
+      const response = await fetch(`/api/claim-evaluations/${evaluation.id}/analysis/regenerate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'regenerate-analysis' }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to regenerate analysis');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to regenerate analysis');
       }
 
       const data = await response.json();
@@ -121,7 +121,7 @@ export default function ClaimEvaluationPage({ params }: ClaimEvaluationPageProps
       });
     } catch (err) {
       console.error('Error regenerating analysis:', err);
-      alert('Failed to regenerate analysis. Please try again.');
+      alert(err instanceof Error ? err.message : 'Failed to regenerate analysis. Please try again.');
     } finally {
       setIsRegeneratingAnalysis(false);
     }

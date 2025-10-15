@@ -75,10 +75,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Claim evaluations are public - no authentication required
-    const session = await auth();
-    const userId = session?.user?.id || null;
+    // Rate limiting for public endpoint
+    const clientId = getClientIdentifier(request);
+    const { success } = await strictRateLimit.check(clientId);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
+    // Claim evaluations are public - no authentication required
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
     const limitParam = parseInt(searchParams.get('limit') || '50');
