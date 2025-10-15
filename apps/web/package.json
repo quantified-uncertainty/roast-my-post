@@ -33,6 +33,7 @@
     "process-jobs": "pnpm --filter @roast/jobs run process-job",
     "process-jobs:dry-run": "dotenv -e .env.local -- tsx -e \"console.log('✅ Script dependencies load correctly'); process.exit(0)\"",
     "process-jobs-adaptive": "pnpm --filter @roast/jobs run process-adaptive",
+    "run-scheduled-tasks": "pnpm --filter @roast/jobs exec tsx src/cli/run-scheduled-tasks.ts",
     "cleanup-stale-jobs": "dotenv -e .env.local -- tsx src/scripts/cleanup-stale-jobs.ts",
     "test-helicone-sessions": "dotenv -e .env.local -- tsx src/scripts/test-helicone-sessions.ts",
     "helicone-cost-report": "dotenv -e .env.local -- tsx src/scripts/helicone-cost-report.ts",

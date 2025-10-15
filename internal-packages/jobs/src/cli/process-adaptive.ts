@@ -17,7 +17,6 @@ import { config } from '@roast/domain';
 import { JobRepository } from '@roast/db';
 import { JobService } from '../core/JobService';
 import { logger } from '../utils/logger';
-import { startScheduledTasks } from '../scheduled-tasks/tasks';
 
 // Configuration from centralized config system
 const DEFAULT_MAX_WORKERS = config.jobs.adaptiveWorkers.maxWorkers;
@@ -470,9 +469,6 @@ class AdaptiveJobProcessor {
     console.log(`🔄 Poll interval: ${POLL_INTERVAL_MS/1000}s`);
     console.log(`🧹 Stale job cleanup: every ${STALE_JOB_CHECK_INTERVAL_MS/1000/60}m`);
     console.log("Press Ctrl+C to stop\n");
-
-    // Start all background scheduled tasks
-    startScheduledTasks(() => this.isShuttingDown);
 
     while (!this.isShuttingDown) {
       try {
