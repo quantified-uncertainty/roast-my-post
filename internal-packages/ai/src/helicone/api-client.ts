@@ -1,6 +1,6 @@
 /**
  * Helicone API Client
- * 
+ *
  * Utilities for interacting with Helicone's REST API to:
  * - Test session integration
  * - Get cost/usage statistics
@@ -10,7 +10,7 @@
 // Session configuration
 const heliconeSessionsConfig = {
   enabled: true, // Helicone session tracking is enabled
-  properties: ['userId']
+  properties: ["userId"],
 };
 
 export interface HeliconeRequest {
@@ -46,12 +46,12 @@ export interface HeliconeQueryFilter {
 }
 
 export interface HeliconeQueryOptions {
-  filter: HeliconeQueryFilter | 'all';
+  filter: HeliconeQueryFilter | "all";
   offset?: number;
   limit?: number;
   sort?: {
-    created_at?: 'asc' | 'desc';
-    cost?: 'asc' | 'desc';
+    created_at?: "asc" | "desc";
+    cost?: "asc" | "desc";
   };
 }
 
@@ -65,25 +65,30 @@ export class HeliconeAPIClient {
   private baseUrl: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.HELICONE_API_KEY || '';
+    this.apiKey = apiKey || process.env.HELICONE_API_KEY || "";
     // Use EU endpoint if configured
-    this.baseUrl = process.env.HELICONE_API_BASE_URL || 'https://api.helicone.ai';
-    
+    this.baseUrl =
+      process.env.HELICONE_API_BASE_URL || "https://api.helicone.ai";
+
     if (!this.apiKey) {
-      throw new Error('Helicone API key is required. Set HELICONE_API_KEY environment variable.');
+      throw new Error(
+        "Helicone API key is required. Set HELICONE_API_KEY environment variable."
+      );
     }
   }
 
   /**
    * Query requests from Helicone
    */
-  async queryRequests(options: HeliconeQueryOptions): Promise<HeliconeQueryResponse> {
+  async queryRequests(
+    options: HeliconeQueryOptions
+  ): Promise<HeliconeQueryResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/v1/request/query`, {
-        method: 'POST',
+      const response = await fetch(`${this.baseUrl}/oai/v1/request/query`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'authorization': `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify(options),
         signal: AbortSignal.timeout(30000), // 30 second timeout
@@ -97,26 +102,36 @@ export class HeliconeAPIClient {
         } catch {
           errorMessage = response.statusText;
         }
-        
+
         // Handle specific error cases
         if (response.status === 429) {
-          throw new Error(`Helicone API rate limit exceeded (${response.status}): ${errorMessage}`);
+          throw new Error(
+            `Helicone API rate limit exceeded (${response.status}): ${errorMessage}`
+          );
         } else if (response.status >= 500) {
-          throw new Error(`Helicone API server error (${response.status}): ${errorMessage}`);
+          throw new Error(
+            `Helicone API server error (${response.status}): ${errorMessage}`
+          );
         } else if (response.status === 401) {
-          throw new Error(`Helicone API authentication failed (${response.status}): Invalid API key`);
+          throw new Error(
+            `Helicone API authentication failed (${response.status}): Invalid API key`
+          );
         } else {
-          throw new Error(`Helicone API error (${response.status}): ${errorMessage}`);
+          throw new Error(
+            `Helicone API error (${response.status}): ${errorMessage}`
+          );
         }
       }
 
       return await response.json();
     } catch (error) {
       // Handle network errors and timeouts
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error(`Network error connecting to Helicone API: ${error.message}`);
-      } else if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Helicone API request timeout (30s exceeded)');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          `Network error connecting to Helicone API: ${error.message}`
+        );
+      } else if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Helicone API request timeout (30s exceeded)");
       }
       // Re-throw other errors
       throw error;
@@ -128,19 +143,73 @@ export class HeliconeAPIClient {
    */
   async getSessionRequests(sessionId: string): Promise<HeliconeRequest[]> {
     try {
-      const result = await this.queryRequests({
+      const body = {
+        search: "",
+        timeFilter: {
+          startTimeUnixMs: 0,
+          endTimeUnixMs: Date.now(),
+        },
+        timezoneDifference: 0,
         filter: {
-          properties: {
-            'Helicone-Session-Id': { equals: sessionId }
-          }
-        } as any, // Type cast needed as our interface doesn't match actual API
-        sort: { created_at: 'asc' },
-        limit: 100
-      });
+          sessions_request_response_rmt: {
+            session_session_id: {
+              equals: sessionId,
+            },
+          },
+        },
+      };
 
-      return result.data;
+      const params = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      };
+
+      console.log(`FFFFFFF: ${JSON.stringify(params, null, 2)}`);
+
+      const response = await fetch(`${this.baseUrl}/v1/session/query`, params);
+
+      if (!response.ok) {
+        let errorMessage: string;
+        try {
+          const errorData = await response.text();
+          errorMessage = errorData || response.statusText;
+        } catch {
+          errorMessage = response.statusText;
+        }
+        throw new Error(
+          `Helicone API error (${response.status}): ${errorMessage}`
+        );
+      }
+
+      const result: any = await response.json();
+
+      if (!result.data || result.data.length === 0) {
+        return [];
+      }
+
+      // The session query endpoint returns session summaries, not individual requests.
+      // We will transform this summary into a single pseudo-request for cost calculation.
+      const sessionSummary = result.data[0];
+
+      const pseudoRequest: HeliconeRequest = {
+        model: sessionSummary.session_name || "aggregated-session",
+        costUSD: sessionSummary.total_cost || 0,
+        total_tokens: sessionSummary.total_tokens || 0,
+        prompt_tokens: sessionSummary.prompt_tokens || 0,
+        completion_tokens: sessionSummary.completion_tokens || 0,
+        request_id: sessionSummary.session_id,
+      };
+
+      return [pseudoRequest];
     } catch (error) {
-      throw new Error(`Failed to get session requests for ${sessionId}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get session requests for ${sessionId}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -159,53 +228,74 @@ export class HeliconeAPIClient {
     }>;
   }> {
     const requests = await this.getSessionRequests(sessionId);
-    console.log(`[Cost-Check] Fetched ${requests.length} requests for session: ${sessionId}`);
-    
+    console.log(
+      `[Cost-Check] Fetched ${requests.length} requests for session: ${sessionId}`
+    );
+
     let totalCost = 0;
     let totalTokens = 0;
-    const modelStats = new Map<string, { cost: number; tokens: number; count: number }>();
-    
-    console.log('[Cost-Check] --- Processing Individual Requests and Calculating Totals ---');
+    const modelStats = new Map<
+      string,
+      { cost: number; tokens: number; count: number }
+    >();
+
+    console.log(
+      "[Cost-Check] --- Processing Individual Requests and Calculating Totals ---"
+    );
     requests.forEach((req, i) => {
       const reqCost = req.costUSD || 0;
       const reqTokens = req.total_tokens || 0;
 
-      console.log(`[Cost-Check] Req ${i + 1}: Model=${req.model}, Cost=${reqCost}, Tokens=${reqTokens} (P: ${req.prompt_tokens || 0}, C: ${req.completion_tokens || 0})`);
-      
+      console.log(
+        `[Cost-Check] Req ${i + 1}: Model=${req.model}, Cost=${reqCost}, Tokens=${reqTokens} (P: ${req.prompt_tokens || 0}, C: ${req.completion_tokens || 0})`
+      );
+
       // Update running totals
       totalCost += reqCost;
       totalTokens += reqTokens;
-      console.log(`[Cost-Check]   -> Running Total: Cost=${totalCost.toFixed(6)}, Tokens=${totalTokens}`);
-      
+      console.log(
+        `[Cost-Check]   -> Running Total: Cost=${totalCost.toFixed(6)}, Tokens=${totalTokens}`
+      );
+
       // Update model stats
-      const existing = modelStats.get(req.model) || { cost: 0, tokens: 0, count: 0 };
+      const existing = modelStats.get(req.model) || {
+        cost: 0,
+        tokens: 0,
+        count: 0,
+      };
       modelStats.set(req.model, {
         cost: existing.cost + reqCost,
         tokens: existing.tokens + reqTokens,
-        count: existing.count + 1
+        count: existing.count + 1,
       });
     });
-    console.log('[Cost-Check] --- End of Request Processing ---');
+    console.log("[Cost-Check] --- End of Request Processing ---");
 
-    console.log('[Cost-Check] --- Intermediate Model Stats Map ---');
+    console.log("[Cost-Check] --- Intermediate Model Stats Map ---");
     console.log(modelStats);
-    console.log('[Cost-Check] ------------------------------------');
+    console.log("[Cost-Check] ------------------------------------");
 
-    const breakdown = Array.from(modelStats.entries()).map(([model, stats]) => ({
-      model,
-      ...stats
-    }));
+    const breakdown = Array.from(modelStats.entries()).map(
+      ([model, stats]) => ({
+        model,
+        ...stats,
+      })
+    );
 
     const result = {
       totalCost,
       totalTokens,
       requestCount: requests.length,
-      breakdown
+      breakdown,
     };
 
-    console.log(`[Cost-Check] --- Aggregated Session Summary for ${sessionId} ---`);
+    console.log(
+      `[Cost-Check] --- Aggregated Session Summary for ${sessionId} ---`
+    );
     console.log(JSON.stringify(result, null, 2));
-    console.log('[Cost-Check] -------------------------------------------------');
+    console.log(
+      "[Cost-Check] -------------------------------------------------"
+    );
 
     return result;
   }
@@ -213,43 +303,45 @@ export class HeliconeAPIClient {
   /**
    * Get recent job sessions
    */
-  async getRecentJobSessions(limit: number = 10): Promise<Array<{
-    sessionId: string;
-    sessionName: string;
-    jobId: string;
-    agentName: string;
-    documentTitle: string;
-    createdAt: string;
-    requestCount: number;
-    totalCost: number;
-  }>> {
+  async getRecentJobSessions(limit: number = 10): Promise<
+    Array<{
+      sessionId: string;
+      sessionName: string;
+      jobId: string;
+      agentName: string;
+      documentTitle: string;
+      createdAt: string;
+      requestCount: number;
+      totalCost: number;
+    }>
+  > {
     // Get recent requests and filter for job sessions
     const result = await this.queryRequests({
-      filter: 'all',
-      sort: { created_at: 'desc' },
-      limit: 500 // Get recent requests
+      filter: "all",
+      sort: { created_at: "desc" },
+      limit: 500, // Get recent requests
     });
 
     // Group by session and extract metadata
     const sessionMap = new Map<string, any>();
-    
-    result.data.forEach(req => {
-      const sessionId = req.request_properties?.['Helicone-Session-Id'];
+
+    result.data.forEach((req) => {
+      const sessionId = req.request_properties?.["Helicone-Session-Id"];
       if (!sessionId) return;
-      
+
       if (!sessionMap.has(sessionId)) {
         sessionMap.set(sessionId, {
           sessionId,
-          sessionName: req.request_properties?.['Helicone-Session-Name'] || '',
-          jobId: req.request_properties?.['JobId'] || '',
-          agentName: req.request_properties?.['AgentName'] || '',
-          documentTitle: req.request_properties?.['DocumentTitle'] || '',
-          createdAt: req.request_created_at || req.response_created_at || '',
+          sessionName: req.request_properties?.["Helicone-Session-Name"] || "",
+          jobId: req.request_properties?.["JobId"] || "",
+          agentName: req.request_properties?.["AgentName"] || "",
+          documentTitle: req.request_properties?.["DocumentTitle"] || "",
+          createdAt: req.request_created_at || req.response_created_at || "",
           requests: [],
-          totalCost: 0
+          totalCost: 0,
         });
       }
-      
+
       const session = sessionMap.get(sessionId);
       session.requests.push(req);
       session.totalCost += req.costUSD || 0;
@@ -257,8 +349,8 @@ export class HeliconeAPIClient {
 
     // Convert to array and sort by creation date
     return Array.from(sessionMap.values())
-      .filter(s => s.jobId) // Only job sessions
-      .map(s => ({
+      .filter((s) => s.jobId) // Only job sessions
+      .map((s) => ({
         sessionId: s.sessionId,
         sessionName: s.sessionName,
         jobId: s.jobId,
@@ -266,9 +358,12 @@ export class HeliconeAPIClient {
         documentTitle: s.documentTitle,
         createdAt: s.createdAt,
         requestCount: s.requests.length,
-        totalCost: s.totalCost
+        totalCost: s.totalCost,
       }))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
       .slice(0, limit);
   }
 
@@ -278,30 +373,44 @@ export class HeliconeAPIClient {
   async testSessionIntegration(): Promise<{
     isWorking: boolean;
     sessionsFound: number;
-    recentSessions: Array<{ id: string; name: string; path: string; requestCount: number }>;
+    recentSessions: Array<{
+      id: string;
+      name: string;
+      path: string;
+      requestCount: number;
+    }>;
     issues: string[];
   }> {
     const issues: string[] = [];
-    
+
     try {
       // Get recent requests
       const result = await this.queryRequests({
-        filter: 'all',
-        sort: { created_at: 'desc' },
-        limit: 100
+        filter: "all",
+        sort: { created_at: "desc" },
+        limit: 100,
       });
 
       // Check for sessions
-      const sessionsMap = new Map<string, { name: string; paths: Set<string>; count: number }>();
-      
-      result.data.forEach(req => {
-        const sessionId = req.request_properties?.['Helicone-Session-Id'];
-        const sessionName = req.request_properties?.['Helicone-Session-Name'] || '';
-        const sessionPath = req.request_properties?.['Helicone-Session-Path'] || '';
-        
+      const sessionsMap = new Map<
+        string,
+        { name: string; paths: Set<string>; count: number }
+      >();
+
+      result.data.forEach((req) => {
+        const sessionId = req.request_properties?.["Helicone-Session-Id"];
+        const sessionName =
+          req.request_properties?.["Helicone-Session-Name"] || "";
+        const sessionPath =
+          req.request_properties?.["Helicone-Session-Path"] || "";
+
         if (sessionId) {
           if (!sessionsMap.has(sessionId)) {
-            sessionsMap.set(sessionId, { name: sessionName, paths: new Set(), count: 0 });
+            sessionsMap.set(sessionId, {
+              name: sessionName,
+              paths: new Set(),
+              count: 0,
+            });
           }
           const session = sessionsMap.get(sessionId)!;
           session.count++;
@@ -313,34 +422,36 @@ export class HeliconeAPIClient {
         .map(([id, data]) => ({
           id,
           name: data.name,
-          path: Array.from(data.paths).join(', '),
-          requestCount: data.count
+          path: Array.from(data.paths).join(", "),
+          requestCount: data.count,
         }))
         .slice(0, 5);
 
       // Check for any issues
       if (sessionsMap.size === 0) {
-        issues.push('No sessions found in recent requests');
+        issues.push("No sessions found in recent requests");
       }
 
       // Check if session features are enabled
       if (!heliconeSessionsConfig.enabled) {
-        issues.push('Helicone sessions are disabled in configuration');
+        issues.push("Helicone sessions are disabled in configuration");
       }
 
       return {
         isWorking: sessionsMap.size > 0 && issues.length === 0,
         sessionsFound: sessionsMap.size,
         recentSessions,
-        issues
+        issues,
       };
     } catch (error) {
-      issues.push(`API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      issues.push(
+        `API error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
       return {
         isWorking: false,
         sessionsFound: 0,
         recentSessions: [],
-        issues
+        issues,
       };
     }
   }
@@ -348,7 +459,10 @@ export class HeliconeAPIClient {
   /**
    * Get usage statistics for a time period
    */
-  async getUsageStats(startDate: Date, endDate: Date): Promise<{
+  async getUsageStats(
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
     totalRequests: number;
     totalCost: number;
     totalTokens: number;
@@ -359,33 +473,44 @@ export class HeliconeAPIClient {
       filter: {
         created_at: {
           gte: startDate.toISOString(),
-          lte: endDate.toISOString()
-        }
+          lte: endDate.toISOString(),
+        },
       },
-      sort: { created_at: 'asc' },
-      limit: 1000 // Adjust as needed
+      sort: { created_at: "asc" },
+      limit: 1000, // Adjust as needed
     });
 
-    const byModel = new Map<string, { requests: number; cost: number; tokens: number }>();
+    const byModel = new Map<
+      string,
+      { requests: number; cost: number; tokens: number }
+    >();
     const byDayMap = new Map<string, { requests: number; cost: number }>();
 
     let totalCost = 0;
     let totalTokens = 0;
 
-    result.data.forEach(req => {
+    result.data.forEach((req) => {
       // Update totals
       totalCost += req.costUSD || 0;
       totalTokens += req.total_tokens || 0;
 
       // Update by model
-      const modelStats = byModel.get(req.model) || { requests: 0, cost: 0, tokens: 0 };
+      const modelStats = byModel.get(req.model) || {
+        requests: 0,
+        cost: 0,
+        tokens: 0,
+      };
       modelStats.requests++;
       modelStats.cost += req.costUSD || 0;
       modelStats.tokens += req.total_tokens || 0;
       byModel.set(req.model, modelStats);
 
       // Update by day
-      const day = (req.request_created_at || req.response_created_at || '').split('T')[0];
+      const day = (
+        req.request_created_at ||
+        req.response_created_at ||
+        ""
+      ).split("T")[0];
       const dayStats = byDayMap.get(day) || { requests: 0, cost: 0 };
       dayStats.requests++;
       dayStats.cost += req.costUSD || 0;
@@ -401,7 +526,7 @@ export class HeliconeAPIClient {
       totalCost,
       totalTokens,
       byModel,
-      byDay
+      byDay,
     };
   }
 }
@@ -416,12 +541,17 @@ export const heliconeAPI = {
     }
     return _heliconeAPI;
   },
-  
+
   // Proxy methods to the instance
-  queryRequests: (options: HeliconeQueryOptions) => heliconeAPI.instance.queryRequests(options),
-  getSessionRequests: (sessionId: string) => heliconeAPI.instance.getSessionRequests(sessionId),
-  getSessionCosts: (sessionId: string) => heliconeAPI.instance.getSessionCosts(sessionId),
-  getRecentJobSessions: (limit?: number) => heliconeAPI.instance.getRecentJobSessions(limit),
+  queryRequests: (options: HeliconeQueryOptions) =>
+    heliconeAPI.instance.queryRequests(options),
+  getSessionRequests: (sessionId: string) =>
+    heliconeAPI.instance.getSessionRequests(sessionId),
+  getSessionCosts: (sessionId: string) =>
+    heliconeAPI.instance.getSessionCosts(sessionId),
+  getRecentJobSessions: (limit?: number) =>
+    heliconeAPI.instance.getRecentJobSessions(limit),
   testSessionIntegration: () => heliconeAPI.instance.testSessionIntegration(),
-  getUsageStats: (startDate: Date, endDate: Date) => heliconeAPI.instance.getUsageStats(startDate, endDate),
+  getUsageStats: (startDate: Date, endDate: Date) =>
+    heliconeAPI.instance.getUsageStats(startDate, endDate),
 };

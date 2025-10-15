@@ -64,6 +64,8 @@ export async function fetchJobCostFromHelicone(jobId: string): Promise<JobCostDa
  */
 export async function fetchDetailedJobCostFromHelicone(jobId: string): Promise<JobCostData> {
   try {
+    console.log('SLEEEPING.....')
+    await new Promise(resolve => setTimeout(resolve, 10000)); // Pause for 10 seconds
     // Get raw requests to access prompt/completion token breakdown
     const requests = await heliconeAPI.getSessionRequests(jobId);
     console.log(`Job ${jobId}: fetched ${requests.length} requests from Helicone`);
