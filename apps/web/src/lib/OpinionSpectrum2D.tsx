@@ -361,6 +361,18 @@ export function ClaimEvaluationDisplay({
 }: ClaimEvaluationDisplayProps) {
   const [showRawJSON, setShowRawJSON] = useState(false);
 
+  // Guard against missing evaluations array
+  if (!result.evaluations) {
+    return (
+      <div className="mt-6 rounded-lg border border-yellow-200 bg-yellow-50 p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-yellow-900 mb-2">No Evaluation Data</h3>
+        <p className="text-sm text-yellow-700">
+          This evaluation does not contain any results yet or the data format is incomplete.
+        </p>
+      </div>
+    );
+  }
+
   // Split evaluations into successful and failed
   const successfulEvaluations = result.evaluations.filter(
     (e): e is EvaluationResult & { successfulResponse: SuccessfulResponse } =>

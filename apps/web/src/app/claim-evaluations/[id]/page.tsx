@@ -404,6 +404,20 @@ interface VariationComparisonTableProps {
 }
 
 function VariationComparisonTable({ currentEvaluation, variations, selectedTags, claimSearch }: VariationComparisonTableProps) {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   // Filter variations by selected tags and search (if any)
   const filteredVariations = useMemo(() => {
     let filtered = variations;
@@ -464,9 +478,6 @@ function VariationComparisonTable({ currentEvaluation, variations, selectedTags,
                 Claim
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Context
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Tags
               </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -510,91 +521,142 @@ function VariationComparisonTable({ currentEvaluation, variations, selectedTags,
                 }
               };
 
+              const isExpanded = expandedRows.has(evaluation.id);
+              const hasContext = evaluation.context && evaluation.context.trim().length > 0;
+
               return (
-                <tr
-                  key={evaluation.id}
-                  className="hover:bg-gray-50"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {isCurrentEvaluation ? (
-                        <span className="text-sm font-medium text-indigo-600">
-                          Current
+                <>
+                  <tr
+                    key={evaluation.id}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-start gap-2">
+                        {hasContext && (
+                          <button
+                            onClick={() => toggleRow(evaluation.id)}
+                            className="text-gray-400 hover:text-gray-600 focus:outline-none mt-0.5 flex-shrink-0"
+                            aria-label={isExpanded ? 'Collapse context' : 'Expand context'}
+                          >
+                            <svg
+                              className={`h-4 w-4 transition-transform ${isExpanded ? 'transform rotate-90' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          {evaluation.submitterNotes ? (
+                            <>
+                              <div className="text-sm text-gray-900 font-medium">
+                                {evaluation.submitterNotes}
+                              </div>
+                              <div className="mt-0.5">
+                                {isCurrentEvaluation ? (
+                                  <span className="text-xs text-indigo-600">
+                                    Current
+                                  </span>
+                                ) : (
+                                  <Link
+                                    href={`/claim-evaluations/${evaluation.id}`}
+                                    className="text-xs text-indigo-600 hover:text-indigo-700"
+                                  >
+                                    Variation {index}
+                                  </Link>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <div>
+                              {isCurrentEvaluation ? (
+                                <span className="text-sm font-medium text-indigo-600">
+                                  Current
+                                </span>
+                              ) : (
+                                <Link
+                                  href={`/claim-evaluations/${evaluation.id}`}
+                                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                                >
+                                  Variation {index}
+                                </Link>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-md">
+                        {evaluation.claim}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {'tags' in evaluation && evaluation.tags && evaluation.tags.length > 0 ? (
+                          evaluation.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700"
+                            >
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-400 italic text-xs">None</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center">
+                        <EvaluationDots evaluations={evaluations} />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {evaluation.summaryMean !== null ? (
+                        <span className="text-sm font-bold text-gray-900">
+                          {Math.round(evaluation.summaryMean)}%
                         </span>
                       ) : (
-                        <Link
-                          href={`/claim-evaluations/${evaluation.id}`}
-                          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                        >
-                          Variation {index}
-                        </Link>
+                        <span className="text-sm text-gray-400">—</span>
                       )}
-                    </div>
-                    {evaluation.submitterNotes && (
-                      <div className="mt-1 text-xs text-gray-500">
-                        {evaluation.submitterNotes}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-md">
-                      {evaluation.claim}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-600 max-w-md">
-                      {evaluation.context || <span className="text-gray-400 italic">None</span>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1 max-w-xs">
-                      {'tags' in evaluation && evaluation.tags && evaluation.tags.length > 0 ? (
-                        evaluation.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700"
-                          >
-                            {tag}
-                          </span>
-                        ))
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {delta !== null ? (
+                        <span className={`text-sm ${getDeltaColor(delta)}`}>
+                          {delta > 0 ? '+' : ''}{delta}
+                        </span>
                       ) : (
-                        <span className="text-gray-400 italic text-xs">None</span>
+                        <span className="text-sm text-gray-400">—</span>
                       )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center">
-                      <EvaluationDots evaluations={evaluations} />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {evaluation.summaryMean !== null ? (
-                      <span className="text-sm font-bold text-gray-900">
-                        {Math.round(evaluation.summaryMean)}%
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {delta !== null ? (
-                      <span className={`text-sm ${getDeltaColor(delta)}`}>
-                        {delta > 0 ? '+' : ''}{delta}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {meanConfidence !== null ? (
-                      <span className="text-sm text-gray-600">
-                        {meanConfidence}%
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-400">—</span>
-                    )}
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {meanConfidence !== null ? (
+                        <span className="text-sm text-gray-600">
+                          {meanConfidence}%
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
+                    </td>
+                  </tr>
+                  {isExpanded && hasContext && (
+                    <tr key={`${evaluation.id}-context`} className="bg-gray-50">
+                      <td colSpan={7} className="px-6 py-4">
+                        <div className="max-w-full">
+                          <div className="text-xs font-medium text-gray-600 mb-2">Context:</div>
+                          <div className="prose prose-sm max-w-none bg-white rounded border border-gray-200 p-4 max-h-96 overflow-y-auto">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {evaluation.context}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
               );
             })}
           </tbody>

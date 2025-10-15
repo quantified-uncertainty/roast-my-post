@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     const tagsFilter = tagsParam ? tagsParam.split(',').map(t => t.trim()).filter(Boolean) : null;
 
     // Validate sortBy and order to prevent SQL injection
-    const validSortBy = ['date', 'agreement'];
+    const validSortBy = ['date', 'updated', 'agreement'];
     const validOrder = ['asc', 'desc'];
 
     if (!validSortBy.includes(sortBy)) {
@@ -125,11 +125,14 @@ export async function GET(request: NextRequest) {
     type OrderByClause = Array<{
       summaryMean?: 'asc' | 'desc';
       createdAt?: 'asc' | 'desc';
+      updatedAt?: 'asc' | 'desc';
       id?: 'desc';
     }>;
     const orderBy: OrderByClause = [];
     if (sortBy === 'agreement' && !search) {
       orderBy.push({ summaryMean: order as 'asc' | 'desc' });
+    } else if (sortBy === 'updated') {
+      orderBy.push({ updatedAt: order as 'asc' | 'desc' });
     }
     orderBy.push({ createdAt: order as 'asc' | 'desc' });
     orderBy.push({ id: 'desc' }); // Tie-breaker for consistent pagination
@@ -164,6 +167,8 @@ export async function GET(request: NextRequest) {
       // Build SQL query parts
       const orderClause = sortBy === 'agreement'
         ? 'ORDER BY "summaryMean" ' + order.toUpperCase() + ', "createdAt" ' + order.toUpperCase() + ', id DESC'
+        : sortBy === 'updated'
+        ? 'ORDER BY "updatedAt" ' + order.toUpperCase() + ', "createdAt" ' + order.toUpperCase() + ', id DESC'
         : 'ORDER BY "createdAt" ' + order.toUpperCase() + ', id DESC';
 
       // Note: Cursor pagination is not reliable for full-text search results since

@@ -49,7 +49,7 @@ const BUFFER_SIZE = 5; // Extra items to render above/below viewport
 export function ClaimEvaluationsList() {
   const [items, setItems] = useState<ClaimEvaluation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "agreement">("date");
+  const [sortBy, setSortBy] = useState<"date" | "updated" | "agreement">("updated");
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -221,9 +221,9 @@ export function ClaimEvaluationsList() {
   }, []);
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col space-y-4 flex-1 min-h-0">
       {/* Search and filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between flex-shrink-0">
         <div className="relative flex-1">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
@@ -238,10 +238,11 @@ export function ClaimEvaluationsList() {
         <div className="flex gap-2">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as "date" | "agreement")}
+            onChange={(e) => setSortBy(e.target.value as "date" | "updated" | "agreement")}
             className="rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="date">Latest</option>
+            <option value="updated">Recently Updated</option>
+            <option value="date">Recently Created</option>
             <option value="agreement">Agreement</option>
           </select>
         </div>
@@ -251,8 +252,7 @@ export function ClaimEvaluationsList() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="overflow-y-auto bg-white"
-        style={{ height: "600px" }}
+        className="overflow-y-auto bg-white flex-1 min-h-0"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {filteredItems.map((item) => (
