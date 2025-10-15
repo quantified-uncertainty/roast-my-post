@@ -245,7 +245,7 @@ export function EvaluationView({
   // (Scroll behavior logic moved into useScrollHeaderBehavior hook)
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Fixed Evaluation Cards Header Bar */}
       <Card
         className={cn(
@@ -267,11 +267,11 @@ export function EvaluationView({
       </Card>
 
       {/* Main content container */}
-      <div className="flex h-full flex-col overflow-x-hidden">
+      <div className="flex h-full min-h-0 flex-col overflow-x-hidden">
         {/* Unified scroll container for all content */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-8 pt-4"
+          className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden overscroll-contain px-8 pb-8 pt-4"
         >
           {/* Document metadata header - now part of scrollable content */}
           <DocumentMetadata
