@@ -97,26 +97,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Delete all variations first, then the parent evaluation
-    // This is necessary because the schema has onDelete: SetNull instead of Cascade
-    // Use transaction to ensure atomicity
+    // Delete the evaluation - CASCADE will automatically delete all variations
     const variationCount = evaluation._count.variations;
 
-    await prisma.$transaction(async (tx) => {
-      if (variationCount > 0) {
-        await tx.claimEvaluation.deleteMany({
-          where: { variationOf: id },
-        });
-        logger.info(`Deleted ${variationCount} variations of claim evaluation ${id}`);
-      }
-
-      // Delete the evaluation itself
-      await tx.claimEvaluation.delete({
-        where: { id },
-      });
-
-      logger.info(`Deleted claim evaluation ${id}`);
+    await prisma.claimEvaluation.delete({
+      where: { id },
     });
+
+    logger.info(`Deleted claim evaluation ${id} (and ${variationCount} variations via CASCADE)`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

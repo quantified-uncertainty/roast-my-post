@@ -333,7 +333,7 @@ model ClaimEvaluation {
   updatedAt           DateTime                 @updatedAt
   claim_search_text   Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(claim, ''::text) || ' ' || COALESCE(context, ''::text))"))
   user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parentEvaluation    ClaimEvaluation?         @relation("Variations", fields: [variationOf], references: [id], onDelete: SetNull)
+  parentEvaluation    ClaimEvaluation?         @relation("Variations", fields: [variationOf], references: [id], onDelete: Cascade)
   variations          ClaimEvaluation[]        @relation("Variations")
 
   @@index([userId])
