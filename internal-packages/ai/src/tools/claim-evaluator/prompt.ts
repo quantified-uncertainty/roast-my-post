@@ -1,23 +1,22 @@
 import type { ClaimEvaluatorInput } from "./utils";
+import { renderTemplate, type TemplateVariables } from "../../utils/template-engine";
 
 // Constants
 export const DEFAULT_EXPLANATION_LENGTH = 50; // Default max words for explanation text
 
 /**
- * Generate the LLM prompt for claim evaluation
- * Exported for preview/debugging purposes
+ * Default prompt template using {{VARIABLE}} syntax
+ * Available variables:
+ * - {{CLAIM}}: The claim to evaluate
+ * - {{CONTEXT}}: Optional context (includes "Context: " prefix if provided)
+ * - {{EXPLANATION_LENGTH}}: Max words for explanation
+ * - {{RUN_NOTE}}: Note for multiple runs (empty if single run)
+ * - {{CONTEXT_SECTION}}: Full context considerations section (empty if no context)
  */
-export function generateClaimEvaluatorPrompt(input: Pick<ClaimEvaluatorInput, 'claim' | 'context' | 'explanationLength' | 'runs'>): string {
-  const runNote = (input.runs && input.runs > 1)
-    ? '\n\nIMPORTANT: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others. Use the full probability scale (0-100) based on your analysis.'
-    : '';
+export const DEFAULT_PROMPT_TEMPLATE = `You are evaluating the factual accuracy of this claim:
 
-  const explanationLength = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
-
-  return `You are evaluating the factual accuracy of this claim:
-
-"${input.claim}"
-${input.context ? `\nContext: ${input.context}` : ''}
+"{{CLAIM}}"
+{{CONTEXT}}
 
 ## Your Task
 
@@ -50,7 +49,7 @@ Confidence = How sure are you of your probability estimate?
 
 Note: You can have 60% probability with 90% confidence, OR 60% probability with 30% confidence. These are independent dimensions.
 
-${input.context ? '\n## Context Considerations\n\nThe provided context may include temporal information (when the claim was made), domain knowledge, or situational details. Factor these into your base rate and evidence assessment.\n' : ''}${runNote}
+{{CONTEXT_SECTION}}{{RUN_NOTE}}
 
 ## Refusal Options
 
@@ -68,14 +67,51 @@ CRITICAL: Respond with ONLY a JSON object. No explanatory text before or after.
 {
   "agreement": 75,
   "confidence": 85,
-  "reasoning": "Step-by-step reasoning (max ${explanationLength} words): Base rate ~70% for scientific consensus claims. Strong peer-reviewed evidence supports this. No significant contradicting evidence. Temporal factors not relevant. Final estimate: 75% with high confidence."
+  "reasoning": "Step-by-step reasoning (max {{EXPLANATION_LENGTH}} words): Base rate ~70% for scientific consensus claims. Strong peer-reviewed evidence supports this. No significant contradicting evidence. Temporal factors not relevant. Final estimate: 75% with high confidence."
 }
 
 **For refusal:**
 {
   "refusalReason": "Unclear",
-  "reasoning": "Brief explanation of why you're refusing (max ${explanationLength} words)"
+  "reasoning": "Brief explanation of why you're refusing (max {{EXPLANATION_LENGTH}} words)"
 }
 
 Your response must be valid JSON only.`;
+
+/**
+ * Generate the LLM prompt for claim evaluation
+ * Exported for preview/debugging purposes
+ *
+ * @param input - Claim evaluation input with claim, context, etc.
+ * @param customTemplate - Optional custom template string (uses DEFAULT_PROMPT_TEMPLATE if not provided)
+ */
+export function generateClaimEvaluatorPrompt(
+  input: Pick<ClaimEvaluatorInput, 'claim' | 'context' | 'explanationLength' | 'runs'>,
+  customTemplate?: string
+): string {
+  const template = customTemplate || DEFAULT_PROMPT_TEMPLATE;
+  const explanationLength = input.explanationLength || DEFAULT_EXPLANATION_LENGTH;
+
+  // Build context string with prefix
+  const contextString = input.context ? `\nContext: ${input.context}` : '';
+
+  // Build context section (full explanation about context)
+  const contextSection = input.context
+    ? '\n## Context Considerations\n\nThe provided context may include temporal information (when the claim was made), domain knowledge, or situational details. Factor these into your base rate and evidence assessment.\n'
+    : '';
+
+  // Build run note for multiple runs
+  const runNote = (input.runs && input.runs > 1)
+    ? '\n\nIMPORTANT: You are one of multiple independent evaluators. Provide your honest assessment without trying to match others. Use the full probability scale (0-100) based on your analysis.'
+    : '';
+
+  const variables: TemplateVariables = {
+    CLAIM: input.claim,
+    CONTEXT: contextString,
+    EXPLANATION_LENGTH: explanationLength,
+    RUN_NOTE: runNote,
+    CONTEXT_SECTION: contextSection,
+  };
+
+  return renderTemplate(template, variables);
 }

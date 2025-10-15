@@ -115,11 +115,13 @@ export class HeliconeSessionManager {
   static forJob(
     jobId: string,
     jobName: string,
-    properties?: Record<string, string>
+    properties?: Record<string, string>,
+    userId?: string
   ): HeliconeSessionManager {
     return new HeliconeSessionManager({
       sessionId: jobId,
       sessionName: jobName,
+      userId,
       properties
     });
   }

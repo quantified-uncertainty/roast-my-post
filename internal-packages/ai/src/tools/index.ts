@@ -27,6 +27,7 @@ export { detectLanguageConventionTool } from './language-convention-detector';
 export { default as perplexityResearchTool } from './perplexity-researcher';
 export { linkValidator } from './link-validator';
 export { default as claimEvaluatorTool } from './claim-evaluator';
+export { analyzeClaimEvaluation } from './claim-evaluator';
 
 // Export link validator utilities and types
 export { 

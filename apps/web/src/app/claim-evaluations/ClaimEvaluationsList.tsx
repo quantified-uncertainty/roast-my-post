@@ -12,6 +12,8 @@ import Link from "next/link";
 
 import { useDebounce } from "@/hooks/useDebounce";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Split } from "lucide-react";
+import { EvaluationDots } from "./EvaluationDots";
 
 interface ClaimEvaluation {
   id: string;
@@ -19,6 +21,9 @@ interface ClaimEvaluation {
   summaryMean: number | null;
   createdAt: string;
   context?: string | null;
+  variationOf?: string | null;
+  submitterNotes?: string | null;
+  tags?: string[];
   rawOutput?: {
     evaluations?: Array<{
       hasError: boolean;
@@ -26,6 +31,9 @@ interface ClaimEvaluation {
         agreement: number;
       };
     }>;
+  };
+  _count?: {
+    variations: number;
   };
 }
 
@@ -35,13 +43,13 @@ interface FetchResponse {
   hasMore: boolean;
 }
 
-const ITEM_HEIGHT = 40; // Height of each list item in pixels (single line)
+const ITEM_HEIGHT = 56; // Height of each list item in pixels (allows for notes)
 const BUFFER_SIZE = 5; // Extra items to render above/below viewport
 
 export function ClaimEvaluationsList() {
   const [items, setItems] = useState<ClaimEvaluation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "agreement">("date");
+  const [sortBy, setSortBy] = useState<"date" | "updated" | "agreement">("updated");
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -213,9 +221,9 @@ export function ClaimEvaluationsList() {
   }, []);
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col space-y-4 flex-1 min-h-0">
       {/* Search and filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between flex-shrink-0">
         <div className="relative flex-1">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
@@ -230,31 +238,26 @@ export function ClaimEvaluationsList() {
         <div className="flex gap-2">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as "date" | "agreement")}
+            onChange={(e) => setSortBy(e.target.value as "date" | "updated" | "agreement")}
             className="rounded-lg border border-gray-300 px-4 py-2 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="date">Latest</option>
+            <option value="updated">Recently Updated</option>
+            <option value="date">Recently Created</option>
             <option value="agreement">Agreement</option>
           </select>
         </div>
       </div>
 
-      {/* Virtual scrolling container - 2 column grid */}
+      {/* Scrolling container - 2 column grid */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="overflow-y-auto bg-white"
-        style={{ height: "600px" }}
+        className="overflow-y-auto bg-white flex-1 min-h-0"
       >
-        <div style={{ height: `${totalHeight}px`, position: "relative" }}>
-          <div
-            style={{ transform: `translateY(${offsetY}px)` }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-2"
-          >
-            {visibleItems.map((item) => (
-              <ClaimCard key={item.id} item={item} />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {filteredItems.map((item) => (
+            <ClaimCard key={item.id} item={item} />
+          ))}
         </div>
 
         {loading && (
@@ -303,86 +306,46 @@ function ClaimCard({ item }: { item: ClaimEvaluation }) {
           ? "text-red-600"
           : "text-yellow-600";
 
-  // Helper to get color based on agreement score
-  const getAgreementColor = (agreement: number): string => {
-    if (agreement >= 70) return "#22c55e"; // green-500
-    if (agreement >= 50) return "#eab308"; // yellow-500
-    if (agreement >= 30) return "#f97316"; // orange-500
-    return "#ef4444"; // red-500
-  };
-
-  // Sort evaluations: failed first, then by agreement (low to high)
-  const sortedEvaluations = item.rawOutput?.evaluations
-    ? [...item.rawOutput.evaluations].sort((a, b) => {
-        // Failed items first
-        if (a.hasError && !b.hasError) return -1;
-        if (!a.hasError && b.hasError) return 1;
-
-        // Both successful or both failed - sort by agreement (low to high)
-        const aAgreement = a.successfulResponse?.agreement ?? 50;
-        const bAgreement = b.successfulResponse?.agreement ?? 50;
-        return aAgreement - bAgreement;
-      })
-    : [];
+  const evaluations = item.rawOutput?.evaluations || [];
+  const variationCount = item._count?.variations || 0;
 
   return (
     <Link
       href={`/claim-evaluations/${item.id}`}
-      className="block rounded-lg bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100"
-      style={{ height: `${ITEM_HEIGHT}px` }}
+      className={`block rounded-lg px-4 py-3 transition-colors hover:bg-gray-100 ${
+        item.variationOf ? "bg-blue-50 border-l-2 border-blue-400" : "bg-gray-50"
+      }`}
     >
-      <div className="flex h-full items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         {/* Claim text - clickable, truncated to single line */}
         <div className="flex-1 overflow-hidden">
-          <p className="truncate text-sm font-medium text-gray-900 hover:text-indigo-600">
-            {item.claim}
-          </p>
+          <div className="flex items-center gap-2">
+            {item.variationOf && (
+              <span className="text-xs text-blue-600 flex-shrink-0" title="Variation">↳</span>
+            )}
+            <p className="truncate text-sm font-medium text-gray-900 hover:text-indigo-600">
+              {item.claim}
+            </p>
+            {variationCount > 0 && (
+              <span className="flex-shrink-0 flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700" title={`${variationCount} variation${variationCount !== 1 ? 's' : ''}`}>
+                <Split size={12} />
+                {variationCount}
+              </span>
+            )}
+          </div>
+          {item.submitterNotes && (
+            <p className="truncate text-xs text-gray-500 mt-0.5" title={item.submitterNotes}>
+              {item.submitterNotes}
+            </p>
+          )}
         </div>
 
         {/* Evaluation count and agreement */}
         <div className="flex flex-shrink-0 items-center gap-3">
-          {/* Dot visualization for each evaluation */}
-          {sortedEvaluations.length > 0 && (
-            <div
-              className="flex items-center gap-0.5 opacity-20 transition-opacity hover:opacity-100"
-              style={
-                sortedEvaluations.length > 5
-                  ? {
-                      // Multi-row layout: dots flow right-to-left, bottom-to-top
-                      // This creates a compact grid where most recent evaluations
-                      // appear in the bottom-right and wrap upward
-                      flexWrap: "wrap-reverse",
-                      flexDirection: "row-reverse",
-                      maxWidth: "60px", // Approximately 5 dots per row
-                    }
-                  : undefined
-              }
-            >
-              {/* For multi-row layouts, reverse array so most recent is bottom-right */}
-              {(sortedEvaluations.length > 5
-                ? [...sortedEvaluations].reverse()
-                : sortedEvaluations
-              ).map((evaluation, idx) => (
-                <div
-                  key={idx}
-                  className="h-2 w-2 rounded-sm"
-                  style={{
-                    backgroundColor: evaluation.hasError
-                      ? "#9ca3af" // gray-400 for errors
-                      : getAgreementColor(
-                          evaluation.successfulResponse?.agreement ?? 50
-                        ),
-                  }}
-                  title={
-                    evaluation.hasError
-                      ? "Failed"
-                      : `${evaluation.successfulResponse?.agreement}% agreement`
-                  }
-                />
-              ))}
-            </div>
-          )}
-
+          <EvaluationDots
+            evaluations={evaluations}
+            className="opacity-20 transition-opacity hover:opacity-100"
+          />
           <div className={`text-sm font-bold ${agreementColor} w-6 text-right`}>
             {agreementPercent !== null ? agreementPercent : ""}
           </div>

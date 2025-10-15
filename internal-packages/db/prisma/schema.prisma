@@ -315,23 +315,32 @@ enum JobStatus {
 }
 
 model ClaimEvaluation {
-  id                String                   @id
-  userId            String
-  claim             String
-  context           String?
-  summaryMean       Float?
-  rawOutput         Json
-  explanationLength Int?
-  temperature       Float?
-  prompt            String?
-  createdAt         DateTime                 @default(now())
-  updatedAt         DateTime                 @updatedAt
-  claim_search_text Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(claim, ''::text) || ' ' || COALESCE(context, ''::text))"))
-  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String                   @id
+  userId              String
+  claim               String
+  context             String?
+  summaryMean         Float?
+  rawOutput           Json
+  explanationLength   Int?
+  temperature         Float?
+  prompt              String?
+  variationOf         String?
+  submitterNotes      String?
+  tags                String[]
+  analysisText        String?
+  analysisGeneratedAt DateTime?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  claim_search_text   Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(claim, ''::text) || ' ' || COALESCE(context, ''::text))"))
+  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentEvaluation    ClaimEvaluation?         @relation("Variations", fields: [variationOf], references: [id], onDelete: SetNull)
+  variations          ClaimEvaluation[]        @relation("Variations")
 
   @@index([userId])
   @@index([createdAt])
   @@index([userId, createdAt(sort: Desc)])
   @@index([userId, summaryMean])
   @@index([claim_search_text], type: Gin)
+  @@index([variationOf])
+  @@index([tags], type: Gin)
 }
