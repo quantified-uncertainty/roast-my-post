@@ -649,7 +649,7 @@ function VariationComparisonTable({ currentEvaluation, variations, selectedTags,
                           <div className="text-xs font-medium text-gray-600 mb-2">Context:</div>
                           <div className="prose prose-sm max-w-none bg-white rounded border border-gray-200 p-4 max-h-96 overflow-y-auto">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {evaluation.context}
+                              {evaluation.context || ''}
                             </ReactMarkdown>
                           </div>
                         </div>
