@@ -1,0 +1,59 @@
+# Example demonstrating variation tracking with index references
+
+variables:
+  context_2025: "Based on scientific consensus as of 2025"
+  standard_models:
+    - "anthropic/claude-sonnet-4.5"
+    - "openai/gpt-5-mini"
+
+templates:
+  standard:
+    context: "{{context_2025}}"
+    models: "{{standard_models}}"
+    runs: 1
+    temperature: 0.7
+
+claims:
+  # Base claim
+  - claim: "Exercise improves mental health"
+    template: standard
+    tags: ["health", "mental-health", "exercise"]
+    submitterNotes: "General claim"
+
+  # Variations of claim 0 (using index reference)
+  - claim: "Aerobic exercise improves mental health"
+    template: standard
+    variationOf: 0  # References first claim by index
+    tags: ["health", "mental-health", "exercise", "aerobic"]
+    submitterNotes: "Variation: aerobic exercise specifically"
+
+  - claim: "Strength training improves mental health"
+    template: standard
+    variationOf: 0  # References first claim by index
+    tags: ["health", "mental-health", "exercise", "strength"]
+    submitterNotes: "Variation: strength training specifically"
+
+  - claim: "Yoga improves mental health"
+    template: standard
+    variationOf: 0  # References first claim by index
+    tags: ["health", "mental-health", "exercise", "yoga"]
+    submitterNotes: "Variation: yoga specifically"
+
+  # Another base claim
+  - claim: "Mediterranean diet reduces cardiovascular disease risk"
+    template: standard
+    tags: ["health", "nutrition", "cardiovascular"]
+    submitterNotes: "Base claim about diet"
+
+  # Variations of claim 4
+  - claim: "Mediterranean diet reduces cardiovascular disease risk in adults over 50"
+    template: standard
+    variationOf: 4  # References the Mediterranean diet claim
+    tags: ["health", "nutrition", "cardiovascular", "age-specific"]
+    submitterNotes: "Age-specific variation"
+
+  - claim: "Mediterranean diet reduces stroke risk"
+    template: standard
+    variationOf: 4  # References the Mediterranean diet claim
+    tags: ["health", "nutrition", "cardiovascular", "stroke"]
+    submitterNotes: "Specific outcome variation"

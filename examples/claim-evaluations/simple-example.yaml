@@ -1,0 +1,19 @@
+# Simple example: Basic claim evaluations without variables or templates
+
+claims:
+  - claim: "The Earth is round"
+    context: "In the context of basic astronomy"
+    runs: 1
+    temperature: 0.7
+    tags: ["astronomy", "basic-facts"]
+
+  - claim: "The Earth is flat"
+    context: "In the context of basic astronomy"
+    runs: 1
+    temperature: 0.7
+    tags: ["astronomy", "basic-facts"]
+
+  - claim: "Water boils at 100°C at sea level"
+    context: "Standard atmospheric pressure"
+    runs: 1
+    tags: ["physics", "basic-facts"]
