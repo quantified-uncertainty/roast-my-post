@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@roast/db';
-import { auth } from '@/infrastructure/auth/auth';
 import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 import { logger } from '@/infrastructure/logging/logger';
 import { claimEvaluatorTool, analyzeClaimEvaluation } from '@roast/ai/server';
@@ -8,6 +7,7 @@ import type { ClaimEvaluatorOutput } from '@roast/ai/server';
 import { logger as aiLogger } from '@roast/ai';
 import { z } from 'zod';
 import { strictRateLimit, getClientIdentifier } from '@/infrastructure/http/rate-limiter';
+import { errorResponse, successResponse } from '@/infrastructure/http/api-response-helpers';
 
 const addRunsSchema = z.object({
   runs: z.array(z.object({
@@ -25,7 +25,7 @@ export async function GET(
     const clientId = getClientIdentifier(request);
     const { success } = await strictRateLimit.check(clientId);
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      return errorResponse('Too many requests', 429);
     }
 
     const { id } = await params;
@@ -52,15 +52,15 @@ export async function GET(
     });
 
     if (!evaluation) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return errorResponse('Not found', 404);
     }
 
-    return NextResponse.json(evaluation);
+    return successResponse(evaluation);
   } catch (error) {
     logger.error('Get claim evaluation error', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch evaluation' },
-      { status: 500 }
+    return errorResponse(
+      error instanceof Error ? error.message : 'Failed to fetch evaluation',
+      500
     );
   }
 }
@@ -76,7 +76,7 @@ export async function DELETE(
     const userId = await authenticateRequest(request);
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return errorResponse('Unauthorized', 401);
     }
 
     // Fetch evaluation to check ownership and count variations
@@ -93,11 +93,11 @@ export async function DELETE(
     });
 
     if (!evaluation) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return errorResponse('Not found', 404);
     }
 
     if (evaluation.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return errorResponse('Forbidden', 403);
     }
 
     // Delete the evaluation - CASCADE will automatically delete all variations
@@ -109,12 +109,12 @@ export async function DELETE(
 
     logger.info(`Deleted claim evaluation ${id} (and ${variationCount} variations via CASCADE)`);
 
-    return NextResponse.json({ success: true });
+    return successResponse({ success: true, deletedVariations: variationCount });
   } catch (error) {
     logger.error('Delete claim evaluation error', error);
-    return NextResponse.json(
-      { error: 'Failed to delete evaluation' },
-      { status: 500 }
+    return errorResponse(
+      error instanceof Error ? error.message : 'Failed to delete evaluation',
+      500
     );
   }
 }
@@ -130,7 +130,7 @@ export async function PATCH(
     const userId = await authenticateRequest(request);
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return errorResponse('Unauthorized', 401);
     }
 
     // Parse request body
@@ -138,10 +138,7 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON in request body' },
-        { status: 400 }
-      );
+      return errorResponse('Invalid JSON in request body', 400);
     }
 
     const data = addRunsSchema.parse(body);
@@ -149,10 +146,7 @@ export async function PATCH(
     // Validate that total evaluations don't exceed limit
     const totalRequested = data.runs.reduce((sum, r) => sum + r.runs, 0);
     if (totalRequested > 20) {
-      return NextResponse.json(
-        { error: `Too many evaluations requested: ${totalRequested} (max 20)` },
-        { status: 400 }
-      );
+      return errorResponse(`Too many evaluations requested: ${totalRequested} (max 20)`, 400);
     }
 
     // Fetch existing evaluation to check ownership and get parameters
@@ -169,11 +163,11 @@ export async function PATCH(
     });
 
     if (!existingEval) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return errorResponse('Not found', 404);
     }
 
     if (existingEval.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return errorResponse('Forbidden', 403);
     }
 
     const existingOutput = existingEval.rawOutput as unknown as ClaimEvaluatorOutput;
@@ -264,7 +258,7 @@ export async function PATCH(
 
     logger.info(`Added ${allNewEvaluations.length} evaluations to claim evaluation ${id}`);
 
-    return NextResponse.json({
+    return successResponse({
       id: updatedEval.id,
       addedEvaluations: allNewEvaluations.length,
       totalEvaluations: mergedEvaluations.length,
@@ -275,15 +269,15 @@ export async function PATCH(
     logger.error('Add runs to claim evaluation error', error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
+      return errorResponse(
+        `Invalid request data: ${error.errors.map(e => e.message).join(', ')}`,
+        400
       );
     }
 
-    return NextResponse.json(
-      { error: 'Failed to add runs to evaluation' },
-      { status: 500 }
+    return errorResponse(
+      error instanceof Error ? error.message : 'Failed to add runs to evaluation',
+      500
     );
   }
 }
