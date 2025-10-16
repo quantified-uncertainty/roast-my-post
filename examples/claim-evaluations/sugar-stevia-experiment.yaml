@@ -1,0 +1,196 @@
+# Experiment: Testing phrasing sensitivity for sugar vs stevia health comparison
+#
+# Goal: Evaluate how different phrasings of the same underlying claim affect LLM responses
+#
+# Base claim: "Sugar is at least 10x as unhealthy as stevia, for the same amount of sweetness"
+#
+# We'll test:
+# - Different framing (positive vs negative)
+# - Different quantifiers (10x, order of magnitude, 1000%)
+# - Different perspectives (consumer, researcher, policy)
+# - Different contexts (weight loss, diabetes, general health)
+
+variables:
+  # Shared context
+  year: "2025"
+  context_general: "Based on peer-reviewed research as of 2025, comparing equivalent amounts of sweetness"
+  context_diabetes: "In the context of diabetes management and blood glucose control, 2025 research"
+  context_weight: "In the context of weight management and metabolic health, 2025 research"
+
+  # Model configuration (reduced for cost: $1-4 target)
+  models_main:
+    - "anthropic/claude-sonnet-4.5"
+    - "openai/gpt-5-mini"
+
+  models_variation:
+    - "anthropic/claude-sonnet-4.5"
+
+  # Tags
+  tags_base: ["sugar", "stevia", "sweeteners", "health", "experiment"]
+
+templates:
+  # Main claim gets thorough evaluation (5 runs)
+  main_evaluation:
+    models: "{{models_main}}"
+    runs: 5
+    temperature: 0.7
+    explanationLength: 100
+    tags: "{{tags_base}}"
+
+  # Variations get fewer runs (2 runs)
+  variation_evaluation:
+    models: "{{models_variation}}"
+    runs: 2
+    temperature: 0.7
+    explanationLength: 100
+    tags: "{{tags_base}}"
+
+claims:
+  # ============================================================================
+  # BASELINE CLAIM (Main evaluation - 5 runs per model = 10 total evaluations)
+  # ============================================================================
+
+  - claim: "Sugar is at least 10x as unhealthy as stevia, for the same amount of sweetness"
+    template: main_evaluation
+    context: "{{context_general}}"
+    submitterNotes: "BASELINE - Original phrasing, neutral framing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "baseline"]
+
+  # ============================================================================
+  # CATEGORY 1: Different Quantifiers (4 runs per model = 8 total each)
+  # ============================================================================
+
+  - claim: "Sugar is an order of magnitude more unhealthy than stevia, for equivalent sweetness"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "QUANTIFIER - 'order of magnitude' instead of '10x'"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "quantifier"]
+
+  - claim: "Sugar is 1000% more harmful to health than stevia, when comparing equivalent sweetness levels"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "QUANTIFIER - '1000%' instead of '10x'"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "quantifier"]
+
+  - claim: "For the same sweetness level, sugar causes at least ten times more health problems than stevia"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "QUANTIFIER - 'ten times' spelled out, reordered sentence"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "quantifier"]
+
+  # ============================================================================
+  # CATEGORY 2: Positive vs Negative Framing
+  # ============================================================================
+
+  - claim: "Stevia is at least 10x healthier than sugar, for the same amount of sweetness"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "FRAMING - Positive (stevia is healthier) instead of negative (sugar is unhealthier)"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "framing"]
+
+  - claim: "Choosing stevia over sugar reduces health risks by at least 90% for equivalent sweetness"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "FRAMING - Benefit framing (risk reduction) vs harm framing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "framing"]
+
+  - claim: "Sugar's negative health impact is at least 10 times greater than stevia's when matched for sweetness"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "FRAMING - Harm framing with passive construction"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "framing"]
+
+  # ============================================================================
+  # CATEGORY 3: Different Contexts
+  # ============================================================================
+
+  - claim: "Sugar is at least 10x as unhealthy as stevia, for the same amount of sweetness"
+    template: variation_evaluation
+    context: "{{context_diabetes}}"
+    variationOf: 0
+    submitterNotes: "CONTEXT - Diabetes-specific context"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "context", "diabetes"]
+
+  - claim: "Sugar is at least 10x as unhealthy as stevia, for the same amount of sweetness"
+    template: variation_evaluation
+    context: "{{context_weight}}"
+    variationOf: 0
+    submitterNotes: "CONTEXT - Weight management context"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "context", "weight"]
+
+  # ============================================================================
+  # CATEGORY 4: Different Perspectives
+  # ============================================================================
+
+  - claim: "As a consumer choosing between sweeteners, selecting sugar over stevia for the same sweetness means accepting at least 10x higher health risks"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "PERSPECTIVE - Consumer decision-making framing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "perspective", "consumer"]
+
+  - claim: "Research indicates sugar has at least 10-fold greater adverse health effects compared to stevia at equivalent sweetness doses"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "PERSPECTIVE - Academic/research framing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "perspective", "research"]
+
+  - claim: "From a public health standpoint, sugar represents at least 10 times the health burden of stevia when comparing equivalent sweetness levels"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "PERSPECTIVE - Public health policy framing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "perspective", "policy"]
+
+  # ============================================================================
+  # CATEGORY 5: Extreme Variations (Testing Boundaries)
+  # ============================================================================
+
+  - claim: "The health differential between sugar and stevia is massive - we're talking 10x worse for sugar at matched sweetness"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "STYLE - Casual/colloquial phrasing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "style", "casual"]
+
+  - claim: "Stevia exhibits superior health outcomes relative to sugar by a factor of approximately 10:1 when normalized for sweetness intensity"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "STYLE - Highly technical/formal phrasing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "style", "formal"]
+
+  - claim: "Sugar isn't just a little worse than stevia - it's 10 times more harmful for the same sweet taste"
+    template: variation_evaluation
+    context: "{{context_general}}"
+    variationOf: 0
+    submitterNotes: "STYLE - Emphatic/rhetorical phrasing"
+    tags: ["sugar", "stevia", "sweeteners", "health", "experiment", "style", "emphatic"]
+
+# ============================================================================
+# Summary:
+# - 1 baseline claim: 5 runs × 2 models = 10 evaluations
+# - 14 variations: 2 runs × 1 model = 2 evaluations each = 28 evaluations
+# - Total: 38 LLM evaluations
+# - Estimated cost: $1-4
+#
+# Categories tested:
+# 1. Quantifiers (3 variations): 10x, order of magnitude, 1000%, ten times
+# 2. Framing (3 variations): positive, benefit, passive harm
+# 3. Context (2 variations): diabetes, weight management
+# 4. Perspective (3 variations): consumer, researcher, policy
+# 5. Style (3 variations): casual, formal, emphatic
+#
+# Expected insights:
+# - Do different quantifiers (10x vs 1000%) produce different agreement scores?
+# - Does positive framing (stevia healthier) vs negative (sugar unhealthy) matter?
+# - How context-dependent is the evaluation? (diabetes vs general health)
+# - Do academic vs colloquial phrasings change model confidence?
+# ============================================================================
