@@ -87,6 +87,8 @@ claims:
 
 Track related claims using `variationOf`:
 
+### Using Index References (in same batch)
+
 ```yaml
 claims:
   - claim: "Exercise improves mental health"
@@ -101,10 +103,24 @@ claims:
     tags: ["health", "exercise", "strength"]
 ```
 
-**Index references**:
-- Use integers (0, 1, 2, ...) to reference claims by position
-- Parent claims must come before variations
-- You can also use claim IDs as strings if you know them
+### Using ID References (for existing claims)
+
+```yaml
+claims:
+  - claim: "Aerobic exercise improves mental health"
+    variationOf: "QkNrt45Nu2CTY4wV"  # String ID of existing claim
+    tags: ["health", "exercise", "aerobic"]
+
+  - claim: "Strength training improves mental health"
+    variationOf: "QkNrt45Nu2CTY4wV"  # Same parent claim
+    tags: ["health", "exercise", "strength"]
+```
+
+**Important:**
+- `variationOf` accepts either a **number** (0-based index in same batch) or a **string** (existing claim ID)
+- When using index references, parent claims must come before variations in the same batch
+- When using ID references, the parent claim must already exist in the database
+- Index references are resolved to IDs during processing
 
 ## Available Fields
 

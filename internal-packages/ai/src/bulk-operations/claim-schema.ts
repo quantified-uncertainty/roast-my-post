@@ -30,6 +30,7 @@ export const claimTemplateSchema = z.object({
   promptTemplate: z.string().max(50000).optional(),
   submitterNotes: z.string().optional(),
   tags: z.union([z.array(z.string()), z.string()]).optional(), // String for variable reference
+  variationOf: z.union([z.number(), z.string()]).optional(), // Index or ID
 });
 
 // Claim definition in YAML (before expansion)

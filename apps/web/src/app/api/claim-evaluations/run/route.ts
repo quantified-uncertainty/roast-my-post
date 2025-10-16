@@ -4,10 +4,10 @@ import { claimEvaluatorTool, analyzeClaimEvaluation } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
 import { logger as aiLogger } from '@roast/ai';
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { getUserIdWithDevBypass } from "@/infrastructure/auth/dev-bypass";
 import { logger } from "@/infrastructure/logging/logger";
 import { errorResponse, successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { strictRateLimit, getClientIdentifier } from "@/infrastructure/http/rate-limiter";
-import { config } from '@roast/domain';
 import { z } from 'zod';
 
 const runSchema = z.object({
@@ -32,22 +32,12 @@ export async function POST(request: NextRequest) {
       return errorResponse("Too many requests", 429);
     }
 
-    // Authenticate request (API key first, then session)
-    let userId: string;
+    // Authenticate request (API key first, then session) with dev bypass
+    const authenticatedUserId = await authenticateRequest(request);
+    const userId = await getUserIdWithDevBypass(authenticatedUserId, 'claim evaluation run');
 
-    // Development bypass when BYPASS_TOOL_AUTH is set
-    if (process.env.BYPASS_TOOL_AUTH === 'true' && config.env.isDevelopment) {
-      logger.info('[DEV] Bypassing authentication for claim evaluation run');
-      // Use a test/dev user ID - in production this would come from auth
-      // Try to get the first user, or fall back to a specific dev user
-      const devUser = await prisma.user.findFirst({ select: { id: true } });
-      userId = devUser?.id || 'dev-bypass-user';
-    } else {
-      const authenticatedUserId = await authenticateRequest(request);
-      if (!authenticatedUserId) {
-        return errorResponse("User must be logged in to run claim evaluations", 401);
-      }
-      userId = authenticatedUserId;
+    if (!userId) {
+      return errorResponse("User must be logged in to run claim evaluations", 401);
     }
 
     let body;

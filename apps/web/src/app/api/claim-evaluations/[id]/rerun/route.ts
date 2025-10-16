@@ -4,10 +4,10 @@ import { claimEvaluatorTool } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
 import { logger as aiLogger } from '@roast/ai';
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { getUserIdWithDevBypass } from "@/infrastructure/auth/dev-bypass";
 import { logger } from "@/infrastructure/logging/logger";
 import { errorResponse, successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { strictRateLimit, getClientIdentifier } from "@/infrastructure/http/rate-limiter";
-import { config } from '@roast/domain';
 import { z } from 'zod';
 
 const rerunSchema = z.object({
@@ -34,20 +34,12 @@ export async function POST(
       return errorResponse("Too many requests", 429);
     }
 
-    // Authenticate request
-    let userId: string;
+    // Authenticate request (API key first, then session) with dev bypass
+    const authenticatedUserId = await authenticateRequest(request);
+    const userId = await getUserIdWithDevBypass(authenticatedUserId, 'claim evaluation rerun');
 
-    // Development bypass when BYPASS_TOOL_AUTH is set
-    if (process.env.BYPASS_TOOL_AUTH === 'true' && config.env.isDevelopment) {
-      logger.info('[DEV] Bypassing authentication for claim evaluation rerun');
-      const devUser = await prisma.user.findFirst({ select: { id: true } });
-      userId = devUser?.id || 'dev-bypass-user';
-    } else {
-      const authenticatedUserId = await authenticateRequest(request);
-      if (!authenticatedUserId) {
-        return errorResponse("User must be logged in to rerun claim evaluations", 401);
-      }
-      userId = authenticatedUserId;
+    if (!userId) {
+      return errorResponse("User must be logged in to rerun claim evaluations", 401);
     }
 
     // Get claim ID

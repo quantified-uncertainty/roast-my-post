@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@roast/db';
-import { auth } from '@/infrastructure/auth/auth';
+import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 import { logger } from '@/infrastructure/logging/logger';
 import { analyzeClaimEvaluation } from '@roast/ai/server';
+import { errorResponse, successResponse } from '@/infrastructure/http/api-response-helpers';
 
 export async function POST(
   request: NextRequest,
@@ -10,10 +11,12 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const session = await auth();
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Authenticate request (API key first, then session)
+    const userId = await authenticateRequest(request);
+
+    if (!userId) {
+      return errorResponse('Unauthorized', 401);
     }
 
     // Fetch the evaluation and verify ownership
@@ -29,11 +32,11 @@ export async function POST(
     });
 
     if (!evaluation) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return errorResponse('Not found', 404);
     }
 
-    if (evaluation.userId !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (evaluation.userId !== userId) {
+      return errorResponse('Forbidden', 403);
     }
 
     // Gather all related evaluations (parent, siblings, children)
@@ -105,9 +108,9 @@ export async function POST(
     } catch (error) {
       logger.error('Failed to generate analysis:', error);
       // Fail the request if analysis generation fails - this is the purpose of this endpoint
-      return NextResponse.json(
-        { error: 'Failed to generate analysis', details: error instanceof Error ? error.message : 'Unknown error' },
-        { status: 500 }
+      return errorResponse(
+        `Failed to generate analysis: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        500
       );
     }
 
@@ -124,7 +127,7 @@ export async function POST(
 
     logger.info(`Updated analysis for claim evaluation ${id}`);
 
-    return NextResponse.json({
+    return successResponse({
       analysisText,
       analysisGeneratedAt,
       relatedEvaluationsCount: relatedEvaluations.length,
@@ -132,9 +135,9 @@ export async function POST(
     });
   } catch (error) {
     logger.error('POST regenerate analysis error', error);
-    return NextResponse.json(
-      { error: 'Failed to process request' },
-      { status: 500 }
+    return errorResponse(
+      error instanceof Error ? error.message : 'Failed to process request',
+      500
     );
   }
 }
