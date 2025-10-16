@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { getModelAbbreviation, estimateTokenCount } from "../../constants/modelAbbreviations";
 
 import { ClaimEvaluationDisplay } from "@/lib/OpinionSpectrum2D";
+import { ModelResponseStatsTable } from "@/components/ModelResponseStatsTable";
 import {
   BeakerIcon,
   CalculatorIcon,
@@ -108,6 +109,10 @@ function ClaimEvaluatorResult({
       </Dialog>
 
       <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbreviation} />
+
+      <div className="mt-6">
+        <ModelResponseStatsTable evaluations={result?.evaluations || []} />
+      </div>
     </>
   );
 }

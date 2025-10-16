@@ -64,7 +64,8 @@
     "generate-plugin-readmes": "tsx scripts/generate-plugin-readmes.ts",
     "check-schemas": "tsx src/tools/check-generated-schemas.ts",
     "check-readmes": "pnpm --filter @roast/web test generated-readmes.vtest.ts",
-    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes && pnpm run generate-plugin-readmes"
+    "prebuild": "pnpm run generate-schemas && pnpm run generate-readmes && pnpm run generate-plugin-readmes",
+    "bulk-claims": "tsx scripts/run-claim-bulk.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -74,6 +75,7 @@
     "openai": "^4.77.0",
     "tiktoken": "^1.0.17",
     "uuid": "^11.1.0",
+    "yaml": "^2.8.1",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.24.6"
   },

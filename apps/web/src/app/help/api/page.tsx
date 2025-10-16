@@ -11,6 +11,8 @@ Roast My Post has a simple RESTful API for programmatic access to document evalu
 
 **Note: This API is primarily for the RoastMyPost website. We don't recommend relying on it for production use. Contact us if you want to use it.**
 
+> **See also**: [Claim Evaluations API](/help/claim-evaluations) - Documentation for testing LLM model evaluations of claims
+
 ## Authentication
 
 Most API requests require authentication using an API key in the Authorization header:

@@ -4,6 +4,9 @@
 // Tools system - full implementations
 export * from './tools';
 
+// Bulk operations (YAML-based)
+export * from './bulk-operations';
+
 // Analysis plugins
 export { PluginManager } from './analysis-plugins';
 export { ChunkRouter } from './analysis-plugins/utils/ChunkRouter';

@@ -24,8 +24,8 @@ function LoadingSkeleton() {
 
 export default function ClaimEvaluationsPage() {
   return (
-    <div className="w-full px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="w-full px-4 py-8 flex flex-col h-full">
+      <div className="mb-6 flex items-center justify-between flex-shrink-0">
         <h1 className="text-3xl font-bold">Claim Evaluations</h1>
         <Button asChild size="xs">
           <Link href="/tools/claim-evaluator/try">

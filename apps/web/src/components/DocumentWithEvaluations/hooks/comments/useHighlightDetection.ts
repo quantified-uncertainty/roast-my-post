@@ -37,12 +37,17 @@ export function useHighlightDetection(
     // Helper to update cache from DOM
     const updateHighlightCacheFromDOM = (container: HTMLElement) => {
       const newCache = new Map<string, HTMLElement>();
-      const elements = container.querySelectorAll("[data-tag]");
+      const elements = container.querySelectorAll("[data-tags]");
 
       elements.forEach((el) => {
-        const tag = el.getAttribute("data-tag");
-        if (tag !== null) {
-          newCache.set(tag, el as HTMLElement);
+        const tagsAttr = el.getAttribute("data-tags");
+        if (tagsAttr) {
+          try {
+            const tags = JSON.parse(tagsAttr) as string[];
+            tags.forEach((t) => newCache.set(t, el as HTMLElement));
+          } catch (_e) {
+            // ignore malformed JSON
+          }
         }
       });
 
@@ -128,7 +133,7 @@ export function useHighlightDetection(
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-tag"],
+      attributeFilter: ["data-tags"],
     });
 
     // Initial check after a short delay

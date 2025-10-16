@@ -75,11 +75,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Rate limiting for public endpoint
+    const clientId = getClientIdentifier(request);
+    const { success } = await strictRateLimit.check(clientId);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
+    // Claim evaluations are public - no authentication required
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
     const limitParam = parseInt(searchParams.get('limit') || '50');
@@ -87,9 +90,11 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const sortBy = searchParams.get('sortBy') || 'date';
     const order = searchParams.get('order') || 'desc';
+    const tagsParam = searchParams.get('tags'); // Comma-separated tags
+    const tagsFilter = tagsParam ? tagsParam.split(',').map(t => t.trim()).filter(Boolean) : null;
 
     // Validate sortBy and order to prevent SQL injection
-    const validSortBy = ['date', 'agreement'];
+    const validSortBy = ['date', 'updated', 'agreement'];
     const validOrder = ['asc', 'desc'];
 
     if (!validSortBy.includes(sortBy)) {
@@ -99,22 +104,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid order parameter' }, { status: 400 });
     }
 
-    // Build where clause
+    // Build where clause - filter by user if provided, otherwise show all
     type WhereClause = {
-      userId: string;
+      userId?: string;
       id?: { lt: string };
+      variationOf?: null;
+      tags?: { hasEvery: string[] };
     };
-    const where: WhereClause = { userId: session.user.id };
+    const where: WhereClause = {
+      variationOf: null, // Hide variations from main list
+    };
+
+    // Optionally filter by user if userId query param is provided
+    const userIdFilter = searchParams.get('userId');
+    if (userIdFilter) {
+      where.userId = userIdFilter;
+    }
+
+    if (tagsFilter && tagsFilter.length > 0) {
+      where.tags = { hasEvery: tagsFilter };
+    }
 
     // Build orderBy
     type OrderByClause = Array<{
       summaryMean?: 'asc' | 'desc';
       createdAt?: 'asc' | 'desc';
+      updatedAt?: 'asc' | 'desc';
       id?: 'desc';
     }>;
     const orderBy: OrderByClause = [];
     if (sortBy === 'agreement' && !search) {
       orderBy.push({ summaryMean: order as 'asc' | 'desc' });
+    } else if (sortBy === 'updated') {
+      orderBy.push({ updatedAt: order as 'asc' | 'desc' });
     }
     orderBy.push({ createdAt: order as 'asc' | 'desc' });
     orderBy.push({ id: 'desc' }); // Tie-breaker for consistent pagination
@@ -126,29 +148,54 @@ export async function GET(request: NextRequest) {
       createdAt: Date;
       context: string | null;
       rawOutput: unknown;
+      variationOf: string | null;
+      submitterNotes: string | null;
+      tags: string[];
     };
     let evaluations: EvaluationResult[];
 
     // Use raw SQL for full-text search, otherwise use Prisma
     if (search && search.trim()) {
-      // Use plainto_tsquery for safe handling of user input (handles punctuation automatically)
+      // Clean and prepare search query
       const searchQuery = search.trim();
+
+      // Split into words, add prefix matching to each word, and join with & (AND)
+      // This allows "SSRI" to match "SSRIs", "depress" to match "depression", etc.
+      const searchTerms = searchQuery
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(term => term.length > 0)
+        .map(term => term + ':*')
+        .join(' & ');
 
       // Build SQL query parts
       const orderClause = sortBy === 'agreement'
         ? 'ORDER BY "summaryMean" ' + order.toUpperCase() + ', "createdAt" ' + order.toUpperCase() + ', id DESC'
+        : sortBy === 'updated'
+        ? 'ORDER BY "updatedAt" ' + order.toUpperCase() + ', "createdAt" ' + order.toUpperCase() + ', id DESC'
         : 'ORDER BY "createdAt" ' + order.toUpperCase() + ', id DESC';
 
       // Note: Cursor pagination is not reliable for full-text search results since
       // the result set can change between queries. For search, we simply limit to 100 results.
+      const userFilterClause = userIdFilter ? `AND "userId" = $1` : '';
+      const tagFilterClause = tagsFilter ? `AND tags @> ARRAY[${tagsFilter.map((_, i) => `$${userIdFilter ? i + 4 : i + 3}`).join(',')}]::TEXT[]` : '';
+      const queryParams = [
+        ...(userIdFilter ? [userIdFilter] : []),
+        searchTerms,
+        limit + 1,
+        ...(tagsFilter || [])
+      ];
+
       evaluations = await prisma.$queryRawUnsafe(`
-        SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput"
+        SELECT id, claim, "summaryMean", "createdAt", context, "rawOutput", "variationOf", "submitterNotes", tags
         FROM "ClaimEvaluation"
-        WHERE "userId" = $1
-        AND claim_search_text @@ plainto_tsquery('english', $2)
+        WHERE "variationOf" IS NULL
+        ${userFilterClause}
+        AND claim_search_text @@ to_tsquery('english', $${userIdFilter ? 2 : 1})
+        ${tagFilterClause}
         ${orderClause}
-        LIMIT $3
-      `, session.user.id, searchQuery, limit + 1) as EvaluationResult[];
+        LIMIT $${userIdFilter ? 3 : 2}
+      `, ...queryParams) as EvaluationResult[];
     } else {
       // Add cursor pagination for non-search queries
       if (cursor) {
@@ -166,6 +213,14 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           context: true,
           rawOutput: true,
+          variationOf: true,
+          submitterNotes: true,
+          tags: true,
+          _count: {
+            select: {
+              variations: true,
+            },
+          },
         },
       });
     }

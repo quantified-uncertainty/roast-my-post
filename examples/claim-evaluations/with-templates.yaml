@@ -1,0 +1,60 @@
+# Example with templates for maximum compression
+
+variables:
+  # Contexts
+  healthcare_2025: "In the context of 2025 healthcare research and clinical practice"
+  climate_2025: "In the context of 2025 climate science and environmental policy"
+
+  # Tags
+  healthcare_tags: ["healthcare", "2025"]
+  climate_tags: ["climate", "environment", "2025"]
+
+  # Models
+  full_models:
+    - "anthropic/claude-sonnet-4.5"
+    - "openai/gpt-5-mini"
+    - "google/deepseek-chat-v3.1"
+    - "x-ai/grok-4"
+
+templates:
+  # Template for healthcare claims
+  healthcare:
+    context: "{{healthcare_2025}}"
+    models: "{{full_models}}"
+    runs: 2
+    temperature: 0.7
+    tags: "{{healthcare_tags}}"
+
+  # Template for climate claims
+  climate:
+    context: "{{climate_2025}}"
+    models: "{{full_models}}"
+    runs: 2
+    temperature: 0.7
+    tags: "{{climate_tags}}"
+
+claims:
+  # Healthcare claims using template
+  - claim: "SSRIs are effective for depression"
+    template: healthcare
+    submitterNotes: "Base claim"
+
+  - claim: "SSRIs are effective for mild depression"
+    template: healthcare
+    context: "In the context of mild depression cases specifically"
+    variationOf: 0
+    submitterNotes: "Variation for mild cases"
+
+  - claim: "SSRIs are effective for severe depression"
+    template: healthcare
+    context: "In the context of severe depression cases specifically"
+    variationOf: 0
+    submitterNotes: "Variation for severe cases"
+
+  # Climate claims using template
+  - claim: "Global average temperature has increased by more than 1°C since pre-industrial times"
+    template: climate
+
+  - claim: "Renewable energy costs have decreased by more than 80% since 2010"
+    template: climate
+    tags: ["climate", "energy", "economics", "2025"]

@@ -1,0 +1,42 @@
+# Example with variables for compression and reusability
+
+variables:
+  # Shared context
+  healthcare_context: "In the context of 2025 healthcare research and clinical practice"
+
+  # Shared tags
+  healthcare_tags: ["healthcare", "2025"]
+  mental_health_tags: ["mental-health", "treatment"]
+
+  # Model configuration
+  default_models:
+    - "anthropic/claude-sonnet-4.5"
+    - "openai/gpt-5-mini"
+
+  # Common settings
+  default_temperature: 0.7
+  default_runs: 1
+
+claims:
+  - claim: "SSRIs are effective for treating moderate to severe depression"
+    context: "{{healthcare_context}}"
+    models: "{{default_models}}"
+    runs: "{{default_runs}}"
+    temperature: "{{default_temperature}}"
+    tags: "{{mental_health_tags}}"
+    submitterNotes: "Primary claim about SSRI efficacy"
+
+  - claim: "SSRIs are effective for treating mild depression"
+    context: "{{healthcare_context}}"
+    models: "{{default_models}}"
+    runs: "{{default_runs}}"
+    temperature: "{{default_temperature}}"
+    tags: "{{mental_health_tags}}"
+    submitterNotes: "Variation focusing on mild depression specifically"
+
+  - claim: "Cognitive Behavioral Therapy (CBT) is more effective than SSRIs for mild depression"
+    context: "{{healthcare_context}}"
+    models: "{{default_models}}"
+    runs: "{{default_runs}}"
+    temperature: "{{default_temperature}}"
+    tags: "{{mental_health_tags}}"
