@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@roast/db';
 import { auth } from '@/infrastructure/auth/auth';
+import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 import { logger } from '@/infrastructure/logging/logger';
 import { claimEvaluatorTool, analyzeClaimEvaluation } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
@@ -70,9 +71,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const session = await auth();
 
-    if (!session?.user?.id) {
+    // Authenticate request (API key first, then session)
+    const userId = await authenticateRequest(request);
+
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -93,7 +96,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    if (evaluation.userId !== session.user.id) {
+    if (evaluation.userId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -122,9 +125,11 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const session = await auth();
 
-    if (!session?.user?.id) {
+    // Authenticate request (API key first, then session)
+    const userId = await authenticateRequest(request);
+
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -167,7 +172,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    if (existingEval.userId !== session.user.id) {
+    if (existingEval.userId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -189,7 +194,7 @@ export async function PATCH(
           explanationLength: existingEval.explanationLength || undefined,
         },
         {
-          userId: session.user.id,
+          userId,
           logger: aiLogger,
         }
       ) as ClaimEvaluatorOutput;
