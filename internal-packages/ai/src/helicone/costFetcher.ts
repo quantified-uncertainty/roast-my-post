@@ -64,11 +64,8 @@ export async function fetchJobCostFromHelicone(jobId: string): Promise<JobCostDa
  */
 export async function fetchDetailedJobCostFromHelicone(jobId: string): Promise<JobCostData> {
   try {
-    console.log('SLEEEPING.....')
-    await new Promise(resolve => setTimeout(resolve, 10000)); // Pause for 10 seconds
     // Get raw requests to access prompt/completion token breakdown
     const requests = await heliconeAPI.getSessionRequests(jobId);
-    console.log(`Job ${jobId}: fetched ${requests.length} requests from Helicone`);
     
     let totalCostUSD = 0;
     let promptTokens = 0;
@@ -78,33 +75,21 @@ export async function fetchDetailedJobCostFromHelicone(jobId: string): Promise<J
     // Group by model for breakdown
     const modelStats = new Map<string, { cost: number; tokens: number; count: number }>();
     
-    requests.forEach((req, index) => {
+    requests.forEach(req => {
       // Helicone returns costUSD, not cost
-      const cost = req.costUSD || 0;
-      const pTokens = req.prompt_tokens || 0;
-      const cTokens = req.completion_tokens || 0;
-      const tTokens = req.total_tokens || 0;
-      console.log(
-        `Job ${jobId} req ${index + 1}: cost=${cost}, pTokens=${pTokens}, cTokens=${cTokens}, tTokens=${tTokens}`
-      );
-
-      totalCostUSD += cost;
-      promptTokens += pTokens;
-      completionTokens += cTokens;
-      totalTokens += tTokens;
-
+      totalCostUSD += req.costUSD || 0;
+      promptTokens += req.prompt_tokens || 0;
+      completionTokens += req.completion_tokens || 0;
+      totalTokens += req.total_tokens || 0;
+      
       // Update model breakdown
       const existing = modelStats.get(req.model) || { cost: 0, tokens: 0, count: 0 };
       modelStats.set(req.model, {
-        cost: existing.cost + cost,
-        tokens: existing.tokens + tTokens,
+        cost: existing.cost + (req.costUSD || 0),
+        tokens: existing.tokens + (req.total_tokens || 0),
         count: existing.count + 1
       });
     });
-
-    console.log(
-      `Job ${jobId} totals: cost=${totalCostUSD}, promptTokens=${promptTokens}, completionTokens=${completionTokens}, totalTokens=${totalTokens}`
-    );
     
     const breakdown = Array.from(modelStats.entries()).map(([model, stats]) => ({
       model,

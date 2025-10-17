@@ -12,7 +12,6 @@ export function createAnthropicClient(additionalHeaders?: Record<string, string>
 
   const heliconeKey = getHeliconeApiKey();
   const enableHelicone = isHeliconeEnabled() && !!heliconeKey;
-  console.log(`[createAnthropicClient] Helicone check. Key available: ${!!heliconeKey}, Config enabled: ${isHeliconeEnabled()}, Using Helicone: ${enableHelicone}`);
 
   if (enableHelicone) {
     // Use Helicone proxy with caching

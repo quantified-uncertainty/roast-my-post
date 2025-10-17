@@ -73,17 +73,16 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       await this.saveAnalysisResults(job, analysisResult, agent);
 
       // Calculate costs and duration
-      const priceInDollars = await this.calculateJobCost(
-        job.id,
-        analysisResult.tasks
-      );
+      // const priceInDollars = await this.calculateJobCost(
+      //   job.id,
+      //   analysisResult.tasks
+      // );
       const durationInSeconds = (Date.now() - startTime) / 1000;
 
       // Create execution log
       const logContent = this.createExecutionLog(
         job,
         analysisResult,
-        priceInDollars,
         durationInSeconds,
         startTime
       );
@@ -91,7 +90,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Mark job as completed
       const completedJob = await this.jobService.markAsCompleted(job.id, {
         llmThinking: analysisResult.thinking,
-        priceInDollars,
         durationInSeconds,
         logs: logContent,
       });
@@ -455,7 +453,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   private createExecutionLog(
     job: JobWithRelations,
     analysisResult: any,
-    priceInDollars: number,
     durationInSeconds: number,
     startTime: number
   ): string {
@@ -472,7 +469,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       `- Agent: ${agentVersion.name} v${agentVersion.version}`,
       `- Started: ${new Date(startTime).toISOString()}`,
       `- Duration: ${durationInSeconds.toFixed(2)}s`,
-      `- Cost: $${priceInDollars.toFixed(4)}`,
       `- Status: SUCCESS`,
       ``,
       `## Analysis Summary`,

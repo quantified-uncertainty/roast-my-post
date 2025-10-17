@@ -86,7 +86,6 @@ export interface JobProcessingResult {
  */
 export interface CompletionData {
   llmThinking: string | null;
-  priceInDollars: number;
   durationInSeconds: number;
   logs: string;
 }
