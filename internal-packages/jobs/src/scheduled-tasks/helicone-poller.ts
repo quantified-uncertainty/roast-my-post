@@ -67,7 +67,7 @@ export async function updateJobCostsFromHelicone() {
   logger.info('[Job Cost Updater] Running...');
 
   try {
-    const jobsToUpdate = await jobRepository.findJobsForCostUpdate(BATCH_SIZE);
+    const jobsToUpdate = await jobRepository.findJobsForCostUpdate(BATCH_SIZE, 1);
 
     if (jobsToUpdate.length === 0) {
       logger.info('no completed jobs waiting for cost update.');

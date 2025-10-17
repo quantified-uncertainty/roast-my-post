@@ -7,6 +7,7 @@ const workspaceRoot = findWorkspaceRoot(__dirname);
 loadWebAppEnvironment(workspaceRoot);
 
 import { startScheduledTasks } from '../scheduled-tasks/tasks';
+import { logger } from '../utils/logger';
 
 class ScheduledTaskRunner {
   private isShuttingDown = false;
@@ -19,12 +20,12 @@ class ScheduledTaskRunner {
     const shutdown = async () => {
       if (this.isShuttingDown) return;
       this.isShuttingDown = true;
-      console.log("\n🛑 Initiating graceful shutdown of scheduled tasks...");
+      logger.info("Initiating graceful shutdown of scheduled tasks...");
       
       // The tasks themselves check isShuttingDown(), so they will stop looping.
       // This timeout is just to allow a currently running task to finish gracefully.
       setTimeout(() => {
-        console.log("\n👋 Shutting down. Goodbye!");
+        logger.info("Shutting down. Goodbye!");
         process.exit(0);
       }, 2000); // 2s grace period
     };
@@ -34,8 +35,8 @@ class ScheduledTaskRunner {
   }
 
   async start() {
-    console.log("🚀 Starting scheduled task runner...");
-    console.log("Press Ctrl+C to stop\n");
+    logger.info("🚀 Starting scheduled task runner...");
+    logger.info("Press Ctrl+C to stop");
 
     startScheduledTasks(() => this.isShuttingDown);
 
@@ -53,12 +54,12 @@ process.on("warning", (warning) => {
   ) {
     return;
   }
-  console.warn(warning);
+  logger.warn('Process warning:', warning);
 });
 
 // Start the runner
 const runner = new ScheduledTaskRunner();
 runner.start().catch((error) => {
-  console.error("Fatal error in scheduled task runner:", error);
+  logger.error("Fatal error in scheduled task runner:", error);
   process.exit(1);
 });

@@ -11,6 +11,7 @@ import { JobStatus } from '../types';
 import type { Job } from '../types';
 import type { PrismaClient } from '../client';
 import { generateId } from '../utils/generateId';
+import { subHours } from 'date-fns';
 
 // Domain types defined in this package to avoid circular dependencies
 export interface JobEntity {
@@ -105,7 +106,7 @@ export interface JobRepositoryInterface {
   incrementAttempts(id: string): Promise<JobEntity>;
   getJobsByStatus(status: JobStatus, limit?: number): Promise<JobEntity[]>;
   getJobsOlderThan(date: Date, statuses: JobStatus[]): Promise<JobEntity[]>;
-  findJobsForCostUpdate(limit: number): Promise<JobEntity[]>;
+  findJobsForCostUpdate(limit: number, maxAgeHours?: number): Promise<JobEntity[]>;
   updateCost(id: string, cost: number): Promise<JobEntity>;
 }
 
@@ -387,9 +388,17 @@ export class JobRepository implements JobRepositoryInterface {
   /**
    * Find jobs that need their cost updated from Helicone
    */
-  async findJobsForCostUpdate(limit = 10): Promise<JobEntity[]> {
+  async findJobsForCostUpdate(limit = 10, maxAgeHours?: number): Promise<JobEntity[]> {
+    const completedAtFilter: any = { not: null };
+    if (maxAgeHours) {
+      completedAtFilter.gte = subHours(new Date(), maxAgeHours);
+    }
+
     const jobs = await this.prisma.job.findMany({
-      where: { completedAt: { not: null }, priceInDollars: null },
+      where: {
+        completedAt: completedAtFilter,
+        priceInDollars: null,
+      },
       take: limit,
       orderBy: {
         createdAt: 'asc',

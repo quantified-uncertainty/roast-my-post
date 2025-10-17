@@ -1,8 +1,10 @@
+import { format } from 'date-fns';
+
 /**
  * Simple logger for jobs package
  */
 
-const getTimestamp = () => new Date().toISOString().replace('T', ' ').slice(0, 23);
+const getTimestamp = () => format(new Date(), 'yyyy-MM-dd HH:mm:ss.SSS');
 
 export interface Logger {
   info(message: string, ...args: any[]): void;

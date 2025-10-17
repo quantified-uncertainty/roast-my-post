@@ -1,4 +1,5 @@
 import { updateJobCostsFromHelicone } from './helicone-poller';
+import { logger } from '../utils/logger';
 
 /**
  * Runs a scheduled task in a loop at the specified interval.
@@ -7,7 +8,7 @@ import { updateJobCostsFromHelicone } from './helicone-poller';
  */
 export async function runScheduledTask(task: ScheduledTask, isShuttingDown: () => boolean) {
   try {
-    console.log(`\n✨ Starting scheduler for task: "${task.name}" (runs every ${task.intervalMs/1000}s)`);
+    logger.info(`Starting scheduler for task: "${task.name}" (runs every ${task.intervalMs/1000}s)`);
 
     while (!isShuttingDown()) {
       // Wait for the interval first, so it doesn't run on immediate startup
@@ -17,12 +18,12 @@ export async function runScheduledTask(task: ScheduledTask, isShuttingDown: () =
       try {
         await task.execute();
       } catch (error) {
-        console.error(`❌ Error in scheduled task "${task.name}":`, error);
+        logger.error(`Error in scheduled task "${task.name}":`, error);
       }
     }
-    console.log(`🛑 Scheduler for task "${task.name}" stopped.`);
+    logger.info(`Scheduler for task "${task.name}" stopped.`);
   } catch (error) {
-    console.error(`❌ Unhandled exception in scheduler for "${task.name}":`, error);
+    logger.error(`Unhandled exception in scheduler for "${task.name}":`, error);
   }
 }
 

@@ -23,7 +23,7 @@ export interface HeliconeRequest {
   completion_tokens?: number;
   prompt_tokens?: number;
   total_tokens?: number;
-  costUSD?: number;
+  cost?: number;
   request_properties?: Record<string, string>;
   request_path?: string;
   delay_ms?: number;
