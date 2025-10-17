@@ -105,6 +105,8 @@ export interface JobRepositoryInterface {
   incrementAttempts(id: string): Promise<JobEntity>;
   getJobsByStatus(status: JobStatus, limit?: number): Promise<JobEntity[]>;
   getJobsOlderThan(date: Date, statuses: JobStatus[]): Promise<JobEntity[]>;
+  findJobsForCostUpdate(limit: number): Promise<JobEntity[]>;
+  updateCost(id: string, cost: number): Promise<JobEntity>;
 }
 
 export class JobRepository implements JobRepositoryInterface {
@@ -380,6 +382,31 @@ export class JobRepository implements JobRepositoryInterface {
     });
 
     return jobs.map(job => this.toDomainEntity(job));
+  }
+
+  /**
+   * Find jobs that need their cost updated from Helicone
+   */
+  async findJobsForCostUpdate(limit = 10): Promise<JobEntity[]> {
+    const jobs = await this.prisma.job.findMany({
+      where: { completedAt: { not: null }, priceInDollars: null },
+      take: limit,
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+    return jobs.map(job => this.toDomainEntity(job));
+  }
+
+  /**
+   * Update the cost of a job
+   */
+  async updateCost(id: string, cost: number): Promise<JobEntity> {
+    const job = await this.prisma.job.update({
+      where: { id },
+      data: { priceInDollars: cost },
+    });
+    return this.toDomainEntity(job);
   }
 
   /**

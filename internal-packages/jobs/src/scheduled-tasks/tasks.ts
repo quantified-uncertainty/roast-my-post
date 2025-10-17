@@ -1,13 +1,4 @@
-/**
- * The logic for a single scheduled task.
- * This is where you'd query your external service.
- */
-async function queryExternalService() {
-  console.log('\n  -> [External Service Query] Running...');
-  // Simulating async work
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  console.log('  <- [External Service Query] Finished.');
-}
+import { updateJobCostsFromHelicone } from './helicone-poller';
 
 /**
  * Runs a scheduled task in a loop at the specified interval.
@@ -56,9 +47,9 @@ export interface ScheduledTask {
 
 export const tasks: ScheduledTask[] = [
   {
-    name: 'External Service Query',
-    intervalMs: 30000,
-    execute: queryExternalService,
+    name: 'Helicone Job Cost Updater',
+    intervalMs: 30000, // Poll every 30 seconds
+    execute: updateJobCostsFromHelicone,
   },
   // You can add more tasks here in the future
 ];
