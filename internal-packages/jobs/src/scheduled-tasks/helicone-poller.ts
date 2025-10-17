@@ -15,7 +15,7 @@ async function fetchHeliconeSession(job: JobEntity): Promise<HeliconeSession | n
   });
 
   if (!sessionResponse.data || sessionResponse.data.length === 0) {
-    logger.info(`session ${job.id} not found in Helicone yet. Will retry next cycle.`);
+    logger.info(`[${job.id}] session not found in Helicone yet. Will retry next cycle.`);
     return null;
   }
   return sessionResponse.data[0];
@@ -32,30 +32,31 @@ function calculateTotalCost(requests: HeliconeRequest[]): number {
  * Processes a single job to fetch, calculate, and update its cost.
  */
 async function processJobCostUpdate(job: JobEntity): Promise<void> {
-  logger.info(`processing job ${job.id}`);
+  logger.info(`[${job.id}] processing job`);
 
   const session = await fetchHeliconeSession(job);
   if (!session) return;
 
   const expectedRequests = parseInt(session.total_requests, 10);
   if (isNaN(expectedRequests)) {
-    logger.warn(`session ${job.id} has invalid total_requests: ${session.total_requests}. Skipping.`);
+    logger.warn(`[${job.id}] session has invalid total_requests: ${session.total_requests}. Skipping.`);
     return;
   }
 
   const actualRequests = await heliconeAPI.getSessionRequests(job.id);
-  logger.info(`session ${job.id}: expected ${expectedRequests}, found ${actualRequests.length} requests.`);
+  logger.info(`[${job.id}] session: expected ${expectedRequests}, found ${actualRequests.length} requests.`);
+  logger.info(`[${job.id}] Helicone requests for session: ${JSON.stringify(actualRequests, null, 2)}`);
 
   if (actualRequests.length < expectedRequests) {
-    logger.info(`session ${job.id} is not fully logged in Helicone yet. Will retry next cycle.`);
+    logger.info(`[${job.id}] session is not fully logged in Helicone yet. Will retry next cycle.`);
     return;
   }
 
   const totalCost = calculateTotalCost(actualRequests);
-  logger.info(`session ${job.id} is complete. Total cost: $${totalCost.toFixed(6)}.`);
+  logger.info(`[${job.id}] session is complete. Total cost: $${totalCost.toFixed(6)}.`);
 
   await jobRepository.updateCost(job.id, totalCost);
-  logger.info(`successfully updated price for job ${job.id}.`);
+  logger.info(`[${job.id}] successfully updated price.`);
 }
 
 /**
