@@ -45,7 +45,7 @@ async function processJobCostUpdate(job: JobEntity): Promise<void> {
 
   const actualRequests = await heliconeAPI.getSessionRequests(job.id);
   logger.info(`[${job.id}] session: expected ${expectedRequests}, found ${actualRequests.length} requests.`);
-  logger.info(`[${job.id}] Helicone requests for session: ${JSON.stringify(actualRequests, null, 2)}`);
+  // logger.info(`[${job.id}] Helicone requests for session: ${JSON.stringify(actualRequests, null, 2)}`);
 
   if (actualRequests.length < expectedRequests) {
     logger.info(`[${job.id}] session is not fully logged in Helicone yet. Will retry next cycle.`);
