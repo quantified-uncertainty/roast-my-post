@@ -148,8 +148,8 @@ async function evaluateWithModel(
 ): Promise<EvaluationResult> {
   context.logger.info(`[ClaimEvaluator] Evaluating with ${model}`);
 
-  // Create timeout promise (configurable via env, default 120 seconds)
-  const TIMEOUT_MS = Number(process.env.MODEL_EVAL_TIMEOUT_MS) || 120000;
+  // Create timeout promise (configurable via env, default 300 seconds for large contexts)
+  const TIMEOUT_MS = Number(process.env.MODEL_EVAL_TIMEOUT_MS) || 300000;
   let timeoutHandle: NodeJS.Timeout | undefined;
 
   const timeoutPromise = new Promise<never>((_, reject) => {

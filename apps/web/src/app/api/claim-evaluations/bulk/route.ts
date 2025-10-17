@@ -14,6 +14,9 @@ import { logger } from "@/infrastructure/logging/logger";
 import { errorResponse, successResponse } from "@/infrastructure/http/api-response-helpers";
 import { strictRateLimit, getClientIdentifier } from "@/infrastructure/http/rate-limiter";
 
+// Increase timeout for bulk operations with large contexts (10 minutes)
+export const maxDuration = 600;
+
 /**
  * POST /api/claim-evaluations/bulk
  *

@@ -172,6 +172,15 @@ export async function executeBulkClaimOperations(
           context
         );
 
+        // Check if all evaluations failed - this is a failure condition
+        const hasAnySuccess = evaluationResult.evaluations.some(e => !e.hasError);
+        if (!hasAnySuccess) {
+          const errors = evaluationResult.evaluations
+            .map(e => e.hasError && e.failedResponse ? e.failedResponse.error : 'Unknown error')
+            .join('; ');
+          throw new Error(`All model evaluations failed: ${errors}`);
+        }
+
         // Save to database
         const saved = await saveClaimEvaluation({
           userId: context.userId!, // Already validated to exist at function start
