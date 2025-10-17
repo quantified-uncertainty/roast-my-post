@@ -15,27 +15,28 @@ import { logger } from '../utils/logger';
 async function main() {
   const startTime = Date.now();
   console.log('🚀 Starting job processor...');
-  
+
   // Initialize AI package with environment variables
   initializeAI({
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY,
     heliconeApiKey: process.env.HELICONE_API_KEY,
+    heliconeEnabled: Boolean(process.env.HELICONE_ENABLED),
   });
-  
+
   // Create services
   const jobRepository = new JobRepository();
   const jobService = new JobService(jobRepository, logger);
   const jobOrchestrator = new JobOrchestrator(jobService, logger);
-  
+
   let hasProcessedJob = false;
 
   try {
     hasProcessedJob = await jobOrchestrator.run();
-    
+
     const endTime = Date.now();
     const duration = Math.round((endTime - startTime) / 1000);
-    
+
     if (hasProcessedJob) {
       console.log(`✅ Job completed successfully`);
       console.log(`🏁 Total execution time: ${duration}s`);
@@ -46,7 +47,7 @@ async function main() {
     console.error('🔥 Fatal error:', error);
     console.error('💥 Process failed with error:', error instanceof Error ? error.message : String(error));
     // Give database operations time to complete before exiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     process.exit(1);
   } finally {
     try {
@@ -64,6 +65,6 @@ async function main() {
 main().catch(async (error) => {
   console.error('🔥 Fatal error:', error);
   // Give database operations time to complete before exiting
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   process.exit(1);
 });
