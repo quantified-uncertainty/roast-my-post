@@ -1,6 +1,10 @@
+import { format } from 'date-fns';
+
 /**
  * Simple logger for jobs package
  */
+
+const getTimestamp = () => format(new Date(), 'yyyy-MM-dd HH:mm:ss.SSS');
 
 export interface Logger {
   info(message: string, ...args: any[]): void;
@@ -14,20 +18,20 @@ export interface Logger {
  */
 class ConsoleLogger implements Logger {
   info(message: string, ...args: any[]): void {
-    console.log(`[JOBS] ${message}`, ...args);
+    console.info(`[${getTimestamp()}] [JOBS] ${message}`, ...args);
   }
 
   error(message: string, ...args: any[]): void {
-    console.error(`[JOBS ERROR] ${message}`, ...args);
+    console.error(`[${getTimestamp()}] [JOBS ERROR] ${message}`, ...args);
   }
 
   warn(message: string, ...args: any[]): void {
-    console.warn(`[JOBS WARN] ${message}`, ...args);
+    console.warn(`[${getTimestamp()}] [JOBS WARN] ${message}`, ...args);
   }
 
   debug(message: string, ...args: any[]): void {
     if (process.env.DEBUG) {
-      console.debug(`[JOBS DEBUG] ${message}`, ...args);
+      console.debug(`[${getTimestamp()}] [JOBS DEBUG] ${message}`, ...args);
     }
   }
 }

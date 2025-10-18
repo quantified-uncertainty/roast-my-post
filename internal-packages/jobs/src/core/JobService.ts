@@ -77,7 +77,6 @@ export class JobService implements JobServiceInterface {
       status: JobStatus.COMPLETED,
       completedAt: new Date(),
       llmThinking: data.llmThinking || undefined, // Convert null to undefined
-      priceInDollars: data.priceInDollars,
       durationInSeconds: data.durationInSeconds,
       logs: data.logs,
     });

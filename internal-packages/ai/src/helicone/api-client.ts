@@ -55,9 +55,61 @@ export interface HeliconeQueryOptions {
   };
 }
 
-export interface HeliconeQueryResponse {
-  data: HeliconeRequest[];
+export interface HeliconeQueryResponse<T = HeliconeRequest> {
+  data: T[];
   totalCount?: number;
+}
+
+export interface HeliconeClickhouseRequest {
+  request_id?: string;
+  response_id?: string;
+  request_created_at?: string;
+  response_created_at?: string;
+  model: string;
+  request_model?: string;
+  request_user_id?: string;
+  completion_tokens?: string | number;
+  prompt_tokens?: string | number;
+  total_tokens?: string | number;
+  cost?: number;
+  request_properties?: Record<string, string>;
+  request_path?: string;
+  delay_ms?: number;
+  time_to_first_token?: string | number;
+}
+
+export interface HeliconeClickhouseQueryOptions {
+  filter: any; // Using 'any' for flexibility as the filter structure is complex
+  offset?: number;
+  limit?: number;
+  sort?: { created_at?: 'asc' | 'desc'; cost?: 'asc' | 'desc' };
+}
+
+export interface HeliconeSession {
+  created_at: string;
+  latest_request_created_at: string;
+  session_id: string;
+  session_name: string;
+  avg_latency: number;
+  total_cost: number;
+  total_requests: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+export interface HeliconeSessionQueryResponse {
+  data: HeliconeSession[];
+  error?: any;
+}
+
+export interface HeliconeSessionQueryOptions {
+  timeFilter: { startTimeUnixMs: number; endTimeUnixMs: number };
+  filter?: any;
+  search?: string;
+  timezoneDifference?: number;
+  limit?: number;
+  offset?: number;
 }
 
 export class HeliconeAPIClient {
@@ -77,7 +129,7 @@ export class HeliconeAPIClient {
   /**
    * Query requests from Helicone
    */
-  async queryRequests(options: HeliconeQueryOptions): Promise<HeliconeQueryResponse> {
+  async queryRequests(options: HeliconeQueryOptions): Promise<HeliconeQueryResponse<HeliconeRequest>> {
     try {
       const response = await fetch(`${this.baseUrl}/v1/request/query`, {
         method: 'POST',
@@ -124,24 +176,29 @@ export class HeliconeAPIClient {
   }
 
   /**
-   * Get requests for a specific session
+   * Get all requests for a specific session
    */
   async getSessionRequests(sessionId: string): Promise<HeliconeRequest[]> {
-    try {
-      const result = await this.queryRequests({
-        filter: {
-          properties: {
-            'Helicone-Session-Id': { equals: sessionId }
-          }
-        } as any, // Type cast needed as our interface doesn't match actual API
-        sort: { created_at: 'asc' },
-        limit: 100
-      });
+    const response = await this.queryRequestsClickhouse({
+      filter: { request_response_rmt: { properties: { 'Helicone-Session-Id': { equals: sessionId } } } },
+      limit: 1000, // High limit to get all requests in a session
+      sort: { created_at: 'asc' },
+    });
 
-      return result.data;
-    } catch (error) {
-      throw new Error(`Failed to get session requests for ${sessionId}: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    // The data from clickhouse has some fields as strings that should be numbers,
+    // and sometimes uses `request_model` instead of `model`.
+    return (response.data || []).map((req) => {
+      const { cost, request_model, total_tokens, completion_tokens, prompt_tokens, time_to_first_token, ...rest } = req;
+      return {
+        ...rest,
+        model: req.model || request_model || '',
+        costUSD: cost,
+        total_tokens: total_tokens != null ? parseInt(String(total_tokens), 10) : undefined,
+        completion_tokens: completion_tokens != null ? parseInt(String(completion_tokens), 10) : undefined,
+        prompt_tokens: prompt_tokens != null ? parseInt(String(prompt_tokens), 10) : undefined,
+        time_to_first_token: time_to_first_token != null ? parseInt(String(time_to_first_token), 10) : undefined,
+      };
+    });
   }
 
   /**
@@ -382,6 +439,101 @@ export class HeliconeAPIClient {
       byDay
     };
   }
+
+  /**
+   * Query requests from Helicone using the Clickhouse endpoint (for large datasets)
+   */
+  async queryRequestsClickhouse(options: HeliconeClickhouseQueryOptions): Promise<HeliconeQueryResponse<HeliconeClickhouseRequest>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/v1/request/query-clickhouse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${this.apiKey}` },
+        body: JSON.stringify(options),
+        signal: AbortSignal.timeout(60000), // 60 second timeout for potentially large queries
+      });
+
+      if (!response.ok) {
+        let errorMessage: string;
+        try {
+          const errorData = await response.text();
+          errorMessage = errorData || response.statusText;
+        } catch {
+          errorMessage = response.statusText;
+        }
+
+        // Handle specific error cases
+        if (response.status === 429) {
+          throw new Error(`Helicone API rate limit exceeded (${response.status}): ${errorMessage}`);
+        } else if (response.status >= 500) {
+          throw new Error(`Helicone API server error (${response.status}): ${errorMessage}`);
+        } else if (response.status === 401) {
+          throw new Error(`Helicone API authentication failed (${response.status}): Invalid API key`);
+        } else {
+          throw new Error(`Helicone API error (${response.status}): ${errorMessage}`);
+        }
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Handle network errors and timeouts
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error(`Network error connecting to Helicone API: ${error.message}`);
+      } else if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Helicone API request timeout (60s exceeded)');
+      }
+      // Re-throw other errors
+      throw error;
+    }
+  }
+
+  /**
+   * Query sessions from Helicone
+   */
+  async querySessions(options: HeliconeSessionQueryOptions): Promise<HeliconeSessionQueryResponse> {
+    try {
+      const body = { ...options, search: options.search ?? '', timezoneDifference: options.timezoneDifference ?? 0, filter: options.filter ?? {} };
+
+      const response = await fetch(`${this.baseUrl}/v1/session/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${this.apiKey}` },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(60000), // 60 second timeout
+      });
+
+      if (!response.ok) {
+        let errorMessage: string;
+        try {
+          const errorData = await response.text();
+          errorMessage = errorData || response.statusText;
+        } catch {
+          errorMessage = response.statusText;
+        }
+
+        // Handle specific error cases
+        if (response.status === 429) {
+          throw new Error(`Helicone API rate limit exceeded (${response.status}): ${errorMessage}`);
+        } else if (response.status >= 500) {
+          throw new Error(`Helicone API server error (${response.status}): ${errorMessage}`);
+        } else if (response.status === 401) {
+          throw new Error(`Helicone API authentication failed (${response.status}): Invalid API key`);
+        } else {
+          throw new Error(`Helicone API error (${response.status}): ${errorMessage}`);
+        }
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Handle network errors and timeouts
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error(`Network error connecting to Helicone API: ${error.message}`);
+      } else if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Helicone API request timeout (60s exceeded)');
+      }
+      // Re-throw other errors
+      throw error;
+    }
+  }
+
 }
 
 // Export singleton instance for convenience (lazy initialization)
@@ -402,4 +554,6 @@ export const heliconeAPI = {
   getRecentJobSessions: (limit?: number) => heliconeAPI.instance.getRecentJobSessions(limit),
   testSessionIntegration: () => heliconeAPI.instance.testSessionIntegration(),
   getUsageStats: (startDate: Date, endDate: Date) => heliconeAPI.instance.getUsageStats(startDate, endDate),
+  queryRequestsClickhouse: (options: HeliconeClickhouseQueryOptions) => heliconeAPI.instance.queryRequestsClickhouse(options),
+  querySessions: (options: HeliconeSessionQueryOptions) => heliconeAPI.instance.querySessions(options),  
 };

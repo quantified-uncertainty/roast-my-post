@@ -54,6 +54,7 @@ export interface AppConfig {
   };
   
   readonly jobs: {
+    readonly costUpdateStaleHours: number;
     readonly adaptiveWorkers: {
       readonly maxWorkers: number;
       readonly pollIntervalMs: number;
@@ -188,6 +189,11 @@ class ConfigFactory {
         },
 
         jobs: {
+          costUpdateStaleHours: ConfigValidator.validatePositiveInteger(
+            getEnvVar('COST_UPDATE_STALE_HOURS'),
+            1,
+            'COST_UPDATE_STALE_HOURS'
+          ),
           adaptiveWorkers: {
             maxWorkers: ConfigValidator.validatePositiveInteger(
               getEnvVar('ADAPTIVE_MAX_WORKERS'),
@@ -250,7 +256,6 @@ class ConfigFactory {
       errors.push('AUTH_SECRET is required');
     }
 
-    // AI validation (warn if no API keys configured)
     if (!config.ai.anthropicApiKey && !config.ai.openaiApiKey && !config.ai.openRouterApiKey) {
       console.warn('⚠️  No AI API keys configured. AI features will not work.');
     }

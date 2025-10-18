@@ -6,26 +6,18 @@
  * Now uses @roast/ai workflows directly instead of dependency injection.
  */
 
-import type { JobWithRelations, JobEntity } from '@roast/db';
+import type { JobWithRelations } from '@roast/db';
 import { prisma } from '@roast/db';
 import type { JobService } from './JobService';
 import type { Logger, JobProcessingResult, Document } from '../types';
 import { 
   analyzeDocument,
-  type TaskResult,
   Agent,
-  PluginType,
-  ANALYSIS_MODEL
-} from '@roast/ai';
-import {
-  calculateApiCostInDollars,
-  mapModelToCostModel,
-} from '@roast/ai';
+  PluginType} from '@roast/ai';
 import {
   HeliconeSessionManager,
   setGlobalSessionManager,
 } from '@roast/ai';
-import { fetchJobCostWithRetry } from '@roast/ai';
 
 export interface JobOrchestratorInterface {
   processJob(job: JobWithRelations): Promise<JobProcessingResult>;
@@ -78,15 +70,13 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Create evaluation version and save results
       await this.saveAnalysisResults(job, analysisResult, agent);
 
-      // Calculate costs and duration
-      const priceInDollars = await this.calculateJobCost(job.id, analysisResult.tasks);
+      // Calculate duration
       const durationInSeconds = (Date.now() - startTime) / 1000;
 
       // Create execution log
       const logContent = this.createExecutionLog(
         job, 
         analysisResult, 
-        priceInDollars, 
         durationInSeconds,
         startTime
       );
@@ -94,7 +84,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Mark job as completed
       const completedJob = await this.jobService.markAsCompleted(job.id, {
         llmThinking: analysisResult.thinking,
-        priceInDollars,
         durationInSeconds,
         logs: logContent,
       });
@@ -398,30 +387,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     }
   }
 
-  /**
-   * Calculate total cost for the job
-   */
-  private async calculateJobCost(jobId: string, tasks: TaskResult[]): Promise<number> {
-    let totalCost = 0;
-
-    // Calculate cost from tasks
-    for (const task of tasks) {
-      totalCost += task.priceInDollars || 0;
-    }
-
-    // Try to get more accurate cost from Helicone if available
-    try {
-      const heliconeCostData = await fetchJobCostWithRetry(jobId);
-      if (heliconeCostData !== null && heliconeCostData.totalCostUSD > 0) {
-        // Use Helicone cost if available and non-zero
-        return heliconeCostData.totalCostUSD;
-      }
-    } catch (error) {
-      this.logger.warn('Failed to fetch Helicone cost, using calculated cost', { error });
-    }
-
-    return totalCost;
-  }
 
   /**
    * Create a detailed execution log for the job
@@ -429,7 +394,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   private createExecutionLog(
     job: JobWithRelations,
     analysisResult: any,
-    priceInDollars: number,
     durationInSeconds: number,
     startTime: number
   ): string {
@@ -446,7 +410,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       `- Agent: ${agentVersion.name} v${agentVersion.version}`,
       `- Started: ${new Date(startTime).toISOString()}`,
       `- Duration: ${durationInSeconds.toFixed(2)}s`,
-      `- Cost: $${priceInDollars.toFixed(4)}`,
       `- Status: SUCCESS`,
       ``,
       `## Analysis Summary`,
