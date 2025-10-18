@@ -32,4 +32,10 @@
     "src/utils/documentAnalysis.mts",
   ],
   "exclude": ["node_modules", "mcp-server", "claude", "scripts", "src/scripts", "**/*.vtest.ts", "**/*.vtest.tsx"],
+  "references": [
+    { "path": "../../internal-packages/ai" },
+    { "path": "../../internal-packages/db" },
+    { "path": "../../internal-packages/domain" },
+    { "path": "../../internal-packages/jobs" }
+  ]
 }
