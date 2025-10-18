@@ -1,5 +1,6 @@
 import { heliconeAPI, type HeliconeRequest, type HeliconeSession } from '@roast/ai';
 import { JobRepository, type JobEntity } from '@roast/db';
+import { config } from '@roast/domain';
 import { logger } from '../utils/logger';
 
 const BATCH_SIZE = 10;
@@ -45,7 +46,7 @@ async function processJobCostUpdate(job: JobEntity): Promise<void> {
 
   const actualRequests = await heliconeAPI.getSessionRequests(job.id);
   logger.info(`[${job.id}] session: expected ${expectedRequests}, found ${actualRequests.length} requests.`);
-  logger.info(`[${job.id}] Helicone requests for session: ${JSON.stringify(actualRequests, null, 2)}`);
+  // logger.info(`[${job.id}] Helicone requests for session: ${JSON.stringify(actualRequests, null, 2)}`);
 
   if (actualRequests.length < expectedRequests) {
     logger.info(`[${job.id}] session is not fully logged in Helicone yet. Will retry next cycle.`);
@@ -67,7 +68,7 @@ export async function updateJobCostsFromHelicone() {
   logger.info('[Job Cost Updater] Running...');
 
   try {
-    const jobsToUpdate = await jobRepository.findJobsForCostUpdate(BATCH_SIZE, 1);
+    const jobsToUpdate = await jobRepository.findJobsForCostUpdate(BATCH_SIZE, config.jobs.costUpdateStaleHours);
 
     if (jobsToUpdate.length === 0) {
       logger.info('no completed jobs waiting for cost update.');

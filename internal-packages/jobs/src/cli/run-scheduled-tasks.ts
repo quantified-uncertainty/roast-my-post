@@ -41,7 +41,9 @@ class ScheduledTaskRunner {
     startScheduledTasks(() => this.isShuttingDown);
 
     // Keep the process alive indefinitely until a shutdown signal is received
-    await new Promise(() => {});
+     while (!this.isShuttingDown) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
   }
 }
 

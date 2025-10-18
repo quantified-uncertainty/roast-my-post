@@ -18,7 +18,7 @@ export interface Logger {
  */
 class ConsoleLogger implements Logger {
   info(message: string, ...args: any[]): void {
-    console.log(`[${getTimestamp()}] [JOBS] ${message}`, ...args);
+    console.info(`[${getTimestamp()}] [JOBS] ${message}`, ...args);
   }
 
   error(message: string, ...args: any[]): void {

@@ -1,6 +1,6 @@
 /**
  * Job Repository
- * 
+ *
  * Pure data access layer for jobs.
  * Handles all database operations related to job processing.
  * Returns domain entities with minimal dependencies.
@@ -191,7 +191,7 @@ export class JobRepository implements JobRepositoryInterface {
           where: {
             OR: [
               { id: job.originalJobId },
-              { 
+              {
                 AND: [
                   { originalJobId: job.originalJobId },
                   { createdAt: { lt: job.createdAt } }
@@ -224,7 +224,7 @@ export class JobRepository implements JobRepositoryInterface {
       // Find the oldest pending job with row-level lock
       const pendingStatus = JobStatus.PENDING;
       const job = await tx.$queryRaw<Array<{id: string}>>`
-        SELECT id FROM "Job" 
+        SELECT id FROM "Job"
         WHERE status = ${pendingStatus}::"JobStatus"
         ORDER BY "createdAt" ASC
         LIMIT 1
@@ -389,10 +389,9 @@ export class JobRepository implements JobRepositoryInterface {
    * Find jobs that need their cost updated from Helicone
    */
   async findJobsForCostUpdate(limit = 10, maxAgeHours?: number): Promise<JobEntity[]> {
-    const completedAtFilter: any = { not: null };
-    if (maxAgeHours) {
-      completedAtFilter.gte = subHours(new Date(), maxAgeHours);
-    }
+    const completedAtFilter = maxAgeHours
+      ? { not: null, gte: subHours(new Date(), maxAgeHours) }
+      : { not: null };
 
     const jobs = await this.prisma.job.findMany({
       where: {
