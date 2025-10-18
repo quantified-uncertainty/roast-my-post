@@ -30,6 +30,24 @@ export interface HeliconeRequest {
   time_to_first_token?: number;
 }
 
+export interface HeliconeClickhouseRequest {
+  request_id?: string;
+  response_id?: string;
+  request_created_at?: string;
+  response_created_at?: string;
+  model: string;
+  request_model?: string;
+  request_user_id?: string;
+  completion_tokens?: string | number;
+  prompt_tokens?: string | number;
+  total_tokens?: string | number;
+  cost?: number;
+  request_properties?: Record<string, string>;
+  request_path?: string;
+  delay_ms?: number;
+  time_to_first_token?: string | number;
+}
+
 export interface HeliconeQueryFilter {
   request?: { model?: { equals?: string; contains?: string }; user_id?: { equals?: string }; properties?: Record<string, { equals?: string }> };
   response?: { status?: { equals?: number } };
@@ -46,8 +64,8 @@ export interface HeliconeQueryOptions {
   sort?: { created_at?: 'asc' | 'desc'; cost?: 'asc' | 'desc' };
 }
 
-export interface HeliconeQueryResponse {
-  data: HeliconeRequest[];
+export interface HeliconeQueryResponse<T = HeliconeRequest> {
+  data: T[];
   totalCount?: number;
 }
 
@@ -102,7 +120,7 @@ export class HeliconeAPIClient {
   /**
    * Query requests from Helicone
    */
-  async queryRequests(options: HeliconeQueryOptions): Promise<HeliconeQueryResponse> {
+  async queryRequests(options: HeliconeQueryOptions): Promise<HeliconeQueryResponse<HeliconeRequest>> {
     try {
       const response = await fetch(`${this.baseUrl}/v1/request/query`, {
         method: 'POST',
@@ -154,7 +172,21 @@ export class HeliconeAPIClient {
       limit: 1000, // High limit to get all requests in a session
       sort: { created_at: 'asc' },
     });
-    return response.data || [];
+
+    // The data from clickhouse has some fields as strings that should be numbers,
+    // and sometimes uses `request_model` instead of `model`.
+    return (response.data || []).map((req) => {
+      const { cost, request_model, total_tokens, completion_tokens, prompt_tokens, time_to_first_token, ...rest } = req;
+      return {
+        ...rest,
+        model: req.model || request_model || '',
+        costUSD: cost,
+        total_tokens: total_tokens != null ? parseInt(String(total_tokens), 10) : undefined,
+        completion_tokens: completion_tokens != null ? parseInt(String(completion_tokens), 10) : undefined,
+        prompt_tokens: prompt_tokens != null ? parseInt(String(prompt_tokens), 10) : undefined,
+        time_to_first_token: time_to_first_token != null ? parseInt(String(time_to_first_token), 10) : undefined,
+      };
+    });
   }
 
   /**
@@ -361,7 +393,7 @@ export class HeliconeAPIClient {
   /**
    * Query requests from Helicone using the Clickhouse endpoint (for large datasets)
    */
-  async queryRequestsClickhouse(options: HeliconeClickhouseQueryOptions): Promise<HeliconeQueryResponse> {
+  async queryRequestsClickhouse(options: HeliconeClickhouseQueryOptions): Promise<HeliconeQueryResponse<HeliconeClickhouseRequest>> {
     try {
       const response = await fetch(`${this.baseUrl}/v1/request/query-clickhouse`, {
         method: 'POST',

@@ -25,7 +25,7 @@ async function fetchHeliconeSession(job: JobEntity): Promise<HeliconeSession | n
  * Calculates the total cost from a list of Helicone requests.
  */
 function calculateTotalCost(requests: HeliconeRequest[]): number {
-  return requests.reduce((sum, req) => sum + (req.cost || 0), 0);
+  return requests.reduce((sum, req) => sum + (req.costUSD || 0), 0);
 }
 
 /**
