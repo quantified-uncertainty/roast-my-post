@@ -21,7 +21,7 @@ async function main() {
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY,
     heliconeApiKey: process.env.HELICONE_API_KEY,
-    heliconeEnabled: Boolean(process.env.HELICONE_ENABLED),    
+    // heliconeEnabled: Boolean(process.env.HELICONE_ENABLED),    
   });
   
   // Create services
