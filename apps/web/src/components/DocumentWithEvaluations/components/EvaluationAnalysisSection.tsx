@@ -6,13 +6,24 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
-import { CollapsibleSection } from "@/components/CollapsibleSection";
+// Replaced custom CollapsibleSection with shadcn Accordion
 import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { ROUTES } from "@/constants/routes";
-import type { Document, Evaluation } from "@/shared/types/databaseTypes";
+import type {
+  Document,
+  Evaluation,
+  Comment as DbComment,
+} from "@/shared/types/databaseTypes";
 
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
 
@@ -39,109 +50,132 @@ export function EvaluationAnalysisSection({
         {/* Main content */}
         <div className="flex-1 space-y-8">
           {evaluations.map((evaluation) => (
-            <div
+            <Card
               key={evaluation.agentId}
               id={`eval-${evaluation.agentId}`}
-              className="rounded-lg bg-white p-6 shadow"
+              className="shadow"
             >
-              <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-4">
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={ROUTES.AGENTS.DETAIL(evaluation.agentId)}
-                    className="flex items-center gap-2 text-lg font-semibold text-blue-800 hover:text-blue-900 hover:underline"
-                  >
-                    <Bot className="h-4 w-4" />
-                    {evaluation.agent.name}
-                  </Link>
-                  {!!evaluation.grade && (
-                    <span className="mr-3">
-                      <GradeBadge grade={evaluation.grade} variant="light" />
-                    </span>
-                  )}
-                </div>
-                <Link href={`/docs/${document.id}/evals/${evaluation.agentId}`}>
-                  <Button variant="outline" size="xs">
-                    <ShieldUser className="mr-2 h-4 w-4" />
-                    Open in Editor View
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Summary Section */}
-              {evaluation.summary && (
-                <CollapsibleSection
-                  id={`eval-${evaluation.agentId}-summary`}
-                  title="Summary"
-                  defaultOpen={true}
-                  action={<CopyButton text={evaluation.summary} />}
-                >
-                  <div className="prose prose-sm max-w-none text-gray-600">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                      components={MARKDOWN_COMPONENTS}
+              <CardHeader className="mb-0 border-b border-gray-200 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={ROUTES.AGENTS.DETAIL(evaluation.agentId)}
+                      className="flex items-center gap-2 text-lg font-semibold text-blue-800 hover:text-blue-900 hover:underline"
                     >
-                      {evaluation.summary}
-                    </ReactMarkdown>
-                  </div>
-                </CollapsibleSection>
-              )}
-
-              {/* Analysis Section */}
-              {evaluation.analysis && (
-                <CollapsibleSection
-                  id={`eval-${evaluation.agentId}-analysis`}
-                  title="Analysis"
-                  defaultOpen={false}
-                  action={<CopyButton text={evaluation.analysis} />}
-                >
-                  <div className="prose prose-sm max-w-none text-gray-600">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                      components={MARKDOWN_COMPONENTS}
-                    >
-                      {evaluation.analysis}
-                    </ReactMarkdown>
-                  </div>
-                </CollapsibleSection>
-              )}
-
-              {/* Comments Section */}
-              {evaluation.comments && evaluation.comments.length > 0 && (
-                <CollapsibleSection
-                  id={`eval-${evaluation.agentId}-comments`}
-                  title={`Comments (${evaluation.comments.length})`}
-                  defaultOpen={false}
-                >
-                  <EvaluationComments
-                    comments={evaluation.comments.map(
-                      (comment: any, index: number) => ({
-                        id: `${evaluation.agentId}-comment-${index}`,
-                        description: comment.description || "",
-                        importance: comment.importance ?? null,
-                        grade: comment.grade ?? null,
-                        evaluationVersionId: evaluation.id || "",
-                        highlightId: `${evaluation.agentId}-highlight-${index}`,
-                        header: comment.header ?? null,
-                        level: comment.level ?? null,
-                        source: comment.source ?? null,
-                        metadata: comment.metadata ?? null,
-                        highlight: {
-                          id: `${evaluation.agentId}-highlight-${index}`,
-                          startOffset: comment.highlight?.startOffset || 0,
-                          endOffset: comment.highlight?.endOffset || 0,
-                          quotedText: comment.highlight?.quotedText || "",
-                          isValid: comment.highlight?.isValid || true,
-                          prefix: comment.highlight?.prefix ?? null,
-                          error: comment.highlight?.error ?? null,
-                        },
-                      })
+                      <Bot className="h-4 w-4" />
+                      {evaluation.agent.name}
+                    </Link>
+                    {!!evaluation.grade && (
+                      <span className="mr-3">
+                        <GradeBadge grade={evaluation.grade} variant="light" />
+                      </span>
                     )}
-                  />
-                </CollapsibleSection>
-              )}
-            </div>
+                  </div>
+                  <Link
+                    href={`/docs/${document.id}/evals/${evaluation.agentId}`}
+                  >
+                    <Button variant="outline" size="xs">
+                      <ShieldUser className="mr-2 h-4 w-4" />
+                      Open in Editor View
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                {/* Summary Section */}
+                {evaluation.summary && (
+                  <Accordion
+                    type="single"
+                    collapsible
+                    defaultValue={`eval-${evaluation.agentId}-summary`}
+                  >
+                    <AccordionItem value={`eval-${evaluation.agentId}-summary`}>
+                      <AccordionTrigger>Summary</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="mb-2 flex justify-end">
+                          <CopyButton text={evaluation.summary} />
+                        </div>
+                        <div className="prose prose-sm max-w-none text-gray-600">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                            components={MARKDOWN_COMPONENTS}
+                          >
+                            {evaluation.summary}
+                          </ReactMarkdown>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+
+                {/* Analysis Section */}
+                {evaluation.analysis && (
+                  <Accordion type="single" collapsible>
+                    <AccordionItem
+                      value={`eval-${evaluation.agentId}-analysis`}
+                    >
+                      <AccordionTrigger>Analysis</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="mb-2 flex justify-end">
+                          <CopyButton text={evaluation.analysis} />
+                        </div>
+                        <div className="prose prose-sm max-w-none text-gray-600">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                            components={MARKDOWN_COMPONENTS}
+                          >
+                            {evaluation.analysis}
+                          </ReactMarkdown>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+
+                {/* Comments Section */}
+                {evaluation.comments && evaluation.comments.length > 0 && (
+                  <Accordion type="single" collapsible>
+                    <AccordionItem
+                      value={`eval-${evaluation.agentId}-comments`}
+                    >
+                      <AccordionTrigger>
+                        {`Comments (${evaluation.comments.length})`}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <EvaluationComments
+                          comments={evaluation.comments.map(
+                            (comment: DbComment, index: number) => ({
+                              id: `${evaluation.agentId}-comment-${index}`,
+                              description: comment.description || "",
+                              importance: comment.importance ?? null,
+                              grade: comment.grade ?? null,
+                              evaluationVersionId: evaluation.id || "",
+                              highlightId: `${evaluation.agentId}-highlight-${index}`,
+                              header: comment.header ?? null,
+                              level: comment.level ?? null,
+                              source: comment.source ?? null,
+                              metadata: comment.metadata ?? null,
+                              highlight: {
+                                id: `${evaluation.agentId}-highlight-${index}`,
+                                startOffset:
+                                  comment.highlight?.startOffset || 0,
+                                endOffset: comment.highlight?.endOffset || 0,
+                                quotedText: comment.highlight?.quotedText || "",
+                                isValid: comment.highlight?.isValid || true,
+                                prefix: comment.highlight?.prefix ?? null,
+                                error: comment.highlight?.error ?? null,
+                              },
+                            })
+                          )}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
 

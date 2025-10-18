@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, FileText, Users, Wrench, Home, BookOpen, Library, Plus } from "lucide-react";
+import { Bot, Wrench, BookOpen, Library, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -50,7 +50,11 @@ export default function ClientLayout({
                     <Library className="h-5 w-5" />
                     My Docs
                   </Link>
-                  <Button asChild size="sm" className="bg-black hover:bg-gray-800">
+                  <Button
+                    asChild
+                    size="sm"
+                    className="bg-black hover:bg-gray-800"
+                  >
                     <Link href="/docs/new">
                       <Plus className="h-4 w-4" />
                       New Document
@@ -89,9 +93,11 @@ export default function ClientLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-auto">
+      <main
+        className={`flex-1 ${isReaderPage ? "overflow-hidden" : "overflow-auto"}`}
+      >
         {isReaderPage ? (
-          children
+          <div className="flex h-full min-h-0 flex-col">{children}</div>
         ) : (
           <div className="flex min-h-full flex-col">
             <div className="flex-1">{children}</div>
