@@ -33,7 +33,7 @@ export function createPluginBasedAgent(
     description: config.description,
     providesGrades: config.providesGrades ?? false,
     isRecommended: config.isRecommended ?? false,
-    isLlmCostTracked: config.isLlmCostTracked ?? false,
+    isLlmCostTracked: config.isLlmCostTracked ?? true,
     pluginIds: config.pluginIds,
     readme: pluginReadmes[config.readmeId],
   };

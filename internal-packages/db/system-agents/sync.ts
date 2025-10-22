@@ -49,7 +49,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
       where: { id: agent.id },
       data: { 
         isRecommended: agent.isRecommended || false,
-        isLlmCostTracked: agent.isLlmCostTracked ?? false,
+        isLlmCostTracked: agent.isLlmCostTracked ?? true,
       }
     });
 
@@ -103,7 +103,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
         submittedById: userId,
         isSystemManaged: true,
         isRecommended: agent.isRecommended || false,
-        isLlmCostTracked: agent.isLlmCostTracked ?? false,
+        isLlmCostTracked: agent.isLlmCostTracked ?? true,
         versions: {
           create: {
             version: 1,
