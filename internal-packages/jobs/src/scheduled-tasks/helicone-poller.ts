@@ -16,7 +16,7 @@ async function fetchHeliconeSession(job: JobEntity): Promise<HeliconeSession | n
   });
 
   if (!sessionResponse.data || sessionResponse.data.length === 0) {
-    logger.info(`[${job.id}] session not found in Helicone yet. Will retry next cycle.`);
+    logger.debug(`[${job.id}] session not found in Helicone yet. Will retry next cycle.`);
     return null;
   }
   return sessionResponse.data[0];
@@ -33,7 +33,7 @@ function calculateTotalCost(requests: HeliconeRequest[]): number {
  * Processes a single job to fetch, calculate, and update its cost.
  */
 async function processJobCostUpdate(job: JobEntity): Promise<void> {
-  logger.info(`[${job.id}] processing job`);
+  logger.debug(`[${job.id}] processing job`);
 
   const session = await fetchHeliconeSession(job);
   if (!session) return;
