@@ -8,4 +8,5 @@ export const mathCheckerAgent = createPluginBasedAgent({
   pluginIds: [PluginType.MATH],
   readmeId: "math-checker",
   isRecommended: true,
+  isLlmCostTracked: true,
 });

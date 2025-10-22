@@ -21,6 +21,7 @@ export interface SystemAgentDefinition {
   pluginIds?: PluginType[];
   extendedCapabilityId?: string;
   isRecommended?: boolean;
+  isLlmCostTracked?: boolean;
 }
 
 export interface SystemAgentConfig {
