@@ -3,6 +3,7 @@ import { z } from "zod";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { perplexityResearchTool } from "../perplexity-researcher";
 import { generateCacheSeed } from "../shared/cache-utils";
+import { withRetry } from "../../utils/retryUtils";
 
 import {
   Tool,
@@ -110,12 +111,18 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
     if (input.searchForEvidence) {
       context.logger.info(`[FactChecker] Searching for evidence using Perplexity`);
       try {
-        perplexityFullOutput = await perplexityResearchTool.execute({
-          query: input.claim,
-          focusArea: 'general',
-          maxSources: 8, // Increased to get more sources
-          includeForecastingContext: false
-        }, context);
+        perplexityFullOutput = await withRetry(async () => {
+          return await perplexityResearchTool.execute({
+            query: input.claim,
+            focusArea: 'general',
+            maxSources: 8, // Increased to get more sources
+            includeForecastingContext: false
+          }, context);
+        }, {
+          maxRetries: 3,
+          baseDelayMs: 2000, // Longer delay for external API calls
+          logPrefix: '[FactChecker Perplexity]'
+        });
         
         // Convert Perplexity output to our expected format
         researchResults = {
@@ -263,74 +270,80 @@ ${input.claim}
   </requirements>
 </task>`;
 
-    const result = await callClaudeWithTool<FactCheckResult>({
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: userPrompt,
-        },
-      ],
-      max_tokens: 4000,
-      temperature: 0,
-      toolName: "fact_check",
-      toolDescription: "Verify the accuracy of a factual claim",
-      toolSchema: {
-        type: "object",
-        properties: {
-          verdict: {
-            type: "string",
-            enum: [
-              "true",
-              "false",
-              "partially-true",
-              "unverifiable",
-              "outdated",
-            ],
-            description: "The fact-check verdict",
+    const result = await withRetry(async () => {
+      return await callClaudeWithTool<FactCheckResult>({
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: userPrompt,
           },
-          confidence: {
-            type: "string",
-            enum: ["high", "medium", "low"],
-            description: "Confidence level in the verdict",
-          },
-          explanation: {
-            type: "string",
-            description:
-              "Detailed explanation with markdown formatting and inline links",
-          },
-          corrections: {
-            type: "string",
-            description:
-              "Full corrected version of the claim if false or partially true",
-          },
-          displayCorrection: {
-            type: "string",
-            description:
-              "Brief correction in XML format (e.g., '<r:replace from=\"2006\" to=\"2009\"/>')",
-          },
-          criticalText: {
-            type: "string",
-            description:
-              "Minimum critical part of the text that is most factually important to highlight (e.g., '365.25 days', 'Paris', '2023')",
-          },
-          sources: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                url: { type: "string", pattern: "^https?://" },
-              },
-              required: ["title", "url"],
+        ],
+        max_tokens: 4000,
+        temperature: 0,
+        toolName: "fact_check",
+        toolDescription: "Verify the accuracy of a factual claim",
+        toolSchema: {
+          type: "object",
+          properties: {
+            verdict: {
+              type: "string",
+              enum: [
+                "true",
+                "false",
+                "partially-true",
+                "unverifiable",
+                "outdated",
+              ],
+              description: "The fact-check verdict",
             },
-            description: "List of sources with titles and URLs",
+            confidence: {
+              type: "string",
+              enum: ["high", "medium", "low"],
+              description: "Confidence level in the verdict",
+            },
+            explanation: {
+              type: "string",
+              description:
+                "Detailed explanation with markdown formatting and inline links",
+            },
+            corrections: {
+              type: "string",
+              description:
+                "Full corrected version of the claim if false or partially true",
+            },
+            displayCorrection: {
+              type: "string",
+              description:
+                "Brief correction in XML format (e.g., '<r:replace from=\"2006\" to=\"2009\"/>')",
+            },
+            criticalText: {
+              type: "string",
+              description:
+                "Minimum critical part of the text that is most factually important to highlight (e.g., '365.25 days', 'Paris', '2023')",
+            },
+            sources: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  url: { type: "string", pattern: "^https?://" },
+                },
+                required: ["title", "url"],
+              },
+              description: "List of sources with titles and URLs",
+            },
           },
+          required: ["verdict", "confidence", "explanation", "criticalText"],
         },
-        required: ["verdict", "confidence", "explanation", "criticalText"],
-      },
-      enablePromptCaching: true,
-      cacheSeed,
+        enablePromptCaching: true,
+        cacheSeed,
+      });
+    }, {
+      maxRetries: 3,
+      baseDelayMs: 1000,
+      logPrefix: '[FactChecker Claude]'
     });
 
     context.logger.info(
