@@ -8,4 +8,5 @@ export const forecastCheckerAgent = createPluginBasedAgent({
   pluginIds: [PluginType.FORECAST],
   readmeId: "forecast-checker",
   isRecommended: true,
+  isLlmCostTracked: true,
 });

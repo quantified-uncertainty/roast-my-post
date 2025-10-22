@@ -8,4 +8,5 @@ export const linkCheckerAgent = createPluginBasedAgent({
   pluginIds: [PluginType.LINK_ANALYSIS],
   readmeId: "link-checker",
   isRecommended: true,
+  isLlmCostTracked: false
 });

@@ -397,6 +397,11 @@ export class JobRepository implements JobRepositoryInterface {
       where: {
         completedAt: completedAtFilter,
         priceInDollars: null,
+        evaluation: {
+          agent: {
+            isLlmCostTracked: true,
+          },
+        },
       },
       take: limit,
       orderBy: {
