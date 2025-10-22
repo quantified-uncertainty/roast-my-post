@@ -16,10 +16,6 @@ async function main() {
   const startTime = Date.now();
   console.log('🚀 Starting job processor...');
   
-  const apiKey = process.env.HELICONE_API_KEY;
-  console.log('HELICONE_API_KEY:', apiKey ? `${apiKey.substring(0, 7)}...` : 'Not Set');
-  console.log('HELICONE_CACHE_ENABLED:', process.env.HELICONE_CACHE_ENABLED);
-
   // Initialize AI package with environment variables
   initializeAI({
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
