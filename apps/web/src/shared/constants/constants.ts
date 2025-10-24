@@ -1,7 +1,7 @@
 // External URLs and links used throughout the application
 export const EXTERNAL_URLS = {
   // Social and Community
-  DISCORD: 'https://discord.gg/nsTnQTgtG6',
+  DISCORD: 'https://discord.gg/QraJG34x',
   GITHUB_REPO: 'https://github.com/quantified-uncertainty/roast-my-post',
   GITHUB_ISSUES: 'https://github.com/quantified-uncertainty/roast-my-post/issues',
 
