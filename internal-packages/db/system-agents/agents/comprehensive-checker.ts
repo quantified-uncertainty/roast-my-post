@@ -7,4 +7,5 @@ export const comprehensiveCheckerAgent = createPluginBasedAgent({
   description: "Combines Fact Checker, Math Checker, and Forecast Checker",
   pluginIds: [PluginType.FACT_CHECK, PluginType.MATH, PluginType.FORECAST],
   readmeId: "comprehensive-checker",
+  isLlmCostTracked: true,
 });

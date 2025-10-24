@@ -8,4 +8,5 @@ export const factCheckerAgent = createPluginBasedAgent({
   pluginIds: [PluginType.FACT_CHECK],
   readmeId: "fact-checker",
   isRecommended: true,
+  isLlmCostTracked: true,
 });

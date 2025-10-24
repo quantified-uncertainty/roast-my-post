@@ -14,6 +14,7 @@ export interface PluginBasedAgentConfig {
   readmeId: keyof typeof pluginReadmes;
   isRecommended?: boolean;
   providesGrades?: boolean;
+  isLlmCostTracked?: boolean;
 }
 
 /**
@@ -32,6 +33,7 @@ export function createPluginBasedAgent(
     description: config.description,
     providesGrades: config.providesGrades ?? false,
     isRecommended: config.isRecommended ?? false,
+    isLlmCostTracked: config.isLlmCostTracked ?? true,
     pluginIds: config.pluginIds,
     readme: pluginReadmes[config.readmeId],
   };

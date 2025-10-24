@@ -8,4 +8,5 @@ export const spellingGrammarAgent = createPluginBasedAgent({
   pluginIds: [PluginType.SPELLING],
   readmeId: "spelling-grammar",
   isRecommended: true,
+  isLlmCostTracked: true,
 });

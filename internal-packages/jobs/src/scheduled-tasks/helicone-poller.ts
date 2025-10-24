@@ -16,7 +16,7 @@ async function fetchHeliconeSession(job: JobEntity): Promise<HeliconeSession | n
   });
 
   if (!sessionResponse.data || sessionResponse.data.length === 0) {
-    logger.info(`[${job.id}] session not found in Helicone yet. Will retry next cycle.`);
+    logger.debug(`[${job.id}] session not found in Helicone yet. Will retry next cycle.`);
     return null;
   }
   return sessionResponse.data[0];
@@ -33,7 +33,7 @@ function calculateTotalCost(requests: HeliconeRequest[]): number {
  * Processes a single job to fetch, calculate, and update its cost.
  */
 async function processJobCostUpdate(job: JobEntity): Promise<void> {
-  logger.info(`[${job.id}] processing job`);
+  logger.debug(`[${job.id}] processing job`);
 
   const session = await fetchHeliconeSession(job);
   if (!session) return;
@@ -65,24 +65,23 @@ async function processJobCostUpdate(job: JobEntity): Promise<void> {
  * data from Helicone and updates the job record.
  */
 export async function updateJobCostsFromHelicone() {
-  logger.info('[Job Cost Updater] Running...');
+  logger.debug('[Job Cost Updater] Running...');
 
   try {
     const jobsToUpdate = await jobRepository.findJobsForCostUpdate(BATCH_SIZE, config.jobs.costUpdateStaleHours);
 
-    if (jobsToUpdate.length === 0) {
-      logger.info('no completed jobs waiting for cost update.');
-      return;
-    }
+    if (jobsToUpdate.length > 0) {
+      logger.info(`found ${jobsToUpdate.length} completed job(s) to update price for.`);
 
-    logger.info(`found ${jobsToUpdate.length} completed job(s) to update price for.`);
-
-    for (const job of jobsToUpdate) {
-      await processJobCostUpdate(job);
+      for (const job of jobsToUpdate) {
+        await processJobCostUpdate(job);
+      }
+    } else {
+      logger.debug('no completed jobs waiting for cost update.');
     }
   } catch (error) {
     logger.error('Error updating job costs from Helicone:', error);
   } finally {
-    logger.info('[Job Cost Updater] Finished.');
+    logger.debug('[Job Cost Updater] Finished.');
   }
 }
