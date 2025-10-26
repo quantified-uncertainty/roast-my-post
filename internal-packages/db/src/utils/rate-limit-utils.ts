@@ -1,11 +1,10 @@
 import { Plan } from "../types";
 import { nextReset } from "./date-utils";
-import { PrismaClient } from "../../generated";
 
 /**
  * Error thrown when a resource is not found.
  */
-class NotFoundError extends Error {
+export class NotFoundError extends Error {
   constructor(resource: string, id: string) {
     super(`${resource} not found: ${id}`);
     this.name = "NotFoundError";
@@ -15,7 +14,7 @@ class NotFoundError extends Error {
 /**
  * Error thrown when rate limit is exceeded.
  */
-class RateLimitError extends Error {
+export class RateLimitError extends Error {
   constructor(
     message: string,
     public details?: { retryAfter?: Date }
@@ -64,7 +63,7 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
  */
 export async function checkAndIncrementRateLimit(
   userId: string,
-  prisma: PrismaClient,
+  prisma: any,
   now: Date = new Date()
 ): Promise<void> {
   return prisma.$transaction(async (tx: any) => {

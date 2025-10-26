@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
-import { prisma, Plan, checkAndIncrementRateLimit } from "@roast/db";
+import { prisma, Plan, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({
@@ -236,13 +236,16 @@ export async function POST(
     }
 
     // Rate limiting check and increment
-    const { updatedUser, isLimited } = await checkAndIncrementRateLimit(userId, prisma);
-
-    if (isLimited) {
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later (hourly/monthly cap reached)." },
-        { status: 429 }
-      );
+    try {
+      await checkAndIncrementRateLimit(userId, prisma);
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return NextResponse.json(
+          { error: "Rate limit exceeded. Please try again later." },
+          { status: 429 }
+        );
+      }
+      throw error;
     }
 
     // Check if this is a batch request
