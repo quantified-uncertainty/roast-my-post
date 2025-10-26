@@ -52,6 +52,7 @@ const PLAN_LIMITS = {
 export async function checkAndIncrementRateLimit(
   userId: string,
   prisma: any,
+  count: number = 1,
   now: Date = new Date()
 ): Promise<void> {
   return prisma.$transaction(async (tx: any) => {
@@ -89,8 +90,8 @@ export async function checkAndIncrementRateLimit(
       monthlyCount = 0;
     }
 
-    // Check limits
-    if (hourlyCount >= limits.hourly || monthlyCount >= limits.monthly) {
+    // Check limits (accounting for the count we're about to add)
+    if (hourlyCount + count > limits.hourly || monthlyCount + count > limits.monthly) {
       if (Object.keys(updates).length > 0) {
         await tx.user.update({ where: { id: userId }, data: updates });
       }
@@ -101,8 +102,8 @@ export async function checkAndIncrementRateLimit(
     }
 
     // Increment and update
-    updates.evalsThisHour = hourlyCount + 1;
-    updates.evalsThisMonth = monthlyCount + 1;
+    updates.evalsThisHour = hourlyCount + count;
+    updates.evalsThisMonth = monthlyCount + count;
     await tx.user.update({ where: { id: userId }, data: updates });
   });
 }

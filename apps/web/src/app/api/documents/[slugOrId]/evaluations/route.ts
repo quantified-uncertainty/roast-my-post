@@ -235,19 +235,6 @@ export async function POST(
       );
     }
 
-    // Rate limiting check and increment
-    try {
-      await checkAndIncrementRateLimit(userId, prisma);
-    } catch (error) {
-      if (error instanceof RateLimitError) {
-        return NextResponse.json(
-          { error: "Rate limit exceeded. Please try again later." },
-          { status: 429 }
-        );
-      }
-      throw error;
-    }
-
     // Check if this is a batch request
     const isBatch = "agentIds" in body;
 
@@ -300,6 +287,19 @@ export async function POST(
           { error: `Evaluators not found: ${missingAgentIds.join(", ")}` },
           { status: 400 }
         );
+      }
+
+      // Rate limiting check and increment (count all evaluations in batch)
+      try {
+        await checkAndIncrementRateLimit(userId, prisma, agentIds.length);
+      } catch (error) {
+        if (error instanceof RateLimitError) {
+          return NextResponse.json(
+            { error: "Rate limit exceeded. Please try again later." },
+            { status: 429 }
+          );
+        }
+        throw error;
       }
 
       // Create evaluations for all agents
@@ -370,6 +370,19 @@ export async function POST(
           { error: "Evaluator not found" },
           { status: 404 }
         );
+      }
+
+      // Rate limiting check and increment
+      try {
+        await checkAndIncrementRateLimit(userId, prisma);
+      } catch (error) {
+        if (error instanceof RateLimitError) {
+          return NextResponse.json(
+            { error: "Rate limit exceeded. Please try again later." },
+            { status: 429 }
+          );
+        }
+        throw error;
       }
 
       // Create evaluation
