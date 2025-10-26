@@ -92,7 +92,10 @@ export async function checkAndIncrementRateLimit(
   count: number = 1,
   now: Date = new Date()
 ): Promise<void> {
+  console.log(`[RateLimit] Starting check for userId=${userId}, count=${count}, now=${now.toISOString()}`);
+  
   return prisma.$transaction(async (tx: any) => {
+    console.log(`[RateLimit] Fetching user data for userId=${userId}`);
     const user = await tx.user.findUnique({
       where: { id: userId },
       select: {
@@ -105,45 +108,65 @@ export async function checkAndIncrementRateLimit(
     });
 
     if (!user) {
+      console.error(`[RateLimit] User not found: userId=${userId}`);
       throw new NotFoundError("User", userId);
     }
 
+    console.log(`[RateLimit] User found: plan=${user.plan}, evalsThisHour=${user.evalsThisHour}, evalsThisMonth=${user.evalsThisMonth}`);
+
     // Validate plan and get limits with runtime type checking
-    let limits;
-    if (isPlan(user.plan)) {
-      limits = PLAN_LIMITS[user.plan];
+    const userPlan: string = user.plan;
+    const limits = isPlan(userPlan) ? PLAN_LIMITS[userPlan] : PLAN_LIMITS.REGULAR;
+    
+    if (!isPlan(userPlan)) {
+      console.warn(`[RateLimit] Invalid plan "${userPlan}" for user ${userId}, falling back to REGULAR plan`);
     } else {
-      console.warn(`Invalid plan "${user.plan}" for user ${userId}, falling back to REGULAR plan`);
-      limits = PLAN_LIMITS.REGULAR;
+      console.log(`[RateLimit] Valid plan detected: ${userPlan}, limits: hourly=${limits.hourly}, monthly=${limits.monthly}`);
     }
     const updates: any = {};
 
     // Reset hourly counter if needed
     let hourlyCount = user.evalsThisHour ?? 0;
-    if (!user.hourResetAt || now >= user.hourResetAt) {
-      updates.hourResetAt = nextReset(now, "hour");
+    const needsHourlyReset = !user.hourResetAt || now >= user.hourResetAt;
+    console.log(`[RateLimit] Hourly check: current=${hourlyCount}, resetAt=${user.hourResetAt?.toISOString()}, needsReset=${needsHourlyReset}`);
+    
+    if (needsHourlyReset) {
+      const nextHourReset = nextReset(now, "hour");
+      updates.hourResetAt = nextHourReset;
       updates.evalsThisHour = 0;
       hourlyCount = 0;
+      console.log(`[RateLimit] Hourly counter reset, next reset at ${nextHourReset.toISOString()}`);
     }
 
     // Reset monthly counter if needed
     let monthlyCount = user.evalsThisMonth ?? 0;
-    if (!user.monthResetAt || now >= user.monthResetAt) {
-      updates.monthResetAt = nextReset(now, "month");
+    const needsMonthlyReset = !user.monthResetAt || now >= user.monthResetAt;
+    console.log(`[RateLimit] Monthly check: current=${monthlyCount}, resetAt=${user.monthResetAt?.toISOString()}, needsReset=${needsMonthlyReset}`);
+    
+    if (needsMonthlyReset) {
+      const nextMonthReset = nextReset(now, "month");
+      updates.monthResetAt = nextMonthReset;
       updates.evalsThisMonth = 0;
       monthlyCount = 0;
+      console.log(`[RateLimit] Monthly counter reset, next reset at ${nextMonthReset.toISOString()}`);
     }
     // Check limits (accounting for the count we're about to add)
     const hourExceeded = hourlyCount + count > limits.hourly;
     const monthExceeded = monthlyCount + count > limits.monthly;
     
+    console.log(`[RateLimit] Limit check: hourly ${hourlyCount}+${count}=${hourlyCount + count} vs ${limits.hourly} (exceeded=${hourExceeded}), monthly ${monthlyCount}+${count}=${monthlyCount + count} vs ${limits.monthly} (exceeded=${monthExceeded})`);
+    
     if (hourExceeded || monthExceeded) {
+      console.warn(`[RateLimit] Rate limit exceeded for userId=${userId}, plan=${user.plan}`);
+      
       // Save any pending reset updates
       if (Object.keys(updates).length > 0) {
+        console.log(`[RateLimit] Saving pending reset updates before throwing error`);
         await tx.user.update({ where: { id: userId }, data: updates });
       }
       
       const retryAfter = calculateRetryAfter(hourExceeded, monthExceeded, user, now);
+      console.log(`[RateLimit] Retry after: ${retryAfter.toISOString()}`);
       
       throw new RateLimitError(`Rate limit exceeded for ${user.plan} plan`, { retryAfter });
     }
@@ -151,6 +174,8 @@ export async function checkAndIncrementRateLimit(
     // Increment and update
     updates.evalsThisHour = hourlyCount + count;
     updates.evalsThisMonth = monthlyCount + count;
+    console.log(`[RateLimit] Updating counters: evalsThisHour=${updates.evalsThisHour}, evalsThisMonth=${updates.evalsThisMonth}`);
     await tx.user.update({ where: { id: userId }, data: updates });
+    console.log(`[RateLimit] Rate limit check passed for userId=${userId}`);
   });
 }
