@@ -50,6 +50,35 @@ const PLAN_LIMITS = {
   PRO: { hourly: 100, monthly: 1000 },
 };
 
+/**
+ * Calculate the earliest retry time based on which limits were exceeded.
+ */
+function calculateRetryAfter(
+  hourExceeded: boolean,
+  monthExceeded: boolean,
+  user: { hourResetAt: Date | null; monthResetAt: Date | null },
+  now: Date
+): Date {
+  const resetTimes: Date[] = [];
+
+  if (hourExceeded) {
+    const hourResetTime = user.hourResetAt && user.hourResetAt > now
+      ? user.hourResetAt
+      : nextReset(now, "hour");
+    resetTimes.push(hourResetTime);
+  }
+
+  if (monthExceeded) {
+    const monthResetTime = user.monthResetAt && user.monthResetAt > now
+      ? user.monthResetAt
+      : nextReset(now, "month");
+    resetTimes.push(monthResetTime);
+  }
+
+  // Return the earliest reset time
+  return resetTimes.sort((a, b) => a.getTime() - b.getTime())[0];
+}
+
 export async function checkAndIncrementRateLimit(
   userId: string,
   prisma: any,
@@ -76,7 +105,7 @@ export async function checkAndIncrementRateLimit(
     const updates: any = {};
 
     // Reset hourly counter if needed
-    let hourlyCount = user.evalsThisHour;
+    let hourlyCount = user.evalsThisHour ?? 0;
     if (!user.hourResetAt || now >= user.hourResetAt) {
       updates.hourResetAt = nextReset(now, "hour");
       updates.evalsThisHour = 0;
@@ -84,21 +113,24 @@ export async function checkAndIncrementRateLimit(
     }
 
     // Reset monthly counter if needed
-    let monthlyCount = user.evalsThisMonth;
+    let monthlyCount = user.evalsThisMonth ?? 0;
     if (!user.monthResetAt || now >= user.monthResetAt) {
       updates.monthResetAt = nextReset(now, "month");
       updates.evalsThisMonth = 0;
       monthlyCount = 0;
     }
-
     // Check limits (accounting for the count we're about to add)
-    if (hourlyCount + count > limits.hourly || monthlyCount + count > limits.monthly) {
+    const hourExceeded = hourlyCount + count > limits.hourly;
+    const monthExceeded = monthlyCount + count > limits.monthly;
+    
+    if (hourExceeded || monthExceeded) {
+      // Save any pending reset updates
       if (Object.keys(updates).length > 0) {
         await tx.user.update({ where: { id: userId }, data: updates });
       }
-      const retryAfter = user.hourResetAt && user.hourResetAt > now
-        ? user.hourResetAt
-        : nextReset(now, "hour");
+      
+      const retryAfter = calculateRetryAfter(hourExceeded, monthExceeded, user, now);
+      
       throw new RateLimitError(`Rate limit exceeded for ${user.plan} plan`, { retryAfter });
     }
 
