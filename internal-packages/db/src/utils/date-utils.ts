@@ -1,11 +1,14 @@
 export function nextReset(now: Date, interval: 'hour' | 'month'): Date {
   const next = new Date(now);
-  if (interval === 'hour') {
-    next.setHours(next.getHours() + 1, 0, 0, 0);
-  } else if (interval === 'month') {
-    next.setDate(1);
-    next.setMonth(next.getMonth() + 1);
-    next.setHours(0, 0, 0, 0);
+  switch (interval) {
+    case 'hour':
+      next.setHours(next.getHours() + 1, 0, 0, 0);
+      break;
+    case 'month':
+      next.setDate(1);
+      next.setMonth(next.getMonth() + 1);
+      next.setHours(0, 0, 0, 0);
+      break;
   }
   return next;
 }
