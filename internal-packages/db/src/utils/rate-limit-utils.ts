@@ -8,7 +8,13 @@ function nextReset(now: Date, interval: 'hour' | 'month'): Date {
       break;
     case 'month':
       next.setDate(1);
-      next.setMonth(next.getMonth() + 1);
+      const newMonth = next.getMonth() + 1;
+      if (newMonth > 11) {
+        next.setFullYear(next.getFullYear() + 1);
+        next.setMonth(0);
+      } else {
+        next.setMonth(newMonth);
+      }
       next.setHours(0, 0, 0, 0);
       break;
   }
