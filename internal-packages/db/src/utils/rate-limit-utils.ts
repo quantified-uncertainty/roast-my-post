@@ -6,7 +6,7 @@ function nextReset(now: Date, interval: 'hour' | 'month'): Date {
     case 'hour':
       next.setHours(next.getHours() + 1, 0, 0, 0);
       break;
-    case 'month':
+    case 'month': {
       next.setDate(1);
       const newMonth = next.getMonth() + 1;
       if (newMonth > 11) {
@@ -17,6 +17,7 @@ function nextReset(now: Date, interval: 'hour' | 'month'): Date {
       }
       next.setHours(0, 0, 0, 0);
       break;
+    }
   }
   return next;
 }
