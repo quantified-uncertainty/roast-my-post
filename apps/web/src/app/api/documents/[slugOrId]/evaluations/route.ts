@@ -15,6 +15,62 @@ const queryEvaluationsSchema = z.object({
 
 
 
+async function verifyDocumentOwnership(documentId: string, userId: string) {
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+  });
+
+  if (!document) {
+    return NextResponse.json(
+      { error: "Document not found" },
+      { status: 404 }
+    );
+  }
+
+  if (document.submittedById !== userId) {
+    return NextResponse.json(
+      { error: "Document not found" },
+      { status: 404 }
+    );
+  }
+
+  return null;
+}
+
+async function verifyAgents(agentIds: string[]) {
+  const agents = await prisma.agent.findMany({
+    where: { id: { in: agentIds } },
+    select: { id: true },
+  });
+
+  const foundAgentIds = new Set(agents.map((a) => a.id));
+  const missingAgentIds = agentIds.filter((id: string) => !foundAgentIds.has(id));
+
+  if (missingAgentIds.length > 0) {
+    return NextResponse.json(
+      { error: `Evaluator${missingAgentIds.length > 1 ? 's' : ''} not found: ${missingAgentIds.join(", ")}` },
+      { status: 404 }
+    );
+  }
+
+  return null;
+}
+
+async function handleRateLimitCheck(userId: string, count: number) {
+  try {
+    await checkAndIncrementRateLimit(userId, prisma, count);
+    return null;
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again later." },
+        { status: 429 }
+      );
+    }
+    throw error;
+  }
+}
+
 async function createEvaluation(documentId: string, agentId: string) {
   return await prisma.$transaction(async (tx) => {
     const { getServices } = await import(
@@ -248,59 +304,17 @@ export async function POST(
         );
       }
 
-      // Verify document exists and user has access
-      const { PrivacyService } = await import(
-        "@/infrastructure/auth/privacy-service"
-      );
-      const document = await prisma.document.findUnique({
-        where: { id: documentId },
-      });
-
-      if (!document) {
-        return NextResponse.json(
-          { error: "Document not found" },
-          { status: 404 }
-        );
-      }
-
-      // Check if user can modify this document (must be owner)
-      if (document.submittedById !== userId) {
-        return NextResponse.json(
-          { error: "Document not found" },
-          { status: 404 }
-        );
-      }
+      // Verify document ownership
+      const ownershipError = await verifyDocumentOwnership(documentId, userId);
+      if (ownershipError) return ownershipError;
 
       // Verify all agents exist
-      const agents = await prisma.agent.findMany({
-        where: { id: { in: agentIds } },
-        select: { id: true },
-      });
+      const agentError = await verifyAgents(agentIds);
+      if (agentError) return agentError;
 
-      const foundAgentIds = new Set(agents.map((a) => a.id));
-      const missingAgentIds = agentIds.filter(
-        (id: string) => !foundAgentIds.has(id)
-      );
-
-      if (missingAgentIds.length > 0) {
-        return NextResponse.json(
-          { error: `Evaluators not found: ${missingAgentIds.join(", ")}` },
-          { status: 400 }
-        );
-      }
-
-      // Rate limiting check and increment (count all evaluations in batch)
-      try {
-        await checkAndIncrementRateLimit(userId, prisma, agentIds.length);
-      } catch (error) {
-        if (error instanceof RateLimitError) {
-          return NextResponse.json(
-            { error: "Rate limit exceeded. Please try again later." },
-            { status: 429 }
-          );
-        }
-        throw error;
-      }
+      // Rate limiting check
+      const rateLimitError = await handleRateLimitCheck(userId, agentIds.length);
+      if (rateLimitError) return rateLimitError;
 
       // Create evaluations for all agents
       const results = [];
@@ -337,53 +351,17 @@ export async function POST(
         );
       }
 
-      // Verify document exists and user has access
-      const { PrivacyService } = await import(
-        "@/infrastructure/auth/privacy-service"
-      );
-      const document = await prisma.document.findUnique({
-        where: { id: documentId },
-      });
-
-      if (!document) {
-        return NextResponse.json(
-          { error: "Document not found" },
-          { status: 404 }
-        );
-      }
-
-      // Check if user can modify this document (must be owner)
-      if (document.submittedById !== userId) {
-        return NextResponse.json(
-          { error: "Document not found" },
-          { status: 404 }
-        );
-      }
+      // Verify document ownership
+      const ownershipError = await verifyDocumentOwnership(documentId, userId);
+      if (ownershipError) return ownershipError;
 
       // Verify agent exists
-      const agent = await prisma.agent.findUnique({
-        where: { id: agentId },
-      });
+      const agentError = await verifyAgents([agentId]);
+      if (agentError) return agentError;
 
-      if (!agent) {
-        return NextResponse.json(
-          { error: "Evaluator not found" },
-          { status: 404 }
-        );
-      }
-
-      // Rate limiting check and increment
-      try {
-        await checkAndIncrementRateLimit(userId, prisma);
-      } catch (error) {
-        if (error instanceof RateLimitError) {
-          return NextResponse.json(
-            { error: "Rate limit exceeded. Please try again later." },
-            { status: 429 }
-          );
-        }
-        throw error;
-      }
+      // Rate limiting check
+      const rateLimitError = await handleRateLimitCheck(userId, 1);
+      if (rateLimitError) return rateLimitError;
 
       // Create evaluation
       try {
