@@ -1,5 +1,6 @@
 import { Plan } from "../types";
 import { nextReset } from "./date-utils";
+import { PrismaClient } from "../../generated";
 
 // Represents the subset of user data relevant for rate limiting.
 interface UserRateLimitData {
@@ -25,7 +26,7 @@ export interface RateLimitResult {
   isLimited: boolean;
 }
 
-export async function checkAndIncrementRateLimit(userId: string, prisma: any): Promise<RateLimitResult> {
+export async function checkAndIncrementRateLimit(userId: string, prisma: PrismaClient): Promise<RateLimitResult> {
   return await prisma.$transaction(async (tx: any) => {
     const user: UserRateLimitData | null = await tx.user.findUnique({
       where: { id: userId },
