@@ -51,6 +51,13 @@ const PLAN_LIMITS = {
 };
 
 /**
+ * Type guard to check if a string is a valid Plan.
+ */
+function isPlan(plan: string): plan is Plan {
+  return plan in PLAN_LIMITS;
+}
+
+/**
  * Calculate the earliest retry time based on which limits were exceeded.
  */
 function calculateRetryAfter(
@@ -101,7 +108,14 @@ export async function checkAndIncrementRateLimit(
       throw new NotFoundError("User", userId);
     }
 
-    const limits = PLAN_LIMITS[user.plan as Plan] ?? PLAN_LIMITS.REGULAR;
+    // Validate plan and get limits with runtime type checking
+    let limits;
+    if (isPlan(user.plan)) {
+      limits = PLAN_LIMITS[user.plan];
+    } else {
+      console.warn(`Invalid plan "${user.plan}" for user ${userId}, falling back to REGULAR plan`);
+      limits = PLAN_LIMITS.REGULAR;
+    }
     const updates: any = {};
 
     // Reset hourly counter if needed
