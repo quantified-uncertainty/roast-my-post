@@ -46,7 +46,7 @@ export class RateLimitError extends Error {
 }
 
 const PLAN_LIMITS = {
-  FREE: { hourly: 1, monthly: 1 },
+  REGULAR: { hourly: 20, monthly: 300 },
   PRO: { hourly: 100, monthly: 1000 },
 };
 
@@ -101,7 +101,7 @@ export async function checkAndIncrementRateLimit(
       throw new NotFoundError("User", userId);
     }
 
-    const limits = PLAN_LIMITS[user.plan as Plan] ?? PLAN_LIMITS.FREE;
+    const limits = PLAN_LIMITS[user.plan as Plan] ?? PLAN_LIMITS.REGULAR;
     const updates: any = {};
 
     // Reset hourly counter if needed

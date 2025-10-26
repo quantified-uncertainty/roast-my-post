@@ -45,7 +45,7 @@ model User {
   emailVerified    DateTime?
   image            String?
   role             UserRole           @default(USER)
-  plan             Plan               @default(FREE)
+  plan             Plan               @default(REGULAR)
   evalsThisHour    Int                @default(0)
   evalsThisMonth   Int                @default(0)
   hourResetAt      DateTime?
@@ -313,7 +313,7 @@ enum UserRole {
 }
 
 enum Plan {
-  FREE
+  REGULAR
   PRO
 }
 

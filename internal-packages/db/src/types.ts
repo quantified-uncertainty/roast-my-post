@@ -3,7 +3,7 @@
 
 // Define Plan enum directly here since re-exporting from generated causes type issues
 export enum Plan {
-  FREE = 'FREE',
+  REGULAR = 'REGULAR',
   PRO = 'PRO'
 }
 
