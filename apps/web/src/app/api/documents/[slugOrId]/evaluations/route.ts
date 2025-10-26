@@ -213,16 +213,6 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Rate limiting check and increment
-    const { updatedUser, isLimited } = await checkAndIncrementRateLimit(userId, prisma);
-
-    if (isLimited) {
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later (hourly/monthly cap reached)." },
-        { status: 429 }
-      );
-    }
-
     const resolvedParams = await params;
     const { slugOrId: documentId } = resolvedParams;
 
@@ -242,6 +232,16 @@ export async function POST(
       return NextResponse.json(
         { error: "Request body is required" },
         { status: 400 }
+      );
+    }
+
+    // Rate limiting check and increment
+    const { updatedUser, isLimited } = await checkAndIncrementRateLimit(userId, prisma);
+
+    if (isLimited) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again later (hourly/monthly cap reached)." },
+        { status: 429 }
       );
     }
 

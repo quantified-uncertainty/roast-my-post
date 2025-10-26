@@ -3,7 +3,7 @@ import { nextReset } from "./date-utils";
 
 // Rate limiting configuration
 const PLAN_LIMITS = {
-  FREE: { hourly: 0, monthly: 0 },
+  FREE: { hourly: 1, monthly: 1 },
   PRO: { hourly: 100, monthly: 1000 },
 } as const;
 
@@ -47,13 +47,20 @@ export async function checkAndIncrementRateLimit(userId: string, prisma: any): P
     const currentMonth = updates.evalsThisMonth ?? user.evalsThisMonth;
     const limits = getPlanLimits(user.plan);
 
-    if (currentHour >= limits.hourly || currentMonth >= limits.monthly) {
+    const hourlyLimitReached = currentHour >= limits.hourly;
+    const monthlyLimitReached = currentMonth >= limits.monthly;
+
+    if (hourlyLimitReached || monthlyLimitReached) {
+      // Still update reset timestamps if they are due, even if limited
+      if (Object.keys(updates).length > 0) {
+        await tx.user.update({ where: { id: userId }, data: updates });
+      }
       return { updatedUser: null, isLimited: true };
     }
 
     // Increment counters
-    updates.evalsThisHour = { increment: 1 };
-    updates.evalsThisMonth = { increment: 1 };
+    updates.evalsThisHour = currentHour + 1;
+    updates.evalsThisMonth = currentMonth + 1;
 
     const updatedUser = await tx.user.update({ where: { id: userId }, data: updates });
     return { updatedUser, isLimited: false };
