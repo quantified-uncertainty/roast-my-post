@@ -1,7 +1,12 @@
 // Browser-safe type exports
 // This file only exports types and enums that are safe to use in browser environments
 
-// Re-export just the enum values without the rest of Prisma client
+// Define Plan enum directly here since re-exporting from generated causes type issues
+export enum Plan {
+  FREE = 'FREE',
+  PRO = 'PRO'
+}
+
 export enum UserRole {
   USER = 'USER',
   ADMIN = 'ADMIN'

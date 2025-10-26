@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
-import { prisma } from "@roast/db";
+import { prisma, Plan, checkAndIncrementRateLimit } from "@roast/db";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({
@@ -12,6 +12,8 @@ const queryEvaluationsSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
   offset: z.coerce.number().min(0).default(0),
 });
+
+
 
 async function createEvaluation(documentId: string, agentId: string) {
   return await prisma.$transaction(async (tx) => {
@@ -209,6 +211,16 @@ export async function POST(
     const userId = await authenticateRequest(request);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting check and increment
+    const { updatedUser, isLimited } = await checkAndIncrementRateLimit(userId, prisma);
+
+    if (isLimited) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again later (hourly/monthly cap reached)." },
+        { status: 429 }
+      );
     }
 
     const resolvedParams = await params;

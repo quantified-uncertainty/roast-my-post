@@ -45,6 +45,11 @@ model User {
   emailVerified    DateTime?
   image            String?
   role             UserRole           @default(USER)
+  plan             Plan               @default(FREE)
+  evalsThisHour    Int                @default(0)
+  evalsThisMonth   Int                @default(0)
+  hourResetAt      DateTime?
+  monthResetAt     DateTime?
   accounts         Account[]
   agents           Agent[]
   agentEvalBatches AgentEvalBatch[]
@@ -305,6 +310,11 @@ model ApiKey {
 enum UserRole {
   USER
   ADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
 }
 
 enum JobStatus {
