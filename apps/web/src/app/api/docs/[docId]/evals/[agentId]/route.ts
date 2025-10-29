@@ -6,6 +6,7 @@ import { prisma } from "@roast/db";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { handleRateLimitCheck } from "@/infrastructure/http/rate-limit-handler";
 import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 
@@ -77,14 +78,11 @@ export async function GET(
 export const POST = withSecurity(
   async (
     req: NextRequest,
-    context: {
-      params: Promise<{ docId: string; agentId: string }>;
-      userId: string;
-    },
+    context: { params: Promise<{ docId: string; agentId: string }> },
   ) => {
-    const { userId } = context;
     const params = await context.params;
     const { docId, agentId } = params;
+    const userId = (await authenticateRequest(req))!;
     // Authentication is handled by withSecurity middleware
     // userId is injected by withSecurity and used for rate limiting
 
