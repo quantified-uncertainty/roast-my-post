@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
-import { toolRegistry } from '@roast/ai';
-import { ToolPageClient } from '../ToolPageClient';
-
+import { toolRegistry, toolSchemas, type ToolId } from '@roast/ai';
+import { ToolTryPageClient } from '../../components/ToolTryPageClient';
 
 interface ToolTryPageProps {
   params: Promise<{
@@ -17,6 +16,10 @@ export default async function ToolTryPage({ params }: ToolTryPageProps) {
     notFound();
   }
 
-  return <ToolPageClient toolId={toolId} pageType="try" />;
-}
+  // Check if schemas exist
+  if (!(toolId in toolSchemas)) {
+    notFound();
+  }
 
+  return <ToolTryPageClient toolId={toolId} />;
+}

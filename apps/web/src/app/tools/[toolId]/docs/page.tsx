@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
-import { toolRegistry } from '@roast/ai';
-import { ToolPageClient } from '../ToolPageClient';
-
+import { toolRegistry, toolSchemas, type ToolId } from '@roast/ai';
+import { GenericToolDocsPage } from '../../components/DocsPage';
 
 interface ToolDocsPageProps {
   params: Promise<{
@@ -17,6 +16,10 @@ export default async function ToolDocsPage({ params }: ToolDocsPageProps) {
     notFound();
   }
 
-  return <ToolPageClient toolId={toolId} pageType="docs" />;
-}
+  // Check if schemas exist
+  if (!(toolId in toolSchemas)) {
+    notFound();
+  }
 
+  return <GenericToolDocsPage toolId={toolId as ToolId} />;
+}
