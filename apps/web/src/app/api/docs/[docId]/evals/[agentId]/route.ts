@@ -77,9 +77,12 @@ export async function GET(
 export const POST = withSecurity(
   async (
     req: NextRequest,
-    context: { params: Promise<{ docId: string; agentId: string }> },
-    { userId }: { userId: string },
+    context: {
+      params: Promise<{ docId: string; agentId: string }>;
+      userId: string;
+    },
   ) => {
+    const { userId } = context;
     const params = await context.params;
     const { docId, agentId } = params;
     // Authentication is handled by withSecurity middleware
