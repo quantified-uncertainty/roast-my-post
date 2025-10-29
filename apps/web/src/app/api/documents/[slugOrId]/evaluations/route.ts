@@ -3,7 +3,8 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
-import { prisma, Plan, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
+import { handleRateLimitCheck } from "@/infrastructure/http/rate-limit-handler";
+import { prisma, Plan } from "@roast/db";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({
@@ -54,29 +55,6 @@ async function verifyAgents(agentIds: string[]) {
   }
 
   return null;
-}
-
-async function handleRateLimitCheck(userId: string, count: number) {
-  try {
-    await checkAndIncrementRateLimit(userId, prisma, count);
-    return null;
-  } catch (error) {
-    if (error instanceof RateLimitError) {
-      const headers: Record<string, string> = {};
-      if (error.details?.retryAfter) {
-        const seconds = Math.max(
-          1,
-          Math.ceil((error.details.retryAfter.getTime() - Date.now()) / 1000)
-        );
-        headers["Retry-After"] = String(seconds);
-      }
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later." },
-        { status: 429, headers }
-      );
-    }
-    throw error;
-  }
 }
 
 async function createEvaluation(documentId: string, agentId: string) {
