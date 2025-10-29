@@ -1,5 +1,5 @@
 import { Plan } from "../types";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { prisma as defaultPrisma } from "../cli-client";
 
 function nextReset(now: Date, interval: 'hour' | 'month'): Date {
   const next = new Date(now);
@@ -89,13 +89,13 @@ function calculateRetryAfter(
 
 export async function checkAndIncrementRateLimit(
   userId: string,
-  prisma: PrismaClient,
+  prisma: typeof defaultPrisma,
   count: number = 1,
   now: Date = new Date()
 ): Promise<void> {
   console.log(`[RateLimit] Starting check for userId=${userId}, count=${count}, now=${now.toISOString()}`);
   
-  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  await prisma.$transaction(async (tx) => {
     console.log(`[RateLimit] Fetching user data for userId=${userId}`);
     const user = await tx.user.findUnique({
       where: { id: userId },
