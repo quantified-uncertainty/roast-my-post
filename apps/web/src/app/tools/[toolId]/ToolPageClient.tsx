@@ -5,7 +5,7 @@ import { useState } from "react";
 import { notFound } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-import { getModelAbbreviation, estimateTokenCount } from "../../constants/modelAbbreviations";
+import { getModelAbbreviation, estimateTokenCount } from "../constants/modelAbbreviations";
 
 import { ClaimEvaluationDisplay } from "@/lib/OpinionSpectrum2D";
 import { ModelResponseStatsTable } from "@/components/ModelResponseStatsTable";
@@ -30,11 +30,11 @@ import {
   generateClaimEvaluatorPrompt,
 } from "@roast/ai";
 
-import { GenericToolDocsPage } from "../../components/GenericToolDocsPage";
-import { GenericToolTryPage } from "../../components/GenericToolTryPage";
-import { MathCheckDisplay } from "../../components/results/MathCheckDisplay";
-import { FieldConfig } from "../../components/types";
-import { toolExamples as exampleConfigs } from "../../utils/toolExamples";
+import { GenericToolDocsPage } from "../components/GenericToolDocsPage";
+import { GenericToolTryPage } from "../components/GenericToolTryPage";
+import { MathCheckDisplay } from "../components/results/MathCheckDisplay";
+import { FieldConfig } from "../components/types";
+import { toolExamples as exampleConfigs } from "../utils/toolExamples";
 
 const CONTEXT_PREVIEW_LENGTH = 300;
 
@@ -211,10 +211,10 @@ const toolResultRenderers: Record<
 
 interface ToolPageClientProps {
   toolId: string;
-  slug: string[];
+  pageType: 'docs' | 'try';
 }
 
-export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
+export function ToolPageClient({ toolId, pageType }: ToolPageClientProps) {
   const [lastStatement, setLastStatement] = useState("");
   const [lastClaim, setLastClaim] = useState("");
   const [lastContext, setLastContext] = useState("");
@@ -235,9 +235,6 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
     <BeakerIcon className="h-8 w-8 text-gray-600" />
   );
   const examples = exampleConfigs[toolId] || [];
-
-  // Determine page type from slug
-  const pageType = slug?.[0] || "docs"; // Default to docs if no slug
 
   // Get the appropriate result renderer
   const resultRenderer =
