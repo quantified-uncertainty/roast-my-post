@@ -1,4 +1,5 @@
 import { Plan } from "../types";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 function nextReset(now: Date, interval: 'hour' | 'month'): Date {
   const next = new Date(now);
@@ -88,13 +89,13 @@ function calculateRetryAfter(
 
 export async function checkAndIncrementRateLimit(
   userId: string,
-  prisma: any,
+  prisma: PrismaClient,
   count: number = 1,
   now: Date = new Date()
 ): Promise<void> {
   console.log(`[RateLimit] Starting check for userId=${userId}, count=${count}, now=${now.toISOString()}`);
   
-  return prisma.$transaction(async (tx: any) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     console.log(`[RateLimit] Fetching user data for userId=${userId}`);
     const user = await tx.user.findUnique({
       where: { id: userId },
@@ -114,7 +115,6 @@ export async function checkAndIncrementRateLimit(
 
     console.log(`[RateLimit] User found: plan=${user.plan}, evalsThisHour=${user.evalsThisHour}, evalsThisMonth=${user.evalsThisMonth}`);
 
-    // Validate plan and get limits with runtime type checking
     const userPlan: string = user.plan;
     const limits = isPlan(userPlan) ? PLAN_LIMITS[userPlan] : PLAN_LIMITS.REGULAR;
     
@@ -123,59 +123,60 @@ export async function checkAndIncrementRateLimit(
     } else {
       console.log(`[RateLimit] Valid plan detected: ${userPlan}, limits: hourly=${limits.hourly}, monthly=${limits.monthly}`);
     }
-    const updates: any = {};
 
-    // Reset hourly counter if needed
-    let hourlyCount = user.evalsThisHour ?? 0;
     const needsHourlyReset = !user.hourResetAt || now >= user.hourResetAt;
-    console.log(`[RateLimit] Hourly check: current=${hourlyCount}, resetAt=${user.hourResetAt?.toISOString()}, needsReset=${needsHourlyReset}`);
-    
-    if (needsHourlyReset) {
-      const nextHourReset = nextReset(now, "hour");
-      updates.hourResetAt = nextHourReset;
-      updates.evalsThisHour = 0;
-      hourlyCount = 0;
-      console.log(`[RateLimit] Hourly counter reset, next reset at ${nextHourReset.toISOString()}`);
-    }
-
-    // Reset monthly counter if needed
-    let monthlyCount = user.evalsThisMonth ?? 0;
     const needsMonthlyReset = !user.monthResetAt || now >= user.monthResetAt;
-    console.log(`[RateLimit] Monthly check: current=${monthlyCount}, resetAt=${user.monthResetAt?.toISOString()}, needsReset=${needsMonthlyReset}`);
     
-    if (needsMonthlyReset) {
-      const nextMonthReset = nextReset(now, "month");
-      updates.monthResetAt = nextMonthReset;
-      updates.evalsThisMonth = 0;
-      monthlyCount = 0;
-      console.log(`[RateLimit] Monthly counter reset, next reset at ${nextMonthReset.toISOString()}`);
-    }
-    // Check limits (accounting for the count we're about to add)
-    const hourExceeded = hourlyCount + count > limits.hourly;
-    const monthExceeded = monthlyCount + count > limits.monthly;
+    console.log(`[RateLimit] Hourly check: resetAt=${user.hourResetAt?.toISOString()}, needsReset=${needsHourlyReset}`);
+    console.log(`[RateLimit] Monthly check: resetAt=${user.monthResetAt?.toISOString()}, needsReset=${needsMonthlyReset}`);
+
+    const currentHourly = needsHourlyReset ? 0 : (user.evalsThisHour ?? 0);
+    const currentMonthly = needsMonthlyReset ? 0 : (user.evalsThisMonth ?? 0);
     
-    console.log(`[RateLimit] Limit check: hourly ${hourlyCount}+${count}=${hourlyCount + count} vs ${limits.hourly} (exceeded=${hourExceeded}), monthly ${monthlyCount}+${count}=${monthlyCount + count} vs ${limits.monthly} (exceeded=${monthExceeded})`);
+    const hourExceeded = currentHourly + count > limits.hourly;
+    const monthExceeded = currentMonthly + count > limits.monthly;
     
+    console.log(`[RateLimit] Limit check: hourly ${currentHourly}+${count}=${currentHourly + count} vs ${limits.hourly} (exceeded=${hourExceeded}), monthly ${currentMonthly}+${count}=${currentMonthly + count} vs ${limits.monthly} (exceeded=${monthExceeded})`);
+
     if (hourExceeded || monthExceeded) {
       console.warn(`[RateLimit] Rate limit exceeded for userId=${userId}, plan=${user.plan}`);
       
-      // Save any pending reset updates
-      if (Object.keys(updates).length > 0) {
-        console.log(`[RateLimit] Saving pending reset updates before throwing error`);
-        await tx.user.update({ where: { id: userId }, data: updates });
+      const resetUpdates: any = {};
+      if (needsHourlyReset) {
+        resetUpdates.hourResetAt = nextReset(now, 'hour');
+        resetUpdates.evalsThisHour = 0;
+      }
+      if (needsMonthlyReset) {
+        resetUpdates.monthResetAt = nextReset(now, 'month');
+        resetUpdates.evalsThisMonth = 0;
       }
       
+      if (Object.keys(resetUpdates).length > 0) {
+        console.log('[RateLimit] Saving pending reset updates before throwing error');
+        await tx.user.update({ where: { id: userId }, data: resetUpdates });
+      }
+
       const retryAfter = calculateRetryAfter(hourExceeded, monthExceeded, user, now);
       console.log(`[RateLimit] Retry after: ${retryAfter.toISOString()}`);
       
       throw new RateLimitError(`Rate limit exceeded for ${user.plan} plan`, { retryAfter });
     }
 
-    // Increment and update
-    updates.evalsThisHour = hourlyCount + count;
-    updates.evalsThisMonth = monthlyCount + count;
-    console.log(`[RateLimit] Updating counters: evalsThisHour=${updates.evalsThisHour}, evalsThisMonth=${updates.evalsThisMonth}`);
-    await tx.user.update({ where: { id: userId }, data: updates });
+    const successUpdates: any = {
+      evalsThisHour: needsHourlyReset ? count : { increment: count },
+      evalsThisMonth: needsMonthlyReset ? count : { increment: count },
+    };
+    if (needsHourlyReset) {
+      successUpdates.hourResetAt = nextReset(now, 'hour');
+    }
+    if (needsMonthlyReset) {
+      successUpdates.monthResetAt = nextReset(now, 'month');
+    }
+
+    console.log(`[RateLimit] Updating counters:`, successUpdates);
+    await tx.user.update({ where: { id: userId }, data: successUpdates });
     console.log(`[RateLimit] Rate limit check passed for userId=${userId}`);
+  }, {
+    isolationLevel: 'Serializable',
   });
 }
