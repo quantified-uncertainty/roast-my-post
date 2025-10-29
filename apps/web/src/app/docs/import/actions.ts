@@ -21,7 +21,7 @@ export async function importDocument(url: string, agentIds: string[] = [], isPri
         await checkAndIncrementRateLimit(session.user.id, prisma, agentIds.length);
       } catch (error) {
         if (error instanceof RateLimitError) {
-          throw new Error("Evaluation rate limit exceeded. Please try again later or select fewer evaluations.");
+          throw new Error("Evaluation rate limit exceeded. Please try again later.");
         }
         throw error;
       }

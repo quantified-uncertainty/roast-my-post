@@ -24,7 +24,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
         await checkAndIncrementRateLimit(session.user.id, prisma, agentIds.length);
       } catch (error) {
         if (error instanceof RateLimitError) {
-          throw new Error("Evaluation rate limit exceeded. Please try again later or select fewer evaluations.");
+          throw new Error("Evaluation rate limit exceeded. Please try again later.");
         }
         // Re-throw other errors
         throw error;
