@@ -46,7 +46,6 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   formatError,
   onExecuteComplete,
   onBeforeSubmit,
-  warning,
   hideViewToggle = false,
   generatePrompt,
   onSaveResult,

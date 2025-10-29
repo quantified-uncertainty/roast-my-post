@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 
 /**
  * Comprehensive test suite for all tool API endpoints
- * This is a minimal test that verifies:
- * 1. Each tool has a working API endpoint
- * 2. The endpoint exists and exports a POST function
+ * Verifies that:
+ * 1. The unified [id] route exists and handles all tools
+ * 2. All registered tools are accessible via /api/tools/[id]
  * 3. Main tools route returns tool metadata
  */
 
@@ -14,32 +14,28 @@ import { toolRegistry } from '@roast/ai/server';
 
 describe('Tool API Endpoints', () => {
   // Get tool IDs dynamically from the registry
-  const tools = toolRegistry.getMetadata().map(tool => tool.id);
+  const tools = toolRegistry.getMetadata();
+  const toolIds = tools.map(tool => tool.id);
   
-  // Check which routes actually exist
-  const apiToolsDir = path.join(process.cwd(), 'src/app/api/tools');
-  const existingRoutes = tools.filter(toolId => {
-    const routePath = path.join(apiToolsDir, toolId, 'route.ts');
-    try {
-      return fs.existsSync(routePath);
-    } catch {
-      return false;
-    }
+  // Check that the unified route exists
+  const apiToolsDir = path.join(process.cwd(), 'apps/web/src/app/api/tools');
+  const unifiedRoutePath = path.join(apiToolsDir, '[id]', 'route.ts');
+
+  it('should have a unified [id] route at /api/tools/[id]/route.ts', () => {
+    expect(fs.existsSync(unifiedRoutePath)).toBe(true);
   });
 
-  describe.each(existingRoutes)('Tool: %s', (toolId) => {
-    it(`should have a route file at /api/tools/${toolId}/route.ts`, async () => {
-      // We already know it exists from the filter above
-      const routePath = path.join(apiToolsDir, toolId, 'route.ts');
-      expect(fs.existsSync(routePath)).toBe(true);
-    });
+  it('should export a POST handler in the unified route', () => {
+    const routeContent = fs.readFileSync(unifiedRoutePath, 'utf-8');
+    expect(routeContent).toMatch(/export\s+async\s+function\s+POST/);
+  });
 
-    it(`should export a POST handler`, async () => {
-      // Since dynamic import with variables doesn't work well in Vitest,
-      // we'll just verify the file exists and trust that it exports POST
-      const routePath = path.join(apiToolsDir, toolId, 'route.ts');
-      const routeContent = fs.readFileSync(routePath, 'utf-8');
-      expect(routeContent).toMatch(/export\s+(const|async\s+function)\s+POST/);
+  describe.each(toolIds)('Tool: %s', (toolId) => {
+    it(`should be accessible via /api/tools/${toolId}`, () => {
+      // Verify the tool exists in registry
+      const tool = toolRegistry.get(toolId);
+      expect(tool).toBeDefined();
+      expect(tool?.config.id).toBe(toolId);
     });
   });
 

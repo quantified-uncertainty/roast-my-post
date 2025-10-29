@@ -10,7 +10,7 @@ import { GenericToolTryPage } from "./GenericToolTryPage";
 import { MathCheckDisplay } from "./results/MathCheckDisplay";
 import { FieldConfig } from "./types";
 import { toolExamples as exampleConfigs } from "../utils/toolExamples";
-import { ClaimEvaluationDisplay } from "@/lib/OpinionSpectrum2D";
+import { ClaimEvaluationDisplay, type ClaimEvaluationResult } from "@/lib/OpinionSpectrum2D";
 import { ModelResponseStatsTable } from "@/components/ModelResponseStatsTable";
 import { getModelAbbreviation, estimateTokenCount } from "../constants/modelAbbreviations";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,7 +32,7 @@ function ClaimEvaluatorResult({
   claim,
   context,
 }: {
-  result: unknown;
+  result: ClaimEvaluationResult;
   claim: string;
   context: string;
 }) {
@@ -90,7 +90,7 @@ function ClaimEvaluatorResult({
       <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbreviation} />
 
       <div className="mt-6">
-        <ModelResponseStatsTable evaluations={(result as { evaluations?: unknown[] })?.evaluations || []} />
+        <ModelResponseStatsTable evaluations={result.evaluations || []} />
       </div>
     </>
   );
@@ -98,32 +98,32 @@ function ClaimEvaluatorResult({
 
 const toolResultRenderers: Record<
   string,
-  (result: ToolResult, extra?: ToolResultExtra) => React.ReactElement
+  (result: ToolResult | ClaimEvaluationResult, extra?: ToolResultExtra) => React.ReactElement
 > = {
   "math-validator-llm": (result, extra) => (
     <MathCheckDisplay
-      result={result}
+      result={result as ToolResult}
       statement={extra?.statement || ""}
       variant="basic"
     />
   ),
   "math-validator-hybrid": (result, extra) => (
     <MathCheckDisplay
-      result={result}
+      result={result as ToolResult}
       statement={extra?.statement || ""}
       variant="hybrid"
     />
   ),
   "math-validator-mathjs": (result, extra) => (
     <MathCheckDisplay
-      result={result}
+      result={result as ToolResult}
       statement={extra?.statement || ""}
       variant="mathjs"
     />
   ),
   "claim-evaluator": (result, extra) => (
     <ClaimEvaluatorResult
-      result={result}
+      result={result as ClaimEvaluationResult}
       claim={extra?.claim || ""}
       context={extra?.context || ""}
     />
@@ -603,7 +603,7 @@ export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
       hideViewToggle={toolId === "claim-evaluator"}
       generatePrompt={
         toolId === "claim-evaluator"
-          ? (input: Record<string, unknown>) => generateClaimEvaluatorPrompt(input)
+          ? (input: Record<string, unknown>) => generateClaimEvaluatorPrompt(input as { claim: string; context?: string; explanationLength?: number; runs?: number })
           : undefined
       }
       onSaveResult={
@@ -619,7 +619,7 @@ export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
                   rawOutput: result,
                   explanationLength: input.explanationLength,
                   temperature: input.temperature,
-                  prompt: input ? generateClaimEvaluatorPrompt(input) : undefined,
+                  prompt: input ? generateClaimEvaluatorPrompt(input as { claim: string; context?: string; explanationLength?: number; runs?: number }) : undefined,
                 }),
               });
 

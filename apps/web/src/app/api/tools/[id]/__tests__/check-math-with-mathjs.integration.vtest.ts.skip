@@ -9,7 +9,7 @@ import { NextRequest } from 'next/server';
 // Mock dependencies BEFORE imports that might fail
 vi.mock('@/infrastructure/auth/auth');
 
-import { POST } from './route';
+import { POST } from '../route';
 import { auth } from '@/infrastructure/auth/auth';
 vi.mock('@roast/domain', () => ({
   config: {
@@ -37,40 +37,53 @@ vi.mock('@roast/domain', () => ({
 }));
 
 // Mock the actual tool execution to avoid calling Claude
-vi.mock('@roast/ai/server', () => ({
-  checkMathWithMathJsTool: {
-    config: {
-      id: 'check-math-with-mathjs',
-      name: 'Check Math with MathJS',
-      path: '/tools/check-math-with-mathjs'
-    },
-    execute: vi.fn().mockImplementation(async (input) => {
-      // Validate required fields like the real tool would
-      if (!input.statement) {
-        throw new Error('Statement is required');
-      }
-      
-      // Simulate tool behavior
-      if (input.statement === '2 + 2 = 4') {
-        return {
-          statement: input.statement,
-          status: 'verified_true',
-          explanation: 'The statement is correct. 2 + 2 equals 4.'
-        };
-      } else if (input.statement === '2 + 2 = 5') {
-        return {
-          statement: input.statement,
-          status: 'verified_false',
-          explanation: 'The statement is incorrect. 2 + 2 equals 4, not 5.'
-        };
-      }
+const mockMathTool = {
+  config: {
+    id: 'math-validator-mathjs',
+    name: 'Math Validator (MathJS)',
+    path: '/tools/math-validator-mathjs'
+  },
+  execute: vi.fn().mockImplementation(async (input) => {
+    // Validate required fields like the real tool would
+    if (!input.statement) {
+      throw new Error('Statement is required');
+    }
+    
+    // Simulate tool behavior
+    if (input.statement === '2 + 2 = 4') {
       return {
         statement: input.statement,
-        status: 'cannot_verify',
-        explanation: 'Unable to verify this statement.'
+        status: 'verified_true',
+        explanation: 'The statement is correct. 2 + 2 equals 4.'
       };
-    })
-  }
+    } else if (input.statement === '2 + 2 = 5') {
+      return {
+        statement: input.statement,
+        status: 'verified_false',
+        explanation: 'The statement is incorrect. 2 + 2 equals 4, not 5.'
+      };
+    }
+    return {
+      statement: input.statement,
+      status: 'cannot_verify',
+      explanation: 'Unable to verify this statement.'
+    };
+  })
+};
+
+vi.mock('@roast/ai/server', () => ({
+  toolRegistry: {
+    get: vi.fn((id: string) => {
+      if (id === 'math-validator-mathjs') {
+        return mockMathTool;
+      }
+      return undefined;
+    }),
+    getMetadata: vi.fn(),
+    getAll: vi.fn(),
+    getByCategory: vi.fn()
+  },
+  checkMathWithMathJsTool: mockMathTool
 }));
 
 describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TESTS)('Math Verification Tool API Route', () => {
@@ -87,7 +100,7 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
   });
 
   const createRequest = (body: any): NextRequest => {
-    return new NextRequest('http://localhost:3000/api/tools/check-math-with-mathjs', {
+    return new NextRequest('http://localhost:3000/api/tools/math-validator-mathjs', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -102,7 +115,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
       mockAuth.mockResolvedValue(null);
 
       const request = createRequest({ statement: '2 + 2 = 4' });
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -118,7 +133,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
       } as any);
 
       const request = createRequest({ statement: '2 + 2 = 4' });
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -138,7 +155,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
       mockAuth.mockResolvedValue(null);
 
       const request = createRequest({ statement: '2 + 2 = 4' });
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(mockAuth).not.toHaveBeenCalled();
@@ -149,7 +168,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
 
     it('should verify correct mathematical statements', async () => {
       const request = createRequest({ statement: '2 + 2 = 4' });
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -163,7 +184,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
 
     it('should identify incorrect mathematical statements', async () => {
       const request = createRequest({ statement: '2 + 2 = 5' });
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -180,7 +203,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
         statement: '2 + 2 = 4',
         context: 'Basic arithmetic'
       });
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -193,7 +218,7 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
     it('should handle malformed requests gracefully', async () => {
       process.env.BYPASS_TOOL_AUTH = 'true';
       
-      const request = new NextRequest('http://localhost:3000/api/tools/check-math-with-mathjs', {
+      const request = new NextRequest('http://localhost:3000/api/tools/math-validator-mathjs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -201,7 +226,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
         body: 'invalid json'
       });
       
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -213,7 +240,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
       process.env.BYPASS_TOOL_AUTH = 'true';
       
       const request = createRequest({});
-      const response = await POST(request);
+      const response = await POST(request, {
+        params: Promise.resolve({ id: 'math-validator-mathjs' })
+      });
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -237,7 +266,9 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
 
       try {
         const request = createRequest({ statement: '2 + 2 = 4' });
-        const response = await POST(request);
+        const response = await POST(request, {
+          params: Promise.resolve({ id: 'math-validator-mathjs' })
+        });
         const data = await response.json();
 
         // In production, bypass should not work even if BYPASS_TOOL_AUTH is set
@@ -254,3 +285,4 @@ describe.skipIf(process.env.NODE_ENV === 'test' && !process.env.INTEGRATION_TEST
     });
   });
 });
+
