@@ -279,6 +279,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
       id: 'eval-123',
     };
     
+    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(mockAgent);
     (prisma.agent.findMany as vi.MockedFunction<any>).mockResolvedValueOnce([mockAgent]);
     (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
       const mockTx = {
