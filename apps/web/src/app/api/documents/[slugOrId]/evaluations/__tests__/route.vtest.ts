@@ -25,6 +25,12 @@ vi.mock('@roast/db', () => ({
     },
     $transaction: vi.fn(),
   },
+  Plan: {
+    FREE: 'FREE',
+    PRO: 'PRO',
+  },
+  RateLimitError: class RateLimitError extends Error {},
+  checkAndIncrementRateLimit: vi.fn(),
 }));
 
 vi.mock('@/infrastructure/auth/auth-helpers', () => ({
@@ -274,6 +280,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     };
     
     (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(mockAgent);
+    (prisma.agent.findMany as vi.MockedFunction<any>).mockResolvedValueOnce([mockAgent]);
     (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
       const mockTx = {
         evaluation: {
