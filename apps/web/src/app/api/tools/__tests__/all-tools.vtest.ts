@@ -18,8 +18,8 @@ describe('Tool API Endpoints', () => {
   const toolIds = tools.map(tool => tool.id);
   
   // Check that the unified route exists
-  const apiToolsDir = path.join(process.cwd(), 'apps/web/src/app/api/tools');
-  const unifiedRoutePath = path.join(apiToolsDir, '[id]', 'route.ts');
+  // Using __dirname to resolve path relative to test file location
+  const unifiedRoutePath = path.join(__dirname, '../[id]/route.ts');
 
   it('should have a unified [id] route at /api/tools/[id]/route.ts', () => {
     expect(fs.existsSync(unifiedRoutePath)).toBe(true);
