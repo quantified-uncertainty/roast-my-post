@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { importDocumentService } from "@/application/services/documentImport";
 import { logger } from "@/infrastructure/logging/logger";
+import { prisma, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
 
 export async function importDocument(url: string, agentIds: string[] = [], isPrivate: boolean = true) {
   try {
@@ -13,6 +14,17 @@ export async function importDocument(url: string, agentIds: string[] = [], isPri
     
     if (!session?.user?.id) {
       throw new Error("User must be logged in to import a document");
+    }
+
+    if (agentIds.length > 0) {
+      try {
+        await checkAndIncrementRateLimit(session.user.id, prisma, agentIds.length);
+      } catch (error) {
+        if (error instanceof RateLimitError) {
+          throw new Error("Evaluation rate limit exceeded. Please try again later or select fewer evaluations.");
+        }
+        throw error;
+      }
     }
     
     // Use the shared import service with privacy setting

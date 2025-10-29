@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/infrastructure/auth/auth";
 import { ValidationError } from '@roast/domain';
+import { prisma, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
 import { getServices } from "@/application/services/ServiceFactory";
 
 import { type DocumentInput } from "./schema";
@@ -16,6 +17,18 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     if (!session?.user?.id) {
       throw new Error("User must be logged in to create a document");
+    }
+
+    if (agentIds.length > 0) {
+      try {
+        await checkAndIncrementRateLimit(session.user.id, prisma, agentIds.length);
+      } catch (error) {
+        if (error instanceof RateLimitError) {
+          throw new Error("Evaluation rate limit exceeded. Please try again later or select fewer evaluations.");
+        }
+        // Re-throw other errors
+        throw error;
+      }
     }
 
     // Create the document using the new DocumentService
