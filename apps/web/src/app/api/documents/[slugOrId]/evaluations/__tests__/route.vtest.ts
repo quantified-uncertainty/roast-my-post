@@ -300,7 +300,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     
     if (response.status !== 200) {
       const errorData = await response.json();
-      process.stdout.write(`TEST ERROR:, ${response.status}, ${errorData}`);
+      console.error('Test error:', response.status, errorData);
     }
     
     expect(response.status).toBe(200);
