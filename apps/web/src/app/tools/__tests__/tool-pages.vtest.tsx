@@ -5,32 +5,48 @@ import { describe, it, expect } from 'vitest';
  */
 
 describe('Tool Pages Structure', () => {
-  describe('Dynamic Tool Page Route', () => {
-    it('should have the dynamic tool page at [toolId]/[...slug]/page.tsx', async () => {
-      try {
-        // Try importing from the path using Node require since ES import doesn't work well with bracket notation in tests
-        const fs = require('fs');
-        const path = require('path');
-        
-        // Check if the file exists
-        const filePath = path.join(__dirname, '../[toolId]/[...slug]/page.tsx');
-        expect(fs.existsSync(filePath)).toBe(true);
-        
-        // For the dynamic route, we can't easily test the import due to bracket notation
-        // But we can verify the file exists and contains expected content
-        const content = fs.readFileSync(filePath, 'utf-8');
-        expect(content).toContain('export default');
-        expect(content).toContain('function');
-      } catch (error) {
-        throw new Error(`Dynamic tool page route missing: ${error.message}`);
-      }
+  describe('Tool Page Routes', () => {
+    it('should have the docs page at [toolId]/docs/page.tsx', () => {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const filePath = path.join(__dirname, '../[toolId]/docs/page.tsx');
+      expect(fs.existsSync(filePath)).toBe(true);
+      
+      const content = fs.readFileSync(filePath, 'utf-8');
+      expect(content).toContain('export default');
+      expect(content).toContain('GenericToolDocsPage');
+    });
+
+    it('should have the try page at [toolId]/try/page.tsx', () => {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const filePath = path.join(__dirname, '../[toolId]/try/page.tsx');
+      expect(fs.existsSync(filePath)).toBe(true);
+      
+      const content = fs.readFileSync(filePath, 'utf-8');
+      expect(content).toContain('export default');
+      expect(content).toContain('ToolTryPageClient');
+    });
+
+    it('should have the layout at [toolId]/layout.tsx', () => {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const filePath = path.join(__dirname, '../[toolId]/layout.tsx');
+      expect(fs.existsSync(filePath)).toBe(true);
+      
+      const content = fs.readFileSync(filePath, 'utf-8');
+      expect(content).toContain('export default');
+      expect(content).toContain('ToolLayout');
     });
   });
 
   describe('Main Tools Page', () => {
     it('should have a main tools listing page', async () => {
       try {
-        const pageModule = await import('../page.tsx');
+        const pageModule = await import('../page');
         expect(pageModule.default).toBeDefined();
         expect(typeof pageModule.default).toBe('function');
       } catch (error) {
@@ -44,7 +60,8 @@ describe('Tool Pages Structure', () => {
       const fs = require('fs');
       const path = require('path');
       
-      const filePath = path.join(__dirname, '../components/GenericToolDocsPage.tsx');
+      // The component is in DocsPage.tsx but exports GenericToolDocsPage
+      const filePath = path.join(__dirname, '../components/DocsPage.tsx');
       expect(fs.existsSync(filePath)).toBe(true);
       
       const content = fs.readFileSync(filePath, 'utf-8');
