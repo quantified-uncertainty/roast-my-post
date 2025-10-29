@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import baseConfig from './vitest.config';
+import baseConfig from './vitest.config.mjs';
 import { config } from 'dotenv';
 import path from 'path';
 

@@ -6,6 +6,8 @@ import { prisma } from "@roast/db";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { handleRateLimitCheck } from "@/infrastructure/http/rate-limit-handler";
 import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 
 const createEvaluationSchema = z.object({
@@ -74,16 +76,22 @@ export async function GET(
 }
 
 export const POST = withSecurity(
-  async (req: NextRequest, context: { params: Promise<{ docId: string; agentId: string }> }) => {
+  async (
+    req: NextRequest,
+    context: { params: Promise<{ docId: string; agentId: string }> },
+  ) => {
     const params = await context.params;
     const { docId, agentId } = params;
+    const userId = (await authenticateRequest(req))!;
     // Authentication is handled by withSecurity middleware
-    // userId and body are available but not needed for this endpoint
+    // userId is injected by withSecurity and used for rate limiting
 
     try {
+      const rateLimitError = await handleRateLimitCheck(userId, 1);
+      if (rateLimitError) return rateLimitError;
 
-    // Verify document exists
-    const document = await prisma.document.findUnique({
+      // Verify document exists
+      const document = await prisma.document.findUnique({
       where: { id: docId },
     });
 

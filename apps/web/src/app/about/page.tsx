@@ -2,6 +2,8 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { EXTERNAL_URLS } from "@/shared/constants/constants";
+
 const aboutContent = `
 # About RoastMyPost
 
@@ -20,28 +22,28 @@ With RoastMyPost, you can:
 
 RoastMyPost is open source. We believe in transparent development and welcome contributions from developers, researchers, and users.
 
-- **GitHub Repository**: [github.com/quantified-uncertainty/roast-my-post](https://github.com/quantified-uncertainty/roast-my-post)
+- **GitHub Repository**: [github.com/quantified-uncertainty/roast-my-post](${EXTERNAL_URLS.GITHUB_REPO})
 - **License**: MIT
-- **Contributing**: See our [contribution guidelines](https://github.com/quantified-uncertainty/roast-my-post/blob/main/CONTRIBUTING.md)
+- **Contributing**: See our [contribution guidelines](${EXTERNAL_URLS.GITHUB_REPO}/blob/main/CONTRIBUTING.md)
 
 ## The Team
 
-Roast My Post is developed and maintained by [Quantified Uncertainty Research Institute (QURI)](https://quantifieduncertainty.org/), a nonprofit research organization focused on improving decision-making under uncertainty.
+Roast My Post is developed and maintained by [Quantified Uncertainty Research Institute (QURI)](${EXTERNAL_URLS.QURI_WEBSITE}), a nonprofit research organization focused on improving decision-making under uncertainty.
 
 ## Contact Us
 
 We'd love to hear from you! Whether you have questions, feedback, or want to contribute:
 
-- **Discord**: [Join our community](https://discord.gg/nsTnQTgtG6)
-- **GitHub Issues**: [Report bugs or request features](https://github.com/quantified-uncertainty/roast-my-post/issues)
+- **Discord**: [Join our community](${EXTERNAL_URLS.DISCORD})
+- **GitHub Issues**: [Report bugs or request features](${EXTERNAL_URLS.GITHUB_ISSUES})
 
 ## Support the Project
 
 If you find Roast My Post valuable, consider:
-- ⭐ Starring us on [GitHub](https://github.com/quantified-uncertainty/roast-my-post)
+- ⭐ Starring us on [GitHub](${EXTERNAL_URLS.GITHUB_REPO})
 - 🐛 Reporting bugs and suggesting features
 - 💻 Contributing code or documentation
-- 💰 [Donating to QURI](https://quantifieduncertainty.org/donate) to support development
+- 💰 [Donating to QURI](${EXTERNAL_URLS.QURI_WEBSITE}/donate) to support development
 `;
 
 export default function AboutPage() {

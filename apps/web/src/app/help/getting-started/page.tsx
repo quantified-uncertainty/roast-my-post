@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
+import { EXTERNAL_URLS } from "@/shared/constants/constants";
 
 const gettingStartedContent = `# Getting Started with Roast My Post
 
@@ -27,9 +28,9 @@ const gettingStartedContent = `# Getting Started with Roast My Post
 ## Need Help?
 
 - 📧 Email: support@quantifieduncertainty.org
-- 💬 Discord: [Join our community](https://discord.gg/nsTnQTgtG6)
+- 💬 Discord: [Join our community](${EXTERNAL_URLS.DISCORD})
 - 📚 Docs: You're already here!
-- 🐛 Issues: [GitHub](https://github.com/quantified-uncertainty/roast-my-post/issues)
+- 🐛 Issues: [GitHub](${EXTERNAL_URLS.GITHUB_ISSUES})
 
 Happy writing and evaluating! 🚀`;
 

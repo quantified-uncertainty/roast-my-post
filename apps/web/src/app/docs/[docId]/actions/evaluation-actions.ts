@@ -6,6 +6,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/infrastructure/database/prisma";
+import { checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -25,6 +26,8 @@ export async function rerunEvaluation(
       };
     }
 
+    await checkAndIncrementRateLimit(session.user.id, prisma, 1);
+
     await DocumentModel.rerunEvaluation(
       agentId,
       documentId,
@@ -37,6 +40,13 @@ export async function rerunEvaluation(
 
     return { success: true };
   } catch (error) {
+    if (error instanceof RateLimitError) {
+      return {
+        success: false,
+        error: "Evaluation rate limit exceeded. Please try again later.",
+      };
+    }
+
     logger.error('Error creating job for evaluation:', error);
     return {
       success: false,
@@ -65,6 +75,8 @@ export async function createOrRerunEvaluation(
       };
     }
 
+    await checkAndIncrementRateLimit(session.user.id, prisma, 1);
+
     await DocumentModel.createOrRerunEvaluation(
       agentId,
       documentId,
@@ -76,6 +88,12 @@ export async function createOrRerunEvaluation(
 
     return { success: true };
   } catch (error) {
+    if (error instanceof RateLimitError) {
+      return {
+        success: false,
+        error: "Evaluation rate limit exceeded. Please try again later.",
+      };
+    }
     logger.error('Error creating or rerunning evaluation:', error);
     return {
       success: false,

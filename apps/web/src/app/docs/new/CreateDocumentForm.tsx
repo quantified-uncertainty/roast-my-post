@@ -403,7 +403,11 @@ export default function CreateDocumentForm() {
         }
       } else {
         logger.error("Error submitting form:", error);
-        setError("root", { message: "An unexpected error occurred" });
+        const message =
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred";
+        setError("root", { message });
       }
     }
   };
