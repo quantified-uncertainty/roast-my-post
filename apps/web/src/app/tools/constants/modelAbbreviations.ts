@@ -8,7 +8,7 @@ export const MODEL_ABBREVIATIONS: Record<string, string> = {
   "anthropic/claude-sonnet-4": "C4",
   "anthropic/claude-3.7-sonnet-20250219": "C3.7",
   "anthropic/claude-3.5-sonnet": "C3.5",
-  "anthropic/claude-3.5-haiku-20241022": "H3.5",
+  "anthropic/claude-haiku-4.5": "Haiku4.5",
   "anthropic/claude-3-haiku": "Haiku",
 
   // Google Gemini models
