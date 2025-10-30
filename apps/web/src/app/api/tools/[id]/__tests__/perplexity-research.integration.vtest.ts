@@ -2,7 +2,6 @@ import { vi } from 'vitest';
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
 import { auth } from '@/infrastructure/auth/auth';
-import { toolRegistry } from '@roast/ai/server';
 
 // Mock the auth module
 vi.mock('@/infrastructure/auth/auth', () => ({
@@ -27,21 +26,24 @@ vi.mock('@roast/ai', async () => {
   };
 });
 
-// Mock the perplexity research tool
-const mockPerplexityTool = {
-  config: {
-    name: 'perplexity-research',
-    description: 'Research using Perplexity',
-    id: 'perplexity-researcher'
-  },
-  execute: vi.fn().mockResolvedValue({
-    summary: 'Test summary',
-    keyFindings: ['Finding 1', 'Finding 2'],
-    sources: [
-      { title: 'Source 1', url: 'https://example.com', snippet: 'Test snippet' }
-    ]
-  })
-};
+// Define hoisted mocks to avoid Vitest mock hoisting issues
+const hoisted = vi.hoisted(() => {
+  const mockPerplexityTool = {
+    config: {
+      name: 'perplexity-research',
+      description: 'Research using Perplexity',
+      id: 'perplexity-researcher'
+    },
+    execute: vi.fn().mockResolvedValue({
+      summary: 'Test summary',
+      keyFindings: ['Finding 1', 'Finding 2'],
+      sources: [
+        { title: 'Source 1', url: 'https://example.com', snippet: 'Test snippet' }
+      ]
+    })
+  };
+  return { mockPerplexityTool };
+});
 
 vi.mock('@roast/ai/server', async () => {
   const actual = await vi.importActual('@roast/ai/server');
@@ -50,7 +52,7 @@ vi.mock('@roast/ai/server', async () => {
     toolRegistry: {
       get: vi.fn((id: string) => {
         if (id === 'perplexity-researcher') {
-          return mockPerplexityTool;
+          return hoisted.mockPerplexityTool;
         }
         return undefined;
       }),
@@ -58,7 +60,7 @@ vi.mock('@roast/ai/server', async () => {
       getAll: vi.fn(),
       getByCategory: vi.fn()
     },
-    perplexityResearchTool: mockPerplexityTool
+    perplexityResearchTool: hoisted.mockPerplexityTool
   };
 });
 
@@ -137,7 +139,7 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle tool execution errors', async () => {
     // Override tool mock for this test
-    vi.mocked(mockPerplexityTool.execute).mockRejectedValueOnce(new Error('API request failed'));
+    vi.mocked(hoisted.mockPerplexityTool.execute).mockRejectedValueOnce(new Error('API request failed'));
 
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-researcher', {
       method: 'POST',
