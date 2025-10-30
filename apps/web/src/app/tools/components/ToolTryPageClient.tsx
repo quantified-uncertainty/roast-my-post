@@ -357,8 +357,8 @@ export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
             },
             { value: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
             {
-              value: "anthropic/claude-3.5-haiku-20241022",
-              label: "Claude 3.5 Haiku",
+              value: "anthropic/claude-haiku-4.5",
+              label: "Claude Haiku 4.5",
             },
             { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
             { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
