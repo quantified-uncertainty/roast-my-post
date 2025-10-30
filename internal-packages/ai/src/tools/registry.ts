@@ -13,6 +13,7 @@ import documentChunkerTool from './document-chunker';
 import fuzzyTextLocatorTool from './smart-text-searcher';
 import { detectLanguageConventionTool } from './language-convention-detector';
 import { linkValidator } from './link-validator';
+import claimEvaluatorTool from './claim-evaluator';
 
 // Tool registry to manage all available tools
 export class ToolRegistry {
@@ -34,6 +35,7 @@ export class ToolRegistry {
     this.register(fuzzyTextLocatorTool);
     this.register(detectLanguageConventionTool);
     this.register(linkValidator);
+    this.register(claimEvaluatorTool);
   }
   
   register(tool: Tool): void {

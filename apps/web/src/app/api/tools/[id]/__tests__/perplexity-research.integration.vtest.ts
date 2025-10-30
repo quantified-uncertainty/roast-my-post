@@ -1,8 +1,7 @@
 import { vi } from 'vitest';
-import { POST } from './route';
+import { POST } from '../route';
 import { NextRequest } from 'next/server';
 import { auth } from '@/infrastructure/auth/auth';
-import { perplexityResearchTool } from '@roast/ai/server';
 
 // Mock the auth module
 vi.mock('@/infrastructure/auth/auth', () => ({
@@ -27,21 +26,14 @@ vi.mock('@roast/ai', async () => {
   };
 });
 
-// Mock the perplexity research tool
-vi.mock('@roast/ai/server', () => ({
-  perplexityResearchTool: {
+// Define hoisted mocks to avoid Vitest mock hoisting issues
+const hoisted = vi.hoisted(() => {
+  const mockPerplexityTool = {
     config: {
       name: 'perplexity-research',
       description: 'Research using Perplexity',
-      id: 'perplexity-research'
+      id: 'perplexity-researcher'
     },
-    run: vi.fn().mockResolvedValue({
-      summary: 'Test summary',
-      keyFindings: ['Finding 1', 'Finding 2'],
-      sources: [
-        { title: 'Source 1', url: 'https://example.com', snippet: 'Test snippet' }
-      ]
-    }),
     execute: vi.fn().mockResolvedValue({
       summary: 'Test summary',
       keyFindings: ['Finding 1', 'Finding 2'],
@@ -49,8 +41,28 @@ vi.mock('@roast/ai/server', () => ({
         { title: 'Source 1', url: 'https://example.com', snippet: 'Test snippet' }
       ]
     })
-  }
-}));
+  };
+  return { mockPerplexityTool };
+});
+
+vi.mock('@roast/ai/server', async () => {
+  const actual = await vi.importActual('@roast/ai/server');
+  return {
+    ...actual,
+    toolRegistry: {
+      get: vi.fn((id: string) => {
+        if (id === 'perplexity-researcher') {
+          return hoisted.mockPerplexityTool;
+        }
+        return undefined;
+      }),
+      getMetadata: vi.fn(),
+      getAll: vi.fn(),
+      getByCategory: vi.fn()
+    },
+    perplexityResearchTool: hoisted.mockPerplexityTool
+  };
+});
 
 // Mock the logger
 vi.mock('@/infrastructure/logging/logger', () => ({
@@ -77,14 +89,16 @@ describe('Perplexity Research API Route', () => {
   });
 
   it('should handle research request successfully', async () => {
-    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
+    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-researcher', {
       method: 'POST',
       body: JSON.stringify({
         query: 'What are the latest AI developments?'
       })
     });
 
-    const responsePromise = POST(request);
+    const responsePromise = POST(request, {
+      params: Promise.resolve({ id: 'perplexity-researcher' })
+    });
 
     // Fast-forward through the 5-second delay
     await vi.advanceTimersByTimeAsync(5000);
@@ -106,14 +120,16 @@ describe('Perplexity Research API Route', () => {
     // Override auth mock for this test
     vi.mocked(auth).mockResolvedValueOnce(null as any);
 
-    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
+    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-researcher', {
       method: 'POST',
       body: JSON.stringify({
         query: 'Test query'
       })
     });
 
-    const response = await POST(request);
+    const response = await POST(request, {
+      params: Promise.resolve({ id: 'perplexity-researcher' })
+    });
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -123,16 +139,18 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle tool execution errors', async () => {
     // Override tool mock for this test
-    vi.mocked(perplexityResearchTool.execute).mockRejectedValueOnce(new Error('API request failed'));
+    vi.mocked(hoisted.mockPerplexityTool.execute).mockRejectedValueOnce(new Error('API request failed'));
 
-    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
+    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-researcher', {
       method: 'POST',
       body: JSON.stringify({
         query: 'Test query'
       })
     });
 
-    const responsePromise = POST(request);
+    const responsePromise = POST(request, {
+      params: Promise.resolve({ id: 'perplexity-researcher' })
+    });
 
     // Fast-forward through any timers
     await vi.advanceTimersByTimeAsync(5000);
@@ -145,3 +163,4 @@ describe('Perplexity Research API Route', () => {
     expect(data).toHaveProperty('error', 'API request failed');
   });
 });
+

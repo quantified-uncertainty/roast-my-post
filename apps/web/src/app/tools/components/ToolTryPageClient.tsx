@@ -1,58 +1,44 @@
 "use client";
 
 import { useState } from "react";
-
-import { notFound } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-import { getModelAbbreviation, estimateTokenCount } from "../../constants/modelAbbreviations";
-
-import { ClaimEvaluationDisplay } from "@/lib/OpinionSpectrum2D";
-import { ModelResponseStatsTable } from "@/components/ModelResponseStatsTable";
-import {
-  BeakerIcon,
-  CalculatorIcon,
-  ChartBarIcon,
-  ClipboardDocumentCheckIcon,
-  CloudIcon,
-  DocumentMagnifyingGlassIcon,
-  DocumentTextIcon,
-  LanguageIcon,
-  LinkIcon,
-  MagnifyingGlassIcon,
-  ScaleIcon,
-  UserGroupIcon,
-} from "@heroicons/react/24/outline";
 import {
   type ToolId,
-  toolRegistry,
   toolSchemas,
   generateClaimEvaluatorPrompt,
 } from "@roast/ai";
-
-import { GenericToolDocsPage } from "../../components/GenericToolDocsPage";
-import { GenericToolTryPage } from "../../components/GenericToolTryPage";
-import { MathCheckDisplay } from "../../components/results/MathCheckDisplay";
-import { FieldConfig } from "../../components/types";
-import { toolExamples as exampleConfigs } from "../../utils/toolExamples";
+import { GenericToolTryPage } from "./GenericToolTryPage";
+import { MathCheckDisplay } from "./results/MathCheckDisplay";
+import { FieldConfig } from "./types";
+import { toolExamples as exampleConfigs } from "../utils/toolExamples";
+import { ClaimEvaluationDisplay, type ClaimEvaluationResult } from "@/lib/OpinionSpectrum2D";
+import { ModelResponseStatsTable } from "@/components/ModelResponseStatsTable";
+import { getModelAbbreviation, estimateTokenCount } from "../constants/modelAbbreviations";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const CONTEXT_PREVIEW_LENGTH = 300;
 
-// Claim Evaluator Result Component (separate to use hooks properly)
+// Tool-specific result renderers
+type ToolResult = Record<string, unknown>;
+interface ToolResultExtra {
+  statement?: string;
+  claim?: string;
+  context?: string;
+  [key: string]: unknown;
+}
+
+// Claim Evaluator Result Component
 function ClaimEvaluatorResult({
   result,
   claim,
   context,
 }: {
-  result: any;
+  result: ClaimEvaluationResult;
   claim: string;
   context: string;
 }) {
   const [showContextModal, setShowContextModal] = useState(false);
 
-  // Use trimmed context to handle empty strings properly
   const trimmedContext = context?.trim() || "";
-  const contextTokens = estimateTokenCount(trimmedContext);
   const contextPreview =
     trimmedContext.length > CONTEXT_PREVIEW_LENGTH
       ? trimmedContext.slice(0, CONTEXT_PREVIEW_LENGTH)
@@ -74,9 +60,6 @@ function ClaimEvaluatorResult({
         <div className="mb-6 rounded-lg border bg-white p-6 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-600">Context</h3>
-            <span className="text-sm text-gray-400" aria-label={`Estimated ${contextTokens} tokens`}>
-              {contextTokens.toLocaleString()} tokens
-            </span>
           </div>
           <p className="text-gray-700">
             {contextPreview}
@@ -86,8 +69,6 @@ function ClaimEvaluatorResult({
             <button
               onClick={() => setShowContextModal(true)}
               className="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-700"
-              aria-label="Show full context"
-              aria-expanded={showContextModal}
             >
               Show More
             </button>
@@ -96,13 +77,11 @@ function ClaimEvaluatorResult({
       )}
 
       <Dialog open={showContextModal} onOpenChange={setShowContextModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" aria-describedby="context-description">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              Full Context ({contextTokens.toLocaleString()} tokens)
-            </DialogTitle>
+            <DialogTitle>Full Context</DialogTitle>
           </DialogHeader>
-          <div className="mt-4" id="context-description">
+          <div className="mt-4">
             <p className="whitespace-pre-wrap text-gray-700">{trimmedContext}</p>
           </div>
         </DialogContent>
@@ -111,94 +90,44 @@ function ClaimEvaluatorResult({
       <ClaimEvaluationDisplay result={result} getModelAbbrev={getModelAbbreviation} />
 
       <div className="mt-6">
-        <ModelResponseStatsTable evaluations={result?.evaluations || []} />
+        <ModelResponseStatsTable evaluations={result.evaluations || []} />
       </div>
     </>
   );
 }
 
-// Map tool IDs to their icons
-const toolIcons: Record<string, React.ReactElement> = {
-  "math-validator-llm": <CalculatorIcon className="h-8 w-8 text-blue-600" />,
-  "math-validator-hybrid": (
-    <CalculatorIcon className="h-8 w-8 text-purple-600" />
-  ),
-  "math-validator-mathjs": (
-    <CalculatorIcon className="h-8 w-8 text-green-600" />
-  ),
-  "spelling-grammar-checker": (
-    <DocumentTextIcon className="h-8 w-8 text-red-600" />
-  ),
-  "language-convention-detector": (
-    <LanguageIcon className="h-8 w-8 text-indigo-600" />
-  ),
-  "document-chunker": (
-    <DocumentMagnifyingGlassIcon className="h-8 w-8 text-orange-600" />
-  ),
-  "factual-claims-extractor": (
-    <ClipboardDocumentCheckIcon className="h-8 w-8 text-teal-600" />
-  ),
-  "binary-forecasting-claims-extractor": (
-    <ChartBarIcon className="h-8 w-8 text-yellow-600" />
-  ),
-  "math-expressions-extractor": (
-    <CalculatorIcon className="h-8 w-8 text-pink-600" />
-  ),
-  "fact-checker": <ScaleIcon className="h-8 w-8 text-emerald-600" />,
-  "binary-forecaster": <ChartBarIcon className="h-8 w-8 text-blue-600" />,
-  "smart-text-searcher": (
-    <MagnifyingGlassIcon className="h-8 w-8 text-violet-600" />
-  ),
-  "link-validator": <LinkIcon className="h-8 w-8 text-cyan-600" />,
-  "perplexity-researcher": <CloudIcon className="h-8 w-8 text-slate-600" />,
-  "claim-evaluator": <UserGroupIcon className="h-8 w-8 text-indigo-600" />,
-};
-
-// Types for tool results
-interface ToolResultExtra {
-  statement?: string;
-  claim?: string;
-  context?: string;
-  [key: string]: unknown;
-}
-
-type ToolResult = Record<string, unknown>;
-
-// Tool-specific result renderers
 const toolResultRenderers: Record<
   string,
-  (result: ToolResult, extra?: ToolResultExtra) => React.ReactElement
+  (result: ToolResult | ClaimEvaluationResult, extra?: ToolResultExtra) => React.ReactElement
 > = {
   "math-validator-llm": (result, extra) => (
     <MathCheckDisplay
-      result={result}
+      result={result as ToolResult}
       statement={extra?.statement || ""}
       variant="basic"
     />
   ),
   "math-validator-hybrid": (result, extra) => (
     <MathCheckDisplay
-      result={result}
+      result={result as ToolResult}
       statement={extra?.statement || ""}
       variant="hybrid"
     />
   ),
   "math-validator-mathjs": (result, extra) => (
     <MathCheckDisplay
-      result={result}
+      result={result as ToolResult}
       statement={extra?.statement || ""}
       variant="mathjs"
     />
   ),
-  "claim-evaluator": (result: any, extra?: ToolResultExtra) => (
+  "claim-evaluator": (result, extra) => (
     <ClaimEvaluatorResult
-      result={result}
+      result={result as ClaimEvaluationResult}
       claim={extra?.claim || ""}
       context={extra?.context || ""}
     />
   ),
-  // Add more custom renderers as needed
-  // Default renderer for tools without custom display
   default: (result) => (
     <div className="rounded-lg border bg-white p-6 shadow-sm">
       <h3 className="mb-4 text-lg font-semibold">Result</h3>
@@ -209,37 +138,21 @@ const toolResultRenderers: Record<
   ),
 };
 
-interface ToolPageClientProps {
+interface ToolTryPageClientProps {
   toolId: string;
-  slug: string[];
 }
 
-export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
+export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
   const [lastStatement, setLastStatement] = useState("");
   const [lastClaim, setLastClaim] = useState("");
   const [lastContext, setLastContext] = useState("");
 
-  const toolConfig = toolRegistry[toolId];
-
-  // Get tool schemas
   const schemas = toolSchemas[toolId as ToolId];
   if (!schemas) {
-    notFound();
+    return null;
   }
 
-  // Type guard to ensure tool exists
-  if (!toolConfig) {
-    notFound();
-  }
-  const icon = toolIcons[toolId] || (
-    <BeakerIcon className="h-8 w-8 text-gray-600" />
-  );
   const examples = exampleConfigs[toolId] || [];
-
-  // Determine page type from slug
-  const pageType = slug?.[0] || "docs"; // Default to docs if no slug
-
-  // Get the appropriate result renderer
   const resultRenderer =
     toolResultRenderers[toolId] || toolResultRenderers.default;
 
@@ -392,11 +305,6 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
           min: 1,
           placeholder: "Optional line number hint",
         },
-        // Note: The options.* fields need nested object support
-        // For now, exclude the nested options until we add proper nested field support
-        // 'options.normalizeQuotes': { type: 'checkbox', defaultValue: false },
-        // 'options.partialMatch': { type: 'checkbox', defaultValue: false },
-        // 'options.useLLMFallback': { type: 'checkbox', defaultValue: false },
       },
       "fact-checker": {
         claim: {
@@ -639,115 +547,97 @@ export function ToolPageClient({ toolId, slug }: ToolPageClientProps) {
     return fields;
   };
 
-  if (pageType === "docs") {
-    return (
-      <GenericToolDocsPage
-        toolId={toolId as ToolId}
-        title={toolConfig.name}
-        description={toolConfig.description}
-        icon={icon}
-      />
-    );
-  }
+  const fields = buildFields();
 
-  if (pageType === "try") {
-    const fields = buildFields();
-
-    return (
-      <GenericToolTryPage
-        toolId={toolId as ToolId}
-        title={toolConfig.name}
-        description={toolConfig.description}
-        icon={icon}
-        fields={fields}
-        renderResult={(result) => {
-          if (toolId.includes("math-validator")) {
-            return resultRenderer(result as ToolResult, {
-              statement: lastStatement,
-            });
-          }
-          if (toolId === "claim-evaluator") {
-            return resultRenderer(result as ToolResult, {
-              claim: lastClaim,
-              context: lastContext,
-            });
-          }
-          return resultRenderer(result as ToolResult);
-        }}
-        exampleInputs={examples.map((ex) => ({
-          label: ex.label,
-          value: ex.values,
-        }))}
-        onBeforeSubmit={(input: Record<string, unknown>) => {
-          // Store statement for math tools
-          if (input.statement) {
-            setLastStatement(input.statement as string);
-          }
-          // Store claim for claim-evaluator
-          if (input.claim) {
-            setLastClaim(input.claim as string);
-          }
-          // Store context for claim-evaluator
-          if (input.context) {
-            setLastContext(input.context as string);
-          }
-          return input;
-        }}
-        submitButtonText={
-          toolId.includes("checker") || toolId.includes("validator")
-            ? "Check"
-            : toolId.includes("extractor")
-              ? "Extract"
-              : "Process"
+  return (
+    <GenericToolTryPage
+      toolId={toolId as ToolId}
+      fields={fields}
+      renderResult={(result) => {
+        if (toolId.includes("math-validator")) {
+          return resultRenderer(result as ToolResult, {
+            statement: lastStatement,
+          });
         }
-        loadingText={
-          toolId.includes("checker") || toolId.includes("validator")
-            ? "Checking..."
-            : toolId.includes("extractor")
-              ? "Extracting..."
-              : "Processing..."
+        if (toolId === "claim-evaluator") {
+          return resultRenderer(result as ToolResult, {
+            claim: lastClaim,
+            context: lastContext,
+          });
         }
-        hideViewToggle={toolId === "claim-evaluator"}
-        generatePrompt={
-          toolId === "claim-evaluator"
-            ? (input: any) => generateClaimEvaluatorPrompt(input)
-            : undefined
+        return resultRenderer(result as ToolResult);
+      }}
+      exampleInputs={examples.map((ex) => ({
+        label: ex.label,
+        value: ex.values,
+      }))}
+      onBeforeSubmit={(input: Record<string, unknown>) => {
+        // Store statement for math tools
+        if (input.statement) {
+          setLastStatement(input.statement as string);
         }
-        onSaveResult={
-          toolId === "claim-evaluator"
-            ? async (result: any, input: any) => {
-                const response = await fetch("/api/claim-evaluations", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    claim: lastClaim,
-                    context: lastContext || undefined,
-                    summaryMean: result.summary?.mean,
-                    rawOutput: result,
-                    explanationLength: input.explanationLength,
-                    temperature: input.temperature,
-                    prompt: input ? generateClaimEvaluatorPrompt(input) : undefined,
-                  }),
-                });
+        // Store claim for claim-evaluator
+        if (input.claim) {
+          setLastClaim(input.claim as string);
+        }
+        // Store context for claim-evaluator
+        if (input.context) {
+          setLastContext(input.context as string);
+        }
+        return input;
+      }}
+      submitButtonText={
+        toolId.includes("checker") || toolId.includes("validator")
+          ? "Check"
+          : toolId.includes("extractor")
+            ? "Extract"
+            : "Process"
+      }
+      loadingText={
+        toolId.includes("checker") || toolId.includes("validator")
+          ? "Checking..."
+          : toolId.includes("extractor")
+            ? "Extracting..."
+            : "Processing..."
+      }
+      hideViewToggle={toolId === "claim-evaluator"}
+      generatePrompt={
+        toolId === "claim-evaluator"
+          ? (input: Record<string, unknown>) => generateClaimEvaluatorPrompt(input as { claim: string; context?: string; explanationLength?: number; runs?: number })
+          : undefined
+      }
+      onSaveResult={
+        toolId === "claim-evaluator"
+          ? async (result: unknown, input: Record<string, unknown>) => {
+              const response = await fetch("/api/claim-evaluations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  claim: lastClaim,
+                  context: lastContext || undefined,
+                  summaryMean: (result as { summary?: { mean?: unknown } })?.summary?.mean,
+                  rawOutput: result,
+                  explanationLength: input.explanationLength,
+                  temperature: input.temperature,
+                  prompt: input ? generateClaimEvaluatorPrompt(input as { claim: string; context?: string; explanationLength?: number; runs?: number }) : undefined,
+                }),
+              });
 
-                if (!response.ok) {
-                  throw new Error("Failed to save evaluation");
-                }
-
-                return response.json();
+              if (!response.ok) {
+                throw new Error("Failed to save evaluation");
               }
-            : undefined
-        }
-        saveButtonText="Save Evaluation"
-        getSavedResultUrl={
-          toolId === "claim-evaluator"
-            ? (id: string) => `/claim-evaluations/${id}`
-            : undefined
-        }
-      />
-    );
-  }
 
-  // Unknown page type
-  notFound();
+              return response.json();
+            }
+          : undefined
+      }
+      saveButtonText="Save Evaluation"
+      getSavedResultUrl={
+        toolId === "claim-evaluator"
+          ? (id: string) => `/claim-evaluations/${id}`
+          : undefined
+      }
+    />
+  );
 }
+
