@@ -36,14 +36,15 @@ export function useColumnMinHeight({
 
     // Clamp to content scrollHeight when available to avoid runaway growth
     const container = contentRef?.current;
-    // Clamp in all modes with a generous cap to prevent runaway inflation
-    if (container && container.scrollHeight > 0) {
-      const MAX_MULTIPLIER = 2; // allow up to 2x document height
-      const maxAllowed = Math.max(
-        container.scrollHeight,
-        Math.floor(container.scrollHeight * MAX_MULTIPLIER)
-      );
-      return Math.min(rawHeight, maxAllowed);
+    // Clamp based on inner article's natural height when possible to avoid wrapper stretch feedback
+    if (container) {
+      const article = container.querySelector("article") as HTMLElement | null;
+      const baseHeight = (article?.scrollHeight || 0) || container.scrollHeight;
+      if (baseHeight > 0) {
+        const MAX_MULTIPLIER = 2; // allow up to 2x content height
+        const maxAllowed = Math.max(baseHeight, Math.floor(baseHeight * MAX_MULTIPLIER));
+        return Math.min(rawHeight, maxAllowed);
+      }
     }
 
     return rawHeight;

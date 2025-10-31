@@ -35,7 +35,9 @@ export function DocumentContent({
   return (
     <div
       ref={contentRef}
-      className={`relative p-0 ${isFullWidth ? "pr-4" : "max-w-3xl flex-1"}`}
+      className={`relative p-0 self-start ${
+        isFullWidth ? "pr-4" : "max-w-3xl flex-1"
+      }`}
       style={
         isFullWidth
           ? {
