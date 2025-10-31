@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import type { RefObject } from "react";
 import type { Comment } from "@/shared/types/databaseTypes";
 
@@ -19,6 +19,8 @@ export function useColumnMinHeight({
   contentRef,
   allowedTags,
 }: UseColumnMinHeightOptions): number {
+  // Snapshot baseline content height once to avoid feedback loop with layout
+  const baselineHeightRef = useRef<number | null>(null);
   return useMemo(() => {
     if (!comments.length) return 0;
 
@@ -36,15 +38,15 @@ export function useColumnMinHeight({
 
     // Clamp to content scrollHeight when available to avoid runaway growth
     const container = contentRef?.current;
-    // Clamp based on inner article's natural height when possible to avoid wrapper stretch feedback
-    if (container) {
-      const article = container.querySelector("article") as HTMLElement | null;
-      const baseHeight = (article?.scrollHeight || 0) || container.scrollHeight;
-      if (baseHeight > 0) {
-        const MAX_MULTIPLIER = 2; // allow up to 2x content height
-        const maxAllowed = Math.max(baseHeight, Math.floor(baseHeight * MAX_MULTIPLIER));
-        return Math.min(rawHeight, maxAllowed);
+    // Clamp in all modes using a stable baseline to prevent feedback loops
+    if (container && container.scrollHeight > 0) {
+      if (baselineHeightRef.current == null) {
+        baselineHeightRef.current = container.scrollHeight;
       }
+      const baseline = baselineHeightRef.current || container.scrollHeight;
+      const MAX_MULTIPLIER = 2; // allow up to 2x baseline document height
+      const maxAllowed = Math.max(baseline, Math.floor(baseline * MAX_MULTIPLIER));
+      return Math.min(rawHeight, maxAllowed);
     }
 
     return rawHeight;

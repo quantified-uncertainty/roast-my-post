@@ -282,7 +282,7 @@ export function EvaluationView({
           {/* Document content and comments section */}
           <div
             className={cn(
-              "flex min-h-screen items-start",
+              "flex min-h-screen",
               isFullWidth ? "" : "justify-center"
             )}
           >
