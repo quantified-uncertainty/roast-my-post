@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "PORT=3002 pnpm --filter @roast/web dev",
+    "dev": "pnpm --filter @roast/web dev",
     "build": "turbo run build",
     "start": "pnpm --filter @roast/web start",
     "lint": "turbo run lint",
