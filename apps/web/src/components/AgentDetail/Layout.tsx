@@ -150,42 +150,44 @@ export function AgentDetailLayout({
       )}
 
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <AgentIcon agentId={agent.id} size={28} />
-            <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
-              {agent.name}
-            </h2>
-            {agent.ephemeralBatch && (
-              <ExperimentalBadge 
-                trackingId={agent.ephemeralBatch.trackingId}
-                className="ml-2"
+      <div className="mb-8 flex items-start justify-between">
+        <div className="flex gap-4">
+          <AgentIcon agentId={agent.id} size={64} />
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
+                {agent.name}
+              </h2>
+              {agent.ephemeralBatch && (
+                <ExperimentalBadge
+                  trackingId={agent.ephemeralBatch.trackingId}
+                  className="ml-2"
+                />
+              )}
+            </div>
+            <p className="text-sm text-gray-500">
+              v{agent.version}
+              {agent.owner && (
+                <>
+                  {" • "}
+                  <Link
+                    href={ROUTES.USERS.PROFILE(agent.owner.id)}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    {agent.owner.name || "View Owner"}
+                  </Link>
+                </>
+              )}
+            </p>
+            <div className="mt-2 flex gap-2">
+              <AgentBadges
+                isDeprecated={agent.isDeprecated}
+                isRecommended={agent.isRecommended}
+                isSystemManaged={agent.isSystemManaged}
+                providesGrades={agent.providesGrades}
+                size="md"
               />
-            )}
-          </div>
-          <p className="text-sm text-gray-500">
-            v{agent.version}
-            {agent.owner && (
-              <>
-                {" • "}
-                <Link
-                  href={ROUTES.USERS.PROFILE(agent.owner.id)}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  {agent.owner.name || "View Owner"}
-                </Link>
-              </>
-            )}
-          </p>
-          <div className="mt-2 flex gap-2">
-            <AgentBadges
-              isDeprecated={agent.isDeprecated}
-              isRecommended={agent.isRecommended}
-              isSystemManaged={agent.isSystemManaged}
-              providesGrades={agent.providesGrades}
-              size="md"
-            />
+            </div>
           </div>
         </div>
 
