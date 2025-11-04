@@ -159,7 +159,7 @@ export function EvaluationManagement({
                 >
                   <div className="flex flex-1 items-start gap-3">
                     <div className="p-1.5">
-                      <AgentIcon agentId={agent.id} size={16} />
+                      <AgentIcon agentId={agent.id} size={32} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

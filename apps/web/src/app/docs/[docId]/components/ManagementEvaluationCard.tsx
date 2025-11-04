@@ -89,7 +89,7 @@ export function ManagementEvaluationCard({
           {/* Left side - Evaluator info */}
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="p-1.5">
-              <AgentIcon agentId={agentId} size={16} />
+              <AgentIcon agentId={agentId} size={32} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
