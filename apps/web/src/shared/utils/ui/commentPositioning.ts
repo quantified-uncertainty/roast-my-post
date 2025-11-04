@@ -49,26 +49,6 @@ export function calculateCommentPositions(
 
   // Batch DOM reads for better performance
   const highlightRects = new Map<string, DOMRect>();
-  const highlightElements = new Map<string, HTMLElement>();
-
-  const getCodeBlockAnchor = (el: HTMLElement, stopAt: HTMLElement): HTMLElement => {
-    let node: HTMLElement | null = el;
-    while (node && node !== stopAt) {
-      const tag = node.tagName?.toLowerCase();
-      const style = window.getComputedStyle(node);
-      const overflowX = style.overflowX;
-      const overflowY = style.overflowY;
-      const isScrollable =
-        overflowX === "auto" ||
-        overflowX === "scroll" ||
-        overflowY === "auto" ||
-        overflowY === "scroll";
-      const isCodeBlock = tag === "pre" || tag === "code";
-      if (isCodeBlock || isScrollable) return node;
-      node = node.parentElement;
-    }
-    return el;
-  };
 
   // Use cache if provided, otherwise query DOM
   if (highlightCache) {
@@ -77,7 +57,6 @@ export function calculateCommentPositions(
       const tag = index.toString();
       const element = highlightCache.get(tag);
       if (element) {
-        highlightElements.set(tag, element);
         highlightRects.set(tag, element.getBoundingClientRect());
       }
     });
@@ -102,9 +81,7 @@ export function calculateCommentPositions(
 
     // Batch read all rects
     highlightsByTag.forEach((element, tag) => {
-      const el = element as HTMLElement;
-      highlightElements.set(tag, el);
-      highlightRects.set(tag, el.getBoundingClientRect());
+      highlightRects.set(tag, element.getBoundingClientRect());
     });
   }
 
@@ -112,16 +89,10 @@ export function calculateCommentPositions(
   comments.forEach((comment, index) => {
     const tag = index.toString();
     const rect = highlightRects.get(tag);
-    const element = highlightElements.get(tag);
 
     if (rect) {
-      // Prefer anchoring to code-block/scrollable wrapper when applicable
-      const anchorEl = element ? getCodeBlockAnchor(element, container) : null;
-      const anchorRect = anchorEl ? anchorEl.getBoundingClientRect() : rect;
-
       // Position relative to content container, accounting for scroll
-      const relativeTop =
-        anchorRect.top - containerRect.top + container.scrollTop;
+      const relativeTop = rect.top - containerRect.top + container.scrollTop;
       // Position at the top of the highlight, not the center
       const adjustedPosition =
         relativeTop - COMMENT_POSITIONING.HIGHLIGHT_ALIGNMENT_OFFSET;

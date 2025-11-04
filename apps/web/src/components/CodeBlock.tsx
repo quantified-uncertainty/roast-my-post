@@ -116,6 +116,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   return (
     <div
       {...attributes}
+      data-code-block="true"
       className="relative my-4 max-w-full overflow-hidden rounded-lg bg-gray-800"
       style={{ position: "relative" }}
     >
@@ -250,7 +251,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         return (
           <div
             key={tag}
-            data-tag={tag}
+            data-tags={JSON.stringify([String(tag)])}
             style={{
               position: "absolute",
               top: `${topPosition}px`,
