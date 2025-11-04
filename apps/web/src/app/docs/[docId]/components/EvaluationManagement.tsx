@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { Bot, Loader2, Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +11,7 @@ import {
   deleteEvaluation,
 } from "@/app/docs/[docId]/actions/evaluation-actions";
 import { AgentBadges } from "@/components/AgentBadges";
+import { AgentIcon } from "@/components/AgentIcon";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import { useEvaluationRerun } from "@/shared/hooks/useEvaluationRerun";
@@ -158,7 +159,7 @@ export function EvaluationManagement({
                 >
                   <div className="flex flex-1 items-start gap-3">
                     <div className="p-1.5">
-                      <Bot className="h-4 w-4 text-gray-500" />
+                      <AgentIcon agentId={agent.id} size={16} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
