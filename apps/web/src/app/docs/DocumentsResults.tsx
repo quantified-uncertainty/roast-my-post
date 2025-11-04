@@ -1,15 +1,29 @@
 "use client";
 
 import Link from "next/link";
+
+import { AgentIcon } from "@/components/AgentIcon";
+import { AppIcon } from "@/components/AppIcon";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
+import { sortAgentReviewsByCommentCount } from "@/shared/utils/agentSorting";
 import {
   formatWordCount,
   getWordCountInfo,
 } from "@/shared/utils/ui/documentUtils";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
+
+const PLATFORM_ICONS: Record<string, string> = {
+  "EA Forum": "ea-forum",
+  "LessWrong": "lesswrong",
+};
 
 interface DocumentsResultsProps {
   documents: SerializedDocumentListing[];
@@ -138,14 +152,20 @@ export default function DocumentsResults({
                                     <div className="text-gray-300">•</div>
                                     <div className="flex items-center gap-2">
                                       {document.platforms.map(
-                                        (platform: string) => (
-                                          <span
-                                            key={platform}
-                                            className="inline-flex items-center text-xs font-medium text-blue-500"
-                                          >
-                                            {platform}
-                                          </span>
-                                        )
+                                        (platform: string) => {
+                                          const iconName = PLATFORM_ICONS[platform];
+                                          return (
+                                            <span
+                                              key={platform}
+                                              className="inline-flex items-center gap-1 text-xs font-medium text-blue-500"
+                                            >
+                                              {iconName && (
+                                                <AppIcon name={iconName} size={12} className="text-blue-500" />
+                                              )}
+                                              {platform}
+                                            </span>
+                                          );
+                                        }
                                       )}
                                     </div>
                                   </>
@@ -156,8 +176,10 @@ export default function DocumentsResults({
                             {showPrivacyBadges && (
                               <PrivacyBadge isPrivate={document.document.isPrivate} size="xs" />
                             )}
-                            {Object.entries(agentReviews).map(
-                              ([agentId, commentCount]) => {
+                            {sortAgentReviewsByCommentCount(
+                              Object.entries(agentReviews),
+                              document.document.evaluations
+                            ).map(([agentId, commentCount]) => {
                                 const evaluation =
                                   document.document.evaluations.find(
                                     (r) => r.agentId === agentId
@@ -173,6 +195,7 @@ export default function DocumentsResults({
                                     key={agentId}
                                     className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
                                   >
+                                    <AgentIcon agentId={agentId} size={14} />
                                     {evaluation?.agent.name || "Unknown Evaluator"}
                                     {hasGrade && (
                                       <GradeBadge
@@ -181,14 +204,17 @@ export default function DocumentsResults({
                                         variant="dark"
                                       />
                                     )}
-                                    <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
-                                    <span className="text-gray-500">
-                                      {commentCount}
-                                    </span>
+                                    {commentCount > 0 && (
+                                      <>
+                                        <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
+                                        <span className="text-gray-500">
+                                          {commentCount}
+                                        </span>
+                                      </>
+                                    )}
                                   </div>
                                 );
-                              }
-                            )}
+                              })}
                             {!document.document?.evaluations?.length && (
                               <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                                 No reviews yet

@@ -138,12 +138,13 @@ class DocumentTransformer {
   /**
    * Transform comment from DB format to frontend format
    */
-  static transformComment(comment: any): any {
+  static transformComment(comment: any, agentId?: string): any {
     return {
       id: comment.id,
       description: comment.description,
       importance: comment.importance,
       grade: comment.grade,
+      agentId: agentId,
       highlight: comment.highlight ? {
         id: comment.highlight.id,
         startOffset: comment.highlight.startOffset,
@@ -225,17 +226,17 @@ class DocumentTransformer {
   /**
    * Transform evaluation version from DB format to frontend format
    */
-  static transformEvaluationVersion(version: any, currentDocumentVersion: number): any {
+  static transformEvaluationVersion(version: any, currentDocumentVersion: number, agentId?: string): any {
     const isStale = version.documentVersion?.version !== currentDocumentVersion;
-    
+
     return {
       id: version.id,
       version: version.version || 1,
       createdAt: new Date(version.createdAt),
       job: version.job ? this.transformJob(version.job) : undefined,
-      comments: version.comments 
-        ? version.comments.map((comment: any) => this.transformComment(comment))
-        : version._count 
+      comments: version.comments
+        ? version.comments.map((comment: any) => this.transformComment(comment, agentId))
+        : version._count
         ? this.createPlaceholderComments(version._count.comments || 0)
         : [],
       summary: version.summary || "",
@@ -254,19 +255,20 @@ class DocumentTransformer {
    */
   static transformEvaluation(evaluation: any, currentDocumentVersion: number): any {
     const latestVersion = evaluation.versions?.[0];
-    const evaluationVersions = evaluation.versions?.map((version: any) => 
-      this.transformEvaluationVersion(version, currentDocumentVersion)
+    const agentId = evaluation.agent.id;
+    const evaluationVersions = evaluation.versions?.map((version: any) =>
+      this.transformEvaluationVersion(version, currentDocumentVersion, agentId)
     ) || [];
 
     return {
       id: evaluation.id,
-      agentId: evaluation.agent.id,
+      agentId: agentId,
       agent: this.transformAgent(evaluation.agent),
       createdAt: new Date(latestVersion?.createdAt || evaluation.createdAt),
       priceInDollars: convertPriceToNumber(latestVersion?.job?.priceInDollars) || 0,
-      comments: latestVersion?.comments 
-        ? latestVersion.comments.map((comment: any) => this.transformComment(comment))
-        : latestVersion?._count 
+      comments: latestVersion?.comments
+        ? latestVersion.comments.map((comment: any) => this.transformComment(comment, agentId))
+        : latestVersion?._count
         ? this.createPlaceholderComments(latestVersion._count.comments || 0)
         : [],
       thinking: latestVersion?.job?.llmThinking || "",

@@ -3,8 +3,8 @@ import { createPluginBasedAgent } from "../utils/createPluginBasedAgent";
 
 export const comprehensiveCheckerAgent = createPluginBasedAgent({
   id: "system-epistemic-verification",
-  name: "Comprehensive Checker",
-  description: "Combines Fact Checker, Math Checker, and Forecast Checker",
+  name: "Comprehensive Check",
+  description: "Combines Fact Check, Math Check, and Forecast Check",
   pluginIds: [PluginType.FACT_CHECK, PluginType.MATH, PluginType.FORECAST],
   readmeId: "comprehensive-checker",
   isLlmCostTracked: true,

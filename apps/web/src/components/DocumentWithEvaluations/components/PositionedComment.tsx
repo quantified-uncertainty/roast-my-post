@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import ReactMarkdown from "react-markdown";
 
+import { AgentIcon } from "@/components/AgentIcon";
 import { commentToYaml } from "@/shared/utils/commentToYaml";
 import { parseColoredText } from "@/shared/utils/ui/coloredText";
 import {
@@ -11,13 +12,14 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentDuplicateIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
 
-import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
+import {
+  MARKDOWN_COMPONENTS,
+  MARKDOWN_PLUGINS,
+} from "../config/markdown";
 import {
   COMMENT_BG_DEFAULT,
   COMMENT_MARGIN_LEFT,
@@ -36,38 +38,32 @@ interface PositionedCommentProps {
   onHover: (tag: string | null) => void;
   onClick: (tag: string) => void;
   agentName: string;
+  agentId?: string;
   skipAnimation?: boolean;
-}
-
-// Helper function to display agent name with truncation
-function getDisplayAgentName(agentName: string, isHovered: boolean): string {
-  return isHovered ? agentName : agentName.slice(0, 5);
 }
 
 // Component for displaying agent name and source
 function AgentInfo({
   agentName,
+  agentId,
   source,
   isHovered,
 }: {
   agentName: string;
+  agentId?: string;
   source?: string;
   isHovered: boolean;
 }) {
   const textColor = isHovered ? "text-neutral-600" : "text-neutral-400";
-  const separatorColor = isHovered ? "text-neutral-400" : "text-neutral-200";
 
   return (
-    <div className="flex-shrink-0 text-xs">
-      <span className={textColor}>
-        {getDisplayAgentName(agentName, isHovered)}
+    <div
+      className={`flex flex-shrink-0 items-center gap-2 text-xs ${textColor}`}
+    >
+      <span className={`${isHovered ? "opacity-100" : "opacity-50"}`}>
+        {agentId && <AgentIcon agentId={agentId} size={16} />}
       </span>
-      {source && (
-        <>
-          <span className={separatorColor}> / </span>
-          <span className={textColor}>{source}</span>
-        </>
-      )}
+      {agentName}
     </div>
   );
 }
@@ -82,6 +78,7 @@ export function PositionedComment({
   onHover,
   onClick,
   agentName,
+  agentId,
   skipAnimation = false,
 }: PositionedCommentProps) {
   const tag = index.toString();
@@ -167,6 +164,7 @@ export function PositionedComment({
               {/* Agent name on the right */}
               <AgentInfo
                 agentName={agentName}
+                agentId={agentId}
                 source={comment.source}
                 isHovered={isHovered}
               />
@@ -192,6 +190,7 @@ export function PositionedComment({
             <div className="mt-0.5 inline-block py-0.5">
               <AgentInfo
                 agentName={agentName}
+                agentId={agentId}
                 source={comment.source}
                 isHovered={isHovered}
               />

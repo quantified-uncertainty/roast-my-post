@@ -21,6 +21,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 
+import { AgentIcon } from "@/components/AgentIcon";
+import { AppIcon } from "@/components/AppIcon";
 import { Button } from "@/components/Button";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { AgentBadges } from "@/components/AgentBadges";
@@ -149,41 +151,44 @@ export function AgentDetailLayout({
       )}
 
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
-              {agent.name}
-            </h2>
-            {agent.ephemeralBatch && (
-              <ExperimentalBadge 
-                trackingId={agent.ephemeralBatch.trackingId}
-                className="ml-2"
+      <div className="mb-8 flex items-start justify-between">
+        <div className="flex gap-4">
+          <AgentIcon agentId={agent.id} size={64} />
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
+                {agent.name}
+              </h2>
+              {agent.ephemeralBatch && (
+                <ExperimentalBadge
+                  trackingId={agent.ephemeralBatch.trackingId}
+                  className="ml-2"
+                />
+              )}
+            </div>
+            <p className="text-sm text-gray-500">
+              v{agent.version}
+              {agent.owner && (
+                <>
+                  {" • "}
+                  <Link
+                    href={ROUTES.USERS.PROFILE(agent.owner.id)}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    {agent.owner.name || "View Owner"}
+                  </Link>
+                </>
+              )}
+            </p>
+            <div className="mt-2 flex gap-2">
+              <AgentBadges
+                isDeprecated={agent.isDeprecated}
+                isRecommended={agent.isRecommended}
+                isSystemManaged={agent.isSystemManaged}
+                providesGrades={agent.providesGrades}
+                size="md"
               />
-            )}
-          </div>
-          <p className="text-sm text-gray-500">
-            v{agent.version}
-            {agent.owner && (
-              <>
-                {" • "}
-                <Link
-                  href={ROUTES.USERS.PROFILE(agent.owner.id)}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  {agent.owner.name || "View Owner"}
-                </Link>
-              </>
-            )}
-          </p>
-          <div className="mt-2 flex gap-2">
-            <AgentBadges
-              isDeprecated={agent.isDeprecated}
-              isRecommended={agent.isRecommended}
-              isSystemManaged={agent.isSystemManaged}
-              providesGrades={agent.providesGrades}
-              size="md"
-            />
+            </div>
           </div>
         </div>
 
@@ -249,25 +254,25 @@ export function AgentDetailLayout({
           <TabLink
             href={ROUTES.AGENTS.DETAIL(agent.id)}
             tabName="overview"
-            icon={<User className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="overview" size={20} className="mr-2" />}
             label="Overview"
           />
           <TabLink
             href={ROUTES.AGENTS.DETAILS(agent.id)}
             tabName="details"
-            icon={<FileText className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="details" size={20} className="mr-2" />}
             label="Details"
           />
           <TabLink
             href={ROUTES.AGENTS.VERSIONS(agent.id)}
             tabName="versions"
-            icon={<Clock className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="versions" size={20} className="mr-2" />}
             label="Versions"
           />
           <TabLink
             href={ROUTES.AGENTS.EVALS(agent.id)}
             tabName="evals"
-            icon={<BarChart3 className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="evaluation" size={20} className="mr-2" />}
             label="Evals"
           />
           {(isOwner || isAdmin) && (

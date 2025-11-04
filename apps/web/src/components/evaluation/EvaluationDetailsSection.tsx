@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { Bot } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -10,6 +9,7 @@ import {
   formatDate,
   formatDuration,
 } from "@/application/services/job/formatters";
+import { AgentIcon } from "@/components/AgentIcon";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ROUTES } from "@/constants/routes";
@@ -59,7 +59,7 @@ export function EvaluationDetailsSection({
             <div className="flex items-start gap-4">
               {/* Agent Icon */}
               <div className="flex-shrink-0">
-                <Bot className="h-8 w-8 text-gray-600" />
+                <AgentIcon agentId={agentId} size={32} />
               </div>
 
               {/* Agent Details */}

@@ -271,6 +271,7 @@ export function CommentsColumn({
                 onHover={(id) => setHoveredCommentId(id)}
                 onClick={(tag) => onCommentClick(tag, comment)}
                 agentName={comment.agentName || "Unknown"}
+                agentId={comment.agentId}
                 skipAnimation={!hasInitialized}
               />
             );

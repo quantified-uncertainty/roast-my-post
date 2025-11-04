@@ -13,6 +13,8 @@ import {
 } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
+import { AgentIcon } from "@/components/AgentIcon";
+import { AppIcon } from "@/components/AppIcon";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageLayout } from "@/components/PageLayout";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
@@ -30,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
+import { sortAgentReviewsByCommentCount } from "@/shared/utils/agentSorting";
 import {
   formatWordCount,
   getWordCountInfo,
@@ -43,6 +46,11 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
+
+const PLATFORM_ICONS: Record<string, string> = {
+  "EA Forum": "ea-forum",
+  "LessWrong": "lesswrong",
+};
 
 interface DocumentsLayoutClientProps {
   documents: SerializedDocumentListing[];
@@ -266,14 +274,20 @@ export default function DocumentsLayoutClient({
                         <>
                           <div className="text-gray-300">•</div>
                           <div className="flex items-center gap-2">
-                            {document.platforms.map((platform: string) => (
-                              <span
-                                key={platform}
-                                className="inline-flex items-center text-xs font-medium text-gray-500"
-                              >
-                                {platform}
-                              </span>
-                            ))}
+                            {document.platforms.map((platform: string) => {
+                              const iconName = PLATFORM_ICONS[platform];
+                              return (
+                                <span
+                                  key={platform}
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-gray-500"
+                                >
+                                  {iconName && (
+                                    <AppIcon name={iconName} size={12} className="text-gray-500" />
+                                  )}
+                                  {platform}
+                                </span>
+                              );
+                            })}
                           </div>
                         </>
                       )}
@@ -310,8 +324,10 @@ export default function DocumentsLayoutClient({
                           size="xs"
                         />
                       )}
-                      {Object.entries(agentReviews).map(
-                        ([agentId, commentCount]) => {
+                      {sortAgentReviewsByCommentCount(
+                        Object.entries(agentReviews),
+                        document.document.evaluations
+                      ).map(([agentId, commentCount]) => {
                           const evaluation = document.document.evaluations.find(
                             (r) => r.agentId === agentId
                           );
@@ -326,6 +342,7 @@ export default function DocumentsLayoutClient({
                               href={`/docs/${document.document.id}/reader?evals=${agentId}`}
                               className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
                             >
+                              <AgentIcon agentId={agentId} size={14} />
                               {evaluation?.agent.name || "Unknown Agent"}
                               {hasGrade && (
                                 <GradeBadge
@@ -334,14 +351,17 @@ export default function DocumentsLayoutClient({
                                   variant="dark"
                                 />
                               )}
-                              <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
-                              <span className="text-gray-500">
-                                {commentCount}
-                              </span>
+                              {commentCount > 0 && (
+                                <>
+                                  <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
+                                  <span className="text-gray-500">
+                                    {commentCount}
+                                  </span>
+                                </>
+                              )}
                             </Link>
                           );
-                        }
-                      )}
+                        })}
                       {!document.document?.evaluations?.length && (
                         <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                           No reviews yet

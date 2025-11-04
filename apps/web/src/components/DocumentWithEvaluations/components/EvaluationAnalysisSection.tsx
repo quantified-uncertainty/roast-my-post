@@ -1,18 +1,23 @@
 "use client";
 
-import { Bot, ShieldUser } from "lucide-react";
+import { ShieldUser } from "lucide-react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
+import { AgentIcon } from "@/components/AgentIcon";
+import { AppIcon } from "@/components/AppIcon";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
-import type { Document, Evaluation } from "@/shared/types/databaseTypes";
+import type {
+  Document,
+  Evaluation,
+} from "@/shared/types/databaseTypes";
 
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
 
@@ -29,7 +34,7 @@ export function EvaluationAnalysisSection({
     <div className="mx-auto mt-20 max-w-7xl px-4">
       <hr className="mb-16 border-2 border-gray-200" />
       <div className="mb-6 flex items-center justify-center gap-2 text-gray-700">
-        <Bot className="h-4 w-4" />
+        <AppIcon name="evaluation" size={16} className="text-gray-700" />
         <span className="font-bold">
           {document.reviews.length} AI Evaluation
           {document.reviews.length === 1 ? "" : "s"}
@@ -50,7 +55,7 @@ export function EvaluationAnalysisSection({
                     href={ROUTES.AGENTS.DETAIL(evaluation.agentId)}
                     className="flex items-center gap-2 text-lg font-semibold text-blue-800 hover:text-blue-900 hover:underline"
                   >
-                    <Bot className="h-4 w-4" />
+                    <AgentIcon agentId={evaluation.agentId} size={24} />
                     {evaluation.agent.name}
                   </Link>
                   {!!evaluation.grade && (
@@ -155,11 +160,12 @@ export function EvaluationAnalysisSection({
                   <li key={evaluation.agentId}>
                     <a
                       href={`#eval-${evaluation.agentId}`}
-                      className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                      className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                     >
+                      <AgentIcon agentId={evaluation.agentId} size={16} />
                       {evaluation.agent.name}
                     </a>
-                    <ul className="ml-4 mt-2 space-y-1">
+                    <ul className="ml-6 mt-2 space-y-1">
                       {evaluation.summary && (
                         <li>
                           <a
