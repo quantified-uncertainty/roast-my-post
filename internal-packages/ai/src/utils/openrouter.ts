@@ -91,7 +91,7 @@ export const OPENROUTER_MODELS = {
 
   // Good value - Fast and cost-effective
   CLAUDE_HAIKU: 'anthropic/claude-3-haiku',
-  CLAUDE_3_5_HAIKU: 'anthropic/claude-3.5-haiku-20241022',
+  CLAUDE_HAIKU_4_5: 'anthropic/claude-haiku-4.5',
   GPT_35_TURBO: 'openai/gpt-3.5-turbo',
   DEEPSEEK_CHAT: 'deepseek/deepseek-chat',
 

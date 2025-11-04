@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { AgentIcon } from "@/components/AgentIcon";
 import { GradeBadge } from "@/components/GradeBadge";
 import { StaleBadge } from "@/components/StaleBadge";
 import type { EvaluationStatus } from "@/components/StatusBadge";
@@ -41,6 +42,7 @@ export function EvaluationHeader({
       {showGrade && isComplete && hasGrade && !isRerunning && (
         <GradeBadge grade={grade} variant="grayscale" size="xs" />
       )}
+      <AgentIcon agentId={agentId} size={20} />
       <Link
         href={ROUTES.AGENTS.DETAIL(agentId)}
         className="text-sm font-semibold text-gray-600 underline hover:text-blue-900"

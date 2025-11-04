@@ -1,9 +1,9 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { BotIcon } from "lucide-react";
 import Link from "next/link";
 
+import { AgentIcon } from "@/components/AgentIcon";
 import { EvaluationActions } from "@/components/EvaluationCard/shared/EvaluationActions";
 import { EvaluationStats } from "@/components/EvaluationCard/shared/EvaluationStats";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -89,7 +89,7 @@ export function ManagementEvaluationCard({
           {/* Left side - Evaluator info */}
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="p-1.5">
-              <BotIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
+              <AgentIcon agentId={agentId} size={32} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

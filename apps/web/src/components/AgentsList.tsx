@@ -1,12 +1,13 @@
 "use client";
 
-import { Bot } from "lucide-react";
 import Link from "next/link";
 
+import { ROUTES } from "@/constants/routes";
 import type { Agent } from "@roast/ai";
 
 import { AgentBadges } from "./AgentBadges";
-import { ROUTES } from "@/constants/routes";
+import { AgentIcon } from "./AgentIcon";
+import { AppIcon } from "./AppIcon";
 
 interface AgentsListProps {
   agents: Agent[];
@@ -15,8 +16,8 @@ interface AgentsListProps {
 export default function AgentsList({ agents }: AgentsListProps) {
   return (
     <div className="mx-auto max-w-6xl p-8">
-      <h1 className="mb-2 flex items-center gap-2 text-3xl font-bold">
-        <Bot className="inline-block h-7 w-7 align-text-bottom text-gray-500" />
+      <h1 className="mb-8 flex items-center gap-4 text-3xl font-bold text-gray-700">
+        <AppIcon name="evaluator" size={28} className="text-gray-500" />
         Evaluators
       </h1>
 
@@ -30,6 +31,7 @@ export default function AgentsList({ agents }: AgentsListProps) {
             >
               <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
                 <div className="mb-2 flex items-center gap-3">
+                  <AgentIcon agentId={agent.id} size={32} />
                   <div>
                     <h3 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
                       {agent.name}

@@ -2,7 +2,6 @@
 
 import { useState, FormEvent, ReactNode } from 'react';
 import { toolSchemas } from '@roast/ai';
-import { ToolPageLayout } from './ToolPageLayout';
 import { ErrorDisplay, SubmitButton, TextAreaField } from './common';
 import { useToolExecution } from '../hooks/useToolExecution';
 import { AuthenticatedToolPage } from './AuthenticatedToolPage';
@@ -13,9 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 
 export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput = unknown> {
   toolId: keyof typeof toolSchemas;
-  title: string;
-  description: string;
-  icon: ReactNode;
   fields: FieldConfig[];
   renderResult: (result: TOutput) => ReactNode;
   exampleInputs?: Array<{ label: string; value: Partial<TInput> }>;
@@ -26,7 +22,6 @@ export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput =
   formatError?: (error: unknown) => string;
   onExecuteComplete?: (result?: TOutput, error?: string) => void;
   onBeforeSubmit?: (input: TInput) => TInput;
-  warning?: string;
   hideViewToggle?: boolean;
   generatePrompt?: (input: TInput) => string; // Optional function to generate prompt for preview
   onSaveResult?: (result: TOutput, input: TInput) => Promise<{ id: string }>;
@@ -37,12 +32,10 @@ export interface GenericToolTryPageProps<TInput = Record<string, any>, TOutput =
 /**
  * Generic try page for tools
  * Requires authentication to use
+ * Layout is handled by layout.tsx
  */
 export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>({
   toolId,
-  title,
-  description,
-  icon,
   fields,
   renderResult,
   exampleInputs,
@@ -53,7 +46,6 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   formatError,
   onExecuteComplete,
   onBeforeSubmit,
-  warning,
   hideViewToggle = false,
   generatePrompt,
   onSaveResult,
@@ -387,15 +379,8 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
   };
   
   return (
-    <AuthenticatedToolPage toolName={title}>
-      <ToolPageLayout
-        title={title}
-        description={description}
-        icon={icon}
-        warning={warning}
-        toolId={toolId as string}
-      >
-        <div className="space-y-6">
+    <AuthenticatedToolPage>
+      <div className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
             {fields.map(renderField)}
             
@@ -536,7 +521,6 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
             </div>
           </DialogContent>
         </Dialog>
-      </ToolPageLayout>
     </AuthenticatedToolPage>
   );
 }
