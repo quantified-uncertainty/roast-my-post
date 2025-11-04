@@ -61,7 +61,7 @@ export function AgentIcon({ agentId, size = 20, className = '' }: AgentIconProps
     <IconComponent
       width={size}
       height={size}
-      className={`inline-block ${className}`}
+      className={`inline-block text-gray-500 ${className}`}
       aria-hidden="true"
     />
   );
