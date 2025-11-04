@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
+
 import { AgentIcon } from "@/components/AgentIcon";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
 import {
   formatWordCount,
   getWordCountInfo,
 } from "@/shared/utils/ui/documentUtils";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SerializedDocumentListing } from "@/models/DocumentListing.types";
 
 interface DocumentsResultsProps {
   documents: SerializedDocumentListing[];

@@ -13,6 +13,7 @@ import {
 } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
+import { AgentIcon } from "@/components/AgentIcon";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageLayout } from "@/components/PageLayout";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
@@ -326,6 +327,7 @@ export default function DocumentsLayoutClient({
                               href={`/docs/${document.document.id}/reader?evals=${agentId}`}
                               className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
                             >
+                              <AgentIcon agentId={agentId} size={14} />
                               {evaluation?.agent.name || "Unknown Agent"}
                               {hasGrade && (
                                 <GradeBadge

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import type { Agent } from "@roast/ai";
@@ -17,7 +17,13 @@ export default function AgentsList({ agents }: AgentsListProps) {
   return (
     <div className="mx-auto max-w-6xl p-8">
       <h1 className="mb-2 flex items-center gap-2 text-3xl font-bold">
-        <Bot className="inline-block h-7 w-7 align-text-bottom text-gray-500" />
+        <Image
+          src="/app-icons/evaluator.svg"
+          alt="Evaluators"
+          width={28}
+          height={28}
+          className="inline-block opacity-60"
+        />
         Evaluators
       </h1>
 
