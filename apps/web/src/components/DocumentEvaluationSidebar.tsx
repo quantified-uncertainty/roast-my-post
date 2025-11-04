@@ -145,9 +145,9 @@ export function DocumentEvaluationSidebar({
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
-                      <span className="flex flex-1 items-center gap-2 truncate">
-                        <AgentIcon agentId={agentId} size={16} />
-                        {agentName}
+                      <span className="flex flex-1 items-center gap-2">
+                        <AgentIcon agentId={agentId} size={16} className="flex-shrink-0" />
+                        <span className="truncate">{agentName}</span>
                       </span>
                       <div className="flex items-center gap-2">
                         {isOwner &&
