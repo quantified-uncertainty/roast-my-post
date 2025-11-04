@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 import type { Agent } from "@roast/ai";
 
 import { AgentBadges } from "./AgentBadges";
 import { AgentIcon } from "./AgentIcon";
+import { AppIcon } from "./AppIcon";
 import { ROUTES } from "@/constants/routes";
 
 interface AgentsListProps {
@@ -17,13 +17,7 @@ export default function AgentsList({ agents }: AgentsListProps) {
   return (
     <div className="mx-auto max-w-6xl p-8">
       <h1 className="mb-2 flex items-center gap-2 text-3xl font-bold">
-        <Image
-          src="/app-icons/evaluator.svg"
-          alt="Evaluators"
-          width={28}
-          height={28}
-          className="inline-block opacity-60"
-        />
+        <AppIcon name="evaluation" size={28} className="text-gray-500" />
         Evaluators
       </h1>
 

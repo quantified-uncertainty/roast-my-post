@@ -1,12 +1,13 @@
 "use client";
 
-import { Bot, ShieldUser } from "lucide-react";
+import { ShieldUser } from "lucide-react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { AgentIcon } from "@/components/AgentIcon";
+import { AppIcon } from "@/components/AppIcon";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
@@ -30,7 +31,7 @@ export function EvaluationAnalysisSection({
     <div className="mx-auto mt-20 max-w-7xl px-4">
       <hr className="mb-16 border-2 border-gray-200" />
       <div className="mb-6 flex items-center justify-center gap-2 text-gray-700">
-        <Bot className="h-4 w-4" />
+        <AppIcon name="evaluation" size={16} className="text-gray-700" />
         <span className="font-bold">
           {document.reviews.length} AI Evaluation
           {document.reviews.length === 1 ? "" : "s"}

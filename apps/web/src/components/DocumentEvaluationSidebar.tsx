@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { FileDown, ShieldUser } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -17,6 +16,7 @@ import {
 import type { JobStatus } from "@roast/db";
 
 import { AgentIcon } from "./AgentIcon";
+import { AppIcon } from "./AppIcon";
 import { GradeBadge } from "./GradeBadge";
 import { JobStatusIndicator } from "./JobStatusIndicator";
 
@@ -101,13 +101,7 @@ export function DocumentEvaluationSidebar({
             className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100"
           >
             <span className="flex items-center gap-2">
-              <Image
-                src="/app-icons/evaluation.svg"
-                alt="AI Evaluations"
-                width={16}
-                height={16}
-                className="opacity-60"
-              />
+              <AppIcon name="evaluation" size={16} className="text-gray-600" />
               AI Evaluations
             </span>
             {isEvaluationsOpen ? (

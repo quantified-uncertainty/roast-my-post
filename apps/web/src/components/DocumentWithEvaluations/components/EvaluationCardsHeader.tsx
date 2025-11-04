@@ -5,10 +5,10 @@ import {
   CommandLineIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
-import { Bot } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type RefObject, useState, memo } from "react";
 
+import { AppIcon } from "@/components/AppIcon";
 // import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -234,7 +234,7 @@ function EvaluationCardsHeaderComponent({
       <AccordionItem value="evaluations" className="border-none">
         <AccordionTrigger className="min-w-0 px-4 py-2 hover:no-underline">
           <div className="flex items-center gap-2">
-            <Bot className="h-4 w-4" />
+            <AppIcon name="evaluation" size={16} className="text-gray-600" />
             <span>
               {document.reviews.length} AI Evaluation
               {document.reviews.length === 1 ? "" : "s"}
