@@ -14,7 +14,10 @@ import { EvaluationComments } from "@/components/EvaluationComments";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
-import type { Document, Evaluation } from "@/shared/types/databaseTypes";
+import type {
+  Document,
+  Evaluation,
+} from "@/shared/types/databaseTypes";
 
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
 
@@ -162,7 +165,7 @@ export function EvaluationAnalysisSection({
                       <AgentIcon agentId={evaluation.agentId} size={16} />
                       {evaluation.agent.name}
                     </a>
-                    <ul className="ml-4 mt-2 space-y-1">
+                    <ul className="ml-6 mt-2 space-y-1">
                       {evaluation.summary && (
                         <li>
                           <a

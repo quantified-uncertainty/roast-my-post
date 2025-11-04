@@ -1,6 +1,19 @@
+import { SVGProps } from "react";
+
+// Import all agent icons via SVGR (converted to React components at build time)
+import EaEpistemicAuditorIcon from "../../public/agent-icons/ea-epistemic-auditor.svg";
+import EpistemicVerificationIcon from "../../public/agent-icons/epistemic-verification.svg";
+import FactCheckerIcon from "../../public/agent-icons/fact-checker.svg";
+import ForecastCheckerIcon from "../../public/agent-icons/forecast-checker.svg";
+import LinkVerifierIcon from "../../public/agent-icons/link-verifier.svg";
+import MathCheckerIcon from "../../public/agent-icons/math-checker.svg";
+import SpellingGrammarIcon from "../../public/agent-icons/spelling-grammar.svg";
+
 /**
  * AgentIcon component
  * Displays an icon for a system agent based on its ID
+ *
+ * Uses SVGR to inline SVG icons at build time for fill="currentColor" support.
  */
 
 interface AgentIconProps {
@@ -9,18 +22,26 @@ interface AgentIconProps {
   className?: string;
 }
 
+// Map agent icon names to their SVGR components
+const iconMap: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
+  "ea-epistemic-auditor": EaEpistemicAuditorIcon,
+  "epistemic-verification": EpistemicVerificationIcon,
+  "fact-checker": FactCheckerIcon,
+  "forecast-checker": ForecastCheckerIcon,
+  "link-verifier": LinkVerifierIcon,
+  "math-checker": MathCheckerIcon,
+  "spelling-grammar": SpellingGrammarIcon,
+};
+
 /**
- * Maps agent ID to icon filename
- * Strips "system-" prefix from agent ID to get the icon filename
+ * Maps agent ID to icon name
+ * Strips "system-" prefix from agent ID to get the icon name
  */
-function getIconPath(agentId: string): string | null {
+function getIconName(agentId: string): string {
   // Strip "system-" prefix if present
-  const iconName = agentId.startsWith('system-')
+  return agentId.startsWith('system-')
     ? agentId.replace('system-', '')
     : agentId;
-
-  // Map to icon file path
-  return `/agent-icons/${iconName}.svg`;
 }
 
 export function AgentIcon({ agentId, size = 20, className = '' }: AgentIconProps) {
@@ -28,23 +49,20 @@ export function AgentIcon({ agentId, size = 20, className = '' }: AgentIconProps
     return null;
   }
 
-  const iconPath = getIconPath(agentId);
+  const iconName = getIconName(agentId);
+  const IconComponent = iconMap[iconName];
 
-  if (!iconPath) {
+  if (!IconComponent) {
+    console.warn(`AgentIcon: No icon found for agent ID "${agentId}" (icon name: "${iconName}")`);
     return null;
   }
 
   return (
-    <img
-      src={iconPath}
-      alt=""
+    <IconComponent
       width={size}
       height={size}
       className={`inline-block ${className}`}
-      onError={(e) => {
-        // Hide icon if file doesn't exist
-        e.currentTarget.style.display = 'none';
-      }}
+      aria-hidden="true"
     />
   );
 }

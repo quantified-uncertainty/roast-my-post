@@ -1,13 +1,22 @@
-"use client";
+import { SVGProps } from "react";
 
-import { useEffect, useState } from "react";
+// Import all SVG icons using SVGR
+// These are converted to React components at build time
+import CustomIcon from "../../public/app-icons/custom.svg";
+import DetailsIcon from "../../public/app-icons/details.svg";
+import EaForumIcon from "../../public/app-icons/ea-forum.svg";
+import EvaluationIcon from "../../public/app-icons/evaluation.svg";
+import EvaluatorIcon from "../../public/app-icons/evaluator.svg";
+import LessWrongIcon from "../../public/app-icons/lesswrong.svg";
+import OverviewIcon from "../../public/app-icons/overview.svg";
+import VersionsIcon from "../../public/app-icons/versions.svg";
 
 /**
  * AppIcon component
  * Displays an icon from the /app-icons/ directory
  *
- * SVG icons are inlined to support fill="currentColor", allowing icons to inherit
- * text color from parent elements via Tailwind color classes.
+ * SVG icons are inlined at build time via SVGR to support fill="currentColor",
+ * allowing icons to inherit text color from parent elements via Tailwind color classes.
  *
  * Available icons:
  * - custom
@@ -26,8 +35,17 @@ interface AppIconProps {
   className?: string;
 }
 
-// Cache raw SVG content (without size modifications)
-const svgCache = new Map<string, string>();
+// Map icon names to their imported SVG components
+const iconMap: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
+  custom: CustomIcon,
+  details: DetailsIcon,
+  "ea-forum": EaForumIcon,
+  evaluation: EvaluationIcon,
+  evaluator: EvaluatorIcon,
+  lesswrong: LessWrongIcon,
+  overview: OverviewIcon,
+  versions: VersionsIcon,
+};
 
 /**
  * Generic component for rendering app-level icons from /app-icons/
@@ -40,50 +58,19 @@ const svgCache = new Map<string, string>();
  * <AppIcon name="ea-forum" size={20} className="text-blue-500 hover:text-blue-700" />
  */
 export function AppIcon({ name, size = 20, className = '' }: AppIconProps) {
-  const [svgContent, setSvgContent] = useState<string>("");
+  const IconComponent = iconMap[name];
 
-  useEffect(() => {
-    const fetchSvg = async () => {
-      let rawSvg: string;
-
-      // Check cache first
-      if (svgCache.has(name)) {
-        rawSvg = svgCache.get(name)!;
-      } else {
-        try {
-          const response = await fetch(`/app-icons/${name}.svg`);
-          if (response.ok) {
-            rawSvg = await response.text();
-            svgCache.set(name, rawSvg);
-          } else {
-            return;
-          }
-        } catch (error) {
-          console.error(`Failed to load icon: ${name}`, error);
-          return;
-        }
-      }
-
-      // Apply size to the SVG content (not cached with size)
-      const modifiedSvg = rawSvg.replace(
-        /<svg([^>]*)>/,
-        `<svg$1 width="${size}" height="${size}">`
-      );
-      setSvgContent(modifiedSvg);
-    };
-
-    fetchSvg();
-  }, [name, size]);
-
-  if (!svgContent) {
+  if (!IconComponent) {
+    console.warn(`Icon "${name}" not found in iconMap`);
     return null;
   }
 
   return (
-    <span
+    <IconComponent
+      width={size}
+      height={size}
       className={`inline-block ${className}`}
-      style={{ width: size, height: size }}
-      dangerouslySetInnerHTML={{ __html: svgContent }}
+      aria-hidden="true"
     />
   );
 }

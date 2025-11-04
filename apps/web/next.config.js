@@ -86,6 +86,14 @@ const nextConfig = {
       use: "raw-loader",
     });
 
+    // Add SVG loader with SVGR
+    // Converts SVG files to React components, supporting fill="currentColor"
+    config.module.rules.push({
+      test: /\.svg$/i,
+      issuer: /\.[jt]sx?$/,
+      use: ['@svgr/webpack'],
+    });
+
     if (isServer) {
       // For server-side, externalize native modules
       config.externals = config.externals || [];
