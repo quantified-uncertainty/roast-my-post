@@ -1,5 +1,9 @@
 import { Plan } from "../types";
 import { prisma as defaultPrisma } from "../cli-client";
+import { NotFoundError, RateLimitError } from "./errors";
+
+// Re-export the error classes for backward compatibility
+export { NotFoundError, RateLimitError };
 
 function nextReset(now: Date, interval: 'hour' | 'month'): Date {
   const next = new Date(now);
@@ -21,29 +25,6 @@ function nextReset(now: Date, interval: 'hour' | 'month'): Date {
     }
   }
   return next;
-}
-
-/**
- * Error thrown when a resource is not found.
- */
-export class NotFoundError extends Error {
-  constructor(resource: string, id: string) {
-    super(`${resource} not found: ${id}`);
-    this.name = "NotFoundError";
-  }
-}
-
-/**
- * Error thrown when rate limit is exceeded.
- */
-export class RateLimitError extends Error {
-  constructor(
-    message: string,
-    public details?: { retryAfter?: Date }
-  ) {
-    super(message);
-    this.name = "RateLimitError";
-  }
 }
 
 const PLAN_LIMITS = {
