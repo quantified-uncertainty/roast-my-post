@@ -21,6 +21,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 
+import { AgentIcon } from "@/components/AgentIcon";
 import { Button } from "@/components/Button";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { AgentBadges } from "@/components/AgentBadges";
@@ -152,6 +153,7 @@ export function AgentDetailLayout({
       <div className="mb-8 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
+            <AgentIcon agentId={agent.id} size={28} />
             <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
               {agent.name}
             </h2>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Agent } from "@roast/ai";
 
 import { AgentBadges } from "./AgentBadges";
+import { AgentIcon } from "./AgentIcon";
 import { ROUTES } from "@/constants/routes";
 
 interface AgentsListProps {
@@ -30,6 +31,7 @@ export default function AgentsList({ agents }: AgentsListProps) {
             >
               <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
                 <div className="mb-2 flex items-center gap-3">
+                  <AgentIcon agentId={agent.id} size={32} />
                   <div>
                     <h3 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
                       {agent.name}
