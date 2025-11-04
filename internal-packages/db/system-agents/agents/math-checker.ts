@@ -3,7 +3,7 @@ import { createPluginBasedAgent } from "../utils/createPluginBasedAgent";
 
 export const mathCheckerAgent = createPluginBasedAgent({
   id: "system-math-checker",
-  name: "Math Checker",
+  name: "Math Check",
   description: "Verifies mathematical statements, calculations, and formulas for correctness",
   pluginIds: [PluginType.MATH],
   readmeId: "math-checker",

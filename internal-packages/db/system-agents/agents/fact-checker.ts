@@ -3,7 +3,7 @@ import { createPluginBasedAgent } from "../utils/createPluginBasedAgent";
 
 export const factCheckerAgent = createPluginBasedAgent({
   id: "system-fact-checker",
-  name: "Fact Checker",
+  name: "Fact Check",
   description: "Verifies factual claims and statements for accuracy using available knowledge",
   pluginIds: [PluginType.FACT_CHECK],
   readmeId: "fact-checker",
