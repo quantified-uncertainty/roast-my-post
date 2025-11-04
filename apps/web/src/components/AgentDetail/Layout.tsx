@@ -22,6 +22,7 @@ import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 
 import { AgentIcon } from "@/components/AgentIcon";
+import { AppIcon } from "@/components/AppIcon";
 import { Button } from "@/components/Button";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { AgentBadges } from "@/components/AgentBadges";
@@ -253,25 +254,25 @@ export function AgentDetailLayout({
           <TabLink
             href={ROUTES.AGENTS.DETAIL(agent.id)}
             tabName="overview"
-            icon={<User className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="overview" size={20} className="mr-2" />}
             label="Overview"
           />
           <TabLink
             href={ROUTES.AGENTS.DETAILS(agent.id)}
             tabName="details"
-            icon={<FileText className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="details" size={20} className="mr-2" />}
             label="Details"
           />
           <TabLink
             href={ROUTES.AGENTS.VERSIONS(agent.id)}
             tabName="versions"
-            icon={<Clock className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="versions" size={20} className="mr-2" />}
             label="Versions"
           />
           <TabLink
             href={ROUTES.AGENTS.EVALS(agent.id)}
             tabName="evals"
-            icon={<BarChart3 className="mr-2 h-5 w-5" />}
+            icon={<AppIcon name="evaluation" size={20} className="mr-2" />}
             label="Evals"
           />
           {(isOwner || isAdmin) && (

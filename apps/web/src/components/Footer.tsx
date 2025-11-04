@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { RssIcon } from "@heroicons/react/24/outline";
+import { Library, Info, BookOpen, ClipboardCheck } from "lucide-react";
+import { AppIcon } from "./AppIcon";
 import { EXTERNAL_URLS } from "@/shared/constants/constants";
 
 export default function Footer() {
@@ -22,28 +24,33 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-gray-900">Quick Links</h3>
             <ul className="mt-3 space-y-2">
               <li>
-                <Link href="/evaluators" className="text-sm text-gray-600 hover:text-gray-900">
-                  Evaluators
+                <Link href="/about" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                  <Info className="h-4 w-4" />
+                  <span>About</span>
                 </Link>
               </li>
               <li>
-                <Link href="/docs" className="text-sm text-gray-600 hover:text-gray-900">
-                  Public Documents
+                <Link href="/help" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                  <BookOpen className="h-4 w-4" />
+                  <span>Help & Docs</span>
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-sm text-gray-600 hover:text-gray-900">
-                  About
+                <Link href="/evaluators" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                  <AppIcon name="evaluator" size={16} className="" />
+                  <span>Evaluators</span>
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="text-sm text-gray-600 hover:text-gray-900">
-                  Help & Docs
+                <Link href="/docs" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                  <Library className="h-4 w-4" />
+                  <span>Public Documents</span>
                 </Link>
               </li>
               <li>
-                <Link href="/claim-evaluations" className="text-sm text-gray-600 hover:text-gray-900">
-                  Claim Evaluations
+                <Link href="/claim-evaluations" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                  <ClipboardCheck className="h-4 w-4" />
+                  <span>Claim Evaluations</span>
                 </Link>
               </li>
             </ul>

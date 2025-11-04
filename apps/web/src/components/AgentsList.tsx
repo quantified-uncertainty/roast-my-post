@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 
+import { ROUTES } from "@/constants/routes";
 import type { Agent } from "@roast/ai";
 
 import { AgentBadges } from "./AgentBadges";
 import { AgentIcon } from "./AgentIcon";
 import { AppIcon } from "./AppIcon";
-import { ROUTES } from "@/constants/routes";
 
 interface AgentsListProps {
   agents: Agent[];
@@ -16,8 +16,8 @@ interface AgentsListProps {
 export default function AgentsList({ agents }: AgentsListProps) {
   return (
     <div className="mx-auto max-w-6xl p-8">
-      <h1 className="mb-2 flex items-center gap-2 text-3xl font-bold">
-        <AppIcon name="evaluation" size={28} className="text-gray-500" />
+      <h1 className="mb-8 flex items-center gap-4 text-3xl font-bold text-gray-700">
+        <AppIcon name="evaluator" size={28} className="text-gray-500" />
         Evaluators
       </h1>
 

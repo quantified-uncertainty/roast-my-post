@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { sortEvaluationsByCommentCount } from "@/shared/utils/agentSorting";
 
 import { EvaluationCard } from "./EvaluationCard";
 import type { Document } from "@/shared/types/databaseTypes";
@@ -103,9 +104,9 @@ function EvaluationCardsHeaderComponent({
   }) {
     const [showMoreOpen, setShowMoreOpen] = useState(false);
     const maxVisible = 4;
-    // Filter out evaluations with 0 comments
-    const reviewsWithComments = document.reviews.filter(
-      (review) => review.comments && review.comments.length > 0
+    // Filter out evaluations with 0 comments and sort by comment count
+    const reviewsWithComments = sortEvaluationsByCommentCount(
+      document.reviews.filter((review) => review.comments && review.comments.length > 0)
     );
     const visibleReviews = reviewsWithComments.slice(0, maxVisible);
     const hiddenReviews = reviewsWithComments.slice(maxVisible);
@@ -260,7 +261,7 @@ function EvaluationCardsHeaderComponent({
         </AccordionTrigger>
         <AccordionContent className="border-t border-gray-100 px-4 pb-4 pt-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {document.reviews.map((review) => (
+            {sortEvaluationsByCommentCount(document.reviews).map((review) => (
               <EvaluationCard
                 key={review.agentId}
                 review={review}

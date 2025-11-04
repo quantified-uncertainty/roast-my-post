@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { UI_LABELS } from "@/constants/ui-labels";
+import { sortEvaluationsByCommentCount } from "@/shared/utils/agentSorting";
 import { getEvaluationGrade } from "@/shared/utils/type-guards";
 import {
   ChevronDownIcon,
@@ -39,6 +40,7 @@ interface Evaluation {
     status: JobStatus;
   }>;
   grade?: number | null;
+  comments?: Array<unknown>;
 }
 
 interface DocumentEvaluationSidebarProps {
@@ -77,7 +79,7 @@ export function DocumentEvaluationSidebar({
               : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
-          <DocumentTextIcon className="h-4 w-4" />
+          <AppIcon name="overview" size={16} />
           Overview
         </Link>
 
@@ -113,16 +115,7 @@ export function DocumentEvaluationSidebar({
 
           {isEvaluationsOpen && (
             <div className="mt-2 space-y-1">
-              {evaluations
-                .sort((a, b) => {
-                  // Sort by evaluator name for consistent ordering
-                  const nameA =
-                    a.agent?.name || a.agent?.versions?.[0]?.name || "";
-                  const nameB =
-                    b.agent?.name || b.agent?.versions?.[0]?.name || "";
-                  return nameA.localeCompare(nameB);
-                })
-                .map((evaluation) => {
+              {sortEvaluationsByCommentCount(evaluations).map((evaluation) => {
                   const agentName =
                     evaluation.agent?.name ||
                     evaluation.agent?.versions?.[0]?.name ||
