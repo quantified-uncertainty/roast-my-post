@@ -127,6 +127,9 @@ export function DocumentEvaluationSidebar({
                     evaluation.agent?.name ||
                     evaluation.agent?.versions?.[0]?.name ||
                     "Unknown Evaluator";
+                  const truncatedName = agentName.length > 20
+                    ? agentName.substring(0, 20) + "..."
+                    : agentName;
                   const grade = getEvaluationGrade(evaluation);
                   const agentId = evaluation.agentId;
                   const isActive = currentAgentId === agentId;
@@ -147,7 +150,7 @@ export function DocumentEvaluationSidebar({
                     >
                       <span className="flex flex-1 items-center gap-2">
                         <AgentIcon agentId={agentId} size={16} className="flex-shrink-0" />
-                        <span className="truncate">{agentName}</span>
+                        <span className="truncate" title={agentName}>{truncatedName}</span>
                       </span>
                       <div className="flex items-center gap-2">
                         {isOwner &&
