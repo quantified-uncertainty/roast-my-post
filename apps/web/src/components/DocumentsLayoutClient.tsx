@@ -326,7 +326,7 @@ export default function DocumentsLayoutClient({
                       )}
                       {sortAgentReviewsByCommentCount(
                         Object.entries(agentReviews),
-                        document.document.evaluations
+                        document.document.evaluations || []
                       ).map(([agentId, commentCount]) => {
                           const evaluation = document.document.evaluations.find(
                             (r) => r.agentId === agentId

@@ -612,9 +612,10 @@ export class DocumentModel {
     return {
       ...DocumentTransformer.transformDocumentBase(dbDoc),
       reviews: dbDoc.evaluations.map((evaluation: any) => {
+        const agentId = evaluation.agent.id;
         // Map all evaluation versions with basic metadata only
-        const evaluationVersions = evaluation.versions.map((version: any) => 
-          DocumentTransformer.transformEvaluationVersion(version, currentDocumentVersion)
+        const evaluationVersions = evaluation.versions.map((version: any) =>
+          DocumentTransformer.transformEvaluationVersion(version, currentDocumentVersion, agentId)
         );
 
         // Use the first version for main evaluation data

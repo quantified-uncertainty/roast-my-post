@@ -97,6 +97,9 @@ export function sortAgentReviewsByCommentCount(
   entries: AgentReviewEntry[],
   evaluations: EvaluationLookup[]
 ): AgentReviewEntry[] {
+  // Create lookup map for O(1) access instead of O(n) find()
+  const evalMap = new Map(evaluations.map((e) => [e.agentId, e]));
+
   return [...entries].sort((a, b) => {
     // Sort by comment count (descending)
     const commentCountA = a[1];
@@ -106,8 +109,8 @@ export function sortAgentReviewsByCommentCount(
     }
 
     // Within same comment count, sort alphabetically by agent name
-    const evalA = evaluations.find((r) => r.agentId === a[0]);
-    const evalB = evaluations.find((r) => r.agentId === b[0]);
+    const evalA = evalMap.get(a[0]);
+    const evalB = evalMap.get(b[0]);
     const nameA = evalA?.agent.name?.toLowerCase() || '';
     const nameB = evalB?.agent.name?.toLowerCase() || '';
     return nameA.localeCompare(nameB);

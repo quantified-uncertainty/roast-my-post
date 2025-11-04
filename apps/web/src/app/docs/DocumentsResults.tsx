@@ -178,7 +178,7 @@ export default function DocumentsResults({
                             )}
                             {sortAgentReviewsByCommentCount(
                               Object.entries(agentReviews),
-                              document.document.evaluations
+                              document.document.evaluations || []
                             ).map(([agentId, commentCount]) => {
                                 const evaluation =
                                   document.document.evaluations.find(
