@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
+import { AgentIcon } from "@/components/AgentIcon";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
@@ -50,7 +51,7 @@ export function EvaluationAnalysisSection({
                     href={ROUTES.AGENTS.DETAIL(evaluation.agentId)}
                     className="flex items-center gap-2 text-lg font-semibold text-blue-800 hover:text-blue-900 hover:underline"
                   >
-                    <Bot className="h-4 w-4" />
+                    <AgentIcon agentId={evaluation.agentId} size={24} />
                     {evaluation.agent.name}
                   </Link>
                   {!!evaluation.grade && (
@@ -155,8 +156,9 @@ export function EvaluationAnalysisSection({
                   <li key={evaluation.agentId}>
                     <a
                       href={`#eval-${evaluation.agentId}`}
-                      className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                      className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                     >
+                      <AgentIcon agentId={evaluation.agentId} size={16} />
                       {evaluation.agent.name}
                     </a>
                     <ul className="ml-4 mt-2 space-y-1">
