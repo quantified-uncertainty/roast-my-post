@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { Bot, FileDown, ShieldUser } from "lucide-react";
+import { FileDown, ShieldUser } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,6 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import type { JobStatus } from "@roast/db";
 
+import { AgentIcon } from "./AgentIcon";
 import { GradeBadge } from "./GradeBadge";
 import { JobStatusIndicator } from "./JobStatusIndicator";
 
@@ -99,7 +101,13 @@ export function DocumentEvaluationSidebar({
             className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100"
           >
             <span className="flex items-center gap-2">
-              <Bot className="h-4 w-4" />
+              <Image
+                src="/app-icons/evaluation.svg"
+                alt="AI Evaluations"
+                width={16}
+                height={16}
+                className="opacity-60"
+              />
               AI Evaluations
             </span>
             {isEvaluationsOpen ? (
@@ -143,7 +151,10 @@ export function DocumentEvaluationSidebar({
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
-                      <span className="flex-1 truncate">{agentName}</span>
+                      <span className="flex flex-1 items-center gap-2 truncate">
+                        <AgentIcon agentId={agentId} size={16} />
+                        {agentName}
+                      </span>
                       <div className="flex items-center gap-2">
                         {isOwner &&
                           latestJobStatus &&
