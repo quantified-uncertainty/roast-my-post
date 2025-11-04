@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AgentIcon } from "@/components/AgentIcon";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PrivacyBadge } from "@/components/PrivacyBadge";
 import {
@@ -173,6 +174,7 @@ export default function DocumentsResults({
                                     key={agentId}
                                     className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
                                   >
+                                    <AgentIcon agentId={agentId} size={14} />
                                     {evaluation?.agent.name || "Unknown Evaluator"}
                                     {hasGrade && (
                                       <GradeBadge
