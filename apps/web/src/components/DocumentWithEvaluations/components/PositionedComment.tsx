@@ -55,7 +55,6 @@ function AgentInfo({
   isHovered: boolean;
 }) {
   const textColor = isHovered ? "text-neutral-600" : "text-neutral-400";
-  console.log(agentId);
 
   return (
     <div
