@@ -192,11 +192,6 @@ const renderElement = ({
             // Search for the quoted text in the code block
             const quotedText = highlight.quotedText.trim();
 
-            // Skip if quoted text is too short or just punctuation
-            if (quotedText.length < TEXT_PROCESSING.MIN_HIGHLIGHT_LENGTH) {
-              return;
-            }
-
             // Check if the entire quoted text appears in the code block
             if (codeContent.includes(quotedText)) {
               // Find the first line that contains this quoted text

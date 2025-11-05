@@ -96,9 +96,16 @@ export function CommentsColumn({
   });
 
   // Compute minimum height using the dedicated hook
+  const allowedTags = useMemo(() => {
+    if (!isPartialReady) return undefined;
+    return matchedTags;
+  }, [isPartialReady, matchedTags]);
+
   const columnMinHeightPx = useColumnMinHeight({
-    comments: sortedComments,
+    comments: isPartialReady ? commentsForDisplay : sortedComments,
     commentPositions,
+    contentRef,
+    allowedTags,
   });
 
   // Memoize comment conversion to avoid repeated conversions

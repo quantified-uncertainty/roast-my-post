@@ -98,16 +98,19 @@ export function useCommentPositions(
 
   // Handle resize events with debouncing
   useEffect(() => {
-    if (!enabled || !contentRef.current) return;
+    if (!contentRef.current) return;
 
     let resizeTimeout: NodeJS.Timeout;
 
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        // Invalidate cache and recalculate on resize
+        // Invalidate cache on any resize
         positionCacheRef.current = {};
-        calculatePositions();
+        // Recalculate only when enabled; otherwise, next enable will recalc
+        if (enabled) {
+          calculatePositions();
+        }
       }, RESIZE_DEBOUNCE_DELAY);
     };
 
