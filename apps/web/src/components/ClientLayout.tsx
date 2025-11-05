@@ -1,9 +1,16 @@
 "use client";
 
-import { Bot, FileText, Users, Wrench, Home, BookOpen, Library, Plus } from "lucide-react";
+import {
+  BookOpen,
+  Bot,
+  Library,
+  Plus,
+  Wrench,
+} from "lucide-react";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 import AuthHeader from "./AuthHeader";
 import Footer from "./Footer";
@@ -28,9 +35,17 @@ export default function ClientLayout({
         <div className="flex items-center justify-between">
           <Link
             href={isLoggedIn ? "/my-documents" : "/"}
-            className="text-2xl font-bold text-gray-900 transition-colors hover:text-gray-700"
+            className="flex items-center gap-3 transition-opacity hover:cursor-pointer hover:opacity-60"
           >
-            Roast My Post
+            <Image
+              src="/logo/Roast-My-Post-logo.svg"
+              alt="Roast My Post"
+              width={30}
+              height={10}
+              priority
+              className="-mt-3"
+            />
+            <span className="text-lg font-black" style={{ color: "rgb(209, 137, 101)" }}>ROAST MY POST</span>
           </Link>
           <div className="flex items-center justify-between space-x-6">
             <nav className="flex items-center space-x-6">
