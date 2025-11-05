@@ -40,7 +40,7 @@ export async function importDocumentService(
       };
     }
 
-    const wordCount = processedArticle.content.trim().split(/\s+/).length;
+    const wordCount = processedArticle.content.trim().split(/\s+/).filter(word => word.length > 0).length;
     if (wordCount > MAX_DOCUMENT_WORD_COUNT) {
       return {
         success: false,
