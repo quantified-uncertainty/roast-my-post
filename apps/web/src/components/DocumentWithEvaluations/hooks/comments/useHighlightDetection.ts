@@ -10,7 +10,7 @@ export interface UseHighlightDetectionResult {
 
 /**
  * Hook to detect when highlight elements are ready in the DOM.
- * Monitors for data-tag elements and maintains a cache for performance.
+ * Monitors for data-tags elements and maintains a cache for performance.
  *
  * @param contentRef - Reference to the content container element
  * @param expectedCount - Expected number of highlights to wait for
@@ -111,13 +111,13 @@ export function useHighlightDetection(
           return addedNodes.some(
             (node) =>
               node instanceof Element &&
-              (node.hasAttribute("data-tag") ||
-                node.querySelector("[data-tag]"))
+              (node.hasAttribute("data-tags") ||
+                node.querySelector("[data-tags]"))
           );
         }
         return (
           mutation.type === "attributes" &&
-          mutation.attributeName === "data-tag"
+          mutation.attributeName === "data-tags"
         );
       });
     };
