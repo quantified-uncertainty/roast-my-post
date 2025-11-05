@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { MAX_DOCUMENT_WORD_COUNT } from "@roast/domain";
 
 // Content validation constants
 export const CONTENT_MIN_CHARS = 30;
-export const CONTENT_MAX_WORDS = 50000;
+export const CONTENT_MAX_WORDS = MAX_DOCUMENT_WORD_COUNT;
 
 // Schema for form validation
 export const documentSchema = z.object({

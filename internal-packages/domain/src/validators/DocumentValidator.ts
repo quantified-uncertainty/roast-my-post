@@ -1,9 +1,15 @@
 /**
  * Document Validator
- * 
+ *
  * Handles all document validation logic.
  * Pure functions with no external dependencies.
  */
+
+import {
+  MAX_DOCUMENT_WORD_COUNT,
+  MIN_DOCUMENT_CONTENT_LENGTH,
+  MAX_DOCUMENT_CONTENT_LENGTH,
+} from './constants';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -20,9 +26,9 @@ export interface ValidatedDocument {
 }
 
 export class DocumentValidator {
-  private readonly MIN_CONTENT_LENGTH = 100;
-  private readonly MAX_CONTENT_LENGTH = 100000;
-  private readonly MAX_WORD_COUNT = 50000;
+  private readonly MIN_CONTENT_LENGTH = MIN_DOCUMENT_CONTENT_LENGTH;
+  private readonly MAX_CONTENT_LENGTH = MAX_DOCUMENT_CONTENT_LENGTH;
+  private readonly MAX_WORD_COUNT = MAX_DOCUMENT_WORD_COUNT;
   private readonly MIN_TITLE_LENGTH = 1;
   private readonly MAX_TITLE_LENGTH = 200;
   private readonly MAX_AUTHOR_LENGTH = 100;
