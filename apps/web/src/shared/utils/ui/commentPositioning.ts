@@ -46,6 +46,17 @@ export function calculateCommentPositions(
 
   const containerRect = container.getBoundingClientRect();
   const newPositions: Record<string, number> = {};
+  let lastMatchedTop = 0; // Track the last matched highlight's top position
+
+  // Local fallback helper: push after last matched
+  const getFallbackPosition = (
+    _comment: Comment,
+    _index: number,
+    _container: HTMLElement,
+    _containerRect: DOMRect
+  ): number => {
+    return lastMatchedTop + COMMENT_POSITIONING.FALLBACK_COMMENT_BOTTOM_MARGIN;
+  };
 
   // Batch DOM reads for better performance
   const highlightRects = new Map<string, DOMRect>();
@@ -97,6 +108,9 @@ export function calculateCommentPositions(
       const adjustedPosition =
         relativeTop - COMMENT_POSITIONING.HIGHLIGHT_ALIGNMENT_OFFSET;
       newPositions[tag] = Math.max(0, adjustedPosition);
+      if (adjustedPosition > lastMatchedTop) {
+        lastMatchedTop = adjustedPosition;
+      }
     } else {
       // Fallback position if highlight not found
       const fallbackPosition = getFallbackPosition(
@@ -175,43 +189,6 @@ export function calculateCommentPositions(
   }
 
   return newPositions;
-}
-
-/**
- * Get fallback position for comments without highlights
- */
-function getFallbackPosition(
-  comment: Comment,
-  index: number,
-  container: HTMLElement,
-  containerRect: DOMRect
-): number {
-  if (comment?.highlight?.startOffset !== undefined) {
-    // Get total content length from the container's text content
-    const totalTextLength = container.textContent?.length || 10000;
-
-    // Calculate position as a percentage of the document
-    const offsetPercentage = Math.min(
-      comment.highlight.startOffset / totalTextLength,
-      1
-    );
-
-    // Get the actual scrollable height of the content
-    const scrollHeight = container.scrollHeight || containerRect.height;
-
-    // Position based on percentage of scrollable content
-    const estimatedPosition = offsetPercentage * scrollHeight;
-
-    // Ensure the position is within reasonable bounds
-    return Math.max(0, Math.min(estimatedPosition, scrollHeight - 100));
-  } else {
-    // Last resort: spread them out more evenly
-    const spacing = Math.max(
-      COMMENT_POSITIONING.FALLBACK_SPACING_MIN,
-      containerRect.height / Math.max(5, 5)
-    );
-    return COMMENT_POSITIONING.FALLBACK_COMMENT_BOTTOM_MARGIN + index * spacing;
-  }
 }
 
 /**

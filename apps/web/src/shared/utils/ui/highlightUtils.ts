@@ -206,7 +206,8 @@ export function testFindTextInContainer(
  * Clean up existing highlights
  */
 export function cleanupHighlights(container: HTMLElement): void {
-  const highlights = container.querySelectorAll("[data-tag]");
+  // Support both legacy data-tag and new data-tags attributes
+  const highlights = container.querySelectorAll("[data-tags], [data-tag]");
   highlights.forEach((highlight) => {
     const parent = highlight.parentNode;
     if (parent) {
