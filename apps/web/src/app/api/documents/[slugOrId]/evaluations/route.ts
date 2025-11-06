@@ -57,38 +57,31 @@ async function verifyAgents(agentIds: string[]) {
   return null;
 }
 
-async function createEvaluation(documentId: string, agentId: string) {
-  return await prisma.$transaction(async (tx) => {
-    const { getServices } = await import(
-      "@/application/services/ServiceFactory"
-    );
-    const transactionalServices = getServices().createTransactionalServices(tx);
+async function createEvaluation(documentId: string, agentId: string, userId: string) {
+  // Use EvaluationService for proper transaction handling
+  // This ensures evaluation + job are created atomically within a single transaction
+  const { getServices } = await import(
+    "@/application/services/ServiceFactory"
+  );
+  const { evaluationService } = getServices();
 
-    // Check if evaluation already exists
-    const existing = await tx.evaluation.findFirst({
-      where: { documentId, agentId },
-    });
-
-    if (existing) {
-      // Create new job for re-evaluation using JobService
-      const job = await transactionalServices.jobService.createJob(existing.id);
-
-      return { evaluation: existing, job, created: false };
-    }
-
-    // Create new evaluation
-    const evaluation = await tx.evaluation.create({
-      data: {
-        documentId,
-        agentId,
-      },
-    });
-
-    // Create job using JobService
-    const job = await transactionalServices.jobService.createJob(evaluation.id);
-
-    return { evaluation, job, created: true };
+  const result = await evaluationService.createEvaluation({
+    documentId,
+    agentId,
+    userId
   });
+
+  if (result.isError()) {
+    throw new Error(result.error()?.message || 'Failed to create evaluation');
+  }
+
+  const evaluationResult = result.unwrap();
+
+  return {
+    evaluationId: evaluationResult.evaluationId,
+    jobId: evaluationResult.jobId,
+    created: evaluationResult.created
+  };
 }
 
 // GET /api/documents/{documentId}/evaluations
@@ -306,12 +299,12 @@ export async function POST(
       const results = [];
       for (const agentId of agentIds) {
         try {
-          const result = await createEvaluation(documentId, agentId);
+          const result = await createEvaluation(documentId, agentId, userId);
           results.push({
             agentId,
-            evaluationId: result.evaluation.id,
-            jobId: result.job.id,
-            status: result.job.status.toLowerCase(),
+            evaluationId: result.evaluationId,
+            jobId: result.jobId,
+            status: 'pending',
             created: result.created,
           });
         } catch {
@@ -354,15 +347,15 @@ export async function POST(
 
       // 2. Create evaluation
       try {
-        const result = await createEvaluation(documentId, agentId);
+        const result = await createEvaluation(documentId, agentId, userId);
 
         // 3. Charge quota after successful creation
         await chargeQuota(userId, 1, { documentId, agentId });
 
         return NextResponse.json({
-          evaluationId: result.evaluation.id,
-          jobId: result.job.id,
-          status: result.job.status.toLowerCase(),
+          evaluationId: result.evaluationId,
+          jobId: result.jobId,
+          status: 'pending',
           created: result.created,
         });
       } catch {

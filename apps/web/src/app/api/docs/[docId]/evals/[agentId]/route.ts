@@ -92,53 +92,25 @@ export const POST = withSecurity(
       const quotaError = await checkQuotaAvailable(userId, 1);
       if (quotaError) return quotaError;
 
-      // Verify document exists
-      const document = await prisma.document.findUnique({
-        where: { id: docId },
+      // 2. Create or get existing evaluation (with proper transaction handling)
+      // EvaluationService handles document/agent verification internally
+      const { evaluationService } = getServices();
+      const result = await evaluationService.createEvaluation({
+        documentId: docId,
+        agentId,
+        userId
       });
 
-      if (!document) {
-        return commonErrors.notFound("Document not found");
-      }
-
-      // Verify agent exists
-      const agent = await prisma.agent.findUnique({
-        where: { id: agentId },
-      });
-
-      if (!agent) {
-        return commonErrors.notFound("Agent not found");
-      }
-
-      // 2. Create or get existing evaluation
-      const result = await prisma.$transaction(async (tx) => {
-        const transactionalServices = getServices().createTransactionalServices(tx);
-
-        // Check if evaluation already exists
-        const existing = await tx.evaluation.findFirst({
-          where: { documentId: docId, agentId }
-        });
-
-        if (existing) {
-          // Create new job for re-evaluation using JobService
-          const job = await transactionalServices.jobService.createJob(existing.id);
-
-          return { evaluation: existing, job, created: false };
+      if (result.isError()) {
+        const error = result.error();
+        if (error?.code === 'NOT_FOUND') {
+          return commonErrors.notFound(error.message);
         }
+        logger.error('Error creating evaluation:', error);
+        return commonErrors.serverError();
+      }
 
-        // Create new evaluation
-        const evaluation = await tx.evaluation.create({
-          data: {
-            documentId: docId,
-            agentId,
-          }
-        });
-
-        // Create job using JobService
-        const job = await transactionalServices.jobService.createJob(evaluation.id);
-
-        return { evaluation, job, created: true };
-      });
+      const evaluationResult = result.unwrap();
 
       // 3. Charge quota after successful creation
       await chargeQuota(userId, 1, { docId, agentId });
@@ -146,16 +118,16 @@ export const POST = withSecurity(
       return NextResponse.json({
         success: true,
         evaluation: {
-          id: result.evaluation.id,
+          id: evaluationResult.evaluationId,
           documentId: docId,
           agentId,
-          created: result.created,
+          created: evaluationResult.created,
         },
         job: {
-          id: result.job.id,
-          status: result.job.status,
+          id: evaluationResult.jobId,
+          status: 'PENDING',
         },
-        message: result.created
+        message: evaluationResult.created
           ? "Evaluation created successfully"
           : "Evaluation re-run initiated",
       });

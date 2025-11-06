@@ -49,14 +49,24 @@ vi.mock('@/infrastructure/auth/privacy-service', () => ({
   },
 }));
 
-// Mock the ServiceFactory 
-const mockJobService = {
-  createJob: vi.fn().mockResolvedValue({ id: "job-123", status: "PENDING" }),
+// Mock the ServiceFactory with EvaluationService
+const mockEvaluationService = {
+  createEvaluation: vi.fn().mockResolvedValue({
+    isError: () => false,
+    unwrap: () => ({
+      evaluationId: 'eval-123',
+      agentId: 'agent-123',
+      jobId: 'job-123',
+      created: true
+    }),
+    error: () => null,
+  }),
 };
 
 const mockGetServices = vi.fn(() => ({
+  evaluationService: mockEvaluationService,
   createTransactionalServices: vi.fn(() => ({
-    jobService: mockJobService,
+    jobService: { createJob: vi.fn() }, // Keep for backwards compatibility if needed
   })),
 }));
 
@@ -240,7 +250,6 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockJobService.createJob.mockClear();
   });
 
   it('should require authentication', async () => {
@@ -271,50 +280,35 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
 
   it('should create evaluation job', async () => {
     (authenticateRequest as vi.MockedFunction<any>).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
+    (prisma.document.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({
       id: mockDocId,
-      submittedById: mockUser.id, // Add this so the user owns the document
-    });
-    
-    const mockAgent = {
-      id: 'agent-123',
-    };
-    
-    const mockEvaluation = {
-      id: 'eval-123',
-    };
-    
-    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce(mockAgent);
-    (prisma.agent.findMany as vi.MockedFunction<any>).mockResolvedValueOnce([mockAgent]);
-    (prisma.$transaction as vi.MockedFunction<any>).mockImplementation(async (callback) => {
-      const mockTx = {
-        evaluation: {
-          findFirst: vi.fn().mockResolvedValueOnce(null),
-          create: vi.fn().mockResolvedValueOnce(mockEvaluation),
-        },
-      };
-      return await callback(mockTx);
+      submittedById: mockUser.id, // User owns the document
     });
 
+    // Mock agent exists check for verifyAgents()
+    const mockAgent = { id: 'agent-123' };
+    (prisma.agent.findMany as vi.MockedFunction<any>).mockResolvedValueOnce([mockAgent]);
+
+    // EvaluationService is already mocked at the top to return success
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agentId: 'agent-123' }),
     });
-    
+
     const response = await POST(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
-    
+
     if (response.status !== 200) {
       const errorData = await response.json();
       console.error('Test error:', response.status, errorData);
     }
-    
+
     expect(response.status).toBe(200);
-    
+
     const data = await response.json();
     expect(data).toEqual({
-      evaluationId: mockEvaluation.id,
-      jobId: "job-123",
+      evaluationId: 'eval-123',
+      jobId: 'job-123',
       status: 'pending',
       created: true,
     });

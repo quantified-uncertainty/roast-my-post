@@ -44,29 +44,28 @@ export async function updateDocumentWithAgents(
   const existingAgentIds = new Set(existingEvaluations.map(e => e.agentId));
   const newAgentIds = intendedAgentIds.filter(agentId => !existingAgentIds.has(agentId));
 
+  // Use EvaluationService for proper transaction handling
+  const { evaluationService } = getServices();
+
   const createdEvaluations = [];
   for (const agentId of newAgentIds) {
     try {
-      const result = await prisma.$transaction(async (tx) => {
-        // Create the evaluation
-        const evaluation = await tx.evaluation.create({
-          data: {
-            documentId,
-            agentId: agentId,
-          },
-        });
-
-        // Create the job using JobService for consistency
-        const transactionalServices = getServices().createTransactionalServices(tx);
-        const job = await transactionalServices.jobService.createJob(evaluation.id);
-
-        return { evaluation, job };
+      const result = await evaluationService.createEvaluation({
+        documentId,
+        agentId,
+        userId: _userId
       });
 
+      if (result.isError()) {
+        logger.error(`Failed to create evaluation for agent ${agentId}:`, result.error());
+        continue;
+      }
+
+      const evaluationResult = result.unwrap();
       createdEvaluations.push({
-        evaluationId: result.evaluation.id,
+        evaluationId: evaluationResult.evaluationId,
         agentId: agentId,
-        jobId: result.job.id,
+        jobId: evaluationResult.jobId,
       });
     } catch (error) {
       logger.error(`Failed to create evaluation for agent ${agentId}:`, error);
