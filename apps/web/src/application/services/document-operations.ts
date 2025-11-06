@@ -1,5 +1,6 @@
 import { prisma } from "@/infrastructure/database/prisma";
 import { logger } from "@/infrastructure/logging/logger";
+import { getServices } from "@/application/services/ServiceFactory";
 
 export async function updateDocumentWithAgents(
   documentId: string, 
@@ -56,7 +57,6 @@ export async function updateDocumentWithAgents(
         });
 
         // Create the job using JobService for consistency
-        const { getServices } = await import("@/application/services/ServiceFactory");
         const transactionalServices = getServices().createTransactionalServices(tx);
         const job = await transactionalServices.jobService.createJob(evaluation.id);
 

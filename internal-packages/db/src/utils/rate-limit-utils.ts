@@ -92,9 +92,32 @@ export function formatQuotaErrorMessage(quotaCheck: QuotaCheck, requestedCount: 
 }
 
 /**
+ * Validates user has sufficient quota, throws formatted error if not.
+ * Use this in server actions before expensive operations.
+ *
+ * This is a convenience wrapper around checkAvailableQuota + formatQuotaErrorMessage.
+ *
+ * @throws {Error} With formatted quota error message if insufficient quota
+ * @throws {NotFoundError} If user not found
+ */
+export async function validateQuota(
+  userId: string,
+  prisma: typeof defaultPrisma,
+  requestedCount: number
+): Promise<void> {
+  const quotaCheck = await checkAvailableQuota(userId, prisma, requestedCount);
+
+  if (!quotaCheck.hasEnoughQuota) {
+    throw new Error(formatQuotaErrorMessage(quotaCheck, requestedCount));
+  }
+}
+
+/**
  * Check if a user has enough available quota for a requested number of evaluations.
  * This is a lightweight check that does NOT increment counters.
  * Use this before expensive operations to provide early feedback to users.
+ *
+ * For server actions, consider using validateQuota() instead which throws on insufficient quota.
  */
 export async function checkAvailableQuota(
   userId: string,
@@ -210,7 +233,14 @@ export async function incrementRateLimit(
       throw new RateLimitError(`Rate limit exceeded for ${user.plan} plan`, { retryAfter });
     }
 
-    const successUpdates: any = {
+    interface RateLimitUpdate {
+      evalsThisHour: number | { increment: number };
+      evalsThisMonth: number | { increment: number };
+      hourResetAt?: Date;
+      monthResetAt?: Date;
+    }
+
+    const successUpdates: RateLimitUpdate = {
       evalsThisHour: needsHourlyReset ? count : { increment: count },
       evalsThisMonth: needsMonthlyReset ? count : { increment: count },
     };

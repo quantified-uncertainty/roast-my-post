@@ -6,7 +6,8 @@ import { logger } from "@/infrastructure/logging/logger";
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/infrastructure/database/prisma";
-import { checkAvailableQuota, formatQuotaErrorMessage, incrementRateLimit, RateLimitError } from "@roast/db";
+import { validateQuota } from "@roast/db";
+import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -26,13 +27,13 @@ export async function rerunEvaluation(
       };
     }
 
-    // 1. Soft check: Do they have enough quota?
-    const quotaCheck = await checkAvailableQuota(session.user.id, prisma, 1);
-
-    if (!quotaCheck.hasEnoughQuota) {
+    // 1. Soft check: Verify quota availability
+    try {
+      await validateQuota(session.user.id, prisma, 1);
+    } catch (error) {
       return {
         success: false,
-        error: formatQuotaErrorMessage(quotaCheck, 1)
+        error: error instanceof Error ? error.message : "Insufficient quota"
       };
     }
 
@@ -43,18 +44,8 @@ export async function rerunEvaluation(
       session.user.id
     );
 
-    // 3. Hard charge ONLY after success
-    try {
-      await incrementRateLimit(session.user.id, prisma, 1);
-    } catch (error) {
-      logger.error('⚠️ BILLING ISSUE: Rate limit increment failed after successful evaluation rerun', {
-        userId: session.user.id,
-        documentId,
-        agentId,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      // Don't fail the request - operation already succeeded
-    }
+    // 3. Charge quota after success
+    await chargeQuotaForServerAction(session.user.id, 1, { documentId, agentId });
 
     // Revalidate pages that might be affected
     revalidatePath(`/docs/${documentId}/evals/${agentId}`);
@@ -91,13 +82,13 @@ export async function createOrRerunEvaluation(
       };
     }
 
-    // 1. Soft check: Do they have enough quota?
-    const quotaCheck = await checkAvailableQuota(session.user.id, prisma, 1);
-
-    if (!quotaCheck.hasEnoughQuota) {
+    // 1. Soft check: Verify quota availability
+    try {
+      await validateQuota(session.user.id, prisma, 1);
+    } catch (error) {
       return {
         success: false,
-        error: formatQuotaErrorMessage(quotaCheck, 1)
+        error: error instanceof Error ? error.message : "Insufficient quota"
       };
     }
 
@@ -108,18 +99,8 @@ export async function createOrRerunEvaluation(
       session.user.id
     );
 
-    // 3. Hard charge ONLY after success
-    try {
-      await incrementRateLimit(session.user.id, prisma, 1);
-    } catch (error) {
-      logger.error('⚠️ BILLING ISSUE: Rate limit increment failed after successful evaluation creation', {
-        userId: session.user.id,
-        documentId,
-        agentId,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      // Don't fail the request - operation already succeeded
-    }
+    // 3. Charge quota after success
+    await chargeQuotaForServerAction(session.user.id, 1, { documentId, agentId });
 
     // Revalidate the document page
     revalidatePath(`/docs/${documentId}`);

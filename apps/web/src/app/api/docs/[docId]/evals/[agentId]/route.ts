@@ -9,6 +9,7 @@ import { withSecurity } from "@/infrastructure/http/security-middleware";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
 import { PrivacyService } from "@/infrastructure/auth/privacy-service";
+import { getServices } from "@/application/services/ServiceFactory";
 
 const createEvaluationSchema = z.object({
   // Currently no body parameters needed
@@ -111,7 +112,6 @@ export const POST = withSecurity(
 
       // 2. Create or get existing evaluation
       const result = await prisma.$transaction(async (tx) => {
-        const { getServices } = await import("@/application/services/ServiceFactory");
         const transactionalServices = getServices().createTransactionalServices(tx);
 
         // Check if evaluation already exists

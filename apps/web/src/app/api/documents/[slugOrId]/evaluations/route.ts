@@ -4,7 +4,7 @@ import { z } from "zod";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
 import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
-import { prisma, Plan } from "@roast/db";
+import { prisma } from "@roast/db";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({

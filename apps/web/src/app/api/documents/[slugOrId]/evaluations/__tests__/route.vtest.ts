@@ -30,11 +30,16 @@ vi.mock('@roast/db', () => ({
     PRO: 'PRO',
   },
   RateLimitError: class RateLimitError extends Error {},
-  checkAndIncrementRateLimit: vi.fn(),
 }));
 
 vi.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: vi.fn(),
+}));
+
+// Mock rate limiting handlers
+vi.mock('@/infrastructure/http/rate-limit-handler', () => ({
+  checkQuotaAvailable: vi.fn().mockResolvedValue(null), // null = quota available
+  chargeQuota: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock PrivacyService
