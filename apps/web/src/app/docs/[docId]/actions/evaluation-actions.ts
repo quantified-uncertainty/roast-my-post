@@ -8,6 +8,7 @@ import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/infrastructure/database/prisma";
 import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
+import { assertSystemNotPaused, SystemPausedError } from "@roast/db";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -25,6 +26,19 @@ export async function rerunEvaluation(
         success: false,
         error: "User must be logged in to rerun an evaluation",
       };
+    }
+
+    // 0. Check if system is paused
+    try {
+      await assertSystemNotPaused();
+    } catch (error) {
+      if (error instanceof SystemPausedError) {
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+      throw error;
     }
 
     // 1. Soft check: Verify quota availability
@@ -84,6 +98,19 @@ export async function createOrRerunEvaluation(
         success: false,
         error: "User must be logged in to create an evaluation",
       };
+    }
+
+    // 0. Check if system is paused
+    try {
+      await assertSystemNotPaused();
+    } catch (error) {
+      if (error instanceof SystemPausedError) {
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+      throw error;
     }
 
     // 1. Soft check: Verify quota availability
