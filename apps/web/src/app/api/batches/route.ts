@@ -5,6 +5,7 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { z } from "zod";
 import { generateId } from "@roast/db";
 import { calculateJobStats } from "@/shared/utils/batch-utils";
+import { getServices } from "@/application/services/ServiceFactory";
 
 // Schema for ephemeral agent creation
 const ephemeralAgentSchema = z.object({
@@ -217,7 +218,6 @@ export async function POST(request: NextRequest) {
       }
 
       // Create evaluations and jobs for each document
-      const { getServices } = await import("@/application/services/ServiceFactory");
       const transactionalServices = getServices().createTransactionalServices(tx);
       
       for (const documentId of documentsToProcess) {

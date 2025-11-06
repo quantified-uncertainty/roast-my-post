@@ -6,7 +6,8 @@ import { logger } from "@/infrastructure/logging/logger";
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/infrastructure/database/prisma";
-import { checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
+import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
+import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -26,13 +27,29 @@ export async function rerunEvaluation(
       };
     }
 
-    await checkAndIncrementRateLimit(session.user.id, prisma, 1);
+    // 1. Soft check: Verify quota availability
+    try {
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: 1 });
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Insufficient quota"
+      };
+    }
 
+    // 2. Do the operation
     await DocumentModel.rerunEvaluation(
       agentId,
       documentId,
       session.user.id
     );
+
+    // 3. Charge quota after success
+    await chargeQuotaForServerAction({
+      userId: session.user.id,
+      chargeCount: 1,
+      context: { documentId, agentId }
+    });
 
     // Revalidate pages that might be affected
     revalidatePath(`/docs/${documentId}/evals/${agentId}`);
@@ -40,12 +57,6 @@ export async function rerunEvaluation(
 
     return { success: true };
   } catch (error) {
-    if (error instanceof RateLimitError) {
-      return {
-        success: false,
-        error: "Evaluation rate limit exceeded. Please try again later.",
-      };
-    }
 
     logger.error('Error creating job for evaluation:', error);
     return {
@@ -75,25 +86,35 @@ export async function createOrRerunEvaluation(
       };
     }
 
-    await checkAndIncrementRateLimit(session.user.id, prisma, 1);
+    // 1. Soft check: Verify quota availability
+    try {
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: 1 });
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Insufficient quota"
+      };
+    }
 
+    // 2. Do the operation
     await DocumentModel.createOrRerunEvaluation(
       agentId,
       documentId,
       session.user.id
     );
 
+    // 3. Charge quota after success
+    await chargeQuotaForServerAction({
+      userId: session.user.id,
+      chargeCount: 1,
+      context: { documentId, agentId }
+    });
+
     // Revalidate the document page
     revalidatePath(`/docs/${documentId}`);
 
     return { success: true };
   } catch (error) {
-    if (error instanceof RateLimitError) {
-      return {
-        success: false,
-        error: "Evaluation rate limit exceeded. Please try again later.",
-      };
-    }
     logger.error('Error creating or rerunning evaluation:', error);
     return {
       success: false,

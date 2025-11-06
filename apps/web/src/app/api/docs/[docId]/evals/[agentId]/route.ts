@@ -7,8 +7,9 @@ import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
-import { handleRateLimitCheck } from "@/infrastructure/http/rate-limit-handler";
+import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
 import { PrivacyService } from "@/infrastructure/auth/privacy-service";
+import { getServices } from "@/application/services/ServiceFactory";
 
 const createEvaluationSchema = z.object({
   // Currently no body parameters needed
@@ -87,71 +88,46 @@ export const POST = withSecurity(
     // userId is injected by withSecurity and used for rate limiting
 
     try {
-      const rateLimitError = await handleRateLimitCheck(userId, 1);
-      if (rateLimitError) return rateLimitError;
+      // 1. Soft check: Do they have enough quota?
+      const quotaError = await checkQuotaAvailable({ userId, requestedCount: 1 });
+      if (quotaError) return quotaError;
 
-      // Verify document exists
-      const document = await prisma.document.findUnique({
-      where: { id: docId },
-    });
-
-    if (!document) {
-      return commonErrors.notFound("Document not found");
-    }
-
-    // Verify agent exists
-    const agent = await prisma.agent.findUnique({
-      where: { id: agentId },
-    });
-
-    if (!agent) {
-      return commonErrors.notFound("Agent not found");
-    }
-
-    // Create or get existing evaluation
-    const result = await prisma.$transaction(async (tx) => {
-      const { getServices } = await import("@/application/services/ServiceFactory");
-      const transactionalServices = getServices().createTransactionalServices(tx);
-      
-      // Check if evaluation already exists
-      const existing = await tx.evaluation.findFirst({
-        where: { documentId: docId, agentId }
+      // 2. Create or get existing evaluation (with proper transaction handling)
+      // EvaluationService handles document/agent verification internally
+      const { evaluationService } = getServices();
+      const result = await evaluationService.createEvaluation({
+        documentId: docId,
+        agentId,
+        userId
       });
-      
-      if (existing) {
-        // Create new job for re-evaluation using JobService
-        const job = await transactionalServices.jobService.createJob(existing.id);
-        
-        return { evaluation: existing, job, created: false };
-      }
-      
-      // Create new evaluation
-      const evaluation = await tx.evaluation.create({
-        data: {
-          documentId: docId,
-          agentId,
+
+      if (result.isError()) {
+        const error = result.error();
+        if (error?.code === 'NOT_FOUND') {
+          return commonErrors.notFound(error.message);
         }
-      });
-      
-      // Create job using JobService
-      const job = await transactionalServices.jobService.createJob(evaluation.id);
-      
-      return { evaluation, job, created: true };
-    });
+        logger.error('Error creating evaluation:', error);
+        return commonErrors.serverError();
+      }
+
+      const evaluationResult = result.unwrap();
+
+      // 3. Charge quota after successful creation
+      await chargeQuota({ userId, chargeCount: 1, context: { docId, agentId } });
 
       return NextResponse.json({
         success: true,
         evaluation: {
-          id: result.evaluation.id,
+          id: evaluationResult.evaluationId,
           documentId: docId,
           agentId,
-          created: result.created,
+          created: evaluationResult.created,
         },
         job: {
-          id: result.job.id,
-          status: result.job.status,
+          id: evaluationResult.jobId,
+          status: 'PENDING',
         },
-        message: result.created 
+        message: evaluationResult.created
           ? "Evaluation created successfully"
           : "Evaluation re-run initiated",
       });
