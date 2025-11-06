@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/logger";
 import { processArticle } from "@/infrastructure/external/articleImport";
-import { ValidationError } from '@roast/domain';
+import { ValidationError, MAX_DOCUMENT_WORD_COUNT } from '@roast/domain';
 import { getServices } from "./ServiceFactory";
 
 export interface ImportDocumentResult {
@@ -40,11 +40,11 @@ export async function importDocumentService(
       };
     }
 
-    const wordCount = processedArticle.content.trim().split(/\s+/).length;
-    if (wordCount > 50000) {
+    const wordCount = processedArticle.content.trim().split(/\s+/).filter(word => word.length > 0).length;
+    if (wordCount > MAX_DOCUMENT_WORD_COUNT) {
       return {
         success: false,
-        error: `Article content exceeds the maximum limit of 50,000 words (found ${wordCount.toLocaleString()} words). Please use a shorter document or split it into multiple parts.`
+        error: `Article content exceeds the maximum limit of ${MAX_DOCUMENT_WORD_COUNT} words (found ${wordCount} words). Please use a shorter document or split it into multiple parts.`
       };
     }
 

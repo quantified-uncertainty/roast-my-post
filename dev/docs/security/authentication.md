@@ -211,21 +211,21 @@ import { z } from 'zod';
 
 const CreateDocumentSchema = z.object({
   title: z.string().min(1).max(200),
-  content: z.string().max(50000),
+  content: z.string().max(100000),
   metadata: z.record(z.unknown()).optional()
 });
 
 export async function POST(request: Request) {
   const userId = await authenticateRequest(request);
   if (!userId) return unauthorized();
-  
+
   const body = await request.json();
   const validated = CreateDocumentSchema.safeParse(body);
-  
+
   if (!validated.success) {
     return badRequest('Invalid input', validated.error.errors);
   }
-  
+
   // Use validated.data
 }
 ```
