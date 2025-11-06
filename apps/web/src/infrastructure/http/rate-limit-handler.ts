@@ -1,26 +1,54 @@
 import { NextResponse } from "next/server";
 
-import { prisma, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
+import { prisma } from "@roast/db";
+import { logger } from "@/infrastructure/logging/logger";
+import { checkAvailableQuota, formatQuotaErrorMessage, incrementRateLimit } from "@/infrastructure/rate-limiting/rate-limit-service";
 
-export async function handleRateLimitCheck(userId: string, count: number) {
+/**
+ * Soft check for quota availability. Returns error response if insufficient quota.
+ * Use this BEFORE performing expensive operations.
+ */
+export async function checkQuotaAvailable({
+  userId,
+  requestedCount
+}: {
+  userId: string;
+  requestedCount: number;
+}): Promise<NextResponse | null> {
+  const quotaCheck = await checkAvailableQuota(userId, prisma, requestedCount);
+
+  if (!quotaCheck.hasEnoughQuota) {
+    return NextResponse.json(
+      { error: formatQuotaErrorMessage(quotaCheck, requestedCount) },
+      { status: 429 }
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Increment quota counters after successful operation.
+ * Use this AFTER your operation succeeds. Does not throw on failure.
+ */
+export async function chargeQuota({
+  userId,
+  chargeCount,
+  context
+}: {
+  userId: string;
+  chargeCount: number;
+  context?: Record<string, any>;
+}): Promise<void> {
   try {
-    await checkAndIncrementRateLimit(userId, prisma, count);
-    return null;
+    await incrementRateLimit(userId, prisma, chargeCount);
   } catch (error) {
-    if (error instanceof RateLimitError) {
-      const headers: Record<string, string> = {};
-      if (error.details?.retryAfter) {
-        const seconds = Math.max(
-          1,
-          Math.ceil((error.details.retryAfter.getTime() - Date.now()) / 1000)
-        );
-        headers["Retry-After"] = String(seconds);
-      }
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later." },
-        { status: 429, headers }
-      );
-    }
-    throw error;
+    // Don't throw - operation already succeeded, this is a billing/reconciliation issue
+    logger.error('⚠️ BILLING ISSUE: Rate limit increment failed after successful operation', {
+      userId,
+      requestedCount: chargeCount,
+      context,
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 }

@@ -6,7 +6,9 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/infrastructure/auth/auth";
 import { ValidationError } from '@roast/domain';
-import { prisma, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
+import { prisma } from "@roast/db";
+import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
+import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 import { getServices } from "@/application/services/ServiceFactory";
 
 import { type DocumentInput } from "./schema";
@@ -19,19 +21,12 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
       throw new Error("User must be logged in to create a document");
     }
 
+    // 1. Soft check: Verify quota availability
     if (agentIds.length > 0) {
-      try {
-        await checkAndIncrementRateLimit(session.user.id, prisma, agentIds.length);
-      } catch (error) {
-        if (error instanceof RateLimitError) {
-          throw new Error("Evaluation rate limit exceeded. Please try again later.");
-        }
-        // Re-throw other errors
-        throw error;
-      }
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: agentIds.length });
     }
 
-    // Create the document using the new DocumentService
+    // 2. Create the document using the new DocumentService
     const { documentService } = getServices();
     const result = await documentService.createDocument(
       session.user.id,
@@ -58,6 +53,15 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
     }
 
     const document = result.unwrap();
+
+    // 3. Charge quota after success
+    if (agentIds.length > 0) {
+      await chargeQuotaForServerAction({
+        userId: session.user.id,
+        chargeCount: agentIds.length,
+        context: { documentId: document.id, agentIds }
+      });
+    }
 
     // DocumentService handles evaluation creation when agentIds are provided
 

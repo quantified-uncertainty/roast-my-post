@@ -3,8 +3,9 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
-import { handleRateLimitCheck } from "@/infrastructure/http/rate-limit-handler";
-import { prisma, Plan } from "@roast/db";
+import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
+import { prisma } from "@roast/db";
+import { getServices } from "@/application/services/ServiceFactory";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({
@@ -57,38 +58,28 @@ async function verifyAgents(agentIds: string[]) {
   return null;
 }
 
-async function createEvaluation(documentId: string, agentId: string) {
-  return await prisma.$transaction(async (tx) => {
-    const { getServices } = await import(
-      "@/application/services/ServiceFactory"
-    );
-    const transactionalServices = getServices().createTransactionalServices(tx);
+async function createEvaluation(documentId: string, agentId: string, userId: string) {
+  // Use EvaluationService for proper transaction handling
+  // This ensures evaluation + job are created atomically within a single transaction
+  const { evaluationService } = getServices();
 
-    // Check if evaluation already exists
-    const existing = await tx.evaluation.findFirst({
-      where: { documentId, agentId },
-    });
-
-    if (existing) {
-      // Create new job for re-evaluation using JobService
-      const job = await transactionalServices.jobService.createJob(existing.id);
-
-      return { evaluation: existing, job, created: false };
-    }
-
-    // Create new evaluation
-    const evaluation = await tx.evaluation.create({
-      data: {
-        documentId,
-        agentId,
-      },
-    });
-
-    // Create job using JobService
-    const job = await transactionalServices.jobService.createJob(evaluation.id);
-
-    return { evaluation, job, created: true };
+  const result = await evaluationService.createEvaluation({
+    documentId,
+    agentId,
+    userId
   });
+
+  if (result.isError()) {
+    throw new Error(result.error()?.message || 'Failed to create evaluation');
+  }
+
+  const evaluationResult = result.unwrap();
+
+  return {
+    evaluationId: evaluationResult.evaluationId,
+    jobId: evaluationResult.jobId,
+    created: evaluationResult.created
+  };
 }
 
 // GET /api/documents/{documentId}/evaluations
@@ -298,20 +289,20 @@ export async function POST(
       const agentError = await verifyAgents(agentIds);
       if (agentError) return agentError;
 
-      // Rate limiting check
-      const rateLimitError = await handleRateLimitCheck(userId, agentIds.length);
-      if (rateLimitError) return rateLimitError;
+      // 1. Soft check: Do they have enough quota?
+      const quotaError = await checkQuotaAvailable({ userId, requestedCount: agentIds.length });
+      if (quotaError) return quotaError;
 
-      // Create evaluations for all agents
+      // 2. Create evaluations for all agents
       const results = [];
       for (const agentId of agentIds) {
         try {
-          const result = await createEvaluation(documentId, agentId);
+          const result = await createEvaluation(documentId, agentId, userId);
           results.push({
             agentId,
-            evaluationId: result.evaluation.id,
-            jobId: result.job.id,
-            status: result.job.status.toLowerCase(),
+            evaluationId: result.evaluationId,
+            jobId: result.jobId,
+            status: 'pending',
             created: result.created,
           });
         } catch {
@@ -322,6 +313,9 @@ export async function POST(
           });
         }
       }
+
+      // 3. Charge quota after successful creation
+      await chargeQuota({ userId, chargeCount: agentIds.length, context: { documentId, agentIds } });
 
       return NextResponse.json({
         evaluations: results,
@@ -345,18 +339,21 @@ export async function POST(
       const agentError = await verifyAgents([agentId]);
       if (agentError) return agentError;
 
-      // Rate limiting check
-      const rateLimitError = await handleRateLimitCheck(userId, 1);
-      if (rateLimitError) return rateLimitError;
+      // 1. Soft check: Do they have enough quota?
+      const quotaError = await checkQuotaAvailable({ userId, requestedCount: 1 });
+      if (quotaError) return quotaError;
 
-      // Create evaluation
+      // 2. Create evaluation
       try {
-        const result = await createEvaluation(documentId, agentId);
+        const result = await createEvaluation(documentId, agentId, userId);
+
+        // 3. Charge quota after successful creation
+        await chargeQuota({ userId, chargeCount: 1, context: { documentId, agentId } });
 
         return NextResponse.json({
-          evaluationId: result.evaluation.id,
-          jobId: result.job.id,
-          status: result.job.status.toLowerCase(),
+          evaluationId: result.evaluationId,
+          jobId: result.jobId,
+          status: 'pending',
           created: result.created,
         });
       } catch {

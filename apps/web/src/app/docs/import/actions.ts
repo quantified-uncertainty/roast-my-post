@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { importDocumentService } from "@/application/services/documentImport";
 import { logger } from "@/infrastructure/logging/logger";
-import { prisma, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
+import { prisma } from "@roast/db";
+import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
+import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 
 export async function importDocument(url: string, agentIds: string[] = [], isPrivate: boolean = true) {
   try {
@@ -16,22 +18,25 @@ export async function importDocument(url: string, agentIds: string[] = [], isPri
       throw new Error("User must be logged in to import a document");
     }
 
+    // 1. Soft check: Verify quota availability
     if (agentIds.length > 0) {
-      try {
-        await checkAndIncrementRateLimit(session.user.id, prisma, agentIds.length);
-      } catch (error) {
-        if (error instanceof RateLimitError) {
-          throw new Error("Evaluation rate limit exceeded. Please try again later.");
-        }
-        throw error;
-      }
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: agentIds.length });
     }
-    
-    // Use the shared import service with privacy setting
+
+    // 2. Do expensive work (fetch, validate)
     const result = await importDocumentService(url, session.user.id, agentIds, isPrivate);
-    
+
     if (!result.success) {
       throw new Error(result.error || "Failed to import document");
+    }
+
+    // 3. Charge quota after success
+    if (agentIds.length > 0) {
+      await chargeQuotaForServerAction({
+        userId: session.user.id,
+        chargeCount: agentIds.length,
+        context: { documentId: result.documentId, agentIds }
+      });
     }
 
     revalidatePath("/docs");
