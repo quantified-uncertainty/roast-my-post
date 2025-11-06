@@ -8,7 +8,6 @@
 import { prisma as defaultPrisma } from '../client';
 import type { PrismaClient } from '../client';
 import { generateId } from './generateId';
-import { logger } from './logger';
 
 export interface ActivePause {
   id: string;
@@ -74,12 +73,12 @@ export async function createSystemPause(
     }
   });
 
-  logger.warn('🔴 SYSTEM PAUSED', {
+  console.warn('🔴 SYSTEM PAUSED', JSON.stringify({
     event: 'system_paused',
     pauseId: pause.id,
     reason: pause.reason,
     timestamp: pause.startedAt.toISOString()
-  });
+  }));
 
   return pause;
 }
@@ -104,7 +103,7 @@ export async function endActivePauses(
   });
 
   if (result.count > 0) {
-    logger.info('✅ SYSTEM UNPAUSED', {
+    console.info('✅ SYSTEM UNPAUSED', JSON.stringify({
       event: 'system_unpaused',
       pausesEnded: result.count,
       timestamp: new Date().toISOString(),
@@ -113,7 +112,7 @@ export async function endActivePauses(
         reason: p.reason,
         duration: Date.now() - p.startedAt.getTime()
       }))
-    });
+    }));
   }
 
   return result.count;
@@ -147,11 +146,11 @@ export async function assertSystemNotPaused(
   const activePause = await getActivePause(prismaClient);
 
   if (activePause) {
-    logger.debug('Operation blocked due to system pause', {
+    console.debug('Operation blocked due to system pause', JSON.stringify({
       event: 'operation_blocked',
       pauseId: activePause.id,
       reason: activePause.reason
-    });
+    }));
     throw new SystemPausedError(activePause);
   }
 }
