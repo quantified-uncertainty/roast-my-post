@@ -4,7 +4,6 @@ import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 import { withRetry } from '../utils/retryUtils';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
-import { assertSystemNotPaused } from '@roast/db';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -81,9 +80,6 @@ export async function callClaude(
   options: ClaudeCallOptions,
   previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult> {
-  // Check if system is paused before making API call
-  await assertSystemNotPaused();
-
   const startTime = Date.now();
 
   // Merge provided headers with global session headers
