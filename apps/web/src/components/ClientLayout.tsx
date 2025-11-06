@@ -15,6 +15,7 @@ import { usePathname } from "next/navigation";
 import AuthHeader from "./AuthHeader";
 import Footer from "./Footer";
 import ProfileCheck from "./ProfileCheck";
+import { SystemPauseBanner } from "./SystemPauseBanner";
 import { Button } from "./ui/button";
 
 export default function ClientLayout({
@@ -102,6 +103,9 @@ export default function ClientLayout({
           </div>
         </div>
       </header>
+
+      {/* System Pause Banner */}
+      <SystemPauseBanner />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto">

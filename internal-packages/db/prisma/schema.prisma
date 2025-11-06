@@ -307,6 +307,15 @@ model ApiKey {
   @@index([userId])
 }
 
+model SystemPause {
+  id        String    @id @default(cuid())
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  reason    String
+
+  @@index([endedAt])
+}
+
 enum UserRole {
   USER
   ADMIN

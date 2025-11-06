@@ -81,7 +81,7 @@ export async function callClaude(
   previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult> {
   const startTime = Date.now();
-  
+
   // Merge provided headers with global session headers
   // Priority: provided headers > global session headers
   const globalHeaders = getCurrentHeliconeHeaders();

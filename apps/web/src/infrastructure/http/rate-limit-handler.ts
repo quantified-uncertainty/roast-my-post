@@ -5,8 +5,11 @@ import { logger } from "@/infrastructure/logging/logger";
 import { checkAvailableQuota, formatQuotaErrorMessage, incrementRateLimit } from "@/infrastructure/rate-limiting/rate-limit-service";
 
 /**
- * Soft check for quota availability. Returns error response if insufficient quota.
- * Use this BEFORE performing expensive operations.
+ * Check quota availability for rate limiting.
+ * Returns error response if insufficient quota.
+ *
+ * NOTE: For comprehensive prerequisite checking (system pause + quota),
+ * use checkOperationPrerequisites from './operation-prerequisites'
  */
 export async function checkQuotaAvailable({
   userId,
@@ -18,6 +21,13 @@ export async function checkQuotaAvailable({
   const quotaCheck = await checkAvailableQuota(userId, prisma, requestedCount);
 
   if (!quotaCheck.hasEnoughQuota) {
+    logger.info('Operation blocked: insufficient quota', {
+      event: 'operation_blocked_quota',
+      userId,
+      requestedCount,
+      hourlyRemaining: quotaCheck.hourlyRemaining,
+      monthlyRemaining: quotaCheck.monthlyRemaining
+    });
     return NextResponse.json(
       { error: formatQuotaErrorMessage(quotaCheck, requestedCount) },
       { status: 429 }

@@ -3,7 +3,8 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
-import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
+import { validateLlmAccess } from "@/infrastructure/http/guards";
+import { chargeQuota } from "@/infrastructure/http/rate-limit-handler";
 import { prisma } from "@roast/db";
 import { getServices } from "@/application/services/ServiceFactory";
 
@@ -289,9 +290,9 @@ export async function POST(
       const agentError = await verifyAgents(agentIds);
       if (agentError) return agentError;
 
-      // 1. Soft check: Do they have enough quota?
-      const quotaError = await checkQuotaAvailable({ userId, requestedCount: agentIds.length });
-      if (quotaError) return quotaError;
+      // 1. Validate access (system pause + quota)
+      const accessError = await validateLlmAccess({ userId, requestedCount: agentIds.length });
+      if (accessError) return accessError;
 
       // 2. Create evaluations for all agents
       const results = [];
@@ -339,9 +340,9 @@ export async function POST(
       const agentError = await verifyAgents([agentId]);
       if (agentError) return agentError;
 
-      // 1. Soft check: Do they have enough quota?
-      const quotaError = await checkQuotaAvailable({ userId, requestedCount: 1 });
-      if (quotaError) return quotaError;
+      // 1. Validate access (system pause + quota)
+      const accessError = await validateLlmAccess({ userId, requestedCount: 1 });
+      if (accessError) return accessError;
 
       // 2. Create evaluation
       try {

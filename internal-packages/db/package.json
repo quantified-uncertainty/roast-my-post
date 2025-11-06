@@ -24,6 +24,9 @@
     "db:migrate:deploy": "pnpm with-env prisma migrate deploy",
     "db:studio": "pnpm with-env prisma studio",
     "sync:agents": "pnpm with-env tsx system-agents/sync.ts",
+    "system:pause": "pnpm with-env tsx scripts/manage-system-pause.ts pause",
+    "system:unpause": "pnpm with-env tsx scripts/manage-system-pause.ts unpause",
+    "system:status": "pnpm with-env tsx scripts/manage-system-pause.ts status",
     "clean": "rm -rf generated .turbo dist",
     "postinstall": "prisma generate"
   },

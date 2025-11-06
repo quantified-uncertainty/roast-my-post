@@ -17,3 +17,12 @@ export * from './types';
 // Utility functions
 export { generateId } from './utils/generateId';
 export { RateLimitError, NotFoundError } from './utils/errors';
+export {
+  isSystemPaused,
+  getActivePause,
+  createSystemPause,
+  endActivePauses,
+  assertSystemNotPaused,
+  SystemPausedError,
+  type ActivePause
+} from './utils/system-pause-utils';
