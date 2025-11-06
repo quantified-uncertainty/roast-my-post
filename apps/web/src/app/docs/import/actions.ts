@@ -19,7 +19,7 @@ export async function importDocument(url: string, agentIds: string[] = [], isPri
 
     // 1. Soft check: Verify quota availability
     if (agentIds.length > 0) {
-      await validateQuota(session.user.id, prisma, agentIds.length);
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: agentIds.length });
     }
 
     // 2. Do expensive work (fetch, validate)
@@ -31,9 +31,10 @@ export async function importDocument(url: string, agentIds: string[] = [], isPri
 
     // 3. Charge quota after success
     if (agentIds.length > 0) {
-      await chargeQuotaForServerAction(session.user.id, agentIds.length, {
-        documentId: result.documentId,
-        agentIds
+      await chargeQuotaForServerAction({
+        userId: session.user.id,
+        chargeCount: agentIds.length,
+        context: { documentId: result.documentId, agentIds }
       });
     }
 

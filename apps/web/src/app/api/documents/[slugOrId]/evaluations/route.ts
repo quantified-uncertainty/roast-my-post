@@ -290,7 +290,7 @@ export async function POST(
       if (agentError) return agentError;
 
       // 1. Soft check: Do they have enough quota?
-      const quotaError = await checkQuotaAvailable(userId, agentIds.length);
+      const quotaError = await checkQuotaAvailable({ userId, requestedCount: agentIds.length });
       if (quotaError) return quotaError;
 
       // 2. Create evaluations for all agents
@@ -315,7 +315,7 @@ export async function POST(
       }
 
       // 3. Charge quota after successful creation
-      await chargeQuota(userId, agentIds.length, { documentId, agentIds });
+      await chargeQuota({ userId, chargeCount: agentIds.length, context: { documentId, agentIds } });
 
       return NextResponse.json({
         evaluations: results,
@@ -340,7 +340,7 @@ export async function POST(
       if (agentError) return agentError;
 
       // 1. Soft check: Do they have enough quota?
-      const quotaError = await checkQuotaAvailable(userId, 1);
+      const quotaError = await checkQuotaAvailable({ userId, requestedCount: 1 });
       if (quotaError) return quotaError;
 
       // 2. Create evaluation
@@ -348,7 +348,7 @@ export async function POST(
         const result = await createEvaluation(documentId, agentId, userId);
 
         // 3. Charge quota after successful creation
-        await chargeQuota(userId, 1, { documentId, agentId });
+        await chargeQuota({ userId, chargeCount: 1, context: { documentId, agentId } });
 
         return NextResponse.json({
           evaluationId: result.evaluationId,

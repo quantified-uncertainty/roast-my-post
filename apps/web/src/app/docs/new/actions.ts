@@ -22,7 +22,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     // 1. Soft check: Verify quota availability
     if (agentIds.length > 0) {
-      await validateQuota(session.user.id, prisma, agentIds.length);
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: agentIds.length });
     }
 
     // 2. Create the document using the new DocumentService
@@ -55,9 +55,10 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     // 3. Charge quota after success
     if (agentIds.length > 0) {
-      await chargeQuotaForServerAction(session.user.id, agentIds.length, {
-        documentId: document.id,
-        agentIds
+      await chargeQuotaForServerAction({
+        userId: session.user.id,
+        chargeCount: agentIds.length,
+        context: { documentId: document.id, agentIds }
       });
     }
 

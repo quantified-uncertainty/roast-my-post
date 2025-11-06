@@ -7,22 +7,22 @@ import { logger } from '@/infrastructure/logging/logger';
  *
  * Use this after your operation succeeds. If the charge fails,
  * it will be logged as a billing issue but won't fail the user's request.
- *
- * @param userId - User ID to charge quota for
- * @param count - Number of evaluations to charge
- * @param context - Additional context for logging (documentId, agentId, etc.)
  */
-export async function chargeQuotaForServerAction(
-  userId: string,
-  count: number,
-  context: { documentId?: string; agentId?: string; agentIds?: string[] }
-): Promise<void> {
+export async function chargeQuotaForServerAction({
+  userId,
+  chargeCount,
+  context
+}: {
+  userId: string;
+  chargeCount: number;
+  context: { documentId?: string; agentId?: string; agentIds?: string[] };
+}): Promise<void> {
   try {
-    await incrementRateLimit(userId, prisma, count);
+    await incrementRateLimit(userId, prisma, chargeCount);
   } catch (error) {
     logger.error('⚠️ BILLING ISSUE: Rate limit increment failed after successful operation', {
       userId,
-      requestedCount: count,
+      requestedCount: chargeCount,
       context,
       error: error instanceof Error ? error.message : String(error)
     });

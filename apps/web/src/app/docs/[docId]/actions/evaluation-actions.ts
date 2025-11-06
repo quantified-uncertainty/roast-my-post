@@ -29,7 +29,7 @@ export async function rerunEvaluation(
 
     // 1. Soft check: Verify quota availability
     try {
-      await validateQuota(session.user.id, prisma, 1);
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: 1 });
     } catch (error) {
       return {
         success: false,
@@ -45,7 +45,11 @@ export async function rerunEvaluation(
     );
 
     // 3. Charge quota after success
-    await chargeQuotaForServerAction(session.user.id, 1, { documentId, agentId });
+    await chargeQuotaForServerAction({
+      userId: session.user.id,
+      chargeCount: 1,
+      context: { documentId, agentId }
+    });
 
     // Revalidate pages that might be affected
     revalidatePath(`/docs/${documentId}/evals/${agentId}`);
@@ -84,7 +88,7 @@ export async function createOrRerunEvaluation(
 
     // 1. Soft check: Verify quota availability
     try {
-      await validateQuota(session.user.id, prisma, 1);
+      await validateQuota({ userId: session.user.id, prisma, requestedCount: 1 });
     } catch (error) {
       return {
         success: false,
@@ -100,7 +104,11 @@ export async function createOrRerunEvaluation(
     );
 
     // 3. Charge quota after success
-    await chargeQuotaForServerAction(session.user.id, 1, { documentId, agentId });
+    await chargeQuotaForServerAction({
+      userId: session.user.id,
+      chargeCount: 1,
+      context: { documentId, agentId }
+    });
 
     // Revalidate the document page
     revalidatePath(`/docs/${documentId}`);

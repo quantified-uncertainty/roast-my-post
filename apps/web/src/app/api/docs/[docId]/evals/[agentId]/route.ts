@@ -89,7 +89,7 @@ export const POST = withSecurity(
 
     try {
       // 1. Soft check: Do they have enough quota?
-      const quotaError = await checkQuotaAvailable(userId, 1);
+      const quotaError = await checkQuotaAvailable({ userId, requestedCount: 1 });
       if (quotaError) return quotaError;
 
       // 2. Create or get existing evaluation (with proper transaction handling)
@@ -113,7 +113,7 @@ export const POST = withSecurity(
       const evaluationResult = result.unwrap();
 
       // 3. Charge quota after successful creation
-      await chargeQuota(userId, 1, { docId, agentId });
+      await chargeQuota({ userId, chargeCount: 1, context: { docId, agentId } });
 
       return NextResponse.json({
         success: true,

@@ -100,11 +100,15 @@ export function formatQuotaErrorMessage(quotaCheck: QuotaCheck, requestedCount: 
  * @throws {Error} With formatted quota error message if insufficient quota
  * @throws {NotFoundError} If user not found
  */
-export async function validateQuota(
-  userId: string,
-  prisma: typeof defaultPrisma,
-  requestedCount: number
-): Promise<void> {
+export async function validateQuota({
+  userId,
+  prisma,
+  requestedCount
+}: {
+  userId: string;
+  prisma: typeof defaultPrisma;
+  requestedCount: number;
+}): Promise<void> {
   const quotaCheck = await checkAvailableQuota(userId, prisma, requestedCount);
 
   if (!quotaCheck.hasEnoughQuota) {
