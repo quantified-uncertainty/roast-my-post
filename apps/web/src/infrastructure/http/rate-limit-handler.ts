@@ -1,26 +1,39 @@
 import { NextResponse } from "next/server";
 
-import { prisma, checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
+import { prisma, checkAvailableQuota, formatQuotaErrorMessage, incrementRateLimit } from "@roast/db";
+import { logger } from "@/infrastructure/logging/logger";
 
-export async function handleRateLimitCheck(userId: string, count: number) {
+/**
+ * Soft check for quota availability. Returns error response if insufficient quota.
+ * Use this BEFORE performing expensive operations.
+ */
+export async function checkQuotaAvailable(userId: string, count: number): Promise<NextResponse | null> {
+  const quotaCheck = await checkAvailableQuota(userId, prisma, count);
+
+  if (!quotaCheck.hasEnoughQuota) {
+    return NextResponse.json(
+      { error: formatQuotaErrorMessage(quotaCheck, count) },
+      { status: 429 }
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Increment quota counters after successful operation.
+ * Use this AFTER your operation succeeds. Does not throw on failure.
+ */
+export async function chargeQuota(userId: string, count: number, context?: Record<string, any>): Promise<void> {
   try {
-    await checkAndIncrementRateLimit(userId, prisma, count);
-    return null;
+    await incrementRateLimit(userId, prisma, count);
   } catch (error) {
-    if (error instanceof RateLimitError) {
-      const headers: Record<string, string> = {};
-      if (error.details?.retryAfter) {
-        const seconds = Math.max(
-          1,
-          Math.ceil((error.details.retryAfter.getTime() - Date.now()) / 1000)
-        );
-        headers["Retry-After"] = String(seconds);
-      }
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later." },
-        { status: 429, headers }
-      );
-    }
-    throw error;
+    // Don't throw - operation already succeeded, this is a billing/reconciliation issue
+    logger.error('⚠️ BILLING ISSUE: Rate limit increment failed after successful operation', {
+      userId,
+      requestedCount: count,
+      context,
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 }

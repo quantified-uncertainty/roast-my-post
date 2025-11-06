@@ -6,7 +6,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/infrastructure/database/prisma";
-import { checkAndIncrementRateLimit, RateLimitError } from "@roast/db";
+import { checkAvailableQuota, formatQuotaErrorMessage, incrementRateLimit, RateLimitError } from "@roast/db";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -26,13 +26,35 @@ export async function rerunEvaluation(
       };
     }
 
-    await checkAndIncrementRateLimit(session.user.id, prisma, 1);
+    // 1. Soft check: Do they have enough quota?
+    const quotaCheck = await checkAvailableQuota(session.user.id, prisma, 1);
 
+    if (!quotaCheck.hasEnoughQuota) {
+      return {
+        success: false,
+        error: formatQuotaErrorMessage(quotaCheck, 1)
+      };
+    }
+
+    // 2. Do the operation
     await DocumentModel.rerunEvaluation(
       agentId,
       documentId,
       session.user.id
     );
+
+    // 3. Hard charge ONLY after success
+    try {
+      await incrementRateLimit(session.user.id, prisma, 1);
+    } catch (error) {
+      logger.error('⚠️ BILLING ISSUE: Rate limit increment failed after successful evaluation rerun', {
+        userId: session.user.id,
+        documentId,
+        agentId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      // Don't fail the request - operation already succeeded
+    }
 
     // Revalidate pages that might be affected
     revalidatePath(`/docs/${documentId}/evals/${agentId}`);
@@ -40,12 +62,6 @@ export async function rerunEvaluation(
 
     return { success: true };
   } catch (error) {
-    if (error instanceof RateLimitError) {
-      return {
-        success: false,
-        error: "Evaluation rate limit exceeded. Please try again later.",
-      };
-    }
 
     logger.error('Error creating job for evaluation:', error);
     return {
@@ -75,25 +91,41 @@ export async function createOrRerunEvaluation(
       };
     }
 
-    await checkAndIncrementRateLimit(session.user.id, prisma, 1);
+    // 1. Soft check: Do they have enough quota?
+    const quotaCheck = await checkAvailableQuota(session.user.id, prisma, 1);
 
+    if (!quotaCheck.hasEnoughQuota) {
+      return {
+        success: false,
+        error: formatQuotaErrorMessage(quotaCheck, 1)
+      };
+    }
+
+    // 2. Do the operation
     await DocumentModel.createOrRerunEvaluation(
       agentId,
       documentId,
       session.user.id
     );
 
+    // 3. Hard charge ONLY after success
+    try {
+      await incrementRateLimit(session.user.id, prisma, 1);
+    } catch (error) {
+      logger.error('⚠️ BILLING ISSUE: Rate limit increment failed after successful evaluation creation', {
+        userId: session.user.id,
+        documentId,
+        agentId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      // Don't fail the request - operation already succeeded
+    }
+
     // Revalidate the document page
     revalidatePath(`/docs/${documentId}`);
 
     return { success: true };
   } catch (error) {
-    if (error instanceof RateLimitError) {
-      return {
-        success: false,
-        error: "Evaluation rate limit exceeded. Please try again later.",
-      };
-    }
     logger.error('Error creating or rerunning evaluation:', error);
     return {
       success: false,

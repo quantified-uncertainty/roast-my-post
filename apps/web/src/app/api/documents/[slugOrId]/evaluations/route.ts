@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
-import { handleRateLimitCheck } from "@/infrastructure/http/rate-limit-handler";
+import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
 import { prisma, Plan } from "@roast/db";
 
 // Schema for querying evaluations
@@ -298,11 +298,11 @@ export async function POST(
       const agentError = await verifyAgents(agentIds);
       if (agentError) return agentError;
 
-      // Rate limiting check
-      const rateLimitError = await handleRateLimitCheck(userId, agentIds.length);
-      if (rateLimitError) return rateLimitError;
+      // 1. Soft check: Do they have enough quota?
+      const quotaError = await checkQuotaAvailable(userId, agentIds.length);
+      if (quotaError) return quotaError;
 
-      // Create evaluations for all agents
+      // 2. Create evaluations for all agents
       const results = [];
       for (const agentId of agentIds) {
         try {
@@ -322,6 +322,9 @@ export async function POST(
           });
         }
       }
+
+      // 3. Charge quota after successful creation
+      await chargeQuota(userId, agentIds.length, { documentId, agentIds });
 
       return NextResponse.json({
         evaluations: results,
@@ -345,13 +348,16 @@ export async function POST(
       const agentError = await verifyAgents([agentId]);
       if (agentError) return agentError;
 
-      // Rate limiting check
-      const rateLimitError = await handleRateLimitCheck(userId, 1);
-      if (rateLimitError) return rateLimitError;
+      // 1. Soft check: Do they have enough quota?
+      const quotaError = await checkQuotaAvailable(userId, 1);
+      if (quotaError) return quotaError;
 
-      // Create evaluation
+      // 2. Create evaluation
       try {
         const result = await createEvaluation(documentId, agentId);
+
+        // 3. Charge quota after successful creation
+        await chargeQuota(userId, 1, { documentId, agentId });
 
         return NextResponse.json({
           evaluationId: result.evaluation.id,

@@ -64,11 +64,93 @@ function calculateRetryAfter(
     resetTimes.push(monthResetTime);
   }
 
-  // Return the earliest reset time
-  return resetTimes.sort((a, b) => a.getTime() - b.getTime())[0];
+  // Return the LATEST reset time (user must wait for ALL limits to clear)
+  return new Date(Math.max(...resetTimes.map(d => d.getTime())));
 }
 
-export async function checkAndIncrementRateLimit(
+export interface QuotaCheck {
+  hasEnoughQuota: boolean;
+  hourlyRemaining: number;
+  monthlyRemaining: number;
+  hourlyLimit: number;
+  monthlyLimit: number;
+}
+
+/**
+ * Generate a standardized error message for insufficient quota.
+ * Use this to ensure consistent error messages across the application.
+ */
+export function formatQuotaErrorMessage(quotaCheck: QuotaCheck, requestedCount: number): string {
+  const limitingFactor = quotaCheck.hourlyRemaining < requestedCount
+    ? `hourly quota (${quotaCheck.hourlyRemaining} of ${quotaCheck.hourlyLimit} remaining)`
+    : `monthly quota (${quotaCheck.monthlyRemaining} of ${quotaCheck.monthlyLimit} remaining)`;
+
+  const remaining = Math.min(quotaCheck.hourlyRemaining, quotaCheck.monthlyRemaining);
+
+  return `Insufficient quota. You requested ${requestedCount} evaluation${requestedCount > 1 ? 's' : ''} ` +
+         `but only have ${remaining} remaining in your ${limitingFactor}.`;
+}
+
+/**
+ * Check if a user has enough available quota for a requested number of evaluations.
+ * This is a lightweight check that does NOT increment counters.
+ * Use this before expensive operations to provide early feedback to users.
+ */
+export async function checkAvailableQuota(
+  userId: string,
+  prisma: typeof defaultPrisma,
+  requestedCount: number
+): Promise<QuotaCheck> {
+  console.log(`[RateLimit] Checking available quota for userId=${userId}, requestedCount=${requestedCount}`);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      plan: true,
+      evalsThisHour: true,
+      evalsThisMonth: true,
+      hourResetAt: true,
+      monthResetAt: true
+    }
+  });
+
+  if (!user) {
+    console.error(`[RateLimit] User not found: userId=${userId}`);
+    throw new NotFoundError("User", userId);
+  }
+
+  const userPlan: string = user.plan;
+  const limits = isPlan(userPlan) ? PLAN_LIMITS[userPlan] : PLAN_LIMITS.REGULAR;
+
+  if (!isPlan(userPlan)) {
+    console.warn(`[RateLimit] Invalid plan "${userPlan}" for user ${userId}, falling back to REGULAR plan`);
+  }
+
+  const now = new Date();
+  const needsHourlyReset = !user.hourResetAt || now >= user.hourResetAt;
+  const needsMonthlyReset = !user.monthResetAt || now >= user.monthResetAt;
+
+  const currentHourly = needsHourlyReset ? 0 : (user.evalsThisHour ?? 0);
+  const currentMonthly = needsMonthlyReset ? 0 : (user.evalsThisMonth ?? 0);
+
+  const hourlyRemaining = Math.max(0, limits.hourly - currentHourly);
+  const monthlyRemaining = Math.max(0, limits.monthly - currentMonthly);
+
+  const hasEnoughQuota = (currentHourly + requestedCount <= limits.hourly) &&
+                         (currentMonthly + requestedCount <= limits.monthly);
+
+  console.log(`[RateLimit] Quota check result: hasEnoughQuota=${hasEnoughQuota}, hourlyRemaining=${hourlyRemaining}/${limits.hourly}, monthlyRemaining=${monthlyRemaining}/${limits.monthly}`);
+
+  return {
+    hasEnoughQuota,
+    hourlyRemaining,
+    monthlyRemaining,
+    hourlyLimit: limits.hourly,
+    monthlyLimit: limits.monthly
+  };
+}
+
+export async function incrementRateLimit(
   userId: string,
   prisma: typeof defaultPrisma,
   count: number = 1,
@@ -121,25 +203,10 @@ export async function checkAndIncrementRateLimit(
 
     if (hourExceeded || monthExceeded) {
       console.warn(`[RateLimit] Rate limit exceeded for userId=${userId}, plan=${user.plan}`);
-      
-      const resetUpdates: any = {};
-      if (needsHourlyReset) {
-        resetUpdates.hourResetAt = nextReset(now, 'hour');
-        resetUpdates.evalsThisHour = 0;
-      }
-      if (needsMonthlyReset) {
-        resetUpdates.monthResetAt = nextReset(now, 'month');
-        resetUpdates.evalsThisMonth = 0;
-      }
-      
-      if (Object.keys(resetUpdates).length > 0) {
-        console.log('[RateLimit] Saving pending reset updates before throwing error');
-        await tx.user.update({ where: { id: userId }, data: resetUpdates });
-      }
 
       const retryAfter = calculateRetryAfter(hourExceeded, monthExceeded, user, now);
       console.log(`[RateLimit] Retry after: ${retryAfter.toISOString()}`);
-      
+
       throw new RateLimitError(`Rate limit exceeded for ${user.plan} plan`, { retryAfter });
     }
 
