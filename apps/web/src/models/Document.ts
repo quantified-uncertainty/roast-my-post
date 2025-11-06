@@ -1030,9 +1030,9 @@ export class DocumentModel {
       throw new Error("Content must be at least 30 characters");
     }
 
-    const wordCount = data.content.trim().split(/\s+/).length;
+    const wordCount = data.content.trim().split(/\s+/).filter(word => word.length > 0).length;
     if (wordCount > MAX_DOCUMENT_WORD_COUNT) {
-      throw new Error(`Content must not exceed ${MAX_DOCUMENT_WORD_COUNT.toLocaleString()} words`);
+      throw new Error(`Content must not exceed ${MAX_DOCUMENT_WORD_COUNT} words`);
     }
 
     // Generate ID for the document

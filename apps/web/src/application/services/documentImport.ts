@@ -44,7 +44,7 @@ export async function importDocumentService(
     if (wordCount > MAX_DOCUMENT_WORD_COUNT) {
       return {
         success: false,
-        error: `Article content exceeds the maximum limit of ${MAX_DOCUMENT_WORD_COUNT.toLocaleString()} words (found ${wordCount.toLocaleString()} words). Please use a shorter document or split it into multiple parts.`
+        error: `Article content exceeds the maximum limit of ${MAX_DOCUMENT_WORD_COUNT} words (found ${wordCount} words). Please use a shorter document or split it into multiple parts.`
       };
     }
 

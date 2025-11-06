@@ -139,12 +139,12 @@ export class DocumentValidator {
     }
 
     if (trimmedContent.length > this.MAX_CONTENT_LENGTH) {
-      errors.push(`Content cannot exceed ${this.MAX_CONTENT_LENGTH.toLocaleString()} characters`);
+      errors.push(`Content cannot exceed ${this.MAX_CONTENT_LENGTH} characters`);
     }
 
     const wordCount = this.getWordCount(trimmedContent);
     if (wordCount > this.MAX_WORD_COUNT) {
-      errors.push(`Content cannot exceed ${this.MAX_WORD_COUNT.toLocaleString()} words`);
+      errors.push(`Content cannot exceed ${this.MAX_WORD_COUNT} words`);
     }
 
     return errors;

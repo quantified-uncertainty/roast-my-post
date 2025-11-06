@@ -18,5 +18,7 @@ export const MIN_DOCUMENT_CONTENT_LENGTH = 100;
 
 /**
  * Maximum number of characters allowed in document content.
+ * Set to 700,000 characters to accommodate 100,000 words.
+ * (Average word length ~6 chars + spaces = ~7 chars per word)
  */
-export const MAX_DOCUMENT_CONTENT_LENGTH = 100000;
+export const MAX_DOCUMENT_CONTENT_LENGTH = 700000;

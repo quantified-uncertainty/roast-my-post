@@ -103,11 +103,11 @@ export class DocumentEntity {
     }
 
     if (this.content.length > MAX_DOCUMENT_CONTENT_LENGTH) {
-      return { valid: false, error: `Content cannot exceed ${MAX_DOCUMENT_CONTENT_LENGTH.toLocaleString()} characters` };
+      return { valid: false, error: `Content cannot exceed ${MAX_DOCUMENT_CONTENT_LENGTH} characters` };
     }
 
     if (wordCount > MAX_DOCUMENT_WORD_COUNT) {
-      return { valid: false, error: `Content cannot exceed ${MAX_DOCUMENT_WORD_COUNT.toLocaleString()} words` };
+      return { valid: false, error: `Content cannot exceed ${MAX_DOCUMENT_WORD_COUNT} words` };
     }
 
     return { valid: true };
