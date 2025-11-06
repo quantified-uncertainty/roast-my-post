@@ -41,7 +41,34 @@ Ensure the workflow has permission to run:
 
 ## Usage
 
-### How to Pause the System
+### CLI Commands (Recommended for Development)
+
+The easiest way to manage system pauses locally:
+
+#### Check Status
+```bash
+pnpm --filter @roast/db run system:status
+```
+
+#### Pause System
+```bash
+pnpm --filter @roast/db run system:pause "Reason for pausing"
+```
+
+#### Unpause System
+```bash
+pnpm --filter @roast/db run system:unpause
+```
+
+These commands provide:
+- ✅ Colorful, formatted output
+- ✅ Input validation
+- ✅ Duration tracking
+- ✅ Helpful tips and guidance
+
+### GitHub Action (For Production/Staging)
+
+#### How to Pause the System
 
 1. Go to: **Actions → System Pause Control**
 2. Click "Run workflow"
@@ -51,7 +78,7 @@ Ensure the workflow has permission to run:
    - **Reason**: `"Claude API rate limit exceeded - pausing for 1 hour"`
 4. Click "Run workflow"
 
-### How to Unpause the System
+#### How to Unpause the System
 
 1. Go to: **Actions → System Pause Control**
 2. Click "Run workflow"
@@ -130,31 +157,6 @@ After running the workflow:
   GRANT INSERT, UPDATE ON "SystemPause" TO your_user;
   ```
 
-## CLI Commands (Recommended)
-
-The easiest way to manage system pauses locally or in development:
-
-### Check Status
-```bash
-pnpm --filter @roast/db run system:status
-```
-
-### Pause System
-```bash
-pnpm --filter @roast/db run system:pause "Reason for pausing"
-```
-
-### Unpause System
-```bash
-pnpm --filter @roast/db run system:unpause
-```
-
-These commands provide:
-- ✅ Colorful, formatted output
-- ✅ Input validation
-- ✅ Duration tracking
-- ✅ Helpful tips and guidance
-
 ## Manual Database Access
 
 If you need to manage pauses via SQL:
@@ -219,6 +221,8 @@ Reason: (empty)
 ## Related Files
 
 - Workflow: `.github/workflows/system-pause-control.yml`
+- CLI script: `internal-packages/db/scripts/manage-system-pause.ts`
 - Database utils: `internal-packages/db/src/utils/system-pause-utils.ts`
 - Banner component: `apps/web/src/components/SystemPauseBanner.tsx`
+- Server action: `apps/web/src/app/actions/system-pause-actions.ts`
 - Migration: `internal-packages/db/prisma/migrations/20251106163419_add_system_pause_table/`
