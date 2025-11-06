@@ -21,11 +21,6 @@ export function SystemPauseBanner() {
     }
 
     checkStatus();
-
-    // Poll every 30 seconds to check for status changes
-    const interval = setInterval(checkStatus, 30000);
-
-    return () => clearInterval(interval);
   }, []);
 
   // Don't render anything while loading or if not paused

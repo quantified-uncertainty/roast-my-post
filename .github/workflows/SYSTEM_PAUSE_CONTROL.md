@@ -72,7 +72,7 @@ Ensure the workflow has permission to run:
 ### Frontend
 - 🚨 Red warning banner appears site-wide
 - 📝 Displays the pause reason to users
-- 🔄 Auto-refreshes every 30 seconds to check status
+- 🔄 Updates on page load/navigation
 
 ## Workflow Details
 
