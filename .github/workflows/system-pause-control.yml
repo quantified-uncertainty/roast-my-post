@@ -38,38 +38,27 @@ jobs:
             exit 1
           fi
 
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Pause System
         if: github.event.inputs.action == 'pause'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          REASON: ${{ github.event.inputs.reason }}
         run: |
           echo "Pausing system on ${{ github.event.inputs.environment }}..."
-          echo "Reason: $REASON"
-
-          # Extract connection details from DATABASE_URL
-          # Format: postgresql://user:password@host:port/database
-          DB_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
-          DB_PASS=$(echo $DATABASE_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
-          DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
-          DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-          DB_NAME=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
-
-          # Create pause record
-          PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c \
-            "INSERT INTO \"SystemPause\" (id, reason, \"startedAt\")
-             VALUES (gen_random_uuid(), '$REASON', NOW());"
-
-          # Verify pause was created
-          PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c \
-            "SELECT id, reason, \"startedAt\" FROM \"SystemPause\" WHERE \"endedAt\" IS NULL ORDER BY \"startedAt\" DESC LIMIT 1;"
-
-          echo "✅ System paused successfully"
+          cd internal-packages/db
+          pnpm run system:pause "${{ github.event.inputs.reason }}"
 
       - name: Unpause System
         if: github.event.inputs.action == 'unpause'
@@ -77,36 +66,8 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           echo "Unpausing system on ${{ github.event.inputs.environment }}..."
-
-          # Extract connection details from DATABASE_URL
-          DB_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
-          DB_PASS=$(echo $DATABASE_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
-          DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
-          DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-          DB_NAME=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
-
-          # Check if there are active pauses
-          ACTIVE_COUNT=$(PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c \
-            "SELECT COUNT(*) FROM \"SystemPause\" WHERE \"endedAt\" IS NULL;")
-
-          if [ "$ACTIVE_COUNT" -eq 0 ]; then
-            echo "ℹ️ No active pauses found. System is already running."
-            exit 0
-          fi
-
-          echo "Found $ACTIVE_COUNT active pause(s). Ending them now..."
-
-          # End all active pauses
-          PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c \
-            "UPDATE \"SystemPause\" SET \"endedAt\" = NOW() WHERE \"endedAt\" IS NULL;"
-
-          # Verify pauses were ended
-          PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c \
-            "SELECT id, reason, \"startedAt\", \"endedAt\" FROM \"SystemPause\"
-             WHERE \"endedAt\" IS NOT NULL
-             ORDER BY \"endedAt\" DESC LIMIT 3;"
-
-          echo "✅ System unpaused successfully"
+          cd internal-packages/db
+          pnpm run system:unpause
 
       - name: Summary
         run: |

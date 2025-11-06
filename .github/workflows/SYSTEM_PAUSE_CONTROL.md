@@ -76,16 +76,26 @@ Ensure the workflow has permission to run:
 
 ## Workflow Details
 
+The GitHub Action uses the same npm scripts available locally for consistency:
+
 ### Pause Action
+```bash
+pnpm --filter @roast/db run system:pause "your reason here"
+```
+
+Internally creates:
 ```sql
--- Creates a new SystemPause record
 INSERT INTO "SystemPause" (id, reason, "startedAt")
 VALUES (gen_random_uuid(), 'your reason here', NOW());
 ```
 
 ### Unpause Action
+```bash
+pnpm --filter @roast/db run system:unpause
+```
+
+Internally executes:
 ```sql
--- Ends all active pauses
 UPDATE "SystemPause"
 SET "endedAt" = NOW()
 WHERE "endedAt" IS NULL;
@@ -120,9 +130,34 @@ After running the workflow:
   GRANT INSERT, UPDATE ON "SystemPause" TO your_user;
   ```
 
+## CLI Commands (Recommended)
+
+The easiest way to manage system pauses locally or in development:
+
+### Check Status
+```bash
+pnpm --filter @roast/db run system:status
+```
+
+### Pause System
+```bash
+pnpm --filter @roast/db run system:pause "Reason for pausing"
+```
+
+### Unpause System
+```bash
+pnpm --filter @roast/db run system:unpause
+```
+
+These commands provide:
+- ✅ Colorful, formatted output
+- ✅ Input validation
+- ✅ Duration tracking
+- ✅ Helpful tips and guidance
+
 ## Manual Database Access
 
-If you need to manage pauses manually:
+If you need to manage pauses via SQL:
 
 ### Check Active Pauses
 ```sql
