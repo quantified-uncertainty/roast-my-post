@@ -50,28 +50,24 @@ vi.mock('@/infrastructure/auth/privacy-service', () => ({
 }));
 
 // Mock the ServiceFactory with EvaluationService
-const mockEvaluationService = {
-  createEvaluation: vi.fn().mockResolvedValue({
-    isError: () => false,
-    unwrap: () => ({
-      evaluationId: 'eval-123',
-      agentId: 'agent-123',
-      jobId: 'job-123',
-      created: true
-    }),
-    error: () => null,
-  }),
-};
-
-const mockGetServices = vi.fn(() => ({
-  evaluationService: mockEvaluationService,
-  createTransactionalServices: vi.fn(() => ({
-    jobService: { createJob: vi.fn() }, // Keep for backwards compatibility if needed
-  })),
-}));
-
 vi.mock('@/application/services/ServiceFactory', () => ({
-  getServices: mockGetServices,
+  getServices: vi.fn(() => ({
+    evaluationService: {
+      createEvaluation: vi.fn().mockResolvedValue({
+        isError: () => false,
+        unwrap: () => ({
+          evaluationId: 'eval-123',
+          agentId: 'agent-123',
+          jobId: 'job-123',
+          created: true
+        }),
+        error: () => null,
+      }),
+    },
+    createTransactionalServices: vi.fn(() => ({
+      jobService: { createJob: vi.fn() },
+    })),
+  })),
 }));
 
 describe('GET /api/documents/[slugOrId]/evaluations', () => {

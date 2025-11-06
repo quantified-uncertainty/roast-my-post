@@ -5,6 +5,7 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
 import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
 import { prisma } from "@roast/db";
+import { getServices } from "@/application/services/ServiceFactory";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({
@@ -60,9 +61,6 @@ async function verifyAgents(agentIds: string[]) {
 async function createEvaluation(documentId: string, agentId: string, userId: string) {
   // Use EvaluationService for proper transaction handling
   // This ensures evaluation + job are created atomically within a single transaction
-  const { getServices } = await import(
-    "@/application/services/ServiceFactory"
-  );
   const { evaluationService } = getServices();
 
   const result = await evaluationService.createEvaluation({
