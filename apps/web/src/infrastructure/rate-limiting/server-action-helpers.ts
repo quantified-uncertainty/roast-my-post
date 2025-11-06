@@ -1,5 +1,6 @@
-import { incrementRateLimit, prisma } from '@roast/db';
+import { prisma } from '@roast/db';
 import { logger } from '@/infrastructure/logging/logger';
+import { incrementRateLimit } from './rate-limit-service';
 
 /**
  * Charge quota after successful operation in server actions.

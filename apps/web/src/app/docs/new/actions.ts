@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/infrastructure/auth/auth";
 import { ValidationError } from '@roast/domain';
-import { prisma, validateQuota } from "@roast/db";
+import { prisma } from "@roast/db";
+import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 import { getServices } from "@/application/services/ServiceFactory";
 

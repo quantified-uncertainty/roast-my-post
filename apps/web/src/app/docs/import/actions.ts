@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { importDocumentService } from "@/application/services/documentImport";
 import { logger } from "@/infrastructure/logging/logger";
-import { prisma, validateQuota } from "@roast/db";
+import { prisma } from "@roast/db";
+import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 
 export async function importDocument(url: string, agentIds: string[] = [], isPrivate: boolean = true) {

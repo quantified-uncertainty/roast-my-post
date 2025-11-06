@@ -16,5 +16,4 @@ export * from './types';
 
 // Utility functions
 export { generateId } from './utils/generateId';
-export * from './utils/rate-limit-utils';
 export { RateLimitError, NotFoundError } from './utils/errors';

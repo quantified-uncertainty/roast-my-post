@@ -1,6 +1,5 @@
-import { Plan } from "../types";
-import { prisma as defaultPrisma } from "../cli-client";
-import { NotFoundError, RateLimitError } from "./errors";
+import { prisma as defaultPrisma, Plan, NotFoundError, RateLimitError } from "@roast/db";
+import { logger } from "@/infrastructure/logging/logger";
 
 // Re-export the error classes for backward compatibility
 export { NotFoundError, RateLimitError };
@@ -128,8 +127,6 @@ export async function checkAvailableQuota(
   prisma: typeof defaultPrisma,
   requestedCount: number
 ): Promise<QuotaCheck> {
-  console.log(`[RateLimit] Checking available quota for userId=${userId}, requestedCount=${requestedCount}`);
-
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -142,7 +139,6 @@ export async function checkAvailableQuota(
   });
 
   if (!user) {
-    console.error(`[RateLimit] User not found: userId=${userId}`);
     throw new NotFoundError("User", userId);
   }
 
@@ -150,7 +146,10 @@ export async function checkAvailableQuota(
   const limits = isPlan(userPlan) ? PLAN_LIMITS[userPlan] : PLAN_LIMITS.REGULAR;
 
   if (!isPlan(userPlan)) {
-    console.warn(`[RateLimit] Invalid plan "${userPlan}" for user ${userId}, falling back to REGULAR plan`);
+    logger.warn('Invalid plan detected, falling back to REGULAR', {
+      userId,
+      invalidPlan: userPlan
+    });
   }
 
   const now = new Date();
@@ -165,8 +164,6 @@ export async function checkAvailableQuota(
 
   const hasEnoughQuota = (currentHourly + requestedCount <= limits.hourly) &&
                          (currentMonthly + requestedCount <= limits.monthly);
-
-  console.log(`[RateLimit] Quota check result: hasEnoughQuota=${hasEnoughQuota}, hourlyRemaining=${hourlyRemaining}/${limits.hourly}, monthlyRemaining=${monthlyRemaining}/${limits.monthly}`);
 
   return {
     hasEnoughQuota,
@@ -183,10 +180,7 @@ export async function incrementRateLimit(
   count: number = 1,
   now: Date = new Date()
 ): Promise<void> {
-  console.log(`[RateLimit] Starting check for userId=${userId}, count=${count}, now=${now.toISOString()}`);
-  
   await prisma.$transaction(async (tx) => {
-    console.log(`[RateLimit] Fetching user data for userId=${userId}`);
     const user = await tx.user.findUnique({
       where: { id: userId },
       select: {
@@ -199,40 +193,41 @@ export async function incrementRateLimit(
     });
 
     if (!user) {
-      console.error(`[RateLimit] User not found: userId=${userId}`);
       throw new NotFoundError("User", userId);
     }
 
-    console.log(`[RateLimit] User found: plan=${user.plan}, evalsThisHour=${user.evalsThisHour}, evalsThisMonth=${user.evalsThisMonth}`);
-
     const userPlan: string = user.plan;
     const limits = isPlan(userPlan) ? PLAN_LIMITS[userPlan] : PLAN_LIMITS.REGULAR;
-    
+
     if (!isPlan(userPlan)) {
-      console.warn(`[RateLimit] Invalid plan "${userPlan}" for user ${userId}, falling back to REGULAR plan`);
-    } else {
-      console.log(`[RateLimit] Valid plan detected: ${userPlan}, limits: hourly=${limits.hourly}, monthly=${limits.monthly}`);
+      logger.warn('Invalid plan detected, falling back to REGULAR', {
+        userId,
+        invalidPlan: userPlan
+      });
     }
 
     const needsHourlyReset = !user.hourResetAt || now >= user.hourResetAt;
     const needsMonthlyReset = !user.monthResetAt || now >= user.monthResetAt;
-    
-    console.log(`[RateLimit] Hourly check: resetAt=${user.hourResetAt?.toISOString()}, needsReset=${needsHourlyReset}`);
-    console.log(`[RateLimit] Monthly check: resetAt=${user.monthResetAt?.toISOString()}, needsReset=${needsMonthlyReset}`);
 
     const currentHourly = needsHourlyReset ? 0 : (user.evalsThisHour ?? 0);
     const currentMonthly = needsMonthlyReset ? 0 : (user.evalsThisMonth ?? 0);
-    
+
     const hourExceeded = currentHourly + count > limits.hourly;
     const monthExceeded = currentMonthly + count > limits.monthly;
-    
-    console.log(`[RateLimit] Limit check: hourly ${currentHourly}+${count}=${currentHourly + count} vs ${limits.hourly} (exceeded=${hourExceeded}), monthly ${currentMonthly}+${count}=${currentMonthly + count} vs ${limits.monthly} (exceeded=${monthExceeded})`);
 
     if (hourExceeded || monthExceeded) {
-      console.warn(`[RateLimit] Rate limit exceeded for userId=${userId}, plan=${user.plan}`);
-
       const retryAfter = calculateRetryAfter(hourExceeded, monthExceeded, user, now);
-      console.log(`[RateLimit] Retry after: ${retryAfter.toISOString()}`);
+
+      logger.warn('Rate limit exceeded', {
+        userId,
+        plan: user.plan,
+        currentHourly,
+        currentMonthly,
+        requestedCount: count,
+        hourlyLimit: limits.hourly,
+        monthlyLimit: limits.monthly,
+        retryAfter: retryAfter.toISOString()
+      });
 
       throw new RateLimitError(`Rate limit exceeded for ${user.plan} plan`, { retryAfter });
     }
@@ -255,9 +250,7 @@ export async function incrementRateLimit(
       successUpdates.monthResetAt = nextReset(now, 'month');
     }
 
-    console.log(`[RateLimit] Updating counters:`, successUpdates);
     await tx.user.update({ where: { id: userId }, data: successUpdates });
-    console.log(`[RateLimit] Rate limit check passed for userId=${userId}`);
   }, {
     isolationLevel: 'Serializable',
   });

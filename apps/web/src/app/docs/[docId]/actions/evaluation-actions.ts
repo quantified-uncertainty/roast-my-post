@@ -6,7 +6,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/infrastructure/database/prisma";
-import { validateQuota } from "@roast/db";
+import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 
 /**

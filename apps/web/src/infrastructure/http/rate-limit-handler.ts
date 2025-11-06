@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { prisma, checkAvailableQuota, formatQuotaErrorMessage, incrementRateLimit } from "@roast/db";
+import { prisma } from "@roast/db";
 import { logger } from "@/infrastructure/logging/logger";
+import { checkAvailableQuota, formatQuotaErrorMessage, incrementRateLimit } from "@/infrastructure/rate-limiting/rate-limit-service";
 
 /**
  * Soft check for quota availability. Returns error response if insufficient quota.
