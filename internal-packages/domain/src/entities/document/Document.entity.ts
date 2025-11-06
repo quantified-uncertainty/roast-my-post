@@ -1,10 +1,16 @@
 /**
  * Document Domain Entity
- * 
+ *
  * Pure business object representing a document in the system.
  * This entity is framework-agnostic and contains only business logic.
  * No database or framework dependencies.
  */
+
+import {
+  MAX_DOCUMENT_WORD_COUNT,
+  MIN_DOCUMENT_CONTENT_LENGTH,
+  MAX_DOCUMENT_CONTENT_LENGTH,
+} from '../../validators/constants';
 
 export class DocumentEntity {
   constructor(
@@ -91,19 +97,19 @@ export class DocumentEntity {
    */
   isContentLengthValid(): { valid: boolean; error?: string } {
     const wordCount = this.getWordCount();
-    
-    if (this.content.length < 100) {
-      return { valid: false, error: 'Content must be at least 100 characters' };
+
+    if (this.content.length < MIN_DOCUMENT_CONTENT_LENGTH) {
+      return { valid: false, error: `Content must be at least ${MIN_DOCUMENT_CONTENT_LENGTH} characters` };
     }
-    
-    if (this.content.length > 100000) {
-      return { valid: false, error: 'Content cannot exceed 100,000 characters' };
+
+    if (this.content.length > MAX_DOCUMENT_CONTENT_LENGTH) {
+      return { valid: false, error: `Content cannot exceed ${MAX_DOCUMENT_CONTENT_LENGTH} characters` };
     }
-    
-    if (wordCount > 50000) {
-      return { valid: false, error: 'Content cannot exceed 50,000 words' };
+
+    if (wordCount > MAX_DOCUMENT_WORD_COUNT) {
+      return { valid: false, error: `Content cannot exceed ${MAX_DOCUMENT_WORD_COUNT} words` };
     }
-    
+
     return { valid: true };
   }
 

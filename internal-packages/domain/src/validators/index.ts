@@ -3,3 +3,4 @@
  */
 
 export * from './DocumentValidator';
+export * from './constants';

@@ -3,7 +3,7 @@ import { generateId } from "@roast/db";
 import { prisma } from "@roast/db";
 // Import removed - DocumentValidationSchema not used
 import type { Document } from "@/shared/types/databaseTypes";
-import { generateMarkdownPrepend } from "@roast/domain";
+import { generateMarkdownPrepend, MAX_DOCUMENT_WORD_COUNT } from "@roast/domain";
 import { getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 import { getCommentProperty } from "@/shared/types/commentTypes";
 import { getServices } from "@/application/services/ServiceFactory";
@@ -1030,9 +1030,9 @@ export class DocumentModel {
       throw new Error("Content must be at least 30 characters");
     }
 
-    const wordCount = data.content.trim().split(/\s+/).length;
-    if (wordCount > 50000) {
-      throw new Error("Content must not exceed 50,000 words");
+    const wordCount = data.content.trim().split(/\s+/).filter(word => word.length > 0).length;
+    if (wordCount > MAX_DOCUMENT_WORD_COUNT) {
+      throw new Error(`Content must not exceed ${MAX_DOCUMENT_WORD_COUNT} words`);
     }
 
     // Generate ID for the document
