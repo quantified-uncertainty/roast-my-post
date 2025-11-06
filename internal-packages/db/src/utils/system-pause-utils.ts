@@ -8,6 +8,7 @@
 import { prisma as defaultPrisma } from '../client';
 import type { PrismaClient } from '../client';
 import { generateId } from './generateId';
+import { logger } from './logger';
 
 export interface ActivePause {
   id: string;
@@ -73,6 +74,13 @@ export async function createSystemPause(
     }
   });
 
+  logger.warn('🔴 SYSTEM PAUSED', {
+    event: 'system_paused',
+    pauseId: pause.id,
+    reason: pause.reason,
+    timestamp: pause.startedAt.toISOString()
+  });
+
   return pause;
 }
 
@@ -84,10 +92,29 @@ export async function endActivePauses(
 ): Promise<number> {
   const client = prismaClient || defaultPrisma;
 
+  // Get active pauses before ending them for logging
+  const activePauses = await client.systemPause.findMany({
+    where: { endedAt: null },
+    select: { id: true, reason: true, startedAt: true }
+  });
+
   const result = await client.systemPause.updateMany({
     where: { endedAt: null },
     data: { endedAt: new Date() }
   });
+
+  if (result.count > 0) {
+    logger.info('✅ SYSTEM UNPAUSED', {
+      event: 'system_unpaused',
+      pausesEnded: result.count,
+      timestamp: new Date().toISOString(),
+      endedPauses: activePauses.map(p => ({
+        id: p.id,
+        reason: p.reason,
+        duration: Date.now() - p.startedAt.getTime()
+      }))
+    });
+  }
 
   return result.count;
 }
@@ -120,6 +147,11 @@ export async function assertSystemNotPaused(
   const activePause = await getActivePause(prismaClient);
 
   if (activePause) {
+    logger.debug('Operation blocked due to system pause', {
+      event: 'operation_blocked',
+      pauseId: activePause.id,
+      reason: activePause.reason
+    });
     throw new SystemPausedError(activePause);
   }
 }

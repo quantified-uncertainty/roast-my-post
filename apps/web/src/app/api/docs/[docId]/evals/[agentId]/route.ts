@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
-import { prisma, assertSystemNotPaused, SystemPausedError } from "@roast/db";
+import { prisma } from "@roast/db";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/application/workflows/evaluation/evaluationQueries";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
-import { checkQuotaAvailable, chargeQuota } from "@/infrastructure/http/rate-limit-handler";
+import { validateLlmAccess } from "@/infrastructure/http/guards";
+import { chargeQuota } from "@/infrastructure/http/rate-limit-handler";
 import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 import { getServices } from "@/application/services/ServiceFactory";
 
@@ -88,22 +89,9 @@ export const POST = withSecurity(
     // userId is injected by withSecurity and used for rate limiting
 
     try {
-      // 0. Check if system is paused
-      try {
-        await assertSystemNotPaused();
-      } catch (error) {
-        if (error instanceof SystemPausedError) {
-          return NextResponse.json(
-            { error: error.message, reason: error.reason },
-            { status: 503 }
-          );
-        }
-        throw error;
-      }
-
-      // 1. Soft check: Do they have enough quota?
-      const quotaError = await checkQuotaAvailable({ userId, requestedCount: 1 });
-      if (quotaError) return quotaError;
+      // 1. Validate access (system pause + quota)
+      const accessError = await validateLlmAccess({ userId, requestedCount: 1 });
+      if (accessError) return accessError;
 
       // 2. Create or get existing evaluation (with proper transaction handling)
       // EvaluationService handles document/agent verification internally

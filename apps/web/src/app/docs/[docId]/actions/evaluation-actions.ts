@@ -2,13 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { logger } from "@/infrastructure/logging/logger";
+import { prisma } from "@roast/db";
 
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
-import { prisma } from "@/infrastructure/database/prisma";
-import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
+import { validateServerActionAccess } from "@/infrastructure/http/guards";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
-import { assertSystemNotPaused, SystemPausedError } from "@roast/db";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -28,28 +27,12 @@ export async function rerunEvaluation(
       };
     }
 
-    // 0. Check if system is paused
-    try {
-      await assertSystemNotPaused();
-    } catch (error) {
-      if (error instanceof SystemPausedError) {
-        return {
-          success: false,
-          error: error.message
-        };
-      }
-      throw error;
-    }
-
-    // 1. Soft check: Verify quota availability
-    try {
-      await validateQuota({ userId: session.user.id, prisma, requestedCount: 1 });
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Insufficient quota"
-      };
-    }
+    // 1. Validate access (system pause + quota)
+    const accessError = await validateServerActionAccess({
+      userId: session.user.id,
+      requestedCount: 1
+    });
+    if (accessError) return accessError;
 
     // 2. Do the operation
     await DocumentModel.rerunEvaluation(
@@ -100,28 +83,12 @@ export async function createOrRerunEvaluation(
       };
     }
 
-    // 0. Check if system is paused
-    try {
-      await assertSystemNotPaused();
-    } catch (error) {
-      if (error instanceof SystemPausedError) {
-        return {
-          success: false,
-          error: error.message
-        };
-      }
-      throw error;
-    }
-
-    // 1. Soft check: Verify quota availability
-    try {
-      await validateQuota({ userId: session.user.id, prisma, requestedCount: 1 });
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Insufficient quota"
-      };
-    }
+    // 1. Validate access (system pause + quota)
+    const accessError = await validateServerActionAccess({
+      userId: session.user.id,
+      requestedCount: 1
+    });
+    if (accessError) return accessError;
 
     // 2. Do the operation
     await DocumentModel.createOrRerunEvaluation(

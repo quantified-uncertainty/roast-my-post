@@ -4,6 +4,7 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { logger } from "@/infrastructure/logging/logger";
 import { importDocumentService } from "@/application/services/documentImport";
 import { errorResponse, successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
+import { validateLlmAccess } from "@/infrastructure/http/guards";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +23,13 @@ export async function POST(request: NextRequest) {
     // Validate agentIds if provided
     if (agentIds && !Array.isArray(agentIds)) {
       return commonErrors.badRequest("agentIds must be an array");
+    }
+
+    // Validate access (system pause + quota) if creating evaluations
+    const requestedCount = agentIds?.length || 0;
+    if (requestedCount > 0) {
+      const accessError = await validateLlmAccess({ userId, requestedCount });
+      if (accessError) return accessError;
     }
 
     // Use the shared import service
