@@ -1,30 +1,76 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { getSystemPauseStatus } from "@/app/actions/system-pause-actions";
+import { checkDocumentOwnership } from "@/app/actions/document-ownership-actions";
 import type { ActivePause } from "@roast/db";
 
 export function SystemPauseBanner() {
+  const { data: session, status: sessionStatus } = useSession();
+  const pathname = usePathname();
   const [activePause, setActivePause] = useState<ActivePause | null>(null);
+  const [shouldShow, setShouldShow] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function checkStatus() {
       try {
+        // Check if system is paused
         const pause = await getSystemPauseStatus();
         setActivePause(pause);
+
+        // If not paused, no need to check further
+        if (!pause) {
+          setShouldShow(false);
+          setIsLoading(false);
+          return;
+        }
+
+        // If user not logged in, don't show
+        if (sessionStatus !== "authenticated" || !session?.user?.id) {
+          setShouldShow(false);
+          setIsLoading(false);
+          return;
+        }
+
+        // Check if on pages where pause is relevant
+        if (pathname?.startsWith("/docs/new") || pathname?.startsWith("/docs/import")) {
+          // Show on new document or import pages
+          setShouldShow(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Check if on a document page the user owns
+        const docIdMatch = pathname?.match(/^\/docs\/([^\/]+)/);
+        if (docIdMatch && docIdMatch[1] !== "new" && docIdMatch[1] !== "import") {
+          const docId = docIdMatch[1];
+          const ownsDocument = await checkDocumentOwnership(docId);
+          setShouldShow(ownsDocument);
+          setIsLoading(false);
+          return;
+        }
+
+        // Default: don't show
+        setShouldShow(false);
       } catch (error) {
         console.error("Failed to fetch system pause status:", error);
+        setShouldShow(false);
       } finally {
         setIsLoading(false);
       }
     }
 
-    checkStatus();
-  }, []);
+    // Only check when session status is determined
+    if (sessionStatus !== "loading") {
+      checkStatus();
+    }
+  }, [pathname, session, sessionStatus]);
 
-  // Don't render anything while loading or if not paused
-  if (isLoading || !activePause) {
+  // Don't render anything while loading, if shouldn't show, or if not paused
+  if (isLoading || !shouldShow || !activePause) {
     return null;
   }
 
