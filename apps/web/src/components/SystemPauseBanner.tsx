@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
+
+import {
+  checkDocumentOwnership,
+} from "@/app/actions/document-ownership-actions";
 import { getSystemPauseStatus } from "@/app/actions/system-pause-actions";
-import { checkDocumentOwnership } from "@/app/actions/document-ownership-actions";
 import type { ActivePause } from "@roast/db";
 
 export function SystemPauseBanner() {
@@ -75,7 +82,7 @@ export function SystemPauseBanner() {
   }
 
   return (
-    <div className="bg-red-600 text-white py-3 px-4 shadow-lg">
+    <div className="bg-orange-600 text-white py-3 px-4 shadow-lg">
       <div className="container mx-auto max-w-7xl flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">
           <svg
@@ -96,9 +103,6 @@ export function SystemPauseBanner() {
           <h3 className="font-semibold text-sm mb-1">
             API Access Temporarily Paused
           </h3>
-          <p className="text-sm opacity-90">
-            {activePause.reason}
-          </p>
           <p className="text-xs opacity-75 mt-1">
             New evaluations and imports are temporarily disabled. Existing jobs will continue processing.
           </p>
