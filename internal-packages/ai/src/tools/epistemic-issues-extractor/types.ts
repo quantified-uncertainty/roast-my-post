@@ -80,6 +80,15 @@ export interface ExtractedEpistemicIssue {
   /** Adversarial confidence: how confident we are this is deliberate manipulation (0-100) */
   adversarialConfidence?: number;
 
+  /** Context validation verdict: is author committing/discussing/warning */
+  validationVerdict?: "COMMITTING" | "DISCUSSING" | "WARNING" | "UNCLEAR";
+
+  /** Whether this passed context validation (false = likely false positive) */
+  isValidatedError?: boolean;
+
+  /** Context validation reasoning */
+  validationReasoning?: string;
+
   /** Adjusted severity after context-aware calibration (0-100) */
   adjustedSeverity?: number;
 

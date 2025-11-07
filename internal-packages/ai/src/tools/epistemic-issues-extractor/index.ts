@@ -19,6 +19,8 @@ import {
   calculateAdjustedSeverity,
   calculatePriorityScore,
 } from "./severity-calibration";
+import { validateIssuesBatch } from "./context-validator";
+import { filterByConfidenceThresholds, getFilterStats } from "./severity-filtering";
 
 // Zod schemas
 const extractedEpistemicIssueSchema = z.object({
@@ -489,17 +491,71 @@ Max issues to return: ${input.maxIssues ?? 15}
       `[EpistemicIssuesExtractor] Enriched ${enrichedIssues.length} issues with context-aware classification`
     );
 
+    // PHASE 1 IMPROVEMENT: Context-aware validation to reduce false positives
+    context.logger.info(
+      `[EpistemicIssuesExtractor] Validating ${enrichedIssues.length} issues for false positives`
+    );
+
+    const validationResults = await validateIssuesBatch(
+      enrichedIssues,
+      input.text, // Pass full chunk text for context
+      context
+    );
+
+    // Apply validation results to issues
+    const validatedIssues = enrichedIssues.map((issue) => {
+      const validation = validationResults.get(issue);
+      if (!validation) return issue;
+
+      return {
+        ...issue,
+        validationVerdict: validation.verdict,
+        isValidatedError: validation.isActualError,
+        validationReasoning: validation.reasoning,
+        // Update scores based on validation
+        adjustedSeverity: validation.adjustedSeverity,
+        confidenceScore: validation.adjustedConfidence,
+      };
+    });
+
+    const falsePositives = validatedIssues.filter(i => !i.isValidatedError).length;
+    context.logger.info(
+      `[EpistemicIssuesExtractor] Context validation: ${validatedIssues.length - falsePositives} real issues, ${falsePositives} false positives filtered`
+    );
+
     // Filter by adjusted severity threshold (not raw severity)
     // KEEP verified-accurate regardless of severity
-    const filteredIssues = enrichedIssues.filter(
-      (issue) =>
-        issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE ||
-        (issue.adjustedSeverity ?? issue.severityScore) >= (input.minSeverityThreshold ?? 20)
+    // FILTER OUT false positives (isValidatedError === false)
+    const filteredIssues = validatedIssues.filter(
+      (issue) => {
+        // Remove false positives
+        if (issue.isValidatedError === false) return false;
+
+        // Keep verified-accurate regardless of severity
+        if (issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE) return true;
+
+        // Filter by severity threshold
+        return (issue.adjustedSeverity ?? issue.severityScore) >= (input.minSeverityThreshold ?? 20);
+      }
+    );
+
+    // PHASE 1 IMPROVEMENT: Apply confidence-based filtering
+    // Different confidence thresholds for different severity levels
+    const beforeConfidenceFiltering = filteredIssues.length;
+    const confidenceFilteredIssues = filterByConfidenceThresholds(filteredIssues);
+    const filterStats = getFilterStats(filteredIssues, confidenceFilteredIssues);
+
+    context.logger.info(
+      `[EpistemicIssuesExtractor] Confidence filtering: ${filterStats.displayed}/${filterStats.total} issues passed thresholds`,
+      {
+        bySeverity: filterStats.bySeverity,
+        filteredOut: filterStats.filteredByConfidence
+      }
     );
 
     // Sort by priority score (combines adjusted severity and centrality)
     // Boost verified-accurate claims
-    const sortedIssues = filteredIssues
+    const sortedIssues = confidenceFilteredIssues
       .sort((a, b) => {
         const priorityA = a.issueType === ISSUE_TYPES.VERIFIED_ACCURATE
           ? (a.importanceScore || 50) * 50  // Boost factor
@@ -512,7 +568,7 @@ Max issues to return: ${input.maxIssues ?? 15}
       .slice(0, input.maxIssues);
 
     context.logger.info(
-      `[EpistemicIssuesExtractor] Found ${allIssues.length} total, ${filteredIssues.length} above adjusted threshold, returning top ${sortedIssues.length}`
+      `[EpistemicIssuesExtractor] Found ${allIssues.length} total, ${confidenceFilteredIssues.length} passed all filters, returning top ${sortedIssues.length}`
     );
 
     // Log adjustment statistics
