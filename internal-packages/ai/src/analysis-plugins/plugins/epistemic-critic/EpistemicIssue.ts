@@ -88,8 +88,8 @@ export class EpistemicIssue {
    * Get the comment level for this issue
    */
   getCommentLevel(): "error" | "warning" | "info" | "success" {
-    const { issueType, importanceScore } = this.issue;
-    const adjustedSeverity = this.issue.adjustedSeverity ?? this.issue.severityScore;
+    const { issueType, importanceScore, severityScore } = this.issue;
+    const adjustedSeverity = severityScore;
 
     // Verified accurate claims get success
     if (issueType === ISSUE_TYPES.VERIFIED_ACCURATE) {
@@ -190,7 +190,7 @@ export class EpistemicIssue {
    */
   getHeader(): string {
     const prefix = this.getConfidencePrefix();
-    const adjustedSeverity = this.issue.adjustedSeverity ?? this.severityScore;
+    const adjustedSeverity = this.severityScore;
 
     switch (this.issueType) {
       case ISSUE_TYPES.MISINFORMATION:
@@ -236,7 +236,7 @@ export class EpistemicIssue {
    * Get confidence-based prefix for headers
    */
   private getConfidencePrefix(): string {
-    const adjustedSeverity = this.issue.adjustedSeverity ?? this.severityScore;
+    const adjustedSeverity = this.severityScore;
     const { confidenceScore, importanceScore } = this.issue;
 
     // Very low importance = nitpick

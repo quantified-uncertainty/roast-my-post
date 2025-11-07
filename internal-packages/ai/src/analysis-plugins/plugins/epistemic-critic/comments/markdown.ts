@@ -159,13 +159,7 @@ export function buildSignificance(issue: EpistemicIssue): string | undefined {
  * Get importance score for sorting
  */
 export function getImportance(issue: EpistemicIssue): number {
-  // Use priorityScore if available (from calibration system)
-  // Otherwise fall back to weighted combination of severity and importance
-  if (issue.issue.priorityScore !== undefined) {
-    return issue.issue.priorityScore;
-  }
-
-  // Fallback: weighted combination
+  // Weighted combination of severity and importance
   // Range: 0-100
   const { severityScore, importanceScore } = issue.issue;
   return Math.round((severityScore * 0.6 + importanceScore * 0.4));

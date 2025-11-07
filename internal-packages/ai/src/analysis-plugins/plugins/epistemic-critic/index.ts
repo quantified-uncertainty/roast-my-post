@@ -4,8 +4,6 @@ import {
 import { logger } from "../../../shared/logger";
 import type { Comment, ToolChainResult } from "../../../shared/types";
 import epistemicIssuesExtractorTool from "../../../tools/epistemic-issues-extractor";
-import { detectGenre, getGenreDisplayName } from "../../../tools/epistemic-issues-extractor/genre-detection";
-import type { DocumentGenre } from "../../../tools/epistemic-issues-extractor/types";
 import perplexityResearcherTool from "../../../tools/perplexity-researcher";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import { TextChunk } from "../../TextChunk";
@@ -27,7 +25,6 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   private summary: string = "";
   private analysis: string = "";
   private processingStartTime: number = 0;
-  private documentGenre: DocumentGenre | null = null;
 
   constructor() {
     // Initialize empty values - they'll be set in analyze()
@@ -122,10 +119,6 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
     }
 
     try {
-      // Detect document genre for context-aware analysis
-      this.documentGenre = detectGenre(documentText);
-      logger.info(`EpistemicCriticPlugin: Detected genre: ${getGenreDisplayName(this.documentGenre)}`);
-
       logger.info("EpistemicCriticPlugin: Starting analysis");
       logger.info(`EpistemicCriticPlugin: Processing ${chunks.length} chunks`);
 
@@ -255,7 +248,6 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
             ],
             minSeverityThreshold: THRESHOLDS.SEVERITY_LOW,
             maxIssues: LIMITS.MAX_ISSUES_PER_CHUNK,
-            genre: this.documentGenre ?? undefined, // Pass detected genre for context-aware analysis
           },
           {
             logger,

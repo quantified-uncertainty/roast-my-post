@@ -13,12 +13,7 @@ import type {
   EpistemicIssuesExtractorInput,
   EpistemicIssuesExtractorOutput,
 } from "./types";
-import { DocumentGenre } from "./types";
-import {
-  enrichIssue,
-  calculateAdjustedSeverity,
-  calculatePriorityScore,
-} from "./severity-calibration";
+// Removed severity-calibration and genre imports - we trust the LLM's scores
 
 // Zod schemas
 const extractedEpistemicIssueSchema = z.object({
@@ -494,28 +489,7 @@ Max issues to return: ${input.maxIssues ?? 15}
       };
     }
 
-    // Get genre from input or use default
-    const genre = input.genre || DocumentGenre.FORUM_POST;
-
-    // Enrich all issues with classification and context-aware adjustments
-    const enrichedIssues = allIssues.map((issue) => {
-      const enriched = enrichIssue(issue, genre);
-      const adjustedSeverity = calculateAdjustedSeverity(enriched, genre);
-      const priorityScore = calculatePriorityScore(enriched, adjustedSeverity);
-
-      return {
-        ...enriched,
-        adjustedSeverity,
-        priorityScore,
-      };
-    });
-
-    context.logger.info(
-      `[EpistemicIssuesExtractor] Enriched ${enrichedIssues.length} issues with context-aware classification`
-    );
-
     // Simple confidence-based filtering: higher severity requires higher confidence
-    // This reduces false positives while catching real issues
     const getMinConfidence = (severity: number) => {
       if (severity >= 80) return 40;  // CRITICAL issues
       if (severity >= 60) return 70;  // HIGH issues
@@ -523,55 +497,32 @@ Max issues to return: ${input.maxIssues ?? 15}
       return 30;                       // LOW issues
     };
 
-    const filteredIssues = enrichedIssues.filter((issue) => {
+    const filteredIssues = allIssues.filter((issue) => {
       // Keep verified-accurate regardless of severity
       if (issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE) return true;
 
       // Filter by severity threshold
-      const severity = issue.adjustedSeverity ?? issue.severityScore;
-      if (severity < (input.minSeverityThreshold ?? 20)) return false;
+      if (issue.severityScore < (input.minSeverityThreshold ?? 20)) return false;
 
       // Apply confidence threshold based on severity
-      return issue.confidenceScore >= getMinConfidence(severity);
+      return issue.confidenceScore >= getMinConfidence(issue.severityScore);
     });
 
-    context.logger.info(
-      `[EpistemicIssuesExtractor] Filtered: ${enrichedIssues.length} → ${filteredIssues.length} issues (confidence thresholds applied)`
-    );
-
-    // Sort by priority score (combines adjusted severity and centrality)
-    // Boost verified-accurate claims
+    // Sort by priority: severity × importance (boost verified-accurate claims)
     const sortedIssues = filteredIssues
       .sort((a, b) => {
         const priorityA = a.issueType === ISSUE_TYPES.VERIFIED_ACCURATE
-          ? (a.importanceScore || 50) * 50  // Boost factor
-          : (a.priorityScore ?? a.severityScore * a.importanceScore);
+          ? (a.importanceScore || 50) * 50
+          : a.severityScore * a.importanceScore;
         const priorityB = b.issueType === ISSUE_TYPES.VERIFIED_ACCURATE
-          ? (b.importanceScore || 50) * 50  // Boost factor
-          : (b.priorityScore ?? b.severityScore * b.importanceScore);
+          ? (b.importanceScore || 50) * 50
+          : b.severityScore * b.importanceScore;
         return priorityB - priorityA;
       })
       .slice(0, input.maxIssues);
 
-    context.logger.info(
-      `[EpistemicIssuesExtractor] Found ${allIssues.length} total, ${filteredIssues.length} passed all filters, returning top ${sortedIssues.length}`
-    );
-
-    // Log adjustment statistics
-    const adjustmentStats = {
-      averageRawSeverity: allIssues.reduce((sum, i) => sum + i.severityScore, 0) / allIssues.length,
-      averageAdjustedSeverity: enrichedIssues.reduce((sum, i) => sum + (i.adjustedSeverity ?? i.severityScore), 0) / enrichedIssues.length,
-      issuesWithHedging: enrichedIssues.filter(i => i.hasHedging).length,
-      issuesWithLowAdversarialConfidence: enrichedIssues.filter(i => (i.adversarialConfidence ?? 0) < 40).length,
-    };
-
-    context.logger.info(
-      `[EpistemicIssuesExtractor] Adjustment stats:`,
-      adjustmentStats
-    );
-
     return {
-      issues: sortedIssues.map(({ adjustedSeverity, priorityScore, ...issue }) => issue),
+      issues: sortedIssues,
       totalIssuesFound: allIssues.length,
       wasComplete,
     };
