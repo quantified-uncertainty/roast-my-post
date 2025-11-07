@@ -25,13 +25,17 @@ function sanitizeUrl(u: string): string {
  * Build the main description content for an epistemic issue comment
  */
 export function buildDescription(issue: EpistemicIssue): string {
-  const { issueType, reasoning, suggestedContext } = issue.issue;
+  const { issueType, reasoning, suggestedContext, confidenceScore } = issue.issue;
 
   let description = `**Issue Type:** ${formatIssueType(issueType)}
 
 **Text:** "${issue.text}"
 
 **Analysis:** ${reasoning}`;
+
+  // Add confidence information
+  const confidenceLabel = getConfidenceLabel(confidenceScore);
+  description += `\n\n**Confidence:** ${confidenceScore}/100 (${confidenceLabel})`;
 
   // Add suggested context if available
   if (suggestedContext) {
@@ -55,6 +59,17 @@ export function buildDescription(issue: EpistemicIssue): string {
   }
 
   return description;
+}
+
+/**
+ * Get confidence label for a confidence score
+ */
+function getConfidenceLabel(score: number): string {
+  if (score >= 90) return "Very High - Textbook example";
+  if (score >= 70) return "High - Strong indicators";
+  if (score >= 50) return "Moderate - Likely but could be innocent";
+  if (score >= 30) return "Low - Borderline case";
+  return "Very Low - Uncertain";
 }
 
 /**

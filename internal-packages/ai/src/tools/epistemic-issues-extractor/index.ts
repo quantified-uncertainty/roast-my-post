@@ -33,6 +33,11 @@ const extractedEpistemicIssueSchema = z.object({
     .min(0)
     .max(100)
     .describe("Severity score from 0-100 (higher = more severe)"),
+  confidenceScore: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe("Confidence score from 0-100 (higher = more confident this is the fallacy)"),
   reasoning: z
     .string()
     .describe("Detailed reasoning for why this is an issue"),
@@ -145,6 +150,36 @@ Note: Basic fact verification is handled by other tools. Focus on REASONING QUAL
    - Strawmanning (misrepresenting opposing views)
    - Moving goalposts (changing criteria when challenged)
    - Gish gallop (overwhelming with many weak arguments)
+   - Quote mining (taking quotes out of context)
+   - Whataboutism (deflecting criticism by pointing elsewhere)
+
+7. **Causal Reasoning Errors**
+   - Confounding variables (third variable causes both X and Y)
+   - Reverse causation (getting direction of causation backwards)
+   - Correlation vs causation (already covered but emphasize)
+   - Post hoc ergo propter hoc ("after this, therefore because of this")
+
+8. **Comparative & Scale Issues**
+   - Scope insensitivity (ignoring magnitude: 2,000 vs 200,000 birds)
+   - False equivalence ("both sides" when severity differs greatly)
+   - Relative privation ("others have it worse" to dismiss concerns)
+
+9. **Evidentiary Issues**
+   - Anecdotal evidence (personal stories treated as data)
+   - Appeal to nature ("natural therefore safe" fallacy)
+   - Appeal to antiquity ("traditional therefore good")
+   - Single case generalization
+
+10. **Temporal & Historical Errors**
+    - Hindsight bias ("I knew it all along" after outcome known)
+    - Presentism (judging past by present knowledge/values)
+    - Cherry-picked timeframes - **PAY SPECIAL ATTENTION**:
+      * March 2020 (COVID market bottom - everything grew from here)
+      * March 2009 (Financial crisis bottom)
+      * March 2000 (Dot-com bubble burst)
+      * October 2008 (Financial crisis low)
+      * ANY conveniently chosen start date that makes performance look better
+      * Suspiciously short time periods (<2 years for market claims)
 
 **AVOID FLAGGING (other tools handle):**
 - Basic factual claims that need verification → Fact Check plugin
@@ -161,6 +196,12 @@ Note: Basic fact verification is handled by other tools. Focus on REASONING QUAL
 - 0-19: Negligible or handled by other tools
 
 **For each issue, provide:**
+- **Severity Score** (0-100): How serious is this issue
+- **Confidence Score** (0-100): How sure are you this IS the fallacy
+  - 90-100: Textbook example, multiple clear markers
+  - 70-89: Strong indicators, likely the fallacy
+  - 50-69: Moderate confidence, could be innocent
+  - 30-49: Weak confidence, borderline case
 - **Importance Score** (0-100): How central to the document's argument
 - **Researchable Score** (0-100): Can this be investigated further?
 - **Reasoning**: Explain the specific reasoning flaw (be pedagogical)
@@ -193,11 +234,15 @@ Max issues to return: ${input.maxIssues ?? 15}
 **Examples to look for:**
 - Survivorship bias: "90% of successful entrepreneurs dropped out" (ignores all who dropped out and failed)
 - False dichotomy: "Either adopt our approach or fail" (ignores alternatives)
-- Cherry-picking: "Stock up 300% over 10 years" (what about before? after?)
+- Cherry-picking data: "Stock up 300% over 10 years" (what about before? after?)
+- **Cherry-picked timeframe**: "Since March 2020, our returns are 500%" (2020 = market bottom!)
+- **Cherry-picked timeframe**: "Invested $10K in 2020, now worth $50K" (2020 starting point is suspicious)
 - Selection bias: "95% of our users are satisfied" (surveyed only existing users)
 - Quote mining: Taking quotes out of context to misrepresent views
 - Base rate neglect: Ignoring prior probabilities
-- Framing: Absolute vs relative risk confusion`;
+- Framing: Absolute vs relative risk confusion
+- Anecdotal evidence: "My friend tried this and it worked" (one case ≠ evidence)
+- Appeal to nature: "It's natural, so it's safe" (arsenic is natural!)`;
 
     const cacheSeed = generateCacheSeed("epistemic-extract", [
       input.text,
@@ -248,6 +293,10 @@ Max issues to return: ${input.maxIssues ?? 15}
                   type: "number",
                   description: "0-100: How severe is this issue",
                 },
+                confidenceScore: {
+                  type: "number",
+                  description: "0-100: How confident you are this is the fallacy",
+                },
                 reasoning: {
                   type: "string",
                   description: "Why this is an issue",
@@ -273,6 +322,7 @@ Max issues to return: ${input.maxIssues ?? 15}
                 "exactText",
                 "issueType",
                 "severityScore",
+                "confidenceScore",
                 "reasoning",
                 "importanceScore",
                 "researchableScore",

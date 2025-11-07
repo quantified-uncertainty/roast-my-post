@@ -44,6 +44,10 @@ export class EpistemicIssue {
     return this.issue.severityScore;
   }
 
+  get confidenceScore(): number {
+    return this.issue.confidenceScore;
+  }
+
   get importanceScore(): number {
     return this.issue.importanceScore;
   }

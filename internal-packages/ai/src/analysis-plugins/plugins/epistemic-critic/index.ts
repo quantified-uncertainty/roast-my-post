@@ -366,6 +366,11 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
         i.severityScore >= THRESHOLDS.SEVERITY_HIGH &&
         i.severityScore < THRESHOLDS.SEVERITY_CRITICAL
     ).length;
+    const mediumIssues = this.issues.filter(
+      (i) =>
+        i.severityScore >= THRESHOLDS.SEVERITY_MEDIUM &&
+        i.severityScore < THRESHOLDS.SEVERITY_HIGH
+    ).length;
     const verifiedAccurate = this.issues.filter(
       (i) => i.issueType === ISSUE_TYPES.VERIFIED_ACCURATE
     ).length;
@@ -381,6 +386,16 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
       (i) => i.issueType === ISSUE_TYPES.DECEPTIVE_WORDING
     ).length;
 
+    // Calculate epistemic health score (0-100, higher is better)
+    const healthScore = this.calculateHealthScore(
+      criticalIssues,
+      highIssues,
+      mediumIssues,
+      totalIssues,
+      verifiedAccurate
+    );
+    const healthGrade = this.getHealthGrade(healthScore);
+
     const summary =
       totalIssues === 0
         ? "No significant epistemic issues detected"
@@ -390,16 +405,21 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
     let analysisSummary = "";
 
     if (totalIssues === 0) {
-      analysisSummary =
+      analysisSummary = `**Epistemic Health Score: ${healthScore}/100 (Grade: ${healthGrade})**\n\n`;
+      analysisSummary +=
         "The document appears to present claims with adequate context and without obvious misinformation or deceptive framing.";
     } else {
-      analysisSummary = `The epistemic analysis identified ${totalIssues} potential issue${totalIssues > 1 ? "s" : ""}:\n\n`;
+      analysisSummary = `**Epistemic Health Score: ${healthScore}/100 (Grade: ${healthGrade})**\n\n`;
+      analysisSummary += `The epistemic analysis identified ${totalIssues} potential issue${totalIssues > 1 ? "s" : ""}:\n\n`;
 
       if (criticalIssues > 0) {
         analysisSummary += `- **${criticalIssues} critical issue${criticalIssues > 1 ? "s" : ""}** requiring immediate attention\n`;
       }
       if (highIssues > 0) {
         analysisSummary += `- **${highIssues} high-severity issue${highIssues > 1 ? "s" : ""}** worth reviewing\n`;
+      }
+      if (mediumIssues > 0) {
+        analysisSummary += `- ${mediumIssues} medium-severity issue${mediumIssues > 1 ? "s" : ""}\n`;
       }
       if (misinformationCount > 0) {
         analysisSummary += `- ${misinformationCount} potential misinformation issue${misinformationCount > 1 ? "s" : ""}\n`;
@@ -419,6 +439,43 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
     }
 
     return { summary, analysisSummary };
+  }
+
+  /**
+   * Calculate epistemic health score (0-100, higher is better)
+   */
+  private calculateHealthScore(
+    criticalIssues: number,
+    highIssues: number,
+    mediumIssues: number,
+    totalIssues: number,
+    verifiedAccurate: number
+  ): number {
+    // Start at 100 (perfect health)
+    let score = 100;
+
+    // Penalize for issues (weighted by severity)
+    score -= criticalIssues * 25; // Critical issues are very bad
+    score -= highIssues * 15; // High severity issues
+    score -= mediumIssues * 8; // Medium severity issues
+    score -= (totalIssues - criticalIssues - highIssues - mediumIssues) * 3; // Low severity
+
+    // Bonus for verified accurate claims (shows good epistemic practices)
+    score += verifiedAccurate * 5;
+
+    // Clamp to 0-100 range
+    return Math.max(0, Math.min(100, Math.round(score)));
+  }
+
+  /**
+   * Get letter grade for health score
+   */
+  private getHealthGrade(score: number): string {
+    if (score >= 90) return "A";
+    if (score >= 80) return "B";
+    if (score >= 70) return "C";
+    if (score >= 60) return "D";
+    return "F";
   }
 
   // Required methods from SimpleAnalysisPlugin interface

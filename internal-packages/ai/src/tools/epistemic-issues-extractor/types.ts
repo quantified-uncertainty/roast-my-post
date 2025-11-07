@@ -13,6 +13,9 @@ export interface ExtractedEpistemicIssue {
   /** Severity score from 0-100 (higher = more severe) */
   severityScore: number;
 
+  /** Confidence score from 0-100 (higher = more confident this is the fallacy) */
+  confidenceScore: number;
+
   /** Detailed reasoning for why this is an issue */
   reasoning: string;
 
