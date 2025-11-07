@@ -4,7 +4,7 @@
  * Automatically detects document genre based on content, structure, and metadata
  */
 
-import { DocumentGenre } from './types.js';
+import { DocumentGenre } from './types';
 
 interface GenreSignals {
   personal: number;

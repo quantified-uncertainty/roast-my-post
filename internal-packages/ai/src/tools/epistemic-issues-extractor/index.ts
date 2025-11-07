@@ -13,6 +13,12 @@ import type {
   EpistemicIssuesExtractorInput,
   EpistemicIssuesExtractorOutput,
 } from "./types";
+import { DocumentGenre } from "./types";
+import {
+  enrichIssue,
+  calculateAdjustedSeverity,
+  calculatePriorityScore,
+} from "./severity-calibration";
 
 // Zod schemas
 const extractedEpistemicIssueSchema = z.object({
@@ -463,15 +469,8 @@ Max issues to return: ${input.maxIssues ?? 15}
       };
     }
 
-    // Import severity calibration utilities
-    const {
-      enrichIssue,
-      calculateAdjustedSeverity,
-      calculatePriorityScore,
-    } = await import('./severity-calibration.js');
-
     // Get genre from input or use default
-    const genre = input.genre || (await import('./types.js')).DocumentGenre.FORUM_POST;
+    const genre = input.genre || DocumentGenre.FORUM_POST;
 
     // Enrich all issues with classification and context-aware adjustments
     const enrichedIssues = allIssues.map((issue) => {

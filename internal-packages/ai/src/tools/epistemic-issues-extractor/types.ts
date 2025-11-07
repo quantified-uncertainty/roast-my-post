@@ -1,4 +1,4 @@
-import { IssueType } from '../../analysis-plugins/plugins/epistemic-critic/constants.js';
+import { IssueType } from '../../analysis-plugins/plugins/epistemic-critic/constants';
 
 /**
  * Claim type classification for context-aware severity adjustment

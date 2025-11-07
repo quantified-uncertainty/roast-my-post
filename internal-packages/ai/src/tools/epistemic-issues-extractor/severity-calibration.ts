@@ -9,7 +9,7 @@
  * - Centrality (how important to the core argument?)
  */
 
-import { ClaimType, DocumentGenre, ExtractedEpistemicIssue } from './types.js';
+import { ClaimType, DocumentGenre, ExtractedEpistemicIssue } from './types';
 
 /**
  * Genre-based severity adjustment factors
