@@ -184,6 +184,18 @@ export const claimEvaluatorConfig: ToolConfig = {
   status: "experimental",
 };
 
+export const epistemicIssuesExtractorConfig: ToolConfig = {
+  id: "epistemic-issues-extractor",
+  name: "Epistemic Issues Extractor",
+  description:
+    "Extract and score potential misinformation, missing context, deceptive wording, and logical fallacies from text",
+  version: "1.0.0",
+  category: "extraction",
+  costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
+  path: "/tools/epistemic-issues-extractor",
+  status: "beta",
+};
+
 // ============================================================================
 // Tool Configs List (for client-side metadata)
 // ============================================================================
@@ -204,6 +216,7 @@ export const allToolConfigs = [
   perplexityResearcherConfig,
   linkValidatorConfig,
   claimEvaluatorConfig,
+  epistemicIssuesExtractorConfig,
 ];
 
 // ============================================================================

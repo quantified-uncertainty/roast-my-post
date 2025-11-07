@@ -1,0 +1,215 @@
+
+=== EPISTEMIC CRITIC RESULTS (ITERATION 4 - FINAL) ===
+
+Summary: Found 12 epistemic issues
+
+Analysis:
+The epistemic analysis identified 12 potential issues:
+
+- **7 high-severity issues** worth reviewing
+- 3 claims missing critical context
+- 5 instances of potentially deceptive wording
+- 2 claims verified as accurate
+
+Review the comments for specific details and suggested improvements.
+
+Total comments: 12
+
+By Level: 4 errors, 6 warnings, 2 success, 0 info
+
+
+========== SUCCESS (2) ==========
+
+--- SUCCESS 1 ---
+Header: Claim verified
+
+Description:
+**Issue Type:** Verified Accurate
+
+**Text:** "The company was incorporated in Delaware in 2020. According to our filed annual reports available on EDGAR, we employ 150 people as of Q4 2024."
+
+**Analysis:** This claim provides specific, verifiable information with a clear source (EDGAR filings). The specificity of dates, location, and employee count, combined with reference to publicly available documentation, makes this a well-sourced factual claim.
+
+**Suggested Context/Correction:**
+This is a properly sourced claim that can be verified through public records.
+Importance: 30
+
+--- SUCCESS 2 ---
+Header: Claim verified
+
+Description:
+**Issue Type:** Verified Accurate
+
+**Text:** "Water freezes at 0 degrees Celsius at standard atmospheric pressure. This is a well-established physical property."
+
+**Analysis:** This is a well-established scientific fact stated with appropriate context (standard atmospheric pressure). The claim correctly identifies this as a well-established property, demonstrating proper epistemic humility.
+
+**Suggested Context/Correction:**
+This is an accurate scientific fact with proper contextual qualifiers.
+Importance: 12
+
+
+========== ERROR (4) ==========
+
+--- ERROR 1 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Scientists agree that this approach is superior."
+
+**Analysis:** Claims universal agreement among 'scientists' without specifying which scientists, in what field, or providing any citations. This is an appeal to authority fallacy combined with an unverifiable consensus claim. Scientific consensus is rarely universal.
+
+**Suggested Context/Correction:**
+Should specify which scientists or scientific organizations, cite specific papers or statements, and avoid claiming universal agreement. Use language like 'some researchers suggest' or cite specific expert opinions.
+Importance: 76
+
+--- ERROR 2 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Our company has seen explosive growth this year, with revenue increasing dramatically."
+
+**Analysis:** Uses vague, emotionally charged language ('explosive', 'dramatically') without providing any specific numbers or percentages. This prevents readers from assessing the actual magnitude of growth and could be used to exaggerate modest increases.
+
+**Suggested Context/Correction:**
+Should provide specific revenue figures or percentage increases (e.g., 'revenue increased by X% from $Y to $Z').
+Importance: 73
+
+--- ERROR 3 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "We've consistently outperformed industry benchmarks by significant margins."
+
+**Analysis:** Uses vague language ('significant margins') without specifying which benchmarks, what metrics were used, or providing numerical data. 'Consistently' is also vague without defining the time period or frequency of measurement.
+
+**Suggested Context/Correction:**
+Should specify which industry benchmarks (e.g., S&P 500, specific industry indices), what metrics (revenue growth, profit margins, etc.), and provide specific numerical comparisons.
+
+**Research Findings:**
+Industry benchmark performance comparison metrics are standardized key performance indicators (KPIs) used to evaluate a company's performance relative to others in the same industry. These metrics span financial, operational, and customer-centric categories and help businesses identify strengths, weaknesses, and areas for improvement to stay competitive and set realistic goals.
+
+Sources:
+1. [Source](https://blog.getaura.ai/mastering-industry-benchmarking)
+2. [Source](https://www.statsig.com/perspectives/how-to-use-industry-benchmarks-to-boost-performance)
+3. [Source](https://business.adobe.com/blog/basics/overview-of-industry-benchmarks)
+4. [Source](https://coresignal.com/blog/industry-benchmarking/)
+5. [Source](https://www.netsuite.com/portal/resource/articles/business-strategy/performance-metrics.shtml)
+Importance: 71
+
+--- ERROR 4 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "All indicators point to continued exponential growth."
+
+**Analysis:** Uses absolute language ('all indicators') without specifying which indicators or providing data. 'Exponential growth' is a specific mathematical term often misused colloquially. True exponential growth is unsustainable long-term in real markets.
+
+**Suggested Context/Correction:**
+Should specify which indicators, provide actual growth rate data, and use more precise language. If growth is truly exponential, provide the mathematical basis; otherwise use terms like 'strong growth' or 'rapid growth'.
+Importance: 66
+
+
+========== WARNING (6) ==========
+
+--- WARNING 1 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "Research proves that our technology is more effective than traditional methods."
+
+**Analysis:** Makes a strong claim ('proves') without citing any specific research, defining 'traditional methods', or specifying what 'more effective' means. Science rarely 'proves' things definitively, and the lack of citations makes this unverifiable.
+
+**Suggested Context/Correction:**
+Should cite specific studies, define what 'traditional methods' are, specify effectiveness metrics, and use more appropriate language than 'proves' (e.g., 'suggests', 'indicates').
+Importance: 81
+
+--- WARNING 2 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "Studies show that 90% of customers prefer our product over competitors."
+
+**Analysis:** This claim cites 'studies' without identifying which studies, who conducted them, sample size, methodology, or when they were performed. The vague attribution combined with a precise statistic is a red flag. Without source information, this cannot be verified and may be cherry-picked data.
+
+**Suggested Context/Correction:**
+Should specify: which studies, who conducted them, sample size, methodology, date of research, and whether studies were independent or company-sponsored.
+Importance: 78
+
+--- WARNING 3 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "The company has been profitable every year since founding."
+
+**Analysis:** Makes a verifiable claim about profitability but doesn't cite a source (e.g., financial statements, annual reports). Given the company was founded in 2020, this is only 4 years of data, which may not be as impressive as implied. Also doesn't specify profit margins or amounts.
+
+**Suggested Context/Correction:**
+Should cite specific financial reports and provide context about the time period (4 years). Ideally include profit margins or amounts to allow meaningful assessment.
+
+**Research Findings:**
+Annual reports from major companies and financial organizations from 2020 to 2024 provide detailed insights into their profitability, financial health, and operational performance. These reports are publicly available on company investor relations websites and regulatory bodies, offering comprehensive data including earnings releases, 10-K filings, and financial statements.
+
+Sources:
+1. [Source](https://investors.coca-colacompany.com/financial-information)
+2. [Source](https://www.finra.org/about/annual-reports)
+3. [Source](https://www.stellantis.com/en/investors/reporting/financial-reports)
+4. [Source](https://www.bea.gov/data/income-saving/corporate-profits)
+5. [Source](https://www.pginvestor.com/financials/annual-reports/default.aspx)
+Importance: 66
+
+--- WARNING 4 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Based on current trends, we expect to dominate the market within 5 years."
+
+**Analysis:** Extrapolates from unspecified 'current trends' to make a bold prediction about market dominance. This assumes linear or exponential continuation of trends without accounting for market saturation, competition, or other variables. The language 'dominate' is also vague and potentially overconfident.
+
+**Suggested Context/Correction:**
+Should specify what trends are being analyzed, provide the methodology for projections, acknowledge uncertainties and risks, and define what 'dominate' means quantitatively.
+Importance: 61
+
+--- WARNING 5 ---
+Header: Potentially misleading wording
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "The market responded very positively to our new features."
+
+**Analysis:** Uses vague language ('very positively') without providing specific metrics like adoption rates, customer satisfaction scores, or sales data. This prevents objective assessment of the actual market response.
+
+**Suggested Context/Correction:**
+Should provide specific metrics such as adoption rates, customer satisfaction scores, sales increases, or user engagement data to quantify the market response.
+Importance: 56
+
+--- WARNING 6 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "This represents a significant market advantage that has driven our success."
+
+**Analysis:** Assumes causation from the claimed customer preference (which itself lacks proper sourcing) without considering other factors that might drive success. This is a post hoc reasoning fallacy - correlation doesn't prove causation.
+
+**Suggested Context/Correction:**
+Should acknowledge that multiple factors contribute to business success and avoid claiming a single cause. Could say 'may have contributed to' rather than 'has driven'.
+Importance: 51

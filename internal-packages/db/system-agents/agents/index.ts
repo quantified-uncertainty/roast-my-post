@@ -4,6 +4,7 @@ import { factCheckerAgent } from './fact-checker';
 import { forecastCheckerAgent } from './forecast-checker';
 import { comprehensiveCheckerAgent } from './comprehensive-checker';
 import { linkCheckerAgent } from './link-checker';
+import { epistemicCriticAgent } from './epistemic-critic';
 import { SystemAgentDefinition } from '../types';
 
 export const systemAgents: SystemAgentDefinition[] = [
@@ -13,6 +14,7 @@ export const systemAgents: SystemAgentDefinition[] = [
   forecastCheckerAgent,
   comprehensiveCheckerAgent,
   linkCheckerAgent,
+  epistemicCriticAgent,
 ];
 
 export {
@@ -22,4 +24,5 @@ export {
   forecastCheckerAgent,
   comprehensiveCheckerAgent,
   linkCheckerAgent,
+  epistemicCriticAgent,
 };

@@ -1,0 +1,183 @@
+
+=== EPISTEMIC CRITIC RESULTS (ITERATION 3) ===
+
+Summary: Found 10 epistemic issues
+
+Analysis:
+The epistemic analysis identified 10 potential issues:
+
+- **7 high-severity issues** worth reviewing
+- 4 claims missing critical context
+- 4 instances of potentially deceptive wording
+
+Review the comments for specific details and suggested improvements.
+
+Total comments: 10
+
+By Level: 3 errors, 7 warnings, 0 success, 0 info
+
+
+========== ERROR (3) ==========
+
+--- ERROR 1 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Scientists agree that this approach is superior."
+
+**Analysis:** Claims universal agreement among 'scientists' without specifying which scientists, in what field, or providing any citations. This is an appeal to authority fallacy combined with an unverifiable consensus claim. Scientific consensus is rarely universal.
+
+**Suggested Context/Correction:**
+Should specify which scientists or scientific organizations, cite specific papers or statements, and avoid claiming universal agreement. Use language like 'some researchers suggest' or cite specific expert opinions.
+Importance: 76
+
+--- ERROR 2 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Our company has seen explosive growth this year, with revenue increasing dramatically."
+
+**Analysis:** Uses vague, emotionally charged language ('explosive', 'dramatically') without providing any specific numbers or percentages. This prevents readers from assessing the actual magnitude of growth and could be used to exaggerate modest increases.
+
+**Suggested Context/Correction:**
+Should provide specific revenue figures or percentage increases (e.g., 'revenue increased by X% from $Y to $Z').
+Importance: 73
+
+--- ERROR 3 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "All indicators point to continued exponential growth."
+
+**Analysis:** Uses absolute language ('all indicators') without specifying which indicators or providing data. 'Exponential growth' is a specific mathematical term often misused for emphasis. True exponential growth is unsustainable long-term in real markets.
+
+**Suggested Context/Correction:**
+Should specify which indicators, provide actual growth rates, and use mathematically accurate terminology. Acknowledge that sustained exponential growth is rare and typically unsustainable.
+Importance: 66
+
+
+========== WARNING (7) ==========
+
+--- WARNING 1 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "Research proves that our technology is more effective than traditional methods."
+
+**Analysis:** Makes a strong claim ('proves') without citing any specific research, defining 'traditional methods', or specifying what 'more effective' means. Science rarely 'proves' things definitively, and the lack of citations makes this unverifiable.
+
+**Suggested Context/Correction:**
+Should cite specific studies, define what 'traditional methods' are, specify effectiveness metrics, and use more appropriate language than 'proves' (e.g., 'suggests', 'indicates').
+Importance: 81
+
+--- WARNING 2 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "Studies show that 90% of customers prefer our product over competitors."
+
+**Analysis:** This claim cites 'studies' without identifying which studies, who conducted them, sample size, methodology, or when they were performed. The vague attribution combined with a precise statistic is a red flag. Without source information, this cannot be verified and may be cherry-picked data.
+
+**Suggested Context/Correction:**
+Should specify: which studies, who conducted them, sample size, methodology, date of research, and whether studies were independent or company-sponsored.
+Importance: 78
+
+--- WARNING 3 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "We've consistently outperformed industry benchmarks by significant margins."
+
+**Analysis:** Uses vague language ('significant margins') without specifying which industry benchmarks, what metrics are being compared, or providing specific numbers. This prevents verification and assessment of the actual performance.
+
+**Suggested Context/Correction:**
+Should specify which benchmarks (e.g., S&P 500, industry-specific indices), what metrics (revenue growth, profit margins, etc.), and provide specific percentages or figures.
+
+**Research Findings:**
+Industry benchmark comparison metrics commonly focus on financial, operational, and customer-centric performance margins to evaluate a company's standing relative to peers. Key performance margins include net profit margin, gross margin, employee productivity, customer retention, and sales growth rates. These metrics help businesses identify strengths, weaknesses, and opportunities for improvement by comparing against best-in-class, competitive, and foundational industry standards.
+
+Sources:
+1. [Source](https://blog.getaura.ai/mastering-industry-benchmarking)
+2. [Source](https://www.statsig.com/perspectives/how-to-use-industry-benchmarks-to-boost-performance)
+3. [Source](https://coresignal.com/blog/industry-benchmarking/)
+4. [Source](https://www.venasolutions.com/blog/average-profit-margin-by-industry)
+5. [Source](https://site.financialmodelingprep.com/education/financial-ratios/Benchmarking-Companies-Within-an-Industry-Key-Ratio-Considerations)
+Importance: 71
+
+--- WARNING 4 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "The company has been profitable every year since founding."
+
+**Analysis:** Makes a verifiable claim but doesn't cite a source (e.g., financial statements, annual reports). Given the company was founded in 2020, this is only 4 years of data, which may not be as impressive as implied. Also doesn't specify profit margins or amounts.
+
+**Suggested Context/Correction:**
+Should cite source (e.g., 'According to our audited financial statements...') and provide context about the time period (4 years) and magnitude of profitability.
+
+**Research Findings:**
+Company profitability from 2020 to 2024, as reported in annual reports, shows varied performance across industries with some companies like JPMorgan Chase and Coca-Cola reporting strong revenue and net income growth, while others reflect broader economic conditions. JPMorgan Chase reported record revenue and net income in 2024, with $180.6 billion in revenue and $58.5 billion net income, demonstrating strong profitability and growth. Coca-Cola provides detailed annual and quarterly financial reports showing their earnings and margin analysis over the period. Other companies such as L'Oréal and Procter & Gamble also publish annual reports reflecting their financial health and profitability trends. Regulatory and industry bodies like FINRA and the U.S. Bureau of Economic Analysis provide aggregated financial data and corporate profit statistics that contextualize these company-specific results within broader economic trends.
+
+Sources:
+1. [Source](https://investors.coca-colacompany.com/financial-information)
+2. [Source](https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/annualreport-2024.pdf)
+3. [Source](https://www.finra.org/about/annual-reports)
+4. [Source](https://www.loreal-finance.com/eng/annual-report)
+5. [Source](https://www.pginvestor.com/financials/annual-reports/default.aspx)
+Importance: 66
+
+--- WARNING 5 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Based on current trends, we expect to dominate the market within 5 years."
+
+**Analysis:** Extrapolates from unspecified 'current trends' to make a bold prediction about market dominance. This commits the fallacy of assuming linear or exponential continuation without accounting for market dynamics, competition, or potential disruptions.
+
+**Suggested Context/Correction:**
+Should specify what trends are being analyzed, acknowledge uncertainties and risks, provide methodology for projections, and use more cautious language (e.g., 'may achieve significant market share' rather than 'dominate').
+Importance: 61
+
+--- WARNING 6 ---
+Header: Potentially misleading wording
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "The market responded very positively to our new features."
+
+**Analysis:** Uses vague, subjective language ('very positively') without providing measurable metrics. What constitutes a positive response is undefined - could be sales, reviews, social media sentiment, etc. This prevents objective assessment.
+
+**Suggested Context/Correction:**
+Should provide specific metrics such as adoption rates, customer satisfaction scores, sales increases, or other quantifiable measures of market response.
+Importance: 56
+
+--- WARNING 7 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "This represents a significant market advantage that has driven our success."
+
+**Analysis:** Assumes causation from the claimed customer preference (which itself lacks proper sourcing) without establishing that this preference actually caused the company's success. This is a post hoc ergo propter hoc fallacy - correlation doesn't prove causation.
+
+**Suggested Context/Correction:**
+Should provide evidence linking customer preference to business outcomes, or use more cautious language like 'may have contributed to' rather than 'has driven'.
+Importance: 51

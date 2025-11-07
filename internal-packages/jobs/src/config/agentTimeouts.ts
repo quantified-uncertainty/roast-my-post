@@ -11,13 +11,16 @@ export const AGENT_TIMEOUT_CONFIG = {
   CAPABILITY_TIMEOUTS: {
     // Multi-epistemic evaluation runs multiple plugins and can take 6-15 minutes
     'multi-epistemic-eval': 900000, // 15 minutes
-    
+
     // Spelling/grammar check can process large documents
     'spelling-grammar': 360000, // 6 minutes
-    
+
     // Link verification might need to check many external URLs
     'simple-link-verifier': 480000, // 8 minutes
-    
+
+    // Epistemic critic may need time for Perplexity research on claims
+    'epistemic-critic': 600000, // 10 minutes
+
     // Add more capabilities as needed
   } as Record<string, number>,
   

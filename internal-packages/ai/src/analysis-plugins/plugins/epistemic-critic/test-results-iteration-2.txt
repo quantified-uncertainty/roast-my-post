@@ -1,0 +1,180 @@
+
+=== EPISTEMIC CRITIC RESULTS (ITERATION 2) ===
+
+Summary: Found 9 epistemic issues
+
+Analysis:
+The epistemic analysis identified 9 potential issues:
+
+- **5 high-severity issues** worth reviewing
+- 3 claims missing critical context
+- 5 instances of potentially deceptive wording
+
+Review the comments for specific details and suggested improvements.
+
+Total comments: 9
+
+By Level: 2 errors, 7 warnings, 0 success, 0 info
+
+--- Comment 1 ---
+Header: Important context missing
+Level: warning
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "Studies show that 90% of customers prefer our product over competitors."
+
+**Analysis:** Cites a specific statistic (90%) without providing any source, methodology, sample size, or definition of 'prefer'. This is a major marketing claim with no verifiable citation.
+
+**Suggested Context/Correction:**
+Need to specify: which studies, who conducted them, sample size, methodology, what 'prefer' means, and whether studies were independent or company-sponsored.
+
+**Research Findings:**
+Customer preference studies showing 90% preference for a product often reflect consensus rather than a large difference in liking; consumers may misinterpret such high preference percentages as indicating much stronger liking than actually exists. Brand name and customer ratings significantly influence preference, with studies showing that known brands can sway preference strongly compared to blind tests. Additionally, nearly 90% of consumers report that customer ratings and reviews have the biggest impact on purchasing decisions, emphasizing the importance of authentic user-generated content and brand trust in shaping preferences.
+
+Sources:
+1. [Source](https://academic.oup.com/jcr/article/52/1/135/7756740)
+2. [Source](https://www.causeweb.org/usproc/sites/default/files/usclap/2019-2/Influence%20of%20Brand%20Name%20on%20Preference.pdf)
+3. [Source](https://www.businesswire.com/news/home/20230228005207/en/Emplifi-Reveals-Nearly-90-of-Consumers-Say-Customer-Ratings-and-Reviews-Have-the-Biggest-Impact-on-Purchasing-Decisions)
+4. [Source](https://www.salsify.com/blog/why-brand-trust-makes-shoppers-pay-more)
+Importance: 81
+
+--- Comment 2 ---
+Header: Important context missing
+Level: warning
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "Research proves that our technology is more effective than traditional methods."
+
+**Analysis:** Makes a definitive claim ('proves') about effectiveness without citing any research, defining 'effective', specifying which traditional methods, or providing measurable outcomes.
+
+**Suggested Context/Correction:**
+Need specific research citations, peer-reviewed studies, effectiveness metrics, and clear comparison parameters.
+
+**Research Findings:**
+{
+Importance: 74
+
+--- Comment 3 ---
+Header: Deceptive presentation
+Level: error
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Our company has seen explosive growth this year, with revenue increasing dramatically."
+
+**Analysis:** Uses vague intensifiers ('explosive', 'dramatically') without providing actual numbers or percentages. This is evasive language that could hide modest or negative performance.
+
+**Suggested Context/Correction:**
+Should provide specific revenue figures or percentage increases that can be verified against filed financial reports.
+
+**Research Findings:**
+{
+Importance: 73
+
+--- Comment 4 ---
+Header: Deceptive presentation
+Level: error
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Scientists agree that this approach is superior."
+
+**Analysis:** Appeals to authority without naming any scientists, specifying their credentials, or indicating level of consensus. 'Scientists agree' implies unanimous consensus without evidence.
+
+**Suggested Context/Correction:**
+Should cite specific scientists, their qualifications, published research, and clarify whether this represents broad scientific consensus or select opinions.
+
+**Research Findings:**
+Scientific consensus refers to the collective judgment, position, and opinion held by the majority or supermajority of scientists in a particular field at a given time, achieved through processes like peer review, scholarly debate, and replication of results[1]. It is not simply majority opinion, but rather the convergence of evidence from multiple independent sources, and is often communicated to the public via consensus statements or review articles[1]. While consensus is a powerful tool for informing policy and public understanding—especially on issues like climate change, evolution, and vaccine safety—it is not a substitute for evidence, and history shows that consensus can sometimes be wrong[1][5][6]. In emerging fields like AI and nature tech, there is a recognized need for community-driven consensus on terminology, measurement, and policy to avoid fragmentation and ensure credibility[2][3][4]. However, consensus in policy-making must be scrutinized for potential biases, and input from adjacent fields is recommended to balance expert interests[5].
+
+Sources:
+1. [Source](https://en.wikipedia.org/wiki/Scientific_consensus)
+2. [Source](https://pmc.ncbi.nlm.nih.gov/articles/PMC11278797/)
+3. [Source](https://arxiv.org/html/2510.00075v1)
+4. [Source](https://www.naturepositive.org/news/blog/nature-tech/)
+5. [Source](https://pmc.ncbi.nlm.nih.gov/articles/PMC6557026/)
+Importance: 71
+
+--- Comment 5 ---
+Header: Important context missing
+Level: warning
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "The company has been profitable every year since founding."
+
+**Analysis:** Makes a verifiable claim about profitability but provides no supporting documentation or reference to financial statements, despite mentioning EDGAR filings elsewhere in the document.
+
+**Suggested Context/Correction:**
+Should reference specific EDGAR filings or annual reports showing profitability for 2020, 2021, 2022, 2023, and 2024.
+
+**Research Findings:**
+```json
+Importance: 64
+
+--- Comment 6 ---
+Header: Potentially misleading wording
+Level: warning
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "We've consistently outperformed industry benchmarks by significant margins."
+
+**Analysis:** Uses vague language ('significant margins') without specifying which benchmarks, what metrics, or providing quantifiable data.
+
+**Suggested Context/Correction:**
+Should specify which industry benchmarks (e.g., S&P 500, industry-specific indices), what metrics (revenue growth, profit margins, etc.), and actual performance numbers.
+Importance: 59
+
+--- Comment 7 ---
+Header: Logical fallacy detected
+Level: warning
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Based on current trends, we expect to dominate the market within 5 years."
+
+**Analysis:** Extrapolates from unspecified 'current trends' to make an extreme prediction ('dominate the market'). This is speculative and assumes linear continuation without accounting for competition, market changes, or other variables.
+
+**Suggested Context/Correction:**
+Should clarify this is a projection with inherent uncertainty, specify assumptions, and provide range of scenarios rather than definitive outcome.
+Importance: 54
+
+--- Comment 8 ---
+Header: Potentially misleading wording
+Level: warning
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "All indicators point to continued exponential growth."
+
+**Analysis:** Uses absolute language ('all indicators') and mathematically specific term ('exponential') without defining indicators or providing data. Exponential growth is unsustainable long-term and rarely accurate.
+
+**Suggested Context/Correction:**
+Should specify which indicators, provide actual growth rates, and acknowledge that exponential growth is typically unsustainable.
+Importance: 53
+
+--- Comment 9 ---
+Header: Potentially misleading wording
+Level: warning
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "The market responded very positively to our new features."
+
+**Analysis:** Vague claim using subjective language ('very positively') without measurable metrics like adoption rates, customer satisfaction scores, or revenue impact.
+
+**Suggested Context/Correction:**
+Should provide specific metrics: feature adoption rates, customer feedback scores, retention rates, or revenue attributed to new features.
+Importance: 47

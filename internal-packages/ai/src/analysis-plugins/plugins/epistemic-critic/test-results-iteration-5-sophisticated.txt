@@ -1,0 +1,395 @@
+
+=== EPISTEMIC CRITIC RESULTS (ITERATION 5 - SOPHISTICATED REASONING) ===
+
+Test Focus: Sophisticated reasoning issues (NOT basic fact-checking)
+Document: Investment strategy with statistical fallacies, framing issues, bias
+
+Summary: Found 15 epistemic issues (9 critical)
+
+Analysis:
+The epistemic analysis identified 15 potential issues:
+
+- **9 critical issues** requiring immediate attention
+- **6 high-severity issues** worth reviewing
+- 2 claims missing critical context
+- 4 instances of potentially deceptive wording
+
+Review the comments for specific details and suggested improvements.
+
+Total comments: 15
+
+By Level: 11 errors, 4 warnings, 0 success, 0 info
+
+Sophisticated Issues Detected:
+  - Survivorship Bias: 3
+  - False Dichotomy: 1
+  - Cherry-Picking: 5
+  - Framing Effect: 2
+  - Other: 3
+  - Strawman: 1
+
+
+========== ERROR (11) ==========
+
+--- ERROR 1 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "90% of millionaires who used our strategy achieved their wealth within 5 years"
+
+**Analysis:** Classic survivorship bias. This only examines millionaires (successful outcomes) who used the strategy, completely ignoring all the people who used the strategy and didn't become millionaires. This is like saying '90% of lottery winners bought tickets at gas stations' - it tells us nothing about the success rate of the strategy itself. The relevant statistic would be: 'Of all people who used our strategy, what percentage became millionaires?'
+
+**Suggested Context/Correction:**
+Need to know: Of ALL clients who used this strategy, what percentage became millionaires? What's the base failure rate? How does this compare to the general population's rate of becoming millionaires?
+
+**Research Findings:**
+Survivorship bias in investment marketing claims refers to the tendency of firms to highlight only the successful funds, stocks, or strategies while omitting those that failed or were discontinued. This creates a misleading impression of performance and success rates, as the marketing materials often showcase only the 'survivors'—those investments that have performed well and remained in existence. By excluding the failures, such as funds that were closed, merged, or went bankrupt, the overall picture presented to investors is overly optimistic and can lead to poor decision-making. This bias is particularly prevalent in mutual fund marketing, where underperforming funds are removed from performance statistics, making the remaining funds appear more successful than they actually are.
+
+Sources:
+1. [Source](https://medium.com/@investing/survivorship-bias-in-investments-8b3b3b3b3b3b)
+2. [Source](https://www.fe.training/free-resources/asset-management/survivorship-bias/)
+3. [Source](https://www.kotaksecurities.com/investing-guide/articles/survivorship-bias/)
+4. [Source](https://bookmap.com/blog/survivorship-bias-in-market-data-what-traders-need-to-know)
+5. [Source](https://weekendinvesting.com/is-survivorship-bias-affecting-your-performance/)
+Importance: 95
+
+--- ERROR 2 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Either you embrace innovation and succeed, or you stick with traditional methods and watch inflation erode your savings"
+
+**Analysis:** Textbook false dichotomy (false dilemma). Presents only two options when many exist: other innovative strategies, hybrid approaches, different traditional methods with inflation protection (TIPS, I-bonds, real estate). Also smuggles in unwarranted assumptions: that their method = innovation = success, and traditional = failure. This is a manipulation tactic to eliminate consideration of alternatives.
+
+**Suggested Context/Correction:**
+Many investment approaches exist between these extremes. Traditional methods include inflation-protected securities. Innovation doesn't guarantee success, and traditional doesn't guarantee failure. This framing artificially constrains the decision space.
+
+**Research Findings:**
+The concept of a false dichotomy in investment marketing refers to the oversimplified presentation of investment choices as mutually exclusive options—such as active vs. passive, value vs. growth, or brand vs. performance—when, in reality, these categories are not rigidly separate and often overlap in practice. This framing can mislead investors and marketers by obscuring the nuanced, context-dependent nature of effective investment strategies and marketing approaches. Leading voices in finance and marketing argue that these dichotomies are more about narrative convenience than practical reality, and that a more integrated, quality-focused perspective often yields better results.
+
+Sources:
+1. [Source](https://investmentsandwealth.org/advisor-publications/blog/investments-wealth-monitor-beyond-the-false-dichotomy-of-active-vs-passive)
+2. [Source](https://jimmysjournal.substack.com/p/growth-vs-value-a-false-dichotomy)
+3. [Source](https://www.netnethunter.com/value-investing-vs-growth-investing/)
+4. [Source](https://investingmotherlode.com/2021/04/25/the-false-dichotomy-between-value-stocks-and-growth-stocks/)
+5. [Source](https://www.warc.com/newsandopinion/opinion/brand-vs-performance-lets-end-this-false-dichotomy/en-gb/5547)
+Importance: 92
+
+--- ERROR 3 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "The stock market has grown 300% over the past decade, clearly demonstrating that now is the perfect time to invest"
+
+**Analysis:** Multiple reasoning errors: (1) Cherry-picked timeframe - why exactly 10 years? What happened in years 11-20? (2) Non sequitur - past growth doesn't demonstrate that NOW is the perfect time; if anything, after major growth, markets might be overvalued. (3) Ignores market cycles and mean reversion. This is like saying 'the coin landed heads 10 times, so now is the perfect time to bet on heads.'
+
+**Suggested Context/Correction:**
+Past performance doesn't predict future returns. After significant growth, markets may be due for correction. Need context: What's the typical pattern after 300% growth periods? What's the current valuation relative to historical averages?
+
+**Research Findings:**
+Regression to the mean in stock market returns after growth periods refers to the tendency for unusually high or low returns to be followed by returns closer to the long-term average. This statistical phenomenon implies that after a period of strong growth, future returns are likely to be lower or closer to average, rather than continuing at the extreme level. However, while this concept is widely recognized in investing, the evidence for strong mean reversion in stock returns over short horizons is weak, and it is not a reliable basis for profitable market timing. Over long periods, stock market returns tend to revert to a growth trend, but deviations can persist for years or decades.
+
+Sources:
+1. [Source](https://www.financialpoise.com/investing-basics-for-beginners-installment-6-regression-toward-the-mean-a-hoity-toity-term-every-investor-should-understand/)
+2. [Source](https://www.bogleheads.org/forum/viewtopic.php?t=342469)
+3. [Source](https://mywealthadvisor.com/mean-reversion-expected-stock-returns-aka-market-timing/)
+4. [Source](https://hedgefundalpha.com/education/what-every-investor-needs-to-know-about-regression-to-the-mean/)
+5. [Source](https://www.currentmarketvaluation.com/models/s&p500-mean-reversion.php)
+Importance: 87
+
+--- ERROR 4 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "Our internal study of 1,000 users showed an average return of 47.3% annually"
+
+**Analysis:** Multiple red flags: (1) False precision - '47.3%' suggests exactness that masks uncertainty and selection bias. (2) 'Internal study' = no independent verification, high conflict of interest. (3) Selection bias - which 1,000 users? Current users? Excludes those who quit/lost money? (4) No timeframe specified. (5) No risk-adjusted returns. (6) Survivorship bias if only studying existing users. (7) No comparison to risk taken.
+
+**Suggested Context/Correction:**
+Need: Independent verification, study methodology, how users were selected, timeframe, risk metrics (volatility, max drawdown), whether this includes users who left the platform, and statistical significance with confidence intervals rather than false precision.
+
+**Research Findings:**
+Selection bias in internal investment performance studies arises when the observed sample of investments or projects is not representative of the entire population due to systematic exclusion or overrepresentation of certain outcomes, typically successful projects. This bias leads to overestimation of returns and misinformed investment decisions. It occurs because investors or analysts tend to observe and evaluate only those projects or firms that have been selected or survived, ignoring failed or unobserved cases. This phenomenon can cause overoptimism, overinvestment, and distorted assessments of investment strategies, especially in early-stage or venture capital contexts.
+
+Sources:
+1. [Source](https://www.pnas.org/doi/10.1073/pnas.2015571118)
+2. [Source](https://philippe-jehiel.enpc.fr/wp-content/uploads/sites/2/2018/07/Investold2.pdf)
+3. [Source](https://acr-journal.com/article/studying-the-influence-of-cognitive-biases-on-the-investment-decision-making-of-retail-investors-in-india-1513/)
+4. [Source](https://scholarlycommons.law.northwestern.edu/cgi/viewcontent.cgi?article=1197&context=facultyworkingpapers)
+5. [Source](https://papers.ssrn.com/sol3/Delivery.cfm/4585432.pdf?abstractid=4585432&mirid=1)
+Importance: 87
+
+--- ERROR 5 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "We surveyed our user base and 95% reported satisfaction with their results"
+
+**Analysis:** Severe selection bias. 'Our user base' only includes people who are still using the service - excludes all who quit (likely the dissatisfied ones). This is survivorship bias in survey form. Also: satisfaction ≠ actual returns. People might be 'satisfied' due to sunk cost fallacy, comparison to worse alternatives, or not understanding their actual performance. No response rate given either.
+
+**Suggested Context/Correction:**
+Need to survey ALL people who ever used the service, including those who quit. Need response rate. 'Satisfaction' is subjective and doesn't correlate with actual financial outcomes. This is like a gym surveying only current members about fitness results.
+
+**Research Findings:**
+Survivorship bias in customer satisfaction surveys occurs when feedback is collected only from customers who have continued using a product or service, while those who stopped (often due to dissatisfaction) are excluded. This leads to an overly optimistic view of customer satisfaction because the negative experiences of churned customers are not captured. As a result, companies may make decisions based on incomplete data, missing critical insights about why customers leave. To mitigate survivorship bias, organizations should gather feedback at multiple points in the customer journey, include both active and inactive customers, and triangulate survey data with behavioral and employee feedback.
+
+Sources:
+1. [Source](https://www.surveymonkey.com/learn/survey-best-practices/how-to-avoid-common-types-survey-bias/)
+2. [Source](https://www.customerthermometer.com/customer-feedback/survey-bias-what-are-different-types-and-how-to-avoid-them/)
+3. [Source](https://chartexpo.com/blog/survivorship-bias)
+4. [Source](https://www.cmswire.com/customer-experience/3-ways-to-reduce-bias-in-customer-survey-based-data-for-effective-cx/)
+5. [Source](https://www.cognitivebiaslab.com/bias/bias-survivorship/)
+Importance: 85
+
+--- ERROR 6 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Consider John, who invested $10,000 with us in 2020. Today, his portfolio is worth $50,000 - a 5x return!"
+
+**Analysis:** Cherry-picked anecdote presented as typical. 2020 was the COVID market bottom - almost any investment strategy would show massive returns from that starting point. This is cherry-picking both the person (best case) and timeframe (starting at market bottom). No mention of: how many Johns lost money, what the median return is, or that 2020-present captured an exceptional bull market.
+
+**Suggested Context/Correction:**
+2020 was an exceptional starting point (market bottom). The S&P 500 itself roughly doubled from March 2020 to present. Need: median returns across all users, distribution of outcomes, and comparison to simply buying index funds in 2020. One success story proves nothing about the strategy.
+
+**Research Findings:**
+Cherry-picking timeframes in investment performance claims refers to selectively presenting investment returns over specific periods that show the most favorable results, thereby potentially misleading investors. Regulatory frameworks, particularly the SEC's Marketing Rule, require investment advisers to present performance consistently over standard 1-, 5-, and 10-year periods (or the life of the portfolio if shorter) to prevent such selective reporting. This rule aims to ensure transparency, comparability, and reduce misleading claims by avoiding the highlighting of only the best-performing timeframes. Enforcement actions and compliance guidelines emphasize the importance of full disclosure and consistent presentation to guard against cherry-picking, which can distort an investor's understanding of true performance.
+
+Sources:
+1. [Source](https://www.kitces.com/blog/performance-advertising-regulations-sec-marketing-rule-investment-advisers-compliance-enforcement-november-4-2022/)
+2. [Source](https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-47)
+3. [Source](https://portfoliocharts.com/2016/03/29/the-avoidable-mistake-of-cherry-picking-data/)
+4. [Source](https://www.dlapiper.com/en/insights/publications/2025/07/sec-targets-investment-adviser-cherry-picking)
+5. [Source](https://web.acaglobal.com/hubfs/2022%20Assets%20from%20Pardot%20Migration/2021%20White%20Paper%20-%20Guide%20to%20Performance%20Under%20New%20Marketing%20Rule.pdf)
+Importance: 85
+
+--- ERROR 7 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Our competitors' returns are mediocre at best - they only achieved 15% annual growth compared to the market average of 10%"
+
+**Analysis:** Contradictory framing that reveals deceptive rhetoric. Competitors achieved 15% vs market average of 10% - that's 50% outperformance, which is actually excellent. Calling this 'mediocre' is pure rhetorical manipulation. This suggests either: (1) the author doesn't understand percentages, or (2) they're deliberately using loaded language to mislead readers about competitors' strong performance.
+
+**Suggested Context/Correction:**
+15% returns vs 10% market average represents significant outperformance (5 percentage points or 50% relative outperformance). This would typically be considered excellent, not mediocre. The framing here is designed to diminish objectively strong performance.
+
+**Research Findings:**
+Rhetorical manipulation in comparative performance claims involves using persuasive techniques or rhetorical devices to present one product, service, or entity as superior to another, often by distorting facts, exaggerating differences, or using emotionally charged language. This can include tactics such as cherry-picking data, using misleading comparisons, or employing rhetorical fallacies like the straw man or equivocation. Such manipulation can influence audience perception and decision-making, even when the underlying evidence is weak or biased.
+
+Sources:
+1. [Source](https://human.libretexts.org/Courses/Oxnard_College/A_Guide_to_Successful_College_Writing/05:_Rhetorical_Analysis/5.05:_Rhetorical_Fallacies)
+2. [Source](https://pmc.ncbi.nlm.nih.gov/articles/PMC10019720/)
+3. [Source](https://www.ccsoh.us/cms/lib/OH01913306/Centricity/Domain/207/Rhetorical%20Devices%20List.pdf)
+4. [Source](https://writers.com/common-rhetorical-devices-list)
+5. [Source](https://academic.oup.com/past/article/257/Supplement_16/233/6782262)
+Importance: 82
+
+--- ERROR 8 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "This represents a 50% increase in returns compared to traditional index funds"
+
+**Analysis:** Absolute vs. relative risk framing manipulation. If index funds return ~10% and they claim 47.3%, that's not a '50% increase' - it's a 37.3 percentage point difference or 373% relative increase. A '50% increase' would be 10% → 15%. This appears to be deliberately using confusing framing to make the claim sound more modest/believable while actually claiming extraordinary outperformance. Or they're comparing to a 31.5% baseline, which isn't disclosed.
+
+**Suggested Context/Correction:**
+Clarify: 50% increase from what baseline? If comparing 47.3% to typical index fund returns of ~10%, this would be 373% relative increase or 37.3 percentage points absolute increase. The math here doesn't add up without knowing the comparison baseline.
+
+**Research Findings:**
+Relative and absolute risk framing are two ways of presenting risk information, each with distinct implications for decision-making, especially in financial and health contexts. Relative risk describes the ratio of risk between two groups (e.g., '50% higher risk'), while absolute risk describes the actual difference in risk (e.g., 'risk increases from 2% to 3%'). In financial claims, relative risk framing can exaggerate the perceived impact of a risk or benefit, potentially misleading consumers. Absolute risk framing provides a clearer picture of the actual change, helping people make more informed decisions. Studies show that people are more likely to choose optimal options when risks are presented in absolute terms, as relative framing can lead to cognitive biases and overestimation of risk or benefit.
+
+Sources:
+1. [Source](https://scholars.csus.edu/view/pdfCoverPage?instCode=01CALS_USL&filePid=13243884860001671&download=true)
+2. [Source](https://www.jmcp.org/doi/10.18553/jmcp.2018.24.11.1173)
+3. [Source](https://centerforhealthjournalism.org/our-work/insights/reporting-findings-absolute-vs-relative-risk)
+4. [Source](https://www.youtube.com/watch?v=ELNt0XZYsAQ)
+5. [Source](https://statisticsbyjim.com/probability/relative-absolute-risk-reduction/)
+Importance: 82
+
+--- ERROR 9 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "This kind of success is typical for our dedicated users"
+
+**Analysis:** Weasel words creating unfalsifiable claim. 'Dedicated users' is a no-true-Scotsman setup - if you don't get 5x returns, you weren't 'dedicated' enough. This shifts blame to the user for any failure while claiming credit for any success. Also contradicts basic statistics: 5x returns in ~4 years cannot be 'typical' without extraordinary risk or survivorship bias.
+
+**Suggested Context/Correction:**
+Define 'dedicated users' objectively. If 5x returns were truly typical, this would be the most successful investment strategy in history. The qualifier 'dedicated' appears designed to excuse failures as user error rather than strategy limitations.
+
+**Research Findings:**
+The No True Scotsman fallacy in performance claims occurs when a generalization about the performance of a system, group, or individual is challenged by a counterexample, and instead of accepting the counterexample, the claimant redefines the criteria to exclude the counterexample. This is often done by asserting that the counterexample does not meet some newly imposed or idealized standard, thus protecting the original claim from being disproven. This fallacy is common in discussions about technology, sports, or any domain where performance standards are debated.
+
+Sources:
+1. [Source](https://en.wikipedia.org/wiki/No_true_Scotsman)
+2. [Source](https://www.logical-fallacy.com/articles/no-true-scotsman/)
+3. [Source](https://www.scribbr.com/fallacies/no-true-scotsman-fallacy/)
+4. [Source](https://www.danmickle.com/logical-fallacies-series-no-true-scotsman/)
+5. [Source](https://quillbot.com/blog/frequently-asked-questions/is-no-true-scotsman-always-a-fallacy/)
+Importance: 82
+
+--- ERROR 10 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Every year you wait costs you thousands in missed gains"
+
+**Analysis:** Framing manipulation using opportunity cost fallacy. This assumes guaranteed future gains (not disclosed as uncertain) and creates artificial urgency. It ignores the symmetric risk: investing at the wrong time could cost you thousands in actual losses. This is denominator neglect combined with one-sided risk presentation - only showing potential upside, not downside.
+
+**Suggested Context/Correction:**
+Opportunity cost of not investing must be weighed against risk of loss. Market timing claims should include probability distributions, not just upside scenarios. 'Missed gains' are hypothetical; actual losses are real.
+
+**Research Findings:**
+The opportunity cost fallacy in investment marketing refers to the tendency to overlook or undervalue the potential benefits lost when choosing one investment or marketing strategy over another. This fallacy occurs when decision-makers focus only on the immediate or visible returns of their chosen option, ignoring the higher returns or better outcomes that could have been achieved by pursuing alternative investments or marketing channels. In marketing, this can manifest as continuing to allocate resources to underperforming campaigns simply because of prior investment, rather than reallocating to more promising opportunities. Recognizing and calculating opportunity costs is essential for making rational, forward-looking decisions that maximize returns and avoid the pitfalls of sunk cost bias.
+
+Sources:
+1. [Source](https://www.volopay.com/blog/sunk-costs-vs-opportunity-costs/)
+2. [Source](https://smartasset.com/investing/what-is-the-opportunity-cost-of-an-investment)
+3. [Source](https://www.shopify.com/hk-en/blog/what-is-opportunity-cost)
+4. [Source](https://planergy.com/blog/sunk-cost-vs-opportunity-cost/)
+5. [Source](https://thirdeyeinsights.ca/marketing-opportunity-costs/)
+Importance: 77
+
+--- ERROR 11 ---
+Header: Deceptive presentation
+
+Description:
+**Issue Type:** Deceptive/Misleading Wording
+
+**Text:** "Dr. Smith from the Institute of Finance said our methodology 'shows promise,' and several analysts have noted our innovative techniques"
+
+**Analysis:** Quote mining and weasel words. 'Shows promise' is extremely weak endorsement (means 'needs more research, unproven') but presented as if it's strong support. 'Several analysts have noted' - noted positively? Critically? Just acknowledged existence? This is cherry-picking the most favorable interpretation of lukewarm or neutral statements. Classic motte-and-bailey setup.
+
+**Suggested Context/Correction:**
+'Shows promise' typically means 'interesting but unproven, needs more research' - not an endorsement. What did Dr. Smith say in full context? What did analysts actually conclude? Were there critical assessments being omitted?
+
+**Research Findings:**
+Quote mining in the context of expert endorsements refers to the practice of selectively quoting or misrepresenting statements made by experts to make it appear as though they support a particular position, product, or argument, even when the original context does not support such a conclusion. This tactic is often used to lend credibility to claims by leveraging the authority of experts, but it can be misleading and unethical, especially when the quotes are taken out of context or altered to serve a specific agenda. In endorsement scenarios, quote mining can distort the expert's true opinion, potentially misleading audiences and undermining trust in both the expert and the endorsed product or idea.
+
+Sources:
+1. [Source](https://citizendium.org/wiki/Quote_mining)
+2. [Source](https://flatearth.ws/quote-mining)
+3. [Source](https://en-academic.com/dic.nsf/enwiki/195352)
+4. [Source](https://en.wikipedia.org/wiki/Quoting_out_of_context)
+5. [Source](https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking)
+Importance: 77
+
+
+========== WARNING (4) ==========
+
+--- WARNING 1 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Traditional financial advisors tell you to 'diversify' and 'invest for the long term.' But that's exactly what Wall Street wants you to think. They profit from keeping you confused and dependent on their services."
+
+**Analysis:** Conspiracy thinking and genetic fallacy. Dismisses sound advice (diversification, long-term investing) not on merits but by impugning motives. Ironically, the document itself is marketing an investment service. This is a manipulation tactic: position themselves as truth-tellers against a shadowy 'them' to build trust while avoiding substantive comparison of strategies.
+
+**Suggested Context/Correction:**
+Diversification and long-term investing are evidence-based strategies supported by academic research, not just 'what Wall Street wants.' The genetic fallacy (dismissing ideas based on their source) doesn't address whether the advice is actually sound. Note the irony: this is also a financial service selling their approach.
+
+**Research Findings:**
+The genetic fallacy in investment marketing occurs when investors or marketers judge an investment idea or advice solely based on its origin rather than its actual merit, leading to flawed decision-making. Conspiracy thinking in investment marketing involves the adoption of conspiracy theories about financial systems or markets, which can strongly influence investment behavior, often driven by economic anxiety and distrust in institutions. These two phenomena can intersect, as conspiracy thinking may rely on genetic fallacy reasoning by dismissing or accepting investment claims based on their source or origin, rather than evidence. Research shows that exposure to conspiracy theories significantly affects investment choices, such as increased gold investment, while genetic predispositions and cognitive biases also play roles in investment behavior.
+
+Sources:
+1. [Source](https://helpfulprofessor.com/genetic-fallacy-examples/)
+2. [Source](https://www.frontiersin.org/journals/human-dynamics/articles/10.3389/fhumd.2025.1617919/full)
+3. [Source](https://finmasters.com/genetic-fallacy/)
+4. [Source](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2009094)
+5. [Source](https://eric.ed.gov/?id=EJ1349083)
+Importance: 77
+
+--- WARNING 2 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "If you're not rich yet, you just need to follow our proven system more carefully"
+
+**Analysis:** Unfalsifiable claim and blame-shifting. Sets up a heads-I-win-tails-you-lose scenario: success proves the system works, failure proves you didn't follow it carefully enough. This is a manipulation tactic that prevents any evidence from disconfirming the claim. Also assumes the only reason for not being rich is insufficient adherence to their system.
+
+**Suggested Context/Correction:**
+A legitimate strategy should specify objective criteria for 'following carefully' and acknowledge that even perfect execution doesn't guarantee wealth due to market risk, timing, and other factors beyond user control.
+
+**Research Findings:**
+Unfalsifiable claims in investment marketing are propositions that cannot be empirically tested or disproven, making them unreliable for sound investment decisions. Such claims often rely on vague, long-term, or abstract reasoning that cannot be verified within typical investment timeframes. This lack of falsifiability means these claims have no predictive or explanatory power and can mislead investors by appearing reasonable while being immune to refutation.
+
+Sources:
+1. [Source](https://news.futunn.com/en/post/37758660/in-depth-article-don-t-fool-yourself-with-unfalsifiable-investment)
+2. [Source](https://dc.law.mc.edu/cgi/viewcontent.cgi?article=1158&context=faculty-journals)
+3. [Source](https://leanlogic.online/glossary/unfalsifiability/)
+4. [Source](https://www.logicallyfallacious.com/logicalfallacies/Unfalsifiability)
+5. [Source](https://cei.org/opeds_articles/secs-gensler-wants-to-regulate-green-funds-but-definitions-are-elusive/)
+Importance: 75
+
+--- WARNING 3 ---
+Header: Logical fallacy detected
+
+Description:
+**Issue Type:** Logical Fallacy
+
+**Text:** "Some critics claim our strategy is risky, but that's just because they don't understand modern investing"
+
+**Analysis:** Ad hominem dismissal and strawmanning. Instead of addressing the substance of risk concerns, dismisses critics as ignorant. This is a thought-terminating cliché that prevents legitimate evaluation of risk. No engagement with what the actual risks might be. Pattern of bad faith argumentation - dismissing rather than engaging with criticism.
+
+**Suggested Context/Correction:**
+Legitimate response would address specific risk concerns: What's the volatility? Maximum drawdown? Leverage used? Risk-adjusted returns? Dismissing critics as ignorant is a red flag that avoids substantive discussion of real risks.
+
+**Research Findings:**
+The ad hominem fallacy occurs when, instead of addressing the substance of an argument, someone attacks the person making the argument—such as their character, background, or motives. In the context of responding to investment criticism, this would mean dismissing or discrediting the criticism by attacking the critic personally (e.g., 'You don’t know anything about investing because you’ve never managed money') rather than engaging with the merits of their critique. This tactic is fallacious because it diverts attention from the actual investment issue and undermines constructive discussion. Even if the personal attack is true, it does not invalidate the criticism itself.
+
+Sources:
+1. [Source](https://quillbot.com/blog/reasoning/ad-hominem-fallacy/)
+2. [Source](https://www.scribbr.com/fallacies/ad-hominem-fallacy/)
+3. [Source](https://www.txst.edu/philosophy/resources/fallacy-definitions/ad-hominem.html)
+4. [Source](https://www.grammarly.com/blog/rhetorical-devices/ad-hominem-fallacy/)
+5. [Source](https://www.britannica.com/topic/ad-hominem)
+Importance: 72
+
+--- WARNING 4 ---
+Header: Important context missing
+
+Description:
+**Issue Type:** Missing Critical Context
+
+**Text:** "The data clearly shows that our method outperforms traditional approaches"
+
+**Analysis:** Vague appeal to 'data' without specifics. What data? Over what timeframe? Risk-adjusted? Compared to which traditional approaches? This is a confidence assertion without substance. After a document full of cherry-picked examples and survivorship bias, claiming 'the data clearly shows' is an attempt to create false certainty from flawed evidence.
+
+**Suggested Context/Correction:**
+Need: Specific data sources, timeframes, risk-adjusted metrics (Sharpe ratio, Sortino ratio), comparison methodologies, independent verification, and acknowledgment of uncertainty. 'Clearly shows' is overconfident given the quality of evidence presented.
+
+**Research Findings:**
+Vague data claims in investment performance marketing often involve unsubstantiated, misleading, or incomplete presentation of performance results, including hypothetical or back-tested returns, without proper disclosures or compliance with regulatory standards. The SEC and other regulators emphasize the need for clear, substantiated, and balanced disclosures that include net performance alongside gross performance, relevant conditions, risks, and methodology details to avoid misleading investors and regulatory penalties.
+
+Sources:
+1. [Source](https://apxstream.com/blog/investment-data-marketing-the-14-profile-datasets-explained/)
+2. [Source](https://natlawreview.com/article/pitfalls-hypothetical-performance-data)
+3. [Source](https://cohenbuckmann.com/insights/2018/9/11/dcldllj896zci3yvrtk31ugzfxqf2z)
+4. [Source](https://www.kitces.com/blog/performance-advertising-regulations-sec-marketing-rule-investment-advisers-compliance-enforcement-november-4-2022/)
+5. [Source](https://www.sec.gov/newsroom/press-releases/2023-173)
+Importance: 70
