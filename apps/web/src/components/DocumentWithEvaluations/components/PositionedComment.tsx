@@ -15,8 +15,8 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
-import TweezersIcon from "../../../../public/app-icons/tweezers.svg";
 
+import IndexFingerIcon from "../../../../public/app-icons/indexFinger.svg";
 import {
   MARKDOWN_COMPONENTS,
   MARKDOWN_PLUGINS,
@@ -105,8 +105,8 @@ export function PositionedComment({
         );
         break;
       case "nitpick":
-        bgColor = isHovered ? "bg-pink-400" : "bg-pink-300";
-        content = <TweezersIcon className="h-3.5 w-3.5 text-white" />;
+        bgColor = isHovered ? "bg-fuchsia-400" : "bg-fuchsia-300";
+        content = <IndexFingerIcon className="h-3.5 w-3.5 text-white" />;
         break;
       case "success":
         bgColor = isHovered ? "bg-green-500" : "bg-green-300";
