@@ -19,8 +19,6 @@ import {
   calculateAdjustedSeverity,
   calculatePriorityScore,
 } from "./severity-calibration";
-import { validateIssuesBatch } from "./context-validator";
-import { filterByConfidenceThresholds, getFilterStats } from "./severity-filtering";
 
 // Zod schemas
 const extractedEpistemicIssueSchema = z.object({
@@ -117,6 +115,31 @@ export class EpistemicIssuesExtractorTool extends Tool<
 **YOUR UNIQUE FOCUS: Sophisticated epistemic issues, NOT basic fact-checking**
 
 Note: Basic fact verification is handled by other tools. Focus on REASONING QUALITY and HOW information is presented.
+
+**🚨 CRITICAL: Distinguish COMMITTING vs DISCUSSING errors**
+
+Do NOT flag authors who are:
+- DISCUSSING or explaining epistemic concepts
+- WARNING readers about potential errors
+- ACKNOWLEDGING their own limitations (this is good epistemics!)
+
+Only flag authors who are MAKING the error themselves.
+
+**FALSE POSITIVE Examples (do NOT flag):**
+1. "Selection bias is a major problem in hiring research because we only see candidates who apply"
+   → Author EXPLAINING the concept, not committing the error
+2. "Be careful not to generalize from a single case study"
+   → Author WARNING about error
+3. "There isn't a cheap way to run true RCTs on hiring, so we're stuck with observational data and its selection biases"
+   → Author ACKNOWLEDGING limitation (good epistemics!)
+
+**TRUE POSITIVE Examples (DO flag):**
+1. "Our clients love us! 95% would recommend us to a friend"
+   → COMMITTING survivorship bias (only surveying existing clients)
+2. "Studies show that our approach is highly effective"
+   → COMMITTING weasel words (vague authority without citation)
+3. "Since launching in March 2020, we've delivered 847% returns"
+   → COMMITTING cherry-picked timeframe (market bottom)
 
 **CORE AREAS (prioritize these):**
 
@@ -491,71 +514,34 @@ Max issues to return: ${input.maxIssues ?? 15}
       `[EpistemicIssuesExtractor] Enriched ${enrichedIssues.length} issues with context-aware classification`
     );
 
-    // PHASE 1 IMPROVEMENT: Context-aware validation to reduce false positives
-    context.logger.info(
-      `[EpistemicIssuesExtractor] Validating ${enrichedIssues.length} issues for false positives`
-    );
+    // Simple confidence-based filtering: higher severity requires higher confidence
+    // This reduces false positives while catching real issues
+    const getMinConfidence = (severity: number) => {
+      if (severity >= 80) return 40;  // CRITICAL issues
+      if (severity >= 60) return 70;  // HIGH issues
+      if (severity >= 40) return 50;  // MEDIUM issues
+      return 30;                       // LOW issues
+    };
 
-    const validationResults = await validateIssuesBatch(
-      enrichedIssues,
-      input.text, // Pass full chunk text for context
-      context
-    );
+    const filteredIssues = enrichedIssues.filter((issue) => {
+      // Keep verified-accurate regardless of severity
+      if (issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE) return true;
 
-    // Apply validation results to issues
-    const validatedIssues = enrichedIssues.map((issue) => {
-      const validation = validationResults.get(issue);
-      if (!validation) return issue;
+      // Filter by severity threshold
+      const severity = issue.adjustedSeverity ?? issue.severityScore;
+      if (severity < (input.minSeverityThreshold ?? 20)) return false;
 
-      return {
-        ...issue,
-        validationVerdict: validation.verdict,
-        isValidatedError: validation.isActualError,
-        validationReasoning: validation.reasoning,
-        // Update scores based on validation
-        adjustedSeverity: validation.adjustedSeverity,
-        confidenceScore: validation.adjustedConfidence,
-      };
+      // Apply confidence threshold based on severity
+      return issue.confidenceScore >= getMinConfidence(severity);
     });
 
-    const falsePositives = validatedIssues.filter(i => !i.isValidatedError).length;
     context.logger.info(
-      `[EpistemicIssuesExtractor] Context validation: ${validatedIssues.length - falsePositives} real issues, ${falsePositives} false positives filtered`
-    );
-
-    // Filter by adjusted severity threshold (not raw severity)
-    // KEEP verified-accurate regardless of severity
-    // FILTER OUT false positives (isValidatedError === false)
-    const filteredIssues = validatedIssues.filter(
-      (issue) => {
-        // Remove false positives
-        if (issue.isValidatedError === false) return false;
-
-        // Keep verified-accurate regardless of severity
-        if (issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE) return true;
-
-        // Filter by severity threshold
-        return (issue.adjustedSeverity ?? issue.severityScore) >= (input.minSeverityThreshold ?? 20);
-      }
-    );
-
-    // PHASE 1 IMPROVEMENT: Apply confidence-based filtering
-    // Different confidence thresholds for different severity levels
-    const beforeConfidenceFiltering = filteredIssues.length;
-    const confidenceFilteredIssues = filterByConfidenceThresholds(filteredIssues);
-    const filterStats = getFilterStats(filteredIssues, confidenceFilteredIssues);
-
-    context.logger.info(
-      `[EpistemicIssuesExtractor] Confidence filtering: ${filterStats.displayed}/${filterStats.total} issues passed thresholds`,
-      {
-        bySeverity: filterStats.bySeverity,
-        filteredOut: filterStats.filteredByConfidence
-      }
+      `[EpistemicIssuesExtractor] Filtered: ${enrichedIssues.length} → ${filteredIssues.length} issues (confidence thresholds applied)`
     );
 
     // Sort by priority score (combines adjusted severity and centrality)
     // Boost verified-accurate claims
-    const sortedIssues = confidenceFilteredIssues
+    const sortedIssues = filteredIssues
       .sort((a, b) => {
         const priorityA = a.issueType === ISSUE_TYPES.VERIFIED_ACCURATE
           ? (a.importanceScore || 50) * 50  // Boost factor
@@ -568,7 +554,7 @@ Max issues to return: ${input.maxIssues ?? 15}
       .slice(0, input.maxIssues);
 
     context.logger.info(
-      `[EpistemicIssuesExtractor] Found ${allIssues.length} total, ${confidenceFilteredIssues.length} passed all filters, returning top ${sortedIssues.length}`
+      `[EpistemicIssuesExtractor] Found ${allIssues.length} total, ${filteredIssues.length} passed all filters, returning top ${sortedIssues.length}`
     );
 
     // Log adjustment statistics
