@@ -28,7 +28,7 @@ export interface CommentBuildOptions {
   // Optional overrides (auto-generated from tool chain if not provided)
   header?: string;
   description?: string;
-  level?: 'error' | 'warning' | 'info' | 'success' | 'debug';
+  level?: 'error' | 'warning' | 'nitpick' | 'info' | 'success' | 'debug';
   importance?: number;
   
   // Optional structured fields

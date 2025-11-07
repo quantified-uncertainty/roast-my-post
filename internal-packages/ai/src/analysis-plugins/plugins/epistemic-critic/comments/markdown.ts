@@ -120,7 +120,7 @@ export function buildTitle(issue: EpistemicIssue): string {
  */
 export function getLevel(
   issue: EpistemicIssue
-): "error" | "warning" | "info" | "success" {
+): "error" | "warning" | "nitpick" | "info" | "success" | "debug" {
   return issue.getCommentLevel();
 }
 

@@ -86,44 +86,50 @@ export class EpistemicIssue {
 
   /**
    * Get the comment level for this issue
+   *
+   * Uses importance score as primary factor, with severity for critical issues
    */
-  getCommentLevel(): "error" | "warning" | "info" | "success" {
+  getCommentLevel(): "error" | "warning" | "nitpick" | "info" | "success" | "debug" {
     const { issueType, importanceScore, severityScore } = this.issue;
-    const adjustedSeverity = severityScore;
 
     // Verified accurate claims get success
     if (issueType === ISSUE_TYPES.VERIFIED_ACCURATE) {
       return "success";
     }
 
-    // Nitpicks (very low importance) always get info level
-    if (importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
-      return "info";
-    }
-
-    // Critical severity (80+)
-    if (adjustedSeverity >= THRESHOLDS.SEVERITY_CRITICAL) {
+    // Critical severity issues always get error (regardless of importance)
+    if (severityScore >= THRESHOLDS.SEVERITY_CRITICAL) {
       return "error";
     }
 
-    // High severity (60+)
-    if (adjustedSeverity >= THRESHOLDS.SEVERITY_HIGH) {
+    // High severity misinformation/deceptive issues get error
+    if (severityScore >= THRESHOLDS.SEVERITY_HIGH) {
       if (
         issueType === ISSUE_TYPES.MISINFORMATION ||
         issueType === ISSUE_TYPES.DECEPTIVE_WORDING
       ) {
         return "error";
       }
+    }
+
+    // For everything else, use importance score:
+    // importance < 30 → debug
+    if (importanceScore < 30) {
+      return "debug";
+    }
+
+    // 30 <= importance < 75 → nitpick
+    if (importanceScore < 75) {
+      return "nitpick";
+    }
+
+    // 75 <= importance < 90 → warning
+    if (importanceScore < 90) {
       return "warning";
     }
 
-    // Medium severity (40+)
-    if (adjustedSeverity >= THRESHOLDS.SEVERITY_MEDIUM) {
-      return "warning";
-    }
-
-    // Low severity
-    return "info";
+    // importance >= 90 → error
+    return "error";
   }
 
   /**
