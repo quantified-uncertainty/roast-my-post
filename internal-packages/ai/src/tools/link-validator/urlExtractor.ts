@@ -25,6 +25,7 @@ export interface ExtractedUrl {
 export function extractUrlsWithPositions(content: string, maxUrls: number = 50): ExtractedUrl[] {
   const extractedUrls: ExtractedUrl[] = [];
   const processedPositions = new Set<string>(); // Track position ranges to avoid duplicates at same location
+  const MAX_URL_LENGTH = 2048; // Reasonable limit for URL length to prevent malformed links from consuming entire document
   
   // First pass: Find all markdown links [text](url), excluding images ![text](url)
   // We need to find these first to know which URLs are part of markdown
@@ -57,7 +58,7 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
     let parenDepth = 0;
     let _title: string | undefined; // Title attribute (extracted but not currently used)
     
-    for (let i = urlStartPos; i < content.length; i++) {
+    for (let i = urlStartPos; i < content.length && url.length < MAX_URL_LENGTH; i++) {
       const char = content[i];
       
       if (char === '(') {
@@ -100,6 +101,11 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
     
     // Skip very short URLs
     if (url.length <= 10) {
+      continue;
+    }
+    
+    // Skip URLs that hit the length limit (likely malformed - missing closing paren)
+    if (url.length >= MAX_URL_LENGTH) {
       continue;
     }
     
