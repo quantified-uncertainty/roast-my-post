@@ -203,32 +203,32 @@ export class EpistemicIssue {
         if (adjustedSeverity >= THRESHOLDS.SEVERITY_CRITICAL) {
           return "Critical misinformation detected";
         }
-        return `${prefix} misinformation`;
+        return prefix ? `${prefix} misinformation` : "Misinformation";
 
       case ISSUE_TYPES.MISSING_CONTEXT:
         if (this.importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
-          return `${prefix}: Context could be added`;
+          return prefix ? `${prefix}: Context could be added` : "Context could be added";
         }
-        return `${prefix} missing context`;
+        return prefix ? `${prefix} missing context` : "Missing context";
 
       case ISSUE_TYPES.INSUFFICIENT_EVIDENCE:
         if (this.importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
-          return `${prefix}: More evidence would help`;
+          return prefix ? `${prefix}: More evidence would help` : "More evidence would help";
         }
-        return `${prefix} insufficient evidence`;
+        return prefix ? `${prefix} insufficient evidence` : "Insufficient evidence";
 
       case ISSUE_TYPES.DECEPTIVE_WORDING:
         if (adjustedSeverity >= 70) {
-          return "Clear deceptive presentation";
+          return "Deceptive presentation";
         }
-        return `${prefix} misleading wording`;
+        return prefix ? `${prefix} misleading wording` : "Misleading wording";
 
       case ISSUE_TYPES.LOGICAL_FALLACY:
         const fallacyName = this.extractFallacyName();
         if (fallacyName) {
-          return `${prefix} ${fallacyName}`;
+          return prefix ? `${prefix} ${fallacyName}` : fallacyName;
         }
-        return `${prefix} logical fallacy`;
+        return prefix ? `${prefix} logical fallacy` : "Logical fallacy";
 
       case ISSUE_TYPES.VERIFIED_ACCURATE:
         return "Claim verified";
@@ -255,9 +255,9 @@ export class EpistemicIssue {
       return "Critical";
     }
 
-    // Clear/high confidence
+    // Clear/high confidence - no prefix, just state the issue
     if (confidenceScore >= THRESHOLDS.CONFIDENCE_CLEAR) {
-      return "Clear";
+      return "";
     }
 
     // Likely/medium confidence
