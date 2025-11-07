@@ -103,6 +103,24 @@ export function PositionedComment({
           <span className="text-sm font-bold leading-none text-white">!</span>
         );
         break;
+      case "nitpick":
+        bgColor = isHovered ? "bg-yellow-500" : "bg-yellow-400";
+        content = (
+          <svg
+            className="h-3.5 w-3.5 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 2v8m0 0c-.5 0-1 .3-1.5.8l-3 3.2c-.8.9-.5 2.2.6 2.7l5.4 2.3c1.2.5 2.5-.3 2.5-1.6V10c0-.6-.4-1-1-1H12zm0 0h3"
+            />
+          </svg>
+        );
+        break;
       case "success":
         bgColor = isHovered ? "bg-green-500" : "bg-green-300";
         content = <CheckIcon className="h-3.5 w-3.5 text-white" />;
