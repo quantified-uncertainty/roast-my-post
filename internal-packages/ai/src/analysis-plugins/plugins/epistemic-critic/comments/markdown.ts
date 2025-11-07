@@ -1,5 +1,7 @@
 import type { EpistemicIssue } from "../EpistemicIssue";
 import { ISSUE_TYPES } from "../constants";
+import { generateImprovementExample, formatImprovementExample } from "../improvement-examples";
+import { getRedFlagInfo, formatRedFlagInfo } from "../red-flags";
 
 /**
  * Pure functions for generating markdown content for epistemic critic comments.
@@ -40,6 +42,18 @@ export function buildDescription(issue: EpistemicIssue): string {
   // Add suggested context if available
   if (suggestedContext) {
     description += `\n\n**Suggested Context/Correction:**\n${suggestedContext}`;
+  }
+
+  // Add improvement example if available
+  const improvementExample = generateImprovementExample(issue);
+  if (improvementExample) {
+    description += formatImprovementExample(improvementExample);
+  }
+
+  // Add red flag info if this is a known pattern
+  const redFlagInfo = getRedFlagInfo(issue);
+  if (redFlagInfo) {
+    description += formatRedFlagInfo(redFlagInfo);
   }
 
   // Add research findings if available

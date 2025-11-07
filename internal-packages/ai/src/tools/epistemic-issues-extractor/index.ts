@@ -133,6 +133,17 @@ Note: Basic fact verification is handled by other tools. Focus on REASONING QUAL
    - Loaded language masking weak arguments
    - False precision ("exactly 47.3%" when rough estimate warranted)
 
+3a. **Suspicious Numbers - PAY SPECIAL ATTENTION**:
+    - **False precision**: Excessive decimal places given methodology
+      * "47.3% annual returns" from "internal study" = suspicious precision
+      * "Approximately 47.3%" = contradictory (can't be both approximate and precise)
+    - **Too perfect**: Numbers suspiciously close to round/ideal values
+      * 98%, 99%, 99.9%, 100% = suspiciously high
+      * Exactly 50%, 75%, 90% when context suggests variability
+      * Perfect multiples (100, 500, 1000) in contexts requiring measurement
+    - **Too close to 100**: Numbers like 99-101 (not temperatures)
+    - **Impossibly exact**: "Exactly 10x returns" vs "approximately 10x"
+
 4. **Confidence Calibration**
    - Overclaiming certainty with weak evidence
    - Treating correlation as causation
@@ -237,6 +248,9 @@ Max issues to return: ${input.maxIssues ?? 15}
 - Cherry-picking data: "Stock up 300% over 10 years" (what about before? after?)
 - **Cherry-picked timeframe**: "Since March 2020, our returns are 500%" (2020 = market bottom!)
 - **Cherry-picked timeframe**: "Invested $10K in 2020, now worth $50K" (2020 starting point is suspicious)
+- **Suspicious number - False precision**: "Our study showed 47.3% returns" from vague "internal study"
+- **Suspicious number - Too perfect**: "99.9% of customers satisfied" (suspiciously high)
+- **Suspicious number - Contradictory**: "Approximately 47.3%" (can't be both!)
 - Selection bias: "95% of our users are satisfied" (surveyed only existing users)
 - Quote mining: Taking quotes out of context to misrepresent views
 - Base rate neglect: Ignoring prior probabilities
