@@ -15,6 +15,14 @@ export const THRESHOLDS = {
   /** Low severity - generates info comments */
   SEVERITY_LOW: 20,
 
+  /** Confidence thresholds for header prefixes */
+  CONFIDENCE_CLEAR: 80,
+  CONFIDENCE_LIKELY: 60,
+  CONFIDENCE_POSSIBLE: 0,
+
+  /** Importance thresholds */
+  IMPORTANCE_NITPICK: 30,
+
   /** Minimum severity score for using Perplexity research */
   MIN_SEVERITY_FOR_RESEARCH: 60,
 
@@ -36,6 +44,7 @@ export const LIMITS = {
 export const ISSUE_TYPES = {
   MISINFORMATION: 'misinformation',
   MISSING_CONTEXT: 'missing-context',
+  INSUFFICIENT_EVIDENCE: 'insufficient-evidence',
   DECEPTIVE_WORDING: 'deceptive-wording',
   LOGICAL_FALLACY: 'logical-fallacy',
   VERIFIED_ACCURATE: 'verified-accurate',

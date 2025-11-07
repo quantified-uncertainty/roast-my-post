@@ -23,6 +23,7 @@ const extractedEpistemicIssueSchema = z.object({
     .enum([
       ISSUE_TYPES.MISINFORMATION,
       ISSUE_TYPES.MISSING_CONTEXT,
+      ISSUE_TYPES.INSUFFICIENT_EVIDENCE,
       ISSUE_TYPES.DECEPTIVE_WORDING,
       ISSUE_TYPES.LOGICAL_FALLACY,
       ISSUE_TYPES.VERIFIED_ACCURATE,
@@ -67,6 +68,7 @@ const inputSchema = z.object({
     .array(z.enum([
       ISSUE_TYPES.MISINFORMATION,
       ISSUE_TYPES.MISSING_CONTEXT,
+      ISSUE_TYPES.INSUFFICIENT_EVIDENCE,
       ISSUE_TYPES.DECEPTIVE_WORDING,
       ISSUE_TYPES.LOGICAL_FALLACY,
       ISSUE_TYPES.VERIFIED_ACCURATE,
@@ -150,12 +152,26 @@ Note: Basic fact verification is handled by other tools. Focus on REASONING QUAL
    - Ignoring error bars/ranges
    - Conflating models with reality
 
-5. **Missing Crucial Context** (that changes interpretation)
-   - Cherry-picked data points or time periods
-   - Missing comparison groups
-   - Undisclosed conflicts of interest
-   - Ignoring counterfactuals
-   - Missing opportunity costs
+5. **Missing Crucial Context vs Insufficient Evidence - KEY DISTINCTION**:
+
+   **Use "missing-context" ONLY when you KNOW specific important information is missing:**
+   - Example: "Hitler was kind to animals" without mentioning the Holocaust
+   - Example: "This drug cured 90% of patients" without mentioning they only tested 10 people
+   - Example: Cherry-picked time periods that hide larger pattern
+   - Example: Undisclosed conflicts of interest you're aware of
+   - Example: Missing comparison groups that change interpretation
+   - Requires: You must know what the missing context IS
+
+   **Use "insufficient-evidence" when the claim needs more support:**
+   - Example: "This will revolutionize AI" without any supporting evidence
+   - Example: Major assumptions stated as fact without justification
+   - Example: Vague claims like "significant impact" without quantification
+   - Example: Causal claims without adequate evidence
+   - Pattern: They SHOULD provide evidence, but it's impossible to provide ALL evidence
+
+   **Remember**: Can't provide all context/evidence for everything! Only flag when:
+   - Missing information significantly changes interpretation (missing-context)
+   - OR major claim/assumption lacks adequate support (insufficient-evidence)
 
 6. **Bad Faith Argumentation**
    - Strawmanning (misrepresenting opposing views)
@@ -192,6 +208,27 @@ Note: Basic fact verification is handled by other tools. Focus on REASONING QUAL
       * ANY conveniently chosen start date that makes performance look better
       * Suspiciously short time periods (<2 years for market claims)
 
+11. **Factual & Narrative Content Issues** - **CRITICAL FOR COVERAGE**
+    - **Vague claims**: "Amazing project", "great work", "significant impact" without specifics
+    - **Missing citations**: Factual claims without sources or links to evidence
+    - **Uncritical authority appeals**: Mentioning credentials/affiliations without context
+      * "Worked at Google" (in what capacity? IC? Manager? Intern?)
+      * "Published research" (where? peer-reviewed? citations?)
+      * "Collaborated with experts" (who? on what? with what results?)
+    - **Selective self-presentation**: Only mentioning successes, hiding failures
+      * Survivorship bias in personal narrative
+      * "My startup was acquired" (at what valuation? profit or acqui-hire?)
+      * Listing only projects that succeeded
+    - **Missing context in biographical claims**:
+      * Duration of roles/projects (2 months vs 2 years matters!)
+      * Scale of impact (affected 10 people vs 10,000)
+      * Individual vs team contribution
+    - **Uncritical framing**: Presenting affiliations/work without acknowledging controversies
+      * "Worked on X" (was X successful? ethical? impactful?)
+    - **Implied causation in narratives**: "After I joined, the company grew 10x" (post hoc)
+
+**NOTE**: Apply this even in "boring" factual sections! Biographical and descriptive content can have epistemic issues too.
+
 **AVOID FLAGGING (other tools handle):**
 - Basic factual claims that need verification → Fact Check plugin
 - Mathematical calculations → Math plugin
@@ -226,7 +263,7 @@ Note: Basic fact verification is handled by other tools. Focus on REASONING QUAL
 - Prioritize issues that affect epistemic hygiene
 - Help readers develop better critical thinking`;
 
-    const userPrompt = `Analyze this text for sophisticated epistemic and reasoning issues:
+    const userPrompt = `Analyze this ENTIRE text for sophisticated epistemic and reasoning issues:
 
 ${input.text}
 
@@ -235,28 +272,63 @@ Min severity threshold: ${input.minSeverityThreshold ?? 20}
 Max issues to return: ${input.maxIssues ?? 15}
 
 **CRITICAL INSTRUCTIONS**:
+- **Analyze EVERY section** - don't stop after finding a few issues in one area
+- **Read through the ENTIRE document** before finalizing your list
+- **Apply analysis to ALL content types**: argumentative, factual, biographical, narrative, descriptive
 - Focus on REASONING QUALITY, not basic fact-checking
 - Look for statistical reasoning errors (survivorship bias, base rate neglect, selection bias)
 - Identify sophisticated fallacies (false dichotomy, motte-bailey, strawman)
 - Catch framing effects and rhetorical manipulation
 - Flag patterns of bias or bad faith argumentation
 - Prioritize issues that teach better critical thinking
+- **Aim for comprehensive coverage across all sections of the text**
 
-**Examples to look for:**
-- Survivorship bias: "90% of successful entrepreneurs dropped out" (ignores all who dropped out and failed)
-- False dichotomy: "Either adopt our approach or fail" (ignores alternatives)
-- Cherry-picking data: "Stock up 300% over 10 years" (what about before? after?)
-- **Cherry-picked timeframe**: "Since March 2020, our returns are 500%" (2020 = market bottom!)
-- **Cherry-picked timeframe**: "Invested $10K in 2020, now worth $50K" (2020 starting point is suspicious)
-- **Suspicious number - False precision**: "Our study showed 47.3% returns" from vague "internal study"
-- **Suspicious number - Too perfect**: "99.9% of customers satisfied" (suspiciously high)
-- **Suspicious number - Contradictory**: "Approximately 47.3%" (can't be both!)
-- Selection bias: "95% of our users are satisfied" (surveyed only existing users)
-- Quote mining: Taking quotes out of context to misrepresent views
+**IMPORTANT**: Factual/biographical sections can have epistemic issues too! Look for:
+- Vague claims without specifics ("amazing", "significant impact")
+- Missing citations for factual claims
+- Uncritical authority appeals (credentials without context)
+- Selective self-presentation (only successes, no failures)
+- Missing context (duration, scale, individual vs team)
+
+**Scan for these patterns THROUGHOUT the entire document:**
+
+**Statistical Issues:**
+- Survivorship bias: "90% of successful entrepreneurs dropped out" (ignores failures)
+- Selection bias: "95% of our users are satisfied" (only surveyed active users)
 - Base rate neglect: Ignoring prior probabilities
-- Framing: Absolute vs relative risk confusion
-- Anecdotal evidence: "My friend tried this and it worked" (one case ≠ evidence)
-- Appeal to nature: "It's natural, so it's safe" (arsenic is natural!)`;
+- **Cherry-picked timeframe**: "Since March 2020" (market bottom!), "early 2020" (suspicious)
+- **Suspicious precision**: "847.3% returns" from vague methodology
+- **Too-perfect numbers**: "99.2%", "99.9%" satisfaction (suspiciously high)
+
+**Logical Fallacies:**
+- False dichotomy: "Either X or Y" (ignoring alternatives)
+- Strawman: Misrepresenting opposing views
+- Ad hominem: Attacking people instead of arguments
+- Appeal to emotion: Fear, urgency, FOMO tactics
+
+**Deceptive Framing:**
+- Quote mining: "shows interesting potential" stripped of context
+- Anecdotal evidence as data: Personal stories treated as proof
+- Missing baselines: Claims without comparison groups
+- Vague sources: "Studies show", "experts say", "internal study"
+- Conspiracy thinking: "They don't want you to know"
+- Appeal to nature/antiquity: "Natural = safe", "Traditional = good"
+
+**Multiple Manipulation Tactics:**
+- Urgency pressure: "Every month you wait costs you..."
+- False authority: Citing credentials without relevant expertise
+- Impossible claims: "Virtually risk-free", "eliminates emotion"
+
+**Factual/Narrative Content Issues:**
+- Vague claims: "Did amazing work on X" (what specifically?)
+- Missing citations: "Research shows..." (which research? link?)
+- Uncritical credentials: "Worked at Google" (capacity? duration? impact?)
+- Selective achievements: Lists only successes, no failures mentioned
+- Missing context: "Led project X" (team size? duration? outcome?)
+- Implied causation: "After I joined, revenue grew 5x" (correlation ≠ causation)
+- Uncritical framing: "Worked on controversial project" without acknowledging controversies
+
+**IMPORTANT**: Make sure to identify issues distributed ACROSS THE ENTIRE TEXT, not just clustered in one section!`;
 
     const cacheSeed = generateCacheSeed("epistemic-extract", [
       input.text,
@@ -297,6 +369,7 @@ Max issues to return: ${input.maxIssues ?? 15}
                   enum: [
                     ISSUE_TYPES.MISINFORMATION,
                     ISSUE_TYPES.MISSING_CONTEXT,
+                    ISSUE_TYPES.INSUFFICIENT_EVIDENCE,
                     ISSUE_TYPES.DECEPTIVE_WORDING,
                     ISSUE_TYPES.LOGICAL_FALLACY,
                     ISSUE_TYPES.VERIFIED_ACCURATE,
@@ -390,33 +463,74 @@ Max issues to return: ${input.maxIssues ?? 15}
       };
     }
 
-    // Filter by severity threshold, but KEEP verified-accurate regardless of severity
-    const filteredIssues = allIssues.filter(
-      (issue) =>
-        issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE ||
-        issue.severityScore >= (input.minSeverityThreshold ?? 20)
+    // Import severity calibration utilities
+    const {
+      enrichIssue,
+      calculateAdjustedSeverity,
+      calculatePriorityScore,
+    } = await import('./severity-calibration.js');
+
+    // Get genre from input or use default
+    const genre = input.genre || (await import('./types.js')).DocumentGenre.FORUM_POST;
+
+    // Enrich all issues with classification and context-aware adjustments
+    const enrichedIssues = allIssues.map((issue) => {
+      const enriched = enrichIssue(issue, genre);
+      const adjustedSeverity = calculateAdjustedSeverity(enriched, genre);
+      const priorityScore = calculatePriorityScore(enriched, adjustedSeverity);
+
+      return {
+        ...enriched,
+        adjustedSeverity,
+        priorityScore,
+      };
+    });
+
+    context.logger.info(
+      `[EpistemicIssuesExtractor] Enriched ${enrichedIssues.length} issues with context-aware classification`
     );
 
-    // Sort by priority (severity * importance), but boost verified-accurate claims
+    // Filter by adjusted severity threshold (not raw severity)
+    // KEEP verified-accurate regardless of severity
+    const filteredIssues = enrichedIssues.filter(
+      (issue) =>
+        issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE ||
+        (issue.adjustedSeverity ?? issue.severityScore) >= (input.minSeverityThreshold ?? 20)
+    );
+
+    // Sort by priority score (combines adjusted severity and centrality)
+    // Boost verified-accurate claims
     const sortedIssues = filteredIssues
       .sort((a, b) => {
-        // Verified accurate claims get boosted priority based on importance alone
         const priorityA = a.issueType === ISSUE_TYPES.VERIFIED_ACCURATE
-          ? a.importanceScore * 50  // Boost factor
-          : a.severityScore * a.importanceScore;
+          ? (a.importanceScore || 50) * 50  // Boost factor
+          : (a.priorityScore ?? a.severityScore * a.importanceScore);
         const priorityB = b.issueType === ISSUE_TYPES.VERIFIED_ACCURATE
-          ? b.importanceScore * 50  // Boost factor
-          : b.severityScore * b.importanceScore;
+          ? (b.importanceScore || 50) * 50  // Boost factor
+          : (b.priorityScore ?? b.severityScore * b.importanceScore);
         return priorityB - priorityA;
       })
       .slice(0, input.maxIssues);
 
     context.logger.info(
-      `[EpistemicIssuesExtractor] Found ${allIssues.length} total, ${sortedIssues.length} above threshold`
+      `[EpistemicIssuesExtractor] Found ${allIssues.length} total, ${filteredIssues.length} above adjusted threshold, returning top ${sortedIssues.length}`
+    );
+
+    // Log adjustment statistics
+    const adjustmentStats = {
+      averageRawSeverity: allIssues.reduce((sum, i) => sum + i.severityScore, 0) / allIssues.length,
+      averageAdjustedSeverity: enrichedIssues.reduce((sum, i) => sum + (i.adjustedSeverity ?? i.severityScore), 0) / enrichedIssues.length,
+      issuesWithHedging: enrichedIssues.filter(i => i.hasHedging).length,
+      issuesWithLowAdversarialConfidence: enrichedIssues.filter(i => (i.adversarialConfidence ?? 0) < 40).length,
+    };
+
+    context.logger.info(
+      `[EpistemicIssuesExtractor] Adjustment stats:`,
+      adjustmentStats
     );
 
     return {
-      issues: sortedIssues,
+      issues: sortedIssues.map(({ adjustedSeverity, priorityScore, ...issue }) => issue),
       totalIssuesFound: allIssues.length,
       wasComplete,
     };

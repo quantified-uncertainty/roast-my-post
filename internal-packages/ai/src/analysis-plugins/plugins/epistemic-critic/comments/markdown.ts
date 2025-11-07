@@ -95,6 +95,8 @@ function formatIssueType(issueType: string): string {
       return "Misinformation";
     case ISSUE_TYPES.MISSING_CONTEXT:
       return "Missing Critical Context";
+    case ISSUE_TYPES.INSUFFICIENT_EVIDENCE:
+      return "Insufficient Evidence";
     case ISSUE_TYPES.DECEPTIVE_WORDING:
       return "Deceptive/Misleading Wording";
     case ISSUE_TYPES.LOGICAL_FALLACY:
@@ -157,7 +159,13 @@ export function buildSignificance(issue: EpistemicIssue): string | undefined {
  * Get importance score for sorting
  */
 export function getImportance(issue: EpistemicIssue): number {
-  // Importance is a combination of severity and importance score
+  // Use priorityScore if available (from calibration system)
+  // Otherwise fall back to weighted combination of severity and importance
+  if (issue.issue.priorityScore !== undefined) {
+    return issue.issue.priorityScore;
+  }
+
+  // Fallback: weighted combination
   // Range: 0-100
   const { severityScore, importanceScore } = issue.issue;
   return Math.round((severityScore * 0.6 + importanceScore * 0.4));

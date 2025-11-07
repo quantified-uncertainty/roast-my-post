@@ -88,20 +88,26 @@ export class EpistemicIssue {
    * Get the comment level for this issue
    */
   getCommentLevel(): "error" | "warning" | "info" | "success" {
-    const { issueType, severityScore } = this.issue;
+    const { issueType, importanceScore } = this.issue;
+    const adjustedSeverity = this.issue.adjustedSeverity ?? this.issue.severityScore;
 
     // Verified accurate claims get success
     if (issueType === ISSUE_TYPES.VERIFIED_ACCURATE) {
       return "success";
     }
 
+    // Nitpicks (very low importance) always get info level
+    if (importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
+      return "info";
+    }
+
     // Critical severity (80+)
-    if (severityScore >= THRESHOLDS.SEVERITY_CRITICAL) {
+    if (adjustedSeverity >= THRESHOLDS.SEVERITY_CRITICAL) {
       return "error";
     }
 
     // High severity (60+)
-    if (severityScore >= THRESHOLDS.SEVERITY_HIGH) {
+    if (adjustedSeverity >= THRESHOLDS.SEVERITY_HIGH) {
       if (
         issueType === ISSUE_TYPES.MISINFORMATION ||
         issueType === ISSUE_TYPES.DECEPTIVE_WORDING
@@ -112,7 +118,7 @@ export class EpistemicIssue {
     }
 
     // Medium severity (40+)
-    if (severityScore >= THRESHOLDS.SEVERITY_MEDIUM) {
+    if (adjustedSeverity >= THRESHOLDS.SEVERITY_MEDIUM) {
       return "warning";
     }
 
@@ -183,24 +189,128 @@ export class EpistemicIssue {
    * Get a short header for this issue
    */
   getHeader(): string {
+    const prefix = this.getConfidencePrefix();
+    const adjustedSeverity = this.issue.adjustedSeverity ?? this.severityScore;
+
     switch (this.issueType) {
       case ISSUE_TYPES.MISINFORMATION:
-        return this.severityScore >= 80
-          ? "Critical misinformation detected"
-          : "Potential misinformation";
+        if (adjustedSeverity >= THRESHOLDS.SEVERITY_CRITICAL) {
+          return "Critical misinformation detected";
+        }
+        return `${prefix} misinformation`;
+
       case ISSUE_TYPES.MISSING_CONTEXT:
-        return "Important context missing";
+        if (this.importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
+          return `${prefix}: Context could be added`;
+        }
+        return `${prefix} missing context`;
+
+      case ISSUE_TYPES.INSUFFICIENT_EVIDENCE:
+        if (this.importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
+          return `${prefix}: More evidence would help`;
+        }
+        return `${prefix} insufficient evidence`;
+
       case ISSUE_TYPES.DECEPTIVE_WORDING:
-        return this.severityScore >= 60
-          ? "Deceptive presentation"
-          : "Potentially misleading wording";
+        if (adjustedSeverity >= 70) {
+          return "Clear deceptive presentation";
+        }
+        return `${prefix} misleading wording`;
+
       case ISSUE_TYPES.LOGICAL_FALLACY:
-        return "Logical fallacy detected";
+        const fallacyName = this.extractFallacyName();
+        if (fallacyName) {
+          return `${prefix} ${fallacyName}`;
+        }
+        return `${prefix} logical fallacy`;
+
       case ISSUE_TYPES.VERIFIED_ACCURATE:
         return "Claim verified";
+
       default:
         return "Epistemic issue";
     }
+  }
+
+  /**
+   * Get confidence-based prefix for headers
+   */
+  private getConfidencePrefix(): string {
+    const adjustedSeverity = this.issue.adjustedSeverity ?? this.severityScore;
+    const { confidenceScore, importanceScore } = this.issue;
+
+    // Very low importance = nitpick
+    if (importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
+      return "Nitpick";
+    }
+
+    // Critical issues
+    if (adjustedSeverity >= THRESHOLDS.SEVERITY_CRITICAL && confidenceScore >= 70) {
+      return "Critical";
+    }
+
+    // Clear/high confidence
+    if (confidenceScore >= THRESHOLDS.CONFIDENCE_CLEAR) {
+      return "Clear";
+    }
+
+    // Likely/medium confidence
+    if (confidenceScore >= THRESHOLDS.CONFIDENCE_LIKELY) {
+      return "Likely";
+    }
+
+    // Possible/low confidence
+    return "Possible";
+  }
+
+  /**
+   * Extract specific fallacy name from reasoning text
+   */
+  private extractFallacyName(): string | null {
+    const reasoning = this.issue.reasoning.toLowerCase();
+
+    // Common fallacies to detect
+    const fallacies: Record<string, string> = {
+      "ad hominem": "Ad Hominem",
+      "straw man": "Straw Man",
+      "strawman": "Straw Man",
+      "false dilemma": "False Dilemma",
+      "false dichotomy": "False Dilemma",
+      "slippery slope": "Slippery Slope",
+      "appeal to authority": "Appeal to Authority",
+      "appeal to emotion": "Appeal to Emotion",
+      "hasty generalization": "Hasty Generalization",
+      "circular reasoning": "Circular Reasoning",
+      "begging the question": "Begging the Question",
+      "post hoc": "Post Hoc",
+      "correlation causation": "Correlation ≠ Causation",
+      "texas sharpshooter": "Texas Sharpshooter",
+      "no true scotsman": "No True Scotsman",
+      "tu quoque": "Tu Quoque",
+      "bandwagon": "Bandwagon",
+      "appeal to nature": "Appeal to Nature",
+      "genetic fallacy": "Genetic Fallacy",
+      "cherry picking": "Cherry Picking",
+      "survivorship bias": "Survivorship Bias",
+      "confirmation bias": "Confirmation Bias",
+      "motte-bailey": "Motte-and-Bailey",
+      "motte and bailey": "Motte-and-Bailey",
+      "gish gallop": "Gish Gallop",
+      "equivocation": "Equivocation",
+      "loaded question": "Loaded Question",
+      "moving the goalposts": "Moving the Goalposts",
+      "non sequitur": "Non Sequitur",
+      "red herring": "Red Herring",
+      "special pleading": "Special Pleading",
+    };
+
+    for (const [pattern, name] of Object.entries(fallacies)) {
+      if (reasoning.includes(pattern)) {
+        return name;
+      }
+    }
+
+    return null;
   }
 
   /**

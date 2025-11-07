@@ -4,6 +4,8 @@ import {
 import { logger } from "../../../shared/logger";
 import type { Comment, ToolChainResult } from "../../../shared/types";
 import epistemicIssuesExtractorTool from "../../../tools/epistemic-issues-extractor";
+import { detectGenre, getGenreDisplayName } from "../../../tools/epistemic-issues-extractor/genre-detection";
+import type { DocumentGenre } from "../../../tools/epistemic-issues-extractor/types";
 import perplexityResearcherTool from "../../../tools/perplexity-researcher";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import { TextChunk } from "../../TextChunk";
@@ -25,6 +27,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   private summary: string = "";
   private analysis: string = "";
   private processingStartTime: number = 0;
+  private documentGenre: DocumentGenre | null = null;
 
   constructor() {
     // Initialize empty values - they'll be set in analyze()
@@ -37,11 +40,12 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   }
 
   promptForWhenToUse(): string {
-    return "Use this when analyzing text for potential misinformation, missing critical context, deceptive wording, or logical fallacies that could mislead readers.";
+    return "Use this when analyzing text for sophisticated reasoning issues, missing context, or epistemic problems. This includes: (1) Argumentative content with logical fallacies, deceptive framing, or manipulation tactics, (2) Factual/biographical content with vague claims, uncritical self-presentation, missing citations, or selective disclosure, (3) Statistical claims with potential bias or missing baselines. Skip only pure feelings/preferences with zero factual content.";
   }
 
   routingExamples(): RoutingExample[] {
     return [
+      // Argumentative/persuasive content (original examples)
       {
         chunkText:
           "Studies show that 90% of people prefer our product over competitors",
@@ -56,11 +60,42 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
         reason:
           "Missing important context like baseline rate, time period, geographic area",
       },
+
+      // Factual/biographical content (NEW - critical for coverage)
+      {
+        chunkText:
+          "Over the past few years, I helped run several dozen hiring rounds for around 15 high-impact organizations",
+        shouldProcess: true,
+        reason:
+          "Vague quantifiers ('several dozen', 'around 15'), uncritical framing ('high-impact'), missing context about success rate, role, failures",
+      },
+      {
+        chunkText:
+          "I joined the company in 2020 and led the product team to achieve incredible results",
+        shouldProcess: true,
+        reason:
+          "Vague achievement claim ('incredible results'), missing specifics about what was achieved, team size, individual vs team contribution, selective self-presentation",
+      },
+      {
+        chunkText:
+          "Our research shows promising results in early trials",
+        shouldProcess: true,
+        reason:
+          "Vague sourcing ('our research'), missing context (sample size, methodology), uncritical framing ('promising' without baseline)",
+      },
+
+      // Pure opinions (should skip)
       {
         chunkText:
           "I personally prefer using TypeScript for large projects",
         shouldProcess: false,
-        reason: "Personal opinion without claims that need epistemic analysis",
+        reason: "Pure personal preference without factual claims or context that needs analysis",
+      },
+      {
+        chunkText:
+          "I'm excited to start my new role next week",
+        shouldProcess: false,
+        reason: "Simple statement about feelings/plans without claims requiring epistemic analysis",
       },
     ];
   }
@@ -87,6 +122,10 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
     }
 
     try {
+      // Detect document genre for context-aware analysis
+      this.documentGenre = detectGenre(documentText);
+      logger.info(`EpistemicCriticPlugin: Detected genre: ${getGenreDisplayName(this.documentGenre)}`);
+
       logger.info("EpistemicCriticPlugin: Starting analysis");
       logger.info(`EpistemicCriticPlugin: Processing ${chunks.length} chunks`);
 
@@ -216,6 +255,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
             ],
             minSeverityThreshold: THRESHOLDS.SEVERITY_LOW,
             maxIssues: LIMITS.MAX_ISSUES_PER_CHUNK,
+            genre: this.documentGenre ?? undefined, // Pass detected genre for context-aware analysis
           },
           {
             logger,
