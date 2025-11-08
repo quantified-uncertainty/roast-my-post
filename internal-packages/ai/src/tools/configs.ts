@@ -187,26 +187,26 @@ export const claimEvaluatorConfig: ToolConfig = {
   status: "experimental",
 };
 
-export const epistemicIssuesExtractorConfig: ToolConfig = {
-  id: "epistemic-issues-extractor",
-  name: "Epistemic Issues Extractor",
+export const fallacyExtractorConfig: ToolConfig = {
+  id: "fallacy-extractor",
+  name: "Fallacy Extractor",
   description:
     "Extract and score potential misinformation, missing context, deceptive wording, and logical fallacies from text",
   version: "1.0.0",
   category: "extraction",
   costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
-  path: "/tools/epistemic-issues-extractor",
+  path: "/tools/fallacy-extractor",
   status: "beta",
 };
 
-export const epistemicReviewConfig: ToolConfig = {
-  id: "epistemic-review",
-  name: "Epistemic Review",
+export const fallacyReviewConfig: ToolConfig = {
+  id: "fallacy-review",
+  name: "Fallacy Review",
   description:
     "Reviews and filters epistemic critic comments, removing redundant issues and generating comprehensive document summaries",
   version: "1.0.0",
   category: "utility",
-  path: "/tools/epistemic-review",
+  path: "/tools/fallacy-review",
   status: "beta",
 };
 
@@ -230,8 +230,8 @@ export const allToolConfigs = [
   perplexityResearcherConfig,
   linkValidatorConfig,
   claimEvaluatorConfig,
-  epistemicIssuesExtractorConfig,
-  epistemicReviewConfig,
+  fallacyExtractorConfig,
+  fallacyReviewConfig,
 ];
 
 // ============================================================================

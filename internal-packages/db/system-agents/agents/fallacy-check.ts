@@ -1,13 +1,13 @@
 import { PluginType } from "../types";
 import { createPluginBasedAgent } from "../utils/createPluginBasedAgent";
 
-export const epistemicCriticAgent = createPluginBasedAgent({
-  id: "system-epistemic-critic",
+export const fallacyCheckAgent = createPluginBasedAgent({
+  id: "system-fallacy-check",
   name: "Fallacy Check",
   description: "Identifies misinformation, missing context, and deceptive wording that could mislead readers",
-  pluginIds: [PluginType.EPISTEMIC_CRITIC],
-  readmeId: "epistemic-critic",
+  pluginIds: [PluginType.FALLACY_CHECK],
+  readmeId: "fallacy-check",
   isRecommended: false, // Start as non-recommended until tested
   isLlmCostTracked: true,
-  extendedCapabilityId: "epistemic-critic",
+  extendedCapabilityId: "fallacy-check",
 });

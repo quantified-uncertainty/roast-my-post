@@ -11,10 +11,10 @@ import { z } from "zod";
 import { Tool, type ToolContext } from "../base/Tool";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
-import { epistemicReviewConfig } from "./config";
+import { fallacyReviewConfig } from "./config";
 import type {
-  EpistemicReviewInput,
-  EpistemicReviewOutput,
+  FallacyReviewInput,
+  FallacyReviewOutput,
   ReviewComment,
 } from "./types";
 
@@ -30,26 +30,26 @@ const reviewCommentSchema = z.object({
 const inputSchema = z.object({
   documentText: z.string().min(1),
   comments: z.array(reviewCommentSchema).min(0),
-}) satisfies z.ZodType<EpistemicReviewInput>;
+}) satisfies z.ZodType<FallacyReviewInput>;
 
 const outputSchema = z.object({
   commentIndicesToKeep: z.array(z.number()),
   documentSummary: z.string().min(200).max(800),
   oneLineSummary: z.string().min(20).max(200),
-}) satisfies z.ZodType<EpistemicReviewOutput>;
+}) satisfies z.ZodType<FallacyReviewOutput>;
 
-export class EpistemicReviewTool extends Tool<
-  EpistemicReviewInput,
-  EpistemicReviewOutput
+export class FallacyReviewTool extends Tool<
+  FallacyReviewInput,
+  FallacyReviewOutput
 > {
-  config = epistemicReviewConfig;
+  config = fallacyReviewConfig;
   inputSchema = inputSchema;
   outputSchema = outputSchema;
 
   async execute(
-    input: EpistemicReviewInput,
+    input: FallacyReviewInput,
     context: ToolContext
-  ): Promise<EpistemicReviewOutput> {
+  ): Promise<FallacyReviewOutput> {
     context.logger.info(`[EpistemicReview] Reviewing ${input.comments.length} comments`);
 
     // If no comments, return empty result with basic summaries
@@ -119,7 +119,7 @@ Please review these comments and provide:
 3. A one-sentence summary`;
 
     try {
-      const result = await callClaudeWithTool<EpistemicReviewOutput>(
+      const result = await callClaudeWithTool<FallacyReviewOutput>(
         {
           model: MODEL_CONFIG.analysis,
           system: systemPrompt,
@@ -184,5 +184,5 @@ Please review these comments and provide:
   }
 }
 
-const epistemicReviewTool = new EpistemicReviewTool();
-export default epistemicReviewTool;
+const fallacyReviewTool = new FallacyReviewTool();
+export default fallacyReviewTool;

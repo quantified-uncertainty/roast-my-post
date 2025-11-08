@@ -14,8 +14,8 @@ import fuzzyTextLocatorTool from './smart-text-searcher';
 import { detectLanguageConventionTool } from './language-convention-detector';
 import { linkValidator } from './link-validator';
 import claimEvaluatorTool from './claim-evaluator';
-import epistemicIssuesExtractorTool from './epistemic-issues-extractor';
-import epistemicReviewTool from './epistemic-review';
+import fallacyExtractorTool from './fallacy-extractor';
+import fallacyReviewTool from './fallacy-review';
 
 // Tool registry to manage all available tools
 // ⚠️ IMPORTANT: When adding a new tool, you must also update:
@@ -41,8 +41,8 @@ export class ToolRegistry {
     this.register(detectLanguageConventionTool);
     this.register(linkValidator);
     this.register(claimEvaluatorTool);
-    this.register(epistemicIssuesExtractorTool);
-    this.register(epistemicReviewTool);
+    this.register(fallacyExtractorTool);
+    this.register(fallacyReviewTool);
   }
   
   register(tool: Tool): void {

@@ -2,26 +2,26 @@ import { z } from "zod";
 
 import {
   ISSUE_TYPES,
-} from "../../analysis-plugins/plugins/epistemic-critic/constants";
+} from "../../analysis-plugins/plugins/fallacy-check/constants";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import {
   Tool,
   ToolContext,
 } from "../base/Tool";
-import { epistemicIssuesExtractorConfig } from "../configs";
+import { fallacyExtractorConfig } from "../configs";
 import { generateCacheSeed } from "../shared/cache-utils";
 import fuzzyTextLocatorTool from "../smart-text-searcher";
 import { findLocationInChunk } from "../smart-text-searcher/chunk-location-finder";
 import type {
-  EpistemicIssuesExtractorInput,
-  EpistemicIssuesExtractorOutput,
-  ExtractedEpistemicIssue,
+  FallacyExtractorInput,
+  FallacyExtractorOutput,
+  ExtractedFallacyIssue,
 } from "./types";
 
 // Removed severity-calibration and genre imports - we trust the LLM's scores
 
 // Zod schemas
-const extractedEpistemicIssueSchema = z.object({
+const extractedFallacyIssueSchema = z.object({
   exactText: z
     .string()
     .describe("The EXACT text from the document that has the epistemic issue"),
@@ -76,32 +76,32 @@ const extractedEpistemicIssueSchema = z.object({
     .number()
     .optional()
     .describe("Approximate line number where this text appears (helps with faster location finding)"),
-}) satisfies z.ZodType<ExtractedEpistemicIssue>;
+}) satisfies z.ZodType<ExtractedFallacyIssue>;
 
 const inputSchema = z.object({
   text: z.string().min(1).max(50000),
   documentText: z.string().optional(),
   chunkStartOffset: z.number().min(0).optional(),
-}) satisfies z.ZodType<EpistemicIssuesExtractorInput>;
+}) satisfies z.ZodType<FallacyExtractorInput>;
 
 const outputSchema = z.object({
-  issues: z.array(extractedEpistemicIssueSchema),
+  issues: z.array(extractedFallacyIssueSchema),
   totalIssuesFound: z.number(),
   wasComplete: z.boolean(),
-}) satisfies z.ZodType<EpistemicIssuesExtractorOutput>;
+}) satisfies z.ZodType<FallacyExtractorOutput>;
 
-export class EpistemicIssuesExtractorTool extends Tool<
-  EpistemicIssuesExtractorInput,
-  EpistemicIssuesExtractorOutput
+export class FallacyExtractorTool extends Tool<
+  FallacyExtractorInput,
+  FallacyExtractorOutput
 > {
-  config = epistemicIssuesExtractorConfig;
+  config = fallacyExtractorConfig;
   inputSchema = inputSchema;
   outputSchema = outputSchema;
 
   async execute(
-    input: EpistemicIssuesExtractorInput,
+    input: FallacyExtractorInput,
     context: ToolContext
-  ): Promise<EpistemicIssuesExtractorOutput> {
+  ): Promise<FallacyExtractorOutput> {
     const executionStartTime = Date.now();
 
     // Hardcoded configuration
@@ -397,7 +397,7 @@ ${input.text}
     ]);
 
     const result = await callClaudeWithTool<{
-      issues: ExtractedEpistemicIssue[];
+      issues: ExtractedFallacyIssue[];
       wasComplete: boolean;
     }>({
       system: systemPrompt,
@@ -566,7 +566,7 @@ ${input.text}
       .slice(0, MAX_ISSUES);
 
     // Find locations for each issue if documentText is provided
-    const issuesWithLocations: ExtractedEpistemicIssue[] = [];
+    const issuesWithLocations: ExtractedFallacyIssue[] = [];
     if (input.documentText) {
       context.logger.info(`[EpistemicIssuesExtractor] Finding locations for ${sortedIssues.length} issues`);
 
@@ -664,5 +664,5 @@ ${input.text}
 }
 
 // Export singleton instance
-export const epistemicIssuesExtractorTool = new EpistemicIssuesExtractorTool();
-export default epistemicIssuesExtractorTool;
+export const fallacyExtractorTool = new FallacyExtractorTool();
+export default fallacyExtractorTool;
