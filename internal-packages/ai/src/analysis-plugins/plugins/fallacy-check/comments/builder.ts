@@ -37,7 +37,7 @@ export async function buildFallacyComment(
   const importance = getImportance(issue);
 
   return CommentBuilder.build({
-    plugin: "epistemic-critic",
+    plugin: "fallacy-check",
     location,
     chunkId: issue.getChunk().id,
     processingStartTime: issue.getProcessingStartTime(),

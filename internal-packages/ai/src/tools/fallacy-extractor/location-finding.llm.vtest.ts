@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import epistemicIssuesExtractorTool from './index';
+import fallacyExtractorTool from './index';
 import { logger } from '../../shared/logger';
-import type { EpistemicIssuesExtractorInput } from './types';
+import type { FallacyExtractorInput } from './types';
 
-describe('Epistemic Issues Extractor - Location Finding', () => {
+describe('Fallacy Extractor - Location Finding', () => {
   const context = { userId: 'test-user', logger };
 
   it('should populate locations when documentText is provided', async () => {
@@ -11,14 +11,14 @@ describe('Epistemic Issues Extractor - Location Finding', () => {
 Everyone knows the earth isn't warming - it was cold last winter!
 Studies show that 97% of climate scientists agree on human-caused climate change.`;
 
-    const input: EpistemicIssuesExtractorInput = {
+    const input: FallacyExtractorInput = {
       text: testText,
       documentText: testText,
       minSeverityThreshold: 30,
       maxIssues: 10,
     };
 
-    const result = await epistemicIssuesExtractorTool.execute(input, context);
+    const result = await fallacyExtractorTool.execute(input, context);
 
     // Should find issues
     expect(result.issues.length).toBeGreaterThan(0);
@@ -60,14 +60,14 @@ Studies show that 97% of climate scientists agree on human-caused climate change
     const testText = `The vaccine contains microchips that track your location.
 This claim is completely unsupported by scientific evidence.`;
 
-    const input: EpistemicIssuesExtractorInput = {
+    const input: FallacyExtractorInput = {
       text: testText,
       // No documentText provided
       minSeverityThreshold: 30,
       maxIssues: 10,
     };
 
-    const result = await epistemicIssuesExtractorTool.execute(input, context);
+    const result = await fallacyExtractorTool.execute(input, context);
 
     // Should find issues
     expect(result.issues.length).toBeGreaterThan(0);
@@ -91,14 +91,14 @@ ${chunkText}
 
 Conclusion: Vaccines are one of the most important public health interventions.`;
 
-    const input: EpistemicIssuesExtractorInput = {
+    const input: FallacyExtractorInput = {
       text: chunkText,
       documentText: fullDocument,
       minSeverityThreshold: 30,
       maxIssues: 10,
     };
 
-    const result = await epistemicIssuesExtractorTool.execute(input, context);
+    const result = await fallacyExtractorTool.execute(input, context);
 
     // Should find issues
     expect(result.issues.length).toBeGreaterThan(0);
@@ -135,14 +135,14 @@ Conclusion: Vaccines are one of the most important public health interventions.`
 The United Nations has confirmed this breakthrough.
 Actually, coffee has some health benefits but no evidence shows it cures cancer.`;
 
-    const input: EpistemicIssuesExtractorInput = {
+    const input: FallacyExtractorInput = {
       text: testText,
       documentText: testText,
       minSeverityThreshold: 30,
       maxIssues: 10,
     };
 
-    const result = await epistemicIssuesExtractorTool.execute(input, context);
+    const result = await fallacyExtractorTool.execute(input, context);
 
     // Should find the misinformation about coffee curing cancer
     const coffeeIssues = result.issues.filter(issue =>
@@ -180,14 +180,14 @@ Actually, coffee has some health benefits but no evidence shows it cures cancer.
 This is a very different document.
 Nothing here relates to the chunk.`;
 
-    const input: EpistemicIssuesExtractorInput = {
+    const input: FallacyExtractorInput = {
       text: chunkText,
       documentText: fullDocument,
       minSeverityThreshold: 10, // Low threshold to potentially get issues
       maxIssues: 10,
     };
 
-    const result = await epistemicIssuesExtractorTool.execute(input, context);
+    const result = await fallacyExtractorTool.execute(input, context);
 
     // The tool should complete without throwing
     expect(result).toBeDefined();
