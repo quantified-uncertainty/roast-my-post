@@ -120,6 +120,14 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
     }
 
     try {
+      // Audit log: Analysis started
+      logger.info("EpistemicCriticPlugin: AUDIT: Analysis started", {
+        timestamp: new Date().toISOString(),
+        documentLength: documentText.length,
+        chunkCount: chunks.length,
+        operation: "epistemic-critic-analysis",
+      });
+
       logger.info("EpistemicCriticPlugin: Starting analysis");
       logger.info(`EpistemicCriticPlugin: Processing ${chunks.length} chunks`);
 
@@ -156,6 +164,14 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
           `Issue extraction completed with ${extractionErrors.length} errors`
         );
       }
+
+      // Audit log: Extraction phase completed
+      logger.info("EpistemicCriticPlugin: AUDIT: Extraction phase completed", {
+        timestamp: new Date().toISOString(),
+        issuesExtracted: allIssues.length,
+        extractionErrors: extractionErrors.length,
+        phase: "extraction",
+      });
 
       // Deduplicate issues by similar text
       this.issues = this.deduplicateIssues(allIssues);
@@ -196,6 +212,14 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
           quotedText: comment.highlight.quotedText,
         }));
 
+        // Audit log: Review phase started
+        logger.info("EpistemicCriticPlugin: AUDIT: Review phase started", {
+          timestamp: new Date().toISOString(),
+          commentsToReview: allComments.length,
+          phase: "review",
+          operation: "epistemic-review-tool",
+        });
+
         const reviewResult = await epistemicReviewTool.execute(
           {
             documentText,
@@ -213,6 +237,15 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
         this.summary = reviewResult.oneLineSummary;
         this.analysis = reviewResult.documentSummary;
 
+        // Audit log: Review phase completed
+        logger.info("EpistemicCriticPlugin: AUDIT: Review phase completed", {
+          timestamp: new Date().toISOString(),
+          commentsReviewed: allComments.length,
+          commentsKept: this.comments.length,
+          commentsFiltered: allComments.length - this.comments.length,
+          phase: "review",
+        });
+
         logger.info(
           `EpistemicCriticPlugin: Review complete - kept ${this.comments.length}/${allComments.length} comments`
         );
@@ -226,12 +259,37 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
       }
 
       this.hasRun = true;
+
+      const totalDuration = Date.now() - this.processingStartTime;
+
+      // Audit log: Analysis completed successfully
+      logger.info("EpistemicCriticPlugin: AUDIT: Analysis completed", {
+        timestamp: new Date().toISOString(),
+        totalDurationMs: totalDuration,
+        issuesFound: this.issues.length,
+        commentsGenerated: this.comments.length,
+        success: true,
+        operation: "epistemic-critic-analysis",
+      });
+
       logger.info(
         `EpistemicCriticPlugin: Analysis complete - ${this.comments.length} comments generated`
       );
 
       return this.getResults();
     } catch (error) {
+      const totalDuration = Date.now() - this.processingStartTime;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Audit log: Analysis failed
+      logger.error("EpistemicCriticPlugin: AUDIT: Analysis failed", {
+        timestamp: new Date().toISOString(),
+        totalDurationMs: totalDuration,
+        error: errorMessage,
+        success: false,
+        operation: "epistemic-critic-analysis",
+      });
+
       logger.error("EpistemicCriticPlugin: Fatal error during analysis", error);
       // Return a partial result instead of throwing
       this.hasRun = true;

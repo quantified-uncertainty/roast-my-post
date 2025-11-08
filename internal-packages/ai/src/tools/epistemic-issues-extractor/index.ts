@@ -93,6 +93,22 @@ export class EpistemicIssuesExtractorTool extends Tool<
     input: EpistemicIssuesExtractorInput,
     context: ToolContext
   ): Promise<EpistemicIssuesExtractorOutput> {
+    const executionStartTime = Date.now();
+
+    // Audit log: Tool execution started
+    context.logger.info(
+      "[EpistemicIssuesExtractor] AUDIT: Tool execution started",
+      {
+        timestamp: new Date().toISOString(),
+        textLength: input.text.length,
+        focusAreas: input.focusAreas,
+        minSeverityThreshold: input.minSeverityThreshold,
+        maxIssues: input.maxIssues,
+        hasDocumentText: !!input.documentText,
+        hasChunkOffset: input.chunkStartOffset !== undefined,
+      }
+    );
+
     context.logger.info(
       `[EpistemicIssuesExtractor] Analyzing text for epistemic issues`
     );
@@ -455,35 +471,35 @@ Max issues to return: ${input.maxIssues ?? 15}
 
     // Handle case where LLM returns issues as a JSON string
     if (typeof allIssues === "string") {
+      const rawIssuesString: string = allIssues; // Save for error reporting
       context.logger.warn(
         "[EpistemicIssuesExtractor] Issues returned as string, attempting to parse"
       );
       try {
         allIssues = JSON.parse(allIssues);
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         context.logger.error(
           "[EpistemicIssuesExtractor] Failed to parse issues string:",
-          error
+          { error: errorMessage, rawValue: rawIssuesString.substring(0, 200) }
         );
-        return {
-          issues: [],
-          totalIssuesFound: 0,
-          wasComplete: true,
-        };
+        // Don't silently drop results - throw error to surface parsing issue
+        throw new Error(
+          `Failed to parse LLM response as JSON: ${errorMessage}. This indicates an LLM output format issue that needs investigation.`
+        );
       }
     }
 
     // Ensure allIssues is an array
     if (!Array.isArray(allIssues)) {
-      context.logger.warn(
+      context.logger.error(
         "[EpistemicIssuesExtractor] Issues is not an array:",
-        { type: typeof allIssues }
+        { type: typeof allIssues, value: allIssues }
       );
-      return {
-        issues: [],
-        totalIssuesFound: 0,
-        wasComplete: true,
-      };
+      // Don't silently drop results - throw error to surface schema issue
+      throw new Error(
+        `LLM returned non-array issues (type: ${typeof allIssues}). This indicates an LLM output format issue that needs investigation.`
+      );
     }
 
     // Simple confidence-based filtering: higher severity requires higher confidence
@@ -590,6 +606,23 @@ Max issues to return: ${input.maxIssues ?? 15}
       // No documentText provided, return issues without locations
       issuesWithLocations.push(...sortedIssues);
     }
+
+    const executionDuration = Date.now() - executionStartTime;
+
+    // Audit log: Tool execution completed
+    context.logger.info(
+      "[EpistemicIssuesExtractor] AUDIT: Tool execution completed",
+      {
+        timestamp: new Date().toISOString(),
+        executionDurationMs: executionDuration,
+        totalIssuesFound: allIssues.length,
+        issuesAfterFiltering: filteredIssues.length,
+        issuesReturned: issuesWithLocations.length,
+        wasComplete,
+        issuesWithLocations: issuesWithLocations.filter(i => i.location).length,
+        issuesMissingLocations: issuesWithLocations.filter(i => !i.location).length,
+      }
+    );
 
     return {
       issues: issuesWithLocations,
