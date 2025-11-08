@@ -535,7 +535,7 @@ ${input.text}
 
     // Simple confidence-based filtering: higher severity requires higher confidence
     const getMinConfidence = (severity: number) => {
-      if (severity >= 80) return 40;  // CRITICAL issues
+      if (severity >= 80) return 85;  // CRITICAL issues - highest confidence required
       if (severity >= 60) return 70;  // HIGH issues
       if (severity >= 40) return 50;  // MEDIUM issues
       return 30;                       // LOW issues
