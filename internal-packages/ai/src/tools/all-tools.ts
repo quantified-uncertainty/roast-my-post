@@ -18,6 +18,7 @@ import forecasterTool from './binary-forecaster';
 import { linkValidator } from './link-validator';
 import perplexityResearchTool from './perplexity-researcher';
 import claimEvaluatorTool from './claim-evaluator';
+import epistemicReviewTool from './epistemic-review';
 import type { Tool } from './base/Tool';
 
 /**
@@ -39,6 +40,7 @@ const toolsList = [
   linkValidator,
   perplexityResearchTool,
   claimEvaluatorTool,
+  epistemicReviewTool,
 ] as const;
 
 /**
@@ -84,4 +86,5 @@ export {
   linkValidator,
   perplexityResearchTool,
   claimEvaluatorTool,
+  epistemicReviewTool,
 };
