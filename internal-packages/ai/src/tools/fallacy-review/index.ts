@@ -50,7 +50,7 @@ export class FallacyReviewTool extends Tool<
     input: FallacyReviewInput,
     context: ToolContext
   ): Promise<FallacyReviewOutput> {
-    context.logger.info(`[EpistemicReview] Reviewing ${input.comments.length} comments`);
+    context.logger.info(`[FallacyReview] Reviewing ${input.comments.length} comments`);
 
     // If no comments, return empty result with basic summaries
     if (input.comments.length === 0) {
@@ -126,8 +126,8 @@ Please review these comments and provide:
           messages: [{ role: "user", content: userPrompt }],
           max_tokens: 2000,
           temperature: 0.2,
-          toolName: "review_epistemic_comments",
-          toolDescription: "Review and filter epistemic comments, generate summaries",
+          toolName: "review_fallacy_comments",
+          toolDescription: "Review and filter fallacy comments, generate summaries",
           toolSchema: {
             type: "object",
             properties: {
@@ -164,7 +164,7 @@ Please review these comments and provide:
       validIndices.sort((a, b) => a - b);
 
       context.logger.info(
-        `[EpistemicReview] Filtered ${input.comments.length} comments down to ${validIndices.length}`
+        `[FallacyReview] Filtered ${input.comments.length} comments down to ${validIndices.length}`
       );
 
       return {
@@ -173,7 +173,7 @@ Please review these comments and provide:
         oneLineSummary: result.toolResult.oneLineSummary,
       };
     } catch (error) {
-      context.logger.error("[EpistemicReview] Review failed:", error);
+      context.logger.error("[FallacyReview] Review failed:", error);
       // Fallback: keep all comments and generate basic summaries
       return {
         commentIndicesToKeep: input.comments.map((_, idx) => idx),

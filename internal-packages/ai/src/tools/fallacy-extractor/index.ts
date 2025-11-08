@@ -110,7 +110,7 @@ export class FallacyExtractorTool extends Tool<
 
     // Audit log: Tool execution started
     context.logger.info(
-      "[EpistemicIssuesExtractor] AUDIT: Tool execution started",
+      "[FallacyExtractor] AUDIT: Tool execution started",
       {
         timestamp: new Date().toISOString(),
         textLength: input.text.length,
@@ -122,7 +122,7 @@ export class FallacyExtractorTool extends Tool<
     );
 
     context.logger.info(
-      `[EpistemicIssuesExtractor] Analyzing text for epistemic issues`
+      `[FallacyExtractor] Analyzing text for epistemic issues`
     );
 
     const systemPrompt = `You are an expert epistemic critic analyzing reasoning quality and argumentation.
@@ -390,7 +390,7 @@ ${input.text}
 
 **IMPORTANT**: Make sure to identify issues distributed ACROSS THE ENTIRE TEXT, not just clustered in one section!`;
 
-    const cacheSeed = generateCacheSeed("epistemic-extract", [
+    const cacheSeed = generateCacheSeed("fallacy-extract", [
       input.text,
       MIN_SEVERITY_THRESHOLD,
       MAX_ISSUES,
@@ -409,8 +409,8 @@ ${input.text}
       ],
       max_tokens: 8000,
       temperature: 0,
-      toolName: "extract_epistemic_issues",
-      toolDescription: "Extract and score epistemic issues from text",
+      toolName: "extract_fallacy_issues",
+      toolDescription: "Extract and score fallacy issues from text",
       toolSchema: {
         type: "object",
         properties: {
@@ -504,14 +504,14 @@ ${input.text}
     if (typeof allIssues === "string") {
       const rawIssuesString: string = allIssues; // Save for error reporting
       context.logger.warn(
-        "[EpistemicIssuesExtractor] Issues returned as string, attempting to parse"
+        "[FallacyExtractor] Issues returned as string, attempting to parse"
       );
       try {
         allIssues = JSON.parse(allIssues);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         context.logger.error(
-          "[EpistemicIssuesExtractor] Failed to parse issues string:",
+          "[FallacyExtractor] Failed to parse issues string:",
           { error: errorMessage, rawValue: rawIssuesString.substring(0, 200) }
         );
         // Don't silently drop results - throw error to surface parsing issue
@@ -524,7 +524,7 @@ ${input.text}
     // Ensure allIssues is an array
     if (!Array.isArray(allIssues)) {
       context.logger.error(
-        "[EpistemicIssuesExtractor] Issues is not an array:",
+        "[FallacyExtractor] Issues is not an array:",
         { type: typeof allIssues, value: allIssues }
       );
       // Don't silently drop results - throw error to surface schema issue
@@ -568,7 +568,7 @@ ${input.text}
     // Find locations for each issue if documentText is provided
     const issuesWithLocations: ExtractedFallacyIssue[] = [];
     if (input.documentText) {
-      context.logger.info(`[EpistemicIssuesExtractor] Finding locations for ${sortedIssues.length} issues`);
+      context.logger.info(`[FallacyExtractor] Finding locations for ${sortedIssues.length} issues`);
 
       for (const issue of sortedIssues) {
         try {
@@ -616,20 +616,20 @@ ${input.text}
               },
             });
             context.logger.debug(
-              `[EpistemicIssuesExtractor] Found location for issue using ${locationResult.location.strategy}`
+              `[FallacyExtractor] Found location for issue using ${locationResult.location.strategy}`
             );
           } else {
             // Keep issue without location
             issuesWithLocations.push(issue);
             context.logger.warn(
-              `[EpistemicIssuesExtractor] Could not find location for issue: "${issue.exactText.substring(0, 50)}..."`
+              `[FallacyExtractor] Could not find location for issue: "${issue.exactText.substring(0, 50)}..."`
             );
           }
         } catch (error) {
           // Keep issue without location on error
           issuesWithLocations.push(issue);
           context.logger.error(
-            `[EpistemicIssuesExtractor] Error finding location: ${error instanceof Error ? error.message : String(error)}`
+            `[FallacyExtractor] Error finding location: ${error instanceof Error ? error.message : String(error)}`
           );
         }
       }
@@ -642,7 +642,7 @@ ${input.text}
 
     // Audit log: Tool execution completed
     context.logger.info(
-      "[EpistemicIssuesExtractor] AUDIT: Tool execution completed",
+      "[FallacyExtractor] AUDIT: Tool execution completed",
       {
         timestamp: new Date().toISOString(),
         executionDurationMs: executionDuration,
