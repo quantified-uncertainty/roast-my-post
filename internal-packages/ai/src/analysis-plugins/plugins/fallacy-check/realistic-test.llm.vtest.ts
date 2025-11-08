@@ -153,11 +153,12 @@ Traditional business advice tells you to spend years planning. We spent 2 months
     const byLevel = {
       error: result.comments.filter(c => c.level === 'error'),
       warning: result.comments.filter(c => c.level === 'warning'),
+      nitpick: result.comments.filter(c => c.level === 'nitpick'),
       success: result.comments.filter(c => c.level === 'success'),
       info: result.comments.filter(c => c.level === 'info'),
     };
 
-    console.log(`By Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings, ${byLevel.success.length} success, ${byLevel.info.length} info\n`);
+    console.log(`By Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings, ${byLevel.nitpick.length} nitpicks, ${byLevel.success.length} success, ${byLevel.info.length} info\n`);
 
     // Show first 3 issues
     console.log('Top 3 Issues:');

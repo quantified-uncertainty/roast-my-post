@@ -30,11 +30,6 @@ const iconMap: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
   "fallacy-check": FallacyCheckIcon,
   "fallacy-verification": FallacyVerificationIcon,
 
-  // Old agent IDs (backward compatibility for existing database entries)
-  "ea-epistemic-auditor": EaFallacyAuditorIcon,
-  "epistemic-critic": FallacyCheckIcon,
-  "epistemic-verification": FallacyVerificationIcon,
-
   // Other agents
   "fact-checker": FactCheckerIcon,
   "forecast-checker": ForecastCheckerIcon,

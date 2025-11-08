@@ -1,5 +1,5 @@
 /**
- * Types for the epistemic review tool
+ * Types for the fallacy review tool
  */
 
 /**
@@ -26,7 +26,7 @@ export interface ReviewComment {
 }
 
 /**
- * Input for the epistemic review tool
+ * Input for the fallacy review tool
  */
 export interface FallacyReviewInput {
   /** Full document text */
@@ -37,7 +37,7 @@ export interface FallacyReviewInput {
 }
 
 /**
- * Output from the epistemic review tool
+ * Output from the fallacy review tool
  */
 export interface FallacyReviewOutput {
   /** Indices of comments to keep (e.g., [0, 2, 5, 7]) */

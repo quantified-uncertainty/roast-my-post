@@ -56,8 +56,8 @@ export class FallacyReviewTool extends Tool<
     if (input.comments.length === 0) {
       return {
         commentIndicesToKeep: [],
-        documentSummary: "No epistemic issues were identified in this document. The content appears to present claims with adequate context and without obvious misinformation or deceptive framing.",
-        oneLineSummary: "No significant epistemic issues detected",
+        documentSummary: "No fallacy issues were identified in this document during analysis. The content appears to present claims with adequate supporting context and reasoning. No obvious patterns of logical fallacies, misleading statistics, or deceptive framing were detected. The document maintains reasonable epistemic standards without significant reasoning flaws that would undermine its credibility or reliability.",
+        oneLineSummary: "No significant fallacy issues detected",
       };
     }
 
@@ -177,8 +177,8 @@ Please review these comments and provide:
       // Fallback: keep all comments and generate basic summaries
       return {
         commentIndicesToKeep: input.comments.map((_, idx) => idx),
-        documentSummary: `The epistemic analysis identified ${input.comments.length} potential issues across the document. Review of individual comments recommended.`,
-        oneLineSummary: `Found ${input.comments.length} epistemic issues`,
+        documentSummary: `The fallacy analysis identified ${input.comments.length} potential reasoning issues across the document. Due to a processing error, automated filtering and summarization could not be completed. All identified issues have been preserved for manual review. These issues may include logical fallacies, statistical misrepresentations, misleading framing, or other epistemic concerns that warrant careful examination.`,
+        oneLineSummary: `Found ${input.comments.length} fallacy issues requiring review`,
       };
     }
   }

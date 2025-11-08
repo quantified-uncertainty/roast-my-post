@@ -63,11 +63,12 @@ Traditional financial advisors tell you to "diversify" and "invest for the long 
     const byLevel = {
       error: result.comments.filter(c => c.level === 'error'),
       warning: result.comments.filter(c => c.level === 'warning'),
+      nitpick: result.comments.filter(c => c.level === 'nitpick'),
       success: result.comments.filter(c => c.level === 'success'),
       info: result.comments.filter(c => c.level === 'info'),
     };
 
-    output += `\nBy Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings, ${byLevel.success.length} success, ${byLevel.info.length} info\n`;
+    output += `\nBy Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings, ${byLevel.nitpick.length} nitpicks, ${byLevel.success.length} success, ${byLevel.info.length} info\n`;
 
     // Analyze issue types
     const issueTypes = result.comments.map(c => {
