@@ -44,7 +44,6 @@ export const LIMITS = {
 export const ISSUE_TYPES = {
   MISINFORMATION: 'misinformation',
   MISSING_CONTEXT: 'missing-context',
-  INSUFFICIENT_EVIDENCE: 'insufficient-evidence',
   DECEPTIVE_WORDING: 'deceptive-wording',
   LOGICAL_FALLACY: 'logical-fallacy',
   VERIFIED_ACCURATE: 'verified-accurate',

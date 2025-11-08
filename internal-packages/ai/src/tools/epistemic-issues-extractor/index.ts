@@ -384,7 +384,6 @@ Max issues to return: ${input.maxIssues ?? 15}
                   enum: [
                     ISSUE_TYPES.MISINFORMATION,
                     ISSUE_TYPES.MISSING_CONTEXT,
-                    ISSUE_TYPES.INSUFFICIENT_EVIDENCE,
                     ISSUE_TYPES.DECEPTIVE_WORDING,
                     ISSUE_TYPES.LOGICAL_FALLACY,
                     ISSUE_TYPES.VERIFIED_ACCURATE,
