@@ -34,7 +34,7 @@ import { LinkPlugin } from "./plugins/link-analysis";
 // Import all plugins
 import { MathPlugin } from "./plugins/math";
 import { SpellingPlugin } from "./plugins/spelling";
-import { EpistemicCriticPlugin } from "./plugins/epistemic-critic";
+import { FallacyCheckPlugin } from "./plugins/fallacy-check";
 import {
   AnalysisResult,
   SimpleAnalysisPlugin,
@@ -140,7 +140,7 @@ export class PluginManager {
     this.registry.register(PluginType.FORECAST, ForecastPlugin);
     this.registry.register(PluginType.LINK_ANALYSIS, LinkPlugin);
     this.registry.register(PluginType.FACT_CHECK, FactCheckPlugin);
-    this.registry.register(PluginType.EPISTEMIC_CRITIC, EpistemicCriticPlugin);
+    this.registry.register(PluginType.FALLACY_CHECK, FallacyCheckPlugin);
   }
 
   /**
@@ -659,7 +659,7 @@ export class PluginManager {
       [PluginType.FACT_CHECK, new FactCheckPlugin()],
       [PluginType.FORECAST, new ForecastPlugin()],
       [PluginType.LINK_ANALYSIS, new LinkPlugin()],
-      [PluginType.EPISTEMIC_CRITIC, new EpistemicCriticPlugin()],
+      [PluginType.FALLACY_CHECK, new FallacyCheckPlugin()],
     ]);
 
     logger.info(`Created fresh instances of ${plugins.size} plugins`);

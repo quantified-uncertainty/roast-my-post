@@ -28,7 +28,7 @@ export { default as perplexityResearchTool } from './perplexity-researcher';
 export { linkValidator } from './link-validator';
 export { default as claimEvaluatorTool } from './claim-evaluator';
 export { analyzeClaimEvaluation } from './claim-evaluator';
-export { default as epistemicReviewTool } from './epistemic-review';
+export { default as fallacyReviewTool } from './fallacy-review';
 
 // Export link validator utilities and types
 export { 
@@ -50,7 +50,7 @@ export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './binary
 export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './math-expressions-extractor';
 export type { DetectLanguageConventionOutput } from './language-convention-detector';
 export type { ClaimEvaluatorOutput, ModelEvaluation } from './claim-evaluator';
-export type { EpistemicReviewInput, EpistemicReviewOutput } from './epistemic-review/types';
+export type { FallacyReviewInput, FallacyReviewOutput } from './fallacy-review/types';
 
 // Re-export shared math types
 export type { MathErrorDetails, MathVerificationStatus } from './shared/math-schemas';

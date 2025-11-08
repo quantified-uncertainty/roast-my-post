@@ -1,4 +1,4 @@
-import type { EpistemicIssue } from "../EpistemicIssue";
+import type { FallacyIssue } from "../FallacyIssue";
 import { ISSUE_TYPES } from "../constants";
 
 /**
@@ -24,7 +24,7 @@ function sanitizeUrl(u: string): string {
 /**
  * Build the main description content for an epistemic issue comment
  */
-export function buildDescription(issue: EpistemicIssue): string {
+export function buildDescription(issue: FallacyIssue): string {
   const { reasoning } = issue.issue;
   return reasoning;
 }
@@ -33,7 +33,7 @@ export function buildDescription(issue: EpistemicIssue): string {
 /**
  * Build the title/header for an epistemic issue comment
  */
-export function buildTitle(issue: EpistemicIssue): string {
+export function buildTitle(issue: FallacyIssue): string {
   return issue.getHeader();
 }
 
@@ -41,7 +41,7 @@ export function buildTitle(issue: EpistemicIssue): string {
  * Get the severity level for an epistemic issue comment
  */
 export function getLevel(
-  issue: EpistemicIssue
+  issue: FallacyIssue
 ): "error" | "warning" | "nitpick" | "info" | "success" | "debug" {
   return issue.getCommentLevel();
 }
@@ -49,14 +49,14 @@ export function getLevel(
 /**
  * Build the observation text for an epistemic issue comment
  */
-export function buildObservation(issue: EpistemicIssue): string | undefined {
+export function buildObservation(issue: FallacyIssue): string | undefined {
   return issue.issue.reasoning;
 }
 
 /**
  * Build the significance text for an epistemic issue comment
  */
-export function buildSignificance(issue: EpistemicIssue): string | undefined {
+export function buildSignificance(issue: FallacyIssue): string | undefined {
   const { severityScore, importanceScore, issueType } = issue.issue;
 
   if (severityScore >= 80) {
@@ -80,7 +80,7 @@ export function buildSignificance(issue: EpistemicIssue): string | undefined {
 /**
  * Get importance score for sorting
  */
-export function getImportance(issue: EpistemicIssue): number {
+export function getImportance(issue: FallacyIssue): number {
   // Weighted combination of severity and importance
   // Range: 0-100
   const { severityScore, importanceScore } = issue.issue;
