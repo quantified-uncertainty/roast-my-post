@@ -9,15 +9,18 @@ export const AGENT_TIMEOUT_CONFIG = {
   
   // Timeout for agents with specific extended capabilities
   CAPABILITY_TIMEOUTS: {
-    // Multi-epistemic evaluation runs multiple plugins and can take 6-15 minutes
-    'multi-epistemic-eval': 900000, // 15 minutes
-    
+    // Multi-fallacy evaluation runs multiple plugins and can take 6-15 minutes
+    'multi-fallacy-eval': 900000, // 15 minutes
+
     // Spelling/grammar check can process large documents
     'spelling-grammar': 360000, // 6 minutes
-    
+
     // Link verification might need to check many external URLs
     'simple-link-verifier': 480000, // 8 minutes
-    
+
+    // Fallacy check may need time for Perplexity research on claims
+    'fallacy-check': 600000, // 10 minutes
+
     // Add more capabilities as needed
   } as Record<string, number>,
   

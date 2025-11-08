@@ -10,12 +10,15 @@ import {
 import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
 import { LineBasedLocator } from "../../text-location/line-based";
+import { getGlobalSessionManager } from "../../helicone/simpleSessionManager";
+import type { ToolContext } from "../base/Tool";
 
 import { TextLocation } from "./types";
 
 export interface LLMSearchOptions {
   context?: string;
   pluginName?: string;
+  toolContext?: ToolContext; // For session tracking
 }
 
 interface LineBasedMatch {
@@ -266,78 +269,89 @@ export async function llmSearch(
     plugin: options.pluginName,
   });
 
-  try {
-    // Use shared line-based locator
-    const locator = new LineBasedLocator(documentText);
-    const numberedLines = locator.getNumberedLines();
+  // Wrap in session tracking if available
+  const executeSearch = async (): Promise<TextLocation | null> => {
+    try {
+      // Use shared line-based locator
+      const locator = new LineBasedLocator(documentText);
+      const numberedLines = locator.getNumberedLines();
 
-    const { systemPrompt, userPrompt } = generateLLMSearchPrompts(
-      searchText,
-      numberedLines,
-      options.context
-    );
+      const { systemPrompt, userPrompt } = generateLLMSearchPrompts(
+        searchText,
+        numberedLines,
+        options.context
+      );
 
-
-    const result = await callClaudeWithTool<LineBasedMatch>(
-      {
-        model: MODEL_CONFIG.analysis,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-        max_tokens: 500,
-        temperature: 0,
-        toolName: "locate_text",
-        toolDescription:
-          "Locate text in a document using line numbers and character snippets for precise positioning",
-        toolSchema: {
-          type: "object",
-          properties: {
-            found: {
-              type: "boolean",
-              description: "Whether text was found",
+      const result = await callClaudeWithTool<LineBasedMatch>(
+        {
+          model: MODEL_CONFIG.analysis,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+          max_tokens: 500,
+          temperature: 0,
+          toolName: "locate_text",
+          toolDescription:
+            "Locate text in a document using line numbers and character snippets for precise positioning",
+          toolSchema: {
+            type: "object",
+            properties: {
+              found: {
+                type: "boolean",
+                description: "Whether text was found",
+              },
+              startLineNumber: {
+                type: "number",
+                description: "Start line (1-based)",
+                minimum: 0,
+              },
+              endLineNumber: {
+                type: "number",
+                description: "End line (1-based)",
+                minimum: 0,
+              },
+              startCharacters: {
+                type: "string",
+                description: "First 6-10 chars",
+                maxLength: 10,
+              },
+              endCharacters: {
+                type: "string",
+                description: "Last 6-10 chars",
+                maxLength: 10,
+              },
+              confidence: {
+                type: "number",
+                description: "Match confidence 0-1",
+                minimum: 0,
+                maximum: 1,
+              },
             },
-            startLineNumber: {
-              type: "number",
-              description: "Start line (1-based)",
-              minimum: 0,
-            },
-            endLineNumber: {
-              type: "number",
-              description: "End line (1-based)",
-              minimum: 0,
-            },
-            startCharacters: {
-              type: "string",
-              description: "First 6-10 chars",
-              maxLength: 10,
-            },
-            endCharacters: {
-              type: "string",
-              description: "Last 6-10 chars",
-              maxLength: 10,
-            },
-            confidence: {
-              type: "number",
-              description: "Match confidence 0-1",
-              minimum: 0,
-              maximum: 1,
-            },
+            required: [
+              "found",
+              "startLineNumber",
+              "endLineNumber",
+              "startCharacters",
+              "endCharacters",
+              "confidence",
+            ],
           },
-          required: [
-            "found",
-            "startLineNumber",
-            "endLineNumber",
-            "startCharacters",
-            "endCharacters",
-            "confidence",
-          ],
         },
-      },
-      []
-    );
+        []
+      );
 
-    return convertLLMResultToLocation(result.toolResult, locator, searchText, documentText);
-  } catch (error) {
-    logger.error("LLM search failed:", error);
-    return null;
+      return convertLLMResultToLocation(result.toolResult, locator, searchText, documentText);
+    } catch (error) {
+      logger.error("LLM search failed:", error);
+      return null;
+    }
+  };
+
+  // Use session manager to track this as a sub-operation if available
+  const sessionManager = getGlobalSessionManager();
+  if (sessionManager) {
+    return sessionManager.withPath('/llm-fallback', { operation: 'text-location' }, executeSearch);
   }
+
+  // Fall back to direct execution if no session manager
+  return executeSearch();
 }

@@ -8,18 +8,25 @@ vi.mock("@/application/services/documentImport", () => ({
   importDocumentService: vi.fn(),
 }));
 vi.mock("@/infrastructure/logging/logger");
+vi.mock("@/infrastructure/http/guards", () => ({
+  validateLlmAccess: vi.fn(),
+}));
 
 import { NextRequest } from "next/server";
 import { POST } from "../route";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { importDocumentService } from "@/application/services/documentImport";
+import { validateLlmAccess } from "@/infrastructure/http/guards";
 
 const mockAuthenticateRequest = vi.mocked(authenticateRequest);
 const mockImportDocumentService = vi.mocked(importDocumentService);
+const mockValidateLlmAccess = vi.mocked(validateLlmAccess);
 
 describe("POST /api/import", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: all guard checks pass
+    mockValidateLlmAccess.mockResolvedValue(null);
   });
 
   it("should require authentication", async () => {

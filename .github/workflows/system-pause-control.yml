@@ -1,0 +1,83 @@
+name: System Pause Control
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - pause
+          - unpause
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+      reason:
+        description: 'Reason for pausing (required for pause action)'
+        required: false
+        type: string
+
+jobs:
+  manage-system-pause:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate inputs
+        run: |
+          if [ "${{ github.event.inputs.action }}" = "pause" ] && [ -z "${{ github.event.inputs.reason }}" ]; then
+            echo "Error: Reason is required when pausing the system"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pause System
+        if: github.event.inputs.action == 'pause'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Pausing system on ${{ github.event.inputs.environment }}..."
+          cd internal-packages/db
+          pnpm run system:pause "${{ github.event.inputs.reason }}"
+
+      - name: Unpause System
+        if: github.event.inputs.action == 'unpause'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Unpausing system on ${{ github.event.inputs.environment }}..."
+          cd internal-packages/db
+          pnpm run system:unpause
+
+      - name: Summary
+        run: |
+          echo "## System Pause Control Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Action**: ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.action }}" = "pause" ]; then
+            echo "- **Reason**: ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- **Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The system has been ${{ github.event.inputs.action }}d on ${{ github.event.inputs.environment }}." >> $GITHUB_STEP_SUMMARY

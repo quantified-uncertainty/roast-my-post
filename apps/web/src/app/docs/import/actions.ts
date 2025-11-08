@@ -5,8 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { importDocumentService } from "@/application/services/documentImport";
 import { logger } from "@/infrastructure/logging/logger";
-import { prisma } from "@roast/db";
-import { validateQuota } from "@/infrastructure/rate-limiting/rate-limit-service";
+import { validateServerActionAccess } from "@/infrastructure/http/guards";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 
 export async function importDocument(url: string, agentIds: string[] = [], isPrivate: boolean = true) {
@@ -18,9 +17,15 @@ export async function importDocument(url: string, agentIds: string[] = [], isPri
       throw new Error("User must be logged in to import a document");
     }
 
-    // 1. Soft check: Verify quota availability
+    // 1. Validate access (system pause + quota) if creating evaluations
     if (agentIds.length > 0) {
-      await validateQuota({ userId: session.user.id, prisma, requestedCount: agentIds.length });
+      const accessError = await validateServerActionAccess({
+        userId: session.user.id,
+        requestedCount: agentIds.length
+      });
+      if (accessError) {
+        throw new Error(accessError.error);
+      }
     }
 
     // 2. Do expensive work (fetch, validate)

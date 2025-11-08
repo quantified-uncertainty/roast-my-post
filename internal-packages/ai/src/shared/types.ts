@@ -49,7 +49,7 @@ export interface Comment {
   
   // Optional fields for plugin-based comments
   header?: string;                   // Brief summary (provided by plugins)
-  level?: 'error' | 'warning' | 'info' | 'success' | 'debug';  // Severity level (provided by plugins)
+  level?: 'error' | 'warning' | 'nitpick' | 'info' | 'success' | 'debug';  // Severity level (provided by plugins)
   source?: string;                   // Plugin name (provided by plugins)
   
   // Optional fields  

@@ -36,6 +36,11 @@ vi.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: vi.fn(),
 }));
 
+// Mock guards
+vi.mock('@/infrastructure/http/guards', () => ({
+  validateLlmAccess: vi.fn().mockResolvedValue(null), // null = all checks pass
+}));
+
 // Mock rate limiting handlers
 vi.mock('@/infrastructure/http/rate-limit-handler', () => ({
   checkQuotaAvailable: vi.fn().mockResolvedValue(null), // null = quota available

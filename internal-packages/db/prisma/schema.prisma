@@ -118,7 +118,7 @@ model Evaluation {
   createdAt  DateTime            @default(now())
   documentId String
   agentId    String
-  agent      Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agent      Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   document   Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   versions   EvaluationVersion[]
   jobs       Job[]
@@ -214,7 +214,7 @@ model AgentVersion {
   primaryInstructions      String?
   providesGrades           Boolean             @default(false)
   pluginIds                String[]            @default([])
-  agent                    Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agent                    Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   evaluations              EvaluationVersion[]
 
   @@unique([agentId, version])
@@ -233,7 +233,7 @@ model AgentEvalBatch {
   expiresAt            DateTime?
   isEphemeral          Boolean    @default(false)
   ephemeralAgent       Agent?     @relation("EphemeralAgent")
-  agent                Agent      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agent                Agent      @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user                 User       @relation(fields: [userId], references: [id])
   ephemeralDocuments   Document[] @relation("EphemeralDocuments")
   jobs                 Job[]
@@ -305,6 +305,15 @@ model ApiKey {
 
   @@index([key])
   @@index([userId])
+}
+
+model SystemPause {
+  id        String    @id @default(cuid())
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  reason    String
+
+  @@index([endedAt])
 }
 
 enum UserRole {
