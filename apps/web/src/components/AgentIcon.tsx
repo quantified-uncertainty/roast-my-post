@@ -1,8 +1,8 @@
 import { SVGProps } from "react";
 
 // Import all agent icons via SVGR (converted to React components at build time)
-import EaEpistemicAuditorIcon from "../../public/agent-icons/ea-epistemic-auditor.svg";
-import EpistemicVerificationIcon from "../../public/agent-icons/epistemic-verification.svg";
+import EaFallacyAuditorIcon from "../../public/agent-icons/ea-fallacy-auditor.svg";
+import FallacyVerificationIcon from "../../public/agent-icons/fallacy-verification.svg";
 import FallacyCheckIcon from "../../public/agent-icons/fallacy-check.svg";
 import FactCheckerIcon from "../../public/agent-icons/fact-checker.svg";
 import ForecastCheckerIcon from "../../public/agent-icons/forecast-checker.svg";
@@ -25,9 +25,17 @@ interface AgentIconProps {
 
 // Map agent icon names to their SVGR components
 const iconMap: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
-  "ea-epistemic-auditor": EaEpistemicAuditorIcon,
+  // New agent IDs (current)
+  "ea-fallacy-auditor": EaFallacyAuditorIcon,
+  "fallacy-check": FallacyCheckIcon,
+  "fallacy-verification": FallacyVerificationIcon,
+
+  // Old agent IDs (backward compatibility for existing database entries)
+  "ea-epistemic-auditor": EaFallacyAuditorIcon,
   "epistemic-critic": FallacyCheckIcon,
-  "epistemic-verification": EpistemicVerificationIcon,
+  "epistemic-verification": FallacyVerificationIcon,
+
+  // Other agents
   "fact-checker": FactCheckerIcon,
   "forecast-checker": ForecastCheckerIcon,
   "link-verifier": LinkVerifierIcon,
