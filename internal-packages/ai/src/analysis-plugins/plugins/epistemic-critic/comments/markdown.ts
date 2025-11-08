@@ -1,4 +1,5 @@
 import type { EpistemicIssue } from "../EpistemicIssue";
+import { ISSUE_TYPES } from "../constants";
 
 /**
  * Pure functions for generating markdown content for epistemic critic comments.
@@ -24,32 +25,8 @@ function sanitizeUrl(u: string): string {
  * Build the main description content for an epistemic issue comment
  */
 export function buildDescription(issue: EpistemicIssue): string {
-  const { reasoning, suggestedContext } = issue.issue;
-
-  let description = `**Analysis:** ${reasoning}`;
-
-  // Add suggested context if available
-  if (suggestedContext) {
-    description += `\n\n**Fix:**\n${suggestedContext}`;
-  }
-
-  // Add research findings if available
-  if (issue.researchFindings) {
-    description += `\n\n**Research Findings:**\n${issue.researchFindings.summary}`;
-
-    if (
-      issue.researchFindings.sources &&
-      issue.researchFindings.sources.length > 0
-    ) {
-      const items = issue.researchFindings.sources.map((s, i) => {
-        const url = sanitizeUrl(s);
-        return `${i + 1}. [Source](${url})`;
-      });
-      description += "\n\nSources:\n" + items.join("\n");
-    }
-  }
-
-  return description;
+  const { reasoning } = issue.issue;
+  return reasoning;
 }
 
 

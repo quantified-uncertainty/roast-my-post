@@ -6,20 +6,12 @@ import type { ToolContext } from "../../../tools/base/Tool";
 import { TextChunk } from "../../TextChunk";
 import { THRESHOLDS, IssueType, ISSUE_TYPES } from "./constants";
 
-// Research findings from Perplexity (if research was conducted)
-export interface ResearchFindings {
-  summary: string;
-  sources: string[];
-  [key: string]: unknown; // Allow additional properties for ToolResult compatibility
-}
-
 /**
  * Domain model for an epistemic issue found in text
  */
 export class EpistemicIssue {
   public issue: ExtractedEpistemicIssue;
   private chunk: TextChunk;
-  public researchFindings?: ResearchFindings;
   private processingStartTime: number;
 
   constructor(
@@ -52,25 +44,8 @@ export class EpistemicIssue {
     return this.issue.importanceScore;
   }
 
-  get researchableScore(): number {
-    return this.issue.researchableScore;
-  }
-
   getChunk(): TextChunk {
     return this.chunk;
-  }
-
-  /**
-   * Determines if this issue should be researched using Perplexity
-   */
-  shouldResearch(): boolean {
-    // Research high-severity issues that are researchable
-    const isHighSeverity =
-      this.severityScore >= THRESHOLDS.MIN_SEVERITY_FOR_RESEARCH;
-    const isResearchable =
-      this.researchableScore >= THRESHOLDS.MIN_RESEARCHABILITY_FOR_RESEARCH;
-
-    return isHighSeverity && isResearchable;
   }
 
   /**
@@ -144,6 +119,7 @@ export class EpistemicIssue {
         {
           documentText,
           searchText: this.issue.exactText,
+          lineNumberHint: this.issue.approximateLineNumber,
           options: {
             normalizeQuotes: true,
             partialMatch: false,
@@ -182,13 +158,6 @@ export class EpistemicIssue {
    */
   getProcessingStartTime(): number {
     return this.processingStartTime;
-  }
-
-  /**
-   * Check if research was conducted
-   */
-  hasResearch(): boolean {
-    return this.researchFindings !== undefined;
   }
 
   /**

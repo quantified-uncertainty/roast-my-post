@@ -19,17 +19,20 @@ export interface ExtractedEpistemicIssue {
   /** Detailed reasoning for why this is an issue */
   reasoning: string;
 
-  /** Suggested context or correction (optional) */
-  suggestedContext?: string;
-
   /** Importance score from 0-100 (higher = more important to address) */
   importanceScore: number;
 
-  /** How researchable is this claim? 0-100 (higher = easier to fact-check) */
-  researchableScore: number;
+  /** Approximate line number where this text appears (helps with location finding) */
+  approximateLineNumber?: number;
 
-  /** Specific research query if this issue should be researched */
-  researchQuery?: string;
+  /** Exact location in the document (populated by tool during location finding) */
+  location?: {
+    startOffset: number;
+    endOffset: number;
+    quotedText: string;
+    strategy?: string;
+    confidence?: number;
+  };
 
   /** Allow additional properties for ToolResult compatibility */
   [key: string]: unknown;
@@ -41,6 +44,12 @@ export interface ExtractedEpistemicIssue {
 export interface EpistemicIssuesExtractorInput {
   /** Text chunk to analyze */
   text: string;
+
+  /** Full document text (for accurate location finding in full doc) */
+  documentText?: string;
+
+  /** Absolute offset where this chunk starts in the full document (optimization) */
+  chunkStartOffset?: number;
 
   /** Which types of issues to focus on */
   focusAreas?: IssueType[];

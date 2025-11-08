@@ -4,8 +4,8 @@ import {
 import { logger } from "../../../shared/logger";
 import type { Comment, ToolChainResult } from "../../../shared/types";
 import epistemicIssuesExtractorTool from "../../../tools/epistemic-issues-extractor";
-import perplexityResearcherTool from "../../../tools/perplexity-researcher";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
+import epistemicReviewTool from "../../../tools/epistemic-review";
 import { TextChunk } from "../../TextChunk";
 import type {
   AnalysisResult,
@@ -35,6 +35,8 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   name(): string {
     return "EPISTEMIC_CRITIC";
   }
+
+  runOnAllChunks = true;
 
   promptForWhenToUse(): string {
     return "Use this when analyzing text for sophisticated reasoning issues, missing context, or epistemic problems. This includes: (1) Argumentative content with logical fallacies, deceptive framing, or manipulation tactics, (2) Factual/biographical content with vague claims, uncritical self-presentation, missing citations, or selective disclosure, (3) Statistical claims with potential bias or missing baselines. Skip only pure feelings/preferences with zero factual content.";
@@ -100,7 +102,6 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   getToolDependencies() {
     return [
       epistemicIssuesExtractorTool,
-      perplexityResearcherTool,
       fuzzyTextLocatorTool,
     ];
   }
@@ -159,16 +160,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
       // Deduplicate issues by similar text
       this.issues = this.deduplicateIssues(allIssues);
 
-      // Phase 2: Research high-priority issues
-      const issuesToResearch = this.issues.filter((issue) =>
-        issue.shouldResearch()
-      );
-
-      if (issuesToResearch.length > 0) {
-        await this.researchIssues(issuesToResearch);
-      }
-
-      // Phase 3: Generate comments for all issues in parallel
+      // Phase 2: Generate comments for all issues in parallel
       const commentPromises = this.issues.map(async (issue) => {
         // Run in next tick to ensure true parallelism
         await new Promise((resolve) => setImmediate(resolve));
@@ -189,14 +181,49 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
       });
 
       const commentResults = await Promise.all(commentPromises);
-      this.comments = commentResults.filter(
+      const allComments = commentResults.filter(
         (comment): comment is Comment => comment !== null
       );
 
-      // Phase 4: Generate analysis summary
-      const { summary, analysisSummary } = this.generateAnalysis();
-      this.summary = summary;
-      this.analysis = analysisSummary;
+      // Phase 3: Review and filter comments, generate summaries
+      try {
+        const reviewComments = allComments.map((comment, index) => ({
+          index,
+          header: comment.header || "Epistemic Issue",
+          description: comment.description,
+          level: comment.level || 'warning',
+          importance: comment.importance,
+          quotedText: comment.highlight.quotedText,
+        }));
+
+        const reviewResult = await epistemicReviewTool.execute(
+          {
+            documentText,
+            comments: reviewComments,
+          },
+          { logger }
+        );
+
+        // Filter comments based on review
+        this.comments = reviewResult.commentIndicesToKeep.map(
+          (idx) => allComments[idx]
+        );
+
+        // Use summaries from review
+        this.summary = reviewResult.oneLineSummary;
+        this.analysis = reviewResult.documentSummary;
+
+        logger.info(
+          `EpistemicCriticPlugin: Review complete - kept ${this.comments.length}/${allComments.length} comments`
+        );
+      } catch (error) {
+        logger.error("EpistemicCriticPlugin: Review failed, using fallback", error);
+        // Fallback: keep all comments and use old summary generation
+        this.comments = allComments;
+        const { summary, analysisSummary } = this.generateAnalysis();
+        this.summary = summary;
+        this.analysis = analysisSummary;
+      }
 
       this.hasRun = true;
       logger.info(
@@ -239,6 +266,8 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
         return await epistemicIssuesExtractorTool.execute(
           {
             text: chunk.text,
+            documentText: this.documentText, // Pass full document for location finding
+            chunkStartOffset: chunk.metadata?.position?.start, // Optimize location finding to search chunk first
             focusAreas: [
               ISSUE_TYPES.MISINFORMATION,
               ISSUE_TYPES.MISSING_CONTEXT,
@@ -246,7 +275,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
               ISSUE_TYPES.LOGICAL_FALLACY,
               ISSUE_TYPES.VERIFIED_ACCURATE,
             ],
-            minSeverityThreshold: THRESHOLDS.SEVERITY_LOW,
+            minSeverityThreshold: THRESHOLDS.SEVERITY_HIGH, // Raised 3x to only comment on top 1/3 of issues
             maxIssues: LIMITS.MAX_ISSUES_PER_CHUNK,
           },
           {
@@ -328,64 +357,6 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
     }
 
     return sortedIssues;
-  }
-
-  private async researchIssues(issues: EpistemicIssue[]): Promise<void> {
-    // Research issues in parallel for better performance
-    const researchPromises = issues.map((issue) =>
-      this.researchSingleIssue(issue)
-    );
-    await Promise.allSettled(researchPromises);
-  }
-
-  private async researchSingleIssue(issue: EpistemicIssue): Promise<void> {
-    try {
-      logger.info(
-        `[EpistemicCritic] Researching high-priority issue: "${issue.text.substring(0, 100)}..."`
-      );
-
-      // Use the research query from the extraction or create one
-      const query =
-        issue.issue.researchQuery ||
-        `Verify this claim and provide context: ${issue.text}`;
-
-      // Track tool execution if session manager is available
-      const sessionManager = getGlobalSessionManager();
-      const executeResearch = async () => {
-        return await perplexityResearcherTool.execute(
-          {
-            query,
-            focusArea: "general",
-          },
-          {
-            logger,
-          }
-        );
-      };
-
-      const result = sessionManager
-        ? await sessionManager.trackTool(
-            "perplexity-researcher",
-            executeResearch
-          )
-        : await executeResearch();
-
-      // Store research findings
-      issue.researchFindings = {
-        summary: result.summary || "No research summary available",
-        sources:
-          result.sources?.map((s) => s.url || "Unknown source") || [],
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown research error";
-      logger.error(`Error researching issue "${issue.text}": ${errorMessage}`);
-      // Store error info on the issue for debugging
-      issue.researchFindings = {
-        summary: `Research failed: ${errorMessage}`,
-        sources: [],
-      };
-    }
   }
 
   private generateAnalysis(): { summary: string; analysisSummary: string } {
@@ -520,19 +491,8 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   }
 
   getDebugInfo(): Record<string, unknown> {
-    const researchErrors = this.issues.filter(
-      (i) =>
-        i.researchFindings?.summary?.includes("Research failed")
-    ).length;
-
     return {
       issuesFound: this.issues.length,
-      issuesResearched: this.issues.filter((i) => i.hasResearch()).length,
-      issuesWithResearchErrors: researchErrors,
-      errorRate:
-        this.issues.length > 0
-          ? ((researchErrors / this.issues.length) * 100).toFixed(1) + "%"
-          : "0%",
     };
   }
 }

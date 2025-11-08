@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import {
+  ISSUE_TYPES,
+} from "../../analysis-plugins/plugins/epistemic-critic/constants";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import {
   Tool,
@@ -7,12 +10,14 @@ import {
 } from "../base/Tool";
 import { epistemicIssuesExtractorConfig } from "../configs";
 import { generateCacheSeed } from "../shared/cache-utils";
-import { IssueType, ISSUE_TYPES } from "../../analysis-plugins/plugins/epistemic-critic/constants";
+import fuzzyTextLocatorTool from "../smart-text-searcher";
+import { findLocationInChunk } from "../smart-text-searcher/chunk-location-finder";
 import type {
-  ExtractedEpistemicIssue,
   EpistemicIssuesExtractorInput,
   EpistemicIssuesExtractorOutput,
+  ExtractedEpistemicIssue,
 } from "./types";
+
 // Removed severity-calibration and genre imports - we trust the LLM's scores
 
 // Zod schemas
@@ -42,28 +47,21 @@ const extractedEpistemicIssueSchema = z.object({
   reasoning: z
     .string()
     .describe("Detailed reasoning for why this is an issue"),
-  suggestedContext: z
-    .string()
-    .optional()
-    .describe("Suggested context or correction"),
   importanceScore: z
     .number()
     .min(0)
     .max(100)
     .describe("How important to address (0-100)"),
-  researchableScore: z
+  approximateLineNumber: z
     .number()
-    .min(0)
-    .max(100)
-    .describe("How easily this can be fact-checked (0-100)"),
-  researchQuery: z
-    .string()
     .optional()
-    .describe("Specific research query if this should be researched"),
+    .describe("Approximate line number where this text appears (helps with faster location finding)"),
 }) satisfies z.ZodType<ExtractedEpistemicIssue>;
 
 const inputSchema = z.object({
   text: z.string().min(1).max(50000),
+  documentText: z.string().optional(),
+  chunkStartOffset: z.number().min(0).optional(),
   focusAreas: z
     .array(z.enum([
       ISSUE_TYPES.MISINFORMATION,
@@ -117,6 +115,17 @@ Do NOT flag authors who are:
 - ACKNOWLEDGING their own limitations (this is good epistemics!)
 
 Only flag authors who are MAKING the error themselves.
+
+**🎯 SELECTIVITY: Quality over quantity**
+
+You are a senior reviewer, not a pedantic nitpicker. Only flag issues that:
+1. **Significantly mislead** readers or distort understanding
+2. **Clearly commit** the error (not borderline cases)
+3. **Matter to the argument** (skip tangential points)
+
+**Default to NOT flagging.** When in doubt, skip it.
+
+Aim for ~5-10 high-quality issues per document, not 20+ marginal ones.
 
 **FALSE POSITIVE Examples (do NOT flag):**
 1. "Selection bias is a major problem in hiring research because we only see candidates who apply"
@@ -251,38 +260,41 @@ Only flag authors who are MAKING the error themselves.
 - Specific probability forecasts → Forecast plugin
 - Simple missing citations (unless pattern of selective citing)
 
-**Severity Scoring** (0-100):
-- 80-100: Sophisticated manipulation that seriously distorts understanding
-- 60-79: Significant reasoning errors affecting key claims
-- 40-59: Moderate issues worth noting
-- 20-39: Minor concerns
-- 0-19: Negligible or handled by other tools
+**Severity Scoring** (0-100) - CALIBRATE HIGH:
+- 80-100: Egregious manipulation seriously distorting reality (rare!)
+- 60-79: Clear, significant reasoning error affecting core claims
+- 40-59: Moderate issue worth noting in professional contexts
+- 20-39: Minor concern (usually skip these)
+- 0-19: Negligible (always skip)
+
+**Only report issues with severity ≥ 60.** Lower severity issues waste reviewer time.
+**Default scores should be 70-80, not 40-50.**
 
 **For each issue, provide:**
+- **Exact Text**: The exact text with the issue (must match document exactly)
+- **Approximate Line Number**: Rough line number where text appears (helps speed up processing)
 - **Severity Score** (0-100): How serious is this issue
 - **Confidence Score** (0-100): How sure are you this IS the fallacy
   - 90-100: Textbook example, multiple clear markers
   - 70-89: Strong indicators, likely the fallacy
   - 50-69: Moderate confidence, could be innocent
   - 30-49: Weak confidence, borderline case
+  - **CRITICAL: Only flag if confidence ≥ 70.** Borderline cases (confidence < 70) should be skipped. If you're not quite sure, don't flag it.
 - **Importance Score** (0-100): How central to the document's argument
-- **Researchable Score** (0-100): Can this be investigated further?
 - **Reasoning**: Explain the specific reasoning flaw (be pedagogical)
   - **FORMAT**: Use proper markdown formatting
   - Use numbered lists for multiple points (1., 2., 3. NOT (1), (2), (3))
   - Use bullet points for sub-items
   - Keep it concise and well-structured
-- **Suggested Context**: How to fix the reasoning or what context is missing
-  - **FORMAT**: Use proper markdown formatting (numbered lists, bullets)
-  - Keep concise - focus on actionable fixes
-- **Research Query**: If deeper investigation needed
+  - Use italic text for key terms and concepts
 
 **Key Principles:**
 - Focus on HOW arguments are made, not just WHAT is claimed
 - Look for patterns of reasoning errors across the document
 - Identify manipulation tactics that mislead without lying
 - Prioritize issues that affect epistemic hygiene
-- Help readers develop better critical thinking`;
+- Help readers develop better critical thinking
+- **IMPORTANT: Avoid redundancy** - Do NOT flag the same type of fallacy multiple times in the same chunk. If a specific fallacy type (e.g., "survivorship bias" or "cherry-picked timeframe") appears multiple times, only report the MOST SEVERE or MOST IMPORTANT instance. This prevents repetitive comments on the same reasoning error.`;
 
     const userPrompt = `Analyze this ENTIRE text for sophisticated epistemic and reasoning issues:
 
@@ -408,21 +420,13 @@ Max issues to return: ${input.maxIssues ?? 15}
                   type: "string",
                   description: "Why this is an issue",
                 },
-                suggestedContext: {
-                  type: "string",
-                  description: "Suggested context or correction (optional)",
-                },
                 importanceScore: {
                   type: "number",
                   description: "0-100: How important to address",
                 },
-                researchableScore: {
+                approximateLineNumber: {
                   type: "number",
-                  description: "0-100: How easily fact-checkable",
-                },
-                researchQuery: {
-                  type: "string",
-                  description: "Research query if this should be verified (optional)",
+                  description: "Approximate line number where this text appears (optional, helps speed up location finding)",
                 },
               },
               required: [
@@ -432,7 +436,6 @@ Max issues to return: ${input.maxIssues ?? 15}
                 "confidenceScore",
                 "reasoning",
                 "importanceScore",
-                "researchableScore",
               ],
             },
           },
@@ -515,8 +518,81 @@ Max issues to return: ${input.maxIssues ?? 15}
       })
       .slice(0, input.maxIssues);
 
+    // Find locations for each issue if documentText is provided
+    const issuesWithLocations: ExtractedEpistemicIssue[] = [];
+    if (input.documentText) {
+      context.logger.info(`[EpistemicIssuesExtractor] Finding locations for ${sortedIssues.length} issues`);
+
+      for (const issue of sortedIssues) {
+        try {
+          let locationResult;
+
+          // OPTIMIZATION: If we have chunk offset, search in chunk first (much faster!)
+          if (input.chunkStartOffset !== undefined) {
+            // Use optimized 3-tier chunk-based location finding
+            locationResult = await findLocationInChunk(
+              {
+                chunkText: input.text,
+                fullDocumentText: input.documentText,
+                chunkStartOffset: input.chunkStartOffset,
+                searchText: issue.exactText,
+                lineNumberHint: issue.approximateLineNumber,
+              },
+              context
+            );
+          } else {
+            // No chunk offset, search in full document
+            locationResult = await fuzzyTextLocatorTool.execute(
+              {
+                documentText: input.documentText,
+                searchText: issue.exactText,
+                lineNumberHint: issue.approximateLineNumber,
+                options: {
+                  normalizeQuotes: true,
+                  partialMatch: false,
+                  useLLMFallback: true,
+                },
+              },
+              context
+            );
+          }
+
+          if (locationResult.found && locationResult.location) {
+            issuesWithLocations.push({
+              ...issue,
+              location: {
+                startOffset: locationResult.location.startOffset,
+                endOffset: locationResult.location.endOffset,
+                quotedText: locationResult.location.quotedText,
+                strategy: locationResult.location.strategy,
+                confidence: locationResult.location.confidence,
+              },
+            });
+            context.logger.debug(
+              `[EpistemicIssuesExtractor] Found location for issue using ${locationResult.location.strategy}`
+            );
+          } else {
+            // Keep issue without location
+            issuesWithLocations.push(issue);
+            context.logger.warn(
+              `[EpistemicIssuesExtractor] Could not find location for issue: "${issue.exactText.substring(0, 50)}..."`
+            );
+          }
+        } catch (error) {
+          // Keep issue without location on error
+          issuesWithLocations.push(issue);
+          context.logger.error(
+            `[EpistemicIssuesExtractor] Error finding location: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+    } else {
+      // No documentText provided, return issues without locations
+      issuesWithLocations.push(...sortedIssues);
+    }
+
     return {
-      issues: sortedIssues,
+      issues: issuesWithLocations,
       totalIssuesFound: allIssues.length,
       wasComplete,
     };

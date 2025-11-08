@@ -21,8 +21,8 @@ export async function buildEpistemicComment(
   documentText: string,
   context: ToolContext
 ): Promise<Comment | null> {
-  // Find precise location in document
-  const location = await issue.findLocation(documentText, context);
+  // Use location from tool output if available, otherwise find it
+  const location = issue.issue.location || await issue.findLocation(documentText, context);
   if (!location) return null;
 
   // Build tool chain results
@@ -59,7 +59,7 @@ export async function buildEpistemicComment(
  * Build the tool chain results for an epistemic issue
  */
 function buildToolChain(issue: EpistemicIssue): ToolChainResult[] {
-  const toolChain: ToolChainResult[] = [
+  return [
     {
       toolName: "extractEpistemicIssues",
       stage: "extraction",
@@ -67,16 +67,4 @@ function buildToolChain(issue: EpistemicIssue): ToolChainResult[] {
       result: issue.issue,
     },
   ];
-
-  // Add research tool results if research was done
-  if (issue.hasResearch() && issue.researchFindings) {
-    toolChain.push({
-      toolName: "perplexityResearch",
-      stage: "verification",
-      timestamp: new Date(issue.getProcessingStartTime() + 500).toISOString(),
-      result: issue.researchFindings,
-    });
-  }
-
-  return toolChain;
 }
