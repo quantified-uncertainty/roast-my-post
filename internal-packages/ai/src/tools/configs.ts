@@ -203,6 +203,7 @@ export const epistemicReviewConfig: ToolConfig = {
     "Reviews and filters epistemic critic comments, removing redundant issues and generating comprehensive document summaries",
   version: "1.0.0",
   category: "utility",
+  path: "/tools/epistemic-review",
 };
 
 // ============================================================================
