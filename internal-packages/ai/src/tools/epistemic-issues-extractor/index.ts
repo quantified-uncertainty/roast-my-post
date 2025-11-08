@@ -268,7 +268,12 @@ Only flag authors who are MAKING the error themselves.
 - **Importance Score** (0-100): How central to the document's argument
 - **Researchable Score** (0-100): Can this be investigated further?
 - **Reasoning**: Explain the specific reasoning flaw (be pedagogical)
+  - **FORMAT**: Use proper markdown formatting
+  - Use numbered lists for multiple points (1., 2., 3. NOT (1), (2), (3))
+  - Use bullet points for sub-items
+  - Keep it concise and well-structured
 - **Suggested Context**: What's missing or how to fix the reasoning
+  - **FORMAT**: Use proper markdown formatting (numbered lists, bullets)
 - **Research Query**: If deeper investigation needed
 
 **Key Principles:**
