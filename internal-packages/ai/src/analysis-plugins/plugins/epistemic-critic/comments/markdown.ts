@@ -1,5 +1,4 @@
 import type { EpistemicIssue } from "../EpistemicIssue";
-import { ISSUE_TYPES } from "../constants";
 
 /**
  * Pure functions for generating markdown content for epistemic critic comments.
@@ -25,19 +24,13 @@ function sanitizeUrl(u: string): string {
  * Build the main description content for an epistemic issue comment
  */
 export function buildDescription(issue: EpistemicIssue): string {
-  const { issueType, reasoning, suggestedContext, confidenceScore } = issue.issue;
+  const { reasoning, suggestedContext } = issue.issue;
 
-  let description = `**Issue Type:** ${formatIssueType(issueType)}
-
-**Analysis:** ${reasoning}`;
-
-  // Add confidence information
-  const confidenceLabel = getConfidenceLabel(confidenceScore);
-  description += `\n\n**Confidence:** ${confidenceScore}/100 (${confidenceLabel})`;
+  let description = `**Analysis:** ${reasoning}`;
 
   // Add suggested context if available
   if (suggestedContext) {
-    description += `\n\n**Suggested Context/Correction:**\n${suggestedContext}`;
+    description += `\n\n**Fix:**\n${suggestedContext}`;
   }
 
   // Add research findings if available
@@ -59,36 +52,6 @@ export function buildDescription(issue: EpistemicIssue): string {
   return description;
 }
 
-/**
- * Get confidence label for a confidence score
- */
-function getConfidenceLabel(score: number): string {
-  if (score >= 90) return "Very High - Textbook example";
-  if (score >= 70) return "High - Strong indicators";
-  if (score >= 50) return "Moderate - Likely but could be innocent";
-  if (score >= 30) return "Low - Borderline case";
-  return "Very Low - Uncertain";
-}
-
-/**
- * Format issue type for display
- */
-function formatIssueType(issueType: string): string {
-  switch (issueType) {
-    case ISSUE_TYPES.MISINFORMATION:
-      return "Misinformation";
-    case ISSUE_TYPES.MISSING_CONTEXT:
-      return "Missing Critical Context";
-    case ISSUE_TYPES.DECEPTIVE_WORDING:
-      return "Deceptive/Misleading Wording";
-    case ISSUE_TYPES.LOGICAL_FALLACY:
-      return "Logical Fallacy";
-    case ISSUE_TYPES.VERIFIED_ACCURATE:
-      return "Verified Accurate";
-    default:
-      return "Epistemic Issue";
-  }
-}
 
 /**
  * Build the title/header for an epistemic issue comment

@@ -272,8 +272,9 @@ Only flag authors who are MAKING the error themselves.
   - Use numbered lists for multiple points (1., 2., 3. NOT (1), (2), (3))
   - Use bullet points for sub-items
   - Keep it concise and well-structured
-- **Suggested Context**: What's missing or how to fix the reasoning
+- **Suggested Context**: How to fix the reasoning or what context is missing
   - **FORMAT**: Use proper markdown formatting (numbered lists, bullets)
+  - Keep concise - focus on actionable fixes
 - **Research Query**: If deeper investigation needed
 
 **Key Principles:**
