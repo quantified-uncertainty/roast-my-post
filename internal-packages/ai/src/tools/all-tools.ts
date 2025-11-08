@@ -1,6 +1,10 @@
 /**
  * Central registry of all available tools
  * This is the single source of truth for tool imports
+ *
+ * ⚠️ IMPORTANT: When adding a new tool, you must also update:
+ * 1. internal-packages/ai/src/tools/registry.ts (add import + register call)
+ * 2. internal-packages/ai/src/tools/configs.ts (add tool config)
  */
 
 import checkSpellingGrammarTool from './spelling-grammar-checker';

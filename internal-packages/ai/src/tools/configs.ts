@@ -5,6 +5,9 @@ import type { ToolConfig } from "./base/Tool";
 
 // ============================================================================
 // Tool Configs - Single Source of Truth
+// ⚠️ IMPORTANT: When adding a new tool config, you must also update:
+// 1. internal-packages/ai/src/tools/all-tools.ts (add import + export)
+// 2. internal-packages/ai/src/tools/registry.ts (add import + register call)
 // ============================================================================
 
 export const mathValidatorLLMConfig: ToolConfig = {
