@@ -121,15 +121,15 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
     try {
       // Audit log: Analysis started
-      logger.info("EpistemicCriticPlugin: AUDIT: Analysis started", {
+      logger.info("FallacyCheckPlugin: AUDIT: Analysis started", {
         timestamp: new Date().toISOString(),
         documentLength: documentText.length,
         chunkCount: chunks.length,
-        operation: "epistemic-critic-analysis",
+        operation: "fallacy-check-analysis",
       });
 
-      logger.info("EpistemicCriticPlugin: Starting analysis");
-      logger.info(`EpistemicCriticPlugin: Processing ${chunks.length} chunks`);
+      logger.info("FallacyCheckPlugin: Starting analysis");
+      logger.info(`FallacyCheckPlugin: Processing ${chunks.length} chunks`);
 
       // Phase 1: Extract epistemic issues from all chunks in parallel
       const extractionPromises = this.chunks.map((chunk) =>
@@ -166,7 +166,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       }
 
       // Audit log: Extraction phase completed
-      logger.info("EpistemicCriticPlugin: AUDIT: Extraction phase completed", {
+      logger.info("FallacyCheckPlugin: AUDIT: Extraction phase completed", {
         timestamp: new Date().toISOString(),
         issuesExtracted: allIssues.length,
         extractionErrors: extractionErrors.length,
@@ -213,11 +213,11 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         }));
 
         // Audit log: Review phase started
-        logger.info("EpistemicCriticPlugin: AUDIT: Review phase started", {
+        logger.info("FallacyCheckPlugin: AUDIT: Review phase started", {
           timestamp: new Date().toISOString(),
           commentsToReview: allComments.length,
           phase: "review",
-          operation: "epistemic-review-tool",
+          operation: "fallacy-review-tool",
         });
 
         const reviewResult = await fallacyReviewTool.execute(
@@ -238,7 +238,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         this.analysis = reviewResult.documentSummary;
 
         // Audit log: Review phase completed
-        logger.info("EpistemicCriticPlugin: AUDIT: Review phase completed", {
+        logger.info("FallacyCheckPlugin: AUDIT: Review phase completed", {
           timestamp: new Date().toISOString(),
           commentsReviewed: allComments.length,
           commentsKept: this.comments.length,
@@ -247,10 +247,10 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         });
 
         logger.info(
-          `EpistemicCriticPlugin: Review complete - kept ${this.comments.length}/${allComments.length} comments`
+          `FallacyCheckPlugin: Review complete - kept ${this.comments.length}/${allComments.length} comments`
         );
       } catch (error) {
-        logger.error("EpistemicCriticPlugin: Review failed, using fallback", error);
+        logger.error("FallacyCheckPlugin: Review failed, using fallback", error);
         // Fallback: keep all comments and use old summary generation
         this.comments = allComments;
         const { summary, analysisSummary } = this.generateAnalysis();
@@ -263,17 +263,17 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       const totalDuration = Date.now() - this.processingStartTime;
 
       // Audit log: Analysis completed successfully
-      logger.info("EpistemicCriticPlugin: AUDIT: Analysis completed", {
+      logger.info("FallacyCheckPlugin: AUDIT: Analysis completed", {
         timestamp: new Date().toISOString(),
         totalDurationMs: totalDuration,
         issuesFound: this.issues.length,
         commentsGenerated: this.comments.length,
         success: true,
-        operation: "epistemic-critic-analysis",
+        operation: "fallacy-check-analysis",
       });
 
       logger.info(
-        `EpistemicCriticPlugin: Analysis complete - ${this.comments.length} comments generated`
+        `FallacyCheckPlugin: Analysis complete - ${this.comments.length} comments generated`
       );
 
       return this.getResults();
@@ -282,20 +282,20 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       const errorMessage = error instanceof Error ? error.message : String(error);
 
       // Audit log: Analysis failed
-      logger.error("EpistemicCriticPlugin: AUDIT: Analysis failed", {
+      logger.error("FallacyCheckPlugin: AUDIT: Analysis failed", {
         timestamp: new Date().toISOString(),
         totalDurationMs: totalDuration,
         error: errorMessage,
         success: false,
-        operation: "epistemic-critic-analysis",
+        operation: "fallacy-check-analysis",
       });
 
-      logger.error("EpistemicCriticPlugin: Fatal error during analysis", error);
+      logger.error("FallacyCheckPlugin: Fatal error during analysis", error);
       // Return a partial result instead of throwing
       this.hasRun = true;
       this.summary = "Analysis failed due to an error";
       this.analysis =
-        "The epistemic analysis could not be completed due to a technical error.";
+        "The fallacy check analysis could not be completed due to a technical error.";
       return this.getResults();
     }
   }
@@ -335,7 +335,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       const result = sessionManager
         ? await sessionManager.trackTool(
-            "extract-epistemic-issues",
+            "extract-fallacy-issues",
             executeExtraction
           )
         : await executeExtraction();

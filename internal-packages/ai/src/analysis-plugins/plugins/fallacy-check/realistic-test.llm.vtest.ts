@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { EpistemicCriticPlugin } from './index';
+import { FallacyCheckPlugin } from './index';
 import { createChunksWithTool } from '../../utils/createChunksWithTool';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -7,7 +7,7 @@ import * as path from 'path';
 /**
  * Realistic document testing - iterate and tune the agent
  */
-describe('EpistemicCriticPlugin - Realistic Documents', () => {
+describe('FallacyCheckPlugin - Realistic Documents', () => {
 
   // TEST 1: Crypto Investment Pitch (High manipulation risk)
   const cryptoDocument = `
@@ -136,7 +136,7 @@ Traditional business advice tells you to spend years planning. We spent 2 months
 `;
 
   it('Test 1: Crypto Investment Pitch', async () => {
-    const plugin = new EpistemicCriticPlugin();
+    const plugin = new FallacyCheckPlugin();
     const chunks = await createChunksWithTool(cryptoDocument);
 
     console.log(`\n${'='.repeat(80)}`);
@@ -177,7 +177,7 @@ Traditional business advice tells you to spend years planning. We spent 2 months
   }, 300000); // 5 minutes for LLM tests
 
   it('Test 2: Health Supplement Marketing', async () => {
-    const plugin = new EpistemicCriticPlugin();
+    const plugin = new FallacyCheckPlugin();
     const chunks = await createChunksWithTool(supplementDocument);
 
     console.log(`\n${'='.repeat(80)}`);
@@ -211,7 +211,7 @@ Traditional business advice tells you to spend years planning. We spent 2 months
   }, 300000); // 5 minutes for LLM tests
 
   it('Test 3: Political Opinion Piece', async () => {
-    const plugin = new EpistemicCriticPlugin();
+    const plugin = new FallacyCheckPlugin();
     const chunks = await createChunksWithTool(politicalDocument);
 
     console.log(`\n${'='.repeat(80)}`);
@@ -245,7 +245,7 @@ Traditional business advice tells you to spend years planning. We spent 2 months
   }, 300000); // 5 minutes for LLM tests
 
   it('Test 4: Business Case Study', async () => {
-    const plugin = new EpistemicCriticPlugin();
+    const plugin = new FallacyCheckPlugin();
     const chunks = await createChunksWithTool(businessDocument);
 
     console.log(`\n${'='.repeat(80)}`);

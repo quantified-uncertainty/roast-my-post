@@ -352,7 +352,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
     }
   ],
 
-  'epistemic-review': [
+  'fallacy-review': [
     {
       label: 'Redundant Comments',
       values: {

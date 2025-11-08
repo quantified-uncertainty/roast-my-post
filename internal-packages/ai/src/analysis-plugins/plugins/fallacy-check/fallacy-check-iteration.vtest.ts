@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { EpistemicCriticPlugin } from './index';
+import { FallacyCheckPlugin } from './index';
 import { createChunksWithTool } from '../../utils/createChunksWithTool';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -7,7 +7,7 @@ import * as path from 'path';
 /**
  * Iteration test for epistemic critic - used to manually test and improve the agent
  */
-describe('EpistemicCriticPlugin - Iteration Testing', () => {
+describe('FallacyCheckPlugin - Iteration Testing', () => {
   // Test document with SOPHISTICATED epistemic issues (Iteration 5)
   const testDocument = `
 # Investment Strategy Analysis
@@ -42,7 +42,7 @@ Traditional financial advisors tell you to "diversify" and "invest for the long 
 `;
 
   it('should extract epistemic issues from test document', async () => {
-    const plugin = new EpistemicCriticPlugin();
+    const plugin = new FallacyCheckPlugin();
 
     // Create chunks
     const chunks = await createChunksWithTool(testDocument);
