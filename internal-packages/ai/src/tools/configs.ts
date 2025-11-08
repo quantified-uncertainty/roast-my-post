@@ -204,6 +204,7 @@ export const epistemicReviewConfig: ToolConfig = {
   version: "1.0.0",
   category: "utility",
   path: "/tools/epistemic-review",
+  status: "beta",
 };
 
 // ============================================================================
