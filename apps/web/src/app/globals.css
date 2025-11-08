@@ -119,9 +119,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-@layer utilities {
-  .bg-amber-hover {
-    background-color: rgb(187, 142, 65);
-  }
-}

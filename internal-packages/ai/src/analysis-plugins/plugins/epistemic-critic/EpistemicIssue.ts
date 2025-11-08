@@ -187,7 +187,7 @@ export class EpistemicIssue {
         return prefix ? `${prefix} misleading wording` : "Misleading wording";
 
       case ISSUE_TYPES.LOGICAL_FALLACY:
-        const fallacyName = this.extractFallacyName();
+        const fallacyName = this.getFallacyDisplayName();
         if (fallacyName) {
           return prefix ? `${prefix} ${fallacyName}` : fallacyName;
         }
@@ -233,53 +233,30 @@ export class EpistemicIssue {
   }
 
   /**
-   * Extract specific fallacy name from reasoning text
+   * Get display name for fallacy type from enum
    */
-  private extractFallacyName(): string | null {
-    const reasoning = this.issue.reasoning.toLowerCase();
+  private getFallacyDisplayName(): string | null {
+    if (!this.issue.fallacyType) return null;
 
-    // Common fallacies to detect
-    const fallacies: Record<string, string> = {
-      "ad hominem": "Ad Hominem",
-      "straw man": "Straw Man",
-      "strawman": "Straw Man",
-      "false dilemma": "False Dilemma",
-      "false dichotomy": "False Dilemma",
-      "slippery slope": "Slippery Slope",
-      "appeal to authority": "Appeal to Authority",
-      "appeal to emotion": "Appeal to Emotion",
-      "hasty generalization": "Hasty Generalization",
-      "circular reasoning": "Circular Reasoning",
-      "begging the question": "Begging the Question",
-      "post hoc": "Post Hoc",
-      "correlation causation": "Correlation ≠ Causation",
-      "texas sharpshooter": "Texas Sharpshooter",
-      "no true scotsman": "No True Scotsman",
-      "tu quoque": "Tu Quoque",
-      "bandwagon": "Bandwagon",
-      "appeal to nature": "Appeal to Nature",
-      "genetic fallacy": "Genetic Fallacy",
-      "cherry picking": "Cherry Picking",
-      "survivorship bias": "Survivorship Bias",
-      "confirmation bias": "Confirmation Bias",
-      "motte-bailey": "Motte-and-Bailey",
-      "motte and bailey": "Motte-and-Bailey",
-      "gish gallop": "Gish Gallop",
+    const displayNames: Record<string, string | null> = {
+      "ad-hominem": "Ad Hominem",
+      "straw-man": "Straw Man",
+      "false-dilemma": "False Dilemma",
+      "slippery-slope": "Slippery Slope",
+      "appeal-to-authority": "Appeal to Authority",
+      "appeal-to-emotion": "Appeal to Emotion",
+      "appeal-to-nature": "Appeal to Nature",
+      "hasty-generalization": "Hasty Generalization",
+      "survivorship-bias": "Survivorship Bias",
+      "selection-bias": "Selection Bias",
+      "cherry-picking": "Cherry Picking",
+      "circular-reasoning": "Circular Reasoning",
       "equivocation": "Equivocation",
-      "loaded question": "Loaded Question",
-      "moving the goalposts": "Moving the Goalposts",
-      "non sequitur": "Non Sequitur",
-      "red herring": "Red Herring",
-      "special pleading": "Special Pleading",
+      "non-sequitur": "Non Sequitur",
+      "other": null, // Don't display "Other" as fallacy name
     };
 
-    for (const [pattern, name] of Object.entries(fallacies)) {
-      if (reasoning.includes(pattern)) {
-        return name;
-      }
-    }
-
-    return null;
+    return displayNames[this.issue.fallacyType] ?? null;
   }
 
   /**

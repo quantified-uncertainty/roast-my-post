@@ -326,15 +326,6 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
             text: chunk.text,
             documentText: this.documentText, // Pass full document for location finding
             chunkStartOffset: chunk.metadata?.position?.start, // Optimize location finding to search chunk first
-            focusAreas: [
-              ISSUE_TYPES.MISINFORMATION,
-              ISSUE_TYPES.MISSING_CONTEXT,
-              ISSUE_TYPES.DECEPTIVE_WORDING,
-              ISSUE_TYPES.LOGICAL_FALLACY,
-              ISSUE_TYPES.VERIFIED_ACCURATE,
-            ],
-            minSeverityThreshold: THRESHOLDS.SEVERITY_HIGH, // Raised 3x to only comment on top 1/3 of issues
-            maxIssues: LIMITS.MAX_ISSUES_PER_CHUNK,
           },
           {
             logger,

@@ -34,6 +34,26 @@ const extractedEpistemicIssueSchema = z.object({
       ISSUE_TYPES.VERIFIED_ACCURATE,
     ] as const)
     .describe("Type of epistemic issue identified"),
+  fallacyType: z
+    .enum([
+      "ad-hominem",
+      "straw-man",
+      "false-dilemma",
+      "slippery-slope",
+      "appeal-to-authority",
+      "appeal-to-emotion",
+      "appeal-to-nature",
+      "hasty-generalization",
+      "survivorship-bias",
+      "selection-bias",
+      "cherry-picking",
+      "circular-reasoning",
+      "equivocation",
+      "non-sequitur",
+      "other",
+    ] as const)
+    .optional()
+    .describe("Specific fallacy type (only for logical-fallacy issues)"),
   severityScore: z
     .number()
     .min(0)
@@ -62,17 +82,6 @@ const inputSchema = z.object({
   text: z.string().min(1).max(50000),
   documentText: z.string().optional(),
   chunkStartOffset: z.number().min(0).optional(),
-  focusAreas: z
-    .array(z.enum([
-      ISSUE_TYPES.MISINFORMATION,
-      ISSUE_TYPES.MISSING_CONTEXT,
-      ISSUE_TYPES.DECEPTIVE_WORDING,
-      ISSUE_TYPES.LOGICAL_FALLACY,
-      ISSUE_TYPES.VERIFIED_ACCURATE,
-    ] as const))
-    .optional(),
-  minSeverityThreshold: z.number().min(0).max(100).default(20),
-  maxIssues: z.number().min(1).max(50).default(15),
 }) satisfies z.ZodType<EpistemicIssuesExtractorInput>;
 
 const outputSchema = z.object({
@@ -95,15 +104,18 @@ export class EpistemicIssuesExtractorTool extends Tool<
   ): Promise<EpistemicIssuesExtractorOutput> {
     const executionStartTime = Date.now();
 
+    // Hardcoded configuration
+    const MIN_SEVERITY_THRESHOLD = 60; // Only report significant issues
+    const MAX_ISSUES = 15; // Limit to prevent overwhelming output
+
     // Audit log: Tool execution started
     context.logger.info(
       "[EpistemicIssuesExtractor] AUDIT: Tool execution started",
       {
         timestamp: new Date().toISOString(),
         textLength: input.text.length,
-        focusAreas: input.focusAreas,
-        minSeverityThreshold: input.minSeverityThreshold,
-        maxIssues: input.maxIssues,
+        minSeverityThreshold: MIN_SEVERITY_THRESHOLD,
+        maxIssues: MAX_ISSUES,
         hasDocumentText: !!input.documentText,
         hasChunkOffset: input.chunkStartOffset !== undefined,
       }
@@ -112,10 +124,6 @@ export class EpistemicIssuesExtractorTool extends Tool<
     context.logger.info(
       `[EpistemicIssuesExtractor] Analyzing text for epistemic issues`
     );
-
-    const focusAreasText = input.focusAreas
-      ? input.focusAreas.join(", ")
-      : "all types";
 
     const systemPrompt = `You are an expert epistemic critic analyzing reasoning quality and argumentation.
 
@@ -289,6 +297,13 @@ Aim for ~5-10 high-quality issues per document, not 20+ marginal ones.
 **For each issue, provide:**
 - **Exact Text**: The exact text with the issue (must match document exactly)
 - **Approximate Line Number**: Rough line number where text appears (helps speed up processing)
+- **Issue Type**: One of misinformation, missing-context, deceptive-wording, logical-fallacy, verified-accurate
+- **Fallacy Type** (required for logical-fallacy issues): Specific fallacy name from this list:
+  - ad-hominem, straw-man, false-dilemma, slippery-slope
+  - appeal-to-authority, appeal-to-emotion, appeal-to-nature
+  - hasty-generalization, survivorship-bias, selection-bias, cherry-picking
+  - circular-reasoning, equivocation, non-sequitur
+  - other (if none of the above fit)
 - **Severity Score** (0-100): How serious is this issue
 - **Confidence Score** (0-100): How sure are you this IS the fallacy
   - 90-100: Textbook example, multiple clear markers
@@ -315,10 +330,6 @@ Aim for ~5-10 high-quality issues per document, not 20+ marginal ones.
     const userPrompt = `Analyze this ENTIRE text for sophisticated epistemic and reasoning issues:
 
 ${input.text}
-
-Focus areas: ${focusAreasText}
-Min severity threshold: ${input.minSeverityThreshold ?? 20}
-Max issues to return: ${input.maxIssues ?? 15}
 
 **CRITICAL INSTRUCTIONS**:
 - **Analyze EVERY section** - don't stop after finding a few issues in one area
@@ -381,9 +392,8 @@ Max issues to return: ${input.maxIssues ?? 15}
 
     const cacheSeed = generateCacheSeed("epistemic-extract", [
       input.text,
-      focusAreasText,
-      input.minSeverityThreshold || 20,
-      input.maxIssues || 15,
+      MIN_SEVERITY_THRESHOLD,
+      MAX_ISSUES,
     ]);
 
     const result = await callClaudeWithTool<{
@@ -423,6 +433,27 @@ Max issues to return: ${input.maxIssues ?? 15}
                     ISSUE_TYPES.VERIFIED_ACCURATE,
                   ],
                   description: "Type of issue",
+                },
+                fallacyType: {
+                  type: "string",
+                  enum: [
+                    "ad-hominem",
+                    "straw-man",
+                    "false-dilemma",
+                    "slippery-slope",
+                    "appeal-to-authority",
+                    "appeal-to-emotion",
+                    "appeal-to-nature",
+                    "hasty-generalization",
+                    "survivorship-bias",
+                    "selection-bias",
+                    "cherry-picking",
+                    "circular-reasoning",
+                    "equivocation",
+                    "non-sequitur",
+                    "other",
+                  ],
+                  description: "Specific fallacy type (only for logical-fallacy issues)",
                 },
                 severityScore: {
                   type: "number",
@@ -515,7 +546,7 @@ Max issues to return: ${input.maxIssues ?? 15}
       if (issue.issueType === ISSUE_TYPES.VERIFIED_ACCURATE) return true;
 
       // Filter by severity threshold
-      if (issue.severityScore < (input.minSeverityThreshold ?? 20)) return false;
+      if (issue.severityScore < MIN_SEVERITY_THRESHOLD) return false;
 
       // Apply confidence threshold based on severity
       return issue.confidenceScore >= getMinConfidence(issue.severityScore);
@@ -532,7 +563,7 @@ Max issues to return: ${input.maxIssues ?? 15}
           : b.severityScore * b.importanceScore;
         return priorityB - priorityA;
       })
-      .slice(0, input.maxIssues);
+      .slice(0, MAX_ISSUES);
 
     // Find locations for each issue if documentText is provided
     const issuesWithLocations: ExtractedEpistemicIssue[] = [];

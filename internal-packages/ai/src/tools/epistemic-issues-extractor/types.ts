@@ -1,6 +1,26 @@
 import { IssueType } from '../../analysis-plugins/plugins/epistemic-critic/constants';
 
 /**
+ * Specific types of fallacies (for logical-fallacy issue type)
+ */
+export type FallacyType =
+  | 'ad-hominem'
+  | 'straw-man'
+  | 'false-dilemma'
+  | 'slippery-slope'
+  | 'appeal-to-authority'
+  | 'appeal-to-emotion'
+  | 'appeal-to-nature'
+  | 'hasty-generalization'
+  | 'survivorship-bias'
+  | 'selection-bias'
+  | 'cherry-picking'
+  | 'circular-reasoning'
+  | 'equivocation'
+  | 'non-sequitur'
+  | 'other';
+
+/**
  * Raw epistemic issue extracted from a text chunk by the LLM
  */
 export interface ExtractedEpistemicIssue {
@@ -9,6 +29,9 @@ export interface ExtractedEpistemicIssue {
 
   /** Type of epistemic issue identified */
   issueType: IssueType;
+
+  /** Specific fallacy type (only for logical-fallacy issues) */
+  fallacyType?: FallacyType;
 
   /** Severity score from 0-100 (higher = more severe) */
   severityScore: number;
@@ -50,15 +73,6 @@ export interface EpistemicIssuesExtractorInput {
 
   /** Absolute offset where this chunk starts in the full document (optimization) */
   chunkStartOffset?: number;
-
-  /** Which types of issues to focus on */
-  focusAreas?: IssueType[];
-
-  /** Minimum severity threshold (0-100) */
-  minSeverityThreshold?: number;
-
-  /** Maximum number of issues to return */
-  maxIssues?: number;
 }
 
 /**
