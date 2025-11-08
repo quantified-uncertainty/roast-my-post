@@ -16,6 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
 
+import IndexFingerIcon from "../../../../public/app-icons/indexFinger.svg";
 import {
   MARKDOWN_COMPONENTS,
   MARKDOWN_PLUGINS,
@@ -94,31 +95,35 @@ export function PositionedComment({
 
     switch (level) {
       case "error":
-        bgColor = isHovered ? "bg-red-500" : "bg-red-300";
-        content = <XMarkIcon className="h-3.5 w-3.5 text-white" />;
+        bgColor = isHovered ? "bg-red-500" : "bg-red-400";
+        content = <XMarkIcon className="h-4 w-4 text-white" />;
         break;
       case "warning":
-        bgColor = isHovered ? "bg-amber-500" : "bg-amber-400";
+        bgColor = isHovered ? "bg-orange-500" : "bg-orange-400";
         content = (
-          <span className="text-sm font-bold leading-none text-white">!</span>
+          <span className="text-lg font-bold leading-none text-white">!</span>
         );
+        break;
+      case "nitpick":
+        bgColor = isHovered ? "bg-fuchsia-500" : "bg-fuchsia-300";
+        content = <IndexFingerIcon className="h-4 w-4 text-white" />;
         break;
       case "success":
         bgColor = isHovered ? "bg-green-500" : "bg-green-300";
-        content = <CheckIcon className="h-3.5 w-3.5 text-white" />;
+        content = <CheckIcon className="h-4 w-4 text-white" />;
         break;
       case "info":
       default:
         bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
         content = (
-          <span className="text-sm font-bold leading-none text-white">i</span>
+          <span className="text-md font-bold leading-none text-white">i</span>
         );
         break;
     }
 
     return (
       <div
-        className={`h-4 w-4 rounded-sm ${bgColor} mr-2 flex flex-shrink-0 items-center justify-center`}
+        className={`h-5 w-5 rounded-sm ${bgColor} mr-2 flex flex-shrink-0 items-center justify-center`}
       >
         {content}
       </div>
@@ -155,7 +160,7 @@ export function PositionedComment({
           {/* Show header if available */}
           {comment.header && (
             <div
-              className={`mb-0.5 flex items-center justify-between gap-2 transition-opacity ${!isHovered ? "opacity-80" : "opacity-100"}`}
+              className={`flex items-center justify-between gap-2 transition-opacity ${!isHovered ? "opacity-80" : "opacity-100"}`}
             >
               <div className="flex items-center gap-1 font-medium text-gray-900">
                 {getLevelIndicator(level, isHovered)}

@@ -30,6 +30,8 @@ function getLevelHighlightColor(level?: string | null): string {
       return "#dc2626"; // Brighter red - for false claims (more intense)
     case "warning":
       return "#f59e0b"; // Amber - for partially-true claims
+    case "nitpick":
+      return "#f0abfc"; // Fuchsia-300 - for minor nitpick comments
     case "success":
       return "#86efac"; // Lighter green - for verified true claims (less intense)
     case "info":

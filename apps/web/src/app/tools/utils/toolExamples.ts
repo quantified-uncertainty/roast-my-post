@@ -350,5 +350,115 @@ export const toolExamples: Record<string, ToolExample[]> = {
       },
       hint: 'Well-established scientific fact'
     }
+  ],
+
+  'fallacy-review': [
+    {
+      label: 'Redundant Comments',
+      values: {
+        documentText: 'Bitcoin has grown 1000% in the last year, making it the best investment ever. Everyone who invested got rich. My friend made millions, so you will too.',
+        comments: [
+          {
+            index: 0,
+            header: 'Cherry-picked timeframe',
+            description: 'Selecting only the best-performing time period to make an investment look better than it actually is.',
+            level: 'warning',
+            importance: 85,
+            quotedText: 'grown 1000% in the last year'
+          },
+          {
+            index: 1,
+            header: 'Survivorship bias',
+            description: 'Only considering successful cases while ignoring all the people who lost money.',
+            level: 'warning',
+            importance: 80,
+            quotedText: 'Everyone who invested got rich'
+          },
+          {
+            index: 2,
+            header: 'Survivorship bias again',
+            description: 'Another instance of only showing winners, not losers.',
+            level: 'warning',
+            importance: 75,
+            quotedText: 'My friend made millions'
+          },
+          {
+            index: 3,
+            header: 'Hasty generalization',
+            description: 'Drawing broad conclusions from a single example.',
+            level: 'warning',
+            importance: 70,
+            quotedText: 'My friend made millions, so you will too'
+          }
+        ]
+      },
+      hint: 'Multiple comments with similar issues - review should filter redundant ones'
+    },
+    {
+      label: 'Mixed Quality',
+      values: {
+        documentText: 'Studies show that coffee is healthy. Some research found benefits. Coffee contains antioxidants.',
+        comments: [
+          {
+            index: 0,
+            header: 'Vague reference',
+            description: 'Which studies? What did they find? This needs specific citations.',
+            level: 'warning',
+            importance: 90,
+            quotedText: 'Studies show'
+          },
+          {
+            index: 1,
+            header: 'Weasel words',
+            description: 'Some research is very vague - how much? What quality?',
+            level: 'nitpick',
+            importance: 40,
+            quotedText: 'Some research'
+          },
+          {
+            index: 2,
+            header: 'Statement is factual',
+            description: 'This is actually accurate and verifiable.',
+            level: 'info',
+            importance: 20,
+            quotedText: 'contains antioxidants'
+          }
+        ]
+      },
+      hint: 'Mix of important and minor comments - review should keep high-quality ones'
+    },
+    {
+      label: 'All Strong Comments',
+      values: {
+        documentText: 'This miracle cure works 100% of the time with no side effects. Doctors hate it!',
+        comments: [
+          {
+            index: 0,
+            header: 'Impossible claim',
+            description: 'No medical treatment has 100% efficacy. This is a red flag for misinformation.',
+            level: 'error',
+            importance: 95,
+            quotedText: 'works 100% of the time'
+          },
+          {
+            index: 1,
+            header: 'Appeal to conspiracy',
+            description: 'Doctors hate it suggests a conspiracy theory framing that undermines credibility.',
+            level: 'warning',
+            importance: 85,
+            quotedText: 'Doctors hate it'
+          }
+        ]
+      },
+      hint: 'All high-quality comments - review should keep most or all'
+    },
+    {
+      label: 'Empty Comments',
+      values: {
+        documentText: 'The sky is blue. Water is wet. Grass is green.',
+        comments: []
+      },
+      hint: 'No comments case - review should handle gracefully'
+    }
   ]
 };

@@ -7,6 +7,7 @@ export enum PluginType {
   FACT_CHECK = 'fact-check',
   FORECAST = 'forecast',
   LINK_ANALYSIS = 'link-analysis',
+  FALLACY_CHECK = 'fallacy-check',
 }
 
 /**

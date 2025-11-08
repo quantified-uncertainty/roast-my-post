@@ -14,8 +14,13 @@ import fuzzyTextLocatorTool from './smart-text-searcher';
 import { detectLanguageConventionTool } from './language-convention-detector';
 import { linkValidator } from './link-validator';
 import claimEvaluatorTool from './claim-evaluator';
+import fallacyExtractorTool from './fallacy-extractor';
+import fallacyReviewTool from './fallacy-review';
 
 // Tool registry to manage all available tools
+// ⚠️ IMPORTANT: When adding a new tool, you must also update:
+// 1. internal-packages/ai/src/tools/all-tools.ts (add import + export)
+// 2. internal-packages/ai/src/tools/configs.ts (add tool config)
 export class ToolRegistry {
   private tools: Map<string, Tool> = new Map();
   
@@ -36,6 +41,8 @@ export class ToolRegistry {
     this.register(detectLanguageConventionTool);
     this.register(linkValidator);
     this.register(claimEvaluatorTool);
+    this.register(fallacyExtractorTool);
+    this.register(fallacyReviewTool);
   }
   
   register(tool: Tool): void {

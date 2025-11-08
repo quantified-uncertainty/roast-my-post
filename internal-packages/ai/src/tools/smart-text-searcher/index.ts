@@ -117,6 +117,7 @@ export class FuzzyTextLocatorTool extends Tool<
         llmContext: input.context,
         pluginName: "smart-text-searcher",
         lineNumberHint: input.lineNumberHint,
+        toolContext: context, // Pass through for session tracking
       };
 
       // Use the unified finder with all strategies

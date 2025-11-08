@@ -5,6 +5,9 @@ import type { ToolConfig } from "./base/Tool";
 
 // ============================================================================
 // Tool Configs - Single Source of Truth
+// ⚠️ IMPORTANT: When adding a new tool config, you must also update:
+// 1. internal-packages/ai/src/tools/all-tools.ts (add import + export)
+// 2. internal-packages/ai/src/tools/registry.ts (add import + register call)
 // ============================================================================
 
 export const mathValidatorLLMConfig: ToolConfig = {
@@ -184,6 +187,29 @@ export const claimEvaluatorConfig: ToolConfig = {
   status: "experimental",
 };
 
+export const fallacyExtractorConfig: ToolConfig = {
+  id: "fallacy-extractor",
+  name: "Fallacy Extractor",
+  description:
+    "Extract and score potential misinformation, missing context, deceptive wording, and logical fallacies from text",
+  version: "1.0.0",
+  category: "extraction",
+  costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
+  path: "/tools/fallacy-extractor",
+  status: "beta",
+};
+
+export const fallacyReviewConfig: ToolConfig = {
+  id: "fallacy-review",
+  name: "Fallacy Review",
+  description:
+    "Reviews and filters epistemic critic comments, removing redundant issues and generating comprehensive document summaries",
+  version: "1.0.0",
+  category: "utility",
+  path: "/tools/fallacy-review",
+  status: "beta",
+};
+
 // ============================================================================
 // Tool Configs List (for client-side metadata)
 // ============================================================================
@@ -204,6 +230,8 @@ export const allToolConfigs = [
   perplexityResearcherConfig,
   linkValidatorConfig,
   claimEvaluatorConfig,
+  fallacyExtractorConfig,
+  fallacyReviewConfig,
 ];
 
 // ============================================================================

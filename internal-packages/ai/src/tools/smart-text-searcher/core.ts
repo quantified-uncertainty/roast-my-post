@@ -288,6 +288,7 @@ export async function findTextLocation(
     const llmOptions: LLMSearchOptions = {
       context: options.llmContext,
       pluginName: options.pluginName,
+      toolContext: options.toolContext,
     };
 
     const llmResult = await llmSearch(searchText, documentText, llmOptions);
