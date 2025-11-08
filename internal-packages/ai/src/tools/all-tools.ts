@@ -19,6 +19,7 @@ import { linkValidator } from './link-validator';
 import perplexityResearchTool from './perplexity-researcher';
 import claimEvaluatorTool from './claim-evaluator';
 import epistemicReviewTool from './epistemic-review';
+import epistemicIssuesExtractorTool from './epistemic-issues-extractor';
 import type { Tool } from './base/Tool';
 
 /**
@@ -41,6 +42,7 @@ const toolsList = [
   perplexityResearchTool,
   claimEvaluatorTool,
   epistemicReviewTool,
+  epistemicIssuesExtractorTool,
 ] as const;
 
 /**
@@ -87,4 +89,5 @@ export {
   perplexityResearchTool,
   claimEvaluatorTool,
   epistemicReviewTool,
+  epistemicIssuesExtractorTool,
 };

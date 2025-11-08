@@ -196,6 +196,15 @@ export const epistemicIssuesExtractorConfig: ToolConfig = {
   status: "beta",
 };
 
+export const epistemicReviewConfig: ToolConfig = {
+  id: "epistemic-review",
+  name: "Epistemic Review",
+  description:
+    "Reviews and filters epistemic critic comments, removing redundant issues and generating comprehensive document summaries",
+  version: "1.0.0",
+  category: "utility",
+};
+
 // ============================================================================
 // Tool Configs List (for client-side metadata)
 // ============================================================================
@@ -217,6 +226,7 @@ export const allToolConfigs = [
   linkValidatorConfig,
   claimEvaluatorConfig,
   epistemicIssuesExtractorConfig,
+  epistemicReviewConfig,
 ];
 
 // ============================================================================
