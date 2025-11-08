@@ -95,8 +95,6 @@ function formatIssueType(issueType: string): string {
       return "Misinformation";
     case ISSUE_TYPES.MISSING_CONTEXT:
       return "Missing Critical Context";
-    case ISSUE_TYPES.INSUFFICIENT_EVIDENCE:
-      return "Insufficient Evidence";
     case ISSUE_TYPES.DECEPTIVE_WORDING:
       return "Deceptive/Misleading Wording";
     case ISSUE_TYPES.LOGICAL_FALLACY:

@@ -211,12 +211,6 @@ export class EpistemicIssue {
         }
         return prefix ? `${prefix} missing context` : "Missing context";
 
-      case ISSUE_TYPES.INSUFFICIENT_EVIDENCE:
-        if (this.importanceScore < THRESHOLDS.IMPORTANCE_NITPICK) {
-          return prefix ? `${prefix}: More evidence would help` : "More evidence would help";
-        }
-        return prefix ? `${prefix} insufficient evidence` : "Insufficient evidence";
-
       case ISSUE_TYPES.DECEPTIVE_WORDING:
         if (adjustedSeverity >= 70) {
           return "Deceptive presentation";

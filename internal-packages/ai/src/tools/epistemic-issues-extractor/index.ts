@@ -24,7 +24,6 @@ const extractedEpistemicIssueSchema = z.object({
     .enum([
       ISSUE_TYPES.MISINFORMATION,
       ISSUE_TYPES.MISSING_CONTEXT,
-      ISSUE_TYPES.INSUFFICIENT_EVIDENCE,
       ISSUE_TYPES.DECEPTIVE_WORDING,
       ISSUE_TYPES.LOGICAL_FALLACY,
       ISSUE_TYPES.VERIFIED_ACCURATE,
@@ -69,7 +68,6 @@ const inputSchema = z.object({
     .array(z.enum([
       ISSUE_TYPES.MISINFORMATION,
       ISSUE_TYPES.MISSING_CONTEXT,
-      ISSUE_TYPES.INSUFFICIENT_EVIDENCE,
       ISSUE_TYPES.DECEPTIVE_WORDING,
       ISSUE_TYPES.LOGICAL_FALLACY,
       ISSUE_TYPES.VERIFIED_ACCURATE,
@@ -178,7 +176,7 @@ Only flag authors who are MAKING the error themselves.
    - Ignoring error bars/ranges
    - Conflating models with reality
 
-5. **Missing Crucial Context vs Insufficient Evidence - KEY DISTINCTION**:
+5. **Missing Crucial Context - KEY DISTINCTION**:
 
    **Use "missing-context" ONLY when you KNOW specific important information is missing:**
    - Example: "Hitler was kind to animals" without mentioning the Holocaust
@@ -188,16 +186,7 @@ Only flag authors who are MAKING the error themselves.
    - Example: Missing comparison groups that change interpretation
    - Requires: You must know what the missing context IS
 
-   **Use "insufficient-evidence" when the claim needs more support:**
-   - Example: "This will revolutionize AI" without any supporting evidence
-   - Example: Major assumptions stated as fact without justification
-   - Example: Vague claims like "significant impact" without quantification
-   - Example: Causal claims without adequate evidence
-   - Pattern: They SHOULD provide evidence, but it's impossible to provide ALL evidence
-
-   **Remember**: Can't provide all context/evidence for everything! Only flag when:
-   - Missing information significantly changes interpretation (missing-context)
-   - OR major claim/assumption lacks adequate support (insufficient-evidence)
+   **Remember**: Can't provide all context for everything! Only flag when missing information significantly changes interpretation
 
 6. **Bad Faith Argumentation**
    - Strawmanning (misrepresenting opposing views)
