@@ -1,4 +1,4 @@
-import { IssueType } from '../../analysis-plugins/plugins/epistemic-critic/constants';
+import { IssueType } from '../../analysis-plugins/plugins/fallacy-check/constants';
 
 /**
  * Specific types of fallacies (for logical-fallacy issue type)
@@ -23,7 +23,7 @@ export type FallacyType =
 /**
  * Raw epistemic issue extracted from a text chunk by the LLM
  */
-export interface ExtractedEpistemicIssue {
+export interface ExtractedFallacyIssue {
   /** The exact text from the document that has the epistemic issue */
   exactText: string;
 
@@ -64,7 +64,7 @@ export interface ExtractedEpistemicIssue {
 /**
  * Input for the epistemic issues extractor tool
  */
-export interface EpistemicIssuesExtractorInput {
+export interface FallacyExtractorInput {
   /** Text chunk to analyze */
   text: string;
 
@@ -78,9 +78,9 @@ export interface EpistemicIssuesExtractorInput {
 /**
  * Output from the epistemic issues extractor tool
  */
-export interface EpistemicIssuesExtractorOutput {
+export interface FallacyExtractorOutput {
   /** Array of extracted epistemic issues */
-  issues: ExtractedEpistemicIssue[];
+  issues: ExtractedFallacyIssue[];
 
   /** Total number of potential issues found (before filtering) */
   totalIssuesFound: number;

@@ -1,7 +1,7 @@
 import type { Comment, ToolChainResult } from "../../../../shared/types";
 import type { ToolContext } from "../../../../tools/base/Tool";
 import { CommentBuilder } from "../../../utils/CommentBuilder";
-import type { EpistemicIssue } from "../EpistemicIssue";
+import type { FallacyIssue } from "../FallacyIssue";
 import {
   buildDescription,
   buildTitle,
@@ -16,8 +16,8 @@ import {
  * This function handles the integration with CommentBuilder while
  * delegating markdown generation to pure functions.
  */
-export async function buildEpistemicComment(
-  issue: EpistemicIssue,
+export async function buildFallacyComment(
+  issue: FallacyIssue,
   documentText: string,
   context: ToolContext
 ): Promise<Comment | null> {
@@ -58,10 +58,10 @@ export async function buildEpistemicComment(
 /**
  * Build the tool chain results for an epistemic issue
  */
-function buildToolChain(issue: EpistemicIssue): ToolChainResult[] {
+function buildToolChain(issue: FallacyIssue): ToolChainResult[] {
   return [
     {
-      toolName: "extractEpistemicIssues",
+      toolName: "extractFallacyIssues",
       stage: "extraction",
       timestamp: new Date(issue.getProcessingStartTime() + 30).toISOString(),
       result: issue.issue,

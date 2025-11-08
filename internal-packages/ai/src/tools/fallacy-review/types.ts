@@ -28,7 +28,7 @@ export interface ReviewComment {
 /**
  * Input for the epistemic review tool
  */
-export interface EpistemicReviewInput {
+export interface FallacyReviewInput {
   /** Full document text */
   documentText: string;
 
@@ -39,7 +39,7 @@ export interface EpistemicReviewInput {
 /**
  * Output from the epistemic review tool
  */
-export interface EpistemicReviewOutput {
+export interface FallacyReviewOutput {
   /** Indices of comments to keep (e.g., [0, 2, 5, 7]) */
   commentIndicesToKeep: number[];
 

@@ -3,9 +3,9 @@ import {
 } from "../../../helicone/simpleSessionManager";
 import { logger } from "../../../shared/logger";
 import type { Comment, ToolChainResult } from "../../../shared/types";
-import epistemicIssuesExtractorTool from "../../../tools/epistemic-issues-extractor";
+import fallacyExtractorTool from "../../../tools/fallacy-extractor";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
-import epistemicReviewTool from "../../../tools/epistemic-review";
+import fallacyReviewTool from "../../../tools/fallacy-review";
 import { TextChunk } from "../../TextChunk";
 import type {
   AnalysisResult,
@@ -13,14 +13,14 @@ import type {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { LIMITS, THRESHOLDS, ISSUE_TYPES } from "./constants";
-import { buildEpistemicComment } from "./comments/builder";
-import { EpistemicIssue } from "./EpistemicIssue";
+import { buildFallacyComment } from "./comments/builder";
+import { FallacyIssue } from "./FallacyIssue";
 
-export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
+export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
   private chunks: TextChunk[];
   private hasRun = false;
-  private issues: EpistemicIssue[] = [];
+  private issues: FallacyIssue[] = [];
   private comments: Comment[] = [];
   private summary: string = "";
   private analysis: string = "";
@@ -33,7 +33,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   }
 
   name(): string {
-    return "EPISTEMIC_CRITIC";
+    return "FALLACY_CHECK";
   }
 
   runOnAllChunks = true;
@@ -101,7 +101,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
 
   getToolDependencies() {
     return [
-      epistemicIssuesExtractorTool,
+      fallacyExtractorTool,
       fuzzyTextLocatorTool,
     ];
   }
@@ -139,7 +139,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
       const extractionResults = await Promise.allSettled(extractionPromises);
 
       // Collect all extracted issues and track errors
-      const allIssues: EpistemicIssue[] = [];
+      const allIssues: FallacyIssue[] = [];
       const extractionErrors: string[] = [];
 
       for (const result of extractionResults) {
@@ -180,7 +180,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
       const commentPromises = this.issues.map(async (issue) => {
         // Run in next tick to ensure true parallelism
         await new Promise((resolve) => setImmediate(resolve));
-        const comment = await buildEpistemicComment(
+        const comment = await buildFallacyComment(
           issue,
           documentText,
           { logger }
@@ -220,7 +220,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
           operation: "epistemic-review-tool",
         });
 
-        const reviewResult = await epistemicReviewTool.execute(
+        const reviewResult = await fallacyReviewTool.execute(
           {
             documentText,
             comments: reviewComments,
@@ -314,14 +314,14 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   }
 
   private async extractIssuesFromChunk(chunk: TextChunk): Promise<{
-    issues: EpistemicIssue[];
+    issues: FallacyIssue[];
     error?: string;
   }> {
     try {
       // Track tool execution if session manager is available
       const sessionManager = getGlobalSessionManager();
       const executeExtraction = async () => {
-        return await epistemicIssuesExtractorTool.execute(
+        return await fallacyExtractorTool.execute(
           {
             text: chunk.text,
             documentText: this.documentText, // Pass full document for location finding
@@ -341,7 +341,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
         : await executeExtraction();
 
       const issues = result.issues.map(
-        (issue) => new EpistemicIssue(issue, chunk, this.processingStartTime)
+        (issue) => new FallacyIssue(issue, chunk, this.processingStartTime)
       );
 
       return {
@@ -356,9 +356,9 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
     }
   }
 
-  private deduplicateIssues(issues: EpistemicIssue[]): EpistemicIssue[] {
+  private deduplicateIssues(issues: FallacyIssue[]): FallacyIssue[] {
     const seen = new Set<string>();
-    const unique: EpistemicIssue[] = [];
+    const unique: FallacyIssue[] = [];
 
     for (const issue of issues) {
       const key = issue.text.toLowerCase().replace(/\s+/g, " ").trim();
@@ -370,7 +370,7 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
 
     // Calculate priority score for each issue
     // Higher score = more important to address
-    const priorityScore = (issue: EpistemicIssue) =>
+    const priorityScore = (issue: FallacyIssue) =>
       issue.severityScore * 0.6 + issue.importanceScore * 0.4;
 
     // Sort by priority score (most important issues first)
@@ -546,5 +546,5 @@ export class EpistemicCriticPlugin implements SimpleAnalysisPlugin {
   }
 }
 
-// Export the plugin class and EpistemicIssue
-export { EpistemicIssue } from "./EpistemicIssue";
+// Export the plugin class and FallacyIssue
+export { FallacyIssue } from "./FallacyIssue";

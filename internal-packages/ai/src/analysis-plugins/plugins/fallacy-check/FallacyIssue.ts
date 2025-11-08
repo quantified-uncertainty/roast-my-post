@@ -1,6 +1,6 @@
 import { logger } from "../../../shared/logger";
 import type { DocumentLocation } from "../../../shared/types";
-import type { ExtractedEpistemicIssue } from "../../../tools/epistemic-issues-extractor/types";
+import type { ExtractedFallacyIssue } from "../../../tools/fallacy-extractor/types";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import type { ToolContext } from "../../../tools/base/Tool";
 import { TextChunk } from "../../TextChunk";
@@ -9,13 +9,13 @@ import { THRESHOLDS, IssueType, ISSUE_TYPES } from "./constants";
 /**
  * Domain model for an epistemic issue found in text
  */
-export class EpistemicIssue {
-  public issue: ExtractedEpistemicIssue;
+export class FallacyIssue {
+  public issue: ExtractedFallacyIssue;
   private chunk: TextChunk;
   private processingStartTime: number;
 
   constructor(
-    issue: ExtractedEpistemicIssue,
+    issue: ExtractedFallacyIssue,
     chunk: TextChunk,
     processingStartTime: number
   ) {
@@ -138,7 +138,7 @@ export class EpistemicIssue {
       }
     } catch (error) {
       logger.warn(
-        `[EpistemicCritic] Failed to find location for issue: "${this.text.substring(0, 50)}..."`,
+        `[FallacyCheck] Failed to find location for issue: "${this.text.substring(0, 50)}..."`,
         { error: error instanceof Error ? error.message : String(error) }
       );
     }
