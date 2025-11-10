@@ -200,6 +200,38 @@ describe('extractUrlsWithPositions - Edge Cases', () => {
       expect(urls.map(u => u.url)).toContain('https://orphaned.com');
       expect(urls.map(u => u.url)).toContain('https://bare.com');
     });
+
+    it('should handle parentheses in URLs correctly', () => {
+      const content = '[five kingdoms of life](https://en.wikipedia.org/wiki/Kingdom_(biology)#Five_kingdoms)';
+      const urls = extractUrlsWithPositions(content);
+      
+      expect(urls).toHaveLength(1);
+      expect(urls[0]).toMatchObject({
+        url: 'https://en.wikipedia.org/wiki/Kingdom_(biology)#Five_kingdoms',
+        linkText: 'five kingdoms of life',
+        isMarkdownLink: true
+      });
+    });
+
+    it('should handle URLs with parentheses and title attributes', () => {
+      const content = '[whitewashing](https://en.wikipedia.org/wiki/Whitewashing_(communications) "Whitewashing (communications)")';
+      const urls = extractUrlsWithPositions(content);
+      
+      expect(urls).toHaveLength(1);
+      expect(urls[0]).toMatchObject({
+        url: 'https://en.wikipedia.org/wiki/Whitewashing_(communications)',
+        linkText: 'whitewashing',
+        isMarkdownLink: true
+      });
+    });
+
+    it('should extract complete URL with parentheses (not truncated at first closing paren)', () => {
+      const content = '[Wikipedia](https://en.wikipedia.org/wiki/Markdown_(markup_language)) link';
+      const urls = extractUrlsWithPositions(content);
+      
+      expect(urls).toHaveLength(1);
+      expect(urls[0].url).toBe('https://en.wikipedia.org/wiki/Markdown_(markup_language)');
+    });
   });
 
   describe('Position accuracy for complex cases', () => {
