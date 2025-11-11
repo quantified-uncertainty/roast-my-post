@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { LanguageConvention } from "../../shared/types";
+import { countWords, truncateToWords } from "../../shared/types";
 import {
   Tool,
   ToolContext,
@@ -12,7 +13,7 @@ import {
 } from "./conventionDetector";
 
 // Configuration constants
-export const DEFAULT_SAMPLE_SIZE = 2000;
+export const DEFAULT_SAMPLE_SIZE = 2000; // Number of words to sample
 
 export interface DetectLanguageConventionInput {
   text: string;
@@ -96,17 +97,24 @@ export class DetectLanguageConventionTool extends Tool<
     input: DetectLanguageConventionInput,
     context: ToolContext
   ): Promise<DetectLanguageConventionOutput> {
+    const maxWords = input.sampleSize || DEFAULT_SAMPLE_SIZE;
+    const totalWords = countWords(input.text);
+    
     context.logger.info("Detecting language convention", {
       textLength: input.text.length,
-      sampleSize: input.sampleSize || DEFAULT_SAMPLE_SIZE,
+      totalWords,
+      sampleSize: maxWords,
     });
 
-    // Use the sample size to analyze a portion of the text
-    const sampleSize = Math.min(
-      input.sampleSize || DEFAULT_SAMPLE_SIZE,
-      input.text.length
-    );
-    const sample = input.text.slice(0, sampleSize);
+    // Truncate to first N words (not characters)
+    const sample = truncateToWords(input.text, maxWords);
+    const sampleWordCount = countWords(sample);
+    
+    context.logger.info("Text sample prepared", {
+      sampleLength: sample.length,
+      sampleWordCount,
+      truncated: sampleWordCount < totalWords,
+    });
 
     // Detect language convention
     const conventionResult = detectLanguageConvention(sample);
