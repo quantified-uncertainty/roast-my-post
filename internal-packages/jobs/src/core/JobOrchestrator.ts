@@ -34,6 +34,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * Process a complete job from start to finish
    */
   async processJob(job: JobWithRelations): Promise<JobProcessingResult> {
+    this.logger.info(`[Job ${job.id}] Starting processing...`);
     const startTime = Date.now();
     let sessionManager: HeliconeSessionManager | undefined;
 
@@ -45,7 +46,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       });
       
       if (currentJob?.status === 'CANCELLED') {
-        this.logger.info(`Job ${job.id} was cancelled, skipping processing`);
+        this.logger.info(`[Job ${job.id}] Job was cancelled, skipping processing`);
         return {
           success: false,
           job: { ...job, status: 'CANCELLED' as any },
@@ -56,9 +57,11 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Setup Helicone session tracking
       sessionManager = await this.setupSessionTracking(job);
 
+      this.logger.info(`[Job ${job.id}] Preparing job data...`);
       // Extract and validate job data
       const { documentForAnalysis, agent } = this.prepareJobData(job);
 
+      this.logger.info(`[Job ${job.id}] Executing analysis...`);
       // Execute document analysis using @roast/ai workflows
       const analysisResult = await this.executeAnalysis(
         documentForAnalysis, 
@@ -67,12 +70,14 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         sessionManager
       );
 
+      this.logger.info(`[Job ${job.id}] Saving analysis results...`);
       // Create evaluation version and save results
       await this.saveAnalysisResults(job, analysisResult, agent);
 
       // Calculate duration
       const durationInSeconds = (Date.now() - startTime) / 1000;
 
+      this.logger.info(`[Job ${job.id}] Creating execution log...`);
       // Create execution log
       const logContent = this.createExecutionLog(
         job, 
@@ -81,6 +86,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         startTime
       );
 
+      this.logger.info(`[Job ${job.id}] Marking job as completed...`);
       // Mark job as completed
       const completedJob = await this.jobService.markAsCompleted(job.id, {
         llmThinking: analysisResult.thinking,
@@ -96,7 +102,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       };
 
     } catch (error) {
-      this.logger.error(`Job ${job.id} processing failed:`, error);
+      this.logger.error(`[Job ${job.id}] processing failed:`, error);
       
       const failedJob = await this.jobService.markAsFailed(job.id, error);
       
@@ -130,9 +136,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       const result = await this.processJob(job);
       
       if (result.success) {
-        this.logger.info(`✅ Job ${job.id} completed successfully`);
+        this.logger.info(`[Job ${job.id}] ✅ Completed successfully`);
       } else {
-        this.logger.error(`❌ Job ${job.id} failed:`, result.error);
+        this.logger.error(`[Job ${job.id}] ❌ Failed:`, result.error);
         throw result.error;
       }
 
@@ -177,7 +183,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         return sessionManager;
       }
     } catch (error) {
-      this.logger.warn('⚠️ Failed to create Helicone session manager:', error);
+      this.logger.warn(`[Job ${job.id}] ⚠️ Failed to create Helicone session manager:`, error);
       // Continue without session tracking rather than failing the job
     }
     
@@ -305,8 +311,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     if (highlights.length > 0) {
       // Use fullContent (which includes markdownPrepend) for validation
       // since highlights were generated based on the full content
-      await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.fullContent);
-      this.logger.info(`Saved ${highlights.length} highlights for evaluation`, {
+      await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.fullContent, job.id);
+      this.logger.info(`[Job ${job.id}] Saved ${highlights.length} highlights for evaluation`, {
         evaluationId: job.evaluation.id,
         highlightCount: highlights.length,
       });
@@ -319,7 +325,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * Note: Highlights are linked to evaluations through comments (not directly).
    * This ensures every highlight has an associated comment for context.
    */
-  private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string) {
+  private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string, jobId: string) {
     if (!highlights || highlights.length === 0) {
       return;
     }
@@ -342,19 +348,19 @@ export class JobOrchestrator implements JobOrchestratorInterface {
           if (actualText !== comment.highlight.quotedText) {
             isValid = false;
             error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
-            this.logger.warn(`Invalid highlight detected: ${error}`);
+            this.logger.warn(`[Job ${jobId}] Invalid highlight detected: ${error}`);
           }
         } catch (highlightError) {
           isValid = false;
           error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
-          this.logger.warn(`Highlight validation failed: ${error}`);
+          this.logger.warn(`[Job ${jobId}] Highlight validation failed: ${error}`);
         }
       }
 
       // Only create highlight if we have highlight data
       if (!comment.highlight) {
         // Skip this comment if no highlight data
-        this.logger.warn(`Skipping comment without highlight data: ${comment.description}`);
+        this.logger.warn(`[Job ${jobId}] Skipping comment without highlight data: ${comment.description}`);
         continue;
       }
 

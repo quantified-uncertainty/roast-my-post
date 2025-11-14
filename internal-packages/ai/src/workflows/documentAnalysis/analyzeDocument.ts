@@ -25,6 +25,8 @@ export async function analyzeDocument(
   tasks: TaskResult[];
   jobLogString?: string; // Include job log string for Job.logs field
 }> {
+  const logPrefix = `[Job ${jobId || 'N/A'}]`;
+  logger.info(`${logPrefix} Starting document analysis for agent ${agentInfo.name}`);
   // Validate that all plugin IDs are valid PluginType entries
   const validPlugins = (agentInfo.pluginIds || []).filter((p): p is PluginType =>
     Object.values(PluginType).includes(p as PluginType)
@@ -33,7 +35,7 @@ export async function analyzeDocument(
   // Log warning if any invalid plugins were filtered out
   const invalidPlugins = (agentInfo.pluginIds || []).filter(p => !validPlugins.includes(p));
   if (invalidPlugins.length > 0) {
-    logger.warn(`Filtered out invalid plugin IDs for agent ${agentInfo.name}: ${invalidPlugins.join(', ')}`);
+    logger.warn(`${logPrefix} Filtered out invalid plugin IDs for agent ${agentInfo.name}: ${invalidPlugins.join(', ')}`);
   }
   
   // Decision point: Use plugins if any are configured, otherwise use LLM workflow
@@ -43,7 +45,7 @@ export async function analyzeDocument(
       .map(String)
       .join(', ')
       .slice(0, 500);
-    logger.info(`Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${pluginListForLog}`);
+    logger.info(`${logPrefix} Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${pluginListForLog}`);
     
     return await analyzeDocumentUnified(document, agentInfo, {
       targetHighlights,
@@ -54,10 +56,11 @@ export async function analyzeDocument(
     });
   } else {
     // No plugins configured - use traditional LLM-based comprehensive analysis
-    logger.info(`Using LLM-based workflow for agent ${agentInfo.name} (no plugins configured)`);
+    logger.info(`${logPrefix} Using LLM-based workflow for agent ${agentInfo.name} (no plugins configured)`);
     
     const tasks: TaskResult[] = [];
     
+    logger.info(`${logPrefix} [LLM Workflow Step 1/3] Generating comprehensive analysis...`);
     // Step 1: Generate comprehensive analysis using the agent's primaryInstructions
     const comprehensiveAnalysisResult = await generateComprehensiveAnalysis(
       document,
@@ -67,6 +70,7 @@ export async function analyzeDocument(
     );
     tasks.push(comprehensiveAnalysisResult.task);
     
+    logger.info(`${logPrefix} [LLM Workflow Step 2/3] Extracting highlights from analysis...`);
     // Step 2: Extract highlights from the analysis
     const highlightExtractionResult = await extractHighlightsFromAnalysis(
       document,
@@ -79,6 +83,7 @@ export async function analyzeDocument(
     // Step 3: Generate self-critique if configured
     let selfCritique: string | undefined;
     if (agentInfo.selfCritiqueInstructions) {
+      logger.info(`${logPrefix} [LLM Workflow Step 3/3] Generating self-critique...`);
       const selfCritiqueResult = await generateSelfCritique(
         {
           analysis: comprehensiveAnalysisResult.outputs.analysis,

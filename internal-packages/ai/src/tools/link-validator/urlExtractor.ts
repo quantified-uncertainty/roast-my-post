@@ -25,18 +25,21 @@ export interface ExtractedUrl {
 export function extractUrlsWithPositions(content: string, maxUrls: number = 50): ExtractedUrl[] {
   const extractedUrls: ExtractedUrl[] = [];
   const processedPositions = new Set<string>(); // Track position ranges to avoid duplicates at same location
+  const MAX_URL_LENGTH = 2048; // Reasonable limit for URL length to prevent malformed links from consuming entire document
   
   // First pass: Find all markdown links [text](url), excluding images ![text](url)
   // We need to find these first to know which URLs are part of markdown
   // More restrictive regex: no brackets or newlines in link text, max 150 chars
-  const markdownLinkRegex = /(!?)\[([^\[\]\n]{1,150})\]\((https?:\/\/[^)]+)\)/g;
+  // Updated to handle URLs with parentheses and optional title attributes:
+  // [text](url) or [text](url "title") or [text](url 'title')
+  const markdownLinkRegex = /(!?)\[([^\[\]\n]{1,150})\]\(/g;
   let match;
   
   while ((match = markdownLinkRegex.exec(content)) !== null) {
     const isImage = match[1] === '!';
     const linkText = match[2];
-    const url = match[3];
     const fullMatchStart = match.index;
+    const urlStartPos = match.index + match[0].length; // Position after ']('
     
     // Check if the bracket is escaped (preceded by backslash)
     if (fullMatchStart > 0 && content[fullMatchStart - 1] === '\\') {
@@ -49,15 +52,67 @@ export function extractUrlsWithPositions(content: string, maxUrls: number = 50):
       continue;
     }
     
+    // Manually parse the URL part to handle parentheses correctly
+    // The URL can contain parentheses, and may be followed by a title attribute
+    let url = '';
+    let parenDepth = 0;
+    let _title: string | undefined; // Title attribute (extracted but not currently used)
+    
+    for (let i = urlStartPos; i < content.length && url.length < MAX_URL_LENGTH; i++) {
+      const char = content[i];
+      
+      if (char === '(') {
+        parenDepth++;
+        url += char;
+      } else if (char === ')') {
+        if (parenDepth === 0) {
+          // This is the closing paren of the markdown link
+          break;
+        } else {
+          parenDepth--;
+          url += char;
+        }
+      } else if (char === ' ' && parenDepth === 0) {
+        // Found a space after the URL - might be a title attribute
+        // Check if next character is a quote
+        if (i + 1 < content.length && (content[i + 1] === '"' || content[i + 1] === "'")) {
+          const quoteChar = content[i + 1];
+          // Extract title (for future use)
+          const titleStart = i + 2;
+          const titleEnd = content.indexOf(quoteChar, titleStart);
+          if (titleEnd !== -1) {
+            _title = content.substring(titleStart, titleEnd);
+          }
+          break;
+        } else {
+          // Space but no quote - check if next char is closing paren
+          if (i + 1 < content.length && content[i + 1] === ')') {
+            break;
+          }
+          // Otherwise, include the space in URL (might be a URL with spaces, though rare)
+          url += char;
+        }
+      } else {
+        url += char;
+      }
+    }
+    
+    url = url.trim();
+    
     // Skip very short URLs
     if (url.length <= 10) {
+      continue;
+    }
+    
+    // Skip URLs that hit the length limit (likely malformed - missing closing paren)
+    if (url.length >= MAX_URL_LENGTH) {
       continue;
     }
     
     // Calculate positions
     const linkTextStart = fullMatchStart + 1; // After '['
     const linkTextEnd = linkTextStart + linkText.length;
-    const urlStart = linkTextEnd + 2; // After ']('
+    const urlStart = urlStartPos;
     const urlEnd = urlStart + url.length;
     
     // Create a unique key for this position to avoid exact duplicates
