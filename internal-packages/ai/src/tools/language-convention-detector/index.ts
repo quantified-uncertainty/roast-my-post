@@ -232,6 +232,18 @@ ${text}`,
     initialAssessment,
   });
 
+  // Validate evidence array before proceeding to Step 2
+  if (!Array.isArray(evidence) || evidence.length === 0) {
+    context.logger.warn("No evidence found in Step 1, returning default result");
+    // Return default result with low confidence when no evidence is found
+    return {
+      convention: initialAssessment || "US", // Default to US if no assessment
+      confidence: 0.3, // Low confidence when no evidence
+      consistency: 0.5, // Neutral consistency
+      evidence: [],
+    };
+  }
+
   // Step 2: Evaluate evidence and provide conclusion
   const evaluationResult = await callClaudeWithTool<{
     convention: "US" | "UK";
