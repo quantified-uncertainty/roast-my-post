@@ -142,3 +142,21 @@ export function getPercentileNumber(array: number[], percentile: number): number
 export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(word => word.length > 0).length;
 }
+
+/**
+ * Truncate text to the first N words
+ * @param text - The text to truncate
+ * @param maxWords - Maximum number of words to keep
+ * @returns The truncated text containing at most maxWords words
+ */
+export function truncateToWords(text: string, maxWords: number): string {
+  if (!text || maxWords <= 0) return "";
+  
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  if (words.length <= maxWords) {
+    return text;
+  }
+  
+  return words.slice(0, maxWords).join(" ");
+}
