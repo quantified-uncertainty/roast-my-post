@@ -147,6 +147,8 @@ export function EvaluationView({
 
   // Track whether we're in "navigation mode" (using arrows) or "direct mode" (from URL)
   const isNavigationMode = useRef(false);
+  // Track when we're intentionally closing to prevent race condition with URL updates
+  const isClosingRef = useRef(false);
 
   // Scroll listener to hide header when evaluations section reaches the top
   useEffect(() => {
@@ -179,6 +181,17 @@ export function EvaluationView({
   const commentIdFromUrl = searchParams.get("comment");
 
   useEffect(() => {
+    // If we're closing and the URL has been cleared, reset the closing flag
+    if (isClosingRef.current && !commentIdFromUrl) {
+      isClosingRef.current = false;
+      return;
+    }
+
+    // Don't open modal if we're in the process of closing it
+    if (isClosingRef.current) {
+      return;
+    }
+
     if (commentIdFromUrl && aiCommentsMap.size > 0) {
       // We're in "direct mode" - showing a specific comment from URL
       isNavigationMode.current = false;
@@ -380,21 +393,28 @@ export function EvaluationView({
         isOpen={!!evaluationState.modalComment}
         hideNavigation={!!commentIdFromUrl && !isNavigationMode.current}
         onClose={() => {
+          // Set closing flag to prevent race condition with URL updates
+          isClosingRef.current = true;
+          
           // Reset navigation mode
           isNavigationMode.current = false;
 
-          // Clear URL if present
-          if (commentIdFromUrl) {
-            const params = new URLSearchParams(searchParams.toString());
-            params.delete("comment");
-            router.replace(`?${params.toString()}`, { scroll: false });
-          }
-
-          // Clear state
+          // Clear state immediately
           onEvaluationStateChange?.({
             ...evaluationState,
             modalComment: null,
           });
+
+          // Clear URL if present
+          // The closing flag will be reset in the useEffect when commentIdFromUrl becomes null
+          if (commentIdFromUrl) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete("comment");
+            router.replace(`?${params.toString()}`, { scroll: false });
+          } else {
+            // If there's no comment in URL, reset the flag immediately
+            isClosingRef.current = false;
+          }
         }}
         onNavigate={(nextCommentId) => {
           // Enter navigation mode
