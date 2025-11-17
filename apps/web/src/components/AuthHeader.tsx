@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, LogOut, Settings, User, UserCircle } from "lucide-react";
+import { Bot, BookOpen, LogOut, MessageSquare, User, Wrench } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
@@ -44,37 +44,38 @@ export default function AuthHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuItem asChild>
                 <Link
-                  href={
-                    session.user?.id
-                      ? ROUTES.USERS.PROFILE(session.user.id)
-                      : "#"
-                  }
-                  className="flex cursor-pointer items-center gap-2"
-                >
-                  <UserCircle className="h-4 w-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/settings/keys"
-                  className="flex cursor-pointer items-center gap-2"
-                >
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={
-                    session.user?.id
-                      ? ROUTES.USERS.AGENTS(session.user.id)
-                      : "#"
-                  }
+                  href={ROUTES.AGENTS.LIST}
                   className="flex cursor-pointer items-center gap-2"
                 >
                   <Bot className="h-4 w-4" />
-                  Custom Evaluators
+                  Evaluators
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href={ROUTES.TOOLS.LIST}
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <Wrench className="h-4 w-4" />
+                  Tools
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href={ROUTES.CLAIM_EVALUATIONS.LIST}
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Opinions
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/help"
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Help & Docs
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
