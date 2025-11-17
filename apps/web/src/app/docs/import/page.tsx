@@ -177,8 +177,9 @@ export default function ImportPage() {
       )}
 
       <div className="mt-6 text-sm text-gray-600">
-        Supports LessWrong and the EA Forum. Attempts to fetch article content
-        from other platforms.
+        Tries to fetch article content
+        from other platforms, but can have issues with fetching and/or
+        formatting.
       </div>
     </div>
   );
