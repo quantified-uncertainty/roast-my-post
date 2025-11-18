@@ -1,6 +1,13 @@
 "use client";
 
-import { Bot, BookOpen, LogOut, MessageSquare, User, Wrench } from "lucide-react";
+import {
+  Bot,
+  BookOpen,
+  LogOut,
+  MessageSquare,
+  User,
+  Wrench,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
