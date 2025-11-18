@@ -71,7 +71,7 @@ export default function AuthHeader() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/help"
+                  href={ROUTES.HELP.BASE}
                   className="flex cursor-pointer items-center gap-2"
                 >
                   <BookOpen className="h-4 w-4" />

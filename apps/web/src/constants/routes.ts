@@ -53,6 +53,11 @@ export const ROUTES = {
     DETAIL: (id: string) => `/claim-evaluations/${id}`,
   },
 
+  // Help routes
+  HELP: {
+    BASE: '/help',
+  },
+
   // User routes
   USERS: {
     PROFILE: (userId: string) => `/users/${userId}`,

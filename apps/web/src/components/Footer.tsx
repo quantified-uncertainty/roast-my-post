@@ -4,6 +4,7 @@ import { RssIcon } from "@heroicons/react/24/outline";
 import { Library, Info, BookOpen, ClipboardCheck } from "lucide-react";
 import { AppIcon } from "./AppIcon";
 import { EXTERNAL_URLS } from "@/shared/constants/constants";
+import { ROUTES } from "@/constants/routes";
 
 export default function Footer() {
   return (
@@ -30,25 +31,25 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                <Link href={ROUTES.HELP.BASE} className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
                   <BookOpen className="h-4 w-4" />
                   <span>Help & Docs</span>
                 </Link>
               </li>
               <li>
-                <Link href="/evaluators" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                <Link href={ROUTES.AGENTS.LIST} className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
                   <AppIcon name="evaluator" size={16} className="" />
                   <span>Evaluators</span>
                 </Link>
               </li>
               <li>
-                <Link href="/docs" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                <Link href={ROUTES.DOCS.LIST} className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
                   <Library className="h-4 w-4" />
                   <span>Public Documents</span>
                 </Link>
               </li>
               <li>
-                <Link href="/claim-evaluations" className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
+                <Link href={ROUTES.CLAIM_EVALUATIONS.LIST} className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900">
                   <ClipboardCheck className="h-4 w-4" />
                   <span>Claim Evaluations</span>
                 </Link>
@@ -112,7 +113,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/help/api"
+                  href={ROUTES.HELP.BASE}
                   className="text-sm text-gray-600 hover:text-gray-900"
                 >
                   API Documentation
