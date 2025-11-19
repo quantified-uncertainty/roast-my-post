@@ -1,9 +1,11 @@
 import { z } from "zod";
-import { MAX_DOCUMENT_WORD_COUNT } from "@roast/domain";
+import { MAX_DOCUMENT_WORD_COUNT, MAX_DOCUMENT_CONTENT_LENGTH } from "@roast/domain";
 
 // Content validation constants
 export const CONTENT_MIN_CHARS = 30;
-export const CONTENT_MAX_WORDS = MAX_DOCUMENT_WORD_COUNT;
+// Fallbacks match backend constants in case imports fail
+export const CONTENT_MAX_WORDS = MAX_DOCUMENT_WORD_COUNT ?? 100000;
+export const CONTENT_MAX_CHARS = MAX_DOCUMENT_CONTENT_LENGTH ?? 700000;
 
 // Schema for form validation
 export const documentSchema = z.object({
@@ -11,6 +13,7 @@ export const documentSchema = z.object({
   authors: z.string().optional(),
   content: z.string()
     .min(CONTENT_MIN_CHARS, `Content must be at least ${CONTENT_MIN_CHARS} characters`)
+    .max(CONTENT_MAX_CHARS, `Content must not exceed ${CONTENT_MAX_CHARS} characters`)
     .refine((content) => {
       // Count words (split by whitespace, filter empty strings for consistency with backend)
       const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
