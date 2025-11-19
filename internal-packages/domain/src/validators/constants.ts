@@ -22,3 +22,10 @@ export const MIN_DOCUMENT_CONTENT_LENGTH = 100;
  * (Average word length ~6 chars + spaces = ~7 chars per word)
  */
 export const MAX_DOCUMENT_CONTENT_LENGTH = 700000;
+
+/**
+ * Maximum URL length for images to be considered "large" and automatically stripped.
+ * Images with URLs longer than this threshold (or base64 data URIs) will be removed
+ * when content exceeds character limits.
+ */
+export const MAX_IMAGE_URL_LENGTH = 2000;

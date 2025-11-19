@@ -25,8 +25,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { importDocument } from "../import/actions";
 import { createDocument } from "./actions";
 import { useContentValidation } from "./hooks/useContentValidation";
+import { useAutoStripLargeImages } from "./hooks/useAutoStripLargeImages";
 import {
   CONTENT_MAX_WORDS,
+  CONTENT_MAX_CHARS,
   CONTENT_MIN_CHARS,
   type DocumentInput,
   documentSchema,
@@ -312,13 +314,21 @@ export default function CreateDocumentForm() {
   const {
     formState: { errors, isSubmitting },
     setError,
+    setValue,
     watch,
   } = methods;
 
   // Watch content field for real-time validation
   const content = watch("content");
-  const { charCount, wordCount, hasMinChars, hasMaxWords } =
+  const { charCount, wordCount, hasMinChars, hasMaxChars, hasMaxWords } =
     useContentValidation(content);
+
+  // Automatically strip large images when content exceeds limit
+  useAutoStripLargeImages({
+    content,
+    hasMaxChars,
+    setValue,
+  });
 
   // Fetch available agents
   useEffect(() => {
@@ -564,25 +574,20 @@ export default function CreateDocumentForm() {
                       {...methods.register("content")}
                       id="content"
                       rows={15}
-                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.content ? "border-red-500" : ""}`}
+                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.content || !hasMaxChars ? "border-red-500" : ""}`}
                       placeholder="Document content in Markdown format"
                     />
                     <div className="flex justify-between text-sm">
                       <div className="space-x-4">
                         <span
-                          className={`${!hasMinChars && charCount > 0 ? "text-red-600" : "text-gray-500"}`}
+                          className={`${(!hasMinChars || !hasMaxChars) && charCount > 0 ? "text-red-600" : "text-gray-500"}`}
                         >
-                          {charCount} characters{" "}
-                          {!hasMinChars &&
-                            charCount > 0 &&
-                            `(min: ${CONTENT_MIN_CHARS})`}
+                          {charCount.toLocaleString()} / {CONTENT_MAX_CHARS.toLocaleString()} characters
                         </span>
                         <span
                           className={`${!hasMaxWords && wordCount > 0 ? "text-red-600" : "text-gray-500"}`}
                         >
-                          {wordCount.toLocaleString()} words{" "}
-                          {!hasMaxWords &&
-                            `(max: ${CONTENT_MAX_WORDS.toLocaleString()})`}
+                          {wordCount.toLocaleString()} words
                         </span>
                       </div>
                       {content && (
@@ -593,7 +598,12 @@ export default function CreateDocumentForm() {
                               characters
                             </span>
                           )}
-                          {hasMinChars && hasMaxWords && (
+                          {!hasMaxChars && (
+                            <span className="text-red-600 font-medium">
+                              ⚠ Content exceeds {CONTENT_MAX_CHARS.toLocaleString()} character limit by {(charCount - CONTENT_MAX_CHARS).toLocaleString()} characters.
+                            </span>
+                          )}
+                          {hasMinChars && hasMaxChars && hasMaxWords && (
                             <span className="text-green-600">
                               ✓ Valid length
                             </span>
