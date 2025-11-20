@@ -2,10 +2,12 @@
  * Tools Index Page
  * Lists all available experimental tools
  */
+'use client';
 
 import Link from 'next/link';
 import { allToolConfigs } from '@roast/ai';
-import { MagnifyingGlassIcon, CpuChipIcon, CheckCircleIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CpuChipIcon, CheckCircleIcon, FunnelIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { useSession } from 'next-auth/react';
 
 const categoryIcons = {
   extraction: FunnelIcon,
@@ -22,6 +24,10 @@ const categoryColors = {
 };
 
 export default function ToolsIndexPage() {
+  const { data: session, status } = useSession();
+  const isLoading = status === 'loading';
+  const isAuthenticated = !!session?.user;
+
   const tools = allToolConfigs;
   const toolsByCategory = tools.reduce((acc, tool) => {
     if (!acc[tool.category]) {
@@ -30,6 +36,10 @@ export default function ToolsIndexPage() {
     acc[tool.category].push(tool);
     return acc;
   }, {} as Record<string, typeof tools>);
+
+  // Count how many tools require auth
+  const authRequiredCount = tools.filter(tool => tool.requiresAuth !== false).length;
+  const showAuthBanner = !isAuthenticated && !isLoading && authRequiredCount > 0;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -40,6 +50,23 @@ export default function ToolsIndexPage() {
           and testing purposes.
         </p>
       </div>
+
+      {/* Auth Banner for Unauthenticated Users */}
+      {showAuthBanner && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+          <LockClosedIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-blue-900">
+              <strong>Sign in required:</strong> Most AI-powered tools require authentication to use. 
+              You can still review how each tool works, but tools marked with a <LockClosedIcon className="h-4 w-4 inline mx-1" /> icon require you to{' '}
+              <Link href="/api/auth/signin" className="underline font-medium hover:text-blue-700">
+                sign in
+              </Link>{' '}
+              before you can try them.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-8">
         {Object.entries(toolsByCategory).map(([category, categoryTools]) => {
@@ -57,14 +84,21 @@ export default function ToolsIndexPage() {
                 {categoryTools.map(tool => {
                   // Link to docs page by default
                   const toolPath = `/tools/${tool.id}/docs`;
+                  const requiresAuth = tool.requiresAuth !== false; // Default to true if not specified
+                  const showLock = requiresAuth && !isAuthenticated && !isLoading;
 
                   return (
                     <Link
                       key={tool.id}
                       href={toolPath}
-                      className={`block p-6 rounded-lg border-2 transition-all hover:shadow-lg ${categoryColor}`}
+                      className={`block p-6 rounded-lg border-2 transition-all hover:shadow-lg ${categoryColor} relative`}
                     >
-                      <h3 className="text-lg font-semibold mb-2">{tool.name}</h3>
+                      {showLock && (
+                        <div className="absolute top-4 right-4">
+                          <LockClosedIcon className="h-5 w-5 opacity-60" />
+                        </div>
+                      )}
+                      <h3 className="text-lg font-semibold mb-2 pr-8">{tool.name}</h3>
                       <p className="text-sm opacity-90">{tool.description}</p>
                     </Link>
                   );

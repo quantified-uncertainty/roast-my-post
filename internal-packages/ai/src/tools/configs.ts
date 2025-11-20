@@ -20,6 +20,7 @@ export const mathValidatorLLMConfig: ToolConfig = {
   costEstimate: "~$0.02 per check (1 Claude call with longer analysis)",
   path: "/tools/math-validator-llm",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const mathValidatorMathJsConfig: ToolConfig = {
@@ -33,6 +34,7 @@ export const mathValidatorMathJsConfig: ToolConfig = {
     "~$0.02-0.05 per statement (uses Claude with multiple tool calls)",
   path: "/tools/math-validator-mathjs",
   status: "beta",
+  requiresAuth: true,
 };
 
 export const mathValidatorHybridConfig: ToolConfig = {
@@ -44,6 +46,7 @@ export const mathValidatorHybridConfig: ToolConfig = {
   costEstimate: "~$0.01-0.03 per check (computational + optional LLM)",
   path: "/tools/math-validator-hybrid",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const factCheckerConfig: ToolConfig = {
@@ -55,6 +58,7 @@ export const factCheckerConfig: ToolConfig = {
   costEstimate: "~$0.01-0.02 per claim",
   path: "/tools/fact-checker",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const binaryForecasterConfig: ToolConfig = {
@@ -67,6 +71,7 @@ export const binaryForecasterConfig: ToolConfig = {
   costEstimate: "~$0.05 per forecast (6 Claude calls)",
   path: "/tools/binary-forecaster",
   status: "experimental",
+  requiresAuth: true,
 };
 
 export const fuzzyTextSearcherConfig: ToolConfig = {
@@ -79,6 +84,7 @@ export const fuzzyTextSearcherConfig: ToolConfig = {
   costEstimate: "Free (or minimal LLM cost if fallback is used)",
   path: "/tools/smart-text-searcher",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const documentChunkerConfig: ToolConfig = {
@@ -91,6 +97,7 @@ export const documentChunkerConfig: ToolConfig = {
   costEstimate: "$0 (no LLM calls)",
   path: "/tools/document-chunker",
   status: "stable",
+  requiresAuth: false,
 };
 
 export const binaryForecastingClaimsExtractorConfig: ToolConfig = {
@@ -103,6 +110,7 @@ export const binaryForecastingClaimsExtractorConfig: ToolConfig = {
   costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
   path: "/tools/binary-forecasting-claims-extractor",
   status: "beta",
+  requiresAuth: true,
 };
 
 export const factualClaimsExtractorConfig: ToolConfig = {
@@ -114,6 +122,7 @@ export const factualClaimsExtractorConfig: ToolConfig = {
   costEstimate: "~$0.01-0.03 per analysis (depends on text length)",
   path: "/tools/factual-claims-extractor",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const spellingGrammarCheckerConfig: ToolConfig = {
@@ -126,6 +135,7 @@ export const spellingGrammarCheckerConfig: ToolConfig = {
   costEstimate: "~$0.01-0.02 per check",
   path: "/tools/spelling-grammar-checker",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const mathExpressionsExtractorConfig: ToolConfig = {
@@ -138,6 +148,7 @@ export const mathExpressionsExtractorConfig: ToolConfig = {
   costEstimate: "~$0.02 per extraction (1 Claude call)",
   path: "/tools/math-expressions-extractor",
   status: "beta",
+  requiresAuth: true,
 };
 
 export const languageConventionDetectorConfig: ToolConfig = {
@@ -146,9 +157,10 @@ export const languageConventionDetectorConfig: ToolConfig = {
   description: "Detect whether text uses US or UK English conventions",
   version: "1.0.0",
   category: "checker",
-  costEstimate: "~$0.00 (no LLM calls)",
+  costEstimate: "~$0.01-0.02 per check (2 Claude calls)",
   path: "/tools/language-convention-detector",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const perplexityResearcherConfig: ToolConfig = {
@@ -161,6 +173,7 @@ export const perplexityResearcherConfig: ToolConfig = {
   costEstimate: "~$0.001-0.005 per query (via OpenRouter)",
   path: "/tools/perplexity-researcher",
   status: "stable",
+  requiresAuth: true,
 };
 
 export const linkValidatorConfig: ToolConfig = {
@@ -173,6 +186,7 @@ export const linkValidatorConfig: ToolConfig = {
   costEstimate: "Free (no LLM usage)",
   path: "/tools/link-validator",
   status: "stable",
+  requiresAuth: false,
 };
 
 export const claimEvaluatorConfig: ToolConfig = {
@@ -185,6 +199,7 @@ export const claimEvaluatorConfig: ToolConfig = {
   costEstimate: "~$0.01-0.05 per claim (4+ model calls via OpenRouter)",
   path: "/tools/claim-evaluator",
   status: "experimental",
+  requiresAuth: true,
 };
 
 export const fallacyExtractorConfig: ToolConfig = {
@@ -197,6 +212,7 @@ export const fallacyExtractorConfig: ToolConfig = {
   costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
   path: "/tools/fallacy-extractor",
   status: "beta",
+  requiresAuth: true,
 };
 
 export const fallacyReviewConfig: ToolConfig = {
@@ -208,6 +224,7 @@ export const fallacyReviewConfig: ToolConfig = {
   category: "utility",
   path: "/tools/fallacy-review",
   status: "beta",
+  requiresAuth: true,
 };
 
 // ============================================================================
