@@ -17,6 +17,7 @@ import Footer from "./Footer";
 import ProfileCheck from "./ProfileCheck";
 import { SystemPauseBanner } from "./SystemPauseBanner";
 import { Button } from "./ui/button";
+import { ROUTES } from "@/constants/routes";
 
 export default function ClientLayout({
   children,
@@ -53,13 +54,6 @@ export default function ClientLayout({
               {isLoggedIn ? (
                 <>
                   <Link
-                    href="/tools"
-                    className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
-                  >
-                    <Wrench className="h-5 w-5" />
-                    Tools
-                  </Link>
-                  <Link
                     href="/my-documents"
                     className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
                   >
@@ -90,7 +84,7 @@ export default function ClientLayout({
                     Evaluators
                   </Link>
                   <Link
-                    href="/tools"
+                    href={ROUTES.TOOLS.LIST}
                     className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
                   >
                     <Wrench className="h-5 w-5" />
