@@ -383,7 +383,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
           importance: comment.importance || null,
           grade: comment.grade || null,
           header: comment.header || null,
-          level: comment.level || null,
+          variant: comment.variant || null,
           source: comment.source || null,
           metadata: comment.metadata || null,
           evaluationVersionId,

@@ -155,7 +155,7 @@ class DocumentTransformer {
         error: comment.highlight.error,
       } : null,
       header: getCommentProperty(comment, 'header', null),
-      level: getCommentProperty(comment, 'level', null),
+      variant: getCommentProperty(comment, 'variant', null),
       source: getCommentProperty(comment, 'source', null),
       metadata: getCommentProperty(comment, 'metadata', null),
     };

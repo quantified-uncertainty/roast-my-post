@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import { commentToYaml } from "@/shared/utils/commentToYaml";
 import { parseColoredText } from "@/shared/utils/ui/coloredText";
 import {
-  CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentDuplicateIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
+import { CommentVariantIndicator } from "@/components/CommentVariantIndicator";
 import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
 
 interface CommentModalOptimizedProps {
@@ -28,43 +27,6 @@ interface CommentModalOptimizedProps {
   onClose: () => void;
   onNavigate: (commentId: string) => void;
   onGetShareLink?: (commentId: string) => string;
-}
-
-function getLevelIndicator(level: string) {
-  let bgColor = "bg-blue-500";
-  let content: React.ReactNode;
-
-  switch (level) {
-    case "error":
-      bgColor = "bg-red-500";
-      content = <XMarkIcon className="h-5 w-5 text-white" />;
-      break;
-    case "warning":
-      bgColor = "bg-amber-500";
-      content = (
-        <span className="text-lg font-bold leading-none text-white">!</span>
-      );
-      break;
-    case "success":
-      bgColor = "bg-green-500";
-      content = <CheckIcon className="h-5 w-5 text-white" />;
-      break;
-    case "info":
-    default:
-      bgColor = "bg-blue-500";
-      content = (
-        <span className="text-lg font-bold leading-none text-white">i</span>
-      );
-      break;
-  }
-
-  return (
-    <div
-      className={`h-6 w-6 rounded-md ${bgColor} flex items-center justify-center`}
-    >
-      {content}
-    </div>
-  );
 }
 
 export const CommentModalOptimized = memo(function CommentModalOptimized({
@@ -178,7 +140,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
   if (!currentData || !isOpen) return null;
 
   const { comment, agentName } = currentData;
-  const level = comment.level || "info";
+  const variant = comment.variant || "info";
 
   return (
     <div 
@@ -257,7 +219,7 @@ export const CommentModalOptimized = memo(function CommentModalOptimized({
           <div className="flex-shrink-0 border-b px-8 py-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                {getLevelIndicator(level)}
+                <CommentVariantIndicator variant={comment.variant} size="md" />
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
                     {comment.header ? (

@@ -136,7 +136,7 @@ export class HybridMathErrorWrapper {
 
       // Structured content
       header: this.buildHeader(),
-      level: this.getLevel(),
+      variant: this.getLevel(),
       observation: this.buildObservation(),
       significance: this.buildSignificance(),
     });
@@ -375,7 +375,7 @@ export class ExtractedMathExpression {
         (this.expression.hasError
           ? `Math Error: ${this.expression.originalText}`
           : `Math: ${this.expression.originalText}`),
-      level: this.expression.hasError
+      variant: this.expression.hasError
         ? ("error" as const)
         : this.expression.verificationStatus === "verified"
           ? ("success" as const)
@@ -757,7 +757,7 @@ export class MathPlugin implements SimpleAnalysisPlugin {
       toolChain,
 
       header: `Math Expression Detected, Location Unknown`,
-      level: "debug" as const,
+      variant: "debug" as const,
       description: `**Expression Found:**
 > "${extractedExpression.expression.originalText}"
 
@@ -813,7 +813,7 @@ The analysis may still be valid, but the highlighting won't be precise.`,
       toolChain,
 
       header: `Math Expression Detected, Unverifiable`,
-      level: "debug" as const,
+      variant: "debug" as const,
       description: `**Expression Found:**
 > "${hybridWrapper.expression.originalText}"
 
@@ -868,7 +868,7 @@ This expression was detected but couldn't be verified automatically. This could 
       toolChain,
 
       header: `Math Expression Detected, Skipped`,
-      level: "debug" as const,
+      variant: "debug" as const,
       description: `**Expression Found:**
 > "${extractedExpression.expression.originalText}"
 

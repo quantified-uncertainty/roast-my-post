@@ -5,7 +5,7 @@ import type { FallacyIssue } from "../FallacyIssue";
 import {
   buildDescription,
   buildTitle,
-  getLevel,
+  getVariant,
   buildObservation,
   buildSignificance,
   getImportance,
@@ -31,7 +31,7 @@ export async function buildFallacyComment(
   // Get markdown content from pure functions
   const description = buildDescription(issue);
   const header = buildTitle(issue);
-  const level = getLevel(issue);
+  const variant = getVariant(issue);
   const observation = buildObservation(issue);
   const significance = buildSignificance(issue);
   const importance = getImportance(issue);
@@ -48,7 +48,7 @@ export async function buildFallacyComment(
 
     // Structured content
     header,
-    level,
+    variant,
     observation,
     significance,
     importance,

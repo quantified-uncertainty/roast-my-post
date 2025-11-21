@@ -1,6 +1,7 @@
 import type { VerifiedFact } from '../VerifiedFact';
 import { escapeXml } from '../../../../shared/utils/xml';
 import { LIMITS, THRESHOLDS } from '../constants';
+import type { CommentVariant } from '@roast/ai';
 
 /**
  * Pure functions for generating markdown content for fact-check comments.
@@ -156,9 +157,9 @@ export function buildTitle(fact: VerifiedFact): string {
 }
 
 /**
- * Get the severity level for a fact comment
+ * Get the visual variant for a fact comment
  */
-export function getLevel(fact: VerifiedFact): "error" | "warning" | "info" | "success" | "debug" {
+export function getVariant(fact: VerifiedFact): CommentVariant {
   const verdict = fact.verification?.verdict;
   if (verdict === "false") return "error";
   if (verdict === "partially-true") return "warning";

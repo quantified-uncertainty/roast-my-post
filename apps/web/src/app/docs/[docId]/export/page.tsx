@@ -105,7 +105,7 @@ export default async function DocumentExportPage({
                       description: comment.description,
                       importance: comment.importance,
                       grade: comment.grade,
-                      level: comment.level,
+                      variant: comment.variant,
                       source: comment.source,
                       metadata: comment.metadata,
                       highlight: comment.highlight

@@ -9,10 +9,10 @@ import {
   InformationCircleIcon,
   ExclamationTriangleIcon,
   XCircleIcon,
-  CheckCircleIcon,
-  XMarkIcon
 } from "@heroicons/react/24/outline";
 import { parseColoredText } from "@/shared/utils/ui/coloredText";
+import { CommentVariantIndicatorCompact } from "@/components/CommentVariantIndicator";
+import type { CommentVariant } from "@roast/ai";
 
 // Database comment type (different from the documentSchema Comment type)
 type DatabaseComment = {
@@ -23,7 +23,7 @@ type DatabaseComment = {
   evaluationVersionId: string;
   highlightId: string;
   header?: string | null;
-  level?: string | null;
+  variant?: CommentVariant | null;
   source?: string | null;
   metadata?: Record<string, any> | null;
   highlight: {
@@ -42,37 +42,6 @@ interface EvaluationCommentsProps {
   documentContent?: string;
 }
 
-function getLevelIndicator(level?: string | null) {
-  let bgColor = "bg-blue-400";
-  let content: React.ReactNode;
-
-  switch (level) {
-    case "error":
-      bgColor = "bg-red-500";
-      content = <XMarkIcon className="h-3.5 w-3.5 text-white" />;
-      break;
-    case "warning":
-      bgColor = "bg-amber-500";
-      content = <span className="text-white font-bold text-xs leading-none">!</span>;
-      break;
-    case "success":
-      bgColor = "bg-green-500";
-      content = <CheckCircleIcon className="h-3.5 w-3.5 text-white" />;
-      break;
-    case "info":
-    case "debug":
-    default:
-      bgColor = "bg-blue-500";
-      content = <span className="text-white font-bold text-xs leading-none">i</span>;
-      break;
-  }
-
-  return (
-    <div className={`h-5 w-5 rounded-sm ${bgColor} flex flex-shrink-0 items-center justify-center`}>
-      {content}
-    </div>
-  );
-}
 
 export function EvaluationComments({
   comments,
@@ -102,7 +71,7 @@ export function EvaluationComments({
               id={`comment-${index + 1}`}
               className="scroll-mt-4 flex items-center gap-2 text-lg font-semibold text-gray-900"
             >
-              {getLevelIndicator(comment.level)}
+              <CommentVariantIndicatorCompact variant={comment.variant} />
               <span>
                 {comment.header ? parseColoredText(comment.header) : `Comment ${index + 1}`}
               </span>
@@ -154,18 +123,19 @@ export function EvaluationComments({
 
           {/* Comment content with light background */}
           <div className="mb-6">
-            {/* Level and source badges */}
+            {/* Variant and source badges */}
             <div className="mb-4 flex items-center gap-2">
-              {comment.level && (
+              {comment.variant && (
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  comment.level === 'error' ? 'bg-red-100 text-red-800' :
-                  comment.level === 'warning' ? 'bg-orange-100 text-orange-800' :
-                  comment.level === 'info' ? 'bg-blue-100 text-blue-800' :
-                  comment.level === 'success' ? 'bg-green-100 text-green-800' :
-                  comment.level === 'debug' ? 'bg-gray-50 text-gray-600' :
+                  comment.variant === 'error' ? 'bg-red-100 text-red-800' :
+                  comment.variant === 'warning' ? 'bg-orange-100 text-orange-800' :
+                  comment.variant === 'nitpick' ? 'bg-fuchsia-100 text-fuchsia-800' :
+                  comment.variant === 'info' ? 'bg-blue-100 text-blue-800' :
+                  comment.variant === 'success' ? 'bg-green-100 text-green-800' :
+                  comment.variant === 'debug' ? 'bg-gray-50 text-gray-600' :
                   'bg-gray-100 text-gray-800'
                 }`}>
-                  {comment.level}
+                  {comment.variant}
                 </span>
               )}
               {comment.source && (

@@ -83,20 +83,20 @@ describe('FactCheckPlugin Location Tracking', () => {
     
     // Verify the location is document-absolute, not chunk-relative
     const comment = result.comments[0];
-    if (comment && comment.location) {
+    if (comment && comment.highlight) {
       // The fact "The Earth orbits the Sun." starts at position 30 in the document
       // (12 for chunk start + 18 for position within chunk)
       const expectedStart = 12 + 18; // chunk start + relative offset
       const expectedEnd = 12 + 43;   // chunk start + relative end offset
       
-      expect(comment.location.startOffset).toBe(expectedStart);
-      expect(comment.location.endOffset).toBe(expectedEnd);
-      expect(comment.location.quotedText).toBe('The Earth orbits the Sun.');
+      expect(comment.highlight.startOffset).toBe(expectedStart);
+      expect(comment.highlight.endOffset).toBe(expectedEnd);
+      expect(comment.highlight.quotedText).toBe('The Earth orbits the Sun.');
       
       // Verify the text at the location matches
       const extractedText = documentText.substring(
-        comment.location.startOffset,
-        comment.location.endOffset
+        comment.highlight.startOffset,
+        comment.highlight.endOffset
       );
       expect(extractedText).toBe('The Earth orbits the Sun.');
     }
@@ -118,8 +118,8 @@ describe('FactCheckPlugin Location Tracking', () => {
     
     // Should still generate results but location will use fallback (0 offset)
     expect(result.comments).toBeDefined();
-    if (result.comments.length > 0 && result.comments[0]?.location) {
-      const { startOffset, endOffset, quotedText } = result.comments[0].location;
+    if (result.comments.length > 0 && result.comments[0]?.highlight) {
+      const { startOffset, endOffset, quotedText } = result.comments[0].highlight;
       expect(startOffset).toBeGreaterThanOrEqual(0);
       expect(endOffset).toBeGreaterThan(startOffset);
       expect(documentText.substring(startOffset, endOffset)).toBe(quotedText);
@@ -148,7 +148,7 @@ describe('FactCheckPlugin Location Tracking', () => {
     // Should not generate comments since location verification would fail
     expect(result.comments).toBeDefined();
     // Comments should be filtered out if location can't be verified
-    const regularComments = result.comments.filter(c => c.level !== 'debug');
+    const regularComments = result.comments.filter(c => c.variant !== 'debug');
     expect(regularComments.length).toBe(0);
   });
 });

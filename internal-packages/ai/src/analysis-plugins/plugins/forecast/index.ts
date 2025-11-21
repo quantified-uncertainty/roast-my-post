@@ -1,6 +1,7 @@
 import { logger } from "../../../shared/logger";
 import type {
   Comment,
+  CommentVariant,
   ToolChainResult,
 } from "../../../shared/types";
 import type {
@@ -180,7 +181,7 @@ class ExtractedForecast {
     return `📊 Forecast: ${truncated}`;
   }
 
-  private getLevel(): "error" | "warning" | "info" | "success" | "debug" {
+  private getVariant(): CommentVariant {
     // If we have both author and our forecast, base level on confidence gap
     if (this.ourForecast && this.extractedForecast.authorProbability !== undefined) {
       const gap = Math.abs(
@@ -259,7 +260,7 @@ class ExtractedForecast {
       // Required fields
       description,
       header: this.buildTitle(),
-      level: this.getLevel(),
+      variant: this.getVariant(),
 
       // Additional structured content
       observation: this.buildObservation(),
@@ -702,7 +703,7 @@ export class ForecastPlugin implements SimpleAnalysisPlugin {
       toolChain,
 
       header: `Prediction Detected, Location Unknown`,
-      level: "debug" as const,
+      variant: "debug" as const,
       description: `**Prediction Found:**
 > "${forecast.extractedForecast.originalText}"
 

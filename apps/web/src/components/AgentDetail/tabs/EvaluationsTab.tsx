@@ -255,7 +255,7 @@ export function EvaluationsTab({
                     evaluationVersionId: selectedEvaluation.evaluationId,
                     highlightId: comment.id,
                     header: comment.header ?? null,
-                    level: comment.level ?? null,
+                    variant: comment.variant ?? null,
                     source: comment.source ?? null,
                     metadata: comment.metadata ?? null,
                     highlight: {

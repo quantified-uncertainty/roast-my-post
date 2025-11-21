@@ -27,8 +27,8 @@ export function commentToYaml(comment: Comment, agentName: string): string {
   // Metadata
   yamlLines.push(`  agent: "${agentName}"`);
   
-  if (comment.level) {
-    yamlLines.push(`  level: ${comment.level}`);
+  if (comment.variant) {
+    yamlLines.push(`  variant: ${comment.variant}`);
   }
   
   if (comment.source) {

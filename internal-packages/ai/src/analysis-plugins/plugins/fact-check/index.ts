@@ -466,7 +466,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       toolChain,
 
       header: `Fact claim location not found`,
-      level: "debug" as const,
+      variant: "debug" as const,
       description: `The fact-checker found this claim but couldn't locate it precisely in the document: "${fact.text}". This might be due to text paraphrasing or formatting differences between extraction and document structure.`,
     });
   }

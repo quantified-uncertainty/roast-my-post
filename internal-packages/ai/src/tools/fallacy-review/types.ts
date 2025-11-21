@@ -2,6 +2,8 @@
  * Types for the fallacy review tool
  */
 
+import type { CommentVariant } from '@roast/ai';
+
 /**
  * Simplified comment representation for review
  */
@@ -15,8 +17,8 @@ export interface ReviewComment {
   /** Full description */
   description: string;
 
-  /** Severity level */
-  level: 'error' | 'warning' | 'nitpick' | 'info' | 'success' | 'debug';
+  /** Visual variant for display */
+  variant: CommentVariant;
 
   /** Importance score */
   importance?: number;

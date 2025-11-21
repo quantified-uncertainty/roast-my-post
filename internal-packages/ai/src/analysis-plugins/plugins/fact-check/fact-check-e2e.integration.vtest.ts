@@ -45,12 +45,12 @@ The speed of light in a vacuum is approximately 299,792 kilometers per second.
     // Check that comments have proper structure
     const firstComment = result.comments[0];
     if (firstComment) {
-      expect(firstComment.plugin).toBe('fact-check');
-      expect(firstComment.location).toBeDefined();
-      expect(firstComment.location.startOffset).toBeGreaterThanOrEqual(0);
-      expect(firstComment.location.endOffset).toBeGreaterThan(firstComment.location.startOffset);
+      expect(firstComment.source).toBe('fact-check');
+      expect(firstComment.highlight).toBeDefined();
+      expect(firstComment.highlight.startOffset).toBeGreaterThanOrEqual(0);
+      expect(firstComment.highlight.endOffset).toBeGreaterThan(firstComment.highlight.startOffset);
       expect(firstComment.description).toBeDefined();
-      expect(firstComment.level).toMatch(/^(error|warning|info|success|debug)$/);
+      expect(firstComment.variant).toMatch(/^(error|warning|info|success|debug)$/);
     }
 
     // Verify summary was generated
@@ -92,7 +92,7 @@ The human body has 206 bones (adults actually have 206, this is correct).
     const result = await plugin.analyze(chunks, documentText);
 
     // Should identify false claims
-    expect(result.comments.some(c => c.level === 'error')).toBe(true);
+    expect(result.comments.some(c => c.variant === 'error')).toBe(true);
     
     // Analysis should mention false claims
     expect(result.analysis.toLowerCase()).toMatch(/false|incorrect|error/);
@@ -136,17 +136,17 @@ The human body has 206 bones (adults actually have 206, this is correct).
     // If claims were found, they should have valid locations
     if (result.comments.length > 0) {
       result.comments.forEach(comment => {
-        if (comment.location) {
+        if (comment.highlight) {
           // Location should be within document bounds
-          expect(comment.location.startOffset).toBeGreaterThanOrEqual(0);
-          expect(comment.location.endOffset).toBeLessThanOrEqual(documentText.length);
+          expect(comment.highlight.startOffset).toBeGreaterThanOrEqual(0);
+          expect(comment.highlight.endOffset).toBeLessThanOrEqual(documentText.length);
           
           // Quoted text should match the document at that location
           const extractedText = documentText.substring(
-            comment.location.startOffset,
-            comment.location.endOffset
+            comment.highlight.startOffset,
+            comment.highlight.endOffset
           );
-          expect(comment.location.quotedText).toBeTruthy();
+          expect(comment.highlight.quotedText).toBeTruthy();
         }
       });
     }
@@ -198,7 +198,7 @@ We have achieved 99.9% customer satisfaction across 10 million users.
     );
     
     trivialClaims.forEach(claim => {
-      expect(claim.level).toMatch(/^(debug|info)$/);
+      expect(claim.variant).toMatch(/^(debug|info)$/);
     });
   }, 60000);
 });

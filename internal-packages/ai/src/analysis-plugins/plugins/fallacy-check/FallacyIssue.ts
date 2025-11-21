@@ -1,5 +1,5 @@
 import { logger } from "../../../shared/logger";
-import type { DocumentLocation } from "../../../shared/types";
+import type { CommentVariant, DocumentLocation } from "../../../shared/types";
 import type { ExtractedFallacyIssue } from "../../../tools/fallacy-extractor/types";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import type { ToolContext } from "../../../tools/base/Tool";
@@ -60,11 +60,11 @@ export class FallacyIssue {
   }
 
   /**
-   * Get the comment level for this issue
+   * Get the comment variant for this issue
    *
    * Uses importance score as primary factor, with severity for critical issues
    */
-  getCommentLevel(): "error" | "warning" | "nitpick" | "info" | "success" | "debug" {
+  getCommentVariant(): CommentVariant {
     const { issueType, importanceScore, severityScore } = this.issue;
 
     // Verified accurate claims get success

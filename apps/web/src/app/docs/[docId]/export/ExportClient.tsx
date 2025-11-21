@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import yaml from "js-yaml";
 import { RefreshCw } from "lucide-react";
+import type { CommentVariant } from "@roast/ai";
 
 import CodeBlock from "@/components/CodeBlock";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ interface Comment {
   description: string;
   importance?: number | null;
   grade?: number | null;
-  level?: string | null;
+  variant?: CommentVariant | null;
   source?: string | null;
   metadata?: any;
   highlight?: {
@@ -181,7 +182,7 @@ export function ExportClient({ document, evaluations }: ExportClientProps) {
 
               // Add expanded data only if mode is 'expanded'
               if (commentsMode === 'expanded') {
-                if (comment.level) commentData.level = comment.level;
+                if (comment.variant) commentData.variant = comment.variant;
                 if (comment.source) commentData.source = comment.source;
                 if (comment.metadata) commentData.metadata = comment.metadata;
 

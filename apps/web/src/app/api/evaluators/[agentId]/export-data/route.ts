@@ -233,7 +233,7 @@ export async function GET(
           comment_count: evalVersion.comments.length,
           comments: evalVersion.comments.map((comment) => ({
             header: comment.header,
-            level: comment.level,
+            variant: comment.variant,
             source: comment.source,
             metadata: comment.metadata,
             description: comment.description,

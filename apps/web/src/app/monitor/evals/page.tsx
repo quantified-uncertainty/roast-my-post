@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvaluationContent } from "@/components/evaluation";
-
+import type { CommentVariant } from "@roast/ai";
 interface Evaluation {
   id: string;
   createdAt: string;
@@ -45,7 +45,7 @@ interface Evaluation {
       importance: number | null;
       grade: number | null;
       header: string | null;
-      level: string | null;
+      variant: string | null;
       source: string | null;
       metadata: Record<string, any> | null;
     }>;
@@ -277,7 +277,7 @@ export default function EvaluationsMonitorPage() {
                   evaluationVersionId: selectedVersion.id,
                   highlightId: comment.id,
                   header: comment.header ?? null,
-                  level: comment.level ?? null,
+                  variant: comment.variant as CommentVariant | null,
                   source: comment.source ?? null,
                   metadata: comment.metadata ?? null,
                   highlight: {

@@ -1,4 +1,4 @@
-import type { Agent } from "@roast/ai";
+import type { Agent, CommentVariant } from "@roast/ai";
 
 export interface AgentDetailProps {
   agent: Agent;
@@ -48,7 +48,7 @@ export interface AgentEvaluation {
     importance?: number | null;
     grade?: number | null;
     header?: string | null;
-    level?: string | null;
+    variant?: CommentVariant | null;
     source?: string | null;
     metadata?: any | null;
   }>;

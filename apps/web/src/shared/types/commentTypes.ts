@@ -5,14 +5,14 @@
  * and database comment structures.
  */
 
-import type { Comment as AIComment } from '@roast/ai';
+import type { Comment as AIComment, CommentVariant } from '@roast/ai';
 import type { Comment as DatabaseComment } from './databaseTypes';
 
 /**
  * Extended comment interface that includes all possible fields
  * from both AI and database representations
  */
-export interface ExtendedComment extends Partial<Omit<AIComment, 'metadata' | 'header' | 'level' | 'source'>> {
+export interface ExtendedComment extends Partial<Omit<AIComment, 'metadata' | 'header' | 'variant' | 'source'>> {
   // Required database fields
   id?: string;
   commentText?: string;
@@ -21,7 +21,7 @@ export interface ExtendedComment extends Partial<Omit<AIComment, 'metadata' | 'h
   
   // Optional fields that may come from AI (override to allow null)
   header?: string | null;
-  level?: 'error' | 'warning' | 'info' | 'suggestion' | 'success' | null;
+  variant?: CommentVariant | null;
   source?: string | null;
   metadata?: Record<string, any> | null;
   
@@ -82,7 +82,7 @@ export function aiCommentToDatabaseComment(
     highlight,
     // Add any extended fields that might be in the comment
     ...(comment.header !== undefined && { header: comment.header }),
-    ...(comment.level !== undefined && { level: comment.level }),
+    ...(comment.variant !== undefined && { variant: comment.variant }),
     ...(comment.source !== undefined && { source: comment.source }),
     ...(comment.metadata !== undefined && { metadata: comment.metadata }),
   } as DatabaseComment;

@@ -1,3 +1,4 @@
+import type { CommentVariant } from "../../../../shared/types";
 import type { FallacyIssue } from "../FallacyIssue";
 import { ISSUE_TYPES } from "../constants";
 
@@ -38,12 +39,10 @@ export function buildTitle(issue: FallacyIssue): string {
 }
 
 /**
- * Get the severity level for an epistemic issue comment
+ * Get the visual variant for an epistemic issue comment
  */
-export function getLevel(
-  issue: FallacyIssue
-): "error" | "warning" | "nitpick" | "info" | "success" | "debug" {
-  return issue.getCommentLevel();
+export function getVariant(issue: FallacyIssue): CommentVariant {
+  return issue.getCommentVariant();
 }
 
 /**

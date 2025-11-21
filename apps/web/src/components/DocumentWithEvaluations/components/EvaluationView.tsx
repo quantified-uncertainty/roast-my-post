@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import type { Comment as DbComment } from "@/shared/types/databaseTypes";
 import { dbCommentToAiComment } from "@/shared/utils/typeAdapters";
 import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
-import type { Comment } from "@roast/ai";
+import type { Comment, CommentVariant } from "@roast/ai";
 
 import { LAYOUT } from "../constants";
 import { LocalCommentsUIProvider } from "../context/LocalCommentsUIContext";
@@ -22,10 +22,10 @@ import { EvaluationAnalysisSection } from "./EvaluationAnalysisSection";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 
 /**
- * Maps comment levels to appropriate highlight colors
+ * Maps comment variants to appropriate highlight colors
  */
-function getLevelHighlightColor(level?: string | null): string {
-  switch (level) {
+function getVariantHighlightColor(variant?: CommentVariant | null): string {
+  switch (variant) {
     case "error":
       return "#dc2626"; // Brighter red - for false claims (more intense)
     case "warning":
@@ -103,7 +103,7 @@ export function EvaluationView({
     if (localShowDebugComments) {
       return allComments;
     }
-    return allComments.filter((comment) => comment.level !== "debug");
+    return allComments.filter((comment) => comment.variant !== "debug");
   }, [allComments, localShowDebugComments]) as Array<
     DbComment & { agentName: string }
   >;
@@ -252,7 +252,7 @@ export function EvaluationView({
         endOffset: comment.highlight.endOffset!,
         quotedText: comment.highlight.quotedText || "",
         tag: originalIndex.toString(),
-        color: getLevelHighlightColor(comment.level),
+        color: getVariantHighlightColor(comment.variant),
       };
     });
   }, [commentsWithHighlights, displayComments]);
