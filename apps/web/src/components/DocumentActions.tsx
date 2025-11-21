@@ -95,13 +95,14 @@ export function DocumentActions({
       return;
     }
 
-    // Show Substack-specific warning first
+    // If Substack: show Substack warning first, then Re-upload warning after approval
+    // If not Substack: show Re-upload warning directly (if evaluations exist)
     if (isSubstack) {
       setShowSubstackWarning(true);
       return;
     }
 
-    // Show warning dialog if there are evaluations
+    // For non-Substack: show Re-upload warning if there are evaluations
     if (evaluationCount > 0) {
       setShowReuploadWarning(true);
       return;
@@ -138,12 +139,11 @@ export function DocumentActions({
 
   const handleConfirmSubstackRefresh = () => {
     setShowSubstackWarning(false);
-    // After acknowledging Substack warning, check for evaluation warning
-    if (evaluationCount > 0) {
+    // After Substack warning is approved, ALWAYS show Re-upload warning
+    // Use setTimeout to ensure the first dialog fully closes before showing the second
+    setTimeout(() => {
       setShowReuploadWarning(true);
-    } else {
-      performReupload();
-    }
+    }, 200);
   };
 
   const handleCancelSubstackRefresh = () => {
@@ -188,24 +188,32 @@ export function DocumentActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <WarningDialog
-        isOpen={showSubstackWarning}
-        title="Substack Refresh Warning"
-        message="Refreshing Substack articles may not work reliably. Substack uses aggressive caching, and the refresh may return an old version of the article instead of the latest content. Consider manually editing the document if you need the most recent version."
-        confirmText="Continue anyway"
-        cancelText="Cancel"
-        onConfirm={handleConfirmSubstackRefresh}
-        onCancel={handleCancelSubstackRefresh}
-      />
+      {/* Show Substack warning first, then evaluation warning after user confirms */}
+      {showSubstackWarning && (
+        <WarningDialog
+          isOpen={showSubstackWarning}
+          title="Substack Refresh Warning"
+          message="Refreshing Substack articles may not work reliably. Substack uses aggressive caching, and the refresh may return an old version of the article instead of the latest content. Consider manually editing the document if you need the most recent version."
+          confirmText="Continue anyway"
+          cancelText="Cancel"
+          onConfirm={handleConfirmSubstackRefresh}
+          onCancel={handleCancelSubstackRefresh}
+        />
+      )}
 
-      <WarningDialog
-        isOpen={showReuploadWarning}
-        title="Re-upload Document"
-        message={`Re-uploading this document will create a new version and invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? "s" : ""}. They will be automatically re-run, which will incur API costs. Continue?`}
-        confirmText="Continue with re-upload"
-        onConfirm={handleConfirmReupload}
-        onCancel={handleCancelReupload}
-      />
+      {/* Show Re-upload warning - only when Substack warning is not showing */}
+      {!showSubstackWarning && (
+        <WarningDialog
+          isOpen={showReuploadWarning}
+          title="Re-upload Document"
+          message={evaluationCount > 0 
+            ? `Re-uploading this document will create a new version and invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? "s" : ""}. They will be automatically re-run, which will incur API costs. Continue?`
+            : "Re-uploading this document will create a new version. Continue?"}
+          confirmText="Continue with re-upload"
+          onConfirm={handleConfirmReupload}
+          onCancel={handleCancelReupload}
+        />
+      )}
     </div>
   );
 }
