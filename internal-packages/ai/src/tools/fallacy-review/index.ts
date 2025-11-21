@@ -22,7 +22,7 @@ const reviewCommentSchema = z.object({
   index: z.number(),
   header: z.string(),
   description: z.string(),
-  level: z.enum(['error', 'warning', 'nitpick', 'info', 'success', 'debug']),
+  variant: z.enum(['error', 'warning', 'nitpick', 'info', 'success', 'debug']),
   importance: z.number().optional(),
   quotedText: z.string(),
 }) satisfies z.ZodType<ReviewComment>;
@@ -66,7 +66,7 @@ export class FallacyReviewTool extends Tool<
       .map((comment, idx) => {
         return `**Comment ${idx}**:
 Header: ${comment.header}
-Level: ${comment.level}
+Variant: ${comment.variant}
 Importance: ${comment.importance || 'N/A'}
 Quoted Text: "${comment.quotedText.substring(0, 100)}${comment.quotedText.length > 100 ? '...' : ''}"
 Description: ${comment.description}

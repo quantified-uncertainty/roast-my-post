@@ -162,7 +162,7 @@ model EvaluationComment {
   evaluationVersionId String
   highlightId         String              @unique
   header              String?
-  level               String?
+  variant             String?
   metadata            Json?
   source              String?
   evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)

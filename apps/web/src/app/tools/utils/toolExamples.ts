@@ -362,7 +362,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 0,
             header: 'Cherry-picked timeframe',
             description: 'Selecting only the best-performing time period to make an investment look better than it actually is.',
-            level: 'warning',
+            variant: 'warning',
             importance: 85,
             quotedText: 'grown 1000% in the last year'
           },
@@ -370,7 +370,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 1,
             header: 'Survivorship bias',
             description: 'Only considering successful cases while ignoring all the people who lost money.',
-            level: 'warning',
+            variant: 'warning',
             importance: 80,
             quotedText: 'Everyone who invested got rich'
           },
@@ -378,7 +378,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 2,
             header: 'Survivorship bias again',
             description: 'Another instance of only showing winners, not losers.',
-            level: 'warning',
+            variant: 'warning',
             importance: 75,
             quotedText: 'My friend made millions'
           },
@@ -386,7 +386,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 3,
             header: 'Hasty generalization',
             description: 'Drawing broad conclusions from a single example.',
-            level: 'warning',
+            variant: 'warning',
             importance: 70,
             quotedText: 'My friend made millions, so you will too'
           }
@@ -403,7 +403,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 0,
             header: 'Vague reference',
             description: 'Which studies? What did they find? This needs specific citations.',
-            level: 'warning',
+            variant: 'warning',
             importance: 90,
             quotedText: 'Studies show'
           },
@@ -411,7 +411,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 1,
             header: 'Weasel words',
             description: 'Some research is very vague - how much? What quality?',
-            level: 'nitpick',
+            variant: 'nitpick',
             importance: 40,
             quotedText: 'Some research'
           },
@@ -419,7 +419,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 2,
             header: 'Statement is factual',
             description: 'This is actually accurate and verifiable.',
-            level: 'info',
+            variant: 'info',
             importance: 20,
             quotedText: 'contains antioxidants'
           }
@@ -436,7 +436,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 0,
             header: 'Impossible claim',
             description: 'No medical treatment has 100% efficacy. This is a red flag for misinformation.',
-            level: 'error',
+            variant: 'error',
             importance: 95,
             quotedText: 'works 100% of the time'
           },
@@ -444,7 +444,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             index: 1,
             header: 'Appeal to conspiracy',
             description: 'Doctors hate it suggests a conspiracy theory framing that undermines credibility.',
-            level: 'warning',
+            variant: 'warning',
             importance: 85,
             quotedText: 'Doctors hate it'
           }

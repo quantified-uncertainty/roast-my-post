@@ -121,6 +121,7 @@ export * from './shared/utils/xml';
 export type {
   Comment,
   CommentMetadata,
+  CommentVariant,
   ToolChainResult,
   DocumentLocation,
   LanguageConvention,

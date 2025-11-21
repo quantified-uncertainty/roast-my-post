@@ -8,15 +8,12 @@ import { AgentIcon } from "@/components/AgentIcon";
 import { commentToYaml } from "@/shared/utils/commentToYaml";
 import { parseColoredText } from "@/shared/utils/ui/coloredText";
 import {
-  CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentDuplicateIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
-
-import IndexFingerIcon from "../../../../public/app-icons/indexFinger.svg";
+import { CommentVariantIndicator } from "@/components/CommentVariantIndicator";
 import {
   MARKDOWN_COMPONENTS,
   MARKDOWN_PLUGINS,
@@ -87,49 +84,6 @@ export function PositionedComment({
 
   // Note: We show header if available, otherwise description is shown inline
 
-  const level = comment.level || "info"; // Default to info if not set
-  // Get level indicator (icon with colored background)
-  const getLevelIndicator = (level: string, isHovered: boolean) => {
-    let bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
-    let content: React.ReactNode;
-
-    switch (level) {
-      case "error":
-        bgColor = isHovered ? "bg-red-500" : "bg-red-400";
-        content = <XMarkIcon className="h-4 w-4 text-white" />;
-        break;
-      case "warning":
-        bgColor = isHovered ? "bg-orange-500" : "bg-orange-400";
-        content = (
-          <span className="text-lg font-bold leading-none text-white">!</span>
-        );
-        break;
-      case "nitpick":
-        bgColor = isHovered ? "bg-fuchsia-500" : "bg-fuchsia-300";
-        content = <IndexFingerIcon className="h-4 w-4 text-white" />;
-        break;
-      case "success":
-        bgColor = isHovered ? "bg-green-500" : "bg-green-300";
-        content = <CheckIcon className="h-4 w-4 text-white" />;
-        break;
-      case "info":
-      default:
-        bgColor = isHovered ? "bg-blue-500" : "bg-blue-400";
-        content = (
-          <span className="text-md font-bold leading-none text-white">i</span>
-        );
-        break;
-    }
-
-    return (
-      <div
-        className={`h-5 w-5 rounded-sm ${bgColor} mr-2 flex flex-shrink-0 items-center justify-center`}
-      >
-        {content}
-      </div>
-    );
-  };
-
   return (
     <div
       style={{
@@ -163,7 +117,7 @@ export function PositionedComment({
               className={`flex items-center justify-between gap-2 transition-opacity ${!isHovered ? "opacity-80" : "opacity-100"}`}
             >
               <div className="flex items-center gap-1 font-medium text-gray-900">
-                {getLevelIndicator(level, isHovered)}
+                <CommentVariantIndicator variant={comment.variant} size="sm" isHovered={isHovered} className="mr-2" />
                 {parseColoredText(comment.header)}
               </div>
               {/* Agent name on the right */}

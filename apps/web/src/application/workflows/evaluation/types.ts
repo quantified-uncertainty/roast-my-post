@@ -1,3 +1,5 @@
+import type { CommentVariant } from "@roast/ai";
+
 /**
  * Standardized evaluation display data structure
  */
@@ -15,7 +17,7 @@ export interface EvaluationDisplayData {
     evaluationVersionId: string;
     highlightId: string;
     header?: string | null;
-    level?: string | null;
+    variant?: CommentVariant | null;
     source?: string | null;
     metadata?: Record<string, any> | null;
     highlight: {
@@ -73,7 +75,7 @@ export interface EvaluationContentProps {
     evaluationVersionId: string;
     highlightId: string;
     header?: string | null;
-    level?: string | null;
+    variant?: CommentVariant | null;
     source?: string | null;
     metadata?: Record<string, any> | null;
     highlight: {

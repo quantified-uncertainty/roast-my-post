@@ -1,4 +1,5 @@
 import { logger } from "@/infrastructure/logging/logger";
+import type { CommentVariant } from "@roast/ai";
 
 interface ExportEvaluationData {
   evaluation: {
@@ -22,7 +23,7 @@ interface ExportEvaluationData {
       importance?: number | null;
       grade?: number | null;
       header?: string | null;
-      level?: string | null;
+      variant?: CommentVariant | null;
       source?: string | null;
       metadata?: Record<string, any> | null;
     }>;
@@ -122,8 +123,8 @@ export function exportEvaluationToXml(data: ExportEvaluationData): string {
       if (comment.header) {
         xml += `      <header><![CDATA[${comment.header}]]></header>\n`;
       }
-      if (comment.level) {
-        xml += `      <level>${comment.level}</level>\n`;
+      if (comment.variant) {
+        xml += `      <variant>${comment.variant}</variant>\n`;
       }
       if (comment.source) {
         xml += `      <source>${comment.source}</source>\n`;

@@ -149,23 +149,23 @@ Traditional business advice tells you to spend years planning. We spent 2 months
     console.log(`\n${result.analysis}`);
     console.log(`\n💬 Total Comments: ${result.comments.length}\n`);
 
-    // Group by level
-    const byLevel = {
-      error: result.comments.filter(c => c.level === 'error'),
-      warning: result.comments.filter(c => c.level === 'warning'),
-      nitpick: result.comments.filter(c => c.level === 'nitpick'),
-      success: result.comments.filter(c => c.level === 'success'),
-      info: result.comments.filter(c => c.level === 'info'),
+    // Group by variant
+    const byVariant = {
+      error: result.comments.filter(c => c.variant === 'error'),
+      warning: result.comments.filter(c => c.variant === 'warning'),
+      nitpick: result.comments.filter(c => c.variant === 'nitpick'),
+      success: result.comments.filter(c => c.variant === 'success'),
+      info: result.comments.filter(c => c.variant === 'info'),
     };
 
-    console.log(`By Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings, ${byLevel.nitpick.length} nitpicks, ${byLevel.success.length} success, ${byLevel.info.length} info\n`);
+    console.log(`By Variant: ${byVariant.error.length} errors, ${byVariant.warning.length} warnings, ${byVariant.nitpick.length} nitpicks, ${byVariant.success.length} success, ${byVariant.info.length} info\n`);
 
     // Show first 3 issues
     console.log('Top 3 Issues:');
     result.comments.slice(0, 3).forEach((comment, i) => {
-      console.log(`\n${i + 1}. [${comment.level.toUpperCase()}] ${comment.header}`);
-      if (comment.location?.quotedText) {
-        console.log(`   Text: "${comment.location.quotedText.substring(0, 80)}..."`);
+      console.log(`\n${i + 1}. [${comment.variant?.toUpperCase()}] ${comment.header}`);
+      if (comment.highlight?.quotedText) {
+        console.log(`   Text: "${comment.highlight.quotedText.substring(0, 80)}..."`);
       }
       console.log(`   ${comment.description.substring(0, 200)}...`);
     });
@@ -173,7 +173,7 @@ Traditional business advice tells you to spend years planning. We spent 2 months
     // Should catch: survivorship bias, cherry-picked 2020, false precision (847.3%),
     // vague claims, selection bias, false dichotomy, appeal to emotion
     expect(result.comments.length).toBeGreaterThan(5);
-    expect(byLevel.error.length).toBeGreaterThan(3);
+    expect(byVariant.error.length).toBeGreaterThan(3);
 
   }, 300000); // 5 minutes for LLM tests
 
@@ -192,16 +192,16 @@ Traditional business advice tells you to spend years planning. We spent 2 months
     console.log(`\n💬 Total Comments: ${result.comments.length}\n`);
 
     const byLevel = {
-      error: result.comments.filter(c => c.level === 'error'),
-      warning: result.comments.filter(c => c.level === 'warning'),
+      error: result.comments.filter(c => c.variant === 'error'),
+      warning: result.comments.filter(c => c.variant === 'warning'),
     };
 
-    console.log(`By Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings\n`);
+    console.log(`By Variant: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings\n`);
 
     // Show first 3 issues
     console.log('Top 3 Issues:');
     result.comments.slice(0, 3).forEach((comment, i) => {
-      console.log(`\n${i + 1}. [${comment.level.toUpperCase()}] ${comment.header}`);
+      console.log(`\n${i + 1}. [${comment.variant?.toUpperCase()}] ${comment.header}`);
       console.log(`   ${comment.description.substring(0, 200)}...`);
     });
 
@@ -225,17 +225,17 @@ Traditional business advice tells you to spend years planning. We spent 2 months
     console.log(`\n${result.analysis}`);
     console.log(`\n💬 Total Comments: ${result.comments.length}\n`);
 
-    const byLevel = {
-      error: result.comments.filter(c => c.level === 'error'),
-      warning: result.comments.filter(c => c.level === 'warning'),
+    const byVariant = {
+      error: result.comments.filter(c => c.variant === 'error'),
+      warning: result.comments.filter(c => c.variant === 'warning'),
     };
 
-    console.log(`By Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings\n`);
+    console.log(`By Variant: ${byVariant.error.length} errors, ${byVariant.warning.length} warnings\n`);
 
     // Show all issues for political piece
     console.log('All Issues:');
     result.comments.forEach((comment, i) => {
-      console.log(`\n${i + 1}. [${comment.level.toUpperCase()}] ${comment.header}`);
+      console.log(`\n${i + 1}. [${comment.variant?.toUpperCase()}] ${comment.header}`);
       console.log(`   ${comment.description.substring(0, 150)}...`);
     });
 
@@ -260,16 +260,16 @@ Traditional business advice tells you to spend years planning. We spent 2 months
     console.log(`\n💬 Total Comments: ${result.comments.length}\n`);
 
     const byLevel = {
-      error: result.comments.filter(c => c.level === 'error'),
-      warning: result.comments.filter(c => c.level === 'warning'),
+      error: result.comments.filter(c => c.variant === 'error'),
+      warning: result.comments.filter(c => c.variant === 'warning'),
     };
 
-    console.log(`By Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings\n`);
+    console.log(`By Variant: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings\n`);
 
     // Show first 3 issues
     console.log('Top 3 Issues:');
     result.comments.slice(0, 3).forEach((comment, i) => {
-      console.log(`\n${i + 1}. [${comment.level.toUpperCase()}] ${comment.header}`);
+      console.log(`\n${i + 1}. [${comment.variant?.toUpperCase()}] ${comment.header}`);
       console.log(`   ${comment.description.substring(0, 200)}...`);
     });
 

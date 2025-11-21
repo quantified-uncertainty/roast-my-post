@@ -207,7 +207,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           index,
           header: comment.header || "Epistemic Issue",
           description: comment.description,
-          level: comment.level || 'warning',
+          variant: comment.variant || 'warning',
           importance: comment.importance,
           quotedText: comment.highlight.quotedText,
         }));

@@ -48,7 +48,7 @@ abstract class BaseDocumentExporter implements DocumentExporter {
 
     return comments.map((comment: Comment) => ({
       header: comment.header,
-      level: comment.level,
+      variant: comment.variant,
       source: comment.source,
       metadata: comment.metadata,
       description: comment.description,
@@ -128,7 +128,7 @@ class MarkdownExporter extends BaseDocumentExporter {
             sections.push(`${idx + 1}. **${header}**`);
             
             const badges = [];
-            if (comment.level) badges.push(`[${comment.level.toUpperCase()}]`);
+            if (comment.variant) badges.push(`[${comment.variant.toUpperCase()}]`);
             if (comment.source) badges.push(`[${comment.source}]`);
             if (badges.length > 0) {
               sections.push(`   ${badges.join(" ")}`);

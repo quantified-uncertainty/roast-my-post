@@ -187,7 +187,7 @@ export function generateLinkHighlights(
       
       // Required fields for Comment interface  
       header: extractedUrl.url.length > 50 ? extractedUrl.url.substring(0, 47) + '...' : extractedUrl.url,
-      level: grade > 70 ? 'success' : grade > 30 ? 'warning' : 'error',
+      variant: grade > 70 ? 'success' : grade > 30 ? 'warning' : 'error',
       source: 'link-analysis',
       metadata: {
         pluginName: 'link-analysis',

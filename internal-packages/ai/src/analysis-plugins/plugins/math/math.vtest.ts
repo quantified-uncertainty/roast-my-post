@@ -158,7 +158,7 @@ describe('MathPlugin', () => {
       expect(result.analysis.length).toBeGreaterThan(0);
       expect(result.comments).toHaveLength(2); // Now generates comments for both verified_true and verified_false
       // Check that the error comment does NOT contain duplicate header text
-      const errorComment = result.comments.find(c => c.level === 'error');
+      const errorComment = result.comments.find(c => c.variant === 'error');
       expect(errorComment).toBeDefined();
       expect(errorComment?.description).not.toContain('[Math]');
       expect(errorComment?.description).not.toContain('<span style=');

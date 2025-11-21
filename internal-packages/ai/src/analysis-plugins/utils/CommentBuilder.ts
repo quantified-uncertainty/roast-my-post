@@ -1,4 +1,4 @@
-import type { Comment, DocumentLocation, ToolChainResult, CommentMetadata } from '../../shared/types';
+import type { Comment, CommentVariant, DocumentLocation, ToolChainResult, CommentMetadata } from '../../shared/types';
 import type { 
   MathExtractResult, 
   ForecastExtractResult, 
@@ -28,7 +28,7 @@ export interface CommentBuildOptions {
   // Optional overrides (auto-generated from tool chain if not provided)
   header?: string;
   description?: string;
-  level?: 'error' | 'warning' | 'nitpick' | 'info' | 'success' | 'debug';
+  variant?: CommentVariant;
   importance?: number;
   
   // Optional structured fields
@@ -62,13 +62,13 @@ export class CommentBuilder {
     // Plugins must provide all required fields
     if (!options.description) throw new Error('Description is required');
     if (!options.header) throw new Error('Header is required');
-    if (!options.level) throw new Error('Level is required');
+    if (!options.variant) throw new Error('Variant is required');
     
     return {
       // Required fields (must be provided by plugins)
       description: options.description,
       header: options.header,
-      level: options.level,
+      variant: options.variant,
       source: options.plugin,
       
       // Optional fields

@@ -59,16 +59,16 @@ Traditional financial advisors tell you to "diversify" and "invest for the long 
     output += `\nAnalysis:\n${result.analysis}\n`;
     output += `\nTotal comments: ${result.comments.length}\n`;
 
-    // Group by level
+    // Group by variant
     const byLevel = {
-      error: result.comments.filter(c => c.level === 'error'),
-      warning: result.comments.filter(c => c.level === 'warning'),
-      nitpick: result.comments.filter(c => c.level === 'nitpick'),
-      success: result.comments.filter(c => c.level === 'success'),
-      info: result.comments.filter(c => c.level === 'info'),
+      error: result.comments.filter(c => c.variant === 'error'),
+      warning: result.comments.filter(c => c.variant === 'warning'),
+      nitpick: result.comments.filter(c => c.variant === 'nitpick'),
+      success: result.comments.filter(c => c.variant === 'success'),
+      info: result.comments.filter(c => c.variant === 'info'),
     };
 
-    output += `\nBy Level: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings, ${byLevel.nitpick.length} nitpicks, ${byLevel.success.length} success, ${byLevel.info.length} info\n`;
+    output += `\nBy Variant: ${byLevel.error.length} errors, ${byLevel.warning.length} warnings, ${byLevel.nitpick.length} nitpicks, ${byLevel.success.length} success, ${byLevel.info.length} info\n`;
 
     // Analyze issue types
     const issueTypes = result.comments.map(c => {
@@ -93,7 +93,7 @@ Traditional financial advisors tell you to "diversify" and "invest for the long 
       output += `  - ${type}: ${count}\n`;
     });
 
-    // Log each comment sorted by level
+    // Log each comment sorted by variant
     ['error', 'warning', 'success', 'info'].forEach(level => {
       const comments = byLevel[level as keyof typeof byLevel];
       if (comments.length > 0) {
@@ -101,8 +101,8 @@ Traditional financial advisors tell you to "diversify" and "invest for the long 
         comments.forEach((comment, i) => {
           output += `\n--- ${level.toUpperCase()} ${i + 1} ---\n`;
           output += `Header: ${comment.header}\n`;
-          if (comment.location?.quotedText) {
-            output += `Location: ${comment.location.quotedText.substring(0, 150)}\n`;
+          if (comment.highlight?.quotedText) {
+            output += `Location: ${comment.highlight.quotedText.substring(0, 150)}\n`;
           }
           output += `\nDescription:\n${comment.description}\n`;
           if (comment.importance) {

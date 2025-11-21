@@ -5,7 +5,7 @@ import type { VerifiedFact } from '../VerifiedFact';
 import {
   buildDescription,
   buildTitle,
-  getLevel,
+  getVariant,
   buildObservation,
   buildSignificance,
   buildGrade
@@ -31,7 +31,7 @@ export async function buildFactComment(
   // Get markdown content from pure functions
   const description = buildDescription(fact);
   const header = buildTitle(fact);
-  const level = getLevel(fact);
+  const variant = getVariant(fact);
   const observation = buildObservation(fact);
   const significance = buildSignificance(fact);
   const grade = buildGrade(fact);
@@ -48,7 +48,7 @@ export async function buildFactComment(
 
     // Structured content
     header,
-    level,
+    variant,
     observation,
     significance,
     grade,

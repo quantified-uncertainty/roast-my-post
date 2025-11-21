@@ -129,7 +129,7 @@ export function EvaluationAnalysisSection({
                         evaluationVersionId: evaluation.id || "",
                         highlightId: `${evaluation.agentId}-highlight-${index}`,
                         header: comment.header ?? null,
-                        level: comment.level ?? null,
+                        variant: comment.variant ?? null,
                         source: comment.source ?? null,
                         metadata: comment.metadata ?? null,
                         highlight: {

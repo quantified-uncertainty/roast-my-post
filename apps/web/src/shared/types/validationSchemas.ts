@@ -5,6 +5,8 @@
  */
 
 import { z } from "zod";
+// Zod schema for comment variant enum
+export const CommentVariantSchema = z.enum(['error', 'warning', 'nitpick', 'info', 'success', 'debug']);
 
 // Schema for document highlight validation
 export const HighlightValidationSchema = z.object({
@@ -32,7 +34,7 @@ export const CommentValidationSchema = z.object({
   
   // Plugin standardization fields
   header: z.string().optional(), // Concise summary like "2+2=5 → 2+2=4"
-  level: z.enum(['error', 'warning', 'info', 'success']).optional(),
+  variant: CommentVariantSchema.optional(),
   source: z.string().optional(), // Plugin identifier: 'math', 'spelling', etc.
   metadata: z.record(z.string(), z.any()).optional(), // Plugin-specific data
 });

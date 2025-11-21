@@ -314,7 +314,7 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
       errorType: error.type,
       isGrammar: error.type === "grammar",
       isSpelling: error.type === "spelling", 
-      level: error.type === "grammar" ? "warning" : "error"
+      variant: error.type === "grammar" ? "warning" : "error"
     });
 
     return CommentBuilder.build({
@@ -333,7 +333,7 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
         // Fallback to generating from text/correction with proper escaping
         return `<r:replace from="${escapeXml(error.text)}" to="${escapeXml(error.correction || '[suggestion needed]')}"/>`;
       })(),
-      level: error.type === "grammar" ? "warning" : "error",
+      variant: error.type === "grammar" ? "warning" : "error",
       // Minimal description - required by CommentBuilder but not shown when header exists
       description: error.description || " ",
       significance:
