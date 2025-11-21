@@ -12,6 +12,7 @@ export interface ToolConfig {
   costEstimate?: string;
   path?: string; // UI route path
   status?: 'stable' | 'experimental' | 'beta';
+  requiresAuth?: boolean; // Whether the tool requires authentication (defaults to true for AI-powered tools)
 }
 
 export interface ToolContext {

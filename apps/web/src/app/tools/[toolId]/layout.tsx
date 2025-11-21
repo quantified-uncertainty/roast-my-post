@@ -45,7 +45,7 @@ export default async function ToolLayout({ params, children }: ToolLayoutProps) 
         </div>
 
         {/* Tab Navigation */}
-        <ToolTabs toolId={toolId} />
+        <ToolTabs toolId={toolId} toolConfig={toolConfig} />
 
         {/* Content */}
         {children}

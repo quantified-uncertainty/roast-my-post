@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent, ReactNode } from 'react';
-import { toolSchemas } from '@roast/ai';
+import { toolSchemas, toolRegistry } from '@roast/ai';
 import { ErrorDisplay, SubmitButton, TextAreaField } from './common';
 import { useToolExecution } from '../hooks/useToolExecution';
 import { AuthenticatedToolPage } from './AuthenticatedToolPage';
@@ -378,10 +378,14 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
     }
   };
   
-  return (
-    <AuthenticatedToolPage>
+  // Check if tool requires authentication
+  const toolConfig = toolRegistry[toolId];
+  const requiresAuth = toolConfig?.requiresAuth !== false; // Default to true if not specified
+  
+  const content = (
+    <>
       <div className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
             {fields.map(renderField)}
             
             {/* Multiple examples with labels */}
@@ -420,107 +424,114 @@ export function GenericToolTryPage<TInput extends Record<string, any>, TOutput>(
               </div>
             )}
             
-            <SubmitButton
-              isLoading={isLoading}
-              disabled={!isFormValid()}
-              text={submitButtonText}
-              loadingText={loadingText}
-              className={submitButtonClassName}
-            />
-          </form>
-          
-          <ErrorDisplay error={error} />
+          <SubmitButton
+            isLoading={isLoading}
+            disabled={!isFormValid()}
+            text={submitButtonText}
+            loadingText={loadingText}
+            className={submitButtonClassName}
+          />
+        </form>
+        
+        <ErrorDisplay error={error} />
 
-          {result && (
-            <div className="mt-8" data-testid="tool-result">
-              {/* View Toggle and Save Button */}
-              {(!hideViewToggle || onSaveResult) && (
-                <div className="mb-4 flex gap-2 justify-between items-center">
-                  {!hideViewToggle && (
-                    <div className="flex gap-2">
+        {result && (
+          <div className="mt-8" data-testid="tool-result">
+            {/* View Toggle and Save Button */}
+            {(!hideViewToggle || onSaveResult) && (
+              <div className="mb-4 flex gap-2 justify-between items-center">
+                {!hideViewToggle && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowRawJSON(false)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        !showRawJSON
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Visual View
+                    </button>
+                    <button
+                      onClick={() => setShowRawJSON(true)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        showRawJSON
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Raw JSON
+                    </button>
+                  </div>
+                )}
+
+                {/* Spacer when hideViewToggle but have save button */}
+                {hideViewToggle && onSaveResult && <div />}
+
+                {/* Save Button */}
+                {onSaveResult && (
+                  <div className="flex gap-2 items-center">
+                    {savedId ? (
+                      <>
+                        <span className="text-sm text-green-600">✓ Saved</span>
+                        {getSavedResultUrl && (
+                          <a
+                            href={getSavedResultUrl(savedId)}
+                            className="px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                          >
+                            View Saved
+                          </a>
+                        )}
+                      </>
+                    ) : (
                       <button
-                        onClick={() => setShowRawJSON(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          !showRawJSON
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="px-4 py-2 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Visual View
+                        {isSaving ? 'Saving...' : saveButtonText}
                       </button>
-                      <button
-                        onClick={() => setShowRawJSON(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          showRawJSON
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        Raw JSON
-                      </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
-                  {/* Spacer when hideViewToggle but have save button */}
-                  {hideViewToggle && onSaveResult && <div />}
+            {/* Result Display */}
+            {!hideViewToggle && showRawJSON ? (
+              <div className="rounded-lg border bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-semibold">Full JSON Response</h3>
+                <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              renderResult(result)
+            )}
+          </div>
+        )}
+      </div>
 
-                  {/* Save Button */}
-                  {onSaveResult && (
-                    <div className="flex gap-2 items-center">
-                      {savedId ? (
-                        <>
-                          <span className="text-sm text-green-600">✓ Saved</span>
-                          {getSavedResultUrl && (
-                            <a
-                              href={getSavedResultUrl(savedId)}
-                              className="px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                            >
-                              View Saved
-                            </a>
-                          )}
-                        </>
-                      ) : (
-                        <button
-                          onClick={handleSave}
-                          disabled={isSaving}
-                          className="px-4 py-2 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSaving ? 'Saving...' : saveButtonText}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Result Display */}
-              {!hideViewToggle && showRawJSON ? (
-                <div className="rounded-lg border bg-white p-6 shadow-sm">
-                  <h3 className="mb-4 text-lg font-semibold">Full JSON Response</h3>
-                  <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm">
-                    {JSON.stringify(result, null, 2)}
-                  </pre>
-                </div>
-              ) : (
-                renderResult(result)
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Prompt Preview Modal */}
-        <Dialog open={showPromptModal} onOpenChange={setShowPromptModal}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Prompt Preview</DialogTitle>
-            </DialogHeader>
-            <div className="mt-4">
-              <pre className="whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm border border-gray-200">
-                {promptContent}
-              </pre>
-            </div>
-          </DialogContent>
-        </Dialog>
-    </AuthenticatedToolPage>
+      {/* Prompt Preview Modal */}
+      <Dialog open={showPromptModal} onOpenChange={setShowPromptModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Prompt Preview</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <pre className="whitespace-pre-wrap break-words rounded bg-gray-50 p-4 font-mono text-sm border border-gray-200">
+              {promptContent}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
+  
+  // Only wrap in AuthenticatedToolPage if tool requires auth
+  return requiresAuth ? (
+    <AuthenticatedToolPage toolName={toolConfig?.name}>
+      {content}
+    </AuthenticatedToolPage>
+  ) : content;
 }
