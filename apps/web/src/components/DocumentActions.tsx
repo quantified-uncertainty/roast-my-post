@@ -24,6 +24,12 @@ import {
 
 import { WarningDialog } from "./WarningDialog";
 
+// Helper function to check if a URL is from Substack
+function isSubstackUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.includes("substack.com");
+}
+
 interface DocumentActionsProps {
   docId: string;
   document: {
@@ -41,8 +47,11 @@ export function DocumentActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showReuploadWarning, setShowReuploadWarning] = useState(false);
+  const [showSubstackWarning, setShowSubstackWarning] = useState(false);
   const [evaluationCount, setEvaluationCount] = useState(0);
   const router = useRouter();
+  
+  const isSubstack = isSubstackUrl(document.importUrl);
 
   useEffect(() => {
     // Fetch evaluation count
@@ -86,6 +95,12 @@ export function DocumentActions({
       return;
     }
 
+    // Show Substack-specific warning first
+    if (isSubstack) {
+      setShowSubstackWarning(true);
+      return;
+    }
+
     // Show warning dialog if there are evaluations
     if (evaluationCount > 0) {
       setShowReuploadWarning(true);
@@ -108,6 +123,7 @@ export function DocumentActions({
     } finally {
       setIsRefreshing(false);
       setShowReuploadWarning(false);
+      setShowSubstackWarning(false);
     }
   };
 
@@ -118,6 +134,20 @@ export function DocumentActions({
 
   const handleCancelReupload = () => {
     setShowReuploadWarning(false);
+  };
+
+  const handleConfirmSubstackRefresh = () => {
+    setShowSubstackWarning(false);
+    // After acknowledging Substack warning, check for evaluation warning
+    if (evaluationCount > 0) {
+      setShowReuploadWarning(true);
+    } else {
+      performReupload();
+    }
+  };
+
+  const handleCancelSubstackRefresh = () => {
+    setShowSubstackWarning(false);
   };
 
   const handleEdit = () => {
@@ -157,6 +187,16 @@ export function DocumentActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <WarningDialog
+        isOpen={showSubstackWarning}
+        title="Substack Refresh Warning"
+        message="Refreshing Substack articles may not work reliably. Substack uses aggressive caching, and the refresh may return an old version of the article instead of the latest content. Consider manually editing the document if you need the most recent version."
+        confirmText="Continue anyway"
+        cancelText="Cancel"
+        onConfirm={handleConfirmSubstackRefresh}
+        onCancel={handleCancelSubstackRefresh}
+      />
 
       <WarningDialog
         isOpen={showReuploadWarning}
