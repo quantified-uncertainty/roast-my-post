@@ -29,6 +29,8 @@ export interface JobEntity {
   priceInDollars: number | null;
   durationInSeconds: number | null;
   logs: string | null;
+  cancellationReason: string | null;
+  cancelledAt: Date | null;
 }
 
 export interface JobWithRelations extends JobEntity {
@@ -87,16 +89,19 @@ export interface UpdateJobStatusData {
   status: JobStatus;
   startedAt?: Date;
   completedAt?: Date;
-  error?: string;
-  llmThinking?: string;
+  error?: string | null;
+  llmThinking?: string | null;
   priceInDollars?: number;
   durationInSeconds?: number;
   logs?: string;
+  cancellationReason?: string;
+  cancelledAt?: Date;
 }
 
 export interface JobRepositoryInterface {
   findById(id: string): Promise<JobEntity | null>;
   findByIdWithRelations(id: string): Promise<JobWithRelations | null>;
+  findByEvaluationId(evaluationId: string): Promise<JobEntity[]>;
   findNextPendingJob(): Promise<JobWithRelations | null>;
   claimNextPendingJob(): Promise<JobWithRelations | null>;
   create(data: CreateJobData): Promise<JobEntity>;
@@ -160,6 +165,18 @@ export class JobRepository implements JobRepositoryInterface {
     });
 
     return job ? this.toJobWithRelations(job) : null;
+  }
+
+  /**
+   * Find jobs for evaluation
+   */
+  async findByEvaluationId(evaluationId: string): Promise<JobEntity[]> {
+    const jobs = await this.prisma.job.findMany({
+      where: { evaluationId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return jobs.map(job => this.toDomainEntity(job));
   }
 
   /**
@@ -309,6 +326,8 @@ export class JobRepository implements JobRepositoryInterface {
         ...(data.priceInDollars !== undefined && { priceInDollars: data.priceInDollars }),
         ...(data.durationInSeconds !== undefined && { durationInSeconds: data.durationInSeconds }),
         ...(data.logs !== undefined && { logs: data.logs }),
+        ...(data.cancellationReason !== undefined && { cancellationReason: data.cancellationReason }),
+        ...(data.cancelledAt !== undefined && { cancelledAt: data.cancelledAt }),
       },
     });
 
@@ -441,6 +460,8 @@ export class JobRepository implements JobRepositoryInterface {
       priceInDollars: job.priceInDollars ? Number(job.priceInDollars) : null, // Convert Decimal to number
       durationInSeconds: job.durationInSeconds ? Number(job.durationInSeconds) : null, // Convert Decimal to number
       logs: job.logs,
+      cancellationReason: job.cancellationReason || null,
+      cancelledAt: job.cancelledAt || null,
     };
   }
 

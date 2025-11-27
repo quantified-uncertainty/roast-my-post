@@ -3,14 +3,22 @@
  */
 
 // Core services
-export { JobService, type JobServiceInterface } from './core/JobService';
 export { JobOrchestrator, type JobOrchestratorInterface } from './core/JobOrchestrator';
+export { PgBossService } from './core/PgBossService';
+
+// Job types
+export {
+  DOCUMENT_EVALUATION_JOB,
+  type JobType,
+  type DocumentEvaluationJobData,
+  type JobData,
+} from './types/jobTypes';
 
 // Configuration
-export { 
+export {
   AGENT_TIMEOUT_CONFIG,
   getAgentTimeout,
-  formatTimeout 
+  formatTimeout,
 } from './config/agentTimeouts';
 
 // Types
@@ -23,5 +31,5 @@ export type {
   WorkflowRegistry,
   Logger,
   JobProcessingResult,
-  CompletionData
+  CompletionData,
 } from './types';

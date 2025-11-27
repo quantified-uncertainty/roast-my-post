@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /usr/src/app
 
 # Install dependencies for native modules and enable corepack
@@ -43,7 +43,7 @@ RUN mkdir -p /prod/web/node_modules/@roast/db/generated && \
     cp -r /usr/src/app/internal-packages/db/generated/* /prod/web/node_modules/@roast/db/generated/ || true
 
 # Production stage
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

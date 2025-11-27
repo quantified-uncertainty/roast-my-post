@@ -1,98 +1,84 @@
 /**
- * JobService Facade
- * 
+ * JobService
+ *
  * Provides a minimal interface for job operations needed by the web app.
- * The actual job processing logic lives in @roast/jobs package.
- * This facade exists to maintain backwards compatibility with existing API routes.
+ *
+ * Architecture:
+ * - Web app (this service): Initializes pg-boss to submit jobs
+ * - Worker process: Initializes pg-boss to process jobs
  */
 
-import { prisma, JobStatus, type JobEntity } from '@roast/db';
+import { JobStatus, type JobEntity, type JobRepository } from '@roast/db';
+import { PgBossService, DOCUMENT_EVALUATION_JOB } from '@roast/jobs';
 
 export class JobService {
-  /**
-   * Map Prisma Job to JobEntity
-   */
-  private mapToEntity(job: any): JobEntity {
-    return {
-      id: job.id,
-      status: job.status as JobStatus,
-      evaluationId: job.evaluationId,
-      originalJobId: job.originalJobId,
-      agentEvalBatchId: job.agentEvalBatchId,
-      attempts: job.attempts,
-      createdAt: job.createdAt,
-      startedAt: job.startedAt,
-      completedAt: job.completedAt,
-      error: job.error,
-      llmThinking: job.llmThinking,
-      priceInDollars: job.priceInDollars,
-      durationInSeconds: job.durationInSeconds,
-      logs: job.logs,
-    };
+  constructor(
+    private jobRepository: JobRepository,
+    private logger: any,
+    private pgBossService: PgBossService
+  ) {}
+
+  async initialize() {
+    await this.pgBossService.initialize();
   }
 
   /**
    * Create a job for processing
+   * Creates both Job table record and pg-boss queue entry
    */
   async createJob(evaluationId: string, agentEvalBatchId?: string): Promise<JobEntity> {
-    const job = await prisma.job.create({
-      data: {
-        evaluationId,
-        status: JobStatus.PENDING,
-        createdAt: new Date(),
-        agentEvalBatchId,
-      },
+    // Create Job table record first
+    const job = await this.jobRepository.create({
+      evaluationId,
+      agentEvalBatchId: agentEvalBatchId || undefined,
     });
-    return this.mapToEntity(job);
+
+    const jobData = {
+      jobId: job.id,
+      evaluationId,
+      agentEvalBatchId: agentEvalBatchId || null,
+    };
+
+    try {
+      await this.pgBossService.send(DOCUMENT_EVALUATION_JOB, jobData, {
+        id: job.id, // Use Job table ID as pg-boss job ID for easy cancellation
+      });
+    } catch (error) {
+      this.logger.error(`Failed to create pg-boss job for Job ${job.id}:`, error);
+      // Mark our Job record as failed since we couldn't queue it
+      await this.jobRepository.updateStatus(job.id, {
+        status: JobStatus.FAILED,
+        error: `Failed to queue job: ${error instanceof Error ? error.message : String(error)}`,
+        completedAt: new Date(),
+      });
+      throw error;
+    }
+
+    return job;
   }
 
-  /**
-   * Get job by ID
-   */
-  async getJobById(jobId: string): Promise<JobEntity | null> {
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-    });
-    return job ? this.mapToEntity(job) : null;
-  }
-
-  /**
-   * Get jobs for an evaluation
-   */
-  async getJobsForEvaluation(evaluationId: string): Promise<JobEntity[]> {
-    const jobs = await prisma.job.findMany({
-      where: { evaluationId },
-      orderBy: { createdAt: 'desc' },
-    });
-    return jobs.map(job => this.mapToEntity(job));
-  }
 
   /**
    * Cancel a job
+   * Cancels both the pg-boss queue job and updates the database status
    */
   async cancelJob(jobId: string): Promise<JobEntity> {
-    const job = await prisma.job.update({
-      where: { id: jobId },
-      data: {
-        status: JobStatus.FAILED,
-        completedAt: new Date(),
-      },
+    // Cancel pg-boss job first
+    try {
+      await this.pgBossService.cancel(DOCUMENT_EVALUATION_JOB, jobId);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Failed to cancel pg-boss job ${jobId}: ${errorMessage}`);
+      // Continue to update database even if pg-boss cancellation fails
+    }
+
+    // Update database to mark as cancelled
+    return this.jobRepository.updateStatus(jobId, {
+      status: JobStatus.CANCELLED,
+      completedAt: new Date(),
+      cancellationReason: 'Cancelled by user',
+      cancelledAt: new Date(),
     });
-    return this.mapToEntity(job);
   }
 
-  /**
-   * Mark a job as failed with error details
-   */
-  async markAsFailed(jobId: string, error: Error): Promise<JobEntity> {
-    const job = await prisma.job.update({
-      where: { id: jobId },
-      data: {
-        status: JobStatus.FAILED,
-        completedAt: new Date(),
-        error: error.message,
-      },
-    });
-    return this.mapToEntity(job);
-  }
 }

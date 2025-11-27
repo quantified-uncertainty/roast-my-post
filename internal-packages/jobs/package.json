@@ -23,13 +23,15 @@
     "test:integration": "vitest run",
     "test:ci": "vitest run",
     "process-job": "tsx src/cli/process-job.ts",
-    "process-adaptive": "tsx src/cli/process-adaptive.ts"
+    "process-adaptive": "tsx src/cli/process-adaptive.ts",
+    "process-pgboss": "tsx src/cli/process-pgboss-worker.ts"
   },
   "dependencies": {
     "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
     "@roast/domain": "workspace:*",
-    "dotenv": "^17.2.0"
+    "dotenv": "^17.2.0",
+    "pg-boss": "^12.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

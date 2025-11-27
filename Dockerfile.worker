@@ -1,5 +1,5 @@
 # Worker Dockerfile - Simple approach that builds everything in place
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ RUN pnpm --filter @roast/db run build && \
     pnpm --filter @roast/jobs run build
 
 # ================================ Runner ================================
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
@@ -41,8 +41,8 @@ COPY --from=builder --chown=nextjs:nodejs /app .
 # Switch to non-root user
 USER nextjs
 
-# Set working directory to the web app
-WORKDIR /app/apps/web
+# Set working directory for workers
+WORKDIR /app/internal-packages/jobs
 
-# Run the adaptive job processor
-CMD ["pnpm", "run", "process-jobs-adaptive"]
+# Run pg-boss worker
+CMD ["pnpm", "run", "process-pgboss"]

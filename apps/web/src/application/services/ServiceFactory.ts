@@ -6,7 +6,8 @@
  */
 
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
-import { DocumentRepository, EvaluationRepository } from '@roast/db';
+import { DocumentRepository, EvaluationRepository, JobRepository } from '@roast/db';
+import { PgBossService } from '@roast/jobs';
 import { createLoggerAdapter } from '@/infrastructure/logging/loggerAdapter';
 import { AgentService } from './AgentService';
 import { JobService } from './JobService';
@@ -27,20 +28,24 @@ export class ServiceFactory {
   private documentRepository: DocumentRepository;
   private evaluationRepository: EvaluationRepository;
   private agentRepository: AgentRepository;
+  private jobRepository: JobRepository;
   
   // Validator
   private documentValidator: DocumentValidator;
   
   // Logger adapter
   private logger: any;
+  private pgBossService: PgBossService;
   
   private constructor() {
     // Initialize shared dependencies once
     this.documentRepository = new DocumentRepository();
     this.evaluationRepository = new EvaluationRepository();
     this.agentRepository = new AgentRepository();
+    this.jobRepository = new JobRepository();
     this.documentValidator = new DocumentValidator();
     this.logger = createLoggerAdapter();
+    this.pgBossService = new PgBossService(this.logger);
   }
   
   static getInstance(): ServiceFactory {
@@ -101,9 +106,18 @@ export class ServiceFactory {
       this.logger
     );
     
-    // JobService doesn't need special transaction handling as it uses prisma directly
-    const txJobService = new JobService();
+    // JobService uses repository, so we create a new instance with the tx repository
+    const txJobService = new JobService(
+      new JobRepository(prismaTransaction),
+      this.logger,
+      this.pgBossService
+    );
     
+    // Initialize the service (fire and forget)
+    txJobService.initialize().catch(err => {
+      this.logger.error('Failed to initialize txJobService', err);
+    });
+
     return {
       documentService: txDocumentService,
       evaluationService: txEvaluationService,
@@ -129,7 +143,14 @@ export class ServiceFactory {
    */
   getJobService(): JobService {
     if (!this.jobService) {
-      this.jobService = new JobService();
+      this.jobService = new JobService(
+        this.jobRepository,
+        this.logger,
+        this.pgBossService
+      );
+      this.jobService.initialize().catch(err => {
+        this.logger.error('Failed to initialize JobService', err);
+      });
     }
     return this.jobService;
   }

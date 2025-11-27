@@ -6,9 +6,8 @@
  * Now uses @roast/ai workflows directly instead of dependency injection.
  */
 
-import type { JobWithRelations } from '@roast/db';
-import { prisma } from '@roast/db';
-import type { JobService } from './JobService';
+import type { JobWithRelations, JobRepository } from '@roast/db';
+import { prisma, JobStatus } from '@roast/db';
 import type { Logger, JobProcessingResult, Document } from '../types';
 import { 
   analyzeDocument,
@@ -22,13 +21,57 @@ import {
 export interface JobOrchestratorInterface {
   processJob(job: JobWithRelations): Promise<JobProcessingResult>;
   run(): Promise<boolean>;
+  markAsRunning(jobId: string): Promise<void>;
+  markAsFailed(jobId: string, error: unknown): Promise<any>;
+  markAsCompleted(jobId: string, data: { llmThinking: string | null, durationInSeconds: number, logs: string }): Promise<any>;
 }
 
 export class JobOrchestrator implements JobOrchestratorInterface {
   constructor(
-    private jobService: JobService,
+    private jobRepository: JobRepository,
     private logger: Logger
   ) {}
+
+  /**
+   * Mark a job as running
+   */
+  async markAsRunning(jobId: string): Promise<void> {
+    await this.jobRepository.updateStatus(jobId, {
+      status: JobStatus.RUNNING,
+      startedAt: new Date(),
+    });
+  }
+
+  /**
+   * Mark a job as failed
+   */
+  async markAsFailed(jobId: string, error: unknown) {
+    return this.jobRepository.updateStatus(jobId, {
+      status: JobStatus.FAILED,
+      error: error instanceof Error ? error.message : String(error),
+      completedAt: new Date(),
+    });
+  }
+
+  /**
+   * Mark a job as completed
+   */
+  async markAsCompleted(
+    jobId: string,
+    data: {
+      llmThinking: string | null;
+      durationInSeconds: number;
+      logs: string;
+    }
+  ) {
+    return this.jobRepository.updateStatus(jobId, {
+      status: JobStatus.COMPLETED,
+      completedAt: new Date(),
+      llmThinking: data.llmThinking,
+      durationInSeconds: data.durationInSeconds,
+      logs: data.logs,
+    });
+  }
 
   /**
    * Process a complete job from start to finish
@@ -88,7 +131,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
       this.logger.info(`[Job ${job.id}] Marking job as completed...`);
       // Mark job as completed
-      const completedJob = await this.jobService.markAsCompleted(job.id, {
+      const completedJob = await this.markAsCompleted(job.id, {
         llmThinking: analysisResult.thinking,
         durationInSeconds,
         logs: logContent,
@@ -103,8 +146,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
     } catch (error) {
       this.logger.error(`[Job ${job.id}] processing failed:`, error);
-      
-      const failedJob = await this.jobService.markAsFailed(job.id, error);
+
+      const failedJob = await this.markAsFailed(job.id, error);
       
       return {
         success: false,
@@ -122,11 +165,12 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
   /**
    * Find and process the next available job
+   * Note: Not used with pg-boss. Workers use boss.work() instead.
    */
   async run(): Promise<boolean> {
     try {
       this.logger.info('🔍 Looking for pending jobs...');
-      const job = await this.jobService.claimNextPendingJob();
+      const job = await this.jobRepository.claimNextPendingJob();
 
       if (!job) {
         this.logger.info('✅ No pending jobs found.');
