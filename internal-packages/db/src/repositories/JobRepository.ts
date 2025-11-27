@@ -167,17 +167,6 @@ export class JobRepository implements JobRepositoryInterface {
     return job ? this.toJobWithRelations(job) : null;
   }
 
-  /**
-   * Find jobs for evaluation
-   */
-  async findByEvaluationId(evaluationId: string): Promise<JobEntity[]> {
-    const jobs = await this.prisma.job.findMany({
-      where: { evaluationId },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return jobs.map(job => this.toDomainEntity(job));
-  }
 
   /**
    * Find the next pending job that's safe to process
