@@ -21,7 +21,6 @@ import { JobService } from './JobService';
 
 export interface JobOrchestratorInterface {
   processJob(job: JobWithRelations): Promise<JobProcessingResult>;
-  run(): Promise<boolean>;
 }
 
 export class JobOrchestrator implements JobOrchestratorInterface {
@@ -121,35 +120,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     }
   }
 
-  /**
-   * Find and process the next available job
-   * Note: Not used with pg-boss. Workers use boss.work() instead.
-   */
-  async run(): Promise<boolean> {
-    try {
-      this.logger.info('🔍 Looking for pending jobs...');
-      const job = await this.jobRepository.claimNextPendingJob();
-
-      if (!job) {
-        this.logger.info('✅ No pending jobs found.');
-        return false;
-      }
-
-      const result = await this.processJob(job);
-      
-      if (result.success) {
-        this.logger.info(`[Job ${job.id}] ✅ Completed successfully`);
-      } else {
-        this.logger.error(`[Job ${job.id}] ❌ Failed:`, result.error);
-        throw result.error;
-      }
-
-      return true;
-    } catch (error) {
-      // Re-throw for caller to handle
-      throw error;
-    }
-  }
 
   /**
    * Setup Helicone session tracking for the job
