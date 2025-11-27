@@ -5,6 +5,7 @@
 // Core services
 export { JobOrchestrator, type JobOrchestratorInterface } from './core/JobOrchestrator';
 export { PgBossService } from './core/PgBossService';
+export { JobService } from './core/JobService';
 
 // Job types
 export {

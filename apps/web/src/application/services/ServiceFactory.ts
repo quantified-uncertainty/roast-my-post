@@ -7,10 +7,9 @@
 
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
 import { DocumentRepository, EvaluationRepository, JobRepository } from '@roast/db';
-import { PgBossService } from '@roast/jobs';
+import { PgBossService, JobService } from '@roast/jobs';
 import { createLoggerAdapter } from '@/infrastructure/logging/loggerAdapter';
 import { AgentService } from './AgentService';
-import { JobService } from './JobService';
 import { AgentRepository } from '@/infrastructure/database/repositories/AgentRepository';
 
 /**
