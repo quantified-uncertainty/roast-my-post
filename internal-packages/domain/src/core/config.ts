@@ -61,6 +61,7 @@ export interface AppConfig {
       readonly retryDelay: number;
       readonly retryBackoff: boolean;
       readonly cronWorkerIntervalSeconds: number;
+      readonly expireInSeconds: number;
     };
   };
 }
@@ -216,6 +217,11 @@ class ConfigFactory {
               getEnvVar('PGBOSS_CRON_WORKER_INTERVAL_SECONDS'),
               30,
               'PGBOSS_CRON_WORKER_INTERVAL_SECONDS'
+            ),
+            expireInSeconds: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_EXPIRE_IN_SECONDS'),
+              3600, // 1 hour default
+              'PGBOSS_EXPIRE_IN_SECONDS'
             ),
           },
         },

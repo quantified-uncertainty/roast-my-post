@@ -84,16 +84,13 @@ export class PgBossService {
   }
   /**
    * Send a job to the queue
-   * Note: Retry config is set at queue level in createQueues()
+   * Note: Retry and expiration config is set at queue level in createQueues()
    */
   async send(queue: string, data: any, options: any = {}): Promise<string | null> {
     const boss = this.getBoss();
 
     try {
-      const jobId = await boss.send(queue, data, {
-        expireInSeconds: 60 * 60, // 1 hour expiration
-        ...options,
-      });
+      const jobId = await boss.send(queue, data, options);
 
       this.logger.info(`Sent job to queue ${queue} with ID ${jobId}`);
       return jobId;
@@ -147,6 +144,7 @@ export class PgBossService {
       retryLimit: config.jobs.pgBoss.retryLimit,
       retryDelay: config.jobs.pgBoss.retryDelay,
       retryBackoff: config.jobs.pgBoss.retryBackoff,
+      expireInSeconds: config.jobs.pgBoss.expireInSeconds,
     });
 
     // Helicone cost update - exclusive policy to prevent overlapping runs
