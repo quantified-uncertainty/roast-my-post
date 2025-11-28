@@ -42,8 +42,8 @@ export class PgBossService {
 
       await this.boss.start();
 
-      // Create queues with special policies
-      await this.createScheduledJobQueues();
+      // Create queues with policies
+      await this.createQueues();
 
       this.logger.info('pg-boss initialized successfully');
     } catch (error) {
@@ -84,15 +84,13 @@ export class PgBossService {
   }
   /**
    * Send a job to the queue
+   * Note: Retry config is set at queue level in createQueues()
    */
   async send(queue: string, data: any, options: any = {}): Promise<string | null> {
     const boss = this.getBoss();
 
     try {
       const jobId = await boss.send(queue, data, {
-        retryLimit: config.jobs.pgBoss.retryLimit,
-        retryDelay: config.jobs.pgBoss.retryDelay,
-        retryBackoff: config.jobs.pgBoss.retryBackoff,
         expireInSeconds: 60 * 60, // 1 hour expiration
         ...options,
       });
@@ -137,11 +135,19 @@ export class PgBossService {
   }
 
   /**
-   * Create queues for scheduled jobs with appropriate policies
+   * Create queues with appropriate policies
    * Called during initialization to set up queue behavior
    */
-  private async createScheduledJobQueues(): Promise<void> {
+  private async createQueues(): Promise<void> {
     const boss = this.getBoss();
+
+    // Document evaluation queue - standard policy with retry config from config
+    await boss.createQueue('document-evaluation', {
+      policy: 'standard',
+      retryLimit: config.jobs.pgBoss.retryLimit,
+      retryDelay: config.jobs.pgBoss.retryDelay,
+      retryBackoff: config.jobs.pgBoss.retryBackoff,
+    });
 
     // Helicone cost update - exclusive policy to prevent overlapping runs
     // If a scheduled job is already running, skip the next trigger
@@ -149,6 +155,6 @@ export class PgBossService {
       policy: 'exclusive',
     });
 
-    this.logger.info('Created scheduled job queues with policies');
+    this.logger.info('Created job queues with policies');
   }
 }
