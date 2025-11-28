@@ -163,14 +163,7 @@ class PgBossWorker {
       },
       async (jobs: any[]) => {
         // Even for scheduled tasks, handler receives an array
-        logger.info('[Scheduled] Running Helicone cost update...');
-        try {
           await updateJobCostsFromHelicone();
-          logger.info('[Scheduled] ✅ Helicone cost update completed');
-        } catch (error) {
-          logger.error('[Scheduled] ❌ Helicone cost update failed:', error);
-          throw error;
-        }
       }
     );
 
