@@ -32,6 +32,12 @@ export class PgBossService {
 
       this.boss = new PgBoss({
         connectionString: config.database.url,
+        // Configure cron worker interval for scheduled tasks
+        // cronWorkerIntervalSeconds: how often cron jobs are actually executed
+        // cronMonitorIntervalSeconds: how often to check if cron jobs are due (default: 30s)
+        // Note: If changing cronWorkerIntervalSeconds to something other than 30s,
+        // also set cronMonitorIntervalSeconds to match for proper scheduling
+        cronWorkerIntervalSeconds: config.jobs.pgBoss.cronWorkerIntervalSeconds,
       });
 
       await this.boss.start();

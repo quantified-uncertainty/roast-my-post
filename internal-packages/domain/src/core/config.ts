@@ -60,6 +60,7 @@ export interface AppConfig {
       readonly retryLimit: number;
       readonly retryDelay: number;
       readonly retryBackoff: boolean;
+      readonly cronWorkerIntervalSeconds: number;
     };
   };
 }
@@ -210,6 +211,11 @@ class ConfigFactory {
             retryBackoff: ConfigValidator.validateBoolean(
               getEnvVar('PGBOSS_RETRY_BACKOFF'),
               true
+            ),
+            cronWorkerIntervalSeconds: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_CRON_WORKER_INTERVAL_SECONDS'),
+              30,
+              'PGBOSS_CRON_WORKER_INTERVAL_SECONDS'
             ),
           },
         },

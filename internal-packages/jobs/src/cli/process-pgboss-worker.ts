@@ -152,6 +152,8 @@ class PgBossWorker {
     );
 
     // Schedule Helicone cost updates every 30 seconds
+    // Using 6-placeholder format since we configured cronWorkerIntervalSeconds=30
+    // Format: second minute hour day month dayOfWeek
     const HELICONE_POLLER_SCHEDULE = '*/30 * * * * *'; // Every 30 seconds
 
     await this.pgBossService.work(
