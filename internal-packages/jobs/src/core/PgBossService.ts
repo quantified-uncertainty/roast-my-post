@@ -42,6 +42,9 @@ export class PgBossService {
 
       await this.boss.start();
 
+      // Create queues with special policies
+      await this.createScheduledJobQueues();
+
       this.logger.info('pg-boss initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize pg-boss:', error);
@@ -131,5 +134,21 @@ export class PgBossService {
   async schedule(name: string, cron: string): Promise<void> {
     const boss = this.getBoss();
     await boss.schedule(name, cron);
+  }
+
+  /**
+   * Create queues for scheduled jobs with appropriate policies
+   * Called during initialization to set up queue behavior
+   */
+  private async createScheduledJobQueues(): Promise<void> {
+    const boss = this.getBoss();
+
+    // Helicone cost update - exclusive policy to prevent overlapping runs
+    // If a scheduled job is already running, skip the next trigger
+    await boss.createQueue('helicone-cost-update', {
+      policy: 'exclusive',
+    });
+
+    this.logger.info('Created scheduled job queues with policies');
   }
 }
