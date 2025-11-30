@@ -124,6 +124,16 @@ export class PgBossService {
   }
 
   /**
+   * Explicitly fail a job without allowing retries
+   * Use this for non-retryable errors to prevent pg-boss from retrying
+   */
+  async fail(queue: string, jobId: string, error?: unknown): Promise<void> {
+    const boss = this.getBoss();
+    const errorData = error instanceof Error ? { message: error.message } : { message: String(error) };
+    await boss.fail(queue, jobId, errorData);
+  }
+
+  /**
    * Schedule a job
    */
   async schedule(name: string, cron: string): Promise<void> {
@@ -150,6 +160,12 @@ export class PgBossService {
     // Helicone cost update - exclusive policy to prevent overlapping runs
     // If a scheduled job is already running, skip the next trigger
     await boss.createQueue('helicone-cost-update', {
+      policy: 'exclusive',
+    });
+
+    // Job reconciliation - exclusive policy to prevent overlapping runs
+    // Cleans up stale jobs that may have been abandoned due to worker crashes
+    await boss.createQueue('job-reconciliation', {
       policy: 'exclusive',
     });
 

@@ -89,6 +89,7 @@ export interface UpdateJobStatusData {
   logs?: string;
   cancellationReason?: string;
   cancelledAt?: Date;
+  attempts?: number;
 }
 
 export interface JobRepositoryInterface {
@@ -186,6 +187,7 @@ export class JobRepository implements JobRepositoryInterface {
         ...(data.logs !== undefined && { logs: data.logs }),
         ...(data.cancellationReason !== undefined && { cancellationReason: data.cancellationReason }),
         ...(data.cancelledAt !== undefined && { cancelledAt: data.cancelledAt }),
+        ...(data.attempts !== undefined && { attempts: data.attempts }),
       },
     });
 

@@ -22,6 +22,15 @@ export {
   formatTimeout,
 } from './config/agentTimeouts';
 
+// Error utilities
+export {
+  isRetryableError,
+  sanitizeErrorMessage,
+} from './errors/retryableErrors';
+
+// Scheduled tasks
+export { reconcileStaleJobs } from './scheduled-tasks/job-reconciliation';
+
 // Types
 export type {
   Document,

@@ -5,7 +5,7 @@
  *
  * Registers workers for document evaluation jobs using pg-boss.
  * Reuses existing JobOrchestrator for job processing logic.
- * Handles scheduled tasks like Helicone cost updates.
+ * Handles scheduled tasks like Helicone cost updates and job reconciliation.
  */
 
 import { findWorkspaceRoot, loadWebAppEnvironment } from '../utils/workspace';
@@ -21,9 +21,14 @@ import { JobService } from '../core/JobService';
 import { PgBossService } from '../core/PgBossService';
 import { initializeAI } from '@roast/ai';
 import { logger } from '../utils/logger';
-import {
-  DOCUMENT_EVALUATION_JOB,
-} from '../types/jobTypes';
+import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
+import { isRetryableError } from '../errors/retryableErrors';
+import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
+import { reconcileStaleJobs } from '../scheduled-tasks/job-reconciliation';
+
+// Schedule constants
+const HELICONE_POLLER_SCHEDULE = '*/30 * * * * *'; // Every 30 seconds
+const JOB_RECONCILIATION_SCHEDULE = '0 * * * * *'; // Every minute
 
 class PgBossWorker {
   private pgBossService: PgBossService;
@@ -42,41 +47,12 @@ class PgBossWorker {
   public async start() {
     logger.info('🚀 Starting pg-boss worker...');
 
-    // Initialize AI package
-    logger.info('🤖 Initializing AI package...');
-    initializeAI({
-      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-      openaiApiKey: process.env.OPENAI_API_KEY,
-      heliconeApiKey: process.env.HELICONE_API_KEY,
-    });
-
-    // Initialize pg-boss
-    logger.info('📦 Initializing pg-boss...');
-    await this.jobService.initialize();
-
-    // Register document evaluation worker
-    logger.info(
-      `👷 Registering workers for ${DOCUMENT_EVALUATION_JOB} (batch size: ${config.jobs.pgBoss.teamSize})...`
-    );
-
-    await this.pgBossService.work(
-      DOCUMENT_EVALUATION_JOB,
-      {
-        batchSize: config.jobs.pgBoss.teamSize, // Process multiple jobs in parallel
-      },
-      this.handleBatch
-    );
-
-    // Register scheduled tasks
+    this.initializeAI();
+    await this.initializePgBoss();
+    await this.registerDocumentEvaluationWorker();
     await this.registerScheduledTasks();
 
-    logger.info('✅ pg-boss worker started successfully');
-    logger.info(`📊 Configuration:`);
-    logger.info(`   - Team size: ${config.jobs.pgBoss.teamSize}`);
-    logger.info(`   - Retry limit: ${config.jobs.pgBoss.retryLimit}`);
-    logger.info(`   - Retry delay: ${config.jobs.pgBoss.retryDelay}s`);
-    logger.info(`   - Retry backoff: ${config.jobs.pgBoss.retryBackoff}`);
-    logger.info('🎧 Listening for jobs...');
+    this.logStartupComplete();
   }
 
   public async shutdown() {
@@ -98,33 +74,80 @@ class PgBossWorker {
     }
   }
 
+  private initializeAI() {
+    logger.info('🤖 Initializing AI package...');
+    initializeAI({
+      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+      openaiApiKey: process.env.OPENAI_API_KEY,
+      heliconeApiKey: process.env.HELICONE_API_KEY,
+    });
+  }
+
+  private async initializePgBoss() {
+    logger.info('📦 Initializing pg-boss...');
+    await this.jobService.initialize();
+  }
+
+  private async registerDocumentEvaluationWorker() {
+    logger.info(
+      `👷 Registering worker for ${DOCUMENT_EVALUATION_JOB} (batch size: ${config.jobs.pgBoss.teamSize})...`
+    );
+
+    await this.pgBossService.work(
+      DOCUMENT_EVALUATION_JOB,
+      { batchSize: config.jobs.pgBoss.teamSize },
+      this.handleBatch
+    );
+  }
+
+  private async registerScheduledTasks() {
+    logger.info('📅 Registering scheduled tasks...');
+
+    // Helicone cost updates
+    await this.pgBossService.work('helicone-cost-update', { batchSize: 1 }, async () => {
+      await updateJobCostsFromHelicone();
+    });
+    await this.pgBossService.schedule('helicone-cost-update', HELICONE_POLLER_SCHEDULE);
+    logger.info(`✅ Scheduled: helicone-cost-update (${HELICONE_POLLER_SCHEDULE})`);
+
+    // Job reconciliation
+    await this.pgBossService.work('job-reconciliation', { batchSize: 1 }, async () => {
+      await reconcileStaleJobs(this.jobRepository, this.pgBossService, logger);
+    });
+    await this.pgBossService.schedule('job-reconciliation', JOB_RECONCILIATION_SCHEDULE);
+    logger.info(`✅ Scheduled: job-reconciliation (${JOB_RECONCILIATION_SCHEDULE})`);
+  }
+
+  private logStartupComplete() {
+    logger.info('✅ pg-boss worker started successfully');
+    logger.info(`📊 Configuration:`);
+    logger.info(`   - Team size: ${config.jobs.pgBoss.teamSize}`);
+    logger.info(`   - Retry limit: ${config.jobs.pgBoss.retryLimit}`);
+    logger.info(`   - Retry delay: ${config.jobs.pgBoss.retryDelay}s`);
+    logger.info(`   - Retry backoff: ${config.jobs.pgBoss.retryBackoff}`);
+    logger.info('🎧 Listening for jobs...');
+  }
+
   private handleBatch = async (pgBossJobs: any[]) => {
-    // pg-boss passes an array of jobs
     logger.info(`[Batch] Processing ${pgBossJobs.length} jobs`);
-
-    // Process all jobs in the batch in parallel
     const jobPromises = pgBossJobs.map((job) => this.processJob(job));
-
     await Promise.allSettled(jobPromises);
   };
 
   private async processJob(pgBossJob: any) {
     const { jobId } = pgBossJob.data;
+    const retryCount = pgBossJob.retrycount || 0;
+    const retryLimit = config.jobs.pgBoss.retryLimit;
 
-    logger.info(`[Job ${jobId}] Worker picked up job`);
+    logger.info(`[Job ${jobId}] Processing (attempt ${retryCount + 1}/${retryLimit + 1})`);
 
     try {
-      // Get full job record with relations
       const job = await this.jobRepository.findByIdWithRelations(jobId);
-
       if (!job) {
         throw new Error(`Job ${jobId} not found in database`);
       }
 
-      // Mark as running
-      await this.jobService.markAsRunning(jobId);
-
-      // Process the job using existing orchestrator
+      await this.jobService.markAsRunning(jobId, retryCount + 1);
       const result = await this.jobOrchestrator.processJob(job);
 
       if (!result.success) {
@@ -132,57 +155,40 @@ class PgBossWorker {
       }
 
       logger.info(`[Job ${jobId}] ✅ Completed successfully`);
-
-      // pg-boss will mark as completed automatically
     } catch (error) {
-      logger.error(`[Job ${jobId}] ❌ Failed:`, error);
-      // Mark job as failed in our database
-      await this.jobService.markAsFailed(jobId, error);
-      // Re-throw so pg-boss can handle retry logic
-      throw error;
+      await this.handleJobError(jobId, pgBossJob.id, error, retryCount, retryLimit);
     }
   }
 
-  private async registerScheduledTasks() {
-    logger.info('📅 Registering scheduled tasks...');
+  private async handleJobError(
+    jobId: string,
+    pgBossJobId: string,
+    error: unknown,
+    retryCount: number,
+    retryLimit: number
+  ) {
+    logger.error(`[Job ${jobId}] ❌ Failed:`, error);
 
-    // Import Helicone poller
-    const { updateJobCostsFromHelicone } = await import(
-      '../scheduled-tasks/helicone-poller'
-    );
+    const isTransient = isRetryableError(error);
+    const hasRetriesLeft = retryCount < retryLimit;
 
-    // Schedule Helicone cost updates every 30 seconds
-    // Using 6-placeholder format since we configured cronWorkerIntervalSeconds=30
-    // Format: second minute hour day month dayOfWeek
-    const HELICONE_POLLER_SCHEDULE = '*/30 * * * * *'; // Every 30 seconds
+    if (isTransient && hasRetriesLeft) {
+      logger.info(`[Job ${jobId}] Transient error, will retry (${retryCount + 1}/${retryLimit + 1})`);
+      throw error; // Let pg-boss handle retry
+    }
 
-    await this.pgBossService.work(
-      'helicone-cost-update',
-      {
-        batchSize: 1, // Process one scheduled task at a time
-      },
-      async (jobs: any[]) => {
-        // Even for scheduled tasks, handler receives an array
-          await updateJobCostsFromHelicone();
-      }
-    );
+    // Final failure
+    const reason = !isTransient ? 'non-retryable error' : `max retries (${retryLimit}) exhausted`;
+    logger.info(`[Job ${jobId}] Marking as FAILED: ${reason}`);
 
-    // Schedule the job to run every 30 seconds
-    await this.pgBossService.schedule(
-      'helicone-cost-update',
-      HELICONE_POLLER_SCHEDULE
-    );
-
-    logger.info(
-      `✅ Scheduled task registered: helicone-cost-update (${HELICONE_POLLER_SCHEDULE})`
-    );
+    await this.jobService.markAsFailed(jobId, error);
+    await this.pgBossService.fail(DOCUMENT_EVALUATION_JOB, pgBossJobId, error);
   }
 }
 
-// Run the worker
+// Bootstrap
 const worker = new PgBossWorker();
 
-// Register shutdown handlers
 process.on('SIGTERM', () => worker.shutdown());
 process.on('SIGINT', () => worker.shutdown());
 

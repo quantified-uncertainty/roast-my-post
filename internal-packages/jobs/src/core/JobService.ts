@@ -90,12 +90,15 @@ export class JobService {
   }
 
   /**
-   * Mark a job as running
+   * Mark a job as running and track the attempt number
+   * @param jobId - The job ID
+   * @param attempts - The current attempt number (1-indexed)
    */
-  async markAsRunning(jobId: string): Promise<void> {
+  async markAsRunning(jobId: string, attempts: number = 1): Promise<void> {
     await this.jobRepository.updateStatus(jobId, {
       status: JobStatus.RUNNING,
       startedAt: new Date(),
+      attempts,
     });
   }
 
