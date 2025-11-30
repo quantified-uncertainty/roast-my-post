@@ -74,9 +74,14 @@ Both use **exclusive queue policy** to prevent overlapping runs.
 
 Handles worker crashes and orphaned jobs:
 
-1. Find jobs with `status=RUNNING` and `updatedAt > 30 minutes ago`
-2. Check pg-boss state for each job
-3. If no active pg-boss job exists → mark as FAILED
+| Status | Stale After | Scenario |
+|--------|-------------|----------|
+| RUNNING | 30 min | Worker crashed mid-processing |
+| PENDING | 10 min | Worker crashed before `markAsRunning()` or pg-boss job failed |
+
+For each stale job:
+1. Check pg-boss state
+2. If no active pg-boss job → mark as FAILED
 
 ## Queue Configuration
 
