@@ -15,6 +15,7 @@ import type { Logger } from '../types';
  */
 export class PgBossService {
   private boss: PgBoss | null = null;
+  private initPromise: Promise<void> | null = null;
 
   constructor(private logger: Logger) {}
 
@@ -23,35 +24,45 @@ export class PgBossService {
    */
   async initialize(): Promise<void> {
     if (this.boss) {
-      this.logger.warn('pg-boss already initialized');
       return;
     }
 
-    try {
-      this.logger.info('Initializing pg-boss...');
-
-      this.boss = new PgBoss({
-        connectionString: config.database.url,
-        // Configure cron worker interval for scheduled tasks
-        // cronWorkerIntervalSeconds: how often cron jobs are actually executed
-        // cronMonitorIntervalSeconds: how often to check if cron jobs are due (default: 30s)
-        // Note: If changing cronWorkerIntervalSeconds to something other than 30s,
-        // also set cronMonitorIntervalSeconds to match for proper scheduling
-        cronWorkerIntervalSeconds: config.jobs.pgBoss.cronWorkerIntervalSeconds,
-      });
-
-      await this.boss.start();
-
-      // Create queues with policies
-      await this.createQueues();
-
-      this.logger.info('pg-boss initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize pg-boss:', error);
-      throw new Error(
-        `pg-boss initialization failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+    if (this.initPromise) {
+      return this.initPromise;
     }
+
+    this.initPromise = (async () => {
+      try {
+        this.logger.info('Initializing pg-boss...');
+
+        const boss = new PgBoss({
+          connectionString: config.database.url,
+          // Configure cron worker interval for scheduled tasks
+          // cronWorkerIntervalSeconds: how often cron jobs are actually executed
+          // cronMonitorIntervalSeconds: how often to check if cron jobs are due (default: 30s)
+          // Note: If changing cronWorkerIntervalSeconds to something other than 30s,
+          // also set cronMonitorIntervalSeconds to match for proper scheduling
+          cronWorkerIntervalSeconds: config.jobs.pgBoss.cronWorkerIntervalSeconds,
+        });
+
+        await boss.start();
+
+        this.boss = boss;
+
+        // Create queues with policies
+        await this.createQueues();
+
+        this.logger.info('pg-boss initialized successfully');
+      } catch (error) {
+        this.logger.error('Failed to initialize pg-boss:', error);
+        this.initPromise = null;
+        throw new Error(
+          `pg-boss initialization failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    })();
+
+    return this.initPromise;
   }
 
   /**

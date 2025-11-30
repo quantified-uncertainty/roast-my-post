@@ -111,11 +111,6 @@ export class ServiceFactory {
       this.logger,
       this.pgBossService
     );
-    
-    // Initialize the service (fire and forget)
-    txJobService.initialize().catch(err => {
-      this.logger.error('Failed to initialize txJobService', err);
-    });
 
     return {
       documentService: txDocumentService,
@@ -147,9 +142,6 @@ export class ServiceFactory {
         this.logger,
         this.pgBossService
       );
-      this.jobService.initialize().catch(err => {
-        this.logger.error('Failed to initialize JobService', err);
-      });
     }
     return this.jobService;
   }

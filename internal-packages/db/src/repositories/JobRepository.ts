@@ -266,12 +266,17 @@ export class JobRepository implements JobRepositoryInterface {
       updatedAt: { lt: new Date(Date.now() - thresholdMs) },
     }));
 
-    return this.prisma.job.findMany({
+    const jobs = await this.prisma.job.findMany({
       where: {
         OR: orConditions,
       },
       select: { id: true, status: true, pgBossJobId: true, updatedAt: true },
     });
+
+    return jobs.map(job => ({
+      ...job,
+      status: job.status as JobStatus,
+    }));
   }
 
   /**

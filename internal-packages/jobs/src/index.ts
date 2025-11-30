@@ -29,7 +29,7 @@ export {
 } from './errors/retryableErrors';
 
 // Scheduled tasks
-export { reconcileStaleJobs } from './scheduled-tasks/job-reconciliation';
+export { JobReconciliationService } from './scheduled-tasks/job-reconciliation';
 
 // Types
 export type {

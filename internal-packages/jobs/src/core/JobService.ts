@@ -29,6 +29,14 @@ export class JobService {
    * Creates both Job table record and pg-boss queue entry
    */
   async createJob(evaluationId: string, agentEvalBatchId?: string): Promise<JobEntity> {
+    // Lazy-init prevents race conditions by ensuring the queue is connected
+    // before we try to use it. Safe to call repeatedly due to promise locking.
+    //
+    // Context: In Next.js/Serverless environments, there is no single "main"
+    // function to await global initialization. Use-case specific lazy loading
+    // is the safest way to ensure the connection is ready when needed.
+    await this.pgBossService.initialize();
+
     // Create Job table record first
     const job = await this.jobRepository.create({
       evaluationId,
@@ -68,6 +76,8 @@ export class JobService {
    * Cancels both the pg-boss queue job and updates the database status
    */
   async cancelJob(jobId: string): Promise<JobEntity> {
+    await this.pgBossService.initialize();
+
     // Get the job to find its pgBossJobId
     const job = await this.jobRepository.findById(jobId);
 
