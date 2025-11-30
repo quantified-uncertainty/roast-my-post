@@ -24,7 +24,7 @@ import { logger } from '../utils/logger';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import { isRetryableError } from '../errors/retryableErrors';
 import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
-import { reconcileStaleJobs } from '../scheduled-tasks/job-reconciliation';
+import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
 
 // Schedule constants
 const HELICONE_POLLER_SCHEDULE = '*/30 * * * * *'; // Every 30 seconds
@@ -35,6 +35,7 @@ class PgBossWorker {
   private jobRepository: JobRepository;
   private jobService: JobService;
   private jobOrchestrator: JobOrchestrator;
+  private jobReconciliationService: JobReconciliationService;
   private isShuttingDown = false;
 
   constructor() {
@@ -42,6 +43,7 @@ class PgBossWorker {
     this.jobRepository = new JobRepository();
     this.jobService = new JobService(this.jobRepository, logger, this.pgBossService);
     this.jobOrchestrator = new JobOrchestrator(this.jobRepository, logger, this.jobService);
+    this.jobReconciliationService = new JobReconciliationService(this.jobRepository, this.pgBossService, logger);
   }
 
   public async start() {
@@ -112,7 +114,7 @@ class PgBossWorker {
 
     // Job reconciliation
     await this.pgBossService.work('job-reconciliation', { batchSize: 1 }, async () => {
-      await reconcileStaleJobs(this.jobRepository, this.pgBossService, logger);
+      await this.jobReconciliationService.reconcileStaleJobs();
     });
     await this.pgBossService.schedule('job-reconciliation', JOB_RECONCILIATION_SCHEDULE);
     logger.info(`✅ Scheduled: job-reconciliation (${JOB_RECONCILIATION_SCHEDULE})`);

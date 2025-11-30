@@ -16,12 +16,14 @@ import { subHours } from 'date-fns';
 // Domain types defined in this package to avoid circular dependencies
 export interface JobEntity {
   id: string;
+  pgBossJobId: string | null;
   status: JobStatus;
   evaluationId: string;
   originalJobId: string | null;
   agentEvalBatchId: string | null;
   attempts: number;
   createdAt: Date;
+  updatedAt: Date;
   startedAt: Date | null;
   completedAt: Date | null;
   error: string | null;
@@ -92,6 +94,18 @@ export interface UpdateJobStatusData {
   attempts?: number;
 }
 
+export interface StaleJobCriteria {
+  status: JobStatus;
+  thresholdMs: number;
+}
+
+export interface StaleJobResult {
+  id: string;
+  status: JobStatus;
+  pgBossJobId: string | null;
+  updatedAt: Date;
+}
+
 export interface JobRepositoryInterface {
   findById(id: string): Promise<JobEntity | null>;
   findByIdWithRelations(id: string): Promise<JobWithRelations | null>;
@@ -99,6 +113,7 @@ export interface JobRepositoryInterface {
   updateStatus(id: string, data: UpdateJobStatusData): Promise<JobEntity>;
   findJobsForCostUpdate(limit: number, maxAgeHours?: number): Promise<JobEntity[]>;
   updateCost(id: string, cost: number): Promise<JobEntity>;
+  findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]>;
 }
 
 export class JobRepository implements JobRepositoryInterface {
@@ -171,6 +186,17 @@ export class JobRepository implements JobRepositoryInterface {
   }
 
   /**
+   * Set the pg-boss job ID for a job
+   */
+  async setPgBossJobId(id: string, pgBossJobId: string): Promise<JobEntity> {
+    const job = await this.prisma.job.update({
+      where: { id },
+      data: { pgBossJobId },
+    });
+    return this.toDomainEntity(job);
+  }
+
+  /**
    * Update job status and related fields
    */
   async updateStatus(id: string, data: UpdateJobStatusData): Promise<JobEntity> {
@@ -232,17 +258,36 @@ export class JobRepository implements JobRepositoryInterface {
   }
 
   /**
+   * Find stale jobs
+   */
+  async findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]> {
+    const orConditions = criteria.map(({ status, thresholdMs }) => ({
+      status,
+      updatedAt: { lt: new Date(Date.now() - thresholdMs) },
+    }));
+
+    return this.prisma.job.findMany({
+      where: {
+        OR: orConditions,
+      },
+      select: { id: true, status: true, pgBossJobId: true, updatedAt: true },
+    });
+  }
+
+  /**
    * Convert database record to domain entity
    */
   private toDomainEntity(job: any): JobEntity {
     return {
       id: job.id,
+      pgBossJobId: job.pgBossJobId || null,
       status: job.status as JobStatus, // Cast from Prisma enum to our enum
       evaluationId: job.evaluationId,
       originalJobId: job.originalJobId,
       agentEvalBatchId: job.agentEvalBatchId,
       attempts: job.attempts,
       createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
       startedAt: job.startedAt,
       completedAt: job.completedAt,
       error: job.error,

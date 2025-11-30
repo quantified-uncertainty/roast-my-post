@@ -42,12 +42,16 @@ export class JobService {
     };
 
     try {
-      await this.pgBossService.send(DOCUMENT_EVALUATION_JOB, jobData, {
-        id: job.id, // Use Job table ID as pg-boss job ID for easy cancellation
-      });
+      // Let pg-boss generate its own UUID
+      const pgBossJobId = await this.pgBossService.send(DOCUMENT_EVALUATION_JOB, jobData);
+
+      if (!pgBossJobId) {
+        throw new Error('pg-boss returned null job ID');
+      }
+
+      await this.jobRepository.setPgBossJobId(job.id, pgBossJobId);
     } catch (error) {
       this.logger.error(`Failed to create pg-boss job for Job ${job.id}:`, error);
-      // Mark our Job record as failed since we couldn't queue it
       await this.markAsFailed(
         job.id,
         `Failed to queue job: ${error instanceof Error ? error.message : String(error)}`
@@ -64,13 +68,18 @@ export class JobService {
    * Cancels both the pg-boss queue job and updates the database status
    */
   async cancelJob(jobId: string): Promise<JobEntity> {
-    // Cancel pg-boss job first
-    try {
-      await this.pgBossService.cancel(DOCUMENT_EVALUATION_JOB, jobId);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Failed to cancel pg-boss job ${jobId}: ${errorMessage}`);
-      // Continue to update database even if pg-boss cancellation fails
+    // Get the job to find its pgBossJobId
+    const job = await this.jobRepository.findById(jobId);
+
+    // Cancel pg-boss job if we have the pgBossJobId
+    if (job?.pgBossJobId) {
+      try {
+        await this.pgBossService.cancel(DOCUMENT_EVALUATION_JOB, job.pgBossJobId);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to cancel pg-boss job ${job.pgBossJobId}: ${errorMessage}`);
+        // Continue to update database even if pg-boss cancellation fails
+      }
     }
 
     // Update database to mark as cancelled

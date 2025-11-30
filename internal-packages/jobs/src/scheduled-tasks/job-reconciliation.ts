@@ -1,133 +1,102 @@
 /**
- * Job Reconciliation Scheduled Task
+ * Job Reconciliation Service
  *
- * Runs periodically to find and clean up stale jobs that may have been
- * abandoned due to worker crashes or other failures.
- *
- * Handles two cases:
- * 1. RUNNING jobs - Worker crashed mid-processing
- * 2. PENDING jobs - Worker crashed before marking as running, or pg-boss job failed to start
+ * Finds and cleans up stale jobs abandoned due to worker crashes.
  */
 
-import { prisma, JobStatus, JobRepository } from '@roast/db';
+import { JobStatus, JobRepository } from '@roast/db';
 import { PgBossService } from '../core/PgBossService';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import type { Logger } from '../types';
+import { PgBoss } from 'pg-boss';
 
-// RUNNING jobs are stale after 30 minutes
-const RUNNING_STALE_THRESHOLD_MS = 30 * 60 * 1000;
+const STALE_THRESHOLDS = {
+  RUNNING: 30 * 60 * 1000, // 30 minutes
+  PENDING: 10 * 60 * 1000, // 10 minutes
+} as const;
 
-// PENDING jobs are stale after 10 minutes (allows for queue backlog)
-const PENDING_STALE_THRESHOLD_MS = 10 * 60 * 1000;
+const ACTIVE_PG_BOSS_STATES = ['created', 'retry', 'active'] as const;
+type PgBossState = typeof ACTIVE_PG_BOSS_STATES[number];
 
-/**
- * Reconcile stale jobs by checking pg-boss state and marking abandoned jobs as failed
- */
-export async function reconcileStaleJobs(
-  jobRepository: JobRepository,
-  pgBossService: PgBossService,
-  logger: Logger
-): Promise<void> {
-  const boss = pgBossService.getBoss();
-
-  const runningCount = await reconcileStaleRunningJobs(jobRepository, boss, logger);
-  const pendingCount = await reconcileStalePendingJobs(jobRepository, boss, logger);
-
-  const total = runningCount + pendingCount;
-  if (total > 0) {
-    logger.info(`[Reconciliation] Reconciled ${total} stale job(s)`);
-  }
+interface StaleJob {
+  id: string;
+  pgBossJobId: string | null;
+  status: JobStatus;
+  updatedAt: Date;
 }
 
-async function reconcileStaleRunningJobs(
-  jobRepository: JobRepository,
-  boss: ReturnType<PgBossService['getBoss']>,
-  logger: Logger
-): Promise<number> {
-  const threshold = new Date(Date.now() - RUNNING_STALE_THRESHOLD_MS);
+export class JobReconciliationService {
+  constructor(
+    private readonly jobRepository: JobRepository,
+    private readonly pgBossService: PgBossService,
+    private readonly logger: Logger
+  ) {}
 
-  const staleJobs = await prisma.job.findMany({
-    where: {
-      status: JobStatus.RUNNING,
-      updatedAt: { lt: threshold },
-    },
-    select: { id: true, updatedAt: true },
-  });
+  async reconcileStaleJobs(): Promise<void> {
+    const boss = this.pgBossService.getBoss();
+  
+    let totalReconciled = 0;
 
-  if (staleJobs.length === 0) return 0;
+    const criteria = [
+      { status: JobStatus.RUNNING, thresholdMs: STALE_THRESHOLDS.RUNNING },
+      { status: JobStatus.PENDING, thresholdMs: STALE_THRESHOLDS.PENDING },
+    ];
 
-  logger.info(`[Reconciliation] Found ${staleJobs.length} stale RUNNING job(s)`);
+    const staleJobs = await this.jobRepository.findStaleJobs(criteria);
 
-  let count = 0;
-  for (const job of staleJobs) {
-    if (await reconcileJob(jobRepository, boss, job, 'RUNNING', logger)) {
-      count++;
+    if (staleJobs.length > 0) {
+      this.logger.info(`[Reconciliation] Found ${staleJobs.length} stale job(s)`);
+      
+      for (const job of staleJobs) {
+        try {
+          if (await this.shouldMarkFailed(boss, job)) {
+            await this.markJobFailed(job);
+            totalReconciled++;
+          }
+        } catch (error) {
+          this.logger.error(`[Reconciliation] Error processing job ${job.id}:`, error);
+        }
+      }
+    }
+
+    if (totalReconciled > 0) {
+      this.logger.info(`[Reconciliation] Reconciled ${totalReconciled} stale job(s)`);
     }
   }
-  return count;
-}
 
-async function reconcileStalePendingJobs(
-  jobRepository: JobRepository,
-  boss: ReturnType<PgBossService['getBoss']>,
-  logger: Logger
-): Promise<number> {
-  const threshold = new Date(Date.now() - PENDING_STALE_THRESHOLD_MS);
-
-  const staleJobs = await prisma.job.findMany({
-    where: {
-      status: JobStatus.PENDING,
-      updatedAt: { lt: threshold },
-    },
-    select: { id: true, updatedAt: true },
-  });
-
-  if (staleJobs.length === 0) return 0;
-
-  logger.info(`[Reconciliation] Found ${staleJobs.length} stale PENDING job(s)`);
-
-  let count = 0;
-  for (const job of staleJobs) {
-    if (await reconcileJob(jobRepository, boss, job, 'PENDING', logger)) {
-      count++;
+  private async shouldMarkFailed(boss: PgBoss, job: StaleJob): Promise<boolean> {
+    // If there is no pg-boss ID, the job is definitely lost/orphaned
+    if (!job.pgBossJobId) {
+      return true;
     }
+
+    const pgBossJob = await boss.getJobById(DOCUMENT_EVALUATION_JOB, job.pgBossJobId);
+
+    // If pg-boss doesn't know about this job (e.g. expired/archived), it's considered failed
+    if (!pgBossJob) {
+      return true;
+    }
+
+    // Check if the job is still in an active state in the queue
+    const isJobActive = ACTIVE_PG_BOSS_STATES.includes(pgBossJob.state as PgBossState);
+
+    // If it's not active in the queue but still marked as RUNNING/PENDING in our DB,
+    // we should mark it as failed.
+    return !isJobActive;
   }
-  return count;
-}
 
-async function reconcileJob(
-  jobRepository: JobRepository,
-  boss: ReturnType<PgBossService['getBoss']>,
-  job: { id: string; updatedAt: Date },
-  status: string,
-  logger: Logger
-): Promise<boolean> {
-  try {
-    const pgBossJob = await boss.getJobById(DOCUMENT_EVALUATION_JOB, job.id);
-
-    // Job states in pg-boss: created, retry, active, completed, cancelled, failed
-    const isActiveInPgBoss =
-      pgBossJob &&
-      (pgBossJob.state === 'created' || pgBossJob.state === 'retry' || pgBossJob.state === 'active');
-
-    if (isActiveInPgBoss) {
-      logger.debug(`[Reconciliation] Job ${job.id} still active in pg-boss (${pgBossJob.state})`);
-      return false;
-    }
-
+  private async markJobFailed(
+    job: StaleJob
+  ): Promise<void> {
     const staleMinutes = Math.round((Date.now() - job.updatedAt.getTime()) / 60000);
-    const pgBossState = pgBossJob?.state || 'not found';
+    const reason = job.pgBossJobId ? 'pg-boss job not active' : 'no pg-boss job ID';
 
-    await jobRepository.updateStatus(job.id, {
+    await this.jobRepository.updateStatus(job.id, {
       status: JobStatus.FAILED,
-      error: `Job stuck in ${status} for ${staleMinutes}min - pg-boss: ${pgBossState}`,
+      error: `Job stuck in ${job.status} for ${staleMinutes}min - ${reason}`,
       completedAt: new Date(),
     });
 
-    logger.info(`[Reconciliation] Marked ${status} job ${job.id} as FAILED (pg-boss: ${pgBossState})`);
-    return true;
-  } catch (error) {
-    logger.error(`[Reconciliation] Error processing job ${job.id}:`, error);
-    return false;
+    this.logger.info(`[Reconciliation] Marked ${job.status} job ${job.id} as FAILED (${reason})`);
   }
 }
