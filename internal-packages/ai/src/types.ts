@@ -30,10 +30,13 @@ export interface RichLLMInteraction {
 // Model configuration - use centralized config
 // Note: This is read at import time, so if env vars are set after import, it won't pick them up
 // For dynamic reading, use aiConfig.analysisModel directly
-export const ANALYSIS_MODEL = "claude-sonnet-4-5";
+export const ANALYSIS_MODEL = "claude-opus-4-5-20251101";
 
 // Model ID to display name mapping
 export const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  "claude-opus-4-5-20251101": "Claude Opus 4.5",
+  "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5",
+  "claude-haiku-4-5-20251001": "Claude Haiku 4.5",
   "claude-sonnet-4-5": "Claude Sonnet 4.5",
   "claude-sonnet-4": "Claude Sonnet 4",
   "claude-3-5-sonnet-20241022": "Claude 3.5 Sonnet",
