@@ -20,7 +20,7 @@ import { ROUTES } from "@/constants/routes";
 import {
   type AgentInput,
   AgentInputSchema,
-} from "@roast/ai/schemas";
+} from "@roast/ai";
 
 import { updateAgent } from "./actions";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { type ToolId, toolSchemas } from '@roast/ai/tools/generated-schemas';
+import { type ToolId, toolSchemas } from '@roast/ai';
 import { generateClaimEvaluatorPrompt } from '@roast/ai/tools/claim-evaluator/prompt';
 import { GenericToolTryPage } from "./GenericToolTryPage";
 import { MathCheckDisplay } from "./results/MathCheckDisplay";

@@ -21,7 +21,7 @@ import {
   ExclamationTriangleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { type AgentInput, AgentInputSchema as agentSchema } from "@roast/ai/schemas";
+import { type AgentInput, AgentInputSchema as agentSchema } from "@roast/ai";
 
 import { createAgent } from "./actions";
 

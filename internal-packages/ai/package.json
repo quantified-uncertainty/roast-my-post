@@ -45,10 +45,6 @@
       "types": "./src/tools/generated-readmes.ts",
       "default": "./src/tools/generated-readmes.ts"
     },
-    "./tools/generated-schemas": {
-      "types": "./src/tools/generated-schemas.ts",
-      "default": "./src/tools/generated-schemas.ts"
-    },
     "./tools/claim-evaluator/prompt": {
       "types": "./src/tools/claim-evaluator/prompt-client.ts",
       "default": "./src/tools/claim-evaluator/prompt-client.ts"
@@ -56,10 +52,6 @@
     "./jobContext": {
       "types": "./src/shared/jobContext.ts",
       "default": "./src/shared/jobContext.ts"
-    },
-    "./schemas": {
-      "types": "./src/schemas.ts",
-      "default": "./src/schemas.ts"
     }
   },
   "scripts": {
