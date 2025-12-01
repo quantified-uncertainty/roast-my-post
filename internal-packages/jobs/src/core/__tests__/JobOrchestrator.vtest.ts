@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobOrchestrator } from '../JobOrchestrator';
-import { analyzeDocument } from '@roast/ai';
+import { analyzeDocument } from '@roast/ai/server';
 import { prisma, JobStatus } from '@roast/db';
 import { fetchJobCostWithRetry } from '@roast/ai';
 import type { Logger } from '../../types';
 
 // Mock dependencies
-vi.mock('@roast/ai', () => ({
+vi.mock('@roast/ai/server', () => ({
   analyzeDocument: vi.fn(),
+}));
+
+vi.mock('@roast/ai', () => ({
   initializeAI: vi.fn(),
   HeliconeSessionManager: {
     forJob: vi.fn(() => ({

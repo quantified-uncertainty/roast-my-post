@@ -105,3 +105,10 @@ export {
   getPercentileNumber,
   countWords
 } from './shared/types';
+
+// Claim evaluator prompt generation (client-safe)
+export {
+  generateClaimEvaluatorPrompt,
+  DEFAULT_EXPLANATION_LENGTH,
+  DEFAULT_PROMPT_TEMPLATE
+} from './tools/claim-evaluator/prompt';

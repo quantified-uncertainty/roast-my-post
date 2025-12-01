@@ -9,14 +9,13 @@
 import type { JobWithRelations, JobRepository } from '@roast/db';
 import { prisma, JobStatus } from '@roast/db';
 import type { Logger, JobProcessingResult, Document } from '../types';
-import { 
-  analyzeDocument,
-  Agent,
-  PluginType} from '@roast/ai';
 import {
+  Agent,
+  PluginType,
   HeliconeSessionManager,
   setGlobalSessionManager,
 } from '@roast/ai';
+import { analyzeDocument } from '@roast/ai/server';
 import { JobService } from './JobService';
 
 export interface JobOrchestratorInterface {

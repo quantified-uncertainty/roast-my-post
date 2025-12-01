@@ -29,3 +29,10 @@ export {
   MathPlugin,
   SpellingPlugin
 } from './analysis-plugins';
+
+// Job context (uses AsyncLocalStorage)
+export {
+  getCurrentJobId,
+  runWithJobId,
+  runWithJobIdAsync
+} from './shared/jobContext';

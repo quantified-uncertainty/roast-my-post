@@ -23,7 +23,7 @@ import { JobOrchestrator } from '../core/JobOrchestrator';
 import { JobService } from '../core/JobService';
 import { PgBossService } from '../core/PgBossService';
 import { initializeAI } from '@roast/ai';
-import { runWithJobIdAsync } from '@roast/ai/jobContext';
+import { runWithJobIdAsync } from '@roast/ai/server';
 import { logger } from '../utils/logger';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import { isRetryableError } from '../errors/retryableErrors';
