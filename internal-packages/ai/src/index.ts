@@ -1,5 +1,5 @@
 // Core AI utilities for RoastMyPost
-export * from './claude/wrapper';
+// Note: claude/wrapper is server-only (uses logger with AsyncLocalStorage), exported from ./server
 // Test utilities are not exported from main index - import them directly if needed
 // export * from './claude/testUtils';
 // export * from './claude/mockHelpers';
@@ -22,8 +22,8 @@ export * from './types';
 // Configuration
 export { initializeAI, type AIConfig } from './config';
 
-// Document analysis workflows
-export * from './workflows';
+// Document analysis workflows - server-only (uses logger), exported from ./server
+// export * from './workflows';
 
 // Cost calculation utilities
 export { 
@@ -41,45 +41,28 @@ export * from './tools/configs';
 // Export generated schemas and READMEs for client-side use
 export { toolSchemas, getToolSchema, type ToolId } from './tools/generated-schemas';
 export { toolReadmes, getToolReadme } from './tools/generated-readmes';
-// Export tool utilities for UI previews
-export { generateClaimEvaluatorPrompt } from './tools/claim-evaluator';
+// generateClaimEvaluatorPrompt available via @roast/ai/tools/claim-evaluator/prompt
 export type { 
   Tool,
   ToolContext,
   ToolConfig
 } from './tools/base/Tool';
-export type { 
-  DocumentChunkerOutput,
-  TextLocationFinderOutput,
-  CheckMathOutput,
-  CheckMathWithMathJSOutput,
-  CheckSpellingGrammarOutput,
-  SpellingGrammarError,
-  ExtractFactualClaimsOutput,
-  ExtractedFactualClaim,
-  ExtractForecastingClaimsOutput,
-  ExtractedForecast,
-  ExtractMathExpressionsOutput,
-  ExtractedMathExpression,
-  DetectLanguageConventionOutput,
-  MathErrorDetails,
-  MathVerificationStatus
-} from './tools/index';
+// Tool output types - imported directly to avoid pulling in implementations
+export type { DocumentChunkerOutput } from './tools/document-chunker';
+export type { TextLocationFinderOutput } from './tools/smart-text-searcher';
+export type { CheckMathOutput } from './tools/math-validator-llm';
+export type { CheckMathAgenticOutput as CheckMathWithMathJSOutput } from './tools/math-validator-mathjs/types';
+export type { CheckSpellingGrammarOutput, SpellingGrammarError } from './tools/spelling-grammar-checker';
+export type { ExtractFactualClaimsOutput, ExtractedFactualClaim } from './tools/factual-claims-extractor';
+export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './tools/binary-forecasting-claims-extractor';
+export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './tools/math-expressions-extractor';
+export type { DetectLanguageConventionOutput } from './tools/language-convention-detector';
+export type { MathErrorDetails, MathVerificationStatus } from './tools/shared/math-schemas';
 
-// Analysis plugins - types only (implementations use sessionContext)
-export type { 
-  FullDocumentAnalysisResult 
+// Analysis plugins - types only (implementations use logger, exported from ./server)
+export type {
+  FullDocumentAnalysisResult
 } from './analysis-plugins/PluginManager';
-export { 
-  PluginLogger,
-  TextChunk,
-  CommentBuilder,
-  createChunks,
-  FactCheckPlugin,
-  ForecastPlugin,
-  MathPlugin,
-  SpellingPlugin
-} from './analysis-plugins';
 
 // Analysis plugin types
 export type { Finding } from './analysis-plugins/types';

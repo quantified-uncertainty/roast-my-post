@@ -3,8 +3,8 @@
  * Used by both plugins and highlight extraction.
  */
 
-import { TextChunk } from '@roast/ai';
-import { Finding } from '@roast/ai';
+import { TextChunk } from '../../../analysis-plugins';
+import { Finding } from '../../../analysis-plugins/types';
 
 export interface LineInfo {
   lineNumber: number; // 1-based line number for human readability
