@@ -32,8 +32,8 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
    * Find existing evaluation by document and agent
    */
   async findByDocumentAndAgent(documentId: string, agentId: string): Promise<any | null> {
-    return await this.prisma.evaluation.findFirst({
-      where: { documentId, agentId }
+    return await this.prisma.evaluation.findUnique({
+      where: { documentId_agentId: { documentId, agentId } }
     });
   }
 
@@ -91,36 +91,19 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     created: boolean;
   }> {
     return await this.prisma.$transaction(async (tx) => {
-      // Check if evaluation already exists
-      const existing = await tx.evaluation.findFirst({
-        where: { documentId, agentId }
+      // Check if evaluation already exists (to determine 'created' flag)
+      const existing = await tx.evaluation.findUnique({
+        where: { documentId_agentId: { documentId, agentId } }
       });
-      
-      if (existing) {
-        // Create new job for re-evaluation
-        const job = await tx.job.create({
-          data: {
-            evaluationId: existing.id,
-            status: 'PENDING',
-          }
-        });
-        
-        return {
-          evaluationId: existing.id,
-          agentId,
-          jobId: job.id,
-          created: false
-        };
-      }
-      
-      // Create new evaluation
-      const evaluation = await tx.evaluation.create({
-        data: {
-          documentId,
-          agentId,
-        }
+
+      // Use upsert to atomically find or create the evaluation
+      // This prevents race conditions where concurrent requests could create duplicates
+      const evaluation = await tx.evaluation.upsert({
+        where: { documentId_agentId: { documentId, agentId } },
+        create: { documentId, agentId },
+        update: {}, // No update needed, just return existing
       });
-      
+
       // Create job
       const job = await tx.job.create({
         data: {
@@ -128,12 +111,12 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
           status: 'PENDING',
         }
       });
-      
+
       return {
         evaluationId: evaluation.id,
         agentId,
         jobId: job.id,
-        created: true
+        created: !existing
       };
     });
   }
