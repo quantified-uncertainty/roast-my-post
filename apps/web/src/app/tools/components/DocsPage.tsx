@@ -1,6 +1,7 @@
 'use client';
 
-import { toolSchemas, getToolReadme } from '@roast/ai';
+import { toolSchemas } from '@roast/ai/tools/generated-schemas';
+import { getToolReadme } from '@roast/ai/tools/generated-readmes';
 import { ToolDocumentation } from './ToolDocumentation';
 
 export interface GenericToolDocsPageProps {

@@ -4,7 +4,7 @@ import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
 import { logger } from '@/infrastructure/logging/logger';
 import { claimEvaluatorTool, analyzeClaimEvaluation } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
-import { logger as aiLogger } from '@roast/ai';
+import { logger as aiLogger } from '@roast/ai/server';
 import { z } from 'zod';
 import { strictRateLimit, getClientIdentifier } from '@/infrastructure/http/rate-limiter';
 import { errorResponse, successResponse } from '@/infrastructure/http/api-response-helpers';

@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  type ToolId,
-  toolSchemas,
-  generateClaimEvaluatorPrompt,
-} from "@roast/ai";
+import { type ToolId, toolSchemas } from '@roast/ai/tools/generated-schemas';
+import { generateClaimEvaluatorPrompt } from '@roast/ai/tools/claim-evaluator/prompt';
 import { GenericToolTryPage } from "./GenericToolTryPage";
 import { MathCheckDisplay } from "./results/MathCheckDisplay";
 import { FieldConfig } from "./types";

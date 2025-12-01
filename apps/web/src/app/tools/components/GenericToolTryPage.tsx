@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent, ReactNode } from 'react';
-import { toolSchemas } from '@roast/ai';
+import { toolSchemas } from '@roast/ai/tools/generated-schemas';
 import { ErrorDisplay, SubmitButton, TextAreaField } from './common';
 import { useToolExecution } from '../hooks/useToolExecution';
 import { AuthenticatedToolPage } from './AuthenticatedToolPage';

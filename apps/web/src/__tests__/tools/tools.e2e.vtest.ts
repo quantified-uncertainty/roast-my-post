@@ -12,7 +12,7 @@ import {
   extractFactualClaimsTool,
   checkSpellingGrammarTool,
 } from '@roast/ai/server';
-import { logger as aiLogger } from '@roast/ai';
+import { logger as aiLogger } from '@roast/ai/server';
 
 // Test context
 const testContext = {

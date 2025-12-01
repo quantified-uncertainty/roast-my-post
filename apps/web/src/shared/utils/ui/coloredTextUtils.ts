@@ -2,7 +2,17 @@
  * Utility functions for parsing colored text and XML replacements
  */
 
-import { unescapeXml } from "@roast/ai";
+/**
+ * Unescape XML entities back to their original characters
+ */
+function unescapeXml(str: string): string {
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
 
 /**
  * Unescapes common HTML entities

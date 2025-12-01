@@ -6,6 +6,7 @@
 import { OpenAI } from 'openai';
 import { aiConfig } from '../../config';
 import { getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
+import { logger } from '../../utils/logger';
 
 export interface PerplexityOptions {
   model?: 'perplexity/sonar' | 'perplexity/sonar-pro';
@@ -115,18 +116,15 @@ export class PerplexityClient {
         'X-Title': appTitle,
       };
       
-      // Debug logging only in development
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[PerplexityClient] Request details:', {
-          model,
-          environment,
-          baseURL: this.client.baseURL,
-          hasApiKey: !!this.client.apiKey,
-          apiKeyPrefix: this.client.apiKey?.substring(0, 10),
-          appTitle,
-          headers: finalHeaders
-        });
-      }
+      logger.debug('[PerplexityClient] Request details:', {
+        model,
+        environment,
+        baseURL: this.client.baseURL,
+        hasApiKey: !!this.client.apiKey,
+        apiKeyPrefix: this.client.apiKey?.substring(0, 10),
+        appTitle,
+        headers: finalHeaders
+      });
       
       const completion = await this.client.chat.completions.create({
         model,
@@ -165,7 +163,7 @@ export class PerplexityClient {
         });
       }
       
-      console.error('[PerplexityClient] Request failed:', errorLog);
+      logger.error('[PerplexityClient] Request failed:', errorLog);
       
       // Simplify error messages
       if (error.status === 401 || error.message?.includes('401')) {

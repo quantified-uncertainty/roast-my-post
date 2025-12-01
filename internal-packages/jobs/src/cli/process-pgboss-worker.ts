@@ -14,12 +14,16 @@ import { findWorkspaceRoot, loadWebAppEnvironment } from '../utils/workspace';
 const workspaceRoot = findWorkspaceRoot(__dirname);
 loadWebAppEnvironment(workspaceRoot);
 
+// Default AI log level to 'warn' in worker to reduce noise
+process.env.AI_LOG_LEVEL ??= 'warn';
+
 import { config } from '@roast/domain';
 import { JobRepository } from '@roast/db';
 import { JobOrchestrator } from '../core/JobOrchestrator';
 import { JobService } from '../core/JobService';
 import { PgBossService } from '../core/PgBossService';
 import { initializeAI } from '@roast/ai';
+import { runWithJobIdAsync } from '@roast/ai/jobContext';
 import { logger } from '../utils/logger';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import { isRetryableError } from '../errors/retryableErrors';
@@ -150,7 +154,7 @@ class PgBossWorker {
       }
 
       await this.jobService.markAsRunning(jobId, retryCount + 1);
-      const result = await this.jobOrchestrator.processJob(job);
+      const result = await runWithJobIdAsync(jobId, () => this.jobOrchestrator.processJob(job));
 
       if (!result.success) {
         throw result.error || new Error('Job processing failed');

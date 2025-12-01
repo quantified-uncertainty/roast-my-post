@@ -109,3 +109,4 @@ job-reconciliation:
 | `PGBOSS_RETRY_DELAY` | 60 | Seconds between retries |
 | `PGBOSS_RETRY_BACKOFF` | true | Exponential backoff |
 | `PGBOSS_EXPIRE_IN_SECONDS` | 3600 | Job timeout |
+| `AI_LOG_LEVEL` | warn | AI package log level (error/warn/info/debug) |

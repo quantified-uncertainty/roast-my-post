@@ -115,8 +115,7 @@ export {
   type TimeoutOptions
 } from './utils/timeout';
 
-// Shared utilities
-export * from './shared/logger';
+// Shared utilities (logger is internal-only, not exported)
 export * from './shared/utils/xml';
 export type {
   Comment,
