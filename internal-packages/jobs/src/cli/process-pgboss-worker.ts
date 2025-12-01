@@ -135,7 +135,7 @@ class PgBossWorker {
   }
 
   private handleBatch = async (pgBossJobs: any[]) => {
-    logger.info(`[Batch] Processing ${pgBossJobs.length} jobs`);
+    logger.info(`[pg-boss Worker] Processing batch of ${pgBossJobs.length} job(s)`);
     const jobPromises = pgBossJobs.map((job) => this.processJob(job));
     await Promise.allSettled(jobPromises);
   };
