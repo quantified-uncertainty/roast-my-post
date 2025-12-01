@@ -36,6 +36,7 @@ describe('DetectLanguageConventionTool', () => {
       expect(result.evidence.length).toBeGreaterThan(0);
       expect(result.evidence.some(e => e.word === 'organised')).toBe(true);
     });
+
   });
 
   describe('Mixed convention detection', () => {

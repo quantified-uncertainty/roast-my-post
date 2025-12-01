@@ -47,6 +47,17 @@ export const ROUTES = {
     TRY: (toolId: string) => `/tools/${toolId}/try`,
   },
 
+  // Claim evaluation routes
+  CLAIM_EVALUATIONS: {
+    LIST: '/claim-evaluations',
+    DETAIL: (id: string) => `/claim-evaluations/${id}`,
+  },
+
+  // Help routes
+  HELP: {
+    BASE: '/help',
+  },
+
   // User routes
   USERS: {
     PROFILE: (userId: string) => `/users/${userId}`,

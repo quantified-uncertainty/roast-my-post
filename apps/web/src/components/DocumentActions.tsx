@@ -24,6 +24,12 @@ import {
 
 import { WarningDialog } from "./WarningDialog";
 
+// Helper function to check if a URL is from Substack
+function isSubstackUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.includes("substack.com");
+}
+
 interface DocumentActionsProps {
   docId: string;
   document: {
@@ -41,8 +47,11 @@ export function DocumentActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showReuploadWarning, setShowReuploadWarning] = useState(false);
+  const [showSubstackWarning, setShowSubstackWarning] = useState(false);
   const [evaluationCount, setEvaluationCount] = useState(0);
   const router = useRouter();
+  
+  const isSubstack = isSubstackUrl(document.importUrl);
 
   useEffect(() => {
     // Fetch evaluation count
@@ -86,7 +95,14 @@ export function DocumentActions({
       return;
     }
 
-    // Show warning dialog if there are evaluations
+    // If Substack: show Substack warning first, then Re-upload warning after approval
+    // If not Substack: show Re-upload warning directly (if evaluations exist)
+    if (isSubstack) {
+      setShowSubstackWarning(true);
+      return;
+    }
+
+    // For non-Substack: show Re-upload warning if there are evaluations
     if (evaluationCount > 0) {
       setShowReuploadWarning(true);
       return;
@@ -108,6 +124,7 @@ export function DocumentActions({
     } finally {
       setIsRefreshing(false);
       setShowReuploadWarning(false);
+      setShowSubstackWarning(false);
     }
   };
 
@@ -118,6 +135,19 @@ export function DocumentActions({
 
   const handleCancelReupload = () => {
     setShowReuploadWarning(false);
+  };
+
+  const handleConfirmSubstackRefresh = () => {
+    setShowSubstackWarning(false);
+    // After Substack warning is approved, ALWAYS show Re-upload warning
+    // Use setTimeout to ensure the first dialog fully closes before showing the second
+    setTimeout(() => {
+      setShowReuploadWarning(true);
+    }, 200);
+  };
+
+  const handleCancelSubstackRefresh = () => {
+    setShowSubstackWarning(false);
   };
 
   const handleEdit = () => {
@@ -158,14 +188,32 @@ export function DocumentActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <WarningDialog
-        isOpen={showReuploadWarning}
-        title="Re-upload Document"
-        message={`Re-uploading this document will create a new version and invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? "s" : ""}. They will be automatically re-run, which will incur API costs. Continue?`}
-        confirmText="Continue with re-upload"
-        onConfirm={handleConfirmReupload}
-        onCancel={handleCancelReupload}
-      />
+      {/* Show Substack warning first, then evaluation warning after user confirms */}
+      {showSubstackWarning && (
+        <WarningDialog
+          isOpen={showSubstackWarning}
+          title="Substack Refresh Warning"
+          message="Refreshing Substack articles may not work reliably. Substack uses aggressive caching, and the refresh may return an old version of the article instead of the latest content. Consider manually editing the document if you need the most recent version."
+          confirmText="Continue anyway"
+          cancelText="Cancel"
+          onConfirm={handleConfirmSubstackRefresh}
+          onCancel={handleCancelSubstackRefresh}
+        />
+      )}
+
+      {/* Show Re-upload warning - only when Substack warning is not showing */}
+      {!showSubstackWarning && (
+        <WarningDialog
+          isOpen={showReuploadWarning}
+          title="Re-upload Document"
+          message={evaluationCount > 0 
+            ? `Re-uploading this document will create a new version and invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? "s" : ""}. They will be automatically re-run, which will incur API costs. Continue?`
+            : "Re-uploading this document will create a new version. Continue?"}
+          confirmText="Continue with re-upload"
+          onConfirm={handleConfirmReupload}
+          onCancel={handleCancelReupload}
+        />
+      )}
     </div>
   );
 }

@@ -51,13 +51,21 @@ export async function importDocumentService(
     // Get services from factory
     const { documentService } = getServices();
 
+    // Ensure author is always a valid string (fallback to "Unknown Author" if missing)
+    const author = processedArticle.author && typeof processedArticle.author === 'string' 
+      ? processedArticle.author.trim() 
+      : "Unknown Author";
+    
+    // Ensure author is not empty after trimming
+    const finalAuthor = author.length > 0 ? author : "Unknown Author";
+
     // Creating document using the DocumentService
     const result = await documentService.createDocument(
       userId,
       {
         title: processedArticle.title,
         content: processedArticle.content,
-        authors: processedArticle.author,
+        authors: finalAuthor,
         url: processedArticle.url,
         platforms: processedArticle.platforms,
         importUrl: url,

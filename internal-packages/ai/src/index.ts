@@ -103,7 +103,8 @@ export {
   getRandomElement,
   getPercentile,
   getPercentileNumber,
-  countWords
+  countWords,
+  truncateToWords
 } from './shared/types';
 
 // Claim evaluator prompt generation (client-safe)
