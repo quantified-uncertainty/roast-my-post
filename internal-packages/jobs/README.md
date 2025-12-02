@@ -26,6 +26,40 @@ The job system uses **pg-boss** as the queue infrastructure while maintaining a 
 
 Jobs share the same ID in both systems for easy correlation.
 
+## Job Context (AsyncLocalStorage)
+
+Single context propagates worker ID, job ID, and timeout through async call stack.
+
+**Log format:**
+```
+[timestamp] [Worker host1234] [Job abc-123] [AI] message...
+```
+
+Worker ID = `hostname(4) + pid(4)`, max 8 chars. Set once at startup via `initWorkerContext()`.
+
+## Timeout Handling
+
+pg-boss `expireInSeconds` marks jobs failed but **cannot interrupt handlers**. We implement graceful timeouts:
+
+1. **Remaining time budget** - LLM calls use `min(remainingTime, 180s)`
+2. **Check between calls** - `checkJobTimeout()` throws if deadline passed
+
+```
+runWithJobContext({ jobId, timeoutMs })
+    ↓
+checkJobTimeout() → callClaude(remaining) → checkJobTimeout() → ...
+    ↓
+JobTimeoutError → Worker marks FAILED (non-retryable)
+```
+
+**Agent-specific timeouts** (from `config/agentTimeouts.ts`):
+- Default: 4 min
+- `spelling-grammar`: 6 min
+- `simple-link-verifier`: 8 min
+- `fallacy-check`: 10 min
+- `multi-fallacy-eval`: 15 min
+- Max: 20 min
+
 ## Retry Strategy (Hybrid)
 
 **pg-boss handles transient errors:**

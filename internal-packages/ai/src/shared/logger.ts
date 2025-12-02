@@ -8,10 +8,11 @@
  * - info: Errors, warnings, and info (default)
  * - debug: All logs including debug
  *
- * Automatically includes job ID from context when available
+ * Automatically includes worker ID and job ID from context when available.
+ * Format: [timestamp] [Worker xxx] [Job yyy] [AI LEVEL] message
  */
 
-import { getCurrentJobId } from './jobContext';
+import { getCurrentJobId, getWorkerId } from './jobContext';
 
 export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
@@ -48,9 +49,11 @@ function getTimestamp(): string {
 }
 
 function getPrefix(level: string): string {
+  const workerId = getWorkerId();
   const jobId = getCurrentJobId();
+  const workerPart = workerId ? `[Worker ${workerId}] ` : '';
   const jobPart = jobId ? `[Job ${jobId}] ` : '';
-  return `[${getTimestamp()}] ${jobPart}[AI${level ? ' ' + level : ''}]`;
+  return `[${getTimestamp()}] ${workerPart}${jobPart}[AI${level ? ' ' + level : ''}]`;
 }
 
 /**

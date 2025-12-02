@@ -5,6 +5,8 @@
  * Used by the worker to decide how to handle job failures.
  */
 
+import { JobTimeoutError } from '@roast/ai/server';
+
 /**
  * Error patterns that should NOT be retried (permanent failures)
  */
@@ -116,9 +118,14 @@ function getErrorStatus(error: unknown): number | undefined {
  * Determine if an error should trigger a retry
  *
  * Returns true for transient errors (network, rate limit, server errors)
- * Returns false for permanent errors (validation, auth, not found)
+ * Returns false for permanent errors (validation, auth, not found, timeout)
  */
 export function isRetryableError(error: unknown): boolean {
+  // Job timeout errors are never retryable
+  if (error instanceof JobTimeoutError) {
+    return false;
+  }
+
   const errorMessage = getErrorMessage(error).toLowerCase();
   const status = getErrorStatus(error);
 

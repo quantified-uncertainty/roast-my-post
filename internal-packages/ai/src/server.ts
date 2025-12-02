@@ -32,6 +32,12 @@ export {
 
 // Job context (uses AsyncLocalStorage)
 export {
+  initWorkerContext,
+  getWorkerId,
   getCurrentJobId,
-  runWithJobId
+  runWithJobContext,
+  getRemainingTimeMs,
+  isJobTimedOut,
+  checkJobTimeout,
+  JobTimeoutError
 } from './shared/jobContext';
