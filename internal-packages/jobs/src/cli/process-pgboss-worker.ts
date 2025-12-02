@@ -23,7 +23,7 @@ import { JobOrchestrator } from '../core/JobOrchestrator';
 import { JobService } from '../core/JobService';
 import { PgBossService } from '../core/PgBossService';
 import { initializeAI } from '@roast/ai';
-import { initWorkerContext, runWithJobContext, JobTimeoutError } from '@roast/ai/server';
+import { initWorkerContext, runWithJobContext, JobTimeoutError, getWorkerId } from '@roast/ai/server';
 import { logger } from '../utils/logger';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import { isRetryableError } from '../errors/retryableErrors';
@@ -144,6 +144,12 @@ class PgBossWorker {
     await Promise.allSettled(jobPromises);
   };
 
+  private formatLog(jobId: string, message: string): string {
+    const workerId = getWorkerId();
+    const workerPrefix = workerId ? `[Worker ${workerId}] ` : '';
+    return `${workerPrefix}[Job ${jobId}] ${message}`;
+  }
+
   private getJobTimeout(job: any): number {
     const agentVersion = job.evaluation.agent.versions[0];
     return getAgentTimeout(agentVersion?.extendedCapabilityId ?? undefined);
@@ -154,7 +160,7 @@ class PgBossWorker {
     const retryCount = pgBossJob.retrycount || 0;
     const retryLimit = config.jobs.pgBoss.retryLimit;
 
-    logger.info(`[Job ${jobId}] Processing (attempt ${retryCount + 1}/${retryLimit + 1})`);
+    logger.info(this.formatLog(jobId, `Processing (attempt ${retryCount + 1}/${retryLimit + 1})`));
 
     try {
       const job = await this.jobRepository.findByIdWithRelations(jobId);
@@ -178,7 +184,7 @@ class PgBossWorker {
         throw result.error || new Error('Job processing failed');
       }
 
-      logger.info(`[Job ${jobId}] ✅ Completed successfully`);
+      logger.info(this.formatLog(jobId, '✅ Completed successfully'));
     } catch (error) {
       await this.handleJobError(jobId, pgBossJob.id, error, retryCount, retryLimit);
     }
@@ -191,11 +197,11 @@ class PgBossWorker {
     retryCount: number,
     retryLimit: number
   ) {
-    logger.error(`[Job ${jobId}] ❌ Failed:`, error);
+    logger.error(this.formatLog(jobId, '❌ Failed:'), error);
 
     // Job timeout errors are not retryable - fail immediately
     if (error instanceof JobTimeoutError) {
-      logger.warn(`[Job ${jobId}] Timed out - marking as FAILED (non-retryable)`);
+      logger.warn(this.formatLog(jobId, 'Timed out - marking as FAILED (non-retryable)'));
       await this.jobService.markAsFailed(jobId, error);
       await this.pgBossService.fail(DOCUMENT_EVALUATION_JOB, pgBossJobId, error);
       return;
@@ -205,13 +211,13 @@ class PgBossWorker {
     const hasRetriesLeft = retryCount < retryLimit;
 
     if (isTransient && hasRetriesLeft) {
-      logger.info(`[Job ${jobId}] Transient error, will retry (${retryCount + 1}/${retryLimit + 1})`);
+      logger.info(this.formatLog(jobId, `Transient error, will retry (${retryCount + 1}/${retryLimit + 1})`));
       throw error; // Let pg-boss handle retry
     }
 
     // Final failure
     const reason = !isTransient ? 'non-retryable error' : `max retries (${retryLimit}) exhausted`;
-    logger.info(`[Job ${jobId}] Marking as FAILED: ${reason}`);
+    logger.info(this.formatLog(jobId, `Marking as FAILED: ${reason}`));
 
     await this.jobService.markAsFailed(jobId, error);
     await this.pgBossService.fail(DOCUMENT_EVALUATION_JOB, pgBossJobId, error);

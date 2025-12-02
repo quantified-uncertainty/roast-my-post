@@ -30,7 +30,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   ) {}
 
   private formatLog(jobId: string, message: string): string {
-    return `[Worker ${getWorkerId()}] [Job ${jobId}] ${message}`;
+    const workerId = getWorkerId();
+    const workerPrefix = workerId ? `[Worker ${workerId}] ` : '';
+    return `${workerPrefix}[Job ${jobId}] ${message}`;
   }
 
   /**

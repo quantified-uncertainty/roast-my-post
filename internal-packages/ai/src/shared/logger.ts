@@ -53,7 +53,8 @@ function getPrefix(level: string): string {
   const jobId = getCurrentJobId();
   const workerPart = workerId ? `[Worker ${workerId}] ` : '';
   const jobPart = jobId ? `[Job ${jobId}] ` : '';
-  return `[${getTimestamp()}] ${workerPart}${jobPart}[AI${level ? ' ' + level : ''}]`;
+  const levelStr = level || 'INFO';
+  return `[${getTimestamp()}] [${levelStr}] [AI] ${workerPart}${jobPart}`;
 }
 
 /**

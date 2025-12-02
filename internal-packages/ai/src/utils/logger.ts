@@ -5,7 +5,7 @@
  * Automatically includes job ID from context when available
  */
 
-import { getCurrentJobId } from '../shared/jobContext';
+import { getCurrentJobId, getWorkerId } from '../shared/jobContext';
 
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
@@ -42,9 +42,12 @@ function getTimestamp(): string {
 }
 
 function getPrefix(level: string): string {
+  const workerId = getWorkerId();
   const jobId = getCurrentJobId();
+  const workerPart = workerId ? `[Worker ${workerId}] ` : '';
   const jobPart = jobId ? `[Job ${jobId}] ` : '';
-  return `[${getTimestamp()}] ${jobPart}[AI${level ? ' ' + level : ''}]`;
+  const levelStr = level || 'INFO';
+  return `[${getTimestamp()}] [${levelStr}] [AI] ${workerPart}${jobPart}`;
 }
 
 interface LogContext {
