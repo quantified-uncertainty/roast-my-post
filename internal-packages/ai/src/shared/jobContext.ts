@@ -21,16 +21,9 @@ export function getCurrentJobId(): string | undefined {
 }
 
 /**
- * Run a function with a job ID in context
- * All logs within this function (and its async children) will include the job ID
+ * Run a function with a job ID in context.
+ * All logs within this function (and its async children) will include the job ID.
  */
 export function runWithJobId<T>(jobId: string, fn: () => T): T {
-  return jobContextStorage.run({ jobId }, fn);
-}
-
-/**
- * Run an async function with a job ID in context
- */
-export async function runWithJobIdAsync<T>(jobId: string, fn: () => Promise<T>): Promise<T> {
   return jobContextStorage.run({ jobId }, fn);
 }

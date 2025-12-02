@@ -33,6 +33,5 @@ export {
 // Job context (uses AsyncLocalStorage)
 export {
   getCurrentJobId,
-  runWithJobId,
-  runWithJobIdAsync
+  runWithJobId
 } from './shared/jobContext';

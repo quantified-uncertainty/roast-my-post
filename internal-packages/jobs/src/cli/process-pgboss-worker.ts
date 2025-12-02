@@ -23,7 +23,7 @@ import { JobOrchestrator } from '../core/JobOrchestrator';
 import { JobService } from '../core/JobService';
 import { PgBossService } from '../core/PgBossService';
 import { initializeAI } from '@roast/ai';
-import { runWithJobIdAsync } from '@roast/ai/server';
+import { runWithJobId } from '@roast/ai/server';
 import { logger } from '../utils/logger';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import { isRetryableError } from '../errors/retryableErrors';
@@ -154,7 +154,7 @@ class PgBossWorker {
       }
 
       await this.jobService.markAsRunning(jobId, retryCount + 1);
-      const result = await runWithJobIdAsync(jobId, () => this.jobOrchestrator.processJob(job));
+      const result = await runWithJobId(jobId, () => this.jobOrchestrator.processJob(job));
 
       if (!result.success) {
         throw result.error || new Error('Job processing failed');
