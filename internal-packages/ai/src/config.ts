@@ -21,7 +21,7 @@ function getEnv(key: string, fallback?: string): string | undefined {
 export const aiConfig = {
   // Model configuration
   get analysisModel(): string {
-    return getEnv("ANALYSIS_MODEL", "claude-sonnet-4-5") as string;
+    return getEnv("ANALYSIS_MODEL", "claude-opus-4-5-20251101") as string;
   },
 
   // API Keys

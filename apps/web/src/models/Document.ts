@@ -1206,24 +1206,18 @@ export class DocumentModel {
       );
     }
 
-    // Find or create the evaluation record
-    let evaluation = await prisma.evaluation.findFirst({
+    // Find or create the evaluation record atomically using upsert
+    // This prevents race conditions where concurrent requests could create duplicates
+    const evaluation = await prisma.evaluation.upsert({
       where: {
+        documentId_agentId: { documentId, agentId },
+      },
+      create: {
         documentId,
         agentId,
       },
+      update: {}, // No update needed, just return existing
     });
-
-    if (!evaluation) {
-      // Create evaluation record with initial job
-      evaluation = await prisma.evaluation.create({
-        data: {
-          documentId,
-          agentId,
-          createdAt: new Date(),
-        },
-      });
-    }
 
     // Create job for evaluation re-run
     const { jobService } = getServices();

@@ -157,8 +157,8 @@ class ConfigFactory {
             10,
             'HELICONE_CACHE_BUCKET_MAX_SIZE'
           ),
-          searchModel: getEnvVar('SEARCH_MODEL', 'claude-3-haiku-20240307'),
-          analysisModel: getEnvVar('ANALYSIS_MODEL', 'claude-3-5-sonnet-20241022'),
+          searchModel: getEnvVar('SEARCH_MODEL', 'claude-haiku-4-5-20251001'),
+          analysisModel: getEnvVar('ANALYSIS_MODEL', 'claude-opus-4-5-20251101'),
         },
 
         auth: {
