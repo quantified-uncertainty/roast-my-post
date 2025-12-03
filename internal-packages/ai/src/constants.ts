@@ -1,6 +1,9 @@
 /**
  * AI Package Constants
  * Centralized constants for AI/LLM configuration
+ *
+ * NOTE: These defaults are also defined in @roast/domain/core/config.ts
+ * If you change these, update both files to stay in sync.
  */
 
 /**
