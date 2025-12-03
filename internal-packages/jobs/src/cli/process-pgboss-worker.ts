@@ -213,7 +213,8 @@ class PgBossWorker {
       logger.warn(this.formatLog(jobId, 'Timed out - marking as FAILED (non-retryable)'));
       await this.jobService.markAsFailed(jobId, error);
       await this.pgBossService.fail(DOCUMENT_EVALUATION_JOB, pgBossJobId, error);
-      return;
+      // Throw to signal handler failure (job already marked failed, won't retry)
+      throw error;
     }
 
     const isTransient = isRetryableError(error);
@@ -230,6 +231,8 @@ class PgBossWorker {
 
     await this.jobService.markAsFailed(jobId, error);
     await this.pgBossService.fail(DOCUMENT_EVALUATION_JOB, pgBossJobId, error);
+    // Throw to signal handler failure (job already marked failed, won't retry)
+    throw error;
   }
 }
 
