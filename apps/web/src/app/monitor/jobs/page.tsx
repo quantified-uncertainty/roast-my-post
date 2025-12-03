@@ -60,6 +60,7 @@ export default function JobsMonitorPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [isRerunning, setIsRerunning] = useState(false);
 
   const fetchJobs = async (showRefreshIndicator = false) => {
     try {
@@ -122,6 +123,33 @@ export default function JobsMonitorPage() {
     } catch (err) {
       console.error('Failed to cancel job:', err);
       alert(err instanceof Error ? err.message : 'Failed to cancel job');
+    }
+  };
+
+  const handleRerunJob = async () => {
+    if (!selectedJob) return;
+
+    try {
+      setIsRerunning(true);
+      const response = await fetch(`/api/monitor/jobs/${selectedJob.id}/rerun`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to re-run job');
+      }
+
+      const result = await response.json();
+      alert(`Job re-run started. New job ID: ${result.newJob.id}`);
+
+      // Refresh the job list
+      await fetchJobs(true);
+    } catch (err) {
+      console.error('Failed to re-run job:', err);
+      alert(err instanceof Error ? err.message : 'Failed to re-run job');
+    } finally {
+      setIsRerunning(false);
     }
   };
 
@@ -257,7 +285,7 @@ export default function JobsMonitorPage() {
                   </div>
                 </div>
                 
-                <JobSummary 
+                <JobSummary
                   job={{
                     id: selectedJob.id,
                     status: selectedJob.status,
@@ -274,6 +302,8 @@ export default function JobsMonitorPage() {
                   }}
                   canCancel={true}
                   onCancel={() => setShowCancelDialog(true)}
+                  canRerun={true}
+                  onRerun={handleRerunJob}
                 />
               </div>
 

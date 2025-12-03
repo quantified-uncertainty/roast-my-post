@@ -7,10 +7,10 @@ import { formatCostFromDollars, formatDuration, formatDate } from "@/application
 import { JobData } from "@/application/services/job/types";
 import { getRetryText } from "@/application/services/job/transformers";
 import { CopyButton } from "@/components/CopyButton";
-import { XCircle } from "lucide-react";
+import { XCircle, RotateCcw } from "lucide-react";
 
 interface JobSummaryProps {
-  job: JobData & { 
+  job: JobData & {
     logs?: string;
     cancelledAt?: string | null;
     cancelledBy?: {
@@ -25,19 +25,24 @@ interface JobSummaryProps {
   compact?: boolean;
   onCancel?: () => void;
   canCancel?: boolean;
+  onRerun?: () => void;
+  canRerun?: boolean;
 }
 
-export function JobSummary({ 
-  job, 
-  showError = true, 
-  showLogs = true, 
+export function JobSummary({
+  job,
+  showError = true,
+  showLogs = true,
   compact = false,
   onCancel,
-  canCancel = false 
+  canCancel = false,
+  onRerun,
+  canRerun = false
 }: JobSummaryProps) {
   const retryText = getRetryText(job);
   const [isCancelling, setIsCancelling] = useState(false);
-  
+  const [isRerunning, setIsRerunning] = useState(false);
+
   const handleCancel = async () => {
     if (!onCancel) return;
     setIsCancelling(true);
@@ -45,6 +50,16 @@ export function JobSummary({
       await onCancel();
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handleRerun = async () => {
+    if (!onRerun) return;
+    setIsRerunning(true);
+    try {
+      await onRerun();
+    } finally {
+      setIsRerunning(false);
     }
   };
   
@@ -61,6 +76,17 @@ export function JobSummary({
         </h3>
         <div className="flex items-center gap-2">
           <JobStatusBadge status={job.status} showIcon />
+          {canRerun && (
+            <button
+              onClick={handleRerun}
+              disabled={isRerunning || (job.status !== 'COMPLETED' && job.status !== 'FAILED' && job.status !== 'CANCELLED')}
+              className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title={job.status === 'PENDING' || job.status === 'RUNNING' ? 'Cannot re-run while job is in progress' : 'Re-run this job'}
+            >
+              <RotateCcw className="h-4 w-4" />
+              {isRerunning ? 'Re-running...' : 'Re-run'}
+            </button>
+          )}
           {canCancel && (job.status === 'PENDING' || job.status === 'RUNNING') && (
             <button
               onClick={handleCancel}

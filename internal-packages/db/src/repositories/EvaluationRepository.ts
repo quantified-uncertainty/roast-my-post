@@ -7,8 +7,15 @@
 
 import { prisma as defaultPrisma } from '../client';
 
+export interface EvaluationSummary {
+  id: string;
+  agentId: string;
+  agentName: string;
+}
+
 export interface EvaluationRepositoryInterface {
   findByDocumentAndAgent(documentId: string, agentId: string): Promise<any | null>;
+  findByDocumentId(documentId: string): Promise<EvaluationSummary[]>;
   findByIdWithAccess(evaluationId: string, userId: string): Promise<any | null>;
   create(documentId: string, agentId: string): Promise<{ id: string }>;
   createJob(evaluationId: string): Promise<{ id: string }>;
@@ -35,6 +42,34 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     return await this.prisma.evaluation.findFirst({
       where: { documentId, agentId }
     });
+  }
+
+  /**
+   * Find all evaluations for a document
+   */
+  async findByDocumentId(documentId: string): Promise<EvaluationSummary[]> {
+    const evaluations = await this.prisma.evaluation.findMany({
+      where: { documentId },
+      select: {
+        id: true,
+        agentId: true,
+        agent: {
+          select: {
+            versions: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { name: true }
+            }
+          }
+        }
+      }
+    });
+
+    return evaluations.map(e => ({
+      id: e.id,
+      agentId: e.agentId,
+      agentName: e.agent.versions[0]?.name || 'Unknown',
+    }));
   }
 
   /**
