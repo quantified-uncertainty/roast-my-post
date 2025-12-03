@@ -1273,7 +1273,7 @@ export class DocumentModel {
     userId: string
   ) {
     // Use a transaction to ensure atomicity and prevent race conditions
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // First get current document and its latest version
       const document = await tx.document.findUnique({
         where: { id: docId },
@@ -1377,21 +1377,22 @@ export class DocumentModel {
           },
         });
 
-        // Automatically queue re-evaluations for all existing evaluations
-        if (document.evaluations.length > 0) {
-          // Use createMany for better performance
-          await tx.job.createMany({
-            data: document.evaluations.map((evaluation) => ({
-              status: "PENDING",
-              evaluationId: evaluation.id,
-            })),
-          });
-        }
       }
 
-      return updatedDocument;
+      return { updatedDocument, evaluationsToRerun: onlySubmitterNotesChanged ? [] : document.evaluations };
     }, {
       isolationLevel: 'Serializable', // Strongest isolation to prevent race conditions
     });
+
+    // After the transaction, enqueue jobs to pg-boss for re-evaluation
+    // This must be done outside the transaction since pg-boss is a separate system
+    if (result.evaluationsToRerun.length > 0) {
+      const { jobService } = getServices();
+      for (const evaluation of result.evaluationsToRerun) {
+        await jobService.createJob(evaluation.id);
+      }
+    }
+
+    return result.updatedDocument;
   }
 }

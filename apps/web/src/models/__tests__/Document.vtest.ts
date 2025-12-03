@@ -49,6 +49,16 @@ vi.mock('@/infrastructure/auth/privacy-service', () => ({
   },
 }));
 
+// Mock ServiceFactory
+const mockJobService = {
+  createJob: vi.fn().mockResolvedValue({ id: 'job-123' }),
+};
+vi.mock('@/application/services/ServiceFactory', () => ({
+  getServices: vi.fn(() => ({
+    jobService: mockJobService,
+  })),
+}));
+
 describe('DocumentModel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -371,13 +381,10 @@ describe('DocumentModel', () => {
         },
       });
 
-      // Verify jobs were created for re-evaluation
-      expect(mockTransaction.job.createMany).toHaveBeenCalledWith({
-        data: [
-          { status: 'PENDING', evaluationId: 'eval-1' },
-          { status: 'PENDING', evaluationId: 'eval-2' },
-        ],
-      });
+      // Verify jobs were created for re-evaluation via JobService (pg-boss)
+      expect(mockJobService.createJob).toHaveBeenCalledTimes(2);
+      expect(mockJobService.createJob).toHaveBeenCalledWith('eval-1');
+      expect(mockJobService.createJob).toHaveBeenCalledWith('eval-2');
 
       expect(result).toBeTruthy();
     });

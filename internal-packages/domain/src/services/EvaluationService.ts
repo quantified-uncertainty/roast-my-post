@@ -183,41 +183,6 @@ export class EvaluationService {
   }
 
   /**
-   * Re-run an existing evaluation (creates new job)
-   */
-  async rerunEvaluation(
-    evaluationId: string,
-    userId: string
-  ): Promise<Result<{ jobId: string }, AppError>> {
-    try {
-      // Check if evaluation exists and user has access
-      const evaluation = await this.evaluationRepository.findByIdWithAccess(evaluationId, userId);
-
-      if (!evaluation) {
-        return Result.fail(
-          new NotFoundError('Evaluation', evaluationId)
-        );
-      }
-
-      // Create new job for re-evaluation
-      const job = await this.evaluationRepository.createJob(evaluationId);
-
-      this.logger.info('Evaluation re-run job created', {
-        evaluationId,
-        jobId: job.id,
-        userId
-      });
-
-      return Result.ok({ jobId: job.id });
-    } catch (error) {
-      this.logger.error('Error creating re-run job', { error, evaluationId, userId });
-      return Result.fail(
-        new AppError('Failed to re-run evaluation', 'EVALUATION_RERUN_ERROR', 500, error)
-      );
-    }
-  }
-
-  /**
    * Validate single evaluation creation request
    */
   private validateCreateRequest(request: CreateEvaluationRequest): { isValid: boolean; errors: string[] } {
