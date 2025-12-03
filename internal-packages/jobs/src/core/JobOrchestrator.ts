@@ -289,10 +289,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Use fullContent (which includes markdownPrepend) for validation
       // since highlights were generated based on the full content
       await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.fullContent, job.id);
-      this.logger.info(this.formatLog(job.id, `Saved ${highlights.length} highlights for evaluation`), {
-        evaluationId: job.evaluation.id,
-        highlightCount: highlights.length,
-      });
+      this.logger.info(this.formatLog(job.id, `Saved ${highlights.length} highlights for evaluation ${job.evaluation.id}`));
     }
   }
 

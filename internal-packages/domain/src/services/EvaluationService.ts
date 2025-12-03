@@ -13,6 +13,14 @@ import type { Logger } from '../core/logger';
 import { Result } from '../core/result';
 import { AppError, ValidationError, NotFoundError } from '../core/errors';
 
+/**
+ * Interface for job creation - allows dependency injection of JobService
+ * without creating circular dependencies between packages
+ */
+export interface JobCreator {
+  createJob(evaluationId: string): Promise<{ id: string }>;
+}
+
 export interface CreateEvaluationRequest {
   documentId: string;
   agentId: string;
@@ -35,7 +43,8 @@ export interface EvaluationCreationResult {
 export class EvaluationService {
   constructor(
     private readonly evaluationRepository: EvaluationRepositoryInterface,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    private readonly jobCreator: JobCreator
   ) {}
 
   /**
@@ -65,11 +74,7 @@ export class EvaluationService {
         return Result.fail(agentCheck.error()!);
       }
 
-      // Create evaluation and job in transaction
-      const result = await this.evaluationRepository.createEvaluationWithJob(
-        request.documentId,
-        request.agentId
-      );
+      const result = await this.createEvaluationWithJob(request.documentId, request.agentId);
 
       this.logger.info('Evaluation created successfully', {
         evaluationId: result.evaluationId,
@@ -125,12 +130,7 @@ export class EvaluationService {
             continue;
           }
 
-          // Create evaluation
-          const result = await this.evaluationRepository.createEvaluationWithJob(
-            request.documentId,
-            agentId
-          );
-
+          const result = await this.createEvaluationWithJob(request.documentId, agentId);
           results.push(result);
 
           this.logger.info('Evaluation created in batch', {
@@ -306,5 +306,40 @@ export class EvaluationService {
     }
 
     return Result.ok(undefined);
+  }
+
+  /**
+   * Create or reuse evaluation and create a job for it
+   * Handles both new evaluation creation and re-evaluation scenarios
+   */
+  private async createEvaluationWithJob(
+    documentId: string,
+    agentId: string
+  ): Promise<EvaluationCreationResult> {
+    const existingEval = await this.evaluationRepository.findByDocumentAndAgent(
+      documentId,
+      agentId
+    );
+
+    if (existingEval) {
+      // Re-evaluation: just create a new job
+      const job = await this.jobCreator.createJob(existingEval.id);
+      return {
+        evaluationId: existingEval.id,
+        agentId,
+        jobId: job.id,
+        created: false
+      };
+    }
+
+    // New evaluation: create evaluation then job
+    const evaluation = await this.evaluationRepository.create(documentId, agentId);
+    const job = await this.jobCreator.createJob(evaluation.id);
+    return {
+      evaluationId: evaluation.id,
+      agentId,
+      jobId: job.id,
+      created: true
+    };
   }
 }

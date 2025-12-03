@@ -75,9 +75,12 @@ export class ServiceFactory {
    */
   getEvaluationService(): EvaluationService {
     if (!this.evaluationService) {
+      // Pass JobService as jobCreator to enable pg-boss enqueueing
+      const jobService = this.getJobService();
       this.evaluationService = new EvaluationService(
         this.evaluationRepository,
-        this.logger
+        this.logger,
+        jobService
       );
     }
     return this.evaluationService;
@@ -91,25 +94,27 @@ export class ServiceFactory {
     // Create repositories with the transaction client
     const txDocumentRepo = new DocumentRepository(prismaTransaction);
     const txEvaluationRepo = new EvaluationRepository(prismaTransaction);
-    
-    // Create services with transactional repositories
-    const txEvaluationService = new EvaluationService(
-      txEvaluationRepo,
-      this.logger
-    );
-    
-    const txDocumentService = new DocumentService(
-      txDocumentRepo,
-      this.documentValidator,
-      txEvaluationService,
-      this.logger
-    );
-    
+
     // JobService uses repository, so we create a new instance with the tx repository
     const txJobService = new JobService(
       new JobRepository(prismaTransaction),
       this.logger,
       this.pgBossService
+    );
+
+    // Create services with transactional repositories
+    // Pass txJobService as jobCreator for pg-boss enqueueing
+    const txEvaluationService = new EvaluationService(
+      txEvaluationRepo,
+      this.logger,
+      txJobService
+    );
+
+    const txDocumentService = new DocumentService(
+      txDocumentRepo,
+      this.documentValidator,
+      txEvaluationService,
+      this.logger
     );
 
     return {
