@@ -5,6 +5,7 @@
  * All environment variables should be accessed through this configuration object.
  */
 
+import { DEFAULT_ANALYSIS_MODEL, DEFAULT_SEARCH_MODEL } from '@roast/ai';
 import { getEnvVar, requireEnvVar, isDevelopment, isProduction, isTest } from './environment';
 
 /**
@@ -157,8 +158,8 @@ class ConfigFactory {
             10,
             'HELICONE_CACHE_BUCKET_MAX_SIZE'
           ),
-          searchModel: getEnvVar('SEARCH_MODEL', 'claude-haiku-4-5-20251001'),
-          analysisModel: getEnvVar('ANALYSIS_MODEL', 'claude-sonnet-4-5-20250929'),
+          searchModel: getEnvVar('SEARCH_MODEL', DEFAULT_SEARCH_MODEL),
+          analysisModel: getEnvVar('ANALYSIS_MODEL', DEFAULT_ANALYSIS_MODEL),
         },
 
         auth: {
