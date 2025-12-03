@@ -141,13 +141,21 @@ export class PgBossService {
   }
 
   /**
-   * Explicitly fail a job without allowing retries
-   * Use this for non-retryable errors to prevent pg-boss from retrying
+   * Explicitly fail a job (still allows retries based on retryLimit)
    */
   async fail(queue: string, jobId: string, error?: unknown): Promise<void> {
     const boss = this.getBoss();
     const errorData = error instanceof Error ? { message: error.message } : { message: String(error) };
     await boss.fail(queue, jobId, errorData);
+  }
+
+  /**
+   * Complete a job - use for non-retryable errors to prevent pg-boss from retrying.
+   * Marks the job as "completed" in pg-boss so it won't be picked up again.
+   */
+  async complete(queue: string, jobId: string, data?: object): Promise<void> {
+    const boss = this.getBoss();
+    await boss.complete(queue, jobId, data);
   }
 
   /**

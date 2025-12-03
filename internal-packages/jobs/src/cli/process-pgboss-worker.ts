@@ -206,15 +206,15 @@ class PgBossWorker {
     retryCount: number,
     retryLimit: number
   ) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(this.formatLog(jobId, '❌ Failed:'), error);
 
-    // Job timeout errors are not retryable - fail immediately
+    // Job timeout errors are not retryable
     if (error instanceof JobTimeoutError) {
       logger.warn(this.formatLog(jobId, 'Timed out - marking as FAILED (non-retryable)'));
       await this.jobService.markAsFailed(jobId, error);
-      await this.pgBossService.fail(DOCUMENT_EVALUATION_JOB, pgBossJobId, error);
-      // Throw to signal handler failure (job already marked failed, won't retry)
-      throw error;
+      await this.pgBossService.complete(DOCUMENT_EVALUATION_JOB, pgBossJobId, { error: errorMessage });
+      return;
     }
 
     const isTransient = isRetryableError(error);
@@ -225,14 +225,12 @@ class PgBossWorker {
       throw error; // Let pg-boss handle retry
     }
 
-    // Final failure
+    // Final failure - non-retryable or max retries exhausted
     const reason = !isTransient ? 'non-retryable error' : `max retries (${retryLimit}) exhausted`;
     logger.info(this.formatLog(jobId, `Marking as FAILED: ${reason}`));
 
     await this.jobService.markAsFailed(jobId, error);
-    await this.pgBossService.fail(DOCUMENT_EVALUATION_JOB, pgBossJobId, error);
-    // Throw to signal handler failure (job already marked failed, won't retry)
-    throw error;
+    await this.pgBossService.complete(DOCUMENT_EVALUATION_JOB, pgBossJobId, { error: errorMessage });
   }
 }
 
