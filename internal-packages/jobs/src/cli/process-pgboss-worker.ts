@@ -25,7 +25,8 @@ import { PgBossService } from '../core/PgBossService';
 import { initializeAI } from '@roast/ai';
 import { initWorkerContext, runWithJobContext, JobTimeoutError, getWorkerId } from '@roast/ai/server';
 import { logger } from '../utils/logger';
-import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
+import { DOCUMENT_EVALUATION_JOB, type DocumentEvaluationJobData } from '../types/jobTypes';
+import type { JobWithMetadata } from 'pg-boss';
 import { isRetryableError } from '../errors/retryableErrors';
 import { getAgentTimeout, formatTimeout } from '../config/agentTimeouts';
 import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
@@ -105,7 +106,7 @@ class PgBossWorker {
 
     await this.pgBossService.work(
       DOCUMENT_EVALUATION_JOB,
-      { batchSize: config.jobs.pgBoss.teamSize },
+      { batchSize: config.jobs.pgBoss.teamSize, includeMetadata: true },
       this.handleBatch
     );
   }
@@ -138,10 +139,18 @@ class PgBossWorker {
     logger.info('🎧 Listening for jobs...');
   }
 
-  private handleBatch = async (pgBossJobs: any[]) => {
+  private handleBatch = async (pgBossJobs: JobWithMetadata<DocumentEvaluationJobData>[]) => {
     logger.info(`[pg-boss Worker] Processing batch of ${pgBossJobs.length} job(s)`);
     const jobPromises = pgBossJobs.map((job) => this.processJob(job));
-    await Promise.allSettled(jobPromises);
+    const results = await Promise.allSettled(jobPromises);
+
+    // Re-throw retryable errors so pg-boss can schedule retries
+    // Promise.allSettled swallows exceptions, so we need to propagate them manually
+    for (const result of results) {
+      if (result.status === 'rejected' && isRetryableError(result.reason)) {
+        throw result.reason;
+      }
+    }
   };
 
   private formatLog(jobId: string, message: string): string {
@@ -155,10 +164,9 @@ class PgBossWorker {
     return getAgentTimeout(agentVersion?.extendedCapabilityId ?? undefined);
   }
 
-  private async processJob(pgBossJob: any) {
+  private async processJob(pgBossJob: JobWithMetadata<DocumentEvaluationJobData>) {
     const { jobId } = pgBossJob.data;
-    const retryCount = pgBossJob.retrycount || 0;
-    const retryLimit = config.jobs.pgBoss.retryLimit;
+    const { retryCount, retryLimit } = pgBossJob;
 
     logger.info(this.formatLog(jobId, `Processing (attempt ${retryCount + 1}/${retryLimit + 1})`));
 
