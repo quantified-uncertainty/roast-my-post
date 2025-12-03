@@ -26,6 +26,21 @@ The job system uses **pg-boss** as the queue infrastructure while maintaining a 
 
 Jobs share the same ID in both systems for easy correlation.
 
+## Concurrency Model
+
+Achieved by registering **multiple workers** (calling `work()` N times):
+
+```typescript
+// Each work() creates an independent polling worker
+for (let i = 0; i < concurrency; i++) {
+  boss.work(queue, { includeMetadata: true }, handler);
+}
+```
+
+Each worker polls and processes jobs independently. When one finishes, it immediately fetches the next.
+
+**Why not batchSize?** With `batchSize: N`, handler receives N jobs but must complete all before fetching more. A 60s job blocks 5s jobs from releasing their slot.
+
 ## Job Context (AsyncLocalStorage)
 
 Single context propagates worker ID, job ID, and timeout through async call stack.

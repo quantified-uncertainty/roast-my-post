@@ -127,11 +127,17 @@ export class PgBossService {
   }
 
   /**
-   * Register a worker for a queue
+   * Register a worker for a queue.
+   * Call multiple times to create multiple concurrent workers.
+   * Handler receives array with 1 job by default (batchSize=1).
    */
-  async work(name: string, options: any, handler: (jobs: any[]) => Promise<void>): Promise<void> {
+  async work(
+    name: string,
+    options: any,
+    handler: (jobs: any[]) => Promise<void>
+  ): Promise<string> {
     const boss = this.getBoss();
-    await boss.work(name, options, handler);
+    return await boss.work(name, options, handler as any);
   }
 
   /**

@@ -100,15 +100,21 @@ class PgBossWorker {
   }
 
   private async registerDocumentEvaluationWorker() {
+    const concurrency = config.jobs.pgBoss.teamSize;
     logger.info(
-      `👷 Registering worker for ${DOCUMENT_EVALUATION_JOB} (batch size: ${config.jobs.pgBoss.teamSize})...`
+      `👷 Registering ${concurrency} worker(s) for ${DOCUMENT_EVALUATION_JOB}...`
     );
 
-    await this.pgBossService.work(
-      DOCUMENT_EVALUATION_JOB,
-      { batchSize: config.jobs.pgBoss.teamSize, includeMetadata: true },
-      this.handleBatch
+    // Register multiple workers to achieve concurrency
+    // Each work() call creates an independent polling worker
+    const workerPromises = Array.from({ length: concurrency }, () =>
+      this.pgBossService.work(
+        DOCUMENT_EVALUATION_JOB,
+        { includeMetadata: true },
+        this.handleJob
+      )
     );
+    await Promise.all(workerPromises);
   }
 
   private async registerScheduledTasks() {
@@ -132,25 +138,20 @@ class PgBossWorker {
   private logStartupComplete() {
     logger.info('✅ pg-boss worker started successfully');
     logger.info(`📊 Configuration:`);
-    logger.info(`   - Team size: ${config.jobs.pgBoss.teamSize}`);
+    logger.info(`   - Concurrency: ${config.jobs.pgBoss.teamSize}`);
     logger.info(`   - Retry limit: ${config.jobs.pgBoss.retryLimit}`);
     logger.info(`   - Retry delay: ${config.jobs.pgBoss.retryDelay}s`);
     logger.info(`   - Retry backoff: ${config.jobs.pgBoss.retryBackoff}`);
     logger.info('🎧 Listening for jobs...');
   }
 
-  private handleBatch = async (pgBossJobs: JobWithMetadata<DocumentEvaluationJobData>[]) => {
-    logger.info(`[pg-boss Worker] Processing batch of ${pgBossJobs.length} job(s)`);
-    const jobPromises = pgBossJobs.map((job) => this.processJob(job));
-    const results = await Promise.allSettled(jobPromises);
-
-    // Re-throw retryable errors so pg-boss can schedule retries
-    // Promise.allSettled swallows exceptions, so we need to propagate them manually
-    for (const result of results) {
-      if (result.status === 'rejected' && isRetryableError(result.reason)) {
-        throw result.reason;
-      }
-    }
+  /**
+   * Handle a single job from pg-boss.
+   * Each worker processes one job at a time (batchSize defaults to 1).
+   */
+  private handleJob = async (pgBossJobs: JobWithMetadata<DocumentEvaluationJobData>[]) => {
+    const pgBossJob = pgBossJobs[0];
+    await this.processJob(pgBossJob);
   };
 
   private formatLog(jobId: string, message: string): string {
