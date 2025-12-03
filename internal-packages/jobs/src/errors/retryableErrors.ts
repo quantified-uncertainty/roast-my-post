@@ -38,6 +38,9 @@ const NON_RETRYABLE_PATTERNS = [
   'agent version not found',
   'evaluation not found',
   'job not found',
+
+  // This is the hard limit and we discard this result so we don't want to retry it
+  'response was truncated at 8000 tokens',
 ];
 
 /**
