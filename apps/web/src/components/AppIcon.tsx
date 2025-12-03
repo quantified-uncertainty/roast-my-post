@@ -1,15 +1,16 @@
 import { SVGProps } from "react";
 
-// Import all SVG icons using SVGR
-// These are converted to React components at build time
-import CustomIcon from "../../public/app-icons/custom.svg";
-import DetailsIcon from "../../public/app-icons/details.svg";
-import EaForumIcon from "../../public/app-icons/ea-forum.svg";
-import EvaluationIcon from "../../public/app-icons/evaluation.svg";
-import EvaluatorIcon from "../../public/app-icons/evaluator.svg";
-import LessWrongIcon from "../../public/app-icons/lesswrong.svg";
-import OverviewIcon from "../../public/app-icons/overview.svg";
-import VersionsIcon from "../../public/app-icons/versions.svg";
+// Import inline React SVG components (Turbopack compatible)
+import {
+  CustomIcon,
+  DetailsIcon,
+  EaForumIcon,
+  EvaluationIcon,
+  EvaluatorIcon,
+  LessWrongIcon,
+  OverviewIcon,
+  VersionsIcon,
+} from "./icons/AppIcons";
 
 /**
  * AppIcon component

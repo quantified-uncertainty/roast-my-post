@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
+    "dev:webpack": "next dev",
     "build": "pnpm --filter @roast/ai run check-schemas && pnpm --filter @roast/ai run check-readmes && next build",
     "start": "next start",
     "lint": "eslint . --config ./config/eslint/.eslintrc.json",
