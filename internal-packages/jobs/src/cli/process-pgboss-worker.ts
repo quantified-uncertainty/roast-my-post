@@ -177,16 +177,17 @@ class PgBossWorker {
         throw new Error(`Job ${jobId} not found in database`);
       }
 
-      await this.jobService.markAsRunning(jobId, retryCount + 1);
-
-            // Get timeout based on agent capability
+      // Get timeout based on agent capability
       const timeoutMs = this.getJobTimeout(job);
 
-
       // Run with job context (sets job ID and timeout for logging and timeout checks)
+      // markAsRunning is inside the context so job state is consistent with timeout tracking
       const result = await runWithJobContext(
         { jobId, timeoutMs },
-        () => this.jobOrchestrator.processJob(job)
+        async () => {
+          await this.jobService.markAsRunning(jobId, retryCount + 1);
+          return this.jobOrchestrator.processJob(job);
+        }
       );
 
       if (!result.success) {
