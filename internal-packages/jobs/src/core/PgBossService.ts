@@ -36,8 +36,26 @@ export class PgBossService {
       try {
         this.logger.info('Initializing pg-boss...');
 
+        // Configure SSL for non-development environments
+        // DigitalOcean App Platform injects DATABASE_CA_CERT for managed databases
+        const caCert = process.env.DATABASE_CA_CERT;
+        let sslConfig: { rejectUnauthorized: boolean; ca?: string } | undefined;
+
+        if (config.env.isDevelopment) {
+          this.logger.info('Development mode: SSL disabled');
+          sslConfig = undefined;
+        } else if (caCert) {
+          const certPreview = caCert.substring(0, 50) + '...';
+          this.logger.info(`Using DATABASE_CA_CERT for SSL (${caCert.length} chars): ${certPreview}`);
+          sslConfig = { rejectUnauthorized: true, ca: caCert };
+        } else {
+          this.logger.warn('DATABASE_CA_CERT not found, using rejectUnauthorized: false');
+          sslConfig = { rejectUnauthorized: false };
+        }
+
         const boss = new PgBoss({
           connectionString: config.database.url,
+          ssl: sslConfig,
           // Configure cron worker interval for scheduled tasks
           // cronWorkerIntervalSeconds: how often cron jobs are actually executed
           // cronMonitorIntervalSeconds: how often to check if cron jobs are due (default: 30s)
