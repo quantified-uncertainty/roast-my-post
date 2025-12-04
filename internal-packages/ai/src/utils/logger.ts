@@ -64,7 +64,7 @@ class Logger {
 
   info(message: string, context?: LogContext) {
     if (this.isTest || !shouldLog('info')) return;
-    console.log(`${getPrefix('')} ${message}`, context || '');
+    console.log(`${getPrefix('INFO')} ${message}`, context || '');
   }
 
   warn(message: string, context?: LogContext) {

@@ -79,7 +79,7 @@ export interface LogContext {
 export const logger: Logger = {
   info: (message: string, ...args: LoggerArgs) => {
     if (shouldLog('info')) {
-      console.log(`${getPrefix('')} ${message}`, ...args);
+      console.log(`${getPrefix('INFO')} ${message}`, ...args);
     }
   },
   warn: (message: string, ...args: LoggerArgs) => {
