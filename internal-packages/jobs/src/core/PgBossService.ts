@@ -36,8 +36,15 @@ export class PgBossService {
       try {
         this.logger.info('Initializing pg-boss...');
 
+        // Configure SSL for non-development environments
+        // Cloud databases (AWS RDS, DigitalOcean, etc.) often use self-signed certificates
+        const sslConfig = config.env.isDevelopment
+          ? undefined
+          : { rejectUnauthorized: false };
+
         const boss = new PgBoss({
           connectionString: config.database.url,
+          ssl: sslConfig,
           // Configure cron worker interval for scheduled tasks
           // cronWorkerIntervalSeconds: how often cron jobs are actually executed
           // cronMonitorIntervalSeconds: how often to check if cron jobs are due (default: 30s)
