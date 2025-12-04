@@ -45,16 +45,13 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
     try {
       // Check if job was cancelled before we start processing
-      const currentJob = await prisma.job.findUnique({
-        where: { id: job.id },
-        select: { status: true }
-      });
-      
-      if (currentJob?.status === 'CANCELLED') {
+      const currentJob = await this.jobRepository.findById(job.id);
+
+      if (currentJob?.status === JobStatus.CANCELLED) {
         this.logger.info(this.formatLog(job.id, 'Job was cancelled, skipping processing'));
         return {
           success: false,
-          job: { ...job, status: 'CANCELLED' as any },
+          job: { ...job, status: JobStatus.CANCELLED },
           error: new Error('Job was cancelled'),
         };
       }
