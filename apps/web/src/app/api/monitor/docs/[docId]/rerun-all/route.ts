@@ -22,9 +22,9 @@ export async function POST(
     return commonErrors.forbidden();
   }
 
-  try {
-    const { docId } = await params;
+  const { docId } = await params;
 
+  try {
     // Get all evaluations for this document
     const evaluations = await evaluationRepository.findByDocumentId(docId);
 
@@ -82,7 +82,7 @@ export async function POST(
     });
 
   } catch (error) {
-    logger.error('Error re-running all evaluations:', error);
+    logger.error(`Error re-running all evaluations for doc ${docId}:`, error);
     return commonErrors.serverError("Failed to re-run evaluations");
   }
 }

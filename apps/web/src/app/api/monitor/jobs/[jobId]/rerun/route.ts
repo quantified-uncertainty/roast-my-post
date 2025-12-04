@@ -22,9 +22,9 @@ export async function POST(
     return commonErrors.forbidden();
   }
 
-  try {
-    const { jobId } = await params;
+  const { jobId } = await params;
 
+  try {
     // Get the job to find its evaluationId
     const job = await jobRepository.findById(jobId);
     if (!job) {
@@ -56,7 +56,7 @@ export async function POST(
     });
 
   } catch (error) {
-    logger.error('Error re-running job:', error);
+    logger.error(`Error re-running job ${jobId}:`, error);
     return commonErrors.serverError("Failed to re-run job");
   }
 }
