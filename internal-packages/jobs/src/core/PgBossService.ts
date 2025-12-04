@@ -51,11 +51,11 @@ export class PgBossService {
           this.logger.info(`Using DATABASE_CA_CERT for SSL (${caCert.length} chars): ${certPreview}`);
           sslConfig = { rejectUnauthorized: true, ca: caCert };
         } else {
-          // TEMP WORKAROUND: Disable SSL until CA cert is configured in K8s
-          this.logger.warn('DATABASE_CA_CERT not found, disabling SSL (temporary workaround)');
-          sslConfig = false;
-          // Strip sslmode from connection string to avoid conflicts
-          connectionString = connectionString.replace(/[?&]sslmode=[^&]*/g, '');
+          // TEMP WORKAROUND: Use sslmode=no-verify until CA cert is configured in K8s
+          this.logger.warn('DATABASE_CA_CERT not found, using sslmode=no-verify (temporary workaround)');
+          sslConfig = { rejectUnauthorized: false };
+          // Replace sslmode=require with sslmode=no-verify to skip cert validation
+          connectionString = connectionString.replace(/sslmode=require/, 'sslmode=no-verify');
         }
 
         const boss = new PgBoss({
