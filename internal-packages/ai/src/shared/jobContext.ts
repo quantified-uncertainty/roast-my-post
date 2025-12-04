@@ -83,11 +83,18 @@ export function getRemainingTimeMs(): number | undefined {
 }
 
 /**
- * Check if job has exceeded its timeout
+ * Minimum time buffer (15s) to ensure there's enough time for a meaningful API call.
+ * If less than this time remains, we consider the job effectively timed out
+ * to avoid wasted API calls that would almost certainly fail.
+ */
+const MIN_TIME_BUFFER_MS = 15000;
+
+/**
+ * Check if job has exceeded its timeout (or doesn't have enough time remaining)
  */
 export function isJobTimedOut(): boolean {
   const remaining = getRemainingTimeMs();
-  return remaining !== undefined && remaining <= 0;
+  return remaining !== undefined && remaining < MIN_TIME_BUFFER_MS;
 }
 
 /**
