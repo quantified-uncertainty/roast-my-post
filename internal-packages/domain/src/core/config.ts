@@ -7,6 +7,11 @@
 
 import { getEnvVar, requireEnvVar, isDevelopment, isProduction, isTest } from './environment';
 
+// Model defaults - duplicated from @roast/ai/constants to avoid circular dependency issues
+// If you need to change these, update BOTH here and in @roast/ai/constants.ts
+const DEFAULT_SEARCH_MODEL = "claude-haiku-4-5-20251001";
+const DEFAULT_ANALYSIS_MODEL = "claude-sonnet-4-5-20250929";
+
 /**
  * Application Configuration Interface
  * Defines the complete configuration structure with proper types
@@ -157,8 +162,8 @@ class ConfigFactory {
             10,
             'HELICONE_CACHE_BUCKET_MAX_SIZE'
           ),
-          searchModel: getEnvVar('SEARCH_MODEL', 'claude-haiku-4-5-20251001'),
-          analysisModel: getEnvVar('ANALYSIS_MODEL', 'claude-opus-4-5-20251101'),
+          searchModel: getEnvVar('SEARCH_MODEL', DEFAULT_SEARCH_MODEL),
+          analysisModel: getEnvVar('ANALYSIS_MODEL', DEFAULT_ANALYSIS_MODEL),
         },
 
         auth: {

@@ -1,14 +1,16 @@
 import { SVGProps } from "react";
 
-// Import all agent icons via SVGR (converted to React components at build time)
-import EaFallacyAuditorIcon from "../../public/agent-icons/ea-fallacy-auditor.svg";
-import FallacyVerificationIcon from "../../public/agent-icons/fallacy-verification.svg";
-import FallacyCheckIcon from "../../public/agent-icons/fallacy-check.svg";
-import FactCheckerIcon from "../../public/agent-icons/fact-checker.svg";
-import ForecastCheckerIcon from "../../public/agent-icons/forecast-checker.svg";
-import LinkVerifierIcon from "../../public/agent-icons/link-verifier.svg";
-import MathCheckerIcon from "../../public/agent-icons/math-checker.svg";
-import SpellingGrammarIcon from "../../public/agent-icons/spelling-grammar.svg";
+// Import inline React SVG components (Turbopack compatible)
+import {
+  EaFallacyAuditorIcon,
+  FallacyVerificationIcon,
+  FallacyCheckIcon,
+  FactCheckerIcon,
+  ForecastCheckerIcon,
+  LinkVerifierIcon,
+  MathCheckerIcon,
+  SpellingGrammarIcon,
+} from "./icons/AgentIcons";
 
 /**
  * AgentIcon component

@@ -16,7 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import type { Comment } from "@roast/ai";
 
-import IndexFingerIcon from "../../../../public/app-icons/indexFinger.svg";
+import { IndexFingerIcon } from "@/components/icons/AppIcons";
 import {
   MARKDOWN_COMPONENTS,
   MARKDOWN_PLUGINS,

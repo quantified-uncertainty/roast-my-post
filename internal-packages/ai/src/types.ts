@@ -1,5 +1,6 @@
 // Core types for AI package
 import { aiConfig } from "./config";
+import { DEFAULT_ANALYSIS_MODEL } from "./constants";
 
 export type LLMRole = "system" | "user" | "assistant";
 
@@ -30,7 +31,7 @@ export interface RichLLMInteraction {
 // Model configuration - use centralized config
 // Note: This is read at import time, so if env vars are set after import, it won't pick them up
 // For dynamic reading, use aiConfig.analysisModel directly
-export const ANALYSIS_MODEL = "claude-opus-4-5-20251101";
+export const ANALYSIS_MODEL = DEFAULT_ANALYSIS_MODEL;
 
 // Model ID to display name mapping
 export const MODEL_DISPLAY_NAMES: Record<string, string> = {

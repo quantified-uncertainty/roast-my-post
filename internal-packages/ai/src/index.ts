@@ -21,6 +21,7 @@ export * from './types';
 
 // Configuration
 export { initializeAI, type AIConfig } from './config';
+export { DEFAULT_ANALYSIS_MODEL, DEFAULT_SEARCH_MODEL } from './constants';
 
 // Document analysis workflows
 export * from './workflows';
