@@ -36,10 +36,12 @@ export class PgBossService {
       try {
         this.logger.info('Initializing pg-boss...');
 
-        // Configure SSL for non-development environments
-        // DigitalOcean App Platform injects DATABASE_CA_CERT for managed databases
+        // TODO: Properly configure SSL with CA cert from K8s secrets
+        // For now, disable SSL until DATABASE_CA_CERT is set up
+        // See: https://docs.digitalocean.com/reference/terraform/reference/data-sources/database_ca/
         const caCert = process.env.DATABASE_CA_CERT;
-        let sslConfig: { rejectUnauthorized: boolean; ca?: string } | undefined;
+        let sslConfig: { rejectUnauthorized: boolean; ca?: string } | false | undefined;
+        let connectionString = config.database.url;
 
         if (config.env.isDevelopment) {
           this.logger.info('Development mode: SSL disabled');
@@ -49,12 +51,15 @@ export class PgBossService {
           this.logger.info(`Using DATABASE_CA_CERT for SSL (${caCert.length} chars): ${certPreview}`);
           sslConfig = { rejectUnauthorized: true, ca: caCert };
         } else {
-          this.logger.warn('DATABASE_CA_CERT not found, using rejectUnauthorized: false');
-          sslConfig = { rejectUnauthorized: false };
+          // TEMP WORKAROUND: Disable SSL until CA cert is configured in K8s
+          this.logger.warn('DATABASE_CA_CERT not found, disabling SSL (temporary workaround)');
+          sslConfig = false;
+          // Strip sslmode from connection string to avoid conflicts
+          connectionString = connectionString.replace(/[?&]sslmode=[^&]*/g, '');
         }
 
         const boss = new PgBoss({
-          connectionString: config.database.url,
+          connectionString,
           ssl: sslConfig,
           // Configure cron worker interval for scheduled tasks
           // cronWorkerIntervalSeconds: how often cron jobs are actually executed
