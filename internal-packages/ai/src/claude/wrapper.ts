@@ -4,6 +4,7 @@ import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 import { withRetry } from '../utils/retryUtils';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
+import { getRemainingTimeMs } from '../shared/jobContext';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -151,8 +152,13 @@ export async function callClaude(
       if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
       
       // Add timeout to prevent hanging indefinitely
-      const DEFAULT_CLAUDE_TIMEOUT_MS = 180000; // 3 minutes default (should handle most cases)
-      const timeoutMs = options.timeout || DEFAULT_CLAUDE_TIMEOUT_MS;
+      // Use remaining job time if available, otherwise use provided/default timeout
+      const DEFAULT_CLAUDE_TIMEOUT_MS = 180000; // 3 minutes default
+      const remainingJobTime = getRemainingTimeMs();
+      const requestedTimeout = options.timeout || DEFAULT_CLAUDE_TIMEOUT_MS;
+      const timeoutMs = remainingJobTime !== undefined
+        ? Math.min(remainingJobTime, requestedTimeout)
+        : requestedTimeout;
       let timeoutId: NodeJS.Timeout;
       
       const timeoutPromise = new Promise<never>((_, reject) => {

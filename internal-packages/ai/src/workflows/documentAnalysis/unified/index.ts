@@ -1,12 +1,13 @@
 /**
  * Unified Document Analysis Workflow
- * 
+ *
  * A single, flexible workflow that can be configured with different plugin selections.
  * This replaces the need for separate workflow implementations.
  */
 
 import { aiCommentsToDbComments } from "../typeAdapters";
 import type { Agent, Comment as AiComment, Document } from "@roast/ai";
+import { checkJobTimeout } from "../../../shared/jobContext";
 import { PluginType } from "../../../analysis-plugins/types/plugin-types";
 import { PluginManager } from "../../../analysis-plugins/PluginManager";
 import type { TaskResult } from "../shared/types";
@@ -34,6 +35,9 @@ export async function analyzeDocumentUnified(
   tasks: TaskResult[];
   jobLogString?: string;
 }> {
+  // Check timeout before starting plugin analysis
+  checkJobTimeout();
+
   // Create plugin manager with specified plugin selection
   // Cast readonly arrays to mutable for PluginManager compatibility
   const manager = new PluginManager({

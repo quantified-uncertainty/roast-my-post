@@ -1,220 +1,155 @@
 /**
- * Job Service
- * 
- * Business logic layer for job processing.
- * Handles job lifecycle, retry decisions, and status management.
- * Orchestrates between repository and workflow layers.
+ * JobService
+ *
+ * Provides a minimal interface for job operations.
+ *
+ * Architecture:
+ * - Web app: Initializes pg-boss to submit jobs
+ * - Worker process: Initializes pg-boss to process jobs
  */
 
-import type { 
-  JobRepository, 
-  JobEntity, 
-  JobWithRelations, 
-  CreateJobData, 
-  UpdateJobStatusData 
-} from '@roast/db';
-import { JobStatus } from '@roast/db';
-import type { Logger, CompletionData } from '../types';
+import { JobStatus, type JobEntity, type JobRepository } from '@roast/db';
+import { PgBossService } from './PgBossService';
+import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
+import type { Logger } from '../types';
 
-export interface JobServiceInterface {
-  findNextPendingJob(): Promise<JobWithRelations | null>;
-  claimNextPendingJob(): Promise<JobWithRelations | null>;
-  createJob(data: CreateJobData): Promise<JobEntity>;
-  markAsRunning(id: string): Promise<JobEntity>;
-  markAsCompleted(id: string, data: CompletionData): Promise<JobEntity>;
-  markAsFailed(id: string, error: unknown): Promise<JobEntity>;
-  shouldRetry(error: unknown, attempts: number): Promise<boolean>;
-  createRetryJob(originalJob: JobEntity): Promise<JobEntity>;
-  getJobAttempts(jobId: string): Promise<JobEntity[]>;
-  sanitizeErrorMessage(error: unknown): string;
-}
-
-export class JobService implements JobServiceInterface {
-  private static readonly MAX_RETRY_ATTEMPTS = 3;
-  private static readonly ERROR_MESSAGE_MAX_LENGTH = 1000;
-
+export class JobService {
   constructor(
     private jobRepository: JobRepository,
-    private logger: Logger
+    private logger: Logger,
+    private pgBossService: PgBossService
   ) {}
 
-  /**
-   * Find the next job that can be processed safely
-   */
-  async findNextPendingJob(): Promise<JobWithRelations | null> {
-    return await this.jobRepository.findNextPendingJob();
+  async initialize() {
+    await this.pgBossService.initialize();
   }
 
   /**
-   * Atomically claim the next pending job for processing
+   * Create a job for processing
+   * Creates both Job table record and pg-boss queue entry
    */
-  async claimNextPendingJob(): Promise<JobWithRelations | null> {
-    return await this.jobRepository.claimNextPendingJob();
+  async createJob(evaluationId: string, agentEvalBatchId?: string): Promise<JobEntity> {
+    // Lazy-init prevents race conditions by ensuring the queue is connected
+    // before we try to use it. Safe to call repeatedly due to promise locking.
+    //
+    // Context: In Next.js/Serverless environments, there is no single "main"
+    // function to await global initialization. Use-case specific lazy loading
+    // is the safest way to ensure the connection is ready when needed.
+    await this.pgBossService.initialize();
+
+    // Create Job table record first
+    const job = await this.jobRepository.create({
+      evaluationId,
+      agentEvalBatchId: agentEvalBatchId || undefined,
+    });
+
+    const jobData = {
+      jobId: job.id,
+      evaluationId,
+      agentEvalBatchId: agentEvalBatchId || null,
+    };
+
+    try {
+      // Let pg-boss generate its own UUID
+      const pgBossJobId = await this.pgBossService.send(DOCUMENT_EVALUATION_JOB, jobData);
+
+      if (!pgBossJobId) {
+        throw new Error('pg-boss returned null job ID');
+      }
+
+      await this.jobRepository.setPgBossJobId(job.id, pgBossJobId);
+    } catch (error) {
+      this.logger.error(`Failed to create pg-boss job for Job ${job.id}:`, error);
+      await this.markAsFailed(
+        job.id,
+        `Failed to queue job: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+
+    return job;
+  }
+
+
+  /**
+   * Cancel a job
+   * Cancels both the pg-boss queue job and updates the database status
+   */
+  async cancelJob(jobId: string): Promise<JobEntity> {
+    await this.pgBossService.initialize();
+
+    // Get the job to find its pgBossJobId
+    const job = await this.jobRepository.findById(jobId);
+
+    // Cancel pg-boss job if we have the pgBossJobId
+    if (job?.pgBossJobId) {
+      try {
+        await this.pgBossService.cancel(DOCUMENT_EVALUATION_JOB, job.pgBossJobId);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to cancel pg-boss job ${job.pgBossJobId}: ${errorMessage}`);
+        // Continue to update database even if pg-boss cancellation fails
+      }
+    }
+
+    // Update database to mark as cancelled
+    return this.markAsCancelled(jobId);
   }
 
   /**
-   * Create a new job
+   * Mark a job as cancelled in the database
    */
-  async createJob(data: CreateJobData): Promise<JobEntity> {
-    return await this.jobRepository.create(data);
-  }
-
-  /**
-   * Mark job as running (for manual status updates)
-   */
-  async markAsRunning(id: string): Promise<JobEntity> {
-    return await this.jobRepository.updateStatus(id, {
-      status: JobStatus.RUNNING,
-      startedAt: new Date(),
+  private async markAsCancelled(jobId: string): Promise<JobEntity> {
+    return this.jobRepository.updateStatus(jobId, {
+      status: JobStatus.CANCELLED,
+      completedAt: new Date(),
+      cancellationReason: 'Cancelled by user',
+      cancelledAt: new Date(),
     });
   }
 
   /**
-   * Mark job as completed successfully
+   * Mark a job as running and track the attempt number
+   * @param jobId - The job ID
+   * @param attempts - The current attempt number (1-indexed)
    */
-  async markAsCompleted(id: string, data: CompletionData): Promise<JobEntity> {
-    return await this.jobRepository.updateStatus(id, {
+  async markAsRunning(jobId: string, attempts: number = 1): Promise<void> {
+    await this.jobRepository.updateStatus(jobId, {
+      status: JobStatus.RUNNING,
+      startedAt: new Date(),
+      attempts,
+    });
+  }
+
+  /**
+   * Mark a job as completed
+   */
+  async markAsCompleted(
+    jobId: string,
+    data: {
+      llmThinking: string | null;
+      durationInSeconds: number;
+      logs: string;
+    }
+  ) {
+    return this.jobRepository.updateStatus(jobId, {
       status: JobStatus.COMPLETED,
       completedAt: new Date(),
-      llmThinking: data.llmThinking || undefined, // Convert null to undefined
+      llmThinking: data.llmThinking,
       durationInSeconds: data.durationInSeconds,
       logs: data.logs,
     });
   }
 
   /**
-   * Mark job as failed and potentially create retry
+   * Mark a job as failed
    */
-  async markAsFailed(id: string, error: unknown): Promise<JobEntity> {
-    const job = await this.jobRepository.findById(id);
-    if (!job) {
-      throw new Error(`Job ${id} not found`);
-    }
-
-    // Sanitize and truncate error message
-    const errorMessage = this.sanitizeErrorMessage(error);
-
-    // Log the failure
-    this.logger.error(`Marking job ${id} as failed with error: ${errorMessage}`);
-
-    try {
-      // Update job as failed
-      const updatedJob = await this.jobRepository.updateStatus(id, {
-        status: JobStatus.FAILED,
-        error: errorMessage,
-        completedAt: new Date(),
-      });
-
-      this.logger.info(`Successfully marked job ${id} as FAILED`);
-
-      // Check if we should create a retry (use fresh job data to avoid race conditions)
-      if (await this.shouldRetry(error, updatedJob.attempts)) {
-        const retryJob = await this.createRetryJob(updatedJob);
-        this.logger.info(`Created retry job ${retryJob.id} for failed job ${id}`);
-      } else {
-        const reason = !this.isRetryableError(errorMessage) 
-          ? "non-retryable error" 
-          : `max attempts (${JobService.MAX_RETRY_ATTEMPTS}) reached`;
-        this.logger.info(`Not retrying job ${id}: ${reason}`);
-      }
-
-      return updatedJob;
-    } catch (dbError) {
-      this.logger.error(`Failed to update job ${id} status to FAILED:`, dbError);
-      throw dbError;
-    }
-  }
-
-  /**
-   * Determine if job should be retried
-   */
-  async shouldRetry(error: unknown, attempts: number): Promise<boolean> {
-    const errorMessage = this.sanitizeErrorMessage(error);
-    
-    // Check if error is retryable and we haven't exceeded max attempts
-    return this.isRetryableError(errorMessage) && attempts < JobService.MAX_RETRY_ATTEMPTS;
-  }
-
-  /**
-   * Create a retry job for a failed job
-   */
-  async createRetryJob(originalJob: JobEntity): Promise<JobEntity> {
-    return await this.jobRepository.createRetry({
-      evaluationId: originalJob.evaluationId,
-      originalJobId: originalJob.originalJobId || originalJob.id,
-      attempts: originalJob.attempts + 1,
-      agentEvalBatchId: originalJob.agentEvalBatchId || undefined, // Convert null to undefined
+  async markAsFailed(jobId: string, error: unknown): Promise<JobEntity> {
+    return this.jobRepository.updateStatus(jobId, {
+      status: JobStatus.FAILED,
+      error: error instanceof Error ? error.message : String(error),
+      completedAt: new Date(),
     });
   }
 
-  /**
-   * Get all attempts for a job (original + retries)
-   */
-  async getJobAttempts(jobId: string): Promise<JobEntity[]> {
-    return await this.jobRepository.getJobAttempts(jobId);
-  }
-
-  /**
-   * Sanitize error message for database storage
-   */
-  sanitizeErrorMessage(error: unknown): string {
-    let errorMessage = error instanceof Error ? error.message : String(error);
-    
-    // Remove problematic Unicode characters that might cause database issues
-    errorMessage = errorMessage.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-    
-    // Truncate if too long
-    if (errorMessage.length > JobService.ERROR_MESSAGE_MAX_LENGTH) {
-      errorMessage = errorMessage.substring(0, JobService.ERROR_MESSAGE_MAX_LENGTH - 3) + '...';
-    }
-    
-    return errorMessage;
-  }
-
-  /**
-   * Determine if an error should trigger a retry
-   */
-  private isRetryableError(errorMessage: string): boolean {
-    // Don't retry validation errors or permanent failures
-    const nonRetryablePatterns = [
-      'validation',
-      'invalid',
-      'not found',
-      'unauthorized',
-      'forbidden',
-      'bad request',
-      'schema error',
-      'type error',
-      'syntax error'
-    ];
-    
-    const lowerError = errorMessage.toLowerCase();
-    if (nonRetryablePatterns.some(pattern => lowerError.includes(pattern))) {
-      return false;
-    }
-
-    // Retry network/API/timeout errors
-    const retryablePatterns = [
-      'timeout',
-      'timed out',
-      'econnrefused',
-      'econnreset',
-      'socket hang up',
-      'rate limit',
-      'too many requests',
-      '429',
-      '502',
-      '503',
-      '504',
-      'internal server error',
-      '500',
-      'network',
-      'api error',
-      'service unavailable',
-      'gateway timeout',
-      'connection reset'
-    ];
-    
-    return retryablePatterns.some(pattern => lowerError.includes(pattern));
-  }
 }

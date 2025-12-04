@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { type Agent, callClaude, type Document, MathPlugin } from "@roast/ai";
-import { checkSpellingGrammarTool, PluginManager } from "@roast/ai/server";
+import { type Agent, type Document } from "@roast/ai";
+import { callClaude, checkSpellingGrammarTool, MathPlugin, PluginManager } from "@roast/ai/server";
 
 describe("@roast/ai Package Integration in Web App", () => {
   it("should import and use AI package exports", () => {

@@ -1,6 +1,6 @@
 import { generateId } from "@roast/db";
-
 import { prisma } from "@roast/db";
+import { logger } from "@/infrastructure/logging/logger";
 // Import removed - DocumentValidationSchema not used
 import type { Document } from "@/shared/types/databaseTypes";
 import { generateMarkdownPrepend, MAX_DOCUMENT_WORD_COUNT } from "@roast/domain";
@@ -1267,7 +1267,7 @@ export class DocumentModel {
     userId: string
   ) {
     // Use a transaction to ensure atomicity and prevent race conditions
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // First get current document and its latest version
       const document = await tx.document.findUnique({
         where: { id: docId },
@@ -1371,21 +1371,31 @@ export class DocumentModel {
           },
         });
 
-        // Automatically queue re-evaluations for all existing evaluations
-        if (document.evaluations.length > 0) {
-          // Use createMany for better performance
-          await tx.job.createMany({
-            data: document.evaluations.map((evaluation) => ({
-              status: "PENDING",
-              evaluationId: evaluation.id,
-            })),
-          });
-        }
       }
 
-      return updatedDocument;
+      return { updatedDocument, evaluationsToRerun: onlySubmitterNotesChanged ? [] : document.evaluations };
     }, {
       isolationLevel: 'Serializable', // Strongest isolation to prevent race conditions
     });
+
+    // After the transaction, enqueue jobs to pg-boss for re-evaluation
+    // This must be done outside the transaction since pg-boss is a separate system
+    if (result.evaluationsToRerun.length > 0) {
+      const { jobService } = getServices();
+      const failedEvaluations: string[] = [];
+      for (const evaluation of result.evaluationsToRerun) {
+        try {
+          await jobService.createJob(evaluation.id);
+        } catch (error) {
+          failedEvaluations.push(evaluation.id);
+          logger.error(`Failed to enqueue job for evaluation ${evaluation.id}:`, error);
+        }
+      }
+      if (failedEvaluations.length > 0) {
+        logger.error(`Failed to enqueue ${failedEvaluations.length}/${result.evaluationsToRerun.length} evaluation jobs`);
+      }
+    }
+
+    return result.updatedDocument;
   }
 }

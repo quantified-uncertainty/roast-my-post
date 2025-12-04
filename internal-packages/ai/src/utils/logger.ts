@@ -1,62 +1,80 @@
 /**
  * Simple logging wrapper for AI package
+ *
+ * Respects AI_LOG_LEVEL env var (error/warn/info/debug)
+ * Automatically includes job ID from context when available
  */
 
-type LogLevel = "debug" | "info" | "warn" | "error";
+import { getCurrentJobId, getWorkerId } from '../shared/jobContext';
+
+type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+
+const LOG_LEVELS: Record<LogLevel, number> = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  debug: 3,
+};
+
+function getLogLevel(): LogLevel {
+  const level = process.env.AI_LOG_LEVEL?.toLowerCase();
+  if (level && level in LOG_LEVELS) {
+    return level as LogLevel;
+  }
+  return 'info';
+}
+
+function shouldLog(level: LogLevel): boolean {
+  const currentLevel = getLogLevel();
+  return LOG_LEVELS[level] <= LOG_LEVELS[currentLevel];
+}
+
+function getTimestamp(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const ms = String(now.getMilliseconds()).padStart(3, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${ms}`;
+}
+
+function getPrefix(level: string): string {
+  const workerId = getWorkerId();
+  const jobId = getCurrentJobId();
+  const workerPart = workerId ? `[Worker ${workerId}] ` : '';
+  const jobPart = jobId ? `[Job ${jobId}] ` : '';
+  const levelStr = level || 'INFO';
+  return `[${getTimestamp()}] [${levelStr}] [AI] ${workerPart}${jobPart}`;
+}
 
 interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class Logger {
-  private isDevelopment = process.env.NODE_ENV !== "production";
-  private isTest = process.env.NODE_ENV === "test" || process.env.VITEST_WORKER_ID !== undefined;
-
-  private log(level: LogLevel, message: string, context?: LogContext) {
-    const timestamp = new Date().toISOString();
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      ...context,
-    };
-
-    // In test environment, suppress most logs
-    if (this.isTest && level !== "error") {
-      return;
-    }
-
-    // Console logging
-    switch (level) {
-      case "debug":
-        if (this.isDevelopment) console.debug(message, context || "");
-        break;
-      case "info":
-        console.log(message, context || "");
-        break;
-      case "warn":
-        console.warn(message, context || "");
-        break;
-      case "error":
-        console.error(message, context || "");
-        break;
-    }
-  }
+  private isTest = process.env.NODE_ENV === 'test' || process.env.VITEST_WORKER_ID !== undefined;
 
   debug(message: string, context?: LogContext) {
-    this.log("debug", message, context);
+    if (this.isTest || !shouldLog('debug')) return;
+    console.debug(`${getPrefix('DEBUG')} ${message}`, context || '');
   }
 
   info(message: string, context?: LogContext) {
-    this.log("info", message, context);
+    if (this.isTest || !shouldLog('info')) return;
+    console.log(`${getPrefix('INFO')} ${message}`, context || '');
   }
 
   warn(message: string, context?: LogContext) {
-    this.log("warn", message, context);
+    if (this.isTest || !shouldLog('warn')) return;
+    console.warn(`${getPrefix('WARN')} ${message}`, context || '');
   }
 
   error(message: string, context?: LogContext) {
-    this.log("error", message, context);
+    if (this.isTest || !shouldLog('error')) return;
+    console.error(`${getPrefix('ERROR')} ${message}`, context || '');
   }
 }
 

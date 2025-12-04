@@ -3,7 +3,7 @@ import { vi } from 'vitest';
  * Tests for EvaluationService
  */
 
-import { EvaluationService, ValidationError, NotFoundError } from '@roast/domain';
+import { EvaluationService, ValidationError, NotFoundError, type JobCreator } from '@roast/domain';
 import { prisma, EvaluationRepository } from '@roast/db';
 import { logger } from '@/infrastructure/logging/logger';
 
@@ -12,6 +12,8 @@ vi.mock('@roast/db', () => ({
   EvaluationRepository: vi.fn().mockImplementation(() => ({
     checkDocumentAccess: vi.fn(),
     checkAgentExists: vi.fn(),
+    findByDocumentAndAgent: vi.fn(),
+    create: vi.fn(),
     createEvaluationWithJob: vi.fn(),
   })),
   prisma: {
@@ -37,10 +39,14 @@ const mockPrisma = vi.mocked(prisma);
 describe('EvaluationService', () => {
   let service: EvaluationService;
   let mockEvaluationRepository: any;
+  let mockJobCreator: JobCreator;
 
   beforeEach(() => {
     mockEvaluationRepository = new EvaluationRepository();
-    service = new EvaluationService(mockEvaluationRepository, logger);
+    mockJobCreator = {
+      createJob: vi.fn().mockResolvedValue({ id: 'job-123' }),
+    };
+    service = new EvaluationService(mockEvaluationRepository, logger, mockJobCreator);
     vi.clearAllMocks();
   });
 
@@ -88,12 +94,9 @@ describe('EvaluationService', () => {
     it('should create new evaluation when none exists', async () => {
       mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(true);
       mockEvaluationRepository.checkAgentExists.mockResolvedValueOnce(true);
-      mockEvaluationRepository.createEvaluationWithJob.mockResolvedValueOnce({
-        evaluationId: 'eval-123',
-        agentId: 'agent-123',
-        jobId: 'job-123',
-        created: true
-      });
+      mockEvaluationRepository.findByDocumentAndAgent.mockResolvedValueOnce(null);
+      mockEvaluationRepository.create.mockResolvedValueOnce({ id: 'eval-123' });
+      (mockJobCreator.createJob as any).mockResolvedValueOnce({ id: 'job-123' });
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -105,17 +108,14 @@ describe('EvaluationService', () => {
         jobId: 'job-123',
         created: true
       });
+      expect(mockJobCreator.createJob).toHaveBeenCalledWith('eval-123');
     });
 
     it('should create new job for existing evaluation', async () => {
       mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(true);
       mockEvaluationRepository.checkAgentExists.mockResolvedValueOnce(true);
-      mockEvaluationRepository.createEvaluationWithJob.mockResolvedValueOnce({
-        evaluationId: 'eval-existing',
-        agentId: 'agent-123',
-        jobId: 'job-new',
-        created: false
-      });
+      mockEvaluationRepository.findByDocumentAndAgent.mockResolvedValueOnce({ id: 'eval-existing' });
+      (mockJobCreator.createJob as any).mockResolvedValueOnce({ id: 'job-new' });
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -127,6 +127,7 @@ describe('EvaluationService', () => {
         jobId: 'job-new',
         created: false
       });
+      expect(mockJobCreator.createJob).toHaveBeenCalledWith('eval-existing');
     });
   });
 
@@ -152,18 +153,16 @@ describe('EvaluationService', () => {
 
     it('should handle partial successes gracefully', async () => {
       mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(true);
-      
+
       // First agent exists, second doesn't
       mockEvaluationRepository.checkAgentExists
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(false);
-      
-      mockEvaluationRepository.createEvaluationWithJob.mockResolvedValueOnce({
-        evaluationId: 'eval-1',
-        agentId: 'agent-1',
-        jobId: 'job-1',
-        created: true
-      });
+
+      // First agent: no existing evaluation, create new one
+      mockEvaluationRepository.findByDocumentAndAgent.mockResolvedValueOnce(null);
+      mockEvaluationRepository.create.mockResolvedValueOnce({ id: 'eval-1' });
+      (mockJobCreator.createJob as any).mockResolvedValueOnce({ id: 'job-1' });
 
       const result = await service.createEvaluationsForDocument(mockRequest);
 
@@ -171,6 +170,7 @@ describe('EvaluationService', () => {
       const evaluations = result.unwrap();
       expect(evaluations).toHaveLength(1);
       expect(evaluations[0].agentId).toBe('agent-1');
+      expect(mockJobCreator.createJob).toHaveBeenCalledWith('eval-1');
     });
 
     it('should limit agent IDs to 50', async () => {

@@ -17,21 +17,25 @@ export interface Logger {
  * Default console logger
  */
 class ConsoleLogger implements Logger {
+  private format(level: string, message: string): string {
+    return `[${getTimestamp()}] [${level}] [JOBS] ${message}`;
+  }
+
   info(message: string, ...args: any[]): void {
-    console.info(`[${getTimestamp()}] [JOBS] ${message}`, ...args);
+    console.info(this.format('INFO', message), ...args);
   }
 
   error(message: string, ...args: any[]): void {
-    console.error(`[${getTimestamp()}] [JOBS ERROR] ${message}`, ...args);
+    console.error(this.format('ERROR', message), ...args);
   }
 
   warn(message: string, ...args: any[]): void {
-    console.warn(`[${getTimestamp()}] [JOBS WARN] ${message}`, ...args);
+    console.warn(this.format('WARN', message), ...args);
   }
 
   debug(message: string, ...args: any[]): void {
     if (process.env.DEBUG) {
-      console.debug(`[${getTimestamp()}] [JOBS DEBUG] ${message}`, ...args);
+      console.debug(this.format('DEBUG', message), ...args);
     }
   }
 }

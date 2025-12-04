@@ -60,14 +60,13 @@ export interface AppConfig {
   
   readonly jobs: {
     readonly costUpdateStaleHours: number;
-    readonly adaptiveWorkers: {
-      readonly maxWorkers: number;
-      readonly pollIntervalMs: number;
-      readonly workerTimeoutMs: number;
-      readonly killGracePeriodMs: number;
-      readonly shutdownTimeoutMs: number;
-      readonly staleJobCheckIntervalMs: number;
-      readonly staleJobTimeoutMs: number;
+    readonly pgBoss: {
+      readonly teamSize: number;
+      readonly retryLimit: number;
+      readonly retryDelay: number;
+      readonly retryBackoff: boolean;
+      readonly cronWorkerIntervalSeconds: number;
+      readonly expireInSeconds: number;
     };
   };
 }
@@ -199,41 +198,35 @@ class ConfigFactory {
             1,
             'COST_UPDATE_STALE_HOURS'
           ),
-          adaptiveWorkers: {
-            maxWorkers: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_MAX_WORKERS'),
+          pgBoss: {
+            teamSize: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_TEAM_SIZE'),
               5,
-              'ADAPTIVE_MAX_WORKERS'
+              'PGBOSS_TEAM_SIZE'
             ),
-            pollIntervalMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_POLL_INTERVAL_MS'),
-              1000,
-              'ADAPTIVE_POLL_INTERVAL_MS'
+            retryLimit: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_RETRY_LIMIT'),
+              3,
+              'PGBOSS_RETRY_LIMIT'
             ),
-            workerTimeoutMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_WORKER_TIMEOUT_MS'),
-              240000,
-              'ADAPTIVE_WORKER_TIMEOUT_MS'
+            retryDelay: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_RETRY_DELAY'),
+              60,
+              'PGBOSS_RETRY_DELAY'
             ),
-            killGracePeriodMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_KILL_GRACE_PERIOD_MS'),
-              5000,
-              'ADAPTIVE_KILL_GRACE_PERIOD_MS'
+            retryBackoff: ConfigValidator.validateBoolean(
+              getEnvVar('PGBOSS_RETRY_BACKOFF'),
+              true
             ),
-            shutdownTimeoutMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_SHUTDOWN_TIMEOUT_MS'),
-              30000,
-              'ADAPTIVE_SHUTDOWN_TIMEOUT_MS'
+            cronWorkerIntervalSeconds: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_CRON_WORKER_INTERVAL_SECONDS'),
+              30,
+              'PGBOSS_CRON_WORKER_INTERVAL_SECONDS'
             ),
-            staleJobCheckIntervalMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_STALE_CHECK_INTERVAL_MS'),
-              300000,
-              'ADAPTIVE_STALE_CHECK_INTERVAL_MS'
-            ),
-            staleJobTimeoutMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_STALE_JOB_TIMEOUT_MS'),
-              1800000,
-              'ADAPTIVE_STALE_JOB_TIMEOUT_MS'
+            expireInSeconds: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_EXPIRE_IN_SECONDS'),
+              3600, // 1 hour default
+              'PGBOSS_EXPIRE_IN_SECONDS'
             ),
           },
         },

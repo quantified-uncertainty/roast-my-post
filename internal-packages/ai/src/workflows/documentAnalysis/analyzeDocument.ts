@@ -2,6 +2,7 @@ import { logger } from "../../utils/logger";
 import type { Document } from "../../types/documents";
 import type { Agent } from "../../types/agentSchema";
 import type { Comment } from "../../shared/types";
+import { checkJobTimeout } from "../../shared/jobContext";
 import { analyzeDocumentUnified } from "./unified";
 import { PluginType } from "../../analysis-plugins/types/plugin-types";
 import type { TaskResult } from "./shared/types";
@@ -59,7 +60,10 @@ export async function analyzeDocument(
     logger.info(`${logPrefix} Using LLM-based workflow for agent ${agentInfo.name} (no plugins configured)`);
     
     const tasks: TaskResult[] = [];
-    
+
+    // Check timeout before starting
+    checkJobTimeout();
+
     logger.info(`${logPrefix} [LLM Workflow Step 1/3] Generating comprehensive analysis...`);
     // Step 1: Generate comprehensive analysis using the agent's primaryInstructions
     const comprehensiveAnalysisResult = await generateComprehensiveAnalysis(
@@ -69,7 +73,10 @@ export async function analyzeDocument(
       targetHighlights
     );
     tasks.push(comprehensiveAnalysisResult.task);
-    
+
+    // Check timeout before highlight extraction
+    checkJobTimeout();
+
     logger.info(`${logPrefix} [LLM Workflow Step 2/3] Extracting highlights from analysis...`);
     // Step 2: Extract highlights from the analysis
     const highlightExtractionResult = await extractHighlightsFromAnalysis(
@@ -83,6 +90,9 @@ export async function analyzeDocument(
     // Step 3: Generate self-critique if configured
     let selfCritique: string | undefined;
     if (agentInfo.selfCritiqueInstructions) {
+      // Check timeout before self-critique
+      checkJobTimeout();
+
       logger.info(`${logPrefix} [LLM Workflow Step 3/3] Generating self-critique...`);
       const selfCritiqueResult = await generateSelfCritique(
         {

@@ -7,7 +7,7 @@
 
 import { vi, beforeAll } from 'vitest';
 import { claimEvaluatorTool } from '@roast/ai/server';
-import { logger as aiLogger } from '@roast/ai';
+import { logger as aiLogger } from '@roast/ai/server';
 
 // Model constants (from @roast/ai/src/utils/openrouter.ts)
 const MODELS = {
