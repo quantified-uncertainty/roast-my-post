@@ -6,6 +6,7 @@
  */
 
 import { PgBoss } from 'pg-boss';
+import type { WorkOptions, WorkHandler, WorkWithMetadataHandler, SendOptions } from 'pg-boss';
 import { config } from '@roast/domain';
 import type { Logger } from '../types';
 
@@ -97,7 +98,7 @@ export class PgBossService {
    * Send a job to the queue
    * Note: Retry and expiration config is set at queue level in createQueues()
    */
-  async send(queue: string, data: any, options: any = {}): Promise<string | null> {
+  async send<T extends object>(queue: string, data: T, options: SendOptions = {}): Promise<string | null> {
     const boss = this.getBoss();
 
     try {
@@ -131,13 +132,23 @@ export class PgBossService {
    * Call multiple times to create multiple concurrent workers.
    * Handler receives array with 1 job by default (batchSize=1).
    */
-  async work(
+  async work<T>(
     name: string,
-    options: any,
-    handler: (jobs: any[]) => Promise<void>
+    options: WorkOptions & { includeMetadata: true },
+    handler: WorkWithMetadataHandler<T>
+  ): Promise<string>;
+  async work<T>(
+    name: string,
+    options: WorkOptions,
+    handler: WorkHandler<T>
+  ): Promise<string>;
+  async work<T>(
+    name: string,
+    options: WorkOptions,
+    handler: WorkHandler<T> | WorkWithMetadataHandler<T>
   ): Promise<string> {
     const boss = this.getBoss();
-    return await boss.work(name, options, handler as any);
+    return await boss.work(name, options, handler as WorkHandler<T>);
   }
 
   /**
