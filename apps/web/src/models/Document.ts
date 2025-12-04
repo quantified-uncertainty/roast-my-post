@@ -1,6 +1,6 @@
 import { generateId } from "@roast/db";
-
 import { prisma } from "@roast/db";
+import { logger } from "@/infrastructure/logging/logger";
 // Import removed - DocumentValidationSchema not used
 import type { Document } from "@/shared/types/databaseTypes";
 import { generateMarkdownPrepend, MAX_DOCUMENT_WORD_COUNT } from "@roast/domain";
@@ -1388,8 +1388,17 @@ export class DocumentModel {
     // This must be done outside the transaction since pg-boss is a separate system
     if (result.evaluationsToRerun.length > 0) {
       const { jobService } = getServices();
+      const failedEvaluations: string[] = [];
       for (const evaluation of result.evaluationsToRerun) {
-        await jobService.createJob(evaluation.id);
+        try {
+          await jobService.createJob(evaluation.id);
+        } catch (error) {
+          failedEvaluations.push(evaluation.id);
+          logger.error(`Failed to enqueue job for evaluation ${evaluation.id}:`, error);
+        }
+      }
+      if (failedEvaluations.length > 0) {
+        logger.error(`Failed to enqueue ${failedEvaluations.length}/${result.evaluationsToRerun.length} evaluation jobs`);
       }
     }
 
