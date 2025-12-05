@@ -68,11 +68,25 @@ export interface UpdateDocumentData {
   intendedAgentIds?: string[];
 }
 
+export interface DocumentSummary {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  submittedBy: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  } | null;
+  title: string;
+  evaluationCount: number;
+}
+
 export interface DocumentRepositoryInterface {
   findById(id: string): Promise<DocumentEntity | null>;
   findWithEvaluations(id: string, includeStale?: boolean): Promise<DocumentWithEvaluations | null>;
   findByUser(userId: string, limit?: number): Promise<DocumentWithEvaluations[]>;
   findRecent(limit?: number, requestingUserId?: string): Promise<DocumentWithEvaluations[]>;
+  findRecentForAdmin(limit?: number): Promise<DocumentSummary[]>;
   findAll(): Promise<DocumentWithEvaluations[]>;
   create(data: CreateDocumentData): Promise<DocumentEntity>;
   updateContent(id: string, content: string, title: string, markdownPrepend?: string): Promise<void>;
@@ -263,6 +277,49 @@ export class DocumentRepository implements DocumentRepositoryInterface {
     });
 
     return docs.map(doc => this.toDocumentWithEvaluations(doc));
+  }
+
+  /**
+   * Find recent documents for admin monitoring (lightweight)
+   */
+  async findRecentForAdmin(limit = 20): Promise<DocumentSummary[]> {
+    const docs = await this.prisma.document.findMany({
+      take: limit,
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
+        versions: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            title: true,
+          }
+        },
+        _count: {
+          select: {
+            evaluations: true,
+          }
+        }
+      }
+    });
+
+    return docs.map(doc => ({
+      id: doc.id,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+      submittedBy: doc.submittedBy,
+      title: doc.versions[0]?.title || 'Untitled',
+      evaluationCount: doc._count.evaluations,
+    }));
   }
 
   /**

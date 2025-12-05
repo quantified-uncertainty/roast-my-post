@@ -6,6 +6,7 @@ import {
 } from "../base/Tool";
 import { perplexityResearcherConfig } from "../configs";
 import { PerplexityClient } from "./client";
+import { logger } from "../../utils/logger";
 
 // Define types for the tool
 export interface PerplexityResearchInput {
@@ -214,7 +215,7 @@ Format your response as JSON with this structure:
       }
     } catch (_e) {
       // Fallback to text parsing if JSON parsing fails
-      console.warn("Failed to parse JSON response, using fallback parsing");
+      logger.warn("Failed to parse JSON response, using fallback parsing");
     }
 
     // Fallback parsing

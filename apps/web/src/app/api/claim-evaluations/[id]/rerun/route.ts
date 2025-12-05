@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from '@roast/db';
 import { claimEvaluatorTool } from '@roast/ai/server';
 import type { ClaimEvaluatorOutput } from '@roast/ai/server';
-import { logger as aiLogger } from '@roast/ai';
+import { logger as aiLogger } from '@roast/ai/server';
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { getUserIdWithDevBypass } from "@/infrastructure/auth/dev-bypass";
 import { logger } from "@/infrastructure/logging/logger";

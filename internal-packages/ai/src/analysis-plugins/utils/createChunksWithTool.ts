@@ -29,8 +29,8 @@ export async function createChunksWithTool(
   // Map legacy options to new tool options
   const toolInput: DocumentChunkerInput = {
     text,
-    maxChunkSize: options.maxChunkSize || options.chunkSize || 1500,
-    minChunkSize: options.minChunkSize || 200,
+    maxChunkSize: options.maxChunkSize || options.chunkSize || 3000,
+    minChunkSize: options.minChunkSize || 400,
     preserveContext: options.preserveContext ?? true,
   };
 

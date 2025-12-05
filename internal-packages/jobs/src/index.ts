@@ -3,15 +3,33 @@
  */
 
 // Core services
-export { JobService, type JobServiceInterface } from './core/JobService';
 export { JobOrchestrator, type JobOrchestratorInterface } from './core/JobOrchestrator';
+export { PgBossService } from './core/PgBossService';
+export { JobService } from './core/JobService';
+
+// Job types
+export {
+  DOCUMENT_EVALUATION_JOB,
+  type JobType,
+  type DocumentEvaluationJobData,
+  type JobData,
+} from './types/jobTypes';
 
 // Configuration
-export { 
+export {
   AGENT_TIMEOUT_CONFIG,
   getAgentTimeout,
-  formatTimeout 
+  formatTimeout,
 } from './config/agentTimeouts';
+
+// Error utilities
+export {
+  isRetryableError,
+  sanitizeErrorMessage,
+} from './errors/retryableErrors';
+
+// Scheduled tasks
+export { JobReconciliationService } from './scheduled-tasks/job-reconciliation';
 
 // Types
 export type {
@@ -23,5 +41,5 @@ export type {
   WorkflowRegistry,
   Logger,
   JobProcessingResult,
-  CompletionData
+  CompletionData,
 } from './types';

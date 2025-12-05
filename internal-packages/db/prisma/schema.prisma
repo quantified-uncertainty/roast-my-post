@@ -123,9 +123,9 @@ model Evaluation {
   versions   EvaluationVersion[]
   jobs       Job[]
 
+  @@unique([documentId, agentId])
   @@index([documentId])
   @@index([agentId])
-  @@index([documentId, agentId])
 }
 
 model EvaluationVersion {
@@ -245,6 +245,7 @@ model AgentEvalBatch {
 
 model Job {
   id                  String             @id @default(uuid())
+  pgBossJobId         String?            @unique // pg-boss generated UUID
   status              JobStatus          @default(PENDING)
   attempts            Int                @default(0)
   error               String?

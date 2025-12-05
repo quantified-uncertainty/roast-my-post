@@ -7,6 +7,11 @@
 
 import { getEnvVar, requireEnvVar, isDevelopment, isProduction, isTest } from './environment';
 
+// Model defaults - duplicated from @roast/ai/constants to avoid circular dependency issues
+// If you need to change these, update BOTH here and in @roast/ai/constants.ts
+const DEFAULT_SEARCH_MODEL = "claude-haiku-4-5-20251001";
+const DEFAULT_ANALYSIS_MODEL = "claude-sonnet-4-5-20250929";
+
 /**
  * Application Configuration Interface
  * Defines the complete configuration structure with proper types
@@ -55,14 +60,13 @@ export interface AppConfig {
   
   readonly jobs: {
     readonly costUpdateStaleHours: number;
-    readonly adaptiveWorkers: {
-      readonly maxWorkers: number;
-      readonly pollIntervalMs: number;
-      readonly workerTimeoutMs: number;
-      readonly killGracePeriodMs: number;
-      readonly shutdownTimeoutMs: number;
-      readonly staleJobCheckIntervalMs: number;
-      readonly staleJobTimeoutMs: number;
+    readonly pgBoss: {
+      readonly teamSize: number;
+      readonly retryLimit: number;
+      readonly retryDelay: number;
+      readonly retryBackoff: boolean;
+      readonly cronWorkerIntervalSeconds: number;
+      readonly expireInSeconds: number;
     };
   };
 }
@@ -157,8 +161,8 @@ class ConfigFactory {
             10,
             'HELICONE_CACHE_BUCKET_MAX_SIZE'
           ),
-          searchModel: getEnvVar('SEARCH_MODEL', 'claude-3-haiku-20240307'),
-          analysisModel: getEnvVar('ANALYSIS_MODEL', 'claude-3-5-sonnet-20241022'),
+          searchModel: getEnvVar('SEARCH_MODEL', DEFAULT_SEARCH_MODEL),
+          analysisModel: getEnvVar('ANALYSIS_MODEL', DEFAULT_ANALYSIS_MODEL),
         },
 
         auth: {
@@ -194,41 +198,35 @@ class ConfigFactory {
             1,
             'COST_UPDATE_STALE_HOURS'
           ),
-          adaptiveWorkers: {
-            maxWorkers: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_MAX_WORKERS'),
+          pgBoss: {
+            teamSize: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_TEAM_SIZE'),
               5,
-              'ADAPTIVE_MAX_WORKERS'
+              'PGBOSS_TEAM_SIZE'
             ),
-            pollIntervalMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_POLL_INTERVAL_MS'),
-              1000,
-              'ADAPTIVE_POLL_INTERVAL_MS'
+            retryLimit: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_RETRY_LIMIT'),
+              3,
+              'PGBOSS_RETRY_LIMIT'
             ),
-            workerTimeoutMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_WORKER_TIMEOUT_MS'),
-              240000,
-              'ADAPTIVE_WORKER_TIMEOUT_MS'
+            retryDelay: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_RETRY_DELAY'),
+              60,
+              'PGBOSS_RETRY_DELAY'
             ),
-            killGracePeriodMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_KILL_GRACE_PERIOD_MS'),
-              5000,
-              'ADAPTIVE_KILL_GRACE_PERIOD_MS'
+            retryBackoff: ConfigValidator.validateBoolean(
+              getEnvVar('PGBOSS_RETRY_BACKOFF'),
+              true
             ),
-            shutdownTimeoutMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_SHUTDOWN_TIMEOUT_MS'),
-              30000,
-              'ADAPTIVE_SHUTDOWN_TIMEOUT_MS'
+            cronWorkerIntervalSeconds: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_CRON_WORKER_INTERVAL_SECONDS'),
+              30,
+              'PGBOSS_CRON_WORKER_INTERVAL_SECONDS'
             ),
-            staleJobCheckIntervalMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_STALE_CHECK_INTERVAL_MS'),
-              300000,
-              'ADAPTIVE_STALE_CHECK_INTERVAL_MS'
-            ),
-            staleJobTimeoutMs: ConfigValidator.validatePositiveInteger(
-              getEnvVar('ADAPTIVE_STALE_JOB_TIMEOUT_MS'),
-              1800000,
-              'ADAPTIVE_STALE_JOB_TIMEOUT_MS'
+            expireInSeconds: ConfigValidator.validatePositiveInteger(
+              getEnvVar('PGBOSS_EXPIRE_IN_SECONDS'),
+              3600, // 1 hour default
+              'PGBOSS_EXPIRE_IN_SECONDS'
             ),
           },
         },

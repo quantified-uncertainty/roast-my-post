@@ -5,6 +5,7 @@ import {
   ToolConfig,
   ToolContext,
 } from "../base/Tool";
+import { logger } from "../../utils/logger";
 import { fuzzyTextSearcherConfig } from "../configs";
 import {
   findTextLocation,
@@ -126,7 +127,7 @@ export class FuzzyTextLocatorTool extends Tool<
         input.documentText,
         locationOptions
       );
-      console.log("locationResult", {
+      logger.debug("locationResult", {
         locationResult,
         documentText: input.documentText,
         searchText: input.searchText,

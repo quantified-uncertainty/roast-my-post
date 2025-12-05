@@ -3,6 +3,8 @@
  * Centralized configuration for AI/LLM services
  */
 
+import { DEFAULT_ANALYSIS_MODEL } from "./constants";
+
 // Simple browser check for the AI package
 const isBrowser = typeof window !== "undefined";
 
@@ -21,7 +23,7 @@ function getEnv(key: string, fallback?: string): string | undefined {
 export const aiConfig = {
   // Model configuration
   get analysisModel(): string {
-    return getEnv("ANALYSIS_MODEL", "claude-sonnet-4-5") as string;
+    return getEnv("ANALYSIS_MODEL", DEFAULT_ANALYSIS_MODEL) as string;
   },
 
   // API Keys

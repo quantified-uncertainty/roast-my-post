@@ -196,8 +196,8 @@ export class PluginManager {
       // Always use intelligent chunking with markdown strategy for plugins
       logger.info(`Using intelligent chunking with markdown strategy`);
       const chunks = await createChunksWithTool(text, {
-        maxChunkSize: 1500,
-        minChunkSize: 200,
+        maxChunkSize: 3000,
+        minChunkSize: 400,
         preserveContext: true,
       });
 

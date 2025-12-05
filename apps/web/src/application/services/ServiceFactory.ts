@@ -6,10 +6,10 @@
  */
 
 import { DocumentService, EvaluationService, DocumentValidator } from '@roast/domain';
-import { DocumentRepository, EvaluationRepository } from '@roast/db';
+import { DocumentRepository, EvaluationRepository, JobRepository } from '@roast/db';
+import { PgBossService, JobService } from '@roast/jobs';
 import { createLoggerAdapter } from '@/infrastructure/logging/loggerAdapter';
 import { AgentService } from './AgentService';
-import { JobService } from './JobService';
 import { AgentRepository } from '@/infrastructure/database/repositories/AgentRepository';
 
 /**
@@ -27,20 +27,24 @@ export class ServiceFactory {
   private documentRepository: DocumentRepository;
   private evaluationRepository: EvaluationRepository;
   private agentRepository: AgentRepository;
+  private jobRepository: JobRepository;
   
   // Validator
   private documentValidator: DocumentValidator;
   
   // Logger adapter
   private logger: any;
+  private pgBossService: PgBossService;
   
   private constructor() {
     // Initialize shared dependencies once
     this.documentRepository = new DocumentRepository();
     this.evaluationRepository = new EvaluationRepository();
     this.agentRepository = new AgentRepository();
+    this.jobRepository = new JobRepository();
     this.documentValidator = new DocumentValidator();
     this.logger = createLoggerAdapter();
+    this.pgBossService = new PgBossService(this.logger);
   }
   
   static getInstance(): ServiceFactory {
@@ -71,9 +75,12 @@ export class ServiceFactory {
    */
   getEvaluationService(): EvaluationService {
     if (!this.evaluationService) {
+      // Pass JobService as jobCreator to enable pg-boss enqueueing
+      const jobService = this.getJobService();
       this.evaluationService = new EvaluationService(
         this.evaluationRepository,
-        this.logger
+        this.logger,
+        jobService
       );
     }
     return this.evaluationService;
@@ -87,23 +94,29 @@ export class ServiceFactory {
     // Create repositories with the transaction client
     const txDocumentRepo = new DocumentRepository(prismaTransaction);
     const txEvaluationRepo = new EvaluationRepository(prismaTransaction);
-    
+
+    // JobService uses repository, so we create a new instance with the tx repository
+    const txJobService = new JobService(
+      new JobRepository(prismaTransaction),
+      this.logger,
+      this.pgBossService
+    );
+
     // Create services with transactional repositories
+    // Pass txJobService as jobCreator for pg-boss enqueueing
     const txEvaluationService = new EvaluationService(
       txEvaluationRepo,
-      this.logger
+      this.logger,
+      txJobService
     );
-    
+
     const txDocumentService = new DocumentService(
       txDocumentRepo,
       this.documentValidator,
       txEvaluationService,
       this.logger
     );
-    
-    // JobService doesn't need special transaction handling as it uses prisma directly
-    const txJobService = new JobService();
-    
+
     return {
       documentService: txDocumentService,
       evaluationService: txEvaluationService,
@@ -129,7 +142,11 @@ export class ServiceFactory {
    */
   getJobService(): JobService {
     if (!this.jobService) {
-      this.jobService = new JobService();
+      this.jobService = new JobService(
+        this.jobRepository,
+        this.logger,
+        this.pgBossService
+      );
     }
     return this.jobService;
   }

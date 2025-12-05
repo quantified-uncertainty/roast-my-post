@@ -18,8 +18,8 @@ describe('Configuration Validation', () => {
       delete process.env[key];
     });
     Object.assign(process.env, originalEnv);
-    
-    // Clear the config cache by requiring fresh module
+
+    // Clear the config cache by resetting modules
     vi.resetModules();
   });
 
@@ -34,7 +34,7 @@ describe('Configuration Validation', () => {
     });
   };
 
-  it('should load config without errors in test environment', () => {
+  it('should load config without errors in test environment', async () => {
     // Set minimal required environment variables
     setEnvVars({
       NODE_ENV: 'test',
@@ -42,26 +42,22 @@ describe('Configuration Validation', () => {
       AUTH_SECRET: 'test-secret'
     });
 
-    expect(() => {
-      const { config } = require('@roast/domain');
-      return config.env.nodeEnv;
-    }).not.toThrow();
+    const { config } = await import('@roast/domain');
+    expect(config.env.nodeEnv).toBe('test');
   });
 
-  it('should handle missing DATABASE_URL gracefully in test mode', () => {
+  it('should handle missing DATABASE_URL gracefully in test mode', async () => {
     setEnvVars({
       NODE_ENV: 'test',
       DATABASE_URL: undefined, // Explicitly delete
       AUTH_SECRET: 'test-secret'
     });
 
-    expect(() => {
-      const { config } = require('@roast/domain');
-      expect(config.database.url).toBe('postgresql://test:test@localhost:5432/test');
-    }).not.toThrow();
+    const { config } = await import('@roast/domain');
+    expect(config.database.url).toBe('postgresql://test:test@localhost:5432/test');
   });
 
-  it.skip('should require DATABASE_URL in production mode', () => {
+  it.skip('should require DATABASE_URL in production mode', async () => {
     // Skipped: This test is complex due to environment function caching
     // The environment functions (isTest, isProduction) are cached at import time
     // Making it difficult to test cross-environment scenarios in the same process
@@ -71,23 +67,21 @@ describe('Configuration Validation', () => {
       AUTH_SECRET: 'production-secret'
     });
 
-    expect(() => {
-      // Clear the module cache to get fresh config with new env vars
-      delete require.cache[require.resolve('@roast/domain')];
-      const { config } = require('@roast/domain');
+    await expect(async () => {
+      const { config } = await import('@roast/domain');
       return config.database.url;
-    }).toThrow('Required environment variable DATABASE_URL is not set');
+    }).rejects.toThrow('Required environment variable DATABASE_URL is not set');
   });
 
-  it('should validate environment-specific defaults in test mode', () => {
+  it('should validate environment-specific defaults in test mode', async () => {
     setEnvVars({
       NODE_ENV: 'test',
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
       AUTH_SECRET: 'test-secret'
     });
 
-    const { config } = require('@roast/domain');
-    
+    const { config } = await import('@roast/domain');
+
     // Validate the test environment config (which is what we're actually running in)
     expect(config.env.nodeEnv).toBe('test');
     expect(config.env.isDevelopment).toBe(false);
@@ -96,7 +90,7 @@ describe('Configuration Validation', () => {
     expect(config.features.debugLogging).toBe(true); // Default for test environment is !isProduction() = true
   });
 
-  it('should handle lazy loading correctly', () => {
+  it('should handle lazy loading correctly', async () => {
     setEnvVars({
       NODE_ENV: 'test',
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
@@ -104,17 +98,17 @@ describe('Configuration Validation', () => {
     });
 
     // First access should create config
-    const { config } = require('@roast/domain');
+    const { config } = await import('@roast/domain');
     const firstAccess = config.env.nodeEnv;
-    
+
     // Second access should use cached version
     const secondAccess = config.env.nodeEnv;
-    
+
     expect(firstAccess).toBe(secondAccess);
     expect(firstAccess).toBe('test');
   });
 
-  it('should validate configuration schema', () => {
+  it('should validate configuration schema', async () => {
     setEnvVars({
       NODE_ENV: 'test',
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
@@ -123,7 +117,7 @@ describe('Configuration Validation', () => {
       ANTHROPIC_API_KEY: 'sk-test'
     });
 
-    const { config } = require('@roast/domain');
+    const { config } = await import('@roast/domain');
 
     // Check required fields exist
     expect(config.env).toBeDefined();

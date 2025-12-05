@@ -6,50 +6,52 @@
  * Now uses @roast/ai workflows directly instead of dependency injection.
  */
 
-import type { JobWithRelations } from '@roast/db';
-import { prisma } from '@roast/db';
-import type { JobService } from './JobService';
+import type { JobWithRelations, JobRepository } from '@roast/db';
+import { prisma, JobStatus } from '@roast/db';
 import type { Logger, JobProcessingResult, Document } from '../types';
-import { 
-  analyzeDocument,
-  Agent,
-  PluginType} from '@roast/ai';
 import {
+  Agent,
+  PluginType,
   HeliconeSessionManager,
   setGlobalSessionManager,
 } from '@roast/ai';
+import { analyzeDocument, getWorkerId } from '@roast/ai/server';
+import { JobService } from './JobService';
 
 export interface JobOrchestratorInterface {
   processJob(job: JobWithRelations): Promise<JobProcessingResult>;
-  run(): Promise<boolean>;
 }
 
 export class JobOrchestrator implements JobOrchestratorInterface {
   constructor(
-    private jobService: JobService,
-    private logger: Logger
+    private jobRepository: JobRepository,
+    private logger: Logger,
+    private jobService: JobService
   ) {}
+
+  private formatLog(jobId: string, message: string): string {
+    const workerId = getWorkerId();
+    const workerPrefix = workerId ? `[Worker ${workerId}] ` : '';
+    return `${workerPrefix}[Job ${jobId}] ${message}`;
+  }
 
   /**
    * Process a complete job from start to finish
    */
   async processJob(job: JobWithRelations): Promise<JobProcessingResult> {
-    this.logger.info(`[Job ${job.id}] Starting processing...`);
+    this.logger.info(this.formatLog(job.id, 'Starting processing...'));
     const startTime = Date.now();
     let sessionManager: HeliconeSessionManager | undefined;
 
     try {
       // Check if job was cancelled before we start processing
-      const currentJob = await prisma.job.findUnique({
-        where: { id: job.id },
-        select: { status: true }
-      });
-      
-      if (currentJob?.status === 'CANCELLED') {
-        this.logger.info(`[Job ${job.id}] Job was cancelled, skipping processing`);
+      const currentJob = await this.jobRepository.findById(job.id);
+
+      if (currentJob?.status === JobStatus.CANCELLED) {
+        this.logger.info(this.formatLog(job.id, 'Job was cancelled, skipping processing'));
         return {
           success: false,
-          job: { ...job, status: 'CANCELLED' as any },
+          job: { ...job, status: JobStatus.CANCELLED },
           error: new Error('Job was cancelled'),
         };
       }
@@ -57,11 +59,11 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Setup Helicone session tracking
       sessionManager = await this.setupSessionTracking(job);
 
-      this.logger.info(`[Job ${job.id}] Preparing job data...`);
+      this.logger.info(this.formatLog(job.id, 'Preparing job data...'));
       // Extract and validate job data
       const { documentForAnalysis, agent } = this.prepareJobData(job);
 
-      this.logger.info(`[Job ${job.id}] Executing analysis...`);
+      this.logger.info(this.formatLog(job.id, 'Executing analysis...'));
       // Execute document analysis using @roast/ai workflows
       const analysisResult = await this.executeAnalysis(
         documentForAnalysis, 
@@ -70,14 +72,14 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         sessionManager
       );
 
-      this.logger.info(`[Job ${job.id}] Saving analysis results...`);
+      this.logger.info(this.formatLog(job.id, 'Saving analysis results...'));
       // Create evaluation version and save results
       await this.saveAnalysisResults(job, analysisResult, agent);
 
       // Calculate duration
       const durationInSeconds = (Date.now() - startTime) / 1000;
 
-      this.logger.info(`[Job ${job.id}] Creating execution log...`);
+      this.logger.info(this.formatLog(job.id, 'Creating execution log...'));
       // Create execution log
       const logContent = this.createExecutionLog(
         job, 
@@ -86,7 +88,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         startTime
       );
 
-      this.logger.info(`[Job ${job.id}] Marking job as completed...`);
+      this.logger.info(this.formatLog(job.id, 'Marking job as completed...'));
       // Mark job as completed
       const completedJob = await this.jobService.markAsCompleted(job.id, {
         llmThinking: analysisResult.thinking,
@@ -102,8 +104,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       };
 
     } catch (error) {
-      this.logger.error(`[Job ${job.id}] processing failed:`, error);
-      
+      this.logger.error(this.formatLog(job.id, 'processing failed:'), error);
+
       const failedJob = await this.jobService.markAsFailed(job.id, error);
       
       return {
@@ -120,34 +122,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     }
   }
 
-  /**
-   * Find and process the next available job
-   */
-  async run(): Promise<boolean> {
-    try {
-      this.logger.info('🔍 Looking for pending jobs...');
-      const job = await this.jobService.claimNextPendingJob();
-
-      if (!job) {
-        this.logger.info('✅ No pending jobs found.');
-        return false;
-      }
-
-      const result = await this.processJob(job);
-      
-      if (result.success) {
-        this.logger.info(`[Job ${job.id}] ✅ Completed successfully`);
-      } else {
-        this.logger.error(`[Job ${job.id}] ❌ Failed:`, result.error);
-        throw result.error;
-      }
-
-      return true;
-    } catch (error) {
-      // Re-throw for caller to handle
-      throw error;
-    }
-  }
 
   /**
    * Setup Helicone session tracking for the job
@@ -183,7 +157,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         return sessionManager;
       }
     } catch (error) {
-      this.logger.warn(`[Job ${job.id}] ⚠️ Failed to create Helicone session manager:`, error);
+      this.logger.warn(this.formatLog(job.id, '⚠️ Failed to create Helicone session manager:'), error);
       // Continue without session tracking rather than failing the job
     }
     
@@ -312,10 +286,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Use fullContent (which includes markdownPrepend) for validation
       // since highlights were generated based on the full content
       await this.saveHighlights(highlights, evaluationVersion.id, documentVersion.fullContent, job.id);
-      this.logger.info(`[Job ${job.id}] Saved ${highlights.length} highlights for evaluation`, {
-        evaluationId: job.evaluation.id,
-        highlightCount: highlights.length,
-      });
+      this.logger.info(this.formatLog(job.id, `Saved ${highlights.length} highlights for evaluation ${job.evaluation.id}`));
     }
   }
 
@@ -348,19 +319,19 @@ export class JobOrchestrator implements JobOrchestratorInterface {
           if (actualText !== comment.highlight.quotedText) {
             isValid = false;
             error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
-            this.logger.warn(`[Job ${jobId}] Invalid highlight detected: ${error}`);
+            this.logger.warn(this.formatLog(jobId, `Invalid highlight detected: ${error}`));
           }
         } catch (highlightError) {
           isValid = false;
           error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
-          this.logger.warn(`[Job ${jobId}] Highlight validation failed: ${error}`);
+          this.logger.warn(this.formatLog(jobId, `Highlight validation failed: ${error}`));
         }
       }
 
       // Only create highlight if we have highlight data
       if (!comment.highlight) {
         // Skip this comment if no highlight data
-        this.logger.warn(`[Job ${jobId}] Skipping comment without highlight data: ${comment.description}`);
+        this.logger.warn(this.formatLog(jobId, `Skipping comment without highlight data: ${comment.description}`));
         continue;
       }
 

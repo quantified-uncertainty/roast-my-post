@@ -3,6 +3,7 @@ import { JobRepository, type JobEntity } from '@roast/db';
 import { config } from '@roast/domain';
 import { logger } from '../utils/logger';
 
+const LOG_TAG = '[Helicone Cost Poller]';
 const BATCH_SIZE = 10;
 const jobRepository = new JobRepository();
 
@@ -16,7 +17,7 @@ async function fetchHeliconeSession(job: JobEntity): Promise<HeliconeSession | n
   });
 
   if (!sessionResponse.data || sessionResponse.data.length === 0) {
-    logger.debug(`[${job.id}] session not found in Helicone yet. Will retry next cycle.`);
+    logger.debug(`${LOG_TAG} [${job.id}] session not found in Helicone yet. Will retry next cycle.`);
     return null;
   }
   return sessionResponse.data[0];
@@ -33,31 +34,30 @@ function calculateTotalCost(requests: HeliconeRequest[]): number {
  * Processes a single job to fetch, calculate, and update its cost.
  */
 async function processJobCostUpdate(job: JobEntity): Promise<void> {
-  logger.debug(`[${job.id}] processing job`);
+  logger.debug(`${LOG_TAG} [${job.id}] processing job`);
 
   const session = await fetchHeliconeSession(job);
   if (!session) return;
 
   const expectedRequests = parseInt(session.total_requests, 10);
   if (isNaN(expectedRequests)) {
-    logger.warn(`[${job.id}] session has invalid total_requests: ${session.total_requests}. Skipping.`);
+    logger.warn(`${LOG_TAG} [${job.id}] session has invalid total_requests: ${session.total_requests}. Skipping.`);
     return;
   }
 
   const actualRequests = await heliconeAPI.getSessionRequests(job.id);
-  logger.info(`[${job.id}] session: expected ${expectedRequests}, found ${actualRequests.length} requests.`);
-  // logger.info(`[${job.id}] Helicone requests for session: ${JSON.stringify(actualRequests, null, 2)}`);
+  logger.info(`${LOG_TAG} [${job.id}] session: expected ${expectedRequests}, found ${actualRequests.length} requests.`);
 
   if (actualRequests.length < expectedRequests) {
-    logger.info(`[${job.id}] session is not fully logged in Helicone yet. Will retry next cycle.`);
+    logger.info(`${LOG_TAG} [${job.id}] session is not fully logged in Helicone yet. Will retry next cycle.`);
     return;
   }
 
   const totalCost = calculateTotalCost(actualRequests);
-  logger.info(`[${job.id}] session is complete. Total cost: $${totalCost.toFixed(6)}.`);
+  logger.info(`${LOG_TAG} [${job.id}] session is complete. Total cost: $${totalCost.toFixed(6)}.`);
 
   await jobRepository.updateCost(job.id, totalCost);
-  logger.info(`[${job.id}] successfully updated price.`);
+  logger.info(`${LOG_TAG} [${job.id}] successfully updated price.`);
 }
 
 /**
@@ -65,23 +65,23 @@ async function processJobCostUpdate(job: JobEntity): Promise<void> {
  * data from Helicone and updates the job record.
  */
 export async function updateJobCostsFromHelicone() {
-  logger.debug('[Job Cost Updater] Running...');
+  logger.debug(`${LOG_TAG} Running...`);
 
   try {
     const jobsToUpdate = await jobRepository.findJobsForCostUpdate(BATCH_SIZE, config.jobs.costUpdateStaleHours);
 
     if (jobsToUpdate.length > 0) {
-      logger.info(`found ${jobsToUpdate.length} completed job(s) to update price for.`);
+      logger.info(`${LOG_TAG} found ${jobsToUpdate.length} completed job(s) to update price for.`);
 
       for (const job of jobsToUpdate) {
         await processJobCostUpdate(job);
       }
     } else {
-      logger.debug('no completed jobs waiting for cost update.');
+      logger.debug(`${LOG_TAG} no completed jobs waiting for cost update.`);
     }
   } catch (error) {
-    logger.error('Error updating job costs from Helicone:', error);
+    logger.error(`${LOG_TAG} Error updating job costs:`, error);
   } finally {
-    logger.debug('[Job Cost Updater] Finished.');
+    logger.debug(`${LOG_TAG} Finished.`);
   }
 }
