@@ -41,6 +41,9 @@ const NON_RETRYABLE_PATTERNS = [
 
   // This is the hard limit and we discard this result so we don't want to retry it
   'response was truncated at 8000 tokens',
+
+  // Claude API timeouts indicate systemic issues (document too large/complex) - won't resolve with retries
+  'claude api call timed out',
 ];
 
 /**
