@@ -20,11 +20,12 @@ interface JobContext {
 const contextStorage = new AsyncLocalStorage<JobContext>();
 
 /**
- * Generate worker ID: hostname(4) + pid(4), max 8 chars
- * Example: "host1234" or "node5678"
+ * Generate worker ID: hostname(last 4) + pid(4), max 8 chars
+ * Uses last 4 chars of hostname since prefixes are often identical across workers
+ * Example: "er-11234" or "xyz95678"
  */
 function generateWorkerId(): string {
-  const host = hostname().slice(0, 4);
+  const host = hostname().slice(-4);
   const pid = process.pid.toString().slice(-4).padStart(4, '0');
   return `${host}${pid}`.slice(0, 8);
 }
