@@ -2,32 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { config as appConfig } from '@roast/domain';
 
-// Known AI/scraper bot patterns to block
-const BLOCKED_BOT_PATTERNS = [
-  /GPTBot/i,
-  /ChatGPT-User/i,
-  /Google-Extended/i,
-  /CCBot/i,
-  /anthropic-ai/i,
-  /ClaudeBot/i,
-  /Bytespider/i,
-  /PetalBot/i,
-  /FacebookBot/i,
-  /Meta-ExternalAgent/i,
-  /PerplexityBot/i,
-  /Amazonbot/i,
-  /Applebot-Extended/i,
-  /cohere-ai/i,
-  /Diffbot/i,
-  /ImagesiftBot/i,
-  /Omgili/i,
-  /AhrefsBot/i,
-  /SemrushBot/i,
-  /DotBot/i,
-  /MJ12bot/i,
-  /BLEXBot/i,
-  /DataForSeoBot/i,
-];
+// Known AI/scraper bot patterns to block (combined for performance)
+const BLOCKED_BOT_PATTERN =
+  /GPTBot|ChatGPT-User|Google-Extended|CCBot|anthropic-ai|ClaudeBot|Bytespider|PetalBot|FacebookBot|Meta-ExternalAgent|PerplexityBot|Amazonbot|Applebot-Extended|cohere-ai|Diffbot|ImagesiftBot|Omgili|AhrefsBot|SemrushBot|DotBot|MJ12bot|BLEXBot|DataForSeoBot/i;
 
 // Production hostnames - bots are allowed on these (they can read robots.txt)
 const PRODUCTION_HOSTS = [
@@ -37,20 +14,19 @@ const PRODUCTION_HOSTS = [
 
 function isBlockedBot(userAgent: string | null): boolean {
   if (!userAgent) return false;
-  return BLOCKED_BOT_PATTERNS.some(pattern => pattern.test(userAgent));
+  return BLOCKED_BOT_PATTERN.test(userAgent);
 }
 
-function isPreviewDeployment(host: string | null): boolean {
-  if (!host) return false;
-  return !PRODUCTION_HOSTS.includes(host);
+function isPreviewDeployment(hostname: string): boolean {
+  return !PRODUCTION_HOSTS.includes(hostname);
 }
 
 export function middleware(request: NextRequest) {
   const userAgent = request.headers.get('user-agent');
-  const host = request.headers.get('host');
+  const { hostname } = request.nextUrl;
 
   // Block known bots on preview deployments (they ignore robots.txt there)
-  if (isPreviewDeployment(host) && isBlockedBot(userAgent)) {
+  if (isPreviewDeployment(hostname) && isBlockedBot(userAgent)) {
     return new NextResponse('Forbidden', { status: 403 });
   }
 
