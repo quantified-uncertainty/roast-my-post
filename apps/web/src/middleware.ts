@@ -2,7 +2,57 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { config as appConfig } from '@roast/domain';
 
+// Known AI/scraper bot patterns to block
+const BLOCKED_BOT_PATTERNS = [
+  /GPTBot/i,
+  /ChatGPT-User/i,
+  /Google-Extended/i,
+  /CCBot/i,
+  /anthropic-ai/i,
+  /ClaudeBot/i,
+  /Bytespider/i,
+  /PetalBot/i,
+  /FacebookBot/i,
+  /Meta-ExternalAgent/i,
+  /PerplexityBot/i,
+  /Amazonbot/i,
+  /Applebot-Extended/i,
+  /cohere-ai/i,
+  /Diffbot/i,
+  /ImagesiftBot/i,
+  /Omgili/i,
+  /AhrefsBot/i,
+  /SemrushBot/i,
+  /DotBot/i,
+  /MJ12bot/i,
+  /BLEXBot/i,
+  /DataForSeoBot/i,
+];
+
+// Production hostnames - bots are allowed on these (they can read robots.txt)
+const PRODUCTION_HOSTS = [
+  'roastmypost.org',
+  'www.roastmypost.org',
+];
+
+function isBlockedBot(userAgent: string | null): boolean {
+  if (!userAgent) return false;
+  return BLOCKED_BOT_PATTERNS.some(pattern => pattern.test(userAgent));
+}
+
+function isPreviewDeployment(host: string | null): boolean {
+  if (!host) return false;
+  return !PRODUCTION_HOSTS.includes(host);
+}
+
 export function middleware(request: NextRequest) {
+  const userAgent = request.headers.get('user-agent');
+  const host = request.headers.get('host');
+
+  // Block known bots on preview deployments (they ignore robots.txt there)
+  if (isPreviewDeployment(host) && isBlockedBot(userAgent)) {
+    return new NextResponse('Forbidden', { status: 403 });
+  }
   // Generate a unique nonce for each request
   const nonce = Buffer.from(globalThis.crypto.randomUUID()).toString('base64');
   
