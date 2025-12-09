@@ -54,4 +54,34 @@ Disallow: /
 User-agent: Omgili
 Disallow: /
 
+User-agent: PetalBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+User-agent: bingbot
+Crawl-delay: 30
+
+User-agent: Googlebot
+Crawl-delay: 10
+
 Sitemap: https://roastmypost.org/sitemap.xml
