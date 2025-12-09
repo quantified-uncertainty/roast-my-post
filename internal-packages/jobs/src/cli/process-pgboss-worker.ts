@@ -33,8 +33,8 @@ import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
 
 // Schedule constants
-const HELICONE_POLLER_SCHEDULE = '*/30 * * * * *'; // Every 30 seconds
-const JOB_RECONCILIATION_SCHEDULE = '0 * * * * *'; // Every minute
+const HELICONE_POLLER_SCHEDULE = '*/5 * * * *'; // Every 5 minutes
+const JOB_RECONCILIATION_SCHEDULE = '*/10 * * * *'; // Every 10 minutes
 
 class PgBossWorker {
   private pgBossService: PgBossService;
