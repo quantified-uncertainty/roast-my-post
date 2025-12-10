@@ -193,41 +193,43 @@ export function AgentDetailLayout({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Export Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <Button
-              variant="secondary"
-              onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export
-              <ChevronDown className="h-4 w-4" />
-            </Button>
+          {/* Export Dropdown - only show for non-system agents */}
+          {!agent.isSystemManaged && (
+            <div className="relative" ref={dropdownRef}>
+              <Button
+                variant="secondary"
+                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export
+                <ChevronDown className="h-4 w-4" />
+              </Button>
 
-            {exportDropdownOpen && (
-              <div className="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
-                <button
-                  onClick={handleExportJson}
-                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  JSON
-                </button>
-                <button
-                  onClick={handleExportMarkdown}
-                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Markdown
-                </button>
-                <button
-                  onClick={handleExportYaml}
-                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  YAML
-                </button>
-              </div>
-            )}
-          </div>
+              {exportDropdownOpen && (
+                <div className="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+                  <button
+                    onClick={handleExportJson}
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    JSON
+                  </button>
+                  <button
+                    onClick={handleExportMarkdown}
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Markdown
+                  </button>
+                  <button
+                    onClick={handleExportYaml}
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    YAML
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {isOwner && (
             <>

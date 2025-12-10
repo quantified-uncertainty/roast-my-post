@@ -458,6 +458,31 @@ export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
           placeholder: "Enter a mathematical statement to verify...",
         },
       },
+      "fallacy-extractor": {
+        text: {
+          type: "textarea",
+          rows: 8,
+          placeholder: "Enter text to analyze for fallacies and epistemic issues...",
+        },
+        documentText: {
+          type: "textarea",
+          rows: 6,
+          placeholder: "Optional: Full document text for accurate location finding...",
+        },
+      },
+      "fallacy-review": {
+        documentText: {
+          type: "textarea",
+          rows: 6,
+          placeholder: "Enter the document text being analyzed...",
+        },
+        comments: {
+          type: "textarea",
+          rows: 10,
+          placeholder: 'Enter comments as JSON array, e.g.:\n[\n  {\n    "index": 0,\n    "header": "Cherry-picked timeframe",\n    "description": "Selecting only the best period...",\n    "level": "warning",\n    "importance": 85,\n    "quotedText": "grown 1000%"\n  }\n]',
+          helperText: "JSON array of comments to review. Each comment needs: index, header, description, level, importance, quotedText",
+        },
+      },
     };
 
     return toolSpecificConfigs[toolId]?.[name] || {};
@@ -579,6 +604,18 @@ export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
         // Store context for claim-evaluator
         if (input.context) {
           setLastContext(input.context as string);
+        }
+        // Parse JSON string fields for fallacy-review
+        // Return a copy to avoid mutating form state
+        if (toolId === "fallacy-review" && typeof input.comments === "string") {
+          try {
+            return {
+              ...input,
+              comments: JSON.parse(input.comments),
+            };
+          } catch {
+            // Keep as string if invalid JSON - will fail validation on server
+          }
         }
         return input;
       }}

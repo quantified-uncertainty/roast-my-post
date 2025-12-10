@@ -60,7 +60,11 @@ export function AgentIcon({ agentId, size = 20, className = '' }: AgentIconProps
   const IconComponent = iconMap[iconName];
 
   if (!IconComponent) {
-    console.warn(`AgentIcon: No icon found for agent ID "${agentId}" (icon name: "${iconName}")`);
+    // Only warn for system agents (which should have icons)
+    // User-created agents with random IDs are expected to not have icons
+    if (agentId.startsWith('system-')) {
+      console.warn(`AgentIcon: No icon found for system agent ID "${agentId}" (icon name: "${iconName}")`);
+    }
     return null;
   }
 

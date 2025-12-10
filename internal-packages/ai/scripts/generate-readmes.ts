@@ -134,6 +134,7 @@ function getPluginConfig(scriptDir: string): GeneratorConfig {
     'spelling': 'spelling-grammar',
     'forecast': 'forecast-checker',
     'link-analysis': 'link-checker',
+    'fallacy-check': 'fallacy-check',
   };
 
   const ADDITIONAL_AGENTS = ['comprehensive-checker'];
@@ -208,6 +209,7 @@ async function main() {
       'spelling': 'spelling-grammar',
       'forecast': 'forecast-checker',
       'link-analysis': 'link-checker',
+      'fallacy-check': 'fallacy-check',
     };
     const ADDITIONAL_AGENTS = ['comprehensive-checker'];
     ids = [...Object.values(PLUGIN_TO_AGENT_MAP), ...ADDITIONAL_AGENTS];
