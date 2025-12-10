@@ -357,7 +357,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'Redundant Comments',
       values: {
         documentText: 'Bitcoin has grown 1000% in the last year, making it the best investment ever. Everyone who invested got rich. My friend made millions, so you will too.',
-        comments: [
+        comments: JSON.stringify([
           {
             index: 0,
             header: 'Cherry-picked timeframe',
@@ -390,7 +390,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             importance: 70,
             quotedText: 'My friend made millions, so you will too'
           }
-        ]
+        ], null, 2)
       },
       hint: 'Multiple comments with similar issues - review should filter redundant ones'
     },
@@ -398,7 +398,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'Mixed Quality',
       values: {
         documentText: 'Studies show that coffee is healthy. Some research found benefits. Coffee contains antioxidants.',
-        comments: [
+        comments: JSON.stringify([
           {
             index: 0,
             header: 'Vague reference',
@@ -423,7 +423,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             importance: 20,
             quotedText: 'contains antioxidants'
           }
-        ]
+        ], null, 2)
       },
       hint: 'Mix of important and minor comments - review should keep high-quality ones'
     },
@@ -431,7 +431,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'All Strong Comments',
       values: {
         documentText: 'This miracle cure works 100% of the time with no side effects. Doctors hate it!',
-        comments: [
+        comments: JSON.stringify([
           {
             index: 0,
             header: 'Impossible claim',
@@ -448,7 +448,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             importance: 85,
             quotedText: 'Doctors hate it'
           }
-        ]
+        ], null, 2)
       },
       hint: 'All high-quality comments - review should keep most or all'
     },
@@ -456,7 +456,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'Empty Comments',
       values: {
         documentText: 'The sky is blue. Water is wet. Grass is green.',
-        comments: []
+        comments: '[]'
       },
       hint: 'No comments case - review should handle gracefully'
     }
