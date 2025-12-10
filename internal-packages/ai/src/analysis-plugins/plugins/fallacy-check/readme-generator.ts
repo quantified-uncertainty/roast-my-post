@@ -28,15 +28,15 @@ An agent that identifies misinformation, missing context, and deceptive wording 
 - Low: **Below ${THRESHOLDS.SEVERITY_MEDIUM}** (skipped)
 
 **Confidence Requirements:**
-- Critical issues (${THRESHOLDS.SEVERITY_CRITICAL}+): Require **85+** confidence
-- High issues (${THRESHOLDS.SEVERITY_HIGH}+): Require **70+** confidence
-- Medium issues (${THRESHOLDS.SEVERITY_MEDIUM}+): Require **50+** confidence
-- Low issues: Require **30+** confidence
+- Critical issues (${THRESHOLDS.SEVERITY_CRITICAL}+): Require **${THRESHOLDS.CONFIDENCE_REQUIRED_CRITICAL}+** confidence
+- High issues (${THRESHOLDS.SEVERITY_HIGH}+): Require **${THRESHOLDS.CONFIDENCE_REQUIRED_HIGH}+** confidence
+- Medium issues (${THRESHOLDS.SEVERITY_MEDIUM}+): Require **${THRESHOLDS.CONFIDENCE_REQUIRED_MEDIUM}+** confidence
+- Low issues: Require **${THRESHOLDS.CONFIDENCE_REQUIRED_LOW}+** confidence
 
 **Importance Thresholds:**
 - Nitpick threshold: **Below ${THRESHOLDS.IMPORTANCE_NITPICK}**
-- High importance: **75+** (warning level)
-- Critical importance: **90+** (error level)
+- High importance: **${THRESHOLDS.IMPORTANCE_HIGH}+** (warning level)
+- Critical importance: **${THRESHOLDS.IMPORTANCE_CRITICAL}+** (error level)
 
 ## How It Works
 
@@ -86,8 +86,8 @@ The agent processes documents in three phases:
 ## Comment Levels
 
 - **Error** - Critical issues (severity ${THRESHOLDS.SEVERITY_CRITICAL}+) or high-severity misinformation/deception
-- **Warning** - Important issues (importance 75-89)
-- **Nitpick** - Lower importance issues (importance ${THRESHOLDS.IMPORTANCE_NITPICK}-74)
+- **Warning** - Important issues (importance ${THRESHOLDS.IMPORTANCE_HIGH}-${THRESHOLDS.IMPORTANCE_CRITICAL - 1})
+- **Nitpick** - Lower importance issues (importance ${THRESHOLDS.IMPORTANCE_NITPICK}-${THRESHOLDS.IMPORTANCE_HIGH - 1})
 - **Debug** - Very low importance (below ${THRESHOLDS.IMPORTANCE_NITPICK})
 - **Success** - Verified accurate claims
 
