@@ -47,8 +47,9 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
     // Always update agent-level fields
     await prisma.agent.update({
       where: { id: agent.id },
-      data: { 
+      data: {
         isRecommended: agent.isRecommended || false,
+        isDeprecated: agent.isDeprecated || false,
         isLlmCostTracked: agent.isLlmCostTracked ?? true,
       }
     });
@@ -103,6 +104,7 @@ async function syncAgent(agent: SystemAgentDefinition, userId: string) {
         submittedById: userId,
         isSystemManaged: true,
         isRecommended: agent.isRecommended || false,
+        isDeprecated: agent.isDeprecated || false,
         isLlmCostTracked: agent.isLlmCostTracked ?? true,
         versions: {
           create: {

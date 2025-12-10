@@ -13,6 +13,7 @@ export interface PluginBasedAgentConfig {
   pluginIds: PluginType[];
   readmeId: keyof typeof pluginReadmes;
   isRecommended?: boolean;
+  isDeprecated?: boolean;
   providesGrades?: boolean;
   isLlmCostTracked?: boolean;
 }
@@ -33,6 +34,7 @@ export function createPluginBasedAgent(
     description: config.description,
     providesGrades: config.providesGrades ?? false,
     isRecommended: config.isRecommended ?? false,
+    isDeprecated: config.isDeprecated ?? false,
     isLlmCostTracked: config.isLlmCostTracked ?? true,
     pluginIds: config.pluginIds,
     readme: pluginReadmes[config.readmeId],
