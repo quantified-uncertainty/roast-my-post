@@ -22,6 +22,14 @@ export const THRESHOLDS = {
 
   /** Importance thresholds */
   IMPORTANCE_NITPICK: 30,
+  IMPORTANCE_HIGH: 75,
+  IMPORTANCE_CRITICAL: 90,
+
+  /** Confidence requirements (scale with severity) */
+  CONFIDENCE_REQUIRED_CRITICAL: 85,
+  CONFIDENCE_REQUIRED_HIGH: 70,
+  CONFIDENCE_REQUIRED_MEDIUM: 50,
+  CONFIDENCE_REQUIRED_LOW: 30,
 
   /** Minimum severity score for using Perplexity research */
   MIN_SEVERITY_FOR_RESEARCH: 60,

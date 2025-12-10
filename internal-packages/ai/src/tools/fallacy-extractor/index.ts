@@ -79,15 +79,15 @@ const extractedFallacyIssueSchema = z.object({
 }) satisfies z.ZodType<ExtractedFallacyIssue>;
 
 const inputSchema = z.object({
-  text: z.string().min(1).max(50000),
-  documentText: z.string().optional(),
-  chunkStartOffset: z.number().min(0).optional(),
+  text: z.string().min(1).max(50000).describe("Text chunk to analyze for epistemic issues and logical fallacies"),
+  documentText: z.string().optional().describe("Full document text (optional, used for accurate location finding)"),
+  chunkStartOffset: z.number().min(0).optional().describe("Byte offset where this chunk starts in the full document (optimization for location finding)"),
 }) satisfies z.ZodType<FallacyExtractorInput>;
 
 const outputSchema = z.object({
-  issues: z.array(extractedFallacyIssueSchema),
-  totalIssuesFound: z.number(),
-  wasComplete: z.boolean(),
+  issues: z.array(extractedFallacyIssueSchema).describe("Array of extracted epistemic issues with severity, confidence, and importance scores"),
+  totalIssuesFound: z.number().describe("Total number of potential issues found before filtering"),
+  wasComplete: z.boolean().describe("Whether the analysis was complete or had to be truncated due to length"),
 }) satisfies z.ZodType<FallacyExtractorOutput>;
 
 export class FallacyExtractorTool extends Tool<

@@ -357,7 +357,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'Redundant Comments',
       values: {
         documentText: 'Bitcoin has grown 1000% in the last year, making it the best investment ever. Everyone who invested got rich. My friend made millions, so you will too.',
-        comments: [
+        comments: JSON.stringify([
           {
             index: 0,
             header: 'Cherry-picked timeframe',
@@ -390,7 +390,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             importance: 70,
             quotedText: 'My friend made millions, so you will too'
           }
-        ]
+        ], null, 2)
       },
       hint: 'Multiple comments with similar issues - review should filter redundant ones'
     },
@@ -398,7 +398,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'Mixed Quality',
       values: {
         documentText: 'Studies show that coffee is healthy. Some research found benefits. Coffee contains antioxidants.',
-        comments: [
+        comments: JSON.stringify([
           {
             index: 0,
             header: 'Vague reference',
@@ -423,7 +423,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             importance: 20,
             quotedText: 'contains antioxidants'
           }
-        ]
+        ], null, 2)
       },
       hint: 'Mix of important and minor comments - review should keep high-quality ones'
     },
@@ -431,7 +431,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'All Strong Comments',
       values: {
         documentText: 'This miracle cure works 100% of the time with no side effects. Doctors hate it!',
-        comments: [
+        comments: JSON.stringify([
           {
             index: 0,
             header: 'Impossible claim',
@@ -448,7 +448,7 @@ export const toolExamples: Record<string, ToolExample[]> = {
             importance: 85,
             quotedText: 'Doctors hate it'
           }
-        ]
+        ], null, 2)
       },
       hint: 'All high-quality comments - review should keep most or all'
     },
@@ -456,9 +456,54 @@ export const toolExamples: Record<string, ToolExample[]> = {
       label: 'Empty Comments',
       values: {
         documentText: 'The sky is blue. Water is wet. Grass is green.',
-        comments: []
+        comments: '[]'
       },
       hint: 'No comments case - review should handle gracefully'
+    }
+  ],
+
+  'fallacy-extractor': [
+    {
+      label: 'Investment Claims',
+      values: {
+        text: `Bitcoin has grown 1000% in the last year, making it the best investment ever. Everyone who invested got rich. My friend made millions, so you will too.
+
+Our hedge fund has delivered 847% returns since March 2020. Studies show that 95% of our clients would recommend us to a friend.
+
+This miracle investment strategy works 100% of the time with no risk. Doctors and lawyers hate it!`
+      },
+      hint: 'Multiple fallacies: survivorship bias, cherry-picked timeframes, hasty generalization'
+    },
+    {
+      label: 'Health Claims',
+      values: {
+        text: `Studies show that our supplement is highly effective. Some research found amazing benefits.
+
+Natural remedies are always safer than pharmaceuticals because they come from nature. Our customers report 99.9% satisfaction rates.
+
+Big Pharma doesn't want you to know about this cure that works for everyone.`
+      },
+      hint: 'Vague citations, appeal to nature, suspicious statistics, conspiracy framing'
+    },
+    {
+      label: 'Career Advice',
+      values: {
+        text: `I joined a startup and it grew 10x, so startups are clearly the best career path. After I became VP, the company's revenue doubled.
+
+Everyone successful works 80 hours a week. If you're not growing, you're dying. The best engineers always come from top universities.`
+      },
+      hint: 'Post hoc fallacy, survivorship bias, false generalizations'
+    },
+    {
+      label: 'Well-Reasoned Text',
+      values: {
+        text: `Selection bias is a major problem in hiring research because we only see candidates who apply, not those who self-select out.
+
+There isn't a cheap way to run true RCTs on hiring, so we're stuck with observational data and its limitations. We should be careful not to generalize from a single case study.
+
+The evidence suggests a modest effect size of around 0.3, though confidence intervals are wide.`
+      },
+      hint: 'Good epistemics - acknowledges limitations, should have few/no flags'
     }
   ]
 };
