@@ -19,23 +19,23 @@ import type {
 } from "./types";
 
 const reviewCommentSchema = z.object({
-  index: z.number(),
-  header: z.string(),
-  description: z.string(),
-  level: z.enum(['error', 'warning', 'nitpick', 'info', 'success', 'debug']),
-  importance: z.number().optional(),
-  quotedText: z.string(),
+  index: z.number().describe("Comment index in the original array (0-based)"),
+  header: z.string().describe("Short title summarizing the issue"),
+  description: z.string().describe("Detailed explanation of the epistemic issue"),
+  level: z.enum(['error', 'warning', 'nitpick', 'info', 'success', 'debug']).describe("Severity level of the issue"),
+  importance: z.number().optional().describe("Importance score from 0-100 (higher = more important)"),
+  quotedText: z.string().describe("The exact text from the document that has the issue"),
 }) satisfies z.ZodType<ReviewComment>;
 
 const inputSchema = z.object({
-  documentText: z.string().min(1),
-  comments: z.array(reviewCommentSchema).min(0),
+  documentText: z.string().min(1).describe("The full document text being analyzed for epistemic issues"),
+  comments: z.array(reviewCommentSchema).min(0).describe("Array of epistemic comments to review and filter for redundancy"),
 }) satisfies z.ZodType<FallacyReviewInput>;
 
 const outputSchema = z.object({
-  commentIndicesToKeep: z.array(z.number()),
-  documentSummary: z.string().min(200).max(800),
-  oneLineSummary: z.string().min(20).max(200),
+  commentIndicesToKeep: z.array(z.number()).describe("Indices of comments to keep after filtering redundant/weak ones"),
+  documentSummary: z.string().min(200).max(800).describe("Comprehensive 200-600 word analysis of the document's overall epistemic quality"),
+  oneLineSummary: z.string().min(20).max(200).describe("One-sentence summary capturing the essence of the epistemic evaluation"),
 }) satisfies z.ZodType<FallacyReviewOutput>;
 
 export class FallacyReviewTool extends Tool<

@@ -4,18 +4,19 @@
 
 import {
   generateToolHeader,
-  generateToolsUsedSection,
 } from "../utils/readme-helpers";
 import { fallacyExtractorTool } from "./index";
 
 export function generateReadme(): string {
-  const dependencies = fallacyExtractorTool.getToolDependencies?.() ?? [];
   const header = generateToolHeader(fallacyExtractorTool);
-  const toolsSection = generateToolsUsedSection(dependencies);
 
   return `${header}
 
-${toolsSection}## How It Works
+## Tools Used
+
+- **[Smart Text Searcher](/tools/smart-text-searcher)** - Find exact locations of identified issues in the source document
+
+## How It Works
 
 Analyzes text chunks using Claude to identify sophisticated epistemic issues. The tool focuses on reasoning quality and argumentation rather than basic fact-checking. It extracts issues with severity, confidence, and importance scores, then uses the Smart Text Searcher to find exact locations in the source document.
 
