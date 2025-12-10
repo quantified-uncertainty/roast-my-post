@@ -606,9 +606,13 @@ export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
           setLastContext(input.context as string);
         }
         // Parse JSON string fields for fallacy-review
+        // Return a copy to avoid mutating form state
         if (toolId === "fallacy-review" && typeof input.comments === "string") {
           try {
-            input.comments = JSON.parse(input.comments);
+            return {
+              ...input,
+              comments: JSON.parse(input.comments),
+            };
           } catch {
             // Keep as string if invalid JSON - will fail validation on server
           }
