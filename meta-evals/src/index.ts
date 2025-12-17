@@ -1,7 +1,9 @@
 /**
  * Interactive CLI for meta-evaluation
  *
- * Usage: pnpm --filter @roast/meta-evals run start
+ * Usage:
+ *   pnpm --filter @roast/meta-evals run start          # Interactive mode
+ *   pnpm --filter @roast/meta-evals run start --check  # Verify setup only
  */
 
 import "dotenv/config";
@@ -16,6 +18,12 @@ type EvalMode = "score" | "compare" | "exit";
 
 async function main() {
   checkEnvironment();
+
+  // Non-interactive check mode for CI/development
+  if (process.argv.includes("--check")) {
+    await runCheckMode();
+    return;
+  }
 
   console.log("\n🔬 Meta-Evaluation Tool\n");
 
@@ -40,6 +48,34 @@ async function main() {
     console.log("\n");
   }
 
+  await prisma.$disconnect();
+}
+
+async function runCheckMode() {
+  console.log("🔬 Meta-Evaluation Tool - Check Mode\n");
+
+  // Check imports work
+  console.log("✓ Imports loaded successfully");
+
+  // Check DB connection
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    console.log("✓ Database connection successful");
+  } catch (error) {
+    console.error("✗ Database connection failed:", error);
+    process.exit(1);
+  }
+
+  // Check tables exist
+  try {
+    const count = await prisma.metaEvaluation.count();
+    console.log(`✓ MetaEvaluation table exists (${count} records)`);
+  } catch (error) {
+    console.error("✗ MetaEvaluation table check failed:", error);
+    process.exit(1);
+  }
+
+  console.log("\n✅ All checks passed!\n");
   await prisma.$disconnect();
 }
 

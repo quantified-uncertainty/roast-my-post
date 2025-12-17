@@ -70,7 +70,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
     "@leeoniya/ufuzzy": "^1.0.18",
-    "@roast/domain": "workspace:*",
     "mathjs": "^14.0.1",
     "openai": "^4.77.0",
     "tiktoken": "^1.0.17",
