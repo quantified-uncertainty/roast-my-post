@@ -4,13 +4,15 @@
   "private": true,
   "description": "CLI tools for meta-evaluation of agent outputs",
   "scripts": {
+    "start": "tsx src/index.ts",
     "compare": "tsx src/run-comparison.ts",
     "score": "tsx src/run-scoring.ts"
   },
   "dependencies": {
     "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "enquirer": "^2.4.1"
   },
   "devDependencies": {
     "tsx": "^4.7.0",

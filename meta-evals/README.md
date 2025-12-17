@@ -2,6 +2,17 @@
 
 CLI tools for evaluating agent output quality using LLM-as-judge.
 
+## Quick Start
+
+```bash
+pnpm --filter @roast/meta-evals run start
+```
+
+This launches an interactive menu where you can:
+- Score individual evaluations on quality dimensions
+- Compare batches (A/B testing between agent runs)
+- Rank multiple specific versions
+
 ## Two Evaluation Modes
 
 **Scoring** - Rate a single output on multiple quality dimensions (1-10 each)
