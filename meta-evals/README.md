@@ -8,29 +8,30 @@ CLI for evaluating agent output quality using LLM-as-judge.
 pnpm --filter @roast/meta-evals run start
 ```
 
-This launches an interactive menu where you can:
-- **Baseline** - Create evaluation runs for comparison (select docs + agents)
-- **Score** - Rate outputs on quality dimensions (1-10 each)
-- **Compare** - Rank multiple versions (A/B testing or N-way)
+## Workflow
 
-## Quality Dimensions
+### 1. Create a Baseline
 
-| Dimension | Description |
-|-----------|-------------|
-| Accuracy | Are the identified issues real? Not hallucinated? |
-| Importance | Worth the reader's attention? Not trivial? |
-| Clarity | Punchy, easy to understand, unambiguous? |
-| Surprise | Non-obvious? Adds value beyond what reader would notice? |
-| Verifiability | Can the reader check if it's correct? |
-| Tone | Constructive? Unlikely to upset people? |
-| Coverage | Did it catch the important issues? (collection-level) |
-| Redundancy | Minimal overlap between comments? (collection-level) |
+When you first run the CLI with no existing chains, you'll be prompted to create a baseline:
 
-## Ranking Hierarchy
+1. Select a document to evaluate
+2. Select one or more agents to run
+3. The baseline is created with a unique chain ID
 
-When comparing outputs, the judge uses this strict hierarchy:
+### 2. View Chain & Add Runs
 
-1. **VALIDITY** - Real issue? Hallucinations lose automatically
+Select a chain from the main menu to see:
+- All runs in chronological order
+- Status of each run (pending, running, completed, failed)
+
+From the detail screen you can:
+- **Run Again** - Re-evaluate the document with the same agents (creates a new run for comparison)
+- **Compare Runs** - Select 2-5 completed runs and get an LLM ranking
+
+### 3. Compare Runs
+
+The comparison uses an LLM judge to rank runs based on:
+1. **VALIDITY** - Are the issues real? Hallucinations lose automatically
 2. **UTILITY** - More actionable? (if validity tied)
 3. **TONE** - More constructive? (final tiebreaker)
 
@@ -38,21 +39,27 @@ When comparing outputs, the judge uses this strict hierarchy:
 
 ```
 src/
-├── index.ts           # Entry point with interactive menu
-├── actions/           # User actions (UI + orchestration)
-│   ├── baseline.ts    # Create baseline runs
-│   ├── score.ts       # Scoring flow
-│   └── compare.ts     # Comparison flow
+├── index.ts              # Entry point - main menu with chain listing
+├── actions/
+│   ├── baseline.ts       # Create new baseline chain
+│   ├── chainDetail.ts    # View chain, add runs, compare
+│   ├── compare.ts        # (legacy) Batch comparison
+│   └── score.ts          # (legacy) Individual scoring
 └── utils/
-    ├── apiClient.ts   # HTTP client for web API
-    └── formatters.ts  # Console output formatting
+    ├── apiClient.ts      # HTTP client for web API
+    └── formatters.ts     # Console output formatting
 ```
-
-**Dependencies:**
-- `@roast/db` - Data access (MetaEvaluationRepository)
-- `@roast/ai` - LLM judging logic (scoreComments, rankVersions)
 
 ## Requirements
 
 1. Set `DATABASE_URL` in a `.env` file or copy from `apps/web/.env.local`
-2. For the **Baseline** action, the web app must be running on `localhost:3000`
+2. The web app must be running on `localhost:3000` for creating runs
+3. Run the worker to process jobs: `NODE_ENV=development pnpm run process-pgboss`
+
+## Chain Naming Convention
+
+Chains use trackingIds with the pattern: `chain-{shortId}-{timestamp}-{agentId}`
+
+- `chain-{shortId}` groups all runs in a chain
+- `{timestamp}` is `YYYYMMDD-HHmm` for ordering
+- `{agentId}` identifies which agent created the batch

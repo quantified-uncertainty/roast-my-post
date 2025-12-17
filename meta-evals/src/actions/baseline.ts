@@ -1,10 +1,10 @@
 /**
- * Create Baseline Run Action
+ * Create Baseline Action
  *
- * Creates evaluation batches for comparing agent performance.
- * - Select documents to evaluate
- * - Select agents to run
- * - Assigns a trackingId for later comparison
+ * Creates the first run in a new evaluation chain.
+ * - Single document
+ * - One or more agents
+ * - Generates a chain ID for grouping subsequent runs
  */
 
 import enquirer from "enquirer";
@@ -37,10 +37,30 @@ interface BatchCreateResponse {
   };
 }
 
-export async function runBaselineAction() {
-  console.log("\n📊 Create Baseline Run\n");
+/**
+ * Generate a short random ID for chain identification
+ */
+function generateShortId(): string {
+  return Math.random().toString(36).substring(2, 10);
+}
 
-  // Step 0: Get current user from session
+/**
+ * Generate timestamp string for run identification (YYYYMMDD-HHmm)
+ */
+function generateTimestamp(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hour = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  return `${year}${month}${day}-${hour}${min}`;
+}
+
+export async function createBaseline() {
+  console.log("\n📊 Create New Baseline\n");
+
+  // Step 1: Get current user
   const userId = await apiClient.getUserId();
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -48,46 +68,46 @@ export async function runBaselineAction() {
   });
   console.log(`Acting as: ${user?.email || userId}\n`);
 
-  // Step 1: Get available agents (owned by current user)
+  // Step 2: Get available agents
   const agents = await getAvailableAgents(userId);
   if (agents.length === 0) {
-    console.log("No agents found that you own. Please create an agent first.");
+    console.log("No agents available. Please create an agent first.");
     return;
   }
 
-  // Step 2: Get available documents
+  // Step 3: Get available documents
   const documents = await getRecentDocuments();
   if (documents.length === 0) {
     console.log("No documents found. Please add documents first.");
     return;
   }
 
-  // Step 3: Select documents
-  const selectedDocs = await selectDocuments(documents);
-  if (selectedDocs.length === 0) {
-    console.log("No documents selected.");
+  // Step 4: Select ONE document
+  const selectedDoc = await selectDocument(documents);
+  if (!selectedDoc) {
+    console.log("No document selected.");
     return;
   }
 
-  // Step 4: Select agents
+  // Step 5: Select agents (one or more)
   const selectedAgents = await selectAgents(agents);
   if (selectedAgents.length === 0) {
     console.log("No agents selected.");
     return;
   }
 
-  // Step 5: Enter tracking ID
-  const trackingId = await promptTrackingId();
-
   // Step 6: Confirm
-  const confirmed = await confirmRun(selectedDocs, selectedAgents, trackingId);
+  const confirmed = await confirmBaseline(selectedDoc, selectedAgents);
   if (!confirmed) {
     console.log("Cancelled.");
     return;
   }
 
-  // Step 7: Create batches (one per agent)
-  console.log("\n🚀 Creating evaluation batches...\n");
+  // Step 7: Create chain
+  const chainId = `chain-${generateShortId()}`;
+  const timestamp = generateTimestamp();
+
+  console.log("\n🚀 Creating baseline evaluation...\n");
 
   const results: Array<{
     agent: string;
@@ -98,29 +118,29 @@ export async function runBaselineAction() {
   }> = [];
 
   for (const agent of selectedAgents) {
-    const agentTrackingId = `${trackingId}-${agent.id}`;
+    const trackingId = `${chainId}-${timestamp}-${agent.id}`;
 
     try {
       const response = await apiClient.post<BatchCreateResponse>("/api/batches", {
         agentId: agent.id,
-        documentIds: selectedDocs.map((d) => d.id),
-        trackingId: agentTrackingId,
-        name: `Baseline: ${trackingId}`,
+        documentIds: [selectedDoc.id],
+        trackingId,
+        name: `Baseline: ${selectedDoc.title.slice(0, 30)}`,
       });
 
       results.push({
         agent: agent.name,
-        trackingId: agentTrackingId,
+        trackingId,
         jobCount: response.batch.jobCount,
         status: "success",
       });
 
-      console.log(`  ✓ ${agent.name}: ${response.batch.jobCount} jobs queued`);
+      console.log(`  ✓ ${agent.name}: queued`);
     } catch (error) {
       const message = error instanceof ApiError ? error.message : String(error);
       results.push({
         agent: agent.name,
-        trackingId: agentTrackingId,
+        trackingId,
         jobCount: 0,
         status: "error",
         error: message,
@@ -130,19 +150,60 @@ export async function runBaselineAction() {
   }
 
   // Step 8: Show summary
-  printSummary(results, trackingId);
+  printSummary(results, chainId, selectedDoc.title);
+}
+
+/**
+ * Create a new run in an existing chain
+ */
+export async function createRun(
+  chainId: string,
+  documentId: string,
+  agentIds: string[]
+) {
+  const timestamp = generateTimestamp();
+
+  console.log("\n🚀 Creating new run...\n");
+
+  const results: Array<{
+    agentId: string;
+    trackingId: string;
+    status: "success" | "error";
+    error?: string;
+  }> = [];
+
+  for (const agentId of agentIds) {
+    const trackingId = `${chainId}-${timestamp}-${agentId}`;
+
+    try {
+      await apiClient.post<BatchCreateResponse>("/api/batches", {
+        agentId,
+        documentIds: [documentId],
+        trackingId,
+        name: `Run ${timestamp}`,
+      });
+
+      results.push({ agentId, trackingId, status: "success" });
+      console.log(`  ✓ ${agentId}: queued`);
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : String(error);
+      results.push({ agentId, trackingId, status: "error", error: message });
+      console.log(`  ✗ ${agentId}: ${message}`);
+    }
+  }
+
+  const successCount = results.filter((r) => r.status === "success").length;
+  console.log(`\n✅ Created ${successCount}/${results.length} jobs`);
+
+  return results;
 }
 
 async function getAvailableAgents(userId: string): Promise<AgentChoice[]> {
   const agents = await prisma.agent.findMany({
     where: {
-      // User-owned agents OR system-managed agents
-      OR: [
-        { submittedById: userId },
-        { isSystemManaged: true },
-      ],
+      OR: [{ submittedById: userId }, { isSystemManaged: true }],
       isDeprecated: false,
-      ephemeralBatchId: null, // Exclude ephemeral agents
+      ephemeralBatchId: null,
     },
     include: {
       versions: {
@@ -166,7 +227,7 @@ async function getAvailableAgents(userId: string): Promise<AgentChoice[]> {
 async function getRecentDocuments(): Promise<DocumentChoice[]> {
   const documents = await prisma.document.findMany({
     where: {
-      ephemeralBatchId: null, // Exclude ephemeral documents
+      ephemeralBatchId: null,
     },
     include: {
       versions: {
@@ -188,32 +249,27 @@ async function getRecentDocuments(): Promise<DocumentChoice[]> {
     }));
 }
 
-async function selectDocuments(
+async function selectDocument(
   documents: DocumentChoice[]
-): Promise<DocumentChoice[]> {
-  const { selectedIds } = await prompt({
-    type: "multiselect",
-    name: "selectedIds",
-    message: "Select documents to evaluate:",
+): Promise<DocumentChoice | null> {
+  const { selectedId } = await prompt({
+    type: "select",
+    name: "selectedId",
+    message: "Select a document to evaluate:",
     choices: documents.map((d) => ({
       name: d.id,
       message: truncate(d.title, 60),
     })),
-    validate: (value: string[]) => {
-      if (value.length === 0) return "Select at least 1 document";
-      if (value.length > 20) return "Maximum 20 documents";
-      return true;
-    },
   });
 
-  return documents.filter((d) => selectedIds.includes(d.id));
+  return documents.find((d) => d.id === selectedId) || null;
 }
 
 async function selectAgents(agents: AgentChoice[]): Promise<AgentChoice[]> {
   const { selectedIds } = await prompt({
     type: "multiselect",
     name: "selectedIds",
-    message: "Select agents to run:",
+    message: "Select agents to run (space to select, enter to confirm):",
     choices: agents.map((a) => ({
       name: a.id,
       message: `${a.name} (v${a.version})`,
@@ -227,42 +283,18 @@ async function selectAgents(agents: AgentChoice[]): Promise<AgentChoice[]> {
   return agents.filter((a) => selectedIds.includes(a.id));
 }
 
-async function promptTrackingId(): Promise<string> {
-  const defaultId = `baseline-${new Date().toISOString().slice(0, 10)}`;
-
-  const { trackingId } = await prompt({
-    type: "input",
-    name: "trackingId",
-    message: "Enter tracking ID for this run:",
-    initial: defaultId,
-    validate: (value: string) => {
-      if (!value.trim()) return "Tracking ID is required";
-      if (value.length > 50) return "Maximum 50 characters";
-      if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
-        return "Only letters, numbers, dashes, and underscores allowed";
-      }
-      return true;
-    },
-  });
-
-  return trackingId;
-}
-
-async function confirmRun(
-  documents: DocumentChoice[],
-  agents: AgentChoice[],
-  trackingId: string
+async function confirmBaseline(
+  document: DocumentChoice,
+  agents: AgentChoice[]
 ): Promise<boolean> {
   console.log("\n📋 Summary:");
-  console.log(`   Tracking ID: ${trackingId}`);
-  console.log(`   Documents: ${documents.length}`);
-  console.log(`   Agents: ${agents.length}`);
-  console.log(`   Total jobs: ${documents.length * agents.length}`);
+  console.log(`   Document: ${truncate(document.title, 50)}`);
+  console.log(`   Agents: ${agents.map((a) => a.name).join(", ")}`);
 
   const { confirmed } = await prompt({
     type: "confirm",
     name: "confirmed",
-    message: "Create these evaluation batches?",
+    message: "Create this baseline?",
     initial: true,
   });
 
@@ -275,33 +307,28 @@ function printSummary(
     trackingId: string;
     jobCount: number;
     status: "success" | "error";
-    error?: string;
   }>,
-  baseTrackingId: string
+  chainId: string,
+  docTitle: string
 ) {
   console.log("\n");
 
   const table = new Table({
-    head: ["Agent", "Tracking ID", "Jobs", "Status"],
-    colWidths: [25, 35, 8, 10],
+    head: ["Agent", "Status"],
+    colWidths: [40, 10],
   });
 
   for (const r of results) {
-    table.push([
-      r.agent,
-      r.trackingId,
-      r.jobCount.toString(),
-      r.status === "success" ? "✓" : "✗",
-    ]);
+    table.push([r.agent, r.status === "success" ? "✓" : "✗"]);
   }
 
   console.log(table.toString());
 
   const successCount = results.filter((r) => r.status === "success").length;
-  const totalJobs = results.reduce((sum, r) => sum + r.jobCount, 0);
-
-  console.log(`\n✅ Created ${successCount}/${results.length} batches with ${totalJobs} total jobs`);
-  console.log(`\nUse tracking ID prefix "${baseTrackingId}" to compare results later.`);
+  console.log(`\n✅ Baseline created: ${chainId}`);
+  console.log(`   Document: ${truncate(docTitle, 40)}`);
+  console.log(`   Jobs queued: ${successCount}`);
+  console.log(`\nSelect this chain from the main menu to add more runs or compare.`);
 }
 
 function truncate(str: string, maxLen: number): string {
