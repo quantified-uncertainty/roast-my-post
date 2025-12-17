@@ -9,6 +9,7 @@ pnpm --filter @roast/meta-evals run start
 ```
 
 This launches an interactive menu where you can:
+- **Baseline** - Create evaluation runs for comparison (select docs + agents)
 - **Score** - Rate outputs on quality dimensions (1-10 each)
 - **Compare** - Rank multiple versions (A/B testing or N-way)
 
@@ -39,9 +40,11 @@ When comparing outputs, the judge uses this strict hierarchy:
 src/
 ├── index.ts           # Entry point with interactive menu
 ├── actions/           # User actions (UI + orchestration)
+│   ├── baseline.ts    # Create baseline runs
 │   ├── score.ts       # Scoring flow
 │   └── compare.ts     # Comparison flow
 └── utils/
+    ├── apiClient.ts   # HTTP client for web API
     └── formatters.ts  # Console output formatting
 ```
 
@@ -51,4 +54,5 @@ src/
 
 ## Requirements
 
-Set `DATABASE_URL` in a `.env` file or copy from `apps/web/.env.local`.
+1. Set `DATABASE_URL` in a `.env` file or copy from `apps/web/.env.local`
+2. For the **Baseline** action, the web app must be running on `localhost:3000`

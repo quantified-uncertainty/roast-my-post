@@ -11,10 +11,11 @@ import enquirer from "enquirer";
 import { prisma } from "@roast/db";
 import { runScoreAction } from "./actions/score";
 import { runCompareAction } from "./actions/compare";
+import { runBaselineAction } from "./actions/baseline";
 
 const { prompt } = enquirer as any;
 
-type EvalMode = "score" | "compare" | "exit";
+type EvalMode = "baseline" | "score" | "compare" | "exit";
 
 async function main() {
   checkEnvironment();
@@ -36,7 +37,9 @@ async function main() {
     }
 
     try {
-      if (mode === "score") {
+      if (mode === "baseline") {
+        await runBaselineAction();
+      } else if (mode === "score") {
         await runScoreAction();
       } else if (mode === "compare") {
         await runCompareAction();
@@ -95,6 +98,7 @@ async function selectMode(): Promise<EvalMode> {
     name: "mode",
     message: "What would you like to do?",
     choices: [
+      { name: "baseline", message: "Baseline - Create evaluation runs for comparison" },
       { name: "score", message: "Score - Rate outputs on quality dimensions" },
       { name: "compare", message: "Compare - Rank multiple versions" },
       { name: "exit", message: "Exit" },

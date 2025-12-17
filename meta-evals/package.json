@@ -9,6 +9,8 @@
   "dependencies": {
     "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.5",
     "dotenv": "^16.4.5",
     "enquirer": "^2.4.1"
   },
