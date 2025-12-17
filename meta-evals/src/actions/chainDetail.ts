@@ -8,35 +8,20 @@
 
 import enquirer from "enquirer";
 import Table from "cli-table3";
-import { prisma } from "@roast/db";
+import {
+  metaEvaluationRepository,
+  type ChainDetail,
+  type ChainRun,
+} from "@roast/db";
 import { rankVersions, type RankingCandidate } from "@roast/ai/server";
 import { createRun } from "./baseline";
 import { formatCommentForApi } from "../utils/formatters";
 
 const { prompt } = enquirer as any;
 
-interface Run {
-  trackingId: string;
-  agentId: string;
-  agentName: string;
-  createdAt: Date;
-  jobStatus: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
-  evaluationVersionId: string | null;
-  documentVersionId: string | null;
-}
-
-interface ChainInfo {
-  chainId: string;
-  documentId: string;
-  documentTitle: string;
-  documentContent: string;
-  agentIds: string[];
-  runs: Run[];
-}
-
 export async function showChainDetail(chainId: string) {
   while (true) {
-    const chain = await getChainInfo(chainId);
+    const chain = await metaEvaluationRepository.getChainDetail(chainId);
 
     if (!chain) {
       console.log(`\nChain ${chainId} not found.`);
@@ -101,92 +86,13 @@ export async function showChainDetail(chainId: string) {
   }
 }
 
-async function getChainInfo(chainId: string): Promise<ChainInfo | null> {
-  // Get all batches in this chain
-  const batches = await prisma.agentEvalBatch.findMany({
-    where: {
-      trackingId: { startsWith: chainId },
-    },
-    include: {
-      agent: {
-        include: {
-          versions: {
-            orderBy: { version: "desc" },
-            take: 1,
-          },
-        },
-      },
-      jobs: {
-        include: {
-          evaluation: {
-            include: {
-              document: {
-                include: {
-                  versions: {
-                    orderBy: { version: "desc" },
-                    take: 1,
-                  },
-                },
-              },
-            },
-          },
-          evaluationVersion: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "asc" },
-  });
-
-  if (batches.length === 0) {
-    return null;
-  }
-
-  // Extract document info from first batch
-  const firstJob = batches[0]?.jobs[0];
-  const doc = firstJob?.evaluation?.document;
-  const docVersion = doc?.versions[0];
-
-  if (!doc || !docVersion) {
-    return null;
-  }
-
-  // Collect unique agent IDs
-  const agentIds = [...new Set(batches.map((b) => b.agentId))];
-
-  // Build runs list
-  const runs: Run[] = [];
-  for (const batch of batches) {
-    const job = batch.jobs[0];
-    const agentName = batch.agent.versions[0]?.name || batch.agentId;
-
-    runs.push({
-      trackingId: batch.trackingId || "",
-      agentId: batch.agentId,
-      agentName,
-      createdAt: batch.createdAt,
-      jobStatus: (job?.status as Run["jobStatus"]) || "PENDING",
-      evaluationVersionId: job?.evaluationVersionId || null,
-      documentVersionId: job?.evaluationVersion?.documentVersionId || null,
-    });
-  }
-
-  return {
-    chainId,
-    documentId: doc.id,
-    documentTitle: docVersion.title,
-    documentContent: docVersion.content,
-    agentIds,
-    runs,
-  };
-}
-
 interface RunSet {
   timestamp: Date;
-  runs: Run[];
+  runs: ChainRun[];
 }
 
-function groupRunsByTimestamp(runs: Run[]): RunSet[] {
-  const groups = new Map<string, Run[]>();
+function groupRunsByTimestamp(runs: ChainRun[]): RunSet[] {
+  const groups = new Map<string, ChainRun[]>();
 
   for (const run of runs) {
     // Group by minute-level timestamp
@@ -213,7 +119,7 @@ function groupRunsByTimestamp(runs: Run[]): RunSet[] {
   return runSets;
 }
 
-async function compareRuns(chain: ChainInfo, runSets: RunSet[]) {
+async function compareRuns(chain: ChainDetail, runSets: RunSet[]) {
   // Filter to completed runs only
   const completedRuns = chain.runs.filter(
     (r) => r.jobStatus === "COMPLETED" && r.evaluationVersionId
@@ -252,14 +158,9 @@ async function compareRuns(chain: ChainInfo, runSets: RunSet[]) {
   for (const run of selectedRuns) {
     if (!run.evaluationVersionId) continue;
 
-    const evalVersion = await prisma.evaluationVersion.findUnique({
-      where: { id: run.evaluationVersionId },
-      include: {
-        comments: {
-          include: { highlight: true },
-        },
-      },
-    });
+    const evalVersion = await metaEvaluationRepository.getEvaluationVersionWithComments(
+      run.evaluationVersionId
+    );
 
     if (!evalVersion) continue;
 

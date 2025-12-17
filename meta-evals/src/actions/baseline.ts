@@ -9,22 +9,14 @@
 
 import enquirer from "enquirer";
 import Table from "cli-table3";
-import { prisma } from "@roast/db";
+import {
+  metaEvaluationRepository,
+  type AgentChoice,
+  type DocumentChoice,
+} from "@roast/db";
 import { apiClient, ApiError } from "../utils/apiClient";
 
 const { prompt } = enquirer as any;
-
-interface AgentChoice {
-  id: string;
-  name: string;
-  version: number;
-}
-
-interface DocumentChoice {
-  id: string;
-  title: string;
-  createdAt: Date;
-}
 
 interface BatchCreateResponse {
   batch: {
@@ -62,21 +54,18 @@ export async function createBaseline() {
 
   // Step 1: Get current user
   const userId = await apiClient.getUserId();
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true },
-  });
+  const user = await metaEvaluationRepository.getUserById(userId);
   console.log(`Acting as: ${user?.email || userId}\n`);
 
   // Step 2: Get available agents
-  const agents = await getAvailableAgents(userId);
+  const agents = await metaEvaluationRepository.getAvailableAgents(userId);
   if (agents.length === 0) {
     console.log("No agents available. Please create an agent first.");
     return;
   }
 
   // Step 3: Get available documents
-  const documents = await getRecentDocuments();
+  const documents = await metaEvaluationRepository.getRecentDocuments();
   if (documents.length === 0) {
     console.log("No documents found. Please add documents first.");
     return;
@@ -196,57 +185,6 @@ export async function createRun(
   console.log(`\n✅ Created ${successCount}/${results.length} jobs`);
 
   return results;
-}
-
-async function getAvailableAgents(userId: string): Promise<AgentChoice[]> {
-  const agents = await prisma.agent.findMany({
-    where: {
-      OR: [{ submittedById: userId }, { isSystemManaged: true }],
-      isDeprecated: false,
-      ephemeralBatchId: null,
-    },
-    include: {
-      versions: {
-        orderBy: { version: "desc" },
-        take: 1,
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 30,
-  });
-
-  return agents
-    .filter((a) => a.versions.length > 0)
-    .map((a) => ({
-      id: a.id,
-      name: a.versions[0].name,
-      version: a.versions[0].version,
-    }));
-}
-
-async function getRecentDocuments(): Promise<DocumentChoice[]> {
-  const documents = await prisma.document.findMany({
-    where: {
-      ephemeralBatchId: null,
-    },
-    include: {
-      versions: {
-        orderBy: { version: "desc" },
-        take: 1,
-        select: { title: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 30,
-  });
-
-  return documents
-    .filter((d) => d.versions.length > 0)
-    .map((d) => ({
-      id: d.id,
-      title: d.versions[0].title,
-      createdAt: d.createdAt,
-    }));
 }
 
 async function selectDocument(
