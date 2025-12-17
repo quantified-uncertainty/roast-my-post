@@ -2,3 +2,4 @@ packages:
   - 'apps/*'
   - 'internal-packages/*'
   - 'dev/evaluations'
+  - 'meta-evals'

@@ -41,3 +41,6 @@ export {
   checkJobTimeout,
   JobTimeoutError
 } from './shared/jobContext';
+
+// Meta-evaluation system (uses Claude API)
+export * from './meta-eval';

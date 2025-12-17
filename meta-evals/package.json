@@ -1,0 +1,19 @@
+{
+  "name": "@roast/meta-evals",
+  "version": "0.0.1",
+  "private": true,
+  "description": "CLI tools for meta-evaluation of agent outputs",
+  "scripts": {
+    "compare": "tsx src/run-comparison.ts",
+    "score": "tsx src/run-scoring.ts"
+  },
+  "dependencies": {
+    "@roast/ai": "workspace:*",
+    "@roast/db": "workspace:*",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5"
+  }
+}
