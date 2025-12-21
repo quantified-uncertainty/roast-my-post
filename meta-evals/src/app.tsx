@@ -12,7 +12,7 @@ import {
   type AgentChoice,
 } from "@roast/db";
 import { apiClient } from "./utils/apiClient";
-import { MainMenu, CreateBaseline, SeriesDetail, CompareRuns, ScoreRun, type Screen } from "./components";
+import { MainMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, type Screen } from "./components";
 
 // ============================================================================
 // Baseline Creation
@@ -252,8 +252,8 @@ export function App() {
             return 0;
           }
         }}
-        onCompare={(seriesId) => {
-          setScreen({ type: "compare-runs", seriesId });
+        onRank={(seriesId) => {
+          setScreen({ type: "rank-runs", seriesId });
         }}
         onScore={(seriesId) => {
           setScreen({ type: "score-run", seriesId });
@@ -262,9 +262,9 @@ export function App() {
     );
   }
 
-  if (screen.type === "compare-runs") {
+  if (screen.type === "rank-runs") {
     return (
-      <CompareRuns
+      <RankRuns
         seriesId={screen.seriesId}
         height={termHeight}
         onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}

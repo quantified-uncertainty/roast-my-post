@@ -1,5 +1,5 @@
 /**
- * Compare Runs Screen Component
+ * Rank Runs Screen Component
  */
 
 import React, { useState, useEffect } from "react";
@@ -26,23 +26,27 @@ interface DisplayResult {
   runNumber: number;
 }
 
-interface CompareResults {
+interface RankingResults {
   rankings: DisplayResult[];
   reasoning: string;
+  sessionId: string;
 }
 
-interface CompareRunsProps {
+interface RankRunsProps {
   seriesId: string;
   height: number;
   onBack: () => void;
 }
 
-export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
+const DEFAULT_JUDGE_MODEL = "claude-sonnet-4-20250514";
+
+export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
   const [loading, setLoading] = useState(true);
-  const [comparing, setComparing] = useState(false);
+  const [ranking, setRanking] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [runs, setRuns] = useState<CompletedRun[]>([]);
   const [selectedRuns, setSelectedRuns] = useState<Set<string>>(new Set());
-  const [results, setResults] = useState<CompareResults | null>(null);
+  const [results, setResults] = useState<RankingResults | null>(null);
   const [documentContent, setDocumentContent] = useState<string>("");
   const [showFullReasoning, setShowFullReasoning] = useState(false);
 
@@ -73,10 +77,10 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
     }
   }
 
-  async function runComparison() {
+  async function runRanking() {
     if (selectedRuns.size < 2) return;
 
-    setComparing(true);
+    setRanking(true);
 
     try {
       const selectedRunsList = runs.filter((r) =>
@@ -109,7 +113,7 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
       }
 
       if (candidates.length < 2) {
-        setComparing(false);
+        setRanking(false);
         return;
       }
 
@@ -117,6 +121,9 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
         sourceText: documentContent,
         candidates,
       });
+
+      // Generate a session ID for this ranking
+      const sessionId = `rank-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       // Map results with agent names and run numbers
       const displayResults: DisplayResult[] = result.rankings.map((r) => {
@@ -133,12 +140,38 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
       setResults({
         rankings: displayResults,
         reasoning: result.reasoning,
+        sessionId,
       });
     } catch (error) {
-      console.error("Comparison failed:", error);
+      console.error("Ranking failed:", error);
     }
 
-    setComparing(false);
+    setRanking(false);
+  }
+
+  async function saveResults() {
+    if (!results) return;
+
+    setSaving(true);
+
+    try {
+      // Save each ranking result
+      for (const ranking of results.rankings) {
+        await metaEvaluationRepository.saveRankingResult({
+          evaluationVersionId: ranking.versionId,
+          rankingSessionId: results.sessionId,
+          rank: ranking.rank,
+          relativeScore: ranking.relativeScore,
+          reasoning: results.reasoning,
+          judgeModel: DEFAULT_JUDGE_MODEL,
+        });
+      }
+    } catch (error) {
+      console.error("Save failed:", error);
+    }
+
+    setSaving(false);
+    onBack();
   }
 
   if (loading) {
@@ -151,11 +184,11 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
     );
   }
 
-  if (comparing) {
+  if (ranking) {
     return (
       <Box padding={1}>
         <Text>
-          <Spinner type="dots" /> Running comparison with AI judge...
+          <Spinner type="dots" /> Ranking with AI judge...
         </Text>
       </Box>
     );
@@ -188,7 +221,7 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
       <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
         <Box justifyContent="center" marginBottom={1}>
           <Text bold color="magenta">
-            Comparison Results
+            Ranking Results
           </Text>
         </Box>
 
@@ -211,12 +244,15 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
         <SelectInput
           items={[
             { label: "View Full Reasoning", value: "reasoning" },
-            { label: "<- Back to Series", value: "back" },
+            { label: saving ? "Saving..." : "Save to Database", value: "save" },
+            { label: "<- Back (discard)", value: "back" },
           ]}
-          onSelect={(item) => {
+          onSelect={async (item) => {
             if (item.value === "reasoning") {
               setShowFullReasoning(true);
-            } else {
+            } else if (item.value === "save" && !saving) {
+              await saveResults();
+            } else if (item.value === "back") {
               onBack();
             }
           }}
@@ -230,12 +266,12 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
       <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
         <Box justifyContent="center" marginBottom={1}>
           <Text bold color="magenta">
-            Compare Runs
+            Rank Runs
           </Text>
         </Box>
         <Box paddingX={1}>
           <Text color="yellow">
-            Need at least 2 completed runs to compare. Currently have {runs.length}.
+            Need at least 2 completed runs to rank. Currently have {runs.length}.
           </Text>
         </Box>
         <SelectInput
@@ -250,12 +286,12 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
     <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
       <Box justifyContent="center" marginBottom={1}>
         <Text bold color="magenta">
-          Compare Runs
+          Rank Runs
         </Text>
       </Box>
 
       <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-        <Text>Select runs to compare (Enter to toggle, {selectedRuns.size} selected)</Text>
+        <Text>Select runs to rank (Enter to toggle, {selectedRuns.size} selected)</Text>
       </Box>
 
       <SelectInput
@@ -265,15 +301,15 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
             value: r.evaluationVersionId,
           })),
           ...(selectedRuns.size >= 2
-            ? [{ label: "-> Run Comparison", value: "compare" }]
+            ? [{ label: "-> Run Ranking", value: "rank" }]
             : []),
           { label: "<- Back", value: "back" },
         ]}
         onSelect={async (item) => {
           if (item.value === "back") {
             onBack();
-          } else if (item.value === "compare") {
-            await runComparison();
+          } else if (item.value === "rank") {
+            await runRanking();
           } else {
             setSelectedRuns((prev) => {
               const next = new Set(prev);

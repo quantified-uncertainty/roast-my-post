@@ -32,7 +32,7 @@ interface SeriesDetailProps {
   onBack: () => void;
   onRunAgain: (seriesId: string, documentId: string) => Promise<void>;
   onClearFailed: (seriesId: string) => Promise<number>;
-  onCompare: (seriesId: string) => void;
+  onRank: (seriesId: string) => void;
   onScore: (seriesId: string) => void;
 }
 
@@ -50,7 +50,7 @@ export function SeriesDetail({
   onBack,
   onRunAgain,
   onClearFailed,
-  onCompare,
+  onRank,
   onScore,
 }: SeriesDetailProps) {
   const [loading, setLoading] = useState(true);
@@ -152,7 +152,7 @@ export function SeriesDetail({
       <SelectInput
         items={[
           { label: runningAgain ? "Creating new run..." : "Run Again", value: "run" },
-          { label: "Compare Runs", value: "compare" },
+          { label: "Rank Runs", value: "rank" },
           { label: "Score Run", value: "score" },
           ...(series.runs.some((r) => r.status === "FAILED")
             ? [{ label: clearing ? "Clearing..." : "Clear Failed", value: "clear" }]
@@ -169,8 +169,8 @@ export function SeriesDetail({
             setClearing(true);
             await onClearFailed(series.id);
             setClearing(false);
-          } else if (item.value === "compare" && series) {
-            onCompare(series.id);
+          } else if (item.value === "rank" && series) {
+            onRank(series.id);
           } else if (item.value === "score" && series) {
             onScore(series.id);
           }
