@@ -240,6 +240,63 @@ export class MetaEvaluationRepository {
     });
   }
 
+  /**
+   * Get all ranking sessions for evaluation versions in a series.
+   */
+  async getRankingSessionsForSeries(seriesId: string) {
+    // First get all evaluation version IDs for this series
+    const series = await this.prisma.series.findUnique({
+      where: { id: seriesId },
+      include: {
+        runs: {
+          include: {
+            job: { select: { evaluationVersionId: true } },
+          },
+        },
+      },
+    });
+
+    if (!series) return [];
+
+    const evalVersionIds = series.runs
+      .map((r) => r.job.evaluationVersionId)
+      .filter((id): id is string => id !== null);
+
+    if (evalVersionIds.length === 0) return [];
+
+    // Get all ranking records for these versions, grouped by session
+    const rankings = await this.prisma.metaEvaluation.findMany({
+      where: {
+        evaluationVersionId: { in: evalVersionIds },
+        type: "ranking",
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Group by session ID
+    const sessionMap = new Map<string, typeof rankings>();
+    for (const r of rankings) {
+      if (!r.rankingSessionId) continue;
+      const existing = sessionMap.get(r.rankingSessionId) || [];
+      existing.push(r);
+      sessionMap.set(r.rankingSessionId, existing);
+    }
+
+    // Convert to array of sessions
+    return Array.from(sessionMap.entries()).map(([sessionId, records]) => ({
+      sessionId,
+      createdAt: records[0].createdAt,
+      reasoning: records[0].reasoning || "",
+      rankings: records
+        .sort((a, b) => (a.rank || 0) - (b.rank || 0))
+        .map((r) => ({
+          evaluationVersionId: r.evaluationVersionId,
+          rank: r.rank || 0,
+          relativeScore: r.relativeScore || 0,
+        })),
+    }));
+  }
+
   // ==========================================================================
   // Series Methods (for meta-eval CLI)
   // ==========================================================================

@@ -30,6 +30,14 @@ interface RankingResults {
   rankings: DisplayResult[];
   reasoning: string;
   sessionId: string;
+  isViewingSaved?: boolean;
+}
+
+interface SavedRankingSession {
+  sessionId: string;
+  createdAt: Date;
+  reasoning: string;
+  rankings: { evaluationVersionId: string; rank: number; relativeScore: number }[];
 }
 
 interface RankRunsProps {
@@ -49,14 +57,20 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
   const [results, setResults] = useState<RankingResults | null>(null);
   const [documentContent, setDocumentContent] = useState<string>("");
   const [showFullReasoning, setShowFullReasoning] = useState(false);
+  const [savedSessions, setSavedSessions] = useState<SavedRankingSession[]>([]);
+  const [viewMode, setViewMode] = useState<"list" | "new" | "saved">("list");
 
   useEffect(() => {
-    loadCompletedRuns();
+    loadData();
   }, [seriesId]);
 
-  async function loadCompletedRuns() {
+  async function loadData() {
     try {
-      const detail = await metaEvaluationRepository.getSeriesDetail(seriesId);
+      const [detail, sessions] = await Promise.all([
+        metaEvaluationRepository.getSeriesDetail(seriesId),
+        metaEvaluationRepository.getRankingSessionsForSeries(seriesId),
+      ]);
+
       if (detail) {
         setDocumentContent(detail.documentContent);
         const completed = detail.runs
@@ -71,10 +85,32 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
           }));
         setRuns(completed);
       }
+      setSavedSessions(sessions);
       setLoading(false);
     } catch (error) {
       setLoading(false);
     }
+  }
+
+  function viewSavedSession(session: SavedRankingSession) {
+    // Convert saved session to display format
+    const displayResults: DisplayResult[] = session.rankings.map((r) => {
+      const run = runs.find((run) => run.evaluationVersionId === r.evaluationVersionId);
+      return {
+        versionId: r.evaluationVersionId,
+        rank: r.rank,
+        agentName: run?.agentName || "Unknown",
+        relativeScore: r.relativeScore,
+        runNumber: run?.runNumber || 0,
+      };
+    });
+
+    setResults({
+      rankings: displayResults,
+      reasoning: session.reasoning,
+      sessionId: session.sessionId,
+      isViewingSaved: true,
+    });
   }
 
   async function runRanking() {
@@ -217,11 +253,23 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
       );
     }
 
+    // Build menu items based on whether viewing saved or new result
+    const menuItems = results.isViewingSaved
+      ? [
+          { label: "View Full Reasoning", value: "reasoning" },
+          { label: "<- Back to List", value: "list" },
+        ]
+      : [
+          { label: "View Full Reasoning", value: "reasoning" },
+          { label: saving ? "Saving..." : "Save to Database", value: "save" },
+          { label: "<- Back (discard)", value: "back" },
+        ];
+
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
         <Box justifyContent="center" marginBottom={1}>
           <Text bold color="magenta">
-            Ranking Results
+            {results.isViewingSaved ? "Saved " : ""}Ranking Results
           </Text>
         </Box>
 
@@ -242,16 +290,14 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
         </Box>
 
         <SelectInput
-          items={[
-            { label: "View Full Reasoning", value: "reasoning" },
-            { label: saving ? "Saving..." : "Save to Database", value: "save" },
-            { label: "<- Back (discard)", value: "back" },
-          ]}
+          items={menuItems}
           onSelect={async (item) => {
             if (item.value === "reasoning") {
               setShowFullReasoning(true);
             } else if (item.value === "save" && !saving) {
               await saveResults();
+            } else if (item.value === "list") {
+              setResults(null);
             } else if (item.value === "back") {
               onBack();
             }
@@ -290,18 +336,32 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
         </Text>
       </Box>
 
+      {savedSessions.length > 0 && (
+        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+          <Text color="cyan">
+            {savedSessions.length} saved ranking{savedSessions.length > 1 ? "s" : ""} available
+          </Text>
+        </Box>
+      )}
+
       <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
         <Text>Select runs to rank (Enter to toggle, {selectedRuns.size} selected)</Text>
       </Box>
 
       <SelectInput
         items={[
+          // Show saved sessions first
+          ...savedSessions.map((s, i) => ({
+            label: `[view] Saved Ranking ${i + 1} (${s.createdAt.toLocaleDateString()})`,
+            value: `session:${s.sessionId}`,
+          })),
+          // Then the run selection
           ...runs.map((r) => ({
             label: `${selectedRuns.has(r.evaluationVersionId) ? "[x]" : "[ ]"} #${r.runNumber} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
             value: r.evaluationVersionId,
           })),
           ...(selectedRuns.size >= 2
-            ? [{ label: "-> Run Ranking", value: "rank" }]
+            ? [{ label: "-> Run New Ranking", value: "rank" }]
             : []),
           { label: "<- Back", value: "back" },
         ]}
@@ -310,6 +370,12 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
             onBack();
           } else if (item.value === "rank") {
             await runRanking();
+          } else if (item.value.startsWith("session:")) {
+            const sessionId = item.value.replace("session:", "");
+            const session = savedSessions.find((s) => s.sessionId === sessionId);
+            if (session) {
+              viewSavedSession(session);
+            }
           } else {
             setSelectedRuns((prev) => {
               const next = new Set(prev);
