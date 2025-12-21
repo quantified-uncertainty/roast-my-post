@@ -15,6 +15,7 @@ interface CompletedRun {
   agentName: string;
   evaluationVersionId: string;
   createdAt: Date;
+  runNumber: number; // 1-based index from the series
 }
 
 interface DisplayResult {
@@ -22,6 +23,7 @@ interface DisplayResult {
   rank: number;
   agentName: string;
   relativeScore: number;
+  runNumber: number;
 }
 
 interface CompareResults {
@@ -53,12 +55,14 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
       if (detail) {
         setDocumentContent(detail.documentContent);
         const completed = detail.runs
+          .map((r, index) => ({ ...r, runNumber: index + 1 }))
           .filter((r) => r.status === "COMPLETED" && r.evaluationVersionId)
           .map((r) => ({
             jobId: r.jobId,
             agentName: r.agentName,
             evaluationVersionId: r.evaluationVersionId!,
             createdAt: r.createdAt,
+            runNumber: r.runNumber,
           }));
         setRuns(completed);
       }
@@ -113,14 +117,15 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
         candidates,
       });
 
-      // Map results with agent names
+      // Map results with agent names and run numbers
       const displayResults: DisplayResult[] = result.rankings.map((r) => {
-        const candidate = candidates.find((c) => c.versionId === r.versionId);
+        const run = selectedRunsList.find((sr) => sr.evaluationVersionId === r.versionId);
         return {
           versionId: r.versionId,
           rank: r.rank,
-          agentName: candidate?.agentName || "Unknown",
+          agentName: run?.agentName || "Unknown",
           relativeScore: r.relativeScore,
+          runNumber: run?.runNumber || 0,
         };
       });
 
@@ -169,7 +174,7 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
             <Box key={r.versionId}>
               <Text>
                 <Text color={r.rank === 1 ? "green" : "yellow"}>#{r.rank}</Text>
-                {" "}{r.agentName}
+                {" "}Run #{r.runNumber} {r.agentName}
                 <Text dimColor> (score: {r.relativeScore})</Text>
               </Text>
             </Box>
@@ -224,7 +229,7 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
       <SelectInput
         items={[
           ...runs.map((r) => ({
-            label: `${selectedRuns.has(r.evaluationVersionId) ? "[x]" : "[ ]"} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
+            label: `${selectedRuns.has(r.evaluationVersionId) ? "[x]" : "[ ]"} #${r.runNumber} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
             value: r.evaluationVersionId,
           })),
           ...(selectedRuns.size >= 2

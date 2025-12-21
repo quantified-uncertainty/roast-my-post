@@ -15,6 +15,7 @@ interface CompletedRun {
   agentName: string;
   evaluationVersionId: string;
   createdAt: Date;
+  runNumber: number; // 1-based index from the series
 }
 
 interface ScoreRunProps {
@@ -44,12 +45,14 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
       if (detail) {
         setDocumentContent(detail.documentContent);
         const completed = detail.runs
+          .map((r, index) => ({ ...r, runNumber: index + 1 }))
           .filter((r) => r.status === "COMPLETED" && r.evaluationVersionId)
           .map((r) => ({
             jobId: r.jobId,
             agentName: r.agentName,
             evaluationVersionId: r.evaluationVersionId!,
             createdAt: r.createdAt,
+            runNumber: r.runNumber,
           }));
         setRuns(completed);
       }
@@ -151,7 +154,7 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
       <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
         <Box justifyContent="center" marginBottom={1}>
           <Text bold color="blue">
-            Scoring Results: {selectedRun.agentName}
+            Scoring Results: Run #{selectedRun.runNumber} {selectedRun.agentName}
           </Text>
         </Box>
 
@@ -235,7 +238,7 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
       <SelectInput
         items={[
           ...runs.map((r) => ({
-            label: `${r.agentName} (${r.createdAt.toLocaleDateString()})`,
+            label: `#${r.runNumber} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
             value: r.evaluationVersionId,
           })),
           { label: "<- Back", value: "back" },
