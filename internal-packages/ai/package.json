@@ -13,6 +13,10 @@
       "types": "./src/server.ts",
       "default": "./src/server.ts"
     },
+    "./meta-eval": {
+      "types": "./dist/meta-eval/index.d.ts",
+      "default": "./dist/meta-eval/index.js"
+    },
     "./tools/smart-text-searcher/core": {
       "types": "./dist/tools/smart-text-searcher/core.d.ts",
       "default": "./dist/tools/smart-text-searcher/core.js"

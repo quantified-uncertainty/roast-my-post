@@ -12,7 +12,7 @@ import {
   type AgentChoice,
 } from "@roast/db";
 import { apiClient } from "./utils/apiClient";
-import { MainMenu, CreateBaseline, SeriesDetail, type Screen } from "./components";
+import { MainMenu, CreateBaseline, SeriesDetail, CompareRuns, ScoreRun, type Screen } from "./components";
 
 // ============================================================================
 // Baseline Creation
@@ -240,11 +240,44 @@ export function App() {
         onRunAgain={async (seriesId, documentId) => {
           try {
             await runAgain(seriesId, documentId);
-            // The auto-refresh in SeriesDetail will pick up the new jobs
           } catch (e) {
             setError(String(e));
           }
         }}
+        onClearFailed={async (seriesId) => {
+          try {
+            return await metaEvaluationRepository.clearFailedRuns(seriesId);
+          } catch (e) {
+            setError(String(e));
+            return 0;
+          }
+        }}
+        onCompare={(seriesId) => {
+          setScreen({ type: "compare-runs", seriesId });
+        }}
+        onScore={(seriesId) => {
+          setScreen({ type: "score-run", seriesId });
+        }}
+      />
+    );
+  }
+
+  if (screen.type === "compare-runs") {
+    return (
+      <CompareRuns
+        seriesId={screen.seriesId}
+        height={termHeight}
+        onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
+      />
+    );
+  }
+
+  if (screen.type === "score-run") {
+    return (
+      <ScoreRun
+        seriesId={screen.seriesId}
+        height={termHeight}
+        onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
       />
     );
   }

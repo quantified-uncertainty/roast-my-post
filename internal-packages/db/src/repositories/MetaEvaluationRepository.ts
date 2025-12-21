@@ -488,6 +488,36 @@ export class MetaEvaluationRepository {
   }
 
   /**
+   * Delete failed runs from a series.
+   * Returns the number of runs deleted.
+   */
+  async clearFailedRuns(seriesId: string): Promise<number> {
+    // Find SeriesRun entries where the job has FAILED status
+    const failedRuns = await this.prisma.seriesRun.findMany({
+      where: {
+        seriesId,
+        job: {
+          status: "FAILED",
+        },
+      },
+      select: { id: true },
+    });
+
+    if (failedRuns.length === 0) {
+      return 0;
+    }
+
+    // Delete the SeriesRun entries (not the jobs themselves)
+    await this.prisma.seriesRun.deleteMany({
+      where: {
+        id: { in: failedRuns.map((r) => r.id) },
+      },
+    });
+
+    return failedRuns.length;
+  }
+
+  /**
    * Get unique agents used in a series (for "Run Again" functionality).
    */
   async getSeriesAgents(seriesId: string): Promise<AgentChoice[]> {

@@ -30,6 +30,9 @@ interface SeriesDetailProps {
   height: number;
   onBack: () => void;
   onRunAgain: (seriesId: string, documentId: string) => Promise<void>;
+  onClearFailed: (seriesId: string) => Promise<number>;
+  onCompare: (seriesId: string) => void;
+  onScore: (seriesId: string) => void;
 }
 
 // Column widths for consistent alignment
@@ -44,9 +47,13 @@ export function SeriesDetail({
   height,
   onBack,
   onRunAgain,
+  onClearFailed,
+  onCompare,
+  onScore,
 }: SeriesDetailProps) {
   const [loading, setLoading] = useState(true);
   const [runningAgain, setRunningAgain] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [series, setSeries] = useState<SeriesDetailData | null>(null);
 
   // Load and poll for updates - always poll every 2 seconds
@@ -140,6 +147,10 @@ export function SeriesDetail({
         items={[
           { label: runningAgain ? "Creating new run..." : "Run Again", value: "run" },
           { label: "Compare Runs", value: "compare" },
+          { label: "Score Run", value: "score" },
+          ...(series.runs.some((r) => r.status === "FAILED")
+            ? [{ label: clearing ? "Clearing..." : "Clear Failed", value: "clear" }]
+            : []),
           { label: "<- Back", value: "back" },
         ]}
         onSelect={async (item) => {
@@ -148,9 +159,15 @@ export function SeriesDetail({
             setRunningAgain(true);
             await onRunAgain(series.id, series.documentId);
             setRunningAgain(false);
-            // Polling will pick up new jobs automatically
+          } else if (item.value === "clear" && !clearing && series) {
+            setClearing(true);
+            await onClearFailed(series.id);
+            setClearing(false);
+          } else if (item.value === "compare" && series) {
+            onCompare(series.id);
+          } else if (item.value === "score" && series) {
+            onScore(series.id);
           }
-          // TODO: Handle compare
         }}
       />
 
