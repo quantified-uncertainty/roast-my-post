@@ -32,50 +32,79 @@ Creates the first run in a new evaluation series:
 
 ### 2. Series Detail View
 
-Selecting a series shows a table of all runs grouped by timestamp:
+Selecting a series shows a table of all runs:
 
 ```
-┌────┬──────────────────┬──────────────────────────────┬────────────┐
-│ #  │ Time             │ Agent                        │ Status     │
-├────┼──────────────────┼──────────────────────────────┼────────────┤
-│ 1  │ 12-21 14:30      │ Claude Opus                  │ ✓ Done     │
-│ 2  │                  │ GPT-4                        │ ✓ Done     │
-│ 3  │ 12-21 15:00      │ Claude Opus                  │ ⏳ Running │
-└────┴──────────────────┴──────────────────────────────┴────────────┘
+┌───┬──────────────────────┬──────────┬───────┬──────────┐
+│ # │ Agent                │ Status   │ Score │ Created  │
+├───┼──────────────────────┼──────────┼───────┼──────────┤
+│ 1 │ Claude Opus          │ Done     │ 8/10  │ 12/21    │
+│ 2 │ GPT-4                │ Done     │ 7/10  │ 12/21    │
+│ 3 │ Claude Sonnet        │ Running  │ -     │ 12/21    │
+└───┴──────────────────────┴──────────┴───────┴──────────┘
 ```
 
 Actions available:
-- **Run Again** - Re-evaluate with the same agents (for comparison)
-- **Compare Runs** - Select 2-5 completed runs for LLM ranking
-- **Back** - Return to main menu
+- **Run Again** - Re-evaluate with the same agents
+- **Rank Runs** - Compare 2+ completed runs with LLM ranking
+- **Score Run** - Score a single run on quality dimensions
+- **Clear Failed** - Remove failed runs from the series (only shown if failures exist)
 
-### 3. Compare Runs
+### 3. Score Run
 
-The comparison uses an LLM judge to rank runs based on:
-1. **VALIDITY** - Are the issues real? Hallucinations lose automatically
-2. **UTILITY** - More actionable? (if validity tied)
-3. **TONE** - More constructive? (final tiebreaker)
+Score a single completed run using an LLM judge:
 
-Results show rankings with relative scores and reasoning.
+1. Select a run from the list (shows `[scored]` for already-scored runs)
+2. If already scored: view the saved result
+3. If not scored: AI judge evaluates on dimensions:
+   - **Accuracy** - Are the issues real and correctly identified?
+   - **Importance** - Are the flagged issues significant?
+   - **Clarity** - Is the feedback clear and actionable?
+   - And more...
+4. View overall score (1-10) and per-dimension scores
+5. View full reasoning or save to database
+
+### 4. Rank Runs
+
+Compare multiple runs using an LLM judge:
+
+**Tabbed Interface:**
+- **Saved Rankings** - View previously saved ranking sessions
+- **New Ranking** - Create a new comparison
+
+**Creating a New Ranking:**
+1. Toggle runs to include (need 2+ runs)
+2. Select "Run Ranking"
+3. AI judge compares and ranks based on:
+   - **VALIDITY** - Are the issues real? Hallucinations lose
+   - **UTILITY** - More actionable feedback wins ties
+   - **TONE** - More constructive wins final ties
+4. View rankings with relative scores and reasoning
+5. Save to database or discard
 
 ## Project Structure
 
 ```
 src/
-├── index.ts              # Entry point - main menu loop
-├── actions/
-│   ├── baseline.ts       # Create new baseline, add runs to series
-│   └── seriesDetail.ts   # View series runs, compare outputs
-└── utils/
-    ├── apiClient.ts      # HTTP client for web API
-    └── formatters.ts     # Console output formatting
+├── index.tsx             # Entry point with Ink app
+├── components/
+│   ├── MainMenu.tsx      # Series list and navigation
+│   ├── CreateBaseline.tsx # Document/agent selection
+│   ├── SeriesDetail.tsx  # Run table with actions
+│   ├── ScoreRun.tsx      # Single run scoring flow
+│   ├── RankRuns.tsx      # Multi-run ranking flow
+│   ├── shared.tsx        # Reusable UI components
+│   ├── helpers.ts        # Formatting utilities
+│   └── types.ts          # Screen state types
+└── actions/
+    └── baseline.ts       # API calls for creating runs
 ```
 
 ## Requirements
 
-1. Set `DATABASE_URL` in a `.env` file or copy from `apps/web/.env.local`
-2. The web app must be running on `localhost:3000` for creating runs
-3. Run the worker to process jobs: `NODE_ENV=development pnpm run process-pgboss`
+1. Database connection via `DATABASE_URL` (uses `apps/web/.env.local`)
+2. Web app running on `localhost:3000` for creating runs
+3. Worker running to process jobs: `NODE_ENV=development pnpm run process-pgboss`
 
 ## Data Model
 
@@ -88,7 +117,7 @@ Series (groups runs on one document)
                  │
                  └─► EvaluationVersion (agent output, when complete)
                         │
-                        └─► MetaEvaluation (scores)
+                        └─► MetaEvaluation (scores/rankings)
                                │
                                └─► MetaEvaluationDimension[]
 ```
@@ -98,12 +127,12 @@ Series (groups runs on one document)
 2. Trigger eval via API → creates `Job`
 3. Link job to series via `SeriesRun`
 4. Worker processes job → creates `EvaluationVersion`
-5. Score output → creates `MetaEvaluation` with dimensions
+5. Score/rank outputs → creates `MetaEvaluation` with dimensions
 
 **Tables (in @roast/db):**
 - `Series` - groups runs, links to document
 - `SeriesRun` - join table linking Series ↔ Job
-- `MetaEvaluation` - scores for an EvaluationVersion
+- `MetaEvaluation` - scores/rankings for an EvaluationVersion (type: "scoring" | "ranking")
 - `MetaEvaluationDimension` - individual dimension scores
 
 Core system tables (NOT modified by meta-evals):
