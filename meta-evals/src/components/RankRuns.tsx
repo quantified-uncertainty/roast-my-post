@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import { metaEvaluationRepository } from "@roast/db";
@@ -58,11 +58,18 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
   const [documentContent, setDocumentContent] = useState<string>("");
   const [showFullReasoning, setShowFullReasoning] = useState(false);
   const [savedSessions, setSavedSessions] = useState<SavedRankingSession[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "new" | "saved">("list");
+  const [activeTab, setActiveTab] = useState<"saved" | "new">("new");
 
   useEffect(() => {
     loadData();
   }, [seriesId]);
+
+  // Handle tab key to switch between tabs (must be before any conditional returns)
+  useInput((input, key) => {
+    if (key.tab && savedSessions.length > 0 && !results) {
+      setActiveTab((prev) => (prev === "saved" ? "new" : "saved"));
+    }
+  });
 
   async function loadData() {
     try {
@@ -328,6 +335,71 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
     );
   }
 
+  // Render tabs header
+  const renderTabs = () => (
+    <Box marginBottom={1}>
+      <Text
+        bold={activeTab === "saved"}
+        color={activeTab === "saved" ? "cyan" : "gray"}
+      >
+        [Saved Rankings ({savedSessions.length})]
+      </Text>
+      <Text> </Text>
+      <Text
+        bold={activeTab === "new"}
+        color={activeTab === "new" ? "magenta" : "gray"}
+      >
+        [New Ranking]
+      </Text>
+      <Text dimColor>  (Tab to switch)</Text>
+    </Box>
+  );
+
+  // Saved rankings tab
+  if (activeTab === "saved" && savedSessions.length > 0) {
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1} height={height} overflow="hidden">
+        <Box justifyContent="center" marginBottom={1}>
+          <Text bold color="cyan">
+            Rank Runs
+          </Text>
+        </Box>
+
+        {renderTabs()}
+
+        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+          <Text>Select a saved ranking to view:</Text>
+        </Box>
+
+        <SelectInput
+          items={[
+            ...savedSessions.map((s, i) => ({
+              label: `Ranking ${i + 1} - ${s.rankings.length} runs (${s.createdAt.toLocaleDateString()})`,
+              value: `session:${s.sessionId}`,
+            })),
+            { label: "<- Back", value: "back" },
+          ]}
+          onSelect={(item) => {
+            if (item.value === "back") {
+              onBack();
+            } else if (item.value.startsWith("session:")) {
+              const sessionId = item.value.replace("session:", "");
+              const session = savedSessions.find((s) => s.sessionId === sessionId);
+              if (session) {
+                viewSavedSession(session);
+              }
+            }
+          }}
+        />
+
+        <Box marginTop={1} justifyContent="center">
+          <Text dimColor>Tab Switch | Esc Back | q Quit</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // New ranking tab (default)
   return (
     <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
       <Box justifyContent="center" marginBottom={1}>
@@ -336,13 +408,7 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
         </Text>
       </Box>
 
-      {savedSessions.length > 0 && (
-        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-          <Text color="cyan">
-            {savedSessions.length} saved ranking{savedSessions.length > 1 ? "s" : ""} available
-          </Text>
-        </Box>
-      )}
+      {savedSessions.length > 0 && renderTabs()}
 
       <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
         <Text>Select runs to rank (Enter to toggle, {selectedRuns.size} selected)</Text>
@@ -350,39 +416,20 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
 
       <SelectInput
         items={[
-          // Show saved sessions first
-          ...savedSessions.map((s, i) => ({
-            label: `[view] Saved Ranking ${i + 1} (${s.createdAt.toLocaleDateString()})`,
-            value: `session:${s.sessionId}`,
-          })),
-          // Separator if there are saved sessions
-          ...(savedSessions.length > 0
-            ? [{ label: "─── New Ranking ───", value: "separator" }]
-            : []),
-          // Then the run selection
           ...runs.map((r) => ({
             label: `${selectedRuns.has(r.evaluationVersionId) ? "[x]" : "[ ]"} #${r.runNumber} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
             value: r.evaluationVersionId,
           })),
           ...(selectedRuns.size >= 2
-            ? [{ label: "-> Run New Ranking", value: "rank" }]
+            ? [{ label: "-> Run Ranking", value: "rank" }]
             : []),
           { label: "<- Back", value: "back" },
         ]}
         onSelect={async (item) => {
-          if (item.value === "separator") {
-            // Do nothing for separator
-            return;
-          } else if (item.value === "back") {
+          if (item.value === "back") {
             onBack();
           } else if (item.value === "rank") {
             await runRanking();
-          } else if (item.value.startsWith("session:")) {
-            const sessionId = item.value.replace("session:", "");
-            const session = savedSessions.find((s) => s.sessionId === sessionId);
-            if (session) {
-              viewSavedSession(session);
-            }
           } else {
             setSelectedRuns((prev) => {
               const next = new Set(prev);
@@ -398,7 +445,7 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
       />
 
       <Box marginTop={1} justifyContent="center">
-        <Text dimColor>Esc Back | q Quit</Text>
+        <Text dimColor>{savedSessions.length > 0 ? "Tab Switch | " : ""}Esc Back | q Quit</Text>
       </Box>
     </Box>
   );
