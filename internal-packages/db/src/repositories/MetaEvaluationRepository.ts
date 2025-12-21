@@ -213,6 +213,19 @@ export class MetaEvaluationRepository {
     });
   }
 
+  async getScoringResult(evaluationVersionId: string) {
+    return this.prisma.metaEvaluation.findFirst({
+      where: {
+        evaluationVersionId,
+        type: "scoring",
+      },
+      include: {
+        dimensionScores: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   async saveRankingResult(input: SaveRankingInput) {
     return this.prisma.metaEvaluation.create({
       data: {

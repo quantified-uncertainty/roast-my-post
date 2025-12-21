@@ -16,6 +16,7 @@ interface CompletedRun {
   evaluationVersionId: string;
   createdAt: Date;
   runNumber: number; // 1-based index from the series
+  hasScore: boolean;
 }
 
 interface ScoreRunProps {
@@ -35,6 +36,7 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
   const [result, setResult] = useState<ScoringResult | null>(null);
   const [documentContent, setDocumentContent] = useState<string>("");
   const [showFullReasoning, setShowFullReasoning] = useState(false);
+  const [isViewingSaved, setIsViewingSaved] = useState(false);
 
   useEffect(() => {
     loadCompletedRuns();
@@ -54,6 +56,7 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
             evaluationVersionId: r.evaluationVersionId!,
             createdAt: r.createdAt,
             runNumber: r.runNumber,
+            hasScore: r.scoring !== null,
           }));
         setRuns(completed);
       }
@@ -96,6 +99,35 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
       setResult(scoringResult);
     } catch (error) {
       console.error("Scoring failed:", error);
+    }
+
+    setScoring(false);
+  }
+
+  async function loadSavedScore(run: CompletedRun) {
+    setSelectedRun(run);
+    setScoring(true);
+
+    try {
+      const saved = await metaEvaluationRepository.getScoringResult(run.evaluationVersionId);
+      if (saved) {
+        // Convert saved format to ScoringResult format
+        const dimensions: Record<string, { score: number; explanation: string }> = {};
+        for (const dim of saved.dimensionScores) {
+          dimensions[dim.name] = {
+            score: dim.score,
+            explanation: dim.explanation || "",
+          };
+        }
+        setResult({
+          overallScore: saved.overallScore!,
+          dimensions,
+          reasoning: saved.reasoning || "",
+        });
+        setIsViewingSaved(true);
+      }
+    } catch (error) {
+      console.error("Load failed:", error);
     }
 
     setScoring(false);
@@ -176,11 +208,24 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
     // Score color helper (1-10 scale)
     const scoreColor = (score: number) => score >= 7 ? "green" : score >= 5 ? "yellow" : "red";
 
+    // Build menu items based on whether viewing saved or new result
+    const menuItems = isViewingSaved
+      ? [
+          { label: "View Full Reasoning", value: "reasoning" },
+          { label: "Re-score (run again)", value: "rescore" },
+          { label: "<- Back to List", value: "list" },
+        ]
+      : [
+          { label: "View Full Reasoning", value: "reasoning" },
+          { label: saving ? "Saving..." : "Save to Database", value: "save" },
+          { label: "<- Back (discard)", value: "back" },
+        ];
+
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
         <Box justifyContent="center" marginBottom={1}>
           <Text bold color="blue">
-            Scoring Results: Run #{selectedRun.runNumber} {selectedRun.agentName}
+            {isViewingSaved ? "Saved " : ""}Scoring Results: Run #{selectedRun.runNumber} {selectedRun.agentName}
           </Text>
         </Box>
 
@@ -212,16 +257,20 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
         </Box>
 
         <SelectInput
-          items={[
-            { label: "View Full Reasoning", value: "reasoning" },
-            { label: saving ? "Saving..." : "Save to Database", value: "save" },
-            { label: "<- Back (discard)", value: "back" },
-          ]}
+          items={menuItems}
           onSelect={async (item) => {
             if (item.value === "reasoning") {
               setShowFullReasoning(true);
             } else if (item.value === "save" && !saving) {
               await saveResult();
+            } else if (item.value === "rescore") {
+              setIsViewingSaved(false);
+              setResult(null);
+              await runScoring(selectedRun);
+            } else if (item.value === "list") {
+              setResult(null);
+              setSelectedRun(null);
+              setIsViewingSaved(false);
             } else if (item.value === "back") {
               onBack();
             }
@@ -261,13 +310,13 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
       </Box>
 
       <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-        <Text>Select a run to score:</Text>
+        <Text>Select a run to score or view:</Text>
       </Box>
 
       <SelectInput
         items={[
           ...runs.map((r) => ({
-            label: `#${r.runNumber} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
+            label: `${r.hasScore ? "[scored]" : "[    ]"} #${r.runNumber} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
             value: r.evaluationVersionId,
           })),
           { label: "<- Back", value: "back" },
@@ -278,7 +327,12 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
           } else {
             const run = runs.find((r) => r.evaluationVersionId === item.value);
             if (run) {
-              await runScoring(run);
+              if (run.hasScore) {
+                await loadSavedScore(run);
+              } else {
+                setIsViewingSaved(false);
+                await runScoring(run);
+              }
             }
           }
         }}
