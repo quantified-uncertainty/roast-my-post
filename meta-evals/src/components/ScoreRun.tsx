@@ -5,17 +5,23 @@
 import React, { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import SelectInput from "ink-select-input";
-import Spinner from "ink-spinner";
 import { metaEvaluationRepository } from "@roast/db";
 import { scoreComments, type ScoringResult } from "@roast/ai/meta-eval";
 import { truncate } from "./helpers";
+import {
+  LoadingSpinner,
+  FullReasoningView,
+  ScreenContainer,
+  InfoBox,
+  scoreColor,
+} from "./shared";
 
 interface CompletedRun {
   jobId: string;
   agentName: string;
   evaluationVersionId: string;
   createdAt: Date;
-  runNumber: number; // 1-based index from the series
+  runNumber: number;
   hasScore: boolean;
 }
 
@@ -111,7 +117,6 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
     try {
       const saved = await metaEvaluationRepository.getScoringResult(run.evaluationVersionId);
       if (saved) {
-        // Convert saved format to ScoringResult format
         const dimensions: Record<string, { score: number; explanation: string }> = {};
         for (const dim of saved.dimensionScores) {
           dimensions[dim.name] = {
@@ -162,53 +167,28 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
     onBack();
   }
 
+  // Loading states
   if (loading) {
-    return (
-      <Box padding={1}>
-        <Text>
-          <Spinner type="dots" /> Loading completed runs...
-        </Text>
-      </Box>
-    );
+    return <LoadingSpinner message="Loading completed runs..." />;
   }
 
   if (scoring) {
-    return (
-      <Box padding={1}>
-        <Text>
-          <Spinner type="dots" /> Scoring with AI judge...
-        </Text>
-      </Box>
-    );
+    return <LoadingSpinner message="Scoring with AI judge..." />;
   }
 
+  // Results view
   if (result && selectedRun) {
-    // Full reasoning view
     if (showFullReasoning) {
       return (
-        <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
-          <Box justifyContent="center" marginBottom={1}>
-            <Text bold color="blue">
-              Full Reasoning
-            </Text>
-          </Box>
-
-          <Box flexDirection="column" borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexGrow={1}>
-            <Text wrap="wrap">{result.reasoning}</Text>
-          </Box>
-
-          <SelectInput
-            items={[{ label: "<- Back to Results", value: "back" }]}
-            onSelect={() => setShowFullReasoning(false)}
-          />
-        </Box>
+        <FullReasoningView
+          reasoning={result.reasoning}
+          borderColor="blue"
+          height={height}
+          onBack={() => setShowFullReasoning(false)}
+        />
       );
     }
 
-    // Score color helper (1-10 scale)
-    const scoreColor = (score: number) => score >= 7 ? "green" : score >= 5 ? "yellow" : "red";
-
-    // Build menu items based on whether viewing saved or new result
     const menuItems = isViewingSaved
       ? [
           { label: "View Full Reasoning", value: "reasoning" },
@@ -222,21 +202,19 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
         ];
 
     return (
-      <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
-        <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="blue">
-            {isViewingSaved ? "Saved " : ""}Scoring Results: Run #{selectedRun.runNumber} {selectedRun.agentName}
-          </Text>
-        </Box>
-
-        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+      <ScreenContainer
+        title={`${isViewingSaved ? "Saved " : ""}Scoring Results: Run #${selectedRun.runNumber} ${selectedRun.agentName}`}
+        borderColor="blue"
+        height={height}
+      >
+        <InfoBox>
           <Text>
             <Text bold>Overall Score: </Text>
             <Text color={scoreColor(result.overallScore)}>
               {result.overallScore}/10
             </Text>
           </Text>
-        </Box>
+        </InfoBox>
 
         <Box flexDirection="column" borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
           <Text bold color="gray">Dimensions:</Text>
@@ -252,9 +230,9 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
           ))}
         </Box>
 
-        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+        <InfoBox>
           <Text wrap="wrap">{truncate(result.reasoning, 250)}</Text>
-        </Box>
+        </InfoBox>
 
         <SelectInput
           items={menuItems}
@@ -276,42 +254,36 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
             }
           }}
         />
-      </Box>
+      </ScreenContainer>
     );
   }
 
+  // Empty state
   if (runs.length === 0) {
     return (
-      <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
-        <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="blue">
-            Score Run
-          </Text>
-        </Box>
+      <ScreenContainer title="Score Run" borderColor="blue" height={height}>
         <Box paddingX={1}>
-          <Text color="yellow">
-            No completed runs to score.
-          </Text>
+          <Text color="yellow">No completed runs to score.</Text>
         </Box>
         <SelectInput
           items={[{ label: "<- Back", value: "back" }]}
           onSelect={() => onBack()}
         />
-      </Box>
+      </ScreenContainer>
     );
   }
 
+  // Run selection
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
-      <Box justifyContent="center" marginBottom={1}>
-        <Text bold color="blue">
-          Score Run
-        </Text>
-      </Box>
-
-      <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+    <ScreenContainer
+      title="Score Run"
+      borderColor="blue"
+      height={height}
+      footer="Esc Back | q Quit"
+    >
+      <InfoBox>
         <Text>Select a run to score or view:</Text>
-      </Box>
+      </InfoBox>
 
       <SelectInput
         items={[
@@ -337,10 +309,6 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
           }
         }}
       />
-
-      <Box marginTop={1} justifyContent="center">
-        <Text dimColor>Esc Back | q Quit</Text>
-      </Box>
-    </Box>
+    </ScreenContainer>
   );
 }

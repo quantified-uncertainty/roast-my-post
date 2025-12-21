@@ -5,9 +5,9 @@
 import React, { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import SelectInput from "ink-select-input";
-import Spinner from "ink-spinner";
 import { metaEvaluationRepository } from "@roast/db";
 import { truncate, formatDate, formatStatus, getStatusColor } from "./helpers";
+import { LoadingSpinner, ScreenContainer, scoreColor } from "./shared";
 
 interface SeriesRun {
   jobId: string;
@@ -86,13 +86,7 @@ export function SeriesDetail({
   }, [seriesId]);
 
   if (loading) {
-    return (
-      <Box padding={1}>
-        <Text>
-          <Spinner type="dots" /> Loading series...
-        </Text>
-      </Box>
-    );
+    return <LoadingSpinner message="Loading series..." />;
   }
 
   if (!series) {
@@ -136,7 +130,7 @@ export function SeriesDetail({
             <Text color={getStatusColor(r.status)}>
               {formatStatus(r.status).padEnd(COL_STATUS)}
             </Text>
-            <Text color={r.scoring ? (r.scoring.overallScore >= 7 ? "green" : r.scoring.overallScore >= 5 ? "yellow" : "red") : "gray"}>
+            <Text color={r.scoring ? scoreColor(r.scoring.overallScore) : "gray"}>
               {(r.scoring ? `${r.scoring.overallScore}/10` : "-").padEnd(COL_SCORE)}
             </Text>
             <Text dimColor>

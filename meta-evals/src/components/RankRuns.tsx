@@ -5,10 +5,15 @@
 import React, { useState, useEffect } from "react";
 import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
-import Spinner from "ink-spinner";
 import { metaEvaluationRepository } from "@roast/db";
 import { rankVersions, type RankingCandidate, type RankingResult } from "@roast/ai/meta-eval";
 import { truncate } from "./helpers";
+import {
+  LoadingSpinner,
+  FullReasoningView,
+  ScreenContainer,
+  InfoBox,
+} from "./shared";
 
 interface CompletedRun {
   jobId: string;
@@ -218,45 +223,23 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
   }
 
   if (loading) {
-    return (
-      <Box padding={1}>
-        <Text>
-          <Spinner type="dots" /> Loading completed runs...
-        </Text>
-      </Box>
-    );
+    return <LoadingSpinner message="Loading completed runs..." />;
   }
 
   if (ranking) {
-    return (
-      <Box padding={1}>
-        <Text>
-          <Spinner type="dots" /> Ranking with AI judge...
-        </Text>
-      </Box>
-    );
+    return <LoadingSpinner message="Ranking with AI judge..." />;
   }
 
   if (results) {
     // Full reasoning view
     if (showFullReasoning) {
       return (
-        <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
-          <Box justifyContent="center" marginBottom={1}>
-            <Text bold color="magenta">
-              Full Reasoning
-            </Text>
-          </Box>
-
-          <Box flexDirection="column" borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexGrow={1}>
-            <Text wrap="wrap">{results.reasoning}</Text>
-          </Box>
-
-          <SelectInput
-            items={[{ label: "<- Back to Results", value: "back" }]}
-            onSelect={() => setShowFullReasoning(false)}
-          />
-        </Box>
+        <FullReasoningView
+          reasoning={results.reasoning}
+          borderColor="magenta"
+          height={height}
+          onBack={() => setShowFullReasoning(false)}
+        />
       );
     }
 
@@ -273,13 +256,11 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
         ];
 
     return (
-      <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
-        <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="magenta">
-            {results.isViewingSaved ? "Saved " : ""}Ranking Results
-          </Text>
-        </Box>
-
+      <ScreenContainer
+        title={`${results.isViewingSaved ? "Saved " : ""}Ranking Results`}
+        borderColor="magenta"
+        height={height}
+      >
         <Box flexDirection="column" borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
           {results.rankings.map((r) => (
             <Box key={r.versionId}>
@@ -292,9 +273,9 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
           ))}
         </Box>
 
-        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+        <InfoBox>
           <Text wrap="wrap">{truncate(results.reasoning, 300)}</Text>
-        </Box>
+        </InfoBox>
 
         <SelectInput
           items={menuItems}
@@ -310,18 +291,13 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
             }
           }}
         />
-      </Box>
+      </ScreenContainer>
     );
   }
 
   if (runs.length < 2) {
     return (
-      <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
-        <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="magenta">
-            Rank Runs
-          </Text>
-        </Box>
+      <ScreenContainer title="Rank Runs" borderColor="magenta" height={height}>
         <Box paddingX={1}>
           <Text color="yellow">
             Need at least 2 completed runs to rank. Currently have {runs.length}.
@@ -331,7 +307,7 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
           items={[{ label: "<- Back", value: "back" }]}
           onSelect={() => onBack()}
         />
-      </Box>
+      </ScreenContainer>
     );
   }
 
@@ -358,18 +334,17 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
   // Saved rankings tab
   if (activeTab === "saved" && savedSessions.length > 0) {
     return (
-      <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1} height={height} overflow="hidden">
-        <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="cyan">
-            Rank Runs
-          </Text>
-        </Box>
-
+      <ScreenContainer
+        title="Rank Runs"
+        borderColor="cyan"
+        height={height}
+        footer="Tab Switch | Esc Back | q Quit"
+      >
         {renderTabs()}
 
-        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+        <InfoBox>
           <Text>Select a saved ranking to view:</Text>
-        </Box>
+        </InfoBox>
 
         <SelectInput
           items={[
@@ -391,28 +366,23 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
             }
           }}
         />
-
-        <Box marginTop={1} justifyContent="center">
-          <Text dimColor>Tab Switch | Esc Back | q Quit</Text>
-        </Box>
-      </Box>
+      </ScreenContainer>
     );
   }
 
   // New ranking tab (default)
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
-      <Box justifyContent="center" marginBottom={1}>
-        <Text bold color="magenta">
-          Rank Runs
-        </Text>
-      </Box>
-
+    <ScreenContainer
+      title="Rank Runs"
+      borderColor="magenta"
+      height={height}
+      footer={`${savedSessions.length > 0 ? "Tab Switch | " : ""}Esc Back | q Quit`}
+    >
       {savedSessions.length > 0 && renderTabs()}
 
-      <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+      <InfoBox>
         <Text>Select runs to rank (Enter to toggle, {selectedRuns.size} selected)</Text>
-      </Box>
+      </InfoBox>
 
       <SelectInput
         items={[
@@ -443,10 +413,6 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
           }
         }}
       />
-
-      <Box marginTop={1} justifyContent="center">
-        <Text dimColor>{savedSessions.length > 0 ? "Tab Switch | " : ""}Esc Back | q Quit</Text>
-      </Box>
-    </Box>
+    </ScreenContainer>
   );
 }
