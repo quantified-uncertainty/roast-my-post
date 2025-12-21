@@ -20,16 +20,25 @@ if (!process.env.DATABASE_URL) {
 
 // Non-interactive check mode for CI/development
 if (process.argv.includes("--check")) {
-  runCheckMode();
+  runCheckMode().catch((e) => {
+    console.error("Check mode failed:", e);
+    process.exit(1);
+  });
 } else {
   // Start the ink app in fullscreen mode
   const { waitUntilExit } = render(<App />, {
     exitOnCtrlC: true,
   });
-  waitUntilExit().then(() => {
-    metaEvaluationRepository.disconnect();
-    process.exit(0);
-  });
+  waitUntilExit()
+    .then(() => {
+      metaEvaluationRepository.disconnect();
+      process.exit(0);
+    })
+    .catch((e) => {
+      console.error("Fatal error:", e);
+      metaEvaluationRepository.disconnect();
+      process.exit(1);
+    });
 }
 
 async function runCheckMode() {

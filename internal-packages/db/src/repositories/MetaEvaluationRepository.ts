@@ -461,7 +461,9 @@ export class MetaEvaluationRepository {
       : [];
 
     const scoringMap = new Map(
-      scorings.map((s) => [s.evaluationVersionId, { overallScore: s.overallScore!, scoredAt: s.createdAt }])
+      scorings
+        .filter((s) => s.overallScore !== null)
+        .map((s) => [s.evaluationVersionId, { overallScore: s.overallScore!, scoredAt: s.createdAt }])
     );
 
     // Build runs list from SeriesRun -> Job

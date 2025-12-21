@@ -216,12 +216,13 @@ export function RankRuns({ seriesId, height, judgeModel, onBack }: RankRunsProps
           judgeModel,
         });
       }
+      setSaving(false);
+      onBack();
     } catch (error) {
       console.error("Save failed:", error);
+      setSaving(false);
+      // Don't navigate away on error - let user retry
     }
-
-    setSaving(false);
-    onBack();
   }
 
   if (loading) {

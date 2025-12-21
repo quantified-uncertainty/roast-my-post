@@ -157,12 +157,18 @@ export function SeriesDetail({
           if (item.value === "back") onBack();
           else if (item.value === "run" && !runningAgain && series) {
             setRunningAgain(true);
-            await onRunAgain(series.id, series.documentId);
-            setRunningAgain(false);
+            try {
+              await onRunAgain(series.id, series.documentId);
+            } finally {
+              setRunningAgain(false);
+            }
           } else if (item.value === "clear" && !clearing && series) {
             setClearing(true);
-            await onClearFailed(series.id);
-            setClearing(false);
+            try {
+              await onClearFailed(series.id);
+            } finally {
+              setClearing(false);
+            }
           } else if (item.value === "rank" && series) {
             onRank(series.id);
           } else if (item.value === "score" && series) {

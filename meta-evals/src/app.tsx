@@ -237,7 +237,11 @@ export function App() {
         onConfirm={async () => {
           setScreen({ type: "create-baseline", step: "creating" });
           try {
-            const seriesId = await createBaselineRun(selectedDoc!, selectedAgents);
+            if (!selectedDoc) {
+              setError("No document selected");
+              return;
+            }
+            const seriesId = await createBaselineRun(selectedDoc, selectedAgents);
             // Navigate to the newly created series detail
             setScreen({ type: "series-detail", seriesId });
           } catch (e) {

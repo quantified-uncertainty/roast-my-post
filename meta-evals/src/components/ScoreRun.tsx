@@ -161,12 +161,13 @@ export function ScoreRun({ seriesId, height, judgeModel, onBack }: ScoreRunProps
         reasoning: result.reasoning,
         judgeModel,
       });
+      setSaving(false);
+      onBack();
     } catch (error) {
       console.error("Save failed:", error);
+      setSaving(false);
+      // Don't navigate away on error - let user retry
     }
-
-    setSaving(false);
-    onBack();
   }
 
   // Loading states
