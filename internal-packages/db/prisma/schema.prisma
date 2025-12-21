@@ -115,14 +115,14 @@ model DocumentVersion {
 }
 
 model Evaluation {
-  id              String              @id @default(uuid())
-  createdAt       DateTime            @default(now())
-  documentId      String
-  agentId         String
-  agent           Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  document        Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  versions        EvaluationVersion[]
-  jobs            Job[]
+  id         String              @id @default(uuid())
+  createdAt  DateTime            @default(now())
+  documentId String
+  agentId    String
+  agent      Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document   Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versions   EvaluationVersion[]
+  jobs       Job[]
 
   @@unique([documentId, agentId])
   @@index([documentId])
