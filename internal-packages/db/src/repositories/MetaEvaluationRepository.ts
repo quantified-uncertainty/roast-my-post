@@ -7,11 +7,11 @@
 import { prisma as defaultPrisma } from "../client";
 
 // ============================================================================
-// Chain Types (for meta-eval CLI)
+// Series Types (for meta-eval CLI)
 // ============================================================================
 
-export type Chain = {
-  id: string; // Chain prefix (e.g., "chain-abc123")
+export type Series = {
+  id: string; // Series prefix (e.g., "series-abc123")
   documentTitle: string;
   documentId: string;
   agentNames: string[];
@@ -20,7 +20,7 @@ export type Chain = {
   lastRunAt: Date;
 };
 
-export type ChainRun = {
+export type SeriesRun = {
   trackingId: string;
   agentId: string;
   agentName: string;
@@ -30,13 +30,13 @@ export type ChainRun = {
   documentVersionId: string | null;
 };
 
-export type ChainDetail = {
-  chainId: string;
+export type SeriesDetail = {
+  seriesId: string;
   documentId: string;
   documentTitle: string;
   documentContent: string;
   agentIds: string[];
-  runs: ChainRun[];
+  runs: SeriesRun[];
 };
 
 export type AgentChoice = {
@@ -211,17 +211,17 @@ export class MetaEvaluationRepository {
   }
 
   // ==========================================================================
-  // Chain Methods (for meta-eval CLI)
+  // Series Methods (for meta-eval CLI)
   // ==========================================================================
 
   /**
-   * Get all evaluation chains, grouped by chain prefix.
-   * Returns chains sorted by most recent activity.
+   * Get all evaluation series, grouped by series prefix.
+   * Returns series sorted by most recent activity.
    */
-  async getChains(): Promise<Chain[]> {
+  async getSeries(): Promise<Series[]> {
     const batches = await this.prisma.agentEvalBatch.findMany({
       where: {
-        trackingId: { startsWith: "chain-" },
+        trackingId: { startsWith: "series-" },
       },
       include: {
         agent: {
@@ -252,8 +252,8 @@ export class MetaEvaluationRepository {
       orderBy: { createdAt: "desc" },
     });
 
-    // Group by chain prefix (chain-{shortId})
-    const chainMap = new Map<
+    // Group by series prefix (series-{shortId})
+    const seriesMap = new Map<
       string,
       {
         batches: typeof batches;
@@ -266,12 +266,12 @@ export class MetaEvaluationRepository {
     for (const batch of batches) {
       if (!batch.trackingId) continue;
 
-      // Extract chain prefix: "chain-abc123" from "chain-abc123-20251217-1645-agentId"
+      // Extract series prefix: "series-abc123" from "series-abc123-20251217-1645-agentId"
       const parts = batch.trackingId.split("-");
       if (parts.length < 2) continue;
-      const chainId = `${parts[0]}-${parts[1]}`;
+      const seriesId = `${parts[0]}-${parts[1]}`;
 
-      const existing = chainMap.get(chainId);
+      const existing = seriesMap.get(seriesId);
       const agentName = batch.agent.versions[0]?.name || batch.agentId;
       const doc = batch.jobs[0]?.evaluation?.document;
       const docTitle = doc?.versions[0]?.title || "Unknown document";
@@ -281,7 +281,7 @@ export class MetaEvaluationRepository {
         existing.batches.push(batch);
         existing.agentNames.add(agentName);
       } else {
-        chainMap.set(chainId, {
+        seriesMap.set(seriesId, {
           batches: [batch],
           documentTitle: docTitle,
           documentId: docId,
@@ -290,14 +290,14 @@ export class MetaEvaluationRepository {
       }
     }
 
-    // Convert to Chain array
-    const chains: Chain[] = [];
-    for (const [id, data] of chainMap) {
+    // Convert to Series array
+    const seriesList: Series[] = [];
+    for (const [id, data] of seriesMap) {
       const sortedBatches = data.batches.sort(
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
       );
 
-      chains.push({
+      seriesList.push({
         id,
         documentTitle: data.documentTitle,
         documentId: data.documentId,
@@ -309,18 +309,18 @@ export class MetaEvaluationRepository {
     }
 
     // Sort by most recent activity
-    chains.sort((a, b) => b.lastRunAt.getTime() - a.lastRunAt.getTime());
+    seriesList.sort((a, b) => b.lastRunAt.getTime() - a.lastRunAt.getTime());
 
-    return chains;
+    return seriesList;
   }
 
   /**
-   * Get detailed info about a specific chain, including all runs.
+   * Get detailed info about a specific series, including all runs.
    */
-  async getChainDetail(chainId: string): Promise<ChainDetail | null> {
+  async getSeriesDetail(seriesId: string): Promise<SeriesDetail | null> {
     const batches = await this.prisma.agentEvalBatch.findMany({
       where: {
-        trackingId: { startsWith: chainId },
+        trackingId: { startsWith: seriesId },
       },
       include: {
         agent: {
@@ -369,7 +369,7 @@ export class MetaEvaluationRepository {
     const agentIds = [...new Set(batches.map((b) => b.agentId))];
 
     // Build runs list
-    const runs: ChainRun[] = [];
+    const runs: SeriesRun[] = [];
     for (const batch of batches) {
       const job = batch.jobs[0];
       const agentName = batch.agent.versions[0]?.name || batch.agentId;
@@ -379,14 +379,14 @@ export class MetaEvaluationRepository {
         agentId: batch.agentId,
         agentName,
         createdAt: batch.createdAt,
-        jobStatus: (job?.status as ChainRun["jobStatus"]) || "PENDING",
+        jobStatus: (job?.status as SeriesRun["jobStatus"]) || "PENDING",
         evaluationVersionId: job?.evaluationVersionId || null,
         documentVersionId: job?.evaluationVersion?.documentVersionId || null,
       });
     }
 
     return {
-      chainId,
+      seriesId,
       documentId: doc.id,
       documentTitle: docVersion.title,
       documentContent: docVersion.content,

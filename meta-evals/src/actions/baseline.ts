@@ -1,10 +1,10 @@
 /**
  * Create Baseline Action
  *
- * Creates the first run in a new evaluation chain.
+ * Creates the first run in a new evaluation series.
  * - Single document
  * - One or more agents
- * - Generates a chain ID for grouping subsequent runs
+ * - Generates a series ID for grouping subsequent runs
  */
 
 import enquirer from "enquirer";
@@ -30,7 +30,7 @@ interface BatchCreateResponse {
 }
 
 /**
- * Generate a short random ID for chain identification
+ * Generate a short random ID for series identification
  */
 function generateShortId(): string {
   return Math.random().toString(36).substring(2, 10);
@@ -92,8 +92,8 @@ export async function createBaseline() {
     return;
   }
 
-  // Step 7: Create chain
-  const chainId = `chain-${generateShortId()}`;
+  // Step 7: Create series
+  const seriesId = `series-${generateShortId()}`;
   const timestamp = generateTimestamp();
 
   console.log("\n🚀 Creating baseline evaluation...\n");
@@ -107,7 +107,7 @@ export async function createBaseline() {
   }> = [];
 
   for (const agent of selectedAgents) {
-    const trackingId = `${chainId}-${timestamp}-${agent.id}`;
+    const trackingId = `${seriesId}-${timestamp}-${agent.id}`;
 
     try {
       const response = await apiClient.post<BatchCreateResponse>("/api/batches", {
@@ -139,14 +139,14 @@ export async function createBaseline() {
   }
 
   // Step 8: Show summary
-  printSummary(results, chainId, selectedDoc.title);
+  printSummary(results, seriesId, selectedDoc.title);
 }
 
 /**
- * Create a new run in an existing chain
+ * Create a new run in an existing series
  */
 export async function createRun(
-  chainId: string,
+  seriesId: string,
   documentId: string,
   agentIds: string[]
 ) {
@@ -162,7 +162,7 @@ export async function createRun(
   }> = [];
 
   for (const agentId of agentIds) {
-    const trackingId = `${chainId}-${timestamp}-${agentId}`;
+    const trackingId = `${seriesId}-${timestamp}-${agentId}`;
 
     try {
       await apiClient.post<BatchCreateResponse>("/api/batches", {
@@ -246,7 +246,7 @@ function printSummary(
     jobCount: number;
     status: "success" | "error";
   }>,
-  chainId: string,
+  seriesId: string,
   docTitle: string
 ) {
   console.log("\n");
@@ -263,10 +263,10 @@ function printSummary(
   console.log(table.toString());
 
   const successCount = results.filter((r) => r.status === "success").length;
-  console.log(`\n✅ Baseline created: ${chainId}`);
+  console.log(`\n✅ Baseline created: ${seriesId}`);
   console.log(`   Document: ${truncate(docTitle, 40)}`);
   console.log(`   Jobs queued: ${successCount}`);
-  console.log(`\nSelect this chain from the main menu to add more runs or compare.`);
+  console.log(`\nSelect this series from the main menu to add more runs or compare.`);
 }
 
 function truncate(str: string, maxLen: number): string {

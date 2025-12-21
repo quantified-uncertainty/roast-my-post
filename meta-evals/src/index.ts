@@ -2,8 +2,8 @@
  * Interactive CLI for meta-evaluation
  *
  * Simplified flow:
- * 1. If no chains exist → Create Baseline
- * 2. If chains exist → List them, select one to manage
+ * 1. If no series exist → Create Baseline
+ * 2. If series exist → List them, select one to manage
  *
  * Usage:
  *   pnpm --filter @roast/meta-evals run start          # Interactive mode
@@ -14,10 +14,10 @@ import "dotenv/config";
 import enquirer from "enquirer";
 import {
   metaEvaluationRepository,
-  type Chain,
+  type Series,
 } from "@roast/db";
 import { createBaseline } from "./actions/baseline";
-import { showChainDetail } from "./actions/chainDetail";
+import { showSeriesDetail } from "./actions/seriesDetail";
 
 const { prompt } = enquirer as any;
 
@@ -33,11 +33,11 @@ async function main() {
   console.log("\n🔬 Meta-Evaluation Tool\n");
 
   while (true) {
-    const chains = await getChains();
+    const seriesList = await getSeries();
 
-    if (chains.length === 0) {
-      // No chains - only option is to create baseline
-      console.log("No evaluation chains yet.\n");
+    if (seriesList.length === 0) {
+      // No series - only option is to create baseline
+      console.log("No evaluation series yet.\n");
       const { action } = await prompt({
         type: "select",
         name: "action",
@@ -59,11 +59,11 @@ async function main() {
         console.error("\n❌ Error:", error);
       }
     } else {
-      // Has chains - show list
+      // Has series - show list
       const choices = [
-        ...chains.map((c) => ({
-          name: c.id,
-          message: formatChainChoice(c),
+        ...seriesList.map((s) => ({
+          name: s.id,
+          message: formatSeriesChoice(s),
         })),
         { name: "create", message: "➕ Create New Baseline" },
         { name: "exit", message: "Exit" },
@@ -72,7 +72,7 @@ async function main() {
       const { selected } = await prompt({
         type: "select",
         name: "selected",
-        message: "Select an evaluation chain:",
+        message: "Select an evaluation series:",
         choices,
       });
 
@@ -88,10 +88,10 @@ async function main() {
           console.error("\n❌ Error:", error);
         }
       } else {
-        const chain = chains.find((c) => c.id === selected);
-        if (chain) {
+        const series = seriesList.find((s) => s.id === selected);
+        if (series) {
           try {
-            await showChainDetail(chain.id);
+            await showSeriesDetail(series.id);
           } catch (error) {
             console.error("\n❌ Error:", error);
           }
@@ -105,18 +105,18 @@ async function main() {
   await metaEvaluationRepository.disconnect();
 }
 
-async function getChains(): Promise<Chain[]> {
-  return metaEvaluationRepository.getChains();
+async function getSeries(): Promise<Series[]> {
+  return metaEvaluationRepository.getSeries();
 }
 
-function formatChainChoice(chain: Chain): string {
-  const title = chain.documentTitle.length > 40
-    ? chain.documentTitle.slice(0, 37) + "..."
-    : chain.documentTitle;
-  const agents = chain.agentNames.length > 2
-    ? `${chain.agentNames.slice(0, 2).join(", ")}...`
-    : chain.agentNames.join(", ");
-  return `${title} | ${chain.runCount} run${chain.runCount > 1 ? "s" : ""} | ${agents}`;
+function formatSeriesChoice(series: Series): string {
+  const title = series.documentTitle.length > 40
+    ? series.documentTitle.slice(0, 37) + "..."
+    : series.documentTitle;
+  const agents = series.agentNames.length > 2
+    ? `${series.agentNames.slice(0, 2).join(", ")}...`
+    : series.agentNames.join(", ");
+  return `${title} | ${series.runCount} run${series.runCount > 1 ? "s" : ""} | ${agents}`;
 }
 
 async function runCheckMode() {

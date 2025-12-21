@@ -12,15 +12,15 @@ pnpm --filter @roast/meta-evals run start
 
 ### 1. Create a Baseline
 
-When you first run the CLI with no existing chains, you'll be prompted to create a baseline:
+When you first run the CLI with no existing series, you'll be prompted to create a baseline:
 
 1. Select a document to evaluate
 2. Select one or more agents to run
-3. The baseline is created with a unique chain ID
+3. The baseline is created with a unique series ID
 
-### 2. View Chain & Add Runs
+### 2. View Series & Add Runs
 
-Select a chain from the main menu to see:
+Select a series from the main menu to see:
 - All runs in chronological order
 - Status of each run (pending, running, completed, failed)
 
@@ -39,10 +39,10 @@ The comparison uses an LLM judge to rank runs based on:
 
 ```
 src/
-├── index.ts              # Entry point - main menu with chain listing
+├── index.ts              # Entry point - main menu with series listing
 ├── actions/
-│   ├── baseline.ts       # Create new baseline chain
-│   ├── chainDetail.ts    # View chain, add runs, compare
+│   ├── baseline.ts       # Create new baseline series
+│   ├── seriesDetail.ts   # View series, add runs, compare
 │   ├── compare.ts        # (legacy) Batch comparison
 │   └── score.ts          # (legacy) Individual scoring
 └── utils/
@@ -56,10 +56,10 @@ src/
 2. The web app must be running on `localhost:3000` for creating runs
 3. Run the worker to process jobs: `NODE_ENV=development pnpm run process-pgboss`
 
-## Chain Naming Convention
+## Series Naming Convention
 
-Chains use trackingIds with the pattern: `chain-{shortId}-{timestamp}-{agentId}`
+Series use trackingIds with the pattern: `series-{shortId}-{timestamp}-{agentId}`
 
-- `chain-{shortId}` groups all runs in a chain
+- `series-{shortId}` groups all runs in a series
 - `{timestamp}` is `YYYYMMDD-HHmm` for ordering
 - `{agentId}` identifies which agent created the batch

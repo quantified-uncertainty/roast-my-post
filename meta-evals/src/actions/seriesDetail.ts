@@ -1,7 +1,7 @@
 /**
- * Chain Detail Screen
+ * Series Detail Screen
  *
- * Shows all runs in a chain and allows:
+ * Shows all runs in a series and allows:
  * - Creating new runs
  * - Comparing runs
  */
@@ -10,8 +10,8 @@ import enquirer from "enquirer";
 import Table from "cli-table3";
 import {
   metaEvaluationRepository,
-  type ChainDetail,
-  type ChainRun,
+  type SeriesDetail,
+  type SeriesRun,
 } from "@roast/db";
 import { rankVersions, type RankingCandidate } from "@roast/ai/server";
 import { createRun } from "./baseline";
@@ -19,22 +19,22 @@ import { formatCommentForApi } from "../utils/formatters";
 
 const { prompt } = enquirer as any;
 
-export async function showChainDetail(chainId: string) {
+export async function showSeriesDetail(seriesId: string) {
   while (true) {
-    const chain = await metaEvaluationRepository.getChainDetail(chainId);
+    const series = await metaEvaluationRepository.getSeriesDetail(seriesId);
 
-    if (!chain) {
-      console.log(`\nChain ${chainId} not found.`);
+    if (!series) {
+      console.log(`\nSeries ${seriesId} not found.`);
       return;
     }
 
-    console.log(`\n📊 Evaluation Chain: ${chainId}`);
-    console.log(`   Document: ${truncate(chain.documentTitle, 50)}`);
-    console.log(`   Agents: ${chain.agentIds.length}`);
+    console.log(`\n📊 Evaluation Series: ${seriesId}`);
+    console.log(`   Document: ${truncate(series.documentTitle, 50)}`);
+    console.log(`   Agents: ${series.agentIds.length}`);
     console.log("");
 
     // Group runs by timestamp (runs created at same time are one "run set")
-    const runSets = groupRunsByTimestamp(chain.runs);
+    const runSets = groupRunsByTimestamp(series.runs);
 
     // Display runs table
     const table = new Table({
@@ -76,23 +76,23 @@ export async function showChainDetail(chainId: string) {
     }
 
     if (action === "run") {
-      await createRun(chainId, chain.documentId, chain.agentIds);
+      await createRun(seriesId, series.documentId, series.agentIds);
       // Loop continues to show updated list
     }
 
     if (action === "compare") {
-      await compareRuns(chain, runSets);
+      await compareRuns(series, runSets);
     }
   }
 }
 
 interface RunSet {
   timestamp: Date;
-  runs: ChainRun[];
+  runs: SeriesRun[];
 }
 
-function groupRunsByTimestamp(runs: ChainRun[]): RunSet[] {
-  const groups = new Map<string, ChainRun[]>();
+function groupRunsByTimestamp(runs: SeriesRun[]): RunSet[] {
+  const groups = new Map<string, SeriesRun[]>();
 
   for (const run of runs) {
     // Group by minute-level timestamp
@@ -119,9 +119,9 @@ function groupRunsByTimestamp(runs: ChainRun[]): RunSet[] {
   return runSets;
 }
 
-async function compareRuns(chain: ChainDetail, runSets: RunSet[]) {
+async function compareRuns(series: SeriesDetail, runSets: RunSet[]) {
   // Filter to completed runs only
-  const completedRuns = chain.runs.filter(
+  const completedRuns = series.runs.filter(
     (r) => r.jobStatus === "COMPLETED" && r.evaluationVersionId
   );
 
@@ -179,7 +179,7 @@ async function compareRuns(chain: ChainDetail, runSets: RunSet[]) {
   // Run comparison
   try {
     const result = await rankVersions({
-      sourceText: chain.documentContent,
+      sourceText: series.documentContent,
       candidates,
     });
 
