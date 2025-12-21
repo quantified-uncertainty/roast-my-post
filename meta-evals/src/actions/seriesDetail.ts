@@ -28,9 +28,12 @@ export async function showSeriesDetail(seriesId: string) {
       return;
     }
 
+    // Derive unique agent IDs from runs
+    const agentIds = [...new Set(series.runs.map((r) => r.agentId))];
+
     console.log(`\n📊 Evaluation Series: ${seriesId}`);
     console.log(`   Document: ${truncate(series.documentTitle, 50)}`);
-    console.log(`   Agents: ${series.agentIds.length}`);
+    console.log(`   Agents: ${agentIds.length}`);
     console.log("");
 
     // Group runs by timestamp (runs created at same time are one "run set")
@@ -51,7 +54,7 @@ export async function showSeriesDetail(seriesId: string) {
           runIndex.toString(),
           isFirst ? time : "",
           truncate(run.agentName, 28),
-          formatStatus(run.jobStatus),
+          formatStatus(run.status),
         ]);
         runIndex++;
       }
@@ -76,7 +79,7 @@ export async function showSeriesDetail(seriesId: string) {
     }
 
     if (action === "run") {
-      await createRun(seriesId, series.documentId, series.agentIds);
+      await createRun(seriesId, series.documentId, agentIds);
       // Loop continues to show updated list
     }
 
@@ -119,10 +122,10 @@ function groupRunsByTimestamp(runs: SeriesRun[]): RunSet[] {
   return runSets;
 }
 
-async function compareRuns(series: SeriesDetail, runSets: RunSet[]) {
+async function compareRuns(series: SeriesDetail, _runSets: RunSet[]) {
   // Filter to completed runs only
   const completedRuns = series.runs.filter(
-    (r) => r.jobStatus === "COMPLETED" && r.evaluationVersionId
+    (r) => r.status === "COMPLETED" && r.evaluationVersionId
   );
 
   if (completedRuns.length < 2) {
@@ -131,12 +134,12 @@ async function compareRuns(series: SeriesDetail, runSets: RunSet[]) {
   }
 
   // Let user select runs to compare
-  const { selectedTrackingIds } = await prompt({
+  const { selectedJobIds } = await prompt({
     type: "multiselect",
-    name: "selectedTrackingIds",
+    name: "selectedJobIds",
     message: "Select runs to compare (2-5):",
     choices: completedRuns.map((r) => ({
-      name: r.trackingId,
+      name: r.jobId,
       message: `${formatDateTime(r.createdAt)} - ${r.agentName}`,
     })),
     validate: (value: string[]) => {
@@ -147,7 +150,7 @@ async function compareRuns(series: SeriesDetail, runSets: RunSet[]) {
   });
 
   const selectedRuns = completedRuns.filter((r) =>
-    selectedTrackingIds.includes(r.trackingId)
+    selectedJobIds.includes(r.jobId)
   );
 
   console.log("\n🔍 Comparing runs...\n");
@@ -165,7 +168,7 @@ async function compareRuns(series: SeriesDetail, runSets: RunSet[]) {
     if (!evalVersion) continue;
 
     candidates.push({
-      versionId: run.trackingId,
+      versionId: run.jobId,
       agentName: `${run.agentName} (${formatDateTime(run.createdAt)})`,
       comments: evalVersion.comments.map(formatCommentForApi),
     });

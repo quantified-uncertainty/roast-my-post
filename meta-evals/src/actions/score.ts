@@ -32,10 +32,19 @@ export async function runScoreAction() {
   printScoringResult(result);
 
   if (shouldSave) {
+    // Convert dimensions Record to array with name field
+    const dimensionsArray = Object.entries(result.dimensions).map(
+      ([name, { score, explanation }]) => ({
+        name,
+        score,
+        explanation,
+      })
+    );
+
     await metaEvaluationRepository.saveScoringResult({
-      evaluationId: selectedVersion.evaluation.id,
+      evaluationVersionId: selectedVersion.id,
       overallScore: result.overallScore,
-      dimensions: result.dimensions,
+      dimensions: dimensionsArray,
       reasoning: result.reasoning,
       judgeModel: DEFAULT_JUDGE_MODEL,
     });
