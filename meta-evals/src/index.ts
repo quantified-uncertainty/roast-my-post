@@ -14,7 +14,7 @@ import "dotenv/config";
 import enquirer from "enquirer";
 import {
   metaEvaluationRepository,
-  type Series,
+  type SeriesSummary,
 } from "@roast/db";
 import { createBaseline } from "./actions/baseline";
 import { showSeriesDetail } from "./actions/seriesDetail";
@@ -105,11 +105,11 @@ async function main() {
   await metaEvaluationRepository.disconnect();
 }
 
-async function getSeries(): Promise<Series[]> {
+async function getSeries(): Promise<SeriesSummary[]> {
   return metaEvaluationRepository.getSeries();
 }
 
-function formatSeriesChoice(series: Series): string {
+function formatSeriesChoice(series: SeriesSummary): string {
   const title = series.documentTitle.length > 40
     ? series.documentTitle.slice(0, 37) + "..."
     : series.documentTitle;

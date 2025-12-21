@@ -22,10 +22,12 @@ export type SeriesSummary = {
 };
 
 export type SeriesRun = {
-  evaluationVersionId: string;
+  jobId: string;
   agentId: string;
   agentName: string;
   createdAt: Date;
+  status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  evaluationVersionId: string | null;
 };
 
 export type SeriesDetail = {
@@ -243,9 +245,24 @@ export class MetaEvaluationRepository {
             },
           },
         },
-        evaluationVersions: {
+        runs: {
           include: {
-            agentVersion: true,
+            job: {
+              include: {
+                evaluation: {
+                  include: {
+                    agent: {
+                      include: {
+                        versions: {
+                          orderBy: { version: "desc" },
+                          take: 1,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           orderBy: { createdAt: "asc" },
         },
@@ -255,9 +272,12 @@ export class MetaEvaluationRepository {
 
     return seriesRecords.map((s) => {
       const agentNames = [
-        ...new Set(s.evaluationVersions.map((ev) => ev.agentVersion.name)),
+        ...new Set(
+          s.runs.map(
+            (r) => r.job.evaluation.agent.versions[0]?.name || r.job.evaluation.agentId
+          )
+        ),
       ];
-      const versions = s.evaluationVersions;
 
       return {
         id: s.id,
@@ -265,9 +285,9 @@ export class MetaEvaluationRepository {
         documentTitle: s.document.versions[0]?.title || "Unknown document",
         documentId: s.documentId,
         agentNames,
-        runCount: versions.length,
-        firstRunAt: versions[0]?.createdAt || s.createdAt,
-        lastRunAt: versions[versions.length - 1]?.createdAt || s.createdAt,
+        runCount: s.runs.length,
+        firstRunAt: s.runs[0]?.createdAt || s.createdAt,
+        lastRunAt: s.runs[s.runs.length - 1]?.createdAt || s.createdAt,
       };
     });
   }
@@ -290,12 +310,14 @@ export class MetaEvaluationRepository {
   }
 
   /**
-   * Add an evaluation version to a series.
+   * Add a job to a series.
    */
-  async addToSeries(seriesId: string, evaluationVersionId: string) {
-    return this.prisma.evaluationVersion.update({
-      where: { id: evaluationVersionId },
-      data: { seriesId },
+  async addJobToSeries(seriesId: string, jobId: string) {
+    return this.prisma.seriesRun.create({
+      data: {
+        seriesId,
+        jobId,
+      },
     });
   }
 
@@ -314,9 +336,25 @@ export class MetaEvaluationRepository {
             },
           },
         },
-        evaluationVersions: {
+        runs: {
           include: {
-            agentVersion: true,
+            job: {
+              include: {
+                evaluation: {
+                  include: {
+                    agent: {
+                      include: {
+                        versions: {
+                          orderBy: { version: "desc" },
+                          take: 1,
+                        },
+                      },
+                    },
+                  },
+                },
+                evaluationVersion: true,
+              },
+            },
           },
           orderBy: { createdAt: "asc" },
         },
@@ -332,12 +370,14 @@ export class MetaEvaluationRepository {
       return null;
     }
 
-    // Build runs list from evaluation versions
-    const runs: SeriesRun[] = series.evaluationVersions.map((ev) => ({
-      evaluationVersionId: ev.id,
-      agentId: ev.agentId,
-      agentName: ev.agentVersion.name,
-      createdAt: ev.createdAt,
+    // Build runs list from SeriesRun -> Job
+    const runs: SeriesRun[] = series.runs.map((run) => ({
+      jobId: run.jobId,
+      agentId: run.job.evaluation.agentId,
+      agentName: run.job.evaluation.agent.versions[0]?.name || run.job.evaluation.agentId,
+      createdAt: run.createdAt,
+      status: run.job.status as SeriesRun["status"],
+      evaluationVersionId: run.job.evaluationVersionId,
     }));
 
     return {

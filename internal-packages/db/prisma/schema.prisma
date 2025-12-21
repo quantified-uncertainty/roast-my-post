@@ -142,21 +142,18 @@ model EvaluationVersion {
   selfCritique      String?
   version           Int                 @default(1)
   isStale           Boolean             @default(false)
-  seriesId          String?
   comments          EvaluationComment[]
   agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
   evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   job               Job?
   metaEvaluations   MetaEvaluation[]
-  series            Series?             @relation(fields: [seriesId], references: [id])
 
   @@unique([evaluationId, version])
   @@index([evaluationId])
   @@index([agentVersionId])
   @@index([documentVersionId])
   @@index([isStale])
-  @@index([seriesId])
 }
 
 model EvaluationComment {
@@ -256,11 +253,24 @@ model Series {
   documentId  String
   createdAt   DateTime @default(now())
 
-  document           Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  evaluationVersions EvaluationVersion[]
+  document Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  runs     SeriesRun[]
 
   @@index([documentId])
   @@index([createdAt])
+}
+
+/// Links a job to a series (meta-evals feature)
+model SeriesRun {
+  id        String   @id @default(cuid())
+  seriesId  String
+  jobId     String   @unique
+  createdAt DateTime @default(now())
+
+  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([seriesId])
 }
 
 model Job {
@@ -291,6 +301,7 @@ model Job {
   retryJobs           Job[]              @relation("JobRetries")
   tasks               Task[]
   cancelledBy         User?              @relation(fields: [cancelledById], references: [id])
+  seriesRun           SeriesRun?
 
   @@index([evaluationId])
   @@index([agentEvalBatchId])
