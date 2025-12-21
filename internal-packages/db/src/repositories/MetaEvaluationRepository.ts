@@ -10,8 +10,9 @@ import { prisma as defaultPrisma } from "../client";
 // Series Types (for meta-eval CLI)
 // ============================================================================
 
-export type Series = {
-  id: string; // Series prefix (e.g., "series-abc123")
+export type SeriesSummary = {
+  id: string;
+  name: string | null;
   documentTitle: string;
   documentId: string;
   agentNames: string[];
@@ -21,21 +22,19 @@ export type Series = {
 };
 
 export type SeriesRun = {
-  trackingId: string;
+  evaluationVersionId: string;
   agentId: string;
   agentName: string;
   createdAt: Date;
-  jobStatus: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
-  evaluationVersionId: string | null;
-  documentVersionId: string | null;
 };
 
 export type SeriesDetail = {
-  seriesId: string;
+  id: string;
+  name: string | null;
+  description: string | null;
   documentId: string;
   documentTitle: string;
   documentContent: string;
-  agentIds: string[];
   runs: SeriesRun[];
 };
 
@@ -233,7 +232,7 @@ export class MetaEvaluationRepository {
    * Get all evaluation series.
    * Returns series sorted by most recent activity.
    */
-  async getSeries(): Promise<Series[]> {
+  async getSeries(): Promise<SeriesSummary[]> {
     const seriesRecords = await this.prisma.series.findMany({
       include: {
         document: {
@@ -244,16 +243,9 @@ export class MetaEvaluationRepository {
             },
           },
         },
-        runs: {
+        evaluationVersions: {
           include: {
-            agent: {
-              include: {
-                versions: {
-                  orderBy: { version: "desc" },
-                  take: 1,
-                },
-              },
-            },
+            agentVersion: true,
           },
           orderBy: { createdAt: "asc" },
         },
@@ -263,22 +255,19 @@ export class MetaEvaluationRepository {
 
     return seriesRecords.map((s) => {
       const agentNames = [
-        ...new Set(
-          s.runs.map((r) => r.agent.versions[0]?.name || r.agentId)
-        ),
+        ...new Set(s.evaluationVersions.map((ev) => ev.agentVersion.name)),
       ];
-      const sortedRuns = s.runs.sort(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-      );
+      const versions = s.evaluationVersions;
 
       return {
         id: s.id,
+        name: s.name,
         documentTitle: s.document.versions[0]?.title || "Unknown document",
         documentId: s.documentId,
         agentNames,
-        runCount: s.runs.length,
-        firstRunAt: sortedRuns[0]?.createdAt || s.createdAt,
-        lastRunAt: sortedRuns[sortedRuns.length - 1]?.createdAt || s.createdAt,
+        runCount: versions.length,
+        firstRunAt: versions[0]?.createdAt || s.createdAt,
+        lastRunAt: versions[versions.length - 1]?.createdAt || s.createdAt,
       };
     });
   }
@@ -301,6 +290,16 @@ export class MetaEvaluationRepository {
   }
 
   /**
+   * Add an evaluation version to a series.
+   */
+  async addToSeries(seriesId: string, evaluationVersionId: string) {
+    return this.prisma.evaluationVersion.update({
+      where: { id: evaluationVersionId },
+      data: { seriesId },
+    });
+  }
+
+  /**
    * Get detailed info about a specific series, including all runs.
    */
   async getSeriesDetail(seriesId: string): Promise<SeriesDetail | null> {
@@ -315,21 +314,9 @@ export class MetaEvaluationRepository {
             },
           },
         },
-        runs: {
+        evaluationVersions: {
           include: {
-            agent: {
-              include: {
-                versions: {
-                  orderBy: { version: "desc" },
-                  take: 1,
-                },
-              },
-            },
-            jobs: {
-              include: {
-                evaluationVersion: true,
-              },
-            },
+            agentVersion: true,
           },
           orderBy: { createdAt: "asc" },
         },
@@ -345,31 +332,21 @@ export class MetaEvaluationRepository {
       return null;
     }
 
-    // Collect unique agent IDs
-    const agentIds = [...new Set(series.runs.map((r) => r.agentId))];
-
-    // Build runs list
-    const runs: SeriesRun[] = series.runs.map((run) => {
-      const job = run.jobs[0];
-      const agentName = run.agent.versions[0]?.name || run.agentId;
-
-      return {
-        trackingId: run.trackingId || "",
-        agentId: run.agentId,
-        agentName,
-        createdAt: run.createdAt,
-        jobStatus: (job?.status as SeriesRun["jobStatus"]) || "PENDING",
-        evaluationVersionId: job?.evaluationVersionId || null,
-        documentVersionId: job?.evaluationVersion?.documentVersionId || null,
-      };
-    });
+    // Build runs list from evaluation versions
+    const runs: SeriesRun[] = series.evaluationVersions.map((ev) => ({
+      evaluationVersionId: ev.id,
+      agentId: ev.agentId,
+      agentName: ev.agentVersion.name,
+      createdAt: ev.createdAt,
+    }));
 
     return {
-      seriesId,
+      id: series.id,
+      name: series.name,
+      description: series.description,
       documentId: series.documentId,
       documentTitle: docVersion.title,
       documentContent: docVersion.content,
-      agentIds,
       runs,
     };
   }

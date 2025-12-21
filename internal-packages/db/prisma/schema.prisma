@@ -142,18 +142,21 @@ model EvaluationVersion {
   selfCritique      String?
   version           Int                 @default(1)
   isStale           Boolean             @default(false)
+  seriesId          String?
   comments          EvaluationComment[]
   agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
   evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   job               Job?
   metaEvaluations   MetaEvaluation[]
+  series            Series?             @relation(fields: [seriesId], references: [id])
 
   @@unique([evaluationId, version])
   @@index([evaluationId])
   @@index([agentVersionId])
   @@index([documentVersionId])
   @@index([isStale])
+  @@index([seriesId])
 }
 
 model EvaluationComment {
@@ -234,18 +237,15 @@ model AgentEvalBatch {
   description          String?
   expiresAt            DateTime?
   isEphemeral          Boolean    @default(false)
-  seriesId             String?
   ephemeralAgent       Agent?     @relation("EphemeralAgent")
   agent                Agent      @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user                 User       @relation(fields: [userId], references: [id])
   ephemeralDocuments   Document[] @relation("EphemeralDocuments")
   jobs                 Job[]
-  series               Series?    @relation(fields: [seriesId], references: [id])
 
   @@unique([userId, trackingId])
   @@index([userId])
   @@index([expiresAt])
-  @@index([seriesId])
 }
 
 /// A series groups multiple evaluation runs on the same document
@@ -256,8 +256,8 @@ model Series {
   documentId  String
   createdAt   DateTime @default(now())
 
-  document Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  runs     AgentEvalBatch[]
+  document           Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  evaluationVersions EvaluationVersion[]
 
   @@index([documentId])
   @@index([createdAt])
