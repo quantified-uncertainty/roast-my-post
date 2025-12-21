@@ -171,10 +171,12 @@ export function MainMenu({
   // Limit series shown, reserve 2 slots for create/exit
   const visibleSeries = series.slice(0, maxItems - 2);
   const items = [
-    ...visibleSeries.map((s) => ({
-      label: `${truncate(s.documentTitle, 40)} | ${s.runCount} runs | ${s.agentNames.slice(0, 2).join(", ")}`,
-      value: s.id,
-    })),
+    ...visibleSeries
+      .filter((s) => s.id) // Ensure valid IDs
+      .map((s, idx) => ({
+        label: `${truncate(s.documentTitle, 40)} | ${s.runCount} runs | ${s.agentNames.slice(0, 2).join(", ")}`,
+        value: s.id || `series-${idx}`, // Fallback key
+      })),
     { label: "+ Create New Baseline", value: "create" },
     { label: "Exit", value: "exit" },
   ];
