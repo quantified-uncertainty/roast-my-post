@@ -355,6 +355,10 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
             label: `[view] Saved Ranking ${i + 1} (${s.createdAt.toLocaleDateString()})`,
             value: `session:${s.sessionId}`,
           })),
+          // Separator if there are saved sessions
+          ...(savedSessions.length > 0
+            ? [{ label: "─── New Ranking ───", value: "separator" }]
+            : []),
           // Then the run selection
           ...runs.map((r) => ({
             label: `${selectedRuns.has(r.evaluationVersionId) ? "[x]" : "[ ]"} #${r.runNumber} ${r.agentName} (${r.createdAt.toLocaleDateString()})`,
@@ -366,7 +370,10 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
           { label: "<- Back", value: "back" },
         ]}
         onSelect={async (item) => {
-          if (item.value === "back") {
+          if (item.value === "separator") {
+            // Do nothing for separator
+            return;
+          } else if (item.value === "back") {
             onBack();
           } else if (item.value === "rank") {
             await runRanking();
