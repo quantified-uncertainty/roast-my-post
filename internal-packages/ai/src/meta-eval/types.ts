@@ -127,7 +127,7 @@ export interface MetaEvalOptions {
  * Default options
  */
 export const DEFAULT_META_EVAL_OPTIONS: Required<MetaEvalOptions> = {
-  model: "claude-sonnet-4-20250514",
+  model: "claude-sonnet-4-5-20250929",
   temperature: 0.3,
   maxTokens: 4096,
 };

@@ -28,12 +28,11 @@ interface CompletedRun {
 interface ScoreRunProps {
   seriesId: string;
   height: number;
+  judgeModel: string;
   onBack: () => void;
 }
 
-const DEFAULT_JUDGE_MODEL = "claude-sonnet-4-20250514";
-
-export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
+export function ScoreRun({ seriesId, height, judgeModel, onBack }: ScoreRunProps) {
   const [loading, setLoading] = useState(true);
   const [scoring, setScoring] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -86,21 +85,24 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
         return;
       }
 
-      const scoringResult = await scoreComments({
-        sourceText: documentContent,
-        comments: evalVersion.comments.map((c) => ({
-          header: c.header || undefined,
-          level: (c.level as "error" | "warning" | "nitpick" | "info" | "success" | "debug" | undefined) || undefined,
-          description: c.description,
-          highlight: {
-            quotedText: c.highlight.quotedText,
-            startOffset: 0,
-            endOffset: c.highlight.quotedText.length,
-            isValid: true,
-          },
-        })),
-        agentName: run.agentName,
-      });
+      const scoringResult = await scoreComments(
+        {
+          sourceText: documentContent,
+          comments: evalVersion.comments.map((c) => ({
+            header: c.header || undefined,
+            level: (c.level as "error" | "warning" | "nitpick" | "info" | "success" | "debug" | undefined) || undefined,
+            description: c.description,
+            highlight: {
+              quotedText: c.highlight.quotedText,
+              startOffset: 0,
+              endOffset: c.highlight.quotedText.length,
+              isValid: true,
+            },
+          })),
+          agentName: run.agentName,
+        },
+        { model: judgeModel }
+      );
 
       setResult(scoringResult);
     } catch (error) {
@@ -157,7 +159,7 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
         overallScore: result.overallScore,
         dimensions: dimensionsArray,
         reasoning: result.reasoning,
-        judgeModel: DEFAULT_JUDGE_MODEL,
+        judgeModel,
       });
     } catch (error) {
       console.error("Save failed:", error);

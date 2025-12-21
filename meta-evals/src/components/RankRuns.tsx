@@ -48,12 +48,11 @@ interface SavedRankingSession {
 interface RankRunsProps {
   seriesId: string;
   height: number;
+  judgeModel: string;
   onBack: () => void;
 }
 
-const DEFAULT_JUDGE_MODEL = "claude-sonnet-4-20250514";
-
-export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
+export function RankRuns({ seriesId, height, judgeModel, onBack }: RankRunsProps) {
   const [loading, setLoading] = useState(true);
   const [ranking, setRanking] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -165,10 +164,13 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
         return;
       }
 
-      const result: RankingResult = await rankVersions({
-        sourceText: documentContent,
-        candidates,
-      });
+      const result: RankingResult = await rankVersions(
+        {
+          sourceText: documentContent,
+          candidates,
+        },
+        { model: judgeModel }
+      );
 
       // Generate a session ID for this ranking
       const sessionId = `rank-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -211,7 +213,7 @@ export function RankRuns({ seriesId, height, onBack }: RankRunsProps) {
           rank: ranking.rank,
           relativeScore: ranking.relativeScore,
           reasoning: results.reasoning,
-          judgeModel: DEFAULT_JUDGE_MODEL,
+          judgeModel,
         });
       }
     } catch (error) {

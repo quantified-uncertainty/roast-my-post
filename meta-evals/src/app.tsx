@@ -13,6 +13,7 @@ import {
 } from "@roast/db";
 import { apiClient } from "./utils/apiClient";
 import { MainMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, type Screen } from "./components";
+import { getAvailableModels, getRecommendedJudgeModels, DEFAULT_JUDGE_MODEL, type ModelInfo } from "./utils/models";
 
 // ============================================================================
 // Baseline Creation
@@ -119,10 +120,26 @@ export function App() {
   const [selectedDoc, setSelectedDoc] = useState<DocumentChoice | null>(null);
   const [selectedAgents, setSelectedAgents] = useState<AgentChoice[]>([]);
 
+  // Model selection
+  const [judgeModel, setJudgeModel] = useState<string>(DEFAULT_JUDGE_MODEL);
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+
   // Load initial data
   useEffect(() => {
     loadMainMenu();
+    loadModels();
   }, []);
+
+  async function loadModels() {
+    try {
+      const allModels = await getAvailableModels();
+      const recommended = getRecommendedJudgeModels(allModels);
+      setAvailableModels(recommended.length > 0 ? recommended : allModels);
+    } catch (e) {
+      // Models loading failed - continue with default
+      console.error("Failed to load models:", e);
+    }
+  }
 
   async function loadMainMenu() {
     setScreen({ type: "loading" });
@@ -192,6 +209,9 @@ export function App() {
         onCreateBaseline={startCreateBaseline}
         onSelectSeries={(id) => setScreen({ type: "series-detail", seriesId: id })}
         onExit={exit}
+        judgeModel={judgeModel}
+        availableModels={availableModels}
+        onSelectModel={setJudgeModel}
       />
     );
   }
@@ -267,6 +287,7 @@ export function App() {
       <RankRuns
         seriesId={screen.seriesId}
         height={termHeight}
+        judgeModel={judgeModel}
         onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
       />
     );
@@ -277,6 +298,7 @@ export function App() {
       <ScoreRun
         seriesId={screen.seriesId}
         height={termHeight}
+        judgeModel={judgeModel}
         onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
       />
     );
