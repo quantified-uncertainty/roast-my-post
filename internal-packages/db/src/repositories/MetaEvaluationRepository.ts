@@ -28,6 +28,7 @@ export type SeriesRun = {
   createdAt: Date;
   status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
   evaluationVersionId: string | null;
+  scoring: { overallScore: number; scoredAt: Date } | null;
 };
 
 export type SeriesDetail = {
@@ -370,6 +371,29 @@ export class MetaEvaluationRepository {
       return null;
     }
 
+    // Get scoring info for all evaluation versions in this series
+    const evalVersionIds = series.runs
+      .map((r) => r.job.evaluationVersionId)
+      .filter((id): id is string => id !== null);
+
+    const scorings = evalVersionIds.length > 0
+      ? await this.prisma.metaEvaluation.findMany({
+          where: {
+            evaluationVersionId: { in: evalVersionIds },
+            type: "scoring",
+          },
+          select: {
+            evaluationVersionId: true,
+            overallScore: true,
+            createdAt: true,
+          },
+        })
+      : [];
+
+    const scoringMap = new Map(
+      scorings.map((s) => [s.evaluationVersionId, { overallScore: s.overallScore!, scoredAt: s.createdAt }])
+    );
+
     // Build runs list from SeriesRun -> Job
     const runs: SeriesRun[] = series.runs.map((run) => ({
       jobId: run.jobId,
@@ -378,6 +402,7 @@ export class MetaEvaluationRepository {
       createdAt: run.createdAt,
       status: run.job.status as SeriesRun["status"],
       evaluationVersionId: run.job.evaluationVersionId,
+      scoring: run.job.evaluationVersionId ? scoringMap.get(run.job.evaluationVersionId) || null : null,
     }));
 
     return {

@@ -14,6 +14,7 @@ interface SeriesRun {
   agentName: string;
   status: string;
   createdAt: Date;
+  scoring: { overallScore: number; scoredAt: Date } | null;
 }
 
 interface SeriesDetailData {
@@ -37,8 +38,9 @@ interface SeriesDetailProps {
 
 // Column widths for consistent alignment
 const COL_NUM = 3;
-const COL_AGENT = 25;
-const COL_STATUS = 12;
+const COL_AGENT = 22;
+const COL_STATUS = 10;
+const COL_SCORE = 6;
 const COL_DATE = 8;
 
 export function SeriesDetail({
@@ -118,6 +120,7 @@ export function SeriesDetail({
             {"#".padEnd(COL_NUM)}
             {"Agent".padEnd(COL_AGENT)}
             {"Status".padEnd(COL_STATUS)}
+            {"Score".padEnd(COL_SCORE)}
             {"Created".padEnd(COL_DATE)}
           </Text>
         </Box>
@@ -132,6 +135,9 @@ export function SeriesDetail({
             </Text>
             <Text color={getStatusColor(r.status)}>
               {formatStatus(r.status).padEnd(COL_STATUS)}
+            </Text>
+            <Text color={r.scoring ? (r.scoring.overallScore >= 7 ? "green" : r.scoring.overallScore >= 5 ? "yellow" : "red") : "gray"}>
+              {(r.scoring ? `${r.scoring.overallScore}/10` : "-").padEnd(COL_SCORE)}
             </Text>
             <Text dimColor>
               {formatDate(r.createdAt)}
