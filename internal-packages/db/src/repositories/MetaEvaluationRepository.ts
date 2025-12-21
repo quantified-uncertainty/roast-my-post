@@ -230,16 +230,13 @@ export class MetaEvaluationRepository {
   // ==========================================================================
 
   /**
-   * Get all evaluation series, grouped by series prefix.
+   * Get all evaluation series.
    * Returns series sorted by most recent activity.
    */
   async getSeries(): Promise<Series[]> {
-    const batches = await this.prisma.agentEvalBatch.findMany({
-      where: {
-        trackingId: { startsWith: "series-" },
-      },
+    const seriesRecords = await this.prisma.series.findMany({
       include: {
-        agent: {
+        document: {
           include: {
             versions: {
               orderBy: { version: "desc" },
@@ -247,98 +244,70 @@ export class MetaEvaluationRepository {
             },
           },
         },
-        jobs: {
+        runs: {
           include: {
-            evaluation: {
+            agent: {
               include: {
-                document: {
-                  include: {
-                    versions: {
-                      orderBy: { version: "desc" },
-                      take: 1,
-                    },
-                  },
+                versions: {
+                  orderBy: { version: "desc" },
+                  take: 1,
                 },
               },
             },
           },
+          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    // Group by series prefix (series-{shortId})
-    const seriesMap = new Map<
-      string,
-      {
-        batches: typeof batches;
-        documentTitle: string;
-        documentId: string;
-        agentNames: Set<string>;
-      }
-    >();
-
-    for (const batch of batches) {
-      if (!batch.trackingId) continue;
-
-      // Extract series prefix: "series-abc123" from "series-abc123-20251217-1645-agentId"
-      const parts = batch.trackingId.split("-");
-      if (parts.length < 2) continue;
-      const seriesId = `${parts[0]}-${parts[1]}`;
-
-      const existing = seriesMap.get(seriesId);
-      const agentName = batch.agent.versions[0]?.name || batch.agentId;
-      const doc = batch.jobs[0]?.evaluation?.document;
-      const docTitle = doc?.versions[0]?.title || "Unknown document";
-      const docId = doc?.id || "";
-
-      if (existing) {
-        existing.batches.push(batch);
-        existing.agentNames.add(agentName);
-      } else {
-        seriesMap.set(seriesId, {
-          batches: [batch],
-          documentTitle: docTitle,
-          documentId: docId,
-          agentNames: new Set([agentName]),
-        });
-      }
-    }
-
-    // Convert to Series array
-    const seriesList: Series[] = [];
-    for (const [id, data] of seriesMap) {
-      const sortedBatches = data.batches.sort(
+    return seriesRecords.map((s) => {
+      const agentNames = [
+        ...new Set(
+          s.runs.map((r) => r.agent.versions[0]?.name || r.agentId)
+        ),
+      ];
+      const sortedRuns = s.runs.sort(
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
       );
 
-      seriesList.push({
-        id,
-        documentTitle: data.documentTitle,
-        documentId: data.documentId,
-        agentNames: Array.from(data.agentNames),
-        runCount: sortedBatches.length,
-        firstRunAt: sortedBatches[0].createdAt,
-        lastRunAt: sortedBatches[sortedBatches.length - 1].createdAt,
-      });
-    }
+      return {
+        id: s.id,
+        documentTitle: s.document.versions[0]?.title || "Unknown document",
+        documentId: s.documentId,
+        agentNames,
+        runCount: s.runs.length,
+        firstRunAt: sortedRuns[0]?.createdAt || s.createdAt,
+        lastRunAt: sortedRuns[sortedRuns.length - 1]?.createdAt || s.createdAt,
+      };
+    });
+  }
 
-    // Sort by most recent activity
-    seriesList.sort((a, b) => b.lastRunAt.getTime() - a.lastRunAt.getTime());
-
-    return seriesList;
+  /**
+   * Create a new series for a document.
+   */
+  async createSeries(input: {
+    documentId: string;
+    name?: string;
+    description?: string;
+  }) {
+    return this.prisma.series.create({
+      data: {
+        documentId: input.documentId,
+        name: input.name,
+        description: input.description,
+      },
+    });
   }
 
   /**
    * Get detailed info about a specific series, including all runs.
    */
   async getSeriesDetail(seriesId: string): Promise<SeriesDetail | null> {
-    const batches = await this.prisma.agentEvalBatch.findMany({
-      where: {
-        trackingId: { startsWith: seriesId },
-      },
+    const series = await this.prisma.series.findUnique({
+      where: { id: seriesId },
       include: {
-        agent: {
+        document: {
           include: {
             versions: {
               orderBy: { version: "desc" },
@@ -346,63 +315,58 @@ export class MetaEvaluationRepository {
             },
           },
         },
-        jobs: {
+        runs: {
           include: {
-            evaluation: {
+            agent: {
               include: {
-                document: {
-                  include: {
-                    versions: {
-                      orderBy: { version: "desc" },
-                      take: 1,
-                    },
-                  },
+                versions: {
+                  orderBy: { version: "desc" },
+                  take: 1,
                 },
               },
             },
-            evaluationVersion: true,
+            jobs: {
+              include: {
+                evaluationVersion: true,
+              },
+            },
           },
+          orderBy: { createdAt: "asc" },
         },
       },
-      orderBy: { createdAt: "asc" },
     });
 
-    if (batches.length === 0) {
+    if (!series) {
       return null;
     }
 
-    // Extract document info from first batch
-    const firstJob = batches[0]?.jobs[0];
-    const doc = firstJob?.evaluation?.document;
-    const docVersion = doc?.versions[0];
-
-    if (!doc || !docVersion) {
+    const docVersion = series.document.versions[0];
+    if (!docVersion) {
       return null;
     }
 
     // Collect unique agent IDs
-    const agentIds = [...new Set(batches.map((b) => b.agentId))];
+    const agentIds = [...new Set(series.runs.map((r) => r.agentId))];
 
     // Build runs list
-    const runs: SeriesRun[] = [];
-    for (const batch of batches) {
-      const job = batch.jobs[0];
-      const agentName = batch.agent.versions[0]?.name || batch.agentId;
+    const runs: SeriesRun[] = series.runs.map((run) => {
+      const job = run.jobs[0];
+      const agentName = run.agent.versions[0]?.name || run.agentId;
 
-      runs.push({
-        trackingId: batch.trackingId || "",
-        agentId: batch.agentId,
+      return {
+        trackingId: run.trackingId || "",
+        agentId: run.agentId,
         agentName,
-        createdAt: batch.createdAt,
+        createdAt: run.createdAt,
         jobStatus: (job?.status as SeriesRun["jobStatus"]) || "PENDING",
         evaluationVersionId: job?.evaluationVersionId || null,
         documentVersionId: job?.evaluationVersion?.documentVersionId || null,
-      });
-    }
+      };
+    });
 
     return {
       seriesId,
-      documentId: doc.id,
+      documentId: series.documentId,
       documentTitle: docVersion.title,
       documentContent: docVersion.content,
       agentIds,
