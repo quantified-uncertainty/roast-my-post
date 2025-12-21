@@ -93,10 +93,16 @@ export type BatchWithCount = {
   _count: { jobs: number };
 };
 
+export type DimensionScore = {
+  name: string;
+  score: number;
+  explanation?: string;
+};
+
 export type SaveScoringInput = {
   evaluationVersionId: string;
   overallScore: number;
-  dimensions: Record<string, { score: number; explanation: string }>;
+  dimensions: DimensionScore[];
   reasoning: string;
   judgeModel: string;
 };
@@ -189,9 +195,18 @@ export class MetaEvaluationRepository {
         evaluationVersionId: input.evaluationVersionId,
         type: "scoring",
         overallScore: input.overallScore,
-        dimensions: input.dimensions,
         reasoning: input.reasoning,
         judgeModel: input.judgeModel,
+        dimensionScores: {
+          create: input.dimensions.map((d) => ({
+            name: d.name,
+            score: d.score,
+            explanation: d.explanation,
+          })),
+        },
+      },
+      include: {
+        dimensionScores: true,
       },
     });
   }

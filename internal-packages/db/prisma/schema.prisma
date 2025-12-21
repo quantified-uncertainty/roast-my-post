@@ -374,8 +374,8 @@ model MetaEvaluation {
   type                String   // "scoring" | "ranking"
 
   // For scoring mode - rate single output on dimensions
-  overallScore     Float?
-  dimensions       Json?    // { accuracy: 8, importance: 7, clarity: 9, ... }
+  overallScore        Float?
+  dimensionScores     MetaEvaluationDimension[]
 
   // For ranking mode - compare N versions relatively
   rankingSessionId String?  // Groups rankings from same comparison session
@@ -392,4 +392,20 @@ model MetaEvaluation {
   @@index([rankingSessionId])
   @@index([type])
   @@index([createdAt])
+}
+
+/// Individual dimension scores for meta-evaluations
+model MetaEvaluationDimension {
+  id               String @id @default(uuid())
+  metaEvaluationId String
+  name             String // "accuracy", "importance", "clarity", etc.
+  score            Float
+  explanation      String?
+
+  metaEvaluation MetaEvaluation @relation(fields: [metaEvaluationId], references: [id], onDelete: Cascade)
+
+  @@unique([metaEvaluationId, name])
+  @@index([metaEvaluationId])
+  @@index([name])
+  @@index([score])
 }
