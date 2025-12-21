@@ -49,10 +49,12 @@ interface RankRunsProps {
   seriesId: string;
   height: number;
   judgeModel: string;
+  temperature: number;
+  maxTokens: number;
   onBack: () => void;
 }
 
-export function RankRuns({ seriesId, height, judgeModel, onBack }: RankRunsProps) {
+export function RankRuns({ seriesId, height, judgeModel, temperature, maxTokens, onBack }: RankRunsProps) {
   const [loading, setLoading] = useState(true);
   const [ranking, setRanking] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -169,7 +171,7 @@ export function RankRuns({ seriesId, height, judgeModel, onBack }: RankRunsProps
           sourceText: documentContent,
           candidates,
         },
-        { model: judgeModel }
+        { model: judgeModel, temperature, maxTokens }
       );
 
       // Generate a session ID for this ranking

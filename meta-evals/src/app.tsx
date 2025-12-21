@@ -120,9 +120,11 @@ export function App() {
   const [selectedDoc, setSelectedDoc] = useState<DocumentChoice | null>(null);
   const [selectedAgents, setSelectedAgents] = useState<AgentChoice[]>([]);
 
-  // Model selection
+  // Judge settings
   const [judgeModel, setJudgeModel] = useState<string>(DEFAULT_JUDGE_MODEL);
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+  const [temperature, setTemperature] = useState<number>(0.3);
+  const [maxTokens, setMaxTokens] = useState<number>(4096);
 
   // Load initial data
   useEffect(() => {
@@ -212,6 +214,10 @@ export function App() {
         judgeModel={judgeModel}
         availableModels={availableModels}
         onSelectModel={setJudgeModel}
+        temperature={temperature}
+        onSetTemperature={setTemperature}
+        maxTokens={maxTokens}
+        onSetMaxTokens={setMaxTokens}
       />
     );
   }
@@ -292,6 +298,8 @@ export function App() {
         seriesId={screen.seriesId}
         height={termHeight}
         judgeModel={judgeModel}
+        temperature={temperature}
+        maxTokens={maxTokens}
         onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
       />
     );
@@ -303,6 +311,8 @@ export function App() {
         seriesId={screen.seriesId}
         height={termHeight}
         judgeModel={judgeModel}
+        temperature={temperature}
+        maxTokens={maxTokens}
         onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
       />
     );

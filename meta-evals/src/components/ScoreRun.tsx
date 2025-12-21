@@ -29,10 +29,12 @@ interface ScoreRunProps {
   seriesId: string;
   height: number;
   judgeModel: string;
+  temperature: number;
+  maxTokens: number;
   onBack: () => void;
 }
 
-export function ScoreRun({ seriesId, height, judgeModel, onBack }: ScoreRunProps) {
+export function ScoreRun({ seriesId, height, judgeModel, temperature, maxTokens, onBack }: ScoreRunProps) {
   const [loading, setLoading] = useState(true);
   const [scoring, setScoring] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -101,7 +103,7 @@ export function ScoreRun({ seriesId, height, judgeModel, onBack }: ScoreRunProps
           })),
           agentName: run.agentName,
         },
-        { model: judgeModel }
+        { model: judgeModel, temperature, maxTokens }
       );
 
       setResult(scoringResult);
