@@ -44,6 +44,7 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
   const [selectedRuns, setSelectedRuns] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<CompareResults | null>(null);
   const [documentContent, setDocumentContent] = useState<string>("");
+  const [showFullReasoning, setShowFullReasoning] = useState(false);
 
   useEffect(() => {
     loadCompletedRuns();
@@ -161,6 +162,28 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
   }
 
   if (results) {
+    // Full reasoning view
+    if (showFullReasoning) {
+      return (
+        <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
+          <Box justifyContent="center" marginBottom={1}>
+            <Text bold color="magenta">
+              Full Reasoning
+            </Text>
+          </Box>
+
+          <Box flexDirection="column" borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexGrow={1}>
+            <Text wrap="wrap">{results.reasoning}</Text>
+          </Box>
+
+          <SelectInput
+            items={[{ label: "<- Back to Results", value: "back" }]}
+            onSelect={() => setShowFullReasoning(false)}
+          />
+        </Box>
+      );
+    }
+
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height} overflow="hidden">
         <Box justifyContent="center" marginBottom={1}>
@@ -186,8 +209,17 @@ export function CompareRuns({ seriesId, height, onBack }: CompareRunsProps) {
         </Box>
 
         <SelectInput
-          items={[{ label: "<- Back to Series", value: "back" }]}
-          onSelect={() => onBack()}
+          items={[
+            { label: "View Full Reasoning", value: "reasoning" },
+            { label: "<- Back to Series", value: "back" },
+          ]}
+          onSelect={(item) => {
+            if (item.value === "reasoning") {
+              setShowFullReasoning(true);
+            } else {
+              onBack();
+            }
+          }}
         />
       </Box>
     );
