@@ -34,6 +34,7 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
   const [selectedRun, setSelectedRun] = useState<CompletedRun | null>(null);
   const [result, setResult] = useState<ScoringResult | null>(null);
   const [documentContent, setDocumentContent] = useState<string>("");
+  const [showFullReasoning, setShowFullReasoning] = useState(false);
 
   useEffect(() => {
     loadCompletedRuns();
@@ -150,6 +151,31 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
   }
 
   if (result && selectedRun) {
+    // Full reasoning view
+    if (showFullReasoning) {
+      return (
+        <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
+          <Box justifyContent="center" marginBottom={1}>
+            <Text bold color="blue">
+              Full Reasoning
+            </Text>
+          </Box>
+
+          <Box flexDirection="column" borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexGrow={1}>
+            <Text wrap="wrap">{result.reasoning}</Text>
+          </Box>
+
+          <SelectInput
+            items={[{ label: "<- Back to Results", value: "back" }]}
+            onSelect={() => setShowFullReasoning(false)}
+          />
+        </Box>
+      );
+    }
+
+    // Score color helper (1-10 scale)
+    const scoreColor = (score: number) => score >= 7 ? "green" : score >= 5 ? "yellow" : "red";
+
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height} overflow="hidden">
         <Box justifyContent="center" marginBottom={1}>
@@ -161,8 +187,8 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
         <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
           <Text>
             <Text bold>Overall Score: </Text>
-            <Text color={result.overallScore >= 70 ? "green" : result.overallScore >= 50 ? "yellow" : "red"}>
-              {result.overallScore}/100
+            <Text color={scoreColor(result.overallScore)}>
+              {result.overallScore}/10
             </Text>
           </Text>
         </Box>
@@ -173,8 +199,8 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
             <Box key={name}>
               <Text>
                 {name.padEnd(15)}
-                <Text color={score >= 70 ? "green" : score >= 50 ? "yellow" : "red"}>
-                  {score}/100
+                <Text color={scoreColor(score)}>
+                  {score}/10
                 </Text>
               </Text>
             </Box>
@@ -187,11 +213,14 @@ export function ScoreRun({ seriesId, height, onBack }: ScoreRunProps) {
 
         <SelectInput
           items={[
+            { label: "View Full Reasoning", value: "reasoning" },
             { label: saving ? "Saving..." : "Save to Database", value: "save" },
             { label: "<- Back (discard)", value: "back" },
           ]}
           onSelect={async (item) => {
-            if (item.value === "save" && !saving) {
+            if (item.value === "reasoning") {
+              setShowFullReasoning(true);
+            } else if (item.value === "save" && !saving) {
               await saveResult();
             } else if (item.value === "back") {
               onBack();
