@@ -72,6 +72,7 @@ export async function createBaseline() {
   }
 
   // Step 4: Select ONE document
+  console.log(`📄 Step 1/2: Select Document (${documents.length} available)\n`);
   const selectedDoc = await selectDocument(documents);
   if (!selectedDoc) {
     console.log("No document selected.");
@@ -79,6 +80,7 @@ export async function createBaseline() {
   }
 
   // Step 5: Select agents (one or more)
+  console.log(`\n🤖 Step 2/2: Select Agents (${agents.length} available)\n`);
   const selectedAgents = await selectAgents(agents);
   if (selectedAgents.length === 0) {
     console.log("No agents selected.");
@@ -190,17 +192,40 @@ export async function createRun(
 async function selectDocument(
   documents: DocumentChoice[]
 ): Promise<DocumentChoice | null> {
+  // Display table of documents
+  const table = new Table({
+    head: ["#", "Title", "Created"],
+    colWidths: [4, 50, 12],
+  });
+
+  documents.forEach((d, i) => {
+    table.push([
+      (i + 1).toString(),
+      truncate(d.title, 48),
+      formatDate(d.createdAt),
+    ]);
+  });
+
+  console.log(table.toString());
+  console.log("");
+
   const { selectedId } = await prompt({
     type: "select",
     name: "selectedId",
-    message: "Select a document to evaluate:",
-    choices: documents.map((d) => ({
+    message: "Select a document:",
+    choices: documents.map((d, i) => ({
       name: d.id,
-      message: truncate(d.title, 60),
+      message: `${i + 1}. ${truncate(d.title, 55)}`,
     })),
   });
 
   return documents.find((d) => d.id === selectedId) || null;
+}
+
+function formatDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month}-${day}`;
 }
 
 async function selectAgents(agents: AgentChoice[]): Promise<AgentChoice[]> {
