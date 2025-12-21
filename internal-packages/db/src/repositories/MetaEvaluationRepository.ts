@@ -488,6 +488,54 @@ export class MetaEvaluationRepository {
   }
 
   /**
+   * Get unique agents used in a series (for "Run Again" functionality).
+   */
+  async getSeriesAgents(seriesId: string): Promise<AgentChoice[]> {
+    const series = await this.prisma.series.findUnique({
+      where: { id: seriesId },
+      include: {
+        runs: {
+          include: {
+            job: {
+              include: {
+                evaluation: {
+                  include: {
+                    agent: {
+                      include: {
+                        versions: {
+                          orderBy: { version: "desc" },
+                          take: 1,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!series) return [];
+
+    // Get unique agents by ID
+    const agentMap = new Map<string, AgentChoice>();
+    for (const run of series.runs) {
+      const agent = run.job.evaluation.agent;
+      if (!agentMap.has(agent.id) && agent.versions.length > 0) {
+        agentMap.set(agent.id, {
+          id: agent.id,
+          name: agent.versions[0].name,
+          version: agent.versions[0].version,
+        });
+      }
+    }
+
+    return Array.from(agentMap.values());
+  }
+
+  /**
    * Check database connectivity.
    */
   async checkConnection(): Promise<boolean> {

@@ -19,6 +19,7 @@ interface SeriesRun {
 interface SeriesDetailData {
   id: string;
   name: string;
+  documentId: string;
   documentTitle: string;
   runs: SeriesRun[];
 }
@@ -28,6 +29,7 @@ interface SeriesDetailProps {
   maxItems: number;
   height: number;
   onBack: () => void;
+  onRunAgain: (seriesId: string, documentId: string) => Promise<void>;
 }
 
 // Column widths for consistent alignment
@@ -41,14 +43,15 @@ export function SeriesDetail({
   maxItems,
   height,
   onBack,
+  onRunAgain,
 }: SeriesDetailProps) {
   const [loading, setLoading] = useState(true);
+  const [runningAgain, setRunningAgain] = useState(false);
   const [series, setSeries] = useState<SeriesDetailData | null>(null);
 
-  // Load and poll for updates
+  // Load and poll for updates - always poll every 2 seconds
   useEffect(() => {
     let mounted = true;
-    let pollInterval: NodeJS.Timeout | null = null;
 
     async function loadSeries() {
       try {
@@ -56,19 +59,6 @@ export function SeriesDetail({
         if (mounted) {
           setSeries(data as SeriesDetailData);
           setLoading(false);
-
-          // Check if any runs are still in progress
-          const hasRunning = data?.runs.some(
-            (r: SeriesRun) => r.status === "RUNNING" || r.status === "PENDING"
-          );
-
-          // Poll every 2 seconds if there are running jobs
-          if (hasRunning && !pollInterval) {
-            pollInterval = setInterval(loadSeries, 2000);
-          } else if (!hasRunning && pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
-          }
         }
       } catch (error) {
         if (mounted) {
@@ -78,12 +68,11 @@ export function SeriesDetail({
     }
 
     loadSeries();
+    const pollInterval = setInterval(loadSeries, 2000);
 
     return () => {
       mounted = false;
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
+      clearInterval(pollInterval);
     };
   }, [seriesId]);
 
@@ -105,11 +94,6 @@ export function SeriesDetail({
     );
   }
 
-  // Check if any jobs are still running for the indicator
-  const hasRunning = series.runs.some(
-    (r) => r.status === "RUNNING" || r.status === "PENDING"
-  );
-
   const maxRuns = maxItems - 8;
 
   return (
@@ -118,11 +102,6 @@ export function SeriesDetail({
         <Text bold color="green">
           Series: {truncate(series.documentTitle, 40)}
         </Text>
-        {hasRunning && (
-          <Text color="yellow">
-            {" "}<Spinner type="dots" />
-          </Text>
-        )}
       </Box>
 
       <Box flexDirection="column" borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
@@ -159,21 +138,24 @@ export function SeriesDetail({
 
       <SelectInput
         items={[
-          { label: "Refresh", value: "refresh" },
-          { label: "Run Again", value: "run" },
+          { label: runningAgain ? "Creating new run..." : "Run Again", value: "run" },
           { label: "Compare Runs", value: "compare" },
           { label: "<- Back", value: "back" },
         ]}
-        onSelect={(item) => {
+        onSelect={async (item) => {
           if (item.value === "back") onBack();
-          // TODO: Handle run, compare, refresh
+          else if (item.value === "run" && !runningAgain && series) {
+            setRunningAgain(true);
+            await onRunAgain(series.id, series.documentId);
+            setRunningAgain(false);
+            // Polling will pick up new jobs automatically
+          }
+          // TODO: Handle compare
         }}
       />
 
       <Box marginTop={1} justifyContent="center">
-        <Text dimColor>
-          {hasRunning ? "Auto-refreshing... | " : ""}Esc Back | q Quit
-        </Text>
+        <Text dimColor>Esc Back | q Quit</Text>
       </Box>
     </Box>
   );

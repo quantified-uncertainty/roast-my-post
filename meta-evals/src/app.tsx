@@ -68,6 +68,35 @@ async function getJobsForBatch(batchId: string): Promise<string[]> {
   return jobs.map(j => j.id);
 }
 
+/**
+ * Run again - create new jobs for the same agents on the same document
+ */
+async function runAgain(seriesId: string, documentId: string): Promise<void> {
+  // Get unique agents from existing runs
+  const agents = await metaEvaluationRepository.getSeriesAgents(seriesId);
+
+  if (agents.length === 0) {
+    throw new Error("No agents found in series");
+  }
+
+  // Create new batch for each agent
+  for (const agent of agents) {
+    const response = await apiClient.post<BatchCreateResponse>("/api/batches", {
+      agentId: agent.id,
+      documentIds: [documentId],
+      name: `Series ${seriesId} Run - ${agent.name}`,
+    });
+
+    // Link new jobs to the series
+    if (response.batch.jobCount > 0) {
+      const jobs = await getJobsForBatch(response.batch.id);
+      for (const jobId of jobs) {
+        await metaEvaluationRepository.addJobToSeries(seriesId, jobId);
+      }
+    }
+  }
+}
+
 // ============================================================================
 // Main App
 // ============================================================================
@@ -208,6 +237,14 @@ export function App() {
         maxItems={maxListItems}
         height={termHeight}
         onBack={loadMainMenu}
+        onRunAgain={async (seriesId, documentId) => {
+          try {
+            await runAgain(seriesId, documentId);
+            // The auto-refresh in SeriesDetail will pick up the new jobs
+          } catch (e) {
+            setError(String(e));
+          }
+        }}
       />
     );
   }
