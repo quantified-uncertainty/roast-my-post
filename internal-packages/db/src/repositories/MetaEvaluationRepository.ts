@@ -94,7 +94,7 @@ export type BatchWithCount = {
 };
 
 export type SaveScoringInput = {
-  evaluationId: string;
+  evaluationVersionId: string;
   overallScore: number;
   dimensions: Record<string, { score: number; explanation: string }>;
   reasoning: string;
@@ -102,7 +102,7 @@ export type SaveScoringInput = {
 };
 
 export type SaveRankingInput = {
-  evaluationId: string;
+  evaluationVersionId: string;
   rankingSessionId: string;
   rank: number;
   relativeScore: number;
@@ -186,7 +186,7 @@ export class MetaEvaluationRepository {
   async saveScoringResult(input: SaveScoringInput) {
     return this.prisma.metaEvaluation.create({
       data: {
-        evaluationId: input.evaluationId,
+        evaluationVersionId: input.evaluationVersionId,
         type: "scoring",
         overallScore: input.overallScore,
         dimensions: input.dimensions,
@@ -199,7 +199,7 @@ export class MetaEvaluationRepository {
   async saveRankingResult(input: SaveRankingInput) {
     return this.prisma.metaEvaluation.create({
       data: {
-        evaluationId: input.evaluationId,
+        evaluationVersionId: input.evaluationVersionId,
         type: "ranking",
         rankingSessionId: input.rankingSessionId,
         rank: input.rank,

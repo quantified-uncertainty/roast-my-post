@@ -122,7 +122,6 @@ model Evaluation {
   document        Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   versions        EvaluationVersion[]
   jobs            Job[]
-  metaEvaluations MetaEvaluation[]
 
   @@unique([documentId, agentId])
   @@index([documentId])
@@ -147,6 +146,7 @@ model EvaluationVersion {
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
   evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   job               Job?
+  metaEvaluations   MetaEvaluation[]
 
   @@unique([evaluationId, version])
   @@index([evaluationId])
@@ -369,9 +369,9 @@ model ClaimEvaluation {
 
 /// Meta-evaluation results for judging agent output quality
 model MetaEvaluation {
-  id               String   @id @default(uuid())
-  evaluationId     String
-  type             String   // "scoring" | "ranking"
+  id                  String   @id @default(uuid())
+  evaluationVersionId String
+  type                String   // "scoring" | "ranking"
 
   // For scoring mode - rate single output on dimensions
   overallScore     Float?
@@ -386,9 +386,9 @@ model MetaEvaluation {
   judgeModel       String
   createdAt        DateTime @default(now())
 
-  evaluation       Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluationVersion EvaluationVersion @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
 
-  @@index([evaluationId])
+  @@index([evaluationVersionId])
   @@index([rankingSessionId])
   @@index([type])
   @@index([createdAt])
