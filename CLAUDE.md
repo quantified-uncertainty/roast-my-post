@@ -13,8 +13,12 @@
 │   └── mcp-server/           # MCP server for database access
 ├── internal-packages/
 │   ├── db/                   # Shared Prisma database package
-│   └── ai/                   # Shared AI utilities (Claude, tools, plugins)
-└── dev/                       # Development tools and documentation
+│   ├── ai/                   # Shared AI utilities (Claude, tools, plugins)
+│   ├── domain/               # Shared domain types and config
+│   ├── jobs/                 # Background job worker (pg-boss)
+│   └── configs/              # Shared ESLint/TypeScript configs
+├── meta-evals/               # Meta-evaluation CLI for testing agents
+└── dev/                      # Development tools and documentation
 ```
 
 ### Tech Stack
@@ -103,41 +107,55 @@ git commit -m "message"               # Only if staging correct
 ```bash
 # WRONG - Never do this:
 psql -c "ALTER TABLE..."  # NO! Creates no migration file
-
-# RIGHT - Always create a proper migration:
-# 1. Create migration directory with timestamp
-MIGRATION_NAME="your_change_description"
-TIMESTAMP=$(date +%Y%m%d%H%M%S)
-MIGRATION_DIR="internal-packages/db/prisma/migrations/${TIMESTAMP}_${MIGRATION_NAME}"
-mkdir -p "$MIGRATION_DIR"
-
-# 2. Write SQL to migration.sql file
-cat > "$MIGRATION_DIR/migration.sql" << 'EOF'
--- Your SQL here
-ALTER TABLE "TableName" ADD COLUMN "columnName" TEXT;
-EOF
-
-# 3. Apply the migration (executes your migration.sql files)
-pnpm --filter @roast/db run migrate:dev
-# Note: db:push ignores migration.sql and applies schema.prisma only—use it only for quick local iteration when you did NOT author manual SQL.
-
-# 4. ALWAYS add migration to git
-git add "$MIGRATION_DIR"
 ```
+
+#### Standard Migration Workflow
+From `internal-packages/db/`:
+
+```bash
+# 1. Create migration WITHOUT applying (avoids interactive prompts)
+pnpm exec dotenv -e ../../apps/web/.env.local -- prisma migrate dev --create-only --name your_migration_name
+
+# 2. IMPORTANT: Edit the generated migration to remove Prisma cruft!
+#    Prisma often adds unrelated changes (especially to ClaimEvaluation defaults).
+#    Open: prisma/migrations/<timestamp>_your_migration_name/migration.sql
+#    Remove any ALTER TABLE statements not related to your changes.
+
+# 3. Apply the migration
+pnpm exec dotenv -e ../../apps/web/.env.local -- prisma migrate deploy
+
+# 4. Regenerate the Prisma client
+pnpm run gen
+
+# 5. ALWAYS add migration to git
+git add prisma/migrations/<timestamp>_your_migration_name/
+```
+
+#### ⚠️ Prisma Cruft Removal
+Prisma's `migrate dev --create-only` often includes spurious changes like:
+```sql
+-- REMOVE THIS - it's unrelated cruft Prisma adds:
+ALTER TABLE "public"."ClaimEvaluation" ALTER COLUMN "claim_search_text" SET DEFAULT ...,
+ALTER COLUMN "tags" DROP DEFAULT;
+```
+Always review and remove unrelated statements before applying!
 
 #### General Database Safety
 ```bash
 # ALWAYS before schema changes:
 pg_dump -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql
 
+# If psql/pg_dump not installed locally, use a temp docker container:
+docker run --rm -e PGPASSWORD=postgres postgres:15 pg_dump -h host.docker.internal -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql
+
 # DANGEROUS - NEVER USE:
 # prisma db push --accept-data-loss  # DROPS and recreates columns, DESTROYS data!
-# Use proper migrations with SQL ALTER statements instead
+# prisma migrate reset               # WIPES entire database!
 
-# CRITICAL: db:push vs migrate:dev
-# - db:push: ONLY applies schema.prisma changes, IGNORES migration.sql files
-# - migrate:dev: Applies BOTH schema.prisma AND migration.sql files
-# For manual SQL migrations, MUST use migrate:dev!
+# CRITICAL: db:push vs migrate:deploy
+# - db:push: Quick iteration, IGNORES migration files, can lose data
+# - migrate:deploy: Production-safe, applies migration.sql files
+# For proper migrations, ALWAYS use migrate:deploy!
 ```
 
 ### PR/Merge Workflow (See also: ABSOLUTE PROHIBITION above)
