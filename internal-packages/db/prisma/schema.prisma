@@ -80,7 +80,6 @@ model Document {
   submittedBy      User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
   versions         DocumentVersion[]
   evaluations      Evaluation[]
-  series           Series[]
 
   @@index([ephemeralBatchId])
   @@index([isPrivate])
@@ -147,7 +146,6 @@ model EvaluationVersion {
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
   evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   job               Job?
-  metaEvaluations   MetaEvaluation[]
 
   @@unique([evaluationId, version])
   @@index([evaluationId])
@@ -245,34 +243,6 @@ model AgentEvalBatch {
   @@index([expiresAt])
 }
 
-/// A series groups multiple evaluation runs on the same document
-model Series {
-  id          String   @id @default(cuid())
-  name        String?
-  description String?
-  documentId  String
-  createdAt   DateTime @default(now())
-
-  document Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  runs     SeriesRun[]
-
-  @@index([documentId])
-  @@index([createdAt])
-}
-
-/// Links a job to a series (meta-evals feature)
-model SeriesRun {
-  id        String   @id @default(cuid())
-  seriesId  String
-  jobId     String   @unique
-  createdAt DateTime @default(now())
-
-  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  @@index([seriesId])
-}
-
 model Job {
   id                  String             @id @default(uuid())
   pgBossJobId         String?            @unique // pg-boss generated UUID
@@ -301,7 +271,6 @@ model Job {
   retryJobs           Job[]              @relation("JobRetries")
   tasks               Task[]
   cancelledBy         User?              @relation(fields: [cancelledById], references: [id])
-  seriesRun           SeriesRun?
 
   @@index([evaluationId])
   @@index([agentEvalBatchId])
@@ -395,47 +364,4 @@ model ClaimEvaluation {
   @@index([claim_search_text], type: Gin)
   @@index([variationOf])
   @@index([tags], type: Gin)
-}
-
-/// Meta-evaluation results for judging agent output quality
-model MetaEvaluation {
-  id                  String   @id @default(uuid())
-  evaluationVersionId String
-  type                String   // "scoring" | "ranking"
-
-  // For scoring mode - rate single output on dimensions
-  overallScore        Float?
-  dimensionScores     MetaEvaluationDimension[]
-
-  // For ranking mode - compare N versions relatively
-  rankingSessionId String?  // Groups rankings from same comparison session
-  rank             Int?     // 1 = best
-  relativeScore    Float?   // 0-100 normalized score
-
-  reasoning        String
-  judgeModel       String
-  createdAt        DateTime @default(now())
-
-  evaluationVersion EvaluationVersion @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
-
-  @@index([evaluationVersionId])
-  @@index([rankingSessionId])
-  @@index([type])
-  @@index([createdAt])
-}
-
-/// Individual dimension scores for meta-evaluations
-model MetaEvaluationDimension {
-  id               String @id @default(uuid())
-  metaEvaluationId String
-  name             String // "accuracy", "importance", "clarity", etc.
-  score            Float
-  explanation      String?
-
-  metaEvaluation MetaEvaluation @relation(fields: [metaEvaluationId], references: [id], onDelete: Cascade)
-
-  @@unique([metaEvaluationId, name])
-  @@index([metaEvaluationId])
-  @@index([name])
-  @@index([score])
 }
