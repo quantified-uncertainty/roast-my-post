@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { prisma } from "@/infrastructure/database/prisma";
 import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
     const resolvedParams = await params;
     const agentId = resolvedParams.agentId;
+
+    // Get requesting user for privacy filtering (undefined = anonymous/public only)
+    const requestingUserId = await authenticateRequest(request);
+    const privacyFilter = PrivacyService.getEvaluationPrivacyFilter(requestingUserId);
 
     // Get agent details including dates
     const agent = await prisma.agent.findUnique({
@@ -92,9 +98,12 @@ export async function GET(
       },
     });
 
-    // Get recent evaluations
+    // Get recent evaluations (filtered by document privacy)
     const recentEvaluations = await prisma.evaluationVersion.findMany({
-      where: { agentId: agentId },
+      where: {
+        agentId: agentId,
+        evaluation: privacyFilter,
+      },
       orderBy: { createdAt: 'desc' },
       take: 5,
       include: {
