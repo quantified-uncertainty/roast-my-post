@@ -2,11 +2,13 @@ import { PrismaClient } from "../generated";
 
 // Extended client type for CLI/server usage (without server-only restriction)
 function createExtendedClient() {
+  // In dev, only log queries if PRISMA_QUERY_LOG=true (off by default to reduce noise)
+  const devLog: ("query" | "error" | "warn")[] = process.env.PRISMA_QUERY_LOG === "true"
+    ? ["query", "error", "warn"]
+    : ["error", "warn"];
+
   const client = new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
-        : ["error"],
+    log: process.env.NODE_ENV === "development" ? devLog : ["error"],
   });
 
   return client.$extends({

@@ -114,7 +114,8 @@ export async function POST(request: NextRequest) {
           throw new Error("Agent not found");
         }
 
-        if (agent.submittedById !== userId) {
+        // Allow if user owns the agent OR it's a system-managed agent
+        if (agent.submittedById !== userId && !agent.isSystemManaged) {
           throw new Error("Forbidden");
         }
       }
