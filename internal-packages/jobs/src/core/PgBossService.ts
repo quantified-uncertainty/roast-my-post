@@ -61,6 +61,10 @@ export class PgBossService {
         const boss = new PgBoss({
           connectionString,
           ssl: sslConfig,
+          // Limit connection pool to 1 to reduce database connection usage.
+          // pg-boss operations are sequential per worker, so 1 connection is sufficient.
+          // With multiple workers, each gets its own pool, scaling horizontally.
+          max: 1,
           // Configure cron worker interval for scheduled tasks
           // cronWorkerIntervalSeconds: how often cron jobs are actually executed
           // cronMonitorIntervalSeconds: how often to check if cron jobs are due (default: 30s)
