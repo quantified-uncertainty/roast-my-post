@@ -1,0 +1,15 @@
+layout {
+    tab name="dev" focus=true {
+        pane split_direction="vertical" {
+            pane name="web" {
+                command "pnpm"
+                args "run" "dev" "-H" "0.0.0.0"
+            }
+            pane name="jobs" {
+                command "env"
+                args "NODE_ENV=development" "pnpm" "run" "process-pgboss"
+                cwd "internal-packages/jobs"
+            }
+        }
+    }
+}

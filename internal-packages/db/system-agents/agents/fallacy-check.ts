@@ -7,7 +7,7 @@ export const fallacyCheckAgent = createPluginBasedAgent({
   description: "Identifies misinformation, missing context, and deceptive wording that could mislead readers",
   pluginIds: [PluginType.FALLACY_CHECK],
   readmeId: "fallacy-check",
-  isRecommended: true,
+  isRecommended: false,
   isLlmCostTracked: true,
   extendedCapabilityId: "fallacy-check",
 });
