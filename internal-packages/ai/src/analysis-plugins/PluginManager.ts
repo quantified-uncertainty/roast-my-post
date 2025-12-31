@@ -462,6 +462,7 @@ export class PluginManager {
       const results = await Promise.all(pluginPromises);
 
       // Process results with error tracking
+      const failedPlugins: Array<{ plugin: string; error: string }> = [];
       for (const {
         plugin,
         result,
@@ -475,6 +476,7 @@ export class PluginManager {
           totalCost += result.cost;
         } else {
           logger.warn(`Plugin ${plugin} failed: ${error}`);
+          failedPlugins.push({ plugin, error: error || "Unknown error" });
         }
       }
 
@@ -489,9 +491,23 @@ export class PluginManager {
         .map(([name, result]) => `## ${name} Analysis\n\n${result.analysis}`)
         .join("\n\n");
 
-      const summary = `Analyzed ${chunks.length} sections with ${plugins.length} plugins. Found ${allComments.length} total issues.`;
+      // Build summary with error information if any plugins failed
+      let summary = `Analyzed ${chunks.length} sections with ${plugins.length} plugins. Found ${allComments.length} total issues.`;
+      if (failedPlugins.length > 0) {
+        const failedNames = failedPlugins.map((f) => f.plugin).join(", ");
+        summary += ` ⚠️ ${failedPlugins.length} plugin(s) failed: ${failedNames}.`;
+      }
 
-      const analysis = `**Document Analysis Summary**\n\nThis document was analyzed by ${plugins.length} specialized plugins that examined ${chunks.length} sections.\n\n${pluginSummaries}${detailedAnalyses ? "\n\n---\n\n" + detailedAnalyses : ""}`;
+      // Build analysis with error details if any plugins failed
+      let failedPluginsSection = "";
+      if (failedPlugins.length > 0) {
+        const failureDetails = failedPlugins
+          .map((f) => `- **${f.plugin}**: ${f.error}`)
+          .join("\n");
+        failedPluginsSection = `\n\n## ⚠️ Plugin Failures\n\nThe following plugins encountered errors during analysis:\n\n${failureDetails}`;
+      }
+
+      const analysis = `**Document Analysis Summary**\n\nThis document was analyzed by ${plugins.length} specialized plugins that examined ${chunks.length} sections.\n\n${pluginSummaries}${failedPluginsSection}${detailedAnalyses ? "\n\n---\n\n" + detailedAnalyses : ""}`;
 
       // Calculate statistics
       const commentsByPlugin = new Map<string, number>();
