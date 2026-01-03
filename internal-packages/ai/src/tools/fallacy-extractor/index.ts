@@ -164,7 +164,7 @@ export class FallacyExtractorTool extends Tool<
 
 2. **Sophisticated Logical Fallacies**
    - False dichotomy (only presenting two options)
-   - Motte-bailey (defending weak claim by switching to strong one)
+   - Motte-bailey (defending controversial claim by retreating to defensible one)
    - Circular reasoning (conclusion in premises)
    - Hasty generalization (insufficient evidence → broad claim)
 
