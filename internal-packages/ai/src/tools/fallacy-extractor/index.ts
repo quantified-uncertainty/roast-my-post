@@ -112,12 +112,25 @@ export class FallacyExtractorTool extends Tool<
     // This allows callers to just pass documentText for full-document analysis
     const textToAnalyze = input.text || input.documentText || "";
 
+    // Prompt version for tracking - update this when prompt changes
+    const PROMPT_VERSION = "v2-justification-check";
+
+    // DIRECT CONSOLE LOG FOR DEBUGGING - bypasses any logger filtering
+    console.log(`\n\n🔥🔥🔥 FALLACY EXTRACTOR RUNNING 🔥🔥🔥`);
+    console.log(`PROMPT_VERSION=${PROMPT_VERSION}`);
+    console.log(`MODE=${input.text ? "chunk" : "single-pass"}`);
+    console.log(`DOC_LENGTH=${textToAnalyze.length}`);
+    console.log(`DOC_PREVIEW=${textToAnalyze.substring(0, 80)}...`);
+    console.log(`🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥\n\n`);
+
     // Audit log: Tool execution started
     context.logger.info(
       "[FallacyExtractor] AUDIT: Tool execution started",
       {
         timestamp: new Date().toISOString(),
+        promptVersion: PROMPT_VERSION,
         textLength: textToAnalyze.length,
+        textPreview: textToAnalyze.substring(0, 100),
         minSeverityThreshold: MIN_SEVERITY_THRESHOLD,
         maxIssues: MAX_ISSUES,
         hasDocumentText: !!input.documentText,
@@ -127,7 +140,7 @@ export class FallacyExtractorTool extends Tool<
     );
 
     context.logger.info(
-      `[FallacyExtractor] Analyzing text for epistemic issues (${input.text ? "chunk" : "single-pass"} mode)`
+      `[FallacyExtractor] PROMPT_VERSION=${PROMPT_VERSION} MODE=${input.text ? "chunk" : "single-pass"} DOC_LENGTH=${textToAnalyze.length}`
     );
 
     const systemPrompt = `You are an expert epistemic critic analyzing reasoning quality and argumentation.
@@ -137,6 +150,13 @@ export class FallacyExtractorTool extends Tool<
 **🚨 CRITICAL: COMMITTING vs DISCUSSING**
 - Do NOT flag authors EXPLAINING, WARNING about, or ACKNOWLEDGING errors (good epistemics!)
 - Only flag authors MAKING the error themselves
+
+**🚨 CRITICAL: CHECK FOR JUSTIFICATION ELSEWHERE**
+- Before flagging a claim as unsupported or a non sequitur, CHECK if the author provides justification ELSEWHERE in the document
+- Authors often state conclusions first, then explain reasoning later - this is valid argumentation
+- A claim in paragraph 2 may be fully justified by technical explanation in paragraph 5
+- Only flag as "non sequitur" if there is NO supporting reasoning ANYWHERE in the document
+- Read the ENTIRE document before deciding whether a logical leap exists
 
 **🎯 SELECTIVITY**: Senior reviewer, not pedantic nitpicker.
 - Only flag issues that significantly mislead, clearly commit error, and matter to the argument

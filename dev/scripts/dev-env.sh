@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Dev environment manager using tmux
-# Usage: ./dev-env.sh [start|stop|status|attach]
+# Usage: ./dev-env.sh [start|stop|status|attach|restart]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -61,6 +61,33 @@ attach_dev() {
     fi
 }
 
+restart_dev() {
+    if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        echo "Session '$SESSION_NAME' is not running. Starting fresh..."
+        start_dev
+        return
+    fi
+
+    echo "Restarting dev environment..."
+
+    # Send Ctrl+C to both panes to kill running processes
+    tmux send-keys -t "$SESSION_NAME:dev.0" C-c
+    tmux send-keys -t "$SESSION_NAME:dev.1" C-c
+
+    # Wait a moment for processes to die
+    sleep 1
+
+    # Clear scrollback buffer in both panes
+    tmux clear-history -t "$SESSION_NAME:dev.0"
+    tmux clear-history -t "$SESSION_NAME:dev.1"
+
+    # Re-run the commands
+    tmux send-keys -t "$SESSION_NAME:dev.0" "pnpm run dev -H 0.0.0.0" Enter
+    tmux send-keys -t "$SESSION_NAME:dev.1" "NODE_ENV=development pnpm run process-pgboss" Enter
+
+    echo "Dev environment restarted in existing session."
+}
+
 case "${1:-start}" in
     start)
         start_dev
@@ -74,8 +101,11 @@ case "${1:-start}" in
     attach)
         attach_dev
         ;;
+    restart)
+        restart_dev
+        ;;
     *)
-        echo "Usage: $0 [start|stop|status|attach]"
+        echo "Usage: $0 [start|stop|status|attach|restart]"
         exit 1
         ;;
 esac

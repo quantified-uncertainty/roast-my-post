@@ -6,6 +6,7 @@ import type { Comment, ToolChainResult } from "../../../shared/types";
 import fallacyExtractorTool from "../../../tools/fallacy-extractor";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import fallacyReviewTool from "../../../tools/fallacy-review";
+import supportedElsewhereFilterTool from "../../../tools/supported-elsewhere-filter";
 import { TextChunk } from "../../TextChunk";
 import type {
   AnalysisResult,
@@ -150,7 +151,68 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       });
 
       // Deduplicate issues by similar text
-      this.issues = this.deduplicateIssues(allIssues);
+      const deduplicatedIssues = this.deduplicateIssues(allIssues);
+
+      // Phase 1.5: Filter out issues that are supported elsewhere in the document
+      // This catches false positives where claims are actually justified later
+      logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter started", {
+        timestamp: new Date().toISOString(),
+        issuesToFilter: deduplicatedIssues.length,
+        phase: "supported-elsewhere-filter",
+      });
+
+      let filteredIssues = deduplicatedIssues;
+      try {
+        const filterInput = {
+          documentText,
+          issues: deduplicatedIssues.map((issue) => ({
+            quotedText: issue.text,
+            issueType: issue.issueType,
+            reasoning: issue.issue.reasoning,
+            locationOffset: issue.issue.location?.startOffset,
+          })),
+        };
+
+        const filterResult = await supportedElsewhereFilterTool.execute(
+          filterInput,
+          { logger }
+        );
+
+        // Keep only the issues that are NOT supported elsewhere
+        const unsupportedIndices = new Set(
+          filterResult.unsupportedIssues.map((r) => r.index)
+        );
+        filteredIssues = deduplicatedIssues.filter((_, idx) =>
+          unsupportedIndices.has(idx)
+        );
+
+        // Log what was filtered
+        const supportedCount = filterResult.supportedIssues.length;
+        if (supportedCount > 0) {
+          logger.info(
+            `FallacyCheckPlugin: Filtered out ${supportedCount} issues (supported elsewhere in document)`
+          );
+          for (const supported of filterResult.supportedIssues) {
+            logger.debug(
+              `  - Issue ${supported.index}: ${supported.explanation}`
+            );
+          }
+        }
+
+        logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter completed", {
+          timestamp: new Date().toISOString(),
+          issuesBeforeFilter: deduplicatedIssues.length,
+          issuesAfterFilter: filteredIssues.length,
+          issuesFiltered: supportedCount,
+          phase: "supported-elsewhere-filter",
+        });
+      } catch (error) {
+        logger.warn("FallacyCheckPlugin: Supported-elsewhere filter failed, keeping all issues", error);
+        // Fallback: keep all issues if filter fails
+        filteredIssues = deduplicatedIssues;
+      }
+
+      this.issues = filteredIssues;
 
       // Phase 2: Generate comments for all issues in parallel
       const commentPromises = this.issues.map(async (issue) => {

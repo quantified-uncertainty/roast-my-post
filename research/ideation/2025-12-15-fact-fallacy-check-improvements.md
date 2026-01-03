@@ -121,3 +121,24 @@ Separate filtering step. For each issue: "Does this hold under the strongest int
 ### 3.4 Simplify Review
 
 Remove filtering logic from review prompt. Focus only on generating summaries.
+
+### 3.5 Next Steps (2025-01-03)
+
+**Model Testing:**
+- Test filter with additional models: Gemini 3 Flash, Gemini 3 Pro
+- Current observations: Opus filters more aggressively (0 issues kept), Sonnet more conservative (1-2 kept)
+- Opus appears more correct - recognizes that intro claims justified by later technical sections count as supported
+- Need to verify on more documents to confirm Opus isn't too lenient on real issues
+
+**Filter Architecture:**
+- Consider verifying each claim in a separate LLM call during filtering stage
+- Current batch approach may miss nuances when evaluating multiple claims together
+- Per-claim calls would be more expensive but potentially more accurate
+
+**Extraction Prompt:**
+- Take another pass over the extraction prompt - still producing some questionable flags
+- Consider splitting extraction into multiple specialized prompts:
+  - Logical fallacies (non sequitur, circular reasoning, etc.)
+  - Missing context / unsupported claims
+  - Rhetorical manipulation / emotional appeals
+- Specialized prompts may reduce cognitive load and improve accuracy

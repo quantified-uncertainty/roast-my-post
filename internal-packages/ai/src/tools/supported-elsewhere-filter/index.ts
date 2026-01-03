@@ -1,0 +1,326 @@
+/**
+ * Supported Elsewhere Filter Tool
+ *
+ * Checks if claims or arguments flagged as issues are actually supported,
+ * explained, or qualified elsewhere in the document. Common in well-structured
+ * writing where intro claims are backed up later in the text.
+ */
+
+import { z } from "zod";
+import { Tool, type ToolContext } from "../base/Tool";
+import { callClaudeWithTool } from "../../claude/wrapper";
+import { MODEL_CONFIG } from "../../claude/wrapper";
+import type {
+  SupportedElsewhereFilterInput,
+  SupportedElsewhereFilterOutput,
+  SupportedElsewhereResult,
+} from "./types";
+
+const issueSchema = z.object({
+  quotedText: z.string().describe("The exact text flagged as an issue"),
+  issueType: z.string().describe("Type of issue identified"),
+  reasoning: z.string().describe("The reasoning for why this was flagged"),
+  locationOffset: z.number().optional().describe("Approximate location in document"),
+});
+
+const inputSchema = z.object({
+  documentText: z.string().min(1).max(200000).describe("Full document text to search"),
+  issues: z.array(issueSchema).describe("Issues to check for support elsewhere"),
+});
+
+const resultSchema = z.object({
+  index: z.number().describe("Index of the issue in the input array"),
+  isSupported: z.boolean().describe("Whether this issue is supported elsewhere"),
+  supportLocation: z.string().optional().describe("Where the support was found"),
+  explanation: z.string().describe("Explanation of the support or lack thereof"),
+});
+
+const outputSchema = z.object({
+  unsupportedIssues: z.array(resultSchema).describe("Issues NOT supported elsewhere"),
+  supportedIssues: z.array(resultSchema).describe("Issues ARE supported elsewhere"),
+});
+
+// Tool config
+const supportedElsewhereFilterConfig = {
+  id: "supported-elsewhere-filter",
+  name: "Supported Elsewhere Filter",
+  description: "Checks if flagged issues are supported elsewhere in the document",
+  version: "1.0.0",
+  category: "utility" as const,
+};
+
+export class SupportedElsewhereFilterTool extends Tool<
+  SupportedElsewhereFilterInput,
+  SupportedElsewhereFilterOutput
+> {
+  config = supportedElsewhereFilterConfig;
+  inputSchema = inputSchema;
+  outputSchema = outputSchema;
+
+  async execute(
+    input: SupportedElsewhereFilterInput,
+    context: ToolContext
+  ): Promise<SupportedElsewhereFilterOutput> {
+    console.log(`\n\n🔍🔍🔍 SUPPORTED-ELSEWHERE FILTER RUNNING 🔍🔍🔍`);
+    console.log(`Checking ${input.issues.length} issues for support elsewhere`);
+    for (let i = 0; i < input.issues.length; i++) {
+      console.log(`  Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..."`);
+      console.log(`    Type: ${input.issues[i].issueType}`);
+    }
+    console.log(`🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍\n`);
+
+    context.logger.info(
+      `[SupportedElsewhereFilter] Checking ${input.issues.length} issues for support elsewhere`
+    );
+
+    // If no issues, return empty result
+    if (input.issues.length === 0) {
+      return {
+        unsupportedIssues: [],
+        supportedIssues: [],
+      };
+    }
+
+    // Format issues for the LLM
+    const formattedIssues = input.issues
+      .map((issue, idx) => {
+        return `**Issue ${idx}**:
+Text: "${issue.quotedText}"
+Type: ${issue.issueType}
+Reasoning: ${issue.reasoning}
+`;
+      })
+      .join("\n---\n\n");
+
+    const systemPrompt = `You are an expert at analyzing document structure and finding supporting evidence.
+
+Your task is to check if each flagged issue is actually **supported, explained, or qualified elsewhere** in the document.
+
+**MARK AS SUPPORTED (filter out) if**:
+- The claim is backed up with evidence or reasoning later in the document
+- The author provides technical explanation that justifies the claim
+- The author qualifies or nuances the claim elsewhere
+- Context provided elsewhere makes the claim reasonable
+- The issue is about an intro/thesis that the rest of the document supports
+
+**MARK AS UNSUPPORTED (keep flagging) if**:
+- No evidence, reasoning, or support is provided anywhere in the document
+- The claim stands alone without qualification or explanation
+- Other parts of the document don't address the concern
+- The support found is weak or doesn't actually address the issue
+
+**Examples of SUPPORTED issues (filter out)**:
+
+1. Issue: "Non sequitur - claims X is evidence against Y without justification"
+   Support found: Later section explains WHY X implies not-Y with technical reasoning
+   → SUPPORTED - the logical connection is explained later
+
+2. Issue: "Claims 'significant improvement' without data" (in intro)
+   Support found: Paragraph 5 provides specific metrics and comparison
+   → SUPPORTED - intro claim is backed up later
+
+3. Issue: "Missing context about sample size"
+   Support found: Methods section specifies n=500 participants
+   → SUPPORTED - context is provided in appropriate section
+
+**Examples of UNSUPPORTED issues (keep flagging)**:
+
+1. Issue: "Non sequitur - claims X is evidence against Y"
+   Document searched: No explanation of the logical connection anywhere
+   → UNSUPPORTED - logical leap is never justified
+
+2. Issue: "Claims 95% success rate without methodology"
+   Document searched: No methodology section, no data tables
+   → UNSUPPORTED - specific claim needs specific evidence
+
+3. Issue: "Appeals to authority without naming sources"
+   Document searched: No citations or references provided
+   → UNSUPPORTED - authority claims need attribution
+
+For each issue, search the ENTIRE document for supporting evidence or reasoning.`;
+
+    // For longer documents, we need to be strategic about what we show the LLM
+    // Show the full document if short, otherwise provide structured chunks
+    const docForPrompt = input.documentText.length <= 15000
+      ? input.documentText
+      : this.extractKeySections(input.documentText);
+
+    const userPrompt = `Search this document for support for the flagged issues:
+
+**Full Document**:
+${docForPrompt}
+
+**Issues to Check**:
+
+${formattedIssues}
+
+For each issue, determine if it is supported elsewhere in the document.`;
+
+    try {
+      const result = await callClaudeWithTool<{
+        results: Array<{
+          index: number;
+          isSupported: boolean;
+          supportLocation?: string;
+          explanation: string;
+        }>;
+      }>({
+        model: MODEL_CONFIG.analysis,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+        max_tokens: 4000,
+        temperature: 0.1,
+        toolName: "supported_elsewhere_results",
+        toolDescription: "Results of checking each issue for support elsewhere",
+        toolSchema: {
+          type: "object",
+          properties: {
+            results: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  index: {
+                    type: "number",
+                    description: "Index of the issue (0-based)",
+                  },
+                  isSupported: {
+                    type: "boolean",
+                    description: "Whether this issue is supported elsewhere",
+                  },
+                  supportLocation: {
+                    type: "string",
+                    description: "Where the support was found (quote or description)",
+                  },
+                  explanation: {
+                    type: "string",
+                    description: "Explanation of why it is/isn't supported",
+                  },
+                },
+                required: ["index", "isSupported", "explanation"],
+              },
+            },
+          },
+          required: ["results"],
+        },
+      });
+
+      // Process results
+      const unsupportedIssues: SupportedElsewhereResult[] = [];
+      const supportedIssues: SupportedElsewhereResult[] = [];
+
+      for (const r of result.toolResult.results || []) {
+        // Validate index is in range
+        if (r.index < 0 || r.index >= input.issues.length) {
+          context.logger.warn(`[SupportedElsewhereFilter] Invalid index ${r.index}, skipping`);
+          continue;
+        }
+
+        const filterResult: SupportedElsewhereResult = {
+          index: r.index,
+          isSupported: r.isSupported,
+          supportLocation: r.supportLocation,
+          explanation: r.explanation,
+        };
+
+        if (r.isSupported) {
+          supportedIssues.push(filterResult);
+        } else {
+          unsupportedIssues.push(filterResult);
+        }
+      }
+
+      console.log(`\n\n✅✅✅ SUPPORTED-ELSEWHERE FILTER RESULTS ✅✅✅`);
+      console.log(`KEPT (unsupported): ${unsupportedIssues.length} issues`);
+      for (const issue of unsupportedIssues) {
+        console.log(`  Issue ${issue.index}: NOT supported`);
+        console.log(`    Reason: ${issue.explanation}`);
+      }
+      console.log(`FILTERED (supported): ${supportedIssues.length} issues`);
+      for (const issue of supportedIssues) {
+        console.log(`  Issue ${issue.index}: SUPPORTED at "${issue.supportLocation || 'N/A'}"`);
+        console.log(`    Reason: ${issue.explanation}`);
+      }
+      console.log(`✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\n\n`);
+
+      context.logger.info(
+        `[SupportedElsewhereFilter] ${supportedIssues.length}/${input.issues.length} issues filtered (supported elsewhere), ${unsupportedIssues.length} kept`
+      );
+
+      return {
+        unsupportedIssues,
+        supportedIssues,
+      };
+    } catch (error) {
+      context.logger.error("[SupportedElsewhereFilter] Filter failed:", error);
+      // Fallback: assume all issues are unsupported (keep them)
+      return {
+        unsupportedIssues: input.issues.map((_, idx) => ({
+          index: idx,
+          isSupported: false,
+          explanation: "Fallback: filter failed, preserving issue",
+        })),
+        supportedIssues: [],
+      };
+    }
+  }
+
+  /**
+   * Extract key sections from a long document for analysis.
+   * Prioritizes intro, conclusion, and sections with evidence-related keywords.
+   */
+  private extractKeySections(documentText: string): string {
+    const lines = documentText.split("\n");
+    const chunks: string[] = [];
+
+    // Always include first ~2000 chars (intro)
+    chunks.push("**[INTRO/BEGINNING]**\n" + documentText.substring(0, 2000));
+
+    // Always include last ~2000 chars (conclusion)
+    if (documentText.length > 4000) {
+      chunks.push("**[CONCLUSION/END]**\n" + documentText.substring(documentText.length - 2000));
+    }
+
+    // Find sections with evidence-related keywords
+    const evidenceKeywords = [
+      "method", "data", "result", "study", "research", "evidence",
+      "citation", "reference", "source", "appendix", "table", "figure",
+      "analysis", "finding", "sample", "participant", "measure",
+      "because", "therefore", "thus", "since", "reason", "explain"
+    ];
+
+    let currentSection = "";
+    let sectionHasEvidence = false;
+
+    for (const line of lines) {
+      const lowerLine = line.toLowerCase();
+
+      // Check if this line or section contains evidence keywords
+      if (evidenceKeywords.some(kw => lowerLine.includes(kw))) {
+        sectionHasEvidence = true;
+      }
+
+      // Check for section headers (markdown or uppercase)
+      if (line.startsWith("#") || line.match(/^[A-Z][A-Z\s]{3,}$/)) {
+        if (sectionHasEvidence && currentSection.length > 100) {
+          chunks.push("**[EVIDENCE SECTION]**\n" + currentSection.substring(0, 1500));
+        }
+        currentSection = line + "\n";
+        sectionHasEvidence = false;
+      } else {
+        currentSection += line + "\n";
+      }
+    }
+
+    // Don't exceed ~12000 chars total
+    let result = chunks.join("\n\n---\n\n");
+    if (result.length > 12000) {
+      result = result.substring(0, 12000) + "\n...[truncated]...";
+    }
+
+    return result;
+  }
+}
+
+export const supportedElsewhereFilterTool = new SupportedElsewhereFilterTool();
+export default supportedElsewhereFilterTool;

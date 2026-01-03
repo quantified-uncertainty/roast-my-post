@@ -1,0 +1,51 @@
+/**
+ * Supported Elsewhere Filter Types
+ *
+ * This filter checks if claims or arguments flagged as issues are actually
+ * supported, explained, or qualified elsewhere in the document. Common in
+ * well-structured writing where intro claims are backed up later.
+ */
+
+export interface SupportedElsewhereFilterInput {
+  /** Full document text to search for support */
+  documentText: string;
+
+  /** Issues to check for support elsewhere */
+  issues: SupportedElsewhereIssue[];
+}
+
+export interface SupportedElsewhereIssue {
+  /** The exact text flagged as an issue */
+  quotedText: string;
+
+  /** Type of issue identified */
+  issueType: string;
+
+  /** The reasoning for why this was flagged */
+  reasoning: string;
+
+  /** Approximate location in document (character offset) */
+  locationOffset?: number;
+}
+
+export interface SupportedElsewhereFilterOutput {
+  /** Issues that are NOT supported elsewhere (keep flagging) */
+  unsupportedIssues: SupportedElsewhereResult[];
+
+  /** Issues that ARE supported elsewhere (filter out) */
+  supportedIssues: SupportedElsewhereResult[];
+}
+
+export interface SupportedElsewhereResult {
+  /** Index of the issue in the input array */
+  index: number;
+
+  /** Whether this issue is supported elsewhere in the document */
+  isSupported: boolean;
+
+  /** Where the support was found (if applicable) */
+  supportLocation?: string;
+
+  /** Brief explanation of the support or lack thereof */
+  explanation: string;
+}
