@@ -79,8 +79,8 @@ const extractedFallacyIssueSchema = z.object({
 }) satisfies z.ZodType<ExtractedFallacyIssue>;
 
 const inputSchema = z.object({
-  text: z.string().min(1).max(50000).describe("Text chunk to analyze for epistemic issues and logical fallacies"),
-  documentText: z.string().optional().describe("Full document text (optional, used for accurate location finding)"),
+  text: z.string().max(50000).optional().describe("Text chunk to analyze (optional if documentText provided)"),
+  documentText: z.string().optional().describe("Full document text - used for analysis in single-pass mode, or for location finding in chunk mode"),
   chunkStartOffset: z.number().min(0).optional().describe("Byte offset where this chunk starts in the full document (optimization for location finding)"),
 }) satisfies z.ZodType<FallacyExtractorInput>;
 
@@ -108,21 +108,26 @@ export class FallacyExtractorTool extends Tool<
     const MIN_SEVERITY_THRESHOLD = 60; // Only report significant issues
     const MAX_ISSUES = 15; // Limit to prevent overwhelming output
 
+    // Use documentText for analysis if text is not provided (single-pass mode)
+    // This allows callers to just pass documentText for full-document analysis
+    const textToAnalyze = input.text || input.documentText || "";
+
     // Audit log: Tool execution started
     context.logger.info(
       "[FallacyExtractor] AUDIT: Tool execution started",
       {
         timestamp: new Date().toISOString(),
-        textLength: input.text.length,
+        textLength: textToAnalyze.length,
         minSeverityThreshold: MIN_SEVERITY_THRESHOLD,
         maxIssues: MAX_ISSUES,
         hasDocumentText: !!input.documentText,
         hasChunkOffset: input.chunkStartOffset !== undefined,
+        mode: input.text ? "chunk" : "single-pass",
       }
     );
 
     context.logger.info(
-      `[FallacyExtractor] Analyzing text for epistemic issues`
+      `[FallacyExtractor] Analyzing text for epistemic issues (${input.text ? "chunk" : "single-pass"} mode)`
     );
 
     const systemPrompt = `You are an expert epistemic critic analyzing reasoning quality and argumentation.
@@ -227,12 +232,12 @@ export class FallacyExtractorTool extends Tool<
 
     const userPrompt = `Analyze this text for epistemic and reasoning issues:
 
-${input.text}
+${textToAnalyze}
 
 Analyze ALL sections (argumentative, factual, biographical). Look for statistical errors, logical fallacies, rhetorical manipulation, and narrative issues like vague claims or selective self-presentation. Distribute findings across the entire text.`;
 
     const cacheSeed = generateCacheSeed("fallacy-extract", [
-      input.text,
+      textToAnalyze,
       MIN_SEVERITY_THRESHOLD,
       MAX_ISSUES,
     ]);
@@ -416,19 +421,19 @@ Analyze ALL sections (argumentative, factual, biographical). Look for statistica
           let locationResult;
 
           // OPTIMIZATION: If we have chunk offset, search in chunk first (much faster!)
-          if (input.chunkStartOffset !== undefined) {
+          if (input.chunkStartOffset !== undefined && input.text) {
             // Use optimized 3-tier chunk-based location finding
             locationResult = await findLocationInChunk(
               {
                 chunkText: input.text,
-                fullDocumentText: input.documentText,
+                fullDocumentText: input.documentText || input.text,
                 chunkStartOffset: input.chunkStartOffset,
                 searchText: issue.exactText,
                 lineNumberHint: issue.approximateLineNumber,
               },
               context
             );
-          } else {
+          } else if (input.documentText) {
             // No chunk offset, search in full document
             locationResult = await fuzzyTextLocatorTool.execute(
               {
@@ -443,6 +448,10 @@ Analyze ALL sections (argumentative, factual, biographical). Look for statistica
               },
               context
             );
+          } else {
+            // No document text available for location finding
+            issuesWithLocations.push(issue);
+            continue;
           }
 
           if (locationResult.found && locationResult.location) {

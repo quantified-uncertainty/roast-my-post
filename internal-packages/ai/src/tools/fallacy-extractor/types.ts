@@ -65,10 +65,10 @@ export interface ExtractedFallacyIssue {
  * Input for the epistemic issues extractor tool
  */
 export interface FallacyExtractorInput {
-  /** Text chunk to analyze */
-  text: string;
+  /** Text chunk to analyze (optional if documentText provided) */
+  text?: string;
 
-  /** Full document text (for accurate location finding in full doc) */
+  /** Full document text - used for analysis in single-pass mode, or for location finding in chunk mode */
   documentText?: string;
 
   /** Absolute offset where this chunk starts in the full document (optimization) */

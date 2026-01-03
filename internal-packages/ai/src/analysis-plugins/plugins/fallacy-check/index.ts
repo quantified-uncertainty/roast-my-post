@@ -128,48 +128,24 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         operation: "fallacy-check-analysis",
       });
 
-      logger.info("FallacyCheckPlugin: Starting analysis");
-      logger.info(`FallacyCheckPlugin: Processing ${chunks.length} chunks`);
+      logger.info("FallacyCheckPlugin: Starting analysis (single-pass mode)");
 
-      // Phase 1: Extract epistemic issues from all chunks in parallel
-      const extractionPromises = this.chunks.map((chunk) =>
-        this.extractIssuesFromChunk(chunk)
-      );
+      // Phase 1: Single-pass extraction on full document
+      // This provides full context for better accuracy and reduces false positives
+      // from flagging intro claims that are supported later in the document
+      const extractionResult = await this.extractIssuesFromDocument(documentText);
 
-      const extractionResults = await Promise.allSettled(extractionPromises);
+      const allIssues: FallacyIssue[] = extractionResult.issues;
 
-      // Collect all extracted issues and track errors
-      const allIssues: FallacyIssue[] = [];
-      const extractionErrors: string[] = [];
-
-      for (const result of extractionResults) {
-        if (result.status === "fulfilled" && result.value) {
-          allIssues.push(...result.value.issues);
-          if (result.value.error) {
-            extractionErrors.push(result.value.error);
-          }
-        } else if (result.status === "rejected") {
-          const error =
-            result.reason instanceof Error
-              ? result.reason.message
-              : "Unknown extraction error";
-          extractionErrors.push(error);
-          logger.warn(`Issue extraction failed for chunk: ${error}`);
-        }
-      }
-
-      // Log summary of errors if any occurred
-      if (extractionErrors.length > 0) {
-        logger.warn(
-          `Issue extraction completed with ${extractionErrors.length} errors`
-        );
+      if (extractionResult.error) {
+        logger.warn(`Issue extraction completed with error: ${extractionResult.error}`);
       }
 
       // Audit log: Extraction phase completed
       logger.info("FallacyCheckPlugin: AUDIT: Extraction phase completed", {
         timestamp: new Date().toISOString(),
         issuesExtracted: allIssues.length,
-        extractionErrors: extractionErrors.length,
+        extractionError: extractionResult.error || null,
         phase: "extraction",
       });
 
@@ -313,7 +289,12 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     };
   }
 
-  private async extractIssuesFromChunk(chunk: TextChunk): Promise<{
+  /**
+   * Extract issues from the full document in a single pass.
+   * This provides complete context for better accuracy and reduces false positives
+   * from flagging intro claims that are supported later in the document.
+   */
+  private async extractIssuesFromDocument(documentText: string): Promise<{
     issues: FallacyIssue[];
     error?: string;
   }> {
@@ -323,9 +304,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       const executeExtraction = async () => {
         return await fallacyExtractorTool.execute(
           {
-            text: chunk.text,
-            documentText: this.documentText, // Pass full document for location finding
-            chunkStartOffset: chunk.metadata?.position?.start, // Optimize location finding to search chunk first
+            documentText, // Full document for single-pass analysis and location finding
           },
           {
             logger,
@@ -340,15 +319,20 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           )
         : await executeExtraction();
 
+      // Create a synthetic "chunk" representing the full document for FallacyIssue compatibility
+      const fullDocChunk = new TextChunk("full-document", documentText, {
+        position: { start: 0, end: documentText.length },
+      });
+
       const issues = result.issues.map(
-        (issue) => new FallacyIssue(issue, chunk, this.processingStartTime)
+        (issue) => new FallacyIssue(issue, fullDocChunk, this.processingStartTime)
       );
 
       return {
         issues,
       };
     } catch (error) {
-      logger.error("Error extracting issues from chunk:", error);
+      logger.error("Error extracting issues from document:", error);
       return {
         issues: [],
         error: error instanceof Error ? error.message : "Unknown error",
