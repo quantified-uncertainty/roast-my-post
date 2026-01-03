@@ -19,6 +19,7 @@ interface MainMenuProps {
   height: number;
   onCreateBaseline: () => void;
   onSelectSeries: (id: string) => void;
+  onDeleteSeries: (id: string) => Promise<void>;
   onExit: () => void;
   judgeModel: string;
   availableModels: ModelInfo[];
@@ -38,6 +39,7 @@ export function MainMenu({
   height,
   onCreateBaseline,
   onSelectSeries,
+  onDeleteSeries,
   onExit,
   judgeModel,
   availableModels,
@@ -49,11 +51,40 @@ export function MainMenu({
 }: MainMenuProps) {
   const [activeTab, setActiveTab] = useState<"series" | "settings">("series");
   const [settingsSection, setSettingsSection] = useState<"model" | "temperature" | "maxTokens">("model");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Handle tab switching
+  // Limit series shown, reserve 2 slots for create/exit
+  const visibleSeries = series.slice(0, maxItems - 2);
+
+  // Handle keyboard input
   useInput((input, key) => {
     if (key.tab) {
       setActiveTab((prev) => (prev === "series" ? "settings" : "series"));
+      setConfirmDelete(null);
+    }
+
+    // Delete with 'd' key (only in series tab)
+    if (activeTab === "series" && input === "d" && !confirmDelete && !isDeleting) {
+      const selectedSeries = visibleSeries[highlightedIndex];
+      if (selectedSeries) {
+        setConfirmDelete(selectedSeries.id);
+      }
+    }
+
+    // Confirm delete with 'y'
+    if (confirmDelete && input === "y" && !isDeleting) {
+      setIsDeleting(true);
+      onDeleteSeries(confirmDelete).finally(() => {
+        setConfirmDelete(null);
+        setIsDeleting(false);
+      });
+    }
+
+    // Cancel delete with 'n' or Escape
+    if (confirmDelete && (input === "n" || key.escape)) {
+      setConfirmDelete(null);
     }
   });
 
@@ -168,8 +199,6 @@ export function MainMenu({
   }
 
   // Series tab (default)
-  // Limit series shown, reserve 2 slots for create/exit
-  const visibleSeries = series.slice(0, maxItems - 2);
   const items = [
     ...visibleSeries
       .filter((s) => s.id) // Ensure valid IDs
@@ -181,6 +210,9 @@ export function MainMenu({
     { label: "Exit", value: "exit" },
   ];
 
+  // Find series being deleted for confirmation message
+  const deletingSeries = confirmDelete ? visibleSeries.find((s) => s.id === confirmDelete) : null;
+
   return (
     <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1} height={height} overflow="hidden">
       <Box justifyContent="center" marginBottom={1}>
@@ -191,35 +223,91 @@ export function MainMenu({
 
       {renderTabs()}
 
-      <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-        <Box flexDirection="column">
-          <Text>
-            {series.length === 0
-              ? "No evaluation series yet. Create a baseline to get started."
-              : visibleSeries.length < series.length
-                ? `Showing ${visibleSeries.length} of ${series.length} series`
-                : `${series.length} series available`}
-          </Text>
-          <Text dimColor>
-            Judge: <Text color="green">{currentModelName}</Text>
-            {" "}| Temp: <Text color="green">{temperature}</Text>
-            {" "}| Tokens: <Text color="green">{maxTokens}</Text>
-          </Text>
+      {/* Delete confirmation modal - replaces content when active */}
+      {confirmDelete && deletingSeries ? (
+        <Box
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          flexGrow={1}
+        >
+          <Box
+            flexDirection="column"
+            borderStyle="double"
+            borderColor="red"
+            paddingX={4}
+            paddingY={1}
+          >
+            <Box justifyContent="center" marginBottom={1}>
+              <Text bold color="red">
+                ⚠  Confirm Delete  ⚠
+              </Text>
+            </Box>
+            <Box marginBottom={1} justifyContent="center">
+              <Text>
+                Are you sure you want to delete this series?
+              </Text>
+            </Box>
+            <Box marginBottom={1} justifyContent="center">
+              <Text color="yellow">"{truncate(deletingSeries.documentTitle, 45)}"</Text>
+            </Box>
+            <Box marginBottom={1} justifyContent="center">
+              <Text dimColor>
+                {deletingSeries.runCount} run{deletingSeries.runCount !== 1 ? "s" : ""} will be removed.
+              </Text>
+            </Box>
+            <Box justifyContent="center" marginTop={1}>
+              {isDeleting ? (
+                <Text color="yellow">  Deleting...  </Text>
+              ) : (
+                <Box gap={3}>
+                  <Text backgroundColor="red" color="white" bold> Y - Delete </Text>
+                  <Text backgroundColor="gray" color="white"> N - Cancel </Text>
+                </Box>
+              )}
+            </Box>
+          </Box>
         </Box>
-      </Box>
+      ) : (
+        <>
+          <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+            <Box flexDirection="column">
+              <Text>
+                {series.length === 0
+                  ? "No evaluation series yet. Create a baseline to get started."
+                  : visibleSeries.length < series.length
+                    ? `Showing ${visibleSeries.length} of ${series.length} series`
+                    : `${series.length} series available`}
+              </Text>
+              <Text dimColor>
+                Judge: <Text color="green">{currentModelName}</Text>
+                {" "}| Temp: <Text color="green">{temperature}</Text>
+                {" "}| Tokens: <Text color="green">{maxTokens}</Text>
+              </Text>
+            </Box>
+          </Box>
 
-      <SelectInput
-        items={items}
-        limit={maxItems}
-        onSelect={(item) => {
-          if (item.value === "exit") onExit();
-          else if (item.value === "create") onCreateBaseline();
-          else onSelectSeries(item.value);
-        }}
-      />
+          <SelectInput
+            items={items}
+            limit={maxItems}
+            onHighlight={(item) => {
+              const idx = visibleSeries.findIndex((s) => s.id === item.value);
+              if (idx >= 0) setHighlightedIndex(idx);
+            }}
+            onSelect={(item) => {
+              if (confirmDelete) return; // Ignore selection during delete confirmation
+              if (item.value === "exit") onExit();
+              else if (item.value === "create") onCreateBaseline();
+              else onSelectSeries(item.value);
+            }}
+          />
+        </>
+      )}
 
       <Box marginTop={1} justifyContent="center">
-        <Text dimColor>Tab Switch | Up/Down Navigate | Enter Select | q Quit</Text>
+        <Text dimColor>
+          {confirmDelete ? "Y Delete | N Cancel" : "Tab Switch | d Delete | Enter Select | q Quit"}
+        </Text>
       </Box>
     </Box>
   );

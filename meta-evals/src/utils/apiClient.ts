@@ -81,22 +81,65 @@ export class ApiClient {
     const { sessionToken } = await this.getSessionInfo();
 
     const url = `${API_BASE}${path}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `authjs.session-token=${sessionToken}`,
-        ...options.headers,
-      },
-    });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new ApiError(response.status, data.error || "API request failed", data);
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `authjs.session-token=${sessionToken}`,
+          ...options.headers,
+        },
+      });
+    } catch (error) {
+      // Network error - server not running, wrong port, etc.
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("ECONNREFUSED") || message.includes("fetch failed")) {
+        throw new ApiError(
+          0,
+          `Cannot connect to API at ${API_BASE}. Is the web server running? Try: pnpm run dev`,
+          { originalError: message }
+        );
+      }
+      throw new ApiError(0, `Network error: ${message}`, { originalError: message });
     }
 
-    return { data: data as T, status: response.status };
+    // Handle empty responses
+    const text = await response.text();
+    if (!text) {
+      if (!response.ok) {
+        throw new ApiError(
+          response.status,
+          `API returned ${response.status} ${response.statusText} with empty response`,
+          { url, status: response.status }
+        );
+      }
+      throw new ApiError(
+        response.status,
+        `API returned empty response. Is the server running correctly at ${API_BASE}?`,
+        { url, status: response.status }
+      );
+    }
+
+    // Parse JSON
+    let data: T;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new ApiError(
+        response.status,
+        `API returned invalid JSON. Status: ${response.status}. Response: ${text.slice(0, 200)}`,
+        { url, status: response.status, responseText: text.slice(0, 500) }
+      );
+    }
+
+    if (!response.ok) {
+      const errorData = data as { error?: string };
+      throw new ApiError(response.status, errorData.error || "API request failed", data);
+    }
+
+    return { data, status: response.status };
   }
 
   /**

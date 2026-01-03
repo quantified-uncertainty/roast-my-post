@@ -393,6 +393,20 @@ export class MetaEvaluationRepository {
   }
 
   /**
+   * Delete a series and all its runs.
+   */
+  async deleteSeries(seriesId: string): Promise<void> {
+    // Delete runs first (foreign key constraint)
+    await this.prisma.seriesRun.deleteMany({
+      where: { seriesId },
+    });
+    // Delete the series
+    await this.prisma.series.delete({
+      where: { id: seriesId },
+    });
+  }
+
+  /**
    * Get detailed info about a specific series, including all runs.
    */
   async getSeriesDetail(seriesId: string): Promise<SeriesDetail | null> {

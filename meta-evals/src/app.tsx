@@ -224,6 +224,11 @@ export function App() {
         height={termHeight}
         onCreateBaseline={startCreateBaseline}
         onSelectSeries={(id) => setScreen({ type: "series-detail", seriesId: id })}
+        onDeleteSeries={async (id) => {
+          await metaEvaluationRepository.deleteSeries(id);
+          // Reload the menu
+          loadMainMenu();
+        }}
         onExit={exit}
         judgeModel={judgeModel}
         availableModels={availableModels}
