@@ -84,3 +84,40 @@ Per-collection dimensions:
 - Results stored in DB (`MetaEvaluation` table)
 - CLI shell in `meta-evals/` for dev/testing
 - Future: run in production, show to users, enable voting
+
+---
+
+## Part 3: Fallacy Checker Refactor (2025-01)
+
+Based on user feedback (LessWrong/EA Forum): too aggressive, flags intro claims supported later, misses rhetorical context.
+
+### Architecture
+
+```
+Extract (single-pass, wide net)
+    ↓
+Filter (multi-stage)
+  - Principle of Charity
+  - Supported Elsewhere?
+  - Dedup / severity threshold
+    ↓
+Comment (pure transformation)
+    ↓
+Review (summarize only — no filtering)
+```
+
+### 3.1 Single-Pass Extraction
+
+Replace chunked extraction with single LLM call on full document. Cast wide net.
+
+### 3.2 Filter: Principle of Charity
+
+Separate filtering step. For each issue: "Does this hold under the strongest interpretation of the argument?"
+
+### 3.3 Filter: Supported Elsewhere?
+
+"Is this claim supported, explained, or qualified elsewhere in the document?"
+
+### 3.4 Simplify Review
+
+Remove filtering logic from review prompt. Focus only on generating summaries.
