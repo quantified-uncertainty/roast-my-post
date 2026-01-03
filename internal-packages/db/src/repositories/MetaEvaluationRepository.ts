@@ -519,11 +519,23 @@ export class MetaEvaluationRepository {
 
   /**
    * Get recent documents (non-ephemeral).
+   * @param titleFilter - Optional case-insensitive title search filter
    */
-  async getRecentDocuments(): Promise<DocumentChoice[]> {
+  async getRecentDocuments(titleFilter?: string): Promise<DocumentChoice[]> {
     const documents = await this.prisma.document.findMany({
       where: {
         ephemeralBatchId: null,
+        // Filter by title in versions if filter provided
+        ...(titleFilter && {
+          versions: {
+            some: {
+              title: {
+                contains: titleFilter,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+        }),
       },
       include: {
         versions: {
@@ -533,7 +545,7 @@ export class MetaEvaluationRepository {
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 30,
+      take: 100,
     });
 
     return documents

@@ -2,8 +2,9 @@
  * Create Baseline Flow Component
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Box, Text } from "ink";
+import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import type { DocumentChoice, AgentChoice } from "./types";
@@ -19,6 +20,7 @@ interface CreateBaselineProps {
   height: number;
   onSelectDocument: (doc: DocumentChoice) => void;
   onSelectAgents: (agents: AgentChoice[]) => void;
+  onSearchDocuments: (filter: string) => void;
   onConfirm: () => void;
   onBack: () => void;
 }
@@ -33,10 +35,33 @@ export function CreateBaseline({
   height,
   onSelectDocument,
   onSelectAgents,
+  onSearchDocuments,
   onConfirm,
   onBack,
 }: CreateBaselineProps) {
   const [agentSelection, setAgentSelection] = useState<Set<string>>(new Set());
+  const [filter, setFilter] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced DB search when filter changes
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    setIsSearching(true);
+    debounceRef.current = setTimeout(() => {
+      onSearchDocuments(filter);
+      setIsSearching(false);
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [filter]);
 
   if (step === "creating") {
     return (
@@ -59,14 +84,23 @@ export function CreateBaseline({
       {step === "document" && (
         <>
           <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-            <Text>Step 1/2: Select a document ({documents.length} available)</Text>
+            <Text>Step 1/2: Select a document ({documents.length} found{filter ? ` for "${filter}"` : ""})</Text>
+          </Box>
+          <Box marginBottom={1} paddingX={1}>
+            <Text dimColor>Search: </Text>
+            <TextInput
+              value={filter}
+              onChange={setFilter}
+              placeholder="type to search in DB..."
+            />
+            {isSearching && <Text dimColor> <Spinner type="dots" /></Text>}
           </Box>
           <SelectInput
             items={documents.map((d, i) => ({
-              label: `${String(i + 1).padStart(2)} | ${truncate(d.title, 50)} | ${formatDate(d.createdAt)}`,
+              label: `${String(i + 1).padStart(2)} | ${truncate(d.title, 50).padEnd(50)} | ${formatDate(new Date(d.createdAt))}`,
               value: d.id,
             }))}
-            limit={maxItems}
+            limit={maxItems - 2}
             onSelect={(item) => {
               const doc = documents.find((d) => d.id === item.value);
               if (doc) onSelectDocument(doc);
@@ -137,7 +171,7 @@ export function CreateBaseline({
       )}
 
       <Box marginTop={1} justifyContent="center">
-        <Text dimColor>Esc Back | q Quit</Text>
+        <Text dimColor>Esc Back | {step === "document" ? "Ctrl+C" : "q"} Quit</Text>
       </Box>
     </Box>
   );

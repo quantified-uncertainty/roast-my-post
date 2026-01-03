@@ -533,6 +533,9 @@ importers:
       ink-spinner:
         specifier: ^5.0.0
         version: 5.0.0(ink@6.5.1(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)
+      ink-text-input:
+        specifier: ^6.0.0
+        version: 6.0.0(ink@6.5.1(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)
       react:
         specifier: ^19.2.1
         version: 19.2.1
@@ -4424,6 +4427,13 @@ packages:
     peerDependencies:
       ink: '>=4.0.0'
       react: '>=18.0.0'
+
+  ink-text-input@6.0.0:
+    resolution: {integrity: sha512-Fw64n7Yha5deb1rHY137zHTAbSTNelUKuB5Kkk2HACXEtwIHBCf9OH2tP/LQ9fRYTl1F0dZgbW0zPnZk6FA9Lw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      ink: '>=5'
+      react: '>=18'
 
   ink@6.5.1:
     resolution: {integrity: sha512-wF3j/DmkM8q5E+OtfdQhCRw8/0ahkc8CUTgEddxZzpEWPslu7YPL3t64MWRoI9m6upVGpfAg4ms2BBvxCdKRLQ==}
@@ -9913,7 +9923,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.9)(@vitest/ui@3.2.4)(happy-dom@18.0.1)(jiti@2.5.1)(jsdom@24.1.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.1)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.17.0)(@vitest/ui@3.2.4)(happy-dom@18.0.1)(jiti@2.5.1)(jsdom@24.1.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.1)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -11500,6 +11510,13 @@ snapshots:
       cli-spinners: 2.9.2
       ink: 6.5.1(@types/react@19.2.7)(react@19.2.1)
       react: 19.2.1
+
+  ink-text-input@6.0.0(ink@6.5.1(@types/react@19.2.7)(react@19.2.1))(react@19.2.1):
+    dependencies:
+      chalk: 5.6.2
+      ink: 6.5.1(@types/react@19.2.7)(react@19.2.1)
+      react: 19.2.1
+      type-fest: 4.41.0
 
   ink@6.5.1(@types/react@19.2.7)(react@19.2.1):
     dependencies:
