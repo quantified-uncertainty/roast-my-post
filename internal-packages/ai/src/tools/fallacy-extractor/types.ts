@@ -73,6 +73,13 @@ export interface FallacyExtractorInput {
 
   /** Absolute offset where this chunk starts in the full document (optimization) */
   chunkStartOffset?: number;
+
+  /**
+   * Optional model to use for extraction.
+   * Can be a Claude model (default) or an OpenRouter model ID.
+   * Examples: "claude-sonnet-4-20250514", "google/gemini-3-flash-preview"
+   */
+  model?: string;
 }
 
 /**

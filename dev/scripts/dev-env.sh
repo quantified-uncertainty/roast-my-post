@@ -77,7 +77,10 @@ restart_dev() {
     # Wait a moment for processes to die
     sleep 1
 
-    # Clear scrollback buffer in both panes
+    # Clear visible screen and scrollback buffer in both panes
+    tmux send-keys -t "$SESSION_NAME:dev.0" "clear" Enter
+    tmux send-keys -t "$SESSION_NAME:dev.1" "clear" Enter
+    sleep 0.2
     tmux clear-history -t "$SESSION_NAME:dev.0"
     tmux clear-history -t "$SESSION_NAME:dev.1"
 
