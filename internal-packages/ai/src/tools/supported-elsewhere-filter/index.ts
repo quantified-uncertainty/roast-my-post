@@ -10,6 +10,7 @@ import { z } from "zod";
 import { Tool, type ToolContext } from "../base/Tool";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
+import { callOpenRouterWithTool } from "../../utils/openrouter";
 import type {
   SupportedElsewhereFilterInput,
   SupportedElsewhereFilterOutput,
@@ -26,6 +27,7 @@ const issueSchema = z.object({
 const inputSchema = z.object({
   documentText: z.string().min(1).max(200000).describe("Full document text to search"),
   issues: z.array(issueSchema).describe("Issues to check for support elsewhere"),
+  model: z.string().optional().describe("Model to use (Claude or OpenRouter model ID)"),
 });
 
 const resultSchema = z.object({
@@ -61,7 +63,15 @@ export class SupportedElsewhereFilterTool extends Tool<
     input: SupportedElsewhereFilterInput,
     context: ToolContext
   ): Promise<SupportedElsewhereFilterOutput> {
+    // Determine which model to use:
+    // 1. input.model (explicit override)
+    // 2. FALLACY_FILTER_MODEL env var (for testing different models)
+    // 3. Default Claude analysis model
+    const modelId = input.model || process.env.FALLACY_FILTER_MODEL || MODEL_CONFIG.analysis;
+    const isOpenRouterModel = modelId.includes("/"); // OpenRouter models have format "provider/model"
+
     console.log(`\n\n🔍🔍🔍 SUPPORTED-ELSEWHERE FILTER RUNNING 🔍🔍🔍`);
+    console.log(`Model: ${modelId} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`);
     console.log(`Checking ${input.issues.length} issues for support elsewhere`);
     for (let i = 0; i < input.issues.length; i++) {
       console.log(`  Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..."`);
@@ -156,54 +166,79 @@ ${formattedIssues}
 
 For each issue, determine if it is supported elsewhere in the document.`;
 
-    try {
-      const result = await callClaudeWithTool<{
-        results: Array<{
-          index: number;
-          isSupported: boolean;
-          supportLocation?: string;
-          explanation: string;
-        }>;
-      }>({
-        model: MODEL_CONFIG.analysis,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-        max_tokens: 4000,
-        temperature: 0.1,
-        toolName: "supported_elsewhere_results",
-        toolDescription: "Results of checking each issue for support elsewhere",
-        toolSchema: {
-          type: "object",
-          properties: {
-            results: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  index: {
-                    type: "number",
-                    description: "Index of the issue (0-based)",
-                  },
-                  isSupported: {
-                    type: "boolean",
-                    description: "Whether this issue is supported elsewhere",
-                  },
-                  supportLocation: {
-                    type: "string",
-                    description: "Where the support was found (quote or description)",
-                  },
-                  explanation: {
-                    type: "string",
-                    description: "Explanation of why it is/isn't supported",
-                  },
-                },
-                required: ["index", "isSupported", "explanation"],
+    // Shared tool schema for both Claude and OpenRouter
+    const toolSchema = {
+      type: "object" as const,
+      properties: {
+        results: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              index: {
+                type: "number",
+                description: "Index of the issue (0-based)",
+              },
+              isSupported: {
+                type: "boolean",
+                description: "Whether this issue is supported elsewhere",
+              },
+              supportLocation: {
+                type: "string",
+                description: "Where the support was found (quote or description)",
+              },
+              explanation: {
+                type: "string",
+                description: "Explanation of why it is/isn't supported",
               },
             },
+            required: ["index", "isSupported", "explanation"],
           },
-          required: ["results"],
         },
-      });
+      },
+      required: ["results"],
+    };
+
+    type FilterResults = {
+      results: Array<{
+        index: number;
+        isSupported: boolean;
+        supportLocation?: string;
+        explanation: string;
+      }>;
+    };
+
+    try {
+      let result: { toolResult: FilterResults };
+
+      if (isOpenRouterModel) {
+        // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
+        // Use higher max_tokens for OpenRouter models (some need more space)
+        console.log(`📡 Calling OpenRouter API with model: ${modelId}`);
+        result = await callOpenRouterWithTool<FilterResults>({
+          model: modelId,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+          max_tokens: 8000,
+          temperature: 0.1,
+          toolName: "supported_elsewhere_results",
+          toolDescription: "Results of checking each issue for support elsewhere",
+          toolSchema,
+        });
+      } else {
+        // Use Claude API directly
+        console.log(`🤖 Calling Claude API with model: ${modelId}`);
+        result = await callClaudeWithTool<FilterResults>({
+          model: modelId,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+          max_tokens: 4000,
+          temperature: 0.1,
+          toolName: "supported_elsewhere_results",
+          toolDescription: "Results of checking each issue for support elsewhere",
+          toolSchema,
+        });
+      }
 
       // Process results
       const unsupportedIssues: SupportedElsewhereResult[] = [];

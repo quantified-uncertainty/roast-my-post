@@ -12,6 +12,13 @@ export interface SupportedElsewhereFilterInput {
 
   /** Issues to check for support elsewhere */
   issues: SupportedElsewhereIssue[];
+
+  /**
+   * Optional model to use for filtering.
+   * Can be a Claude model (default) or an OpenRouter model ID.
+   * Examples: "claude-sonnet-4-20250514", "google/gemini-3-flash-preview"
+   */
+  model?: string;
 }
 
 export interface SupportedElsewhereIssue {
