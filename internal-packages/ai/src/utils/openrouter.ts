@@ -74,6 +74,8 @@ export const OPENROUTER_MODELS = {
   // Top tier - Latest and most capable models (2025)
   CLAUDE_SONNET_4_5: 'anthropic/claude-sonnet-4.5',
   CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
+  GEMINI_3_PRO: 'google/gemini-3-pro-preview',
+  GEMINI_3_FLASH: 'google/gemini-3-flash-preview',
   GEMINI_2_5_PRO: 'google/gemini-2.5-pro',
   GEMINI_2_5_FLASH: 'google/gemini-2.5-flash',
   GPT_5: 'openai/gpt-5',
@@ -104,6 +106,95 @@ export const OPENROUTER_MODELS = {
 } as const;
 
 export type OpenRouterModel = typeof OPENROUTER_MODELS[keyof typeof OPENROUTER_MODELS];
+
+/**
+ * Call OpenRouter with tool/function calling
+ * Similar interface to callClaudeWithTool but uses OpenAI-compatible API
+ */
+export interface OpenRouterToolCallOptions {
+  model: string;
+  system: string;
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+  max_tokens?: number;
+  temperature?: number;
+  toolName: string;
+  toolDescription: string;
+  toolSchema: Record<string, unknown>;
+}
+
+export interface OpenRouterToolCallResult<T> {
+  toolResult: T;
+  model: string;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export async function callOpenRouterWithTool<T>(
+  options: OpenRouterToolCallOptions
+): Promise<OpenRouterToolCallResult<T>> {
+  const client = createOpenRouterClient();
+
+  const response = await client.chat.completions.create({
+    model: options.model,
+    messages: [
+      { role: 'system', content: options.system },
+      ...options.messages,
+    ],
+    max_tokens: options.max_tokens || 4000,
+    temperature: normalizeTemperature(options.temperature || 0.1, options.model),
+    tools: [
+      {
+        type: 'function',
+        function: {
+          name: options.toolName,
+          description: options.toolDescription,
+          parameters: options.toolSchema,
+        },
+      },
+    ],
+    tool_choice: {
+      type: 'function',
+      function: { name: options.toolName },
+    },
+  });
+
+  const choice = response.choices[0];
+  if (!choice) {
+    throw new Error('No response from OpenRouter');
+  }
+
+  // Check for tool call
+  const toolCall = choice.message?.tool_calls?.[0];
+  if (!toolCall || toolCall.function.name !== options.toolName) {
+    // Log what we actually got for debugging
+    console.error(`[OpenRouter] Expected tool call '${options.toolName}' but got:`);
+    console.error(`  finish_reason: ${choice.finish_reason}`);
+    console.error(`  message.content: ${choice.message?.content?.substring(0, 500) || '(empty)'}`);
+    console.error(`  tool_calls: ${JSON.stringify(choice.message?.tool_calls || [])}`);
+    throw new Error(`No tool call found for ${options.toolName}`);
+  }
+
+  // Parse the tool arguments
+  let toolResult: T;
+  try {
+    toolResult = JSON.parse(toolCall.function.arguments) as T;
+  } catch (e) {
+    throw new Error(`Failed to parse tool arguments: ${toolCall.function.arguments}`);
+  }
+
+  return {
+    toolResult,
+    model: options.model,
+    usage: response.usage ? {
+      prompt_tokens: response.usage.prompt_tokens,
+      completion_tokens: response.usage.completion_tokens,
+      total_tokens: response.usage.total_tokens,
+    } : undefined,
+  };
+}
 
 /**
  * Temperature range configuration by provider

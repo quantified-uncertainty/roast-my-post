@@ -84,3 +84,61 @@ Per-collection dimensions:
 - Results stored in DB (`MetaEvaluation` table)
 - CLI shell in `meta-evals/` for dev/testing
 - Future: run in production, show to users, enable voting
+
+---
+
+## Part 3: Fallacy Checker Refactor (2025-01)
+
+Based on user feedback (LessWrong/EA Forum): too aggressive, flags intro claims supported later, misses rhetorical context.
+
+### Architecture
+
+```
+Extract (single-pass, wide net)
+    ↓
+Filter (multi-stage)
+  - Principle of Charity
+  - Supported Elsewhere?
+  - Dedup / severity threshold
+    ↓
+Comment (pure transformation)
+    ↓
+Review (summarize only — no filtering)
+```
+
+### 3.1 Single-Pass Extraction
+
+Replace chunked extraction with single LLM call on full document. Cast wide net.
+
+### 3.2 Filter: Principle of Charity
+
+Separate filtering step. For each issue: "Does this hold under the strongest interpretation of the argument?"
+
+### 3.3 Filter: Supported Elsewhere?
+
+"Is this claim supported, explained, or qualified elsewhere in the document?"
+
+### 3.4 Simplify Review
+
+Remove filtering logic from review prompt. Focus only on generating summaries.
+
+### 3.5 Next Steps (2025-01-03)
+
+**Model Testing:**
+- Test filter with additional models: Gemini 3 Flash, Gemini 3 Pro
+- Current observations: Opus filters more aggressively (0 issues kept), Sonnet more conservative (1-2 kept)
+- Opus appears more correct - recognizes that intro claims justified by later technical sections count as supported
+- Need to verify on more documents to confirm Opus isn't too lenient on real issues
+
+**Filter Architecture:**
+- Consider verifying each claim in a separate LLM call during filtering stage
+- Current batch approach may miss nuances when evaluating multiple claims together
+- Per-claim calls would be more expensive but potentially more accurate
+
+**Extraction Prompt:**
+- Take another pass over the extraction prompt - still producing some questionable flags
+- Consider splitting extraction into multiple specialized prompts:
+  - Logical fallacies (non sequitur, circular reasoning, etc.)
+  - Missing context / unsupported claims
+  - Rhetorical manipulation / emotional appeals
+- Specialized prompts may reduce cognitive load and improve accuracy

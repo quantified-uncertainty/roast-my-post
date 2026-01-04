@@ -393,6 +393,20 @@ export class MetaEvaluationRepository {
   }
 
   /**
+   * Delete a series and all its runs.
+   */
+  async deleteSeries(seriesId: string): Promise<void> {
+    // Delete runs first (foreign key constraint)
+    await this.prisma.seriesRun.deleteMany({
+      where: { seriesId },
+    });
+    // Delete the series
+    await this.prisma.series.delete({
+      where: { id: seriesId },
+    });
+  }
+
+  /**
    * Get detailed info about a specific series, including all runs.
    */
   async getSeriesDetail(seriesId: string): Promise<SeriesDetail | null> {
@@ -519,11 +533,23 @@ export class MetaEvaluationRepository {
 
   /**
    * Get recent documents (non-ephemeral).
+   * @param titleFilter - Optional case-insensitive title search filter
    */
-  async getRecentDocuments(): Promise<DocumentChoice[]> {
+  async getRecentDocuments(titleFilter?: string): Promise<DocumentChoice[]> {
     const documents = await this.prisma.document.findMany({
       where: {
         ephemeralBatchId: null,
+        // Filter by title in versions if filter provided
+        ...(titleFilter && {
+          versions: {
+            some: {
+              title: {
+                contains: titleFilter,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+        }),
       },
       include: {
         versions: {
@@ -533,7 +559,7 @@ export class MetaEvaluationRepository {
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 30,
+      take: 100,
     });
 
     return documents

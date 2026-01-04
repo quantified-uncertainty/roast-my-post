@@ -171,9 +171,23 @@ export function App() {
     }
   }
 
+  async function searchDocuments(filter: string) {
+    try {
+      const docs = await metaEvaluationRepository.getRecentDocuments(filter || undefined);
+      setDocuments(docs);
+    } catch (e) {
+      // Silently fail - keep existing documents
+    }
+  }
+
   // Handle keyboard shortcuts
+  // Disable "q" quit when on document step (text input is active)
+  const isTextInputActive = screen.type === "create-baseline" && screen.step === "document";
   useInput((input, key) => {
-    if (input === "q" || (key.ctrl && input === "c")) {
+    if (key.ctrl && input === "c") {
+      exit();
+    }
+    if (input === "q" && !isTextInputActive) {
       exit();
     }
     if (key.escape) {
@@ -210,6 +224,11 @@ export function App() {
         height={termHeight}
         onCreateBaseline={startCreateBaseline}
         onSelectSeries={(id) => setScreen({ type: "series-detail", seriesId: id })}
+        onDeleteSeries={async (id) => {
+          await metaEvaluationRepository.deleteSeries(id);
+          // Reload the menu
+          loadMainMenu();
+        }}
         onExit={exit}
         judgeModel={judgeModel}
         availableModels={availableModels}
@@ -240,6 +259,7 @@ export function App() {
           setSelectedAgents(ags);
           setScreen({ type: "create-baseline", step: "confirm" });
         }}
+        onSearchDocuments={searchDocuments}
         onConfirm={async () => {
           setScreen({ type: "create-baseline", step: "creating" });
           try {
