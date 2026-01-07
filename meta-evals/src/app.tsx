@@ -12,7 +12,7 @@ import {
   type AgentChoice,
 } from "@roast/db";
 import { apiClient } from "./utils/apiClient";
-import { MainMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, Validation, type Screen } from "./components";
+import { MainMenu, ScoreRankMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, Validation, type Screen } from "./components";
 import { getAvailableModels, getRecommendedJudgeModels, DEFAULT_JUDGE_MODEL, type ModelInfo } from "./utils/models";
 
 // ============================================================================
@@ -128,8 +128,8 @@ export function App() {
 
   // Load initial data
   useEffect(() => {
-    loadMainMenu();
     loadModels();
+    setScreen({ type: "main-menu" });
   }, []);
 
   async function loadModels() {
@@ -144,10 +144,14 @@ export function App() {
   }
 
   async function loadMainMenu() {
+    setScreen({ type: "main-menu" });
+  }
+
+  async function loadScoreRankMenu() {
     setScreen({ type: "loading" });
     try {
       const series = await metaEvaluationRepository.getSeries();
-      setScreen({ type: "main-menu", series });
+      setScreen({ type: "score-rank-menu", series });
     } catch (e) {
       setError(String(e));
     }
@@ -219,16 +223,8 @@ export function App() {
   if (screen.type === "main-menu") {
     return (
       <MainMenu
-        series={screen.series}
-        maxItems={maxListItems}
         height={termHeight}
-        onCreateBaseline={startCreateBaseline}
-        onSelectSeries={(id) => setScreen({ type: "series-detail", seriesId: id })}
-        onDeleteSeries={async (id) => {
-          await metaEvaluationRepository.deleteSeries(id);
-          // Reload the menu
-          loadMainMenu();
-        }}
+        onScoreRank={loadScoreRankMenu}
         onValidation={() => setScreen({ type: "validation" })}
         onExit={exit}
         judgeModel={judgeModel}
@@ -238,6 +234,25 @@ export function App() {
         onSetTemperature={setTemperature}
         maxTokens={maxTokens}
         onSetMaxTokens={setMaxTokens}
+      />
+    );
+  }
+
+  if (screen.type === "score-rank-menu") {
+    return (
+      <ScoreRankMenu
+        series={screen.series}
+        maxItems={maxListItems}
+        height={termHeight}
+        judgeModel={judgeModel}
+        onCreateSeries={startCreateBaseline}
+        onSelectSeries={(id) => setScreen({ type: "series-detail", seriesId: id })}
+        onDeleteSeries={async (id) => {
+          await metaEvaluationRepository.deleteSeries(id);
+          // Reload the menu
+          loadScoreRankMenu();
+        }}
+        onBack={loadMainMenu}
       />
     );
   }
@@ -273,10 +288,10 @@ export function App() {
             setScreen({ type: "series-detail", seriesId });
           } catch (e) {
             setError(String(e));
-            loadMainMenu();
+            loadScoreRankMenu();
           }
         }}
-        onBack={loadMainMenu}
+        onBack={loadScoreRankMenu}
       />
     );
   }
@@ -287,7 +302,7 @@ export function App() {
         seriesId={screen.seriesId}
         maxItems={maxListItems}
         height={termHeight}
-        onBack={loadMainMenu}
+        onBack={loadScoreRankMenu}
         onRunAgain={async (seriesId, documentId) => {
           try {
             await runAgain(seriesId, documentId);

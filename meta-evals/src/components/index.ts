@@ -3,6 +3,7 @@
  */
 
 export { MainMenu } from "./MainMenu";
+export { ScoreRankMenu } from "./ScoreRankMenu";
 export { CreateBaseline } from "./CreateBaseline";
 export { SeriesDetail } from "./SeriesDetail";
 export { RankRuns } from "./RankRuns";
