@@ -20,6 +20,7 @@ interface MainMenuProps {
   onCreateBaseline: () => void;
   onSelectSeries: (id: string) => void;
   onDeleteSeries: (id: string) => Promise<void>;
+  onValidation: () => void;
   onExit: () => void;
   judgeModel: string;
   availableModels: ModelInfo[];
@@ -40,6 +41,7 @@ export function MainMenu({
   onCreateBaseline,
   onSelectSeries,
   onDeleteSeries,
+  onValidation,
   onExit,
   judgeModel,
   availableModels,
@@ -160,6 +162,7 @@ export function MainMenu({
 
         <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
           <Box flexDirection="column">
+            <Text dimColor>For Score/Rank AI judge:</Text>
             <Text>
               <Text bold>Model: </Text>
               <Text color="green">{currentModelName}</Text>
@@ -207,6 +210,7 @@ export function MainMenu({
         value: s.id || `series-${idx}`, // Fallback key
       })),
     { label: "+ Create New Baseline", value: "create" },
+    { label: "🔍 Validation (Compare Runs)", value: "validation" },
     { label: "Exit", value: "exit" },
   ];
 
@@ -280,9 +284,8 @@ export function MainMenu({
                     : `${series.length} series available`}
               </Text>
               <Text dimColor>
-                Judge: <Text color="green">{currentModelName}</Text>
-                {" "}| Temp: <Text color="green">{temperature}</Text>
-                {" "}| Tokens: <Text color="green">{maxTokens}</Text>
+                Score/Rank Judge: <Text color="green">{currentModelName}</Text>
+                {" "}(Tab → Settings to change)
               </Text>
             </Box>
           </Box>
@@ -298,6 +301,7 @@ export function MainMenu({
               if (confirmDelete) return; // Ignore selection during delete confirmation
               if (item.value === "exit") onExit();
               else if (item.value === "create") onCreateBaseline();
+              else if (item.value === "validation") onValidation();
               else onSelectSeries(item.value);
             }}
           />

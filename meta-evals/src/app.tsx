@@ -12,7 +12,7 @@ import {
   type AgentChoice,
 } from "@roast/db";
 import { apiClient } from "./utils/apiClient";
-import { MainMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, type Screen } from "./components";
+import { MainMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, Validation, type Screen } from "./components";
 import { getAvailableModels, getRecommendedJudgeModels, DEFAULT_JUDGE_MODEL, type ModelInfo } from "./utils/models";
 
 // ============================================================================
@@ -229,6 +229,7 @@ export function App() {
           // Reload the menu
           loadMainMenu();
         }}
+        onValidation={() => setScreen({ type: "validation" })}
         onExit={exit}
         judgeModel={judgeModel}
         availableModels={availableModels}
@@ -334,6 +335,16 @@ export function App() {
         temperature={temperature}
         maxTokens={maxTokens}
         onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
+      />
+    );
+  }
+
+  if (screen.type === "validation") {
+    return (
+      <Validation
+        height={termHeight}
+        maxItems={maxListItems}
+        onBack={loadMainMenu}
       />
     );
   }

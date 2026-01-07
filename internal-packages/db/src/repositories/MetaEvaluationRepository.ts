@@ -713,6 +713,236 @@ export class MetaEvaluationRepository {
   async disconnect(): Promise<void> {
     await this.prisma.$disconnect();
   }
+
+  // ==========================================================================
+  // Validation Framework Methods
+  // ==========================================================================
+
+  /**
+   * Get documents suitable for validation testing.
+   * Returns documents that have been evaluated by the specified agent.
+   */
+  async getValidationCorpusDocuments(
+    agentId: string,
+    options: { limit?: number; minContentLength?: number } = {}
+  ): Promise<
+    Array<{
+      documentId: string;
+      title: string;
+      contentLength: number;
+      lastEvaluatedAt: Date | null;
+      evaluationCount: number;
+    }>
+  > {
+    const { limit = 50, minContentLength = 100 } = options;
+
+    // Get documents that have evaluations from this agent
+    const evaluations = await this.prisma.evaluation.findMany({
+      where: { agentId },
+      include: {
+        document: {
+          include: {
+            versions: {
+              orderBy: { version: "desc" },
+              take: 1,
+              select: { title: true, content: true },
+            },
+          },
+        },
+        versions: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { createdAt: true },
+        },
+        _count: { select: { versions: true } },
+      },
+      take: limit,
+    });
+
+    return evaluations
+      .filter((e) => {
+        const content = e.document.versions[0]?.content;
+        return content && content.length >= minContentLength;
+      })
+      .map((e) => ({
+        documentId: e.documentId,
+        title: e.document.versions[0]?.title || "Unknown",
+        contentLength: e.document.versions[0]?.content.length || 0,
+        lastEvaluatedAt: e.versions[0]?.createdAt || null,
+        evaluationCount: e._count.versions,
+      }));
+  }
+
+  /**
+   * Get evaluation snapshots for a set of documents from a specific agent.
+   * Returns the most recent EvaluationVersion for each document.
+   */
+  async getEvaluationSnapshots(
+    documentIds: string[],
+    agentId: string
+  ): Promise<
+    Array<{
+      evaluationVersionId: string;
+      agentId: string;
+      agentName: string;
+      createdAt: Date;
+      documentId: string;
+      documentTitle: string;
+      grade: number | null;
+      pipelineTelemetry: unknown;
+      comments: Array<{
+        id: string;
+        quotedText: string;
+        header: string | null;
+        description: string;
+        importance: number | null;
+        startOffset: number;
+        endOffset: number;
+      }>;
+    }>
+  > {
+    // Get the most recent evaluation version for each document
+    const evaluations = await this.prisma.evaluation.findMany({
+      where: {
+        agentId,
+        documentId: { in: documentIds },
+      },
+      include: {
+        agent: {
+          include: {
+            versions: {
+              orderBy: { version: "desc" },
+              take: 1,
+              select: { name: true },
+            },
+          },
+        },
+        document: {
+          include: {
+            versions: {
+              orderBy: { version: "desc" },
+              take: 1,
+              select: { title: true },
+            },
+          },
+        },
+        versions: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          include: {
+            comments: {
+              include: {
+                highlight: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return evaluations
+      .filter((e) => e.versions.length > 0)
+      .map((e) => {
+        const version = e.versions[0];
+        return {
+          evaluationVersionId: version.id,
+          agentId: e.agentId,
+          agentName: e.agent.versions[0]?.name || e.agentId,
+          createdAt: version.createdAt,
+          documentId: e.documentId,
+          documentTitle: e.document.versions[0]?.title || "Unknown",
+          grade: version.grade,
+          pipelineTelemetry: version.pipelineTelemetry,
+          comments: version.comments.map((c) => ({
+            id: c.id,
+            quotedText: c.highlight.quotedText,
+            header: c.header,
+            description: c.description,
+            importance: c.importance,
+            startOffset: c.highlight.startOffset,
+            endOffset: c.highlight.endOffset,
+          })),
+        };
+      });
+  }
+
+  /**
+   * Get a specific evaluation version by ID with full details for comparison.
+   */
+  async getEvaluationSnapshotById(evaluationVersionId: string): Promise<{
+    evaluationVersionId: string;
+    agentId: string;
+    agentName: string;
+    createdAt: Date;
+    documentId: string;
+    documentTitle: string;
+    grade: number | null;
+    pipelineTelemetry: unknown;
+    comments: Array<{
+      id: string;
+      quotedText: string;
+      header: string | null;
+      description: string;
+      importance: number | null;
+      startOffset: number;
+      endOffset: number;
+    }>;
+  } | null> {
+    const version = await this.prisma.evaluationVersion.findUnique({
+      where: { id: evaluationVersionId },
+      include: {
+        evaluation: {
+          include: {
+            agent: {
+              include: {
+                versions: {
+                  orderBy: { version: "desc" },
+                  take: 1,
+                  select: { name: true },
+                },
+              },
+            },
+            document: {
+              include: {
+                versions: {
+                  orderBy: { version: "desc" },
+                  take: 1,
+                  select: { title: true },
+                },
+              },
+            },
+          },
+        },
+        comments: {
+          include: {
+            highlight: true,
+          },
+        },
+      },
+    });
+
+    if (!version) return null;
+
+    return {
+      evaluationVersionId: version.id,
+      agentId: version.agentId,
+      agentName: version.evaluation.agent.versions[0]?.name || version.agentId,
+      createdAt: version.createdAt,
+      documentId: version.evaluation.documentId,
+      documentTitle: version.evaluation.document.versions[0]?.title || "Unknown",
+      grade: version.grade,
+      pipelineTelemetry: version.pipelineTelemetry,
+      comments: version.comments.map((c) => ({
+        id: c.id,
+        quotedText: c.highlight.quotedText,
+        header: c.header,
+        description: c.description,
+        importance: c.importance,
+        startOffset: c.highlight.startOffset,
+        endOffset: c.highlight.endOffset,
+      })),
+    };
+  }
 }
 
 // Default instance for convenience
