@@ -142,6 +142,7 @@ model EvaluationVersion {
   selfCritique      String?
   version           Int                 @default(1)
   isStale           Boolean             @default(false)
+  pipelineTelemetry Json?
   comments          EvaluationComment[]
   agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)

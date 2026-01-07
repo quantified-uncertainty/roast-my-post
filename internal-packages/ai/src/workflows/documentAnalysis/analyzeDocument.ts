@@ -25,6 +25,7 @@ export async function analyzeDocument(
   highlights: Comment[];
   tasks: TaskResult[];
   jobLogString?: string; // Include job log string for Job.logs field
+  pipelineTelemetry?: Record<string, unknown>; // Pipeline telemetry from fallacy checker
 }> {
   const logPrefix = `[Job ${jobId || 'N/A'}]`;
   logger.info(`${logPrefix} Starting document analysis for agent ${agentInfo.name}`);
@@ -123,7 +124,8 @@ export async function analyzeDocument(
       selfCritique,
       highlights: highlightExtractionResult.outputs.highlights,
       tasks,
-      jobLogString
+      jobLogString,
+      pipelineTelemetry: undefined, // LLM workflow doesn't use pipeline telemetry
     };
   }
 }

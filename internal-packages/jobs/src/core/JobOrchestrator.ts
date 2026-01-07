@@ -258,6 +258,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         agentVersionId: agentVersion.id,
         evaluationId: job.evaluation.id,
         documentVersionId: documentVersion.id,
+        pipelineTelemetry: evaluationOutputs.pipelineTelemetry || null,
         job: {
           connect: {
             id: job.id,

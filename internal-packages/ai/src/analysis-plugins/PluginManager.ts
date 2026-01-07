@@ -66,6 +66,7 @@ export interface SimpleDocumentAnalysisResult {
   };
   logSummary: JobLogSummary;
   jobLogString: string; // Formatted string for Job.logs field
+  pipelineTelemetry?: Record<string, unknown>; // Pipeline telemetry from plugins (e.g., FallacyCheckPlugin)
 }
 
 export interface FullDocumentAnalysisResult {
@@ -88,6 +89,7 @@ export interface FullDocumentAnalysisResult {
   }>;
   logSummary: JobLogSummary;
   jobLogString: string; // Formatted string for Job.logs field
+  pipelineTelemetry?: Record<string, unknown>; // Pipeline telemetry from plugins (e.g., FallacyCheckPlugin)
 }
 
 export class PluginManager {
@@ -521,6 +523,13 @@ export class PluginManager {
       const logSummary = this.pluginLogger.generateSummary();
       const jobLogString = this.pluginLogger.generateJobLogString();
 
+      // Collect pipeline telemetry from plugins that provide it (e.g., FALLACY_CHECK)
+      let pipelineTelemetry: Record<string, unknown> | undefined;
+      const fallacyResult = pluginResults.get('FALLACY_CHECK');
+      if (fallacyResult?.pipelineTelemetry) {
+        pipelineTelemetry = fallacyResult.pipelineTelemetry;
+      }
+
       return {
         summary,
         analysis,
@@ -535,6 +544,7 @@ export class PluginManager {
         },
         logSummary,
         jobLogString,
+        pipelineTelemetry,
       };
     } finally {
       // Cleanup if needed
@@ -624,6 +634,7 @@ export class PluginManager {
         errors: undefined, // TODO: Add better error tracking
         logSummary: pluginResults.logSummary,
         jobLogString: pluginResults.jobLogString,
+        pipelineTelemetry: pluginResults.pipelineTelemetry,
       };
     } catch (error) {
       logger.error(
@@ -660,6 +671,7 @@ export class PluginManager {
         ],
         logSummary: this.pluginLogger.generateSummary(),
         jobLogString: this.pluginLogger.generateJobLogString(),
+        pipelineTelemetry: undefined,
       };
     }
   }
