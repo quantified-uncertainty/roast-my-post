@@ -38,6 +38,29 @@ export interface StageMetrics {
 }
 
 /**
+ * Details about a filtered item (issue or comment)
+ */
+export interface FilteredItemRecord {
+  /** Stage where filtering occurred */
+  stage: string;
+
+  /** Original text that was flagged */
+  quotedText: string;
+
+  /** Header/type of the issue */
+  header?: string;
+
+  /** Why this item was filtered */
+  filterReason: string;
+
+  /** Where support was found (for supported-elsewhere filter) */
+  supportLocation?: string;
+
+  /** Original index in the input array */
+  originalIndex: number;
+}
+
+/**
  * Complete pipeline execution record
  */
 export interface PipelineExecutionRecord {
@@ -84,6 +107,9 @@ export interface PipelineExecutionRecord {
 
   /** Pipeline version (for tracking changes over time) */
   pipelineVersion: string;
+
+  /** Details about items that were filtered out (for debugging/validation) */
+  filteredItems?: FilteredItemRecord[];
 }
 
 /**

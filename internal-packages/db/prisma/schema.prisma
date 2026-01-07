@@ -151,6 +151,7 @@ model EvaluationVersion {
   job                         Job?
   metaEvaluations             MetaEvaluation[]
   validationBaselineSnapshots ValidationBaselineSnapshot[]
+  validationRunSnapshots      ValidationRunSnapshot[]      @relation("ValidationRunNewEvaluation")
 
   @@unique([evaluationId, version])
   @@index([evaluationId])
@@ -457,6 +458,7 @@ model ValidationBaseline {
   agent     Agent                        @relation(fields: [agentId], references: [id], onDelete: Cascade)
   createdBy User?                        @relation(fields: [createdById], references: [id])
   snapshots ValidationBaselineSnapshot[]
+  runs      ValidationRun[]
 
   @@index([agentId])
   @@index([createdAt])
@@ -468,10 +470,56 @@ model ValidationBaselineSnapshot {
   baselineId          String
   evaluationVersionId String
 
-  baseline          ValidationBaseline @relation(fields: [baselineId], references: [id], onDelete: Cascade)
-  evaluationVersion EvaluationVersion  @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
+  baseline          ValidationBaseline      @relation(fields: [baselineId], references: [id], onDelete: Cascade)
+  evaluationVersion EvaluationVersion       @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
+  runSnapshots      ValidationRunSnapshot[]
 
   @@unique([baselineId, evaluationVersionId])
   @@index([baselineId])
   @@index([evaluationVersionId])
+}
+
+/// A validation run - comparing new pipeline output against a baseline
+model ValidationRun {
+  id          String    @id @default(cuid())
+  baselineId  String
+  name        String?   // Optional name for the run
+  commitHash  String?   // git commit when run was executed
+  status      String    @default("running") // "running" | "completed" | "failed"
+  summary     String?   // Quick summary: "4 unchanged, 2 changed"
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  baseline  ValidationBaseline      @relation(fields: [baselineId], references: [id], onDelete: Cascade)
+  snapshots ValidationRunSnapshot[]
+
+  @@index([baselineId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+/// Per-document results from a validation run
+model ValidationRunSnapshot {
+  id                 String @id @default(cuid())
+  runId              String
+  baselineSnapshotId String // The baseline snapshot being compared against
+  newEvaluationId    String // The new evaluation version from this run
+
+  // Comparison results
+  status    String // "unchanged" | "changed"
+  keptCount Int    @default(0) // Comments that matched
+  newCount  Int    @default(0) // New comments not in baseline
+  lostCount Int    @default(0) // Baseline comments not in new
+
+  // Store detailed diff as JSON for viewing later
+  comparisonData Json? // { matchedComments, newComments, lostComments }
+
+  run              ValidationRun              @relation(fields: [runId], references: [id], onDelete: Cascade)
+  baselineSnapshot ValidationBaselineSnapshot @relation(fields: [baselineSnapshotId], references: [id], onDelete: Cascade)
+  newEvaluation    EvaluationVersion          @relation("ValidationRunNewEvaluation", fields: [newEvaluationId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, baselineSnapshotId])
+  @@index([runId])
+  @@index([baselineSnapshotId])
+  @@index([status])
 }

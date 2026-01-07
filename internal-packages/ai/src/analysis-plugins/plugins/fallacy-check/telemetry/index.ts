@@ -9,5 +9,6 @@ export {
   type StageMetrics,
   type PipelineExecutionRecord,
   type PipelineStage,
+  type FilteredItemRecord,
   PIPELINE_STAGES,
 } from './types';

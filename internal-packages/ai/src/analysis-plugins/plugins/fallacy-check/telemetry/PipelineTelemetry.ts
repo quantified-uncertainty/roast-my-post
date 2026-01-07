@@ -10,6 +10,7 @@ import type {
   StageMetrics,
   PipelineExecutionRecord,
   PipelineStage,
+  FilteredItemRecord,
 } from './types';
 
 /** Current pipeline version - increment when making significant changes */
@@ -49,6 +50,7 @@ export class PipelineTelemetry {
   private documentLength: number;
   private stages: StageMetrics[] = [];
   private activeStage: ActiveStage | null = null;
+  private filteredItems: FilteredItemRecord[] = [];
   private finalCounts: PipelineExecutionRecord['finalCounts'] = {
     issuesExtracted: 0,
     issuesAfterDedup: 0,
@@ -156,6 +158,22 @@ export class PipelineTelemetry {
   }
 
   /**
+   * Record a filtered item with its reasoning
+   */
+  recordFilteredItem(item: FilteredItemRecord): this {
+    this.filteredItems.push(item);
+    return this;
+  }
+
+  /**
+   * Record multiple filtered items
+   */
+  recordFilteredItems(items: FilteredItemRecord[]): this {
+    this.filteredItems.push(...items);
+    return this;
+  }
+
+  /**
    * Calculate total cost from all stages
    */
   private calculateTotalCost(): number | undefined {
@@ -191,6 +209,7 @@ export class PipelineTelemetry {
       error,
       totalCostUsd: this.calculateTotalCost(),
       pipelineVersion: PIPELINE_VERSION,
+      filteredItems: this.filteredItems, // Always include (even if empty) so we know telemetry was captured
     };
   }
 

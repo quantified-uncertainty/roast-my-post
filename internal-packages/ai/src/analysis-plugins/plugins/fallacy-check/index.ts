@@ -388,15 +388,27 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         unsupportedIndices.has(idx)
       );
 
-      // Log what was filtered
+      // Log and record what was filtered
       const supportedCount = filterResult.supportedIssues.length;
       if (supportedCount > 0) {
         logger.info(
           `FallacyCheckPlugin: Filtered out ${supportedCount} issues (supported elsewhere in document)`
         );
-        for (const supported of filterResult.supportedIssues) {
+
+        // Record filtered items with their reasoning for telemetry
+        const filteredRecords = filterResult.supportedIssues.map((supported) => {
+          const originalIssue = issues[supported.index];
           logger.debug(`  - Issue ${supported.index}: ${supported.explanation}`);
-        }
+          return {
+            stage: PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER,
+            quotedText: originalIssue?.text || `Issue at index ${supported.index}`,
+            header: originalIssue?.issueType,
+            filterReason: supported.explanation,
+            supportLocation: supported.supportLocation,
+            originalIndex: supported.index,
+          };
+        });
+        telemetry.recordFilteredItems(filteredRecords);
       }
 
       logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter completed", {
@@ -471,9 +483,26 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       );
 
       // Filter comments based on review
+      const keptIndices = new Set(reviewResult.commentIndicesToKeep);
       this.comments = reviewResult.commentIndicesToKeep.map((idx) => allComments[idx]);
       this.summary = reviewResult.oneLineSummary;
       this.analysis = reviewResult.documentSummary;
+
+      // Record comments that were filtered by review
+      const filteredComments = allComments
+        .map((comment, idx) => ({ comment, idx }))
+        .filter(({ idx }) => !keptIndices.has(idx));
+
+      if (filteredComments.length > 0) {
+        const filteredRecords = filteredComments.map(({ comment, idx }) => ({
+          stage: PIPELINE_STAGES.REVIEW,
+          quotedText: comment.highlight.quotedText,
+          header: comment.header,
+          filterReason: 'Filtered by review (redundant, low-value, or questionable)',
+          originalIndex: idx,
+        }));
+        telemetry.recordFilteredItems(filteredRecords);
+      }
 
       logger.info("FallacyCheckPlugin: AUDIT: Review phase completed", {
         timestamp: new Date().toISOString(),

@@ -1140,6 +1140,239 @@ export class MetaEvaluationRepository {
 
     return [...new Set(baseline.snapshots.map((s) => s.evaluationVersion.evaluation.documentId))];
   }
+
+  // ==========================================================================
+  // Validation Run Methods
+  // ==========================================================================
+
+  /**
+   * Create a new validation run.
+   */
+  async createValidationRun(input: {
+    baselineId: string;
+    name?: string;
+    commitHash?: string;
+  }): Promise<{ id: string; baselineId: string; status: string }> {
+    const run = await this.prisma.validationRun.create({
+      data: {
+        baselineId: input.baselineId,
+        name: input.name,
+        commitHash: input.commitHash,
+        status: "running",
+      },
+    });
+
+    return {
+      id: run.id,
+      baselineId: run.baselineId,
+      status: run.status,
+    };
+  }
+
+  /**
+   * Update validation run status and summary.
+   */
+  async updateValidationRunStatus(
+    runId: string,
+    status: "running" | "completed" | "failed",
+    summary?: string
+  ): Promise<void> {
+    await this.prisma.validationRun.update({
+      where: { id: runId },
+      data: {
+        status,
+        summary,
+        completedAt: status !== "running" ? new Date() : undefined,
+      },
+    });
+  }
+
+  /**
+   * Add a per-document result to a validation run.
+   */
+  async addValidationRunSnapshot(input: {
+    runId: string;
+    baselineSnapshotId: string;
+    newEvaluationId: string;
+    status: "unchanged" | "changed";
+    keptCount: number;
+    newCount: number;
+    lostCount: number;
+    comparisonData?: unknown;
+  }): Promise<{ id: string }> {
+    const snapshot = await this.prisma.validationRunSnapshot.create({
+      data: {
+        runId: input.runId,
+        baselineSnapshotId: input.baselineSnapshotId,
+        newEvaluationId: input.newEvaluationId,
+        status: input.status,
+        keptCount: input.keptCount,
+        newCount: input.newCount,
+        lostCount: input.lostCount,
+        comparisonData: input.comparisonData as object | undefined,
+      },
+    });
+
+    return { id: snapshot.id };
+  }
+
+  /**
+   * Get all validation runs for a baseline.
+   */
+  async getValidationRuns(baselineId: string): Promise<
+    Array<{
+      id: string;
+      name: string | null;
+      commitHash: string | null;
+      status: string;
+      summary: string | null;
+      createdAt: Date;
+      completedAt: Date | null;
+      snapshotCount: number;
+      unchangedCount: number;
+      changedCount: number;
+    }>
+  > {
+    const runs = await this.prisma.validationRun.findMany({
+      where: { baselineId },
+      include: {
+        snapshots: {
+          select: { status: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return runs.map((r) => ({
+      id: r.id,
+      name: r.name,
+      commitHash: r.commitHash,
+      status: r.status,
+      summary: r.summary,
+      createdAt: r.createdAt,
+      completedAt: r.completedAt,
+      snapshotCount: r.snapshots.length,
+      unchangedCount: r.snapshots.filter((s) => s.status === "unchanged").length,
+      changedCount: r.snapshots.filter((s) => s.status === "changed").length,
+    }));
+  }
+
+  /**
+   * Get full details of a validation run including all snapshot comparisons.
+   */
+  async getValidationRunDetail(runId: string): Promise<{
+    id: string;
+    name: string | null;
+    commitHash: string | null;
+    status: string;
+    summary: string | null;
+    createdAt: Date;
+    completedAt: Date | null;
+    baseline: { id: string; name: string };
+    snapshots: Array<{
+      id: string;
+      status: string;
+      keptCount: number;
+      newCount: number;
+      lostCount: number;
+      documentId: string;
+      documentTitle: string;
+      comparisonData: unknown;
+    }>;
+  } | null> {
+    const run = await this.prisma.validationRun.findUnique({
+      where: { id: runId },
+      include: {
+        baseline: {
+          select: { id: true, name: true },
+        },
+        snapshots: {
+          include: {
+            baselineSnapshot: {
+              include: {
+                evaluationVersion: {
+                  include: {
+                    evaluation: {
+                      include: {
+                        document: {
+                          include: {
+                            versions: {
+                              orderBy: { version: "desc" },
+                              take: 1,
+                              select: { title: true },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!run) return null;
+
+    return {
+      id: run.id,
+      name: run.name,
+      commitHash: run.commitHash,
+      status: run.status,
+      summary: run.summary,
+      createdAt: run.createdAt,
+      completedAt: run.completedAt,
+      baseline: run.baseline,
+      snapshots: run.snapshots.map((s) => ({
+        id: s.id,
+        status: s.status,
+        keptCount: s.keptCount,
+        newCount: s.newCount,
+        lostCount: s.lostCount,
+        documentId: s.baselineSnapshot.evaluationVersion.evaluation.documentId,
+        documentTitle:
+          s.baselineSnapshot.evaluationVersion.evaluation.document.versions[0]?.title || "Unknown",
+        comparisonData: s.comparisonData,
+      })),
+    };
+  }
+
+  /**
+   * Delete a validation run.
+   */
+  async deleteValidationRun(runId: string): Promise<void> {
+    await this.prisma.validationRun.delete({
+      where: { id: runId },
+    });
+  }
+
+  /**
+   * Get baseline snapshot ID by baseline and document.
+   * Used when saving run results to link to the correct baseline snapshot.
+   */
+  async getBaselineSnapshotByDocument(
+    baselineId: string,
+    documentId: string
+  ): Promise<{ id: string; evaluationVersionId: string } | null> {
+    const snapshot = await this.prisma.validationBaselineSnapshot.findFirst({
+      where: {
+        baselineId,
+        evaluationVersion: {
+          evaluation: {
+            documentId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        evaluationVersionId: true,
+      },
+    });
+
+    return snapshot;
+  }
 }
 
 // Default instance for convenience

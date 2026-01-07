@@ -44,6 +44,18 @@ export interface EvaluationSnapshot {
 }
 
 /**
+ * Record of an item filtered by the pipeline
+ */
+export interface FilteredItemSnapshot {
+  stage: string;
+  quotedText: string;
+  header?: string;
+  filterReason: string;
+  supportLocation?: string;
+  originalIndex: number;
+}
+
+/**
  * Simplified telemetry for comparison
  */
 export interface PipelineTelemetrySnapshot {
@@ -53,6 +65,8 @@ export interface PipelineTelemetrySnapshot {
   issuesAfterFiltering: number;
   commentsGenerated: number;
   commentsKept: number;
+  /** Items filtered out with their reasoning */
+  filteredItems?: FilteredItemSnapshot[];
 }
 
 /**

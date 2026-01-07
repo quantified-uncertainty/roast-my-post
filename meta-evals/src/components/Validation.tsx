@@ -23,10 +23,9 @@ import {
   type DocumentComparisonResult,
   type EvaluationSnapshot,
   compareSnapshots,
-  getComparisonStatus,
 } from "../validation";
 
-type Tab = "baselines" | "run" | "results";
+type Tab = "baselines" | "run" | "history";
 
 interface ValidationProps {
   height: number;
@@ -46,6 +45,19 @@ interface Baseline {
 
 interface CorpusDocument extends ValidationDocument {
   selected: boolean;
+}
+
+interface ValidationRunSummary {
+  id: string;
+  name: string | null;
+  commitHash: string | null;
+  status: string;
+  summary: string | null;
+  createdAt: Date;
+  completedAt: Date | null;
+  snapshotCount: number;
+  unchangedCount: number;
+  changedCount: number;
 }
 
 export function Validation({ height, maxItems, onBack, onCreateBatch }: ValidationProps) {
@@ -71,29 +83,56 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
   const [isRunning, setIsRunning] = useState(false);
   const [runProgress, setRunProgress] = useState({ phase: "", current: 0, total: 0 });
 
-  // Results state
-  const [comparisons, setComparisons] = useState<DocumentComparisonResult[]>([]);
-  const [savingBaseline, setSavingBaseline] = useState(false);
-  const [saveBaselineName, setSaveBaselineName] = useState("");
+  // Run state (for tracking current run to auto-select after completion)
+  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+
+  // History state
+  const [validationRuns, setValidationRuns] = useState<ValidationRunSummary[]>([]);
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [selectedRunDetail, setSelectedRunDetail] = useState<{
+    id: string;
+    name: string | null;
+    status: string;
+    summary: string | null;
+    createdAt: Date;
+    baseline: { id: string; name: string };
+    snapshots: Array<{
+      id: string;
+      status: string;
+      keptCount: number;
+      newCount: number;
+      lostCount: number;
+      documentId: string;
+      documentTitle: string;
+      comparisonData: unknown;
+    }>;
+  } | null>(null);
+  const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(null);
+  const [selectedCommentKey, setSelectedCommentKey] = useState<string | null>(null);
 
   // Keyboard handling
   useInput((input, key) => {
     if (key.escape) {
-      if (creatingBaseline) {
+      if (selectedCommentKey) {
+        setSelectedCommentKey(null);
+      } else if (selectedSnapshotId) {
+        setSelectedSnapshotId(null);
+      } else if (selectedRunDetail) {
+        setSelectedRunDetail(null);
+        setSelectedRunId(null);
+      } else if (creatingBaseline) {
         setCreatingBaseline(false);
         setShowCorpusSelect(false);
-      } else if (savingBaseline) {
-        setSavingBaseline(false);
       } else if (activeTab !== "baselines") {
         setActiveTab("baselines");
       } else {
         onBack();
       }
     }
-    if (key.tab && !creatingBaseline && !savingBaseline) {
+    if (key.tab && !creatingBaseline) {
       setActiveTab((prev) => {
         if (prev === "baselines") return "run";
-        if (prev === "run") return comparisons.length > 0 ? "results" : "baselines";
+        if (prev === "run") return "history";
         return "baselines";
       });
     }
@@ -111,6 +150,13 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
       loadCorpus(selectedAgent.id);
     }
   }, [selectedAgent?.id]);
+
+  // Load validation runs when baseline selected
+  useEffect(() => {
+    if (selectedBaseline) {
+      loadValidationRuns(selectedBaseline.id);
+    }
+  }, [selectedBaseline?.id]);
 
   async function loadAgents() {
     try {
@@ -179,6 +225,27 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
     }
   }
 
+  async function loadValidationRuns(baselineId: string) {
+    try {
+      const runs = await metaEvaluationRepository.getValidationRuns(baselineId);
+      setValidationRuns(runs);
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
+  async function loadRunDetail(runId: string) {
+    try {
+      setLoading(true);
+      const detail = await metaEvaluationRepository.getValidationRunDetail(runId);
+      setSelectedRunDetail(detail);
+      setLoading(false);
+    } catch (e) {
+      setError(String(e));
+      setLoading(false);
+    }
+  }
+
   async function createBaseline() {
     if (!selectedAgent || !newBaselineName.trim()) return;
 
@@ -236,10 +303,21 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
 
     setIsRunning(true);
     setActiveTab("run");
-    setComparisons([]);
+    setCurrentRunId(null);
+
+    let runId: string | null = null;
 
     try {
-      // Phase 1: Get baseline snapshots
+      // Phase 1: Create validation run record
+      setRunProgress({ phase: "Creating run...", current: 0, total: 0 });
+      const run = await metaEvaluationRepository.createValidationRun({
+        baselineId: selectedBaseline.id,
+        name: `Run ${new Date().toLocaleString()}`,
+      });
+      runId = run.id;
+      setCurrentRunId(runId);
+
+      // Phase 2: Get baseline snapshots
       setRunProgress({ phase: "Loading baseline...", current: 0, total: 0 });
       const baselineSnapshots = await metaEvaluationRepository.getBaselineSnapshots(selectedBaseline.id);
 
@@ -247,14 +325,14 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         throw new Error("Baseline has no snapshots");
       }
 
-      // Phase 2: Run pipeline on documents
+      // Phase 3: Run pipeline on documents
       setRunProgress({ phase: "Running pipeline...", current: 0, total: baselineSnapshots.length });
       const documentIds = [...new Set(baselineSnapshots.map((s) => s.documentId))];
 
       // Create batch jobs
       const jobIds = await onCreateBatch(selectedAgent.id, documentIds);
 
-      // Phase 3: Wait for jobs to complete and get results
+      // Phase 4: Wait for jobs to complete and get results
       setRunProgress({ phase: "Waiting for jobs...", current: 0, total: jobIds.length });
 
       // Poll for job completion
@@ -275,7 +353,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         setRunProgress({ phase: "Waiting for jobs...", current: completed, total: jobIds.length });
       }
 
-      // Phase 4: Get new evaluation versions and compare
+      // Phase 5: Get new evaluation versions and compare
       setRunProgress({ phase: "Comparing results...", current: 0, total: baselineSnapshots.length });
 
       const jobs = await prisma.job.findMany({
@@ -292,8 +370,11 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         newVersionIds.map((id) => metaEvaluationRepository.getEvaluationSnapshotById(id))
       );
 
-      // Compare
+      // Compare and save results
       const results: DocumentComparisonResult[] = [];
+      let unchangedCount = 0;
+      let changedCount = 0;
+
       for (const baselineSnapshot of baselineSnapshots) {
         const newSnapshot = newSnapshots.find(
           (s) => s && s.documentId === baselineSnapshot.documentId
@@ -302,43 +383,70 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         if (newSnapshot) {
           const baselineEval = toEvaluationSnapshot(baselineSnapshot);
           const currentEval = toEvaluationSnapshot(newSnapshot);
-          results.push(compareSnapshots(baselineEval, currentEval));
+          const comparison = compareSnapshots(baselineEval, currentEval);
+          results.push(comparison);
+
+          // Save snapshot result to database
+          const baselineSnapshotRecord = await metaEvaluationRepository.getBaselineSnapshotByDocument(
+            selectedBaseline.id,
+            baselineSnapshot.documentId
+          );
+
+          if (baselineSnapshotRecord && runId) {
+            const status = comparison.newComments.length === 0 && comparison.lostComments.length === 0
+              ? "unchanged"
+              : "changed";
+
+            if (status === "unchanged") unchangedCount++;
+            else changedCount++;
+
+            await metaEvaluationRepository.addValidationRunSnapshot({
+              runId,
+              baselineSnapshotId: baselineSnapshotRecord.id,
+              newEvaluationId: newSnapshot.evaluationVersionId,
+              status,
+              keptCount: comparison.matchedComments.length,
+              newCount: comparison.newComments.length,
+              lostCount: comparison.lostComments.length,
+              comparisonData: {
+                matchedComments: comparison.matchedComments,
+                newComments: comparison.newComments,
+                lostComments: comparison.lostComments,
+                // Include filter reasoning from the current run's telemetry
+                filteredItems: currentEval.pipelineTelemetry?.filteredItems,
+              },
+            });
+          }
         }
 
         setRunProgress((p) => ({ ...p, current: p.current + 1 }));
       }
 
-      setComparisons(results);
-      setActiveTab("results");
+      // Update run status
+      if (runId) {
+        const summary = `${unchangedCount} unchanged, ${changedCount} changed`;
+        await metaEvaluationRepository.updateValidationRunStatus(runId, "completed", summary);
+      }
+
+      // Reload runs list and navigate to history
+      if (selectedBaseline) {
+        await loadValidationRuns(selectedBaseline.id);
+      }
+
+      // Navigate to history and auto-load the run detail
+      setActiveTab("history");
+      if (runId) {
+        setSelectedRunId(runId);
+        await loadRunDetail(runId);
+      }
     } catch (e) {
+      // Mark run as failed if it was created
+      if (runId) {
+        await metaEvaluationRepository.updateValidationRunStatus(runId, "failed", String(e));
+      }
       setError(String(e));
     } finally {
       setIsRunning(false);
-    }
-  }
-
-  async function saveResultsAsBaseline() {
-    if (!selectedAgent || !saveBaselineName.trim() || comparisons.length === 0) return;
-
-    try {
-      setSavingBaseline(false);
-      setLoading(true);
-
-      // Get the "current" evaluation version IDs from comparisons
-      const evalVersionIds = comparisons.map((c) => c.current.evaluationVersionId);
-
-      await metaEvaluationRepository.createValidationBaseline({
-        name: saveBaselineName.trim(),
-        agentId: selectedAgent.id,
-        evaluationVersionIds: evalVersionIds,
-      });
-
-      await loadBaselines(selectedAgent.id);
-      setSaveBaselineName("");
-      setLoading(false);
-    } catch (e) {
-      setError(String(e));
-      setLoading(false);
     }
   }
 
@@ -364,8 +472,8 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         [Run]
       </Text>
       <Text> </Text>
-      <Text bold={activeTab === "results"} color={activeTab === "results" ? "green" : "gray"}>
-        [Results]
+      <Text bold={activeTab === "history"} color={activeTab === "history" ? "magenta" : "gray"}>
+        [History]
       </Text>
       <Text dimColor>  (Tab to switch)</Text>
     </Box>
@@ -454,101 +562,6 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
     );
   }
 
-  // Saving results as baseline
-  if (savingBaseline) {
-    return (
-      <ScreenContainer title="Save as Baseline" borderColor="green" height={height}>
-        <InfoBox>
-          <Text>Save current results as a new baseline for future comparisons</Text>
-        </InfoBox>
-
-        <Box marginY={1}>
-          <Text>Name: </Text>
-          <TextInput
-            value={saveBaselineName}
-            onChange={setSaveBaselineName}
-            onSubmit={() => {
-              if (saveBaselineName.trim()) {
-                saveResultsAsBaseline();
-              }
-            }}
-          />
-        </Box>
-
-        <Box marginTop={1}>
-          <Text dimColor>Enter Save | Escape Cancel</Text>
-        </Box>
-      </ScreenContainer>
-    );
-  }
-
-  // Results tab
-  if (activeTab === "results" && comparisons.length > 0) {
-    // Count by change status
-    const unchangedCount = comparisons.filter((c) =>
-      c.newComments.length === 0 && c.lostComments.length === 0
-    ).length;
-    const changedCount = comparisons.length - unchangedCount;
-
-    // Format change summary for a comparison
-    const formatChangeSummary = (c: DocumentComparisonResult) => {
-      const parts: string[] = [];
-      const kept = c.matchedComments.length;
-      const added = c.newComments.length;
-      const lost = c.lostComments.length;
-
-      if (kept > 0) parts.push(`${kept} kept`);
-      if (added > 0) parts.push(`+${added} new`);
-      if (lost > 0) parts.push(`-${lost} lost`);
-
-      return parts.length > 0 ? parts.join(", ") : "no comments";
-    };
-
-    const items = [
-      ...comparisons.slice(0, maxItems - 4).map((c) => {
-        const hasChanges = c.newComments.length > 0 || c.lostComments.length > 0;
-        const icon = hasChanges ? "~" : "=";
-        const color = hasChanges ? "yellow" : "green";
-
-        return {
-          label: `[${icon}] ${truncate(c.documentTitle, 35)} | ${formatChangeSummary(c)}`,
-          value: c.documentId,
-        };
-      }),
-      { label: "+ Save as New Baseline", value: "save" },
-      { label: "← Back to Baselines", value: "back" },
-    ];
-
-    return (
-      <ScreenContainer title="Validation Results" borderColor="green" height={height}>
-        {renderTabs()}
-
-        <InfoBox>
-          <Text>
-            <Text color="green">[=] {unchangedCount} unchanged</Text>
-            {" | "}
-            <Text color="yellow">[~] {changedCount} changed</Text>
-            {" | "}
-            Baseline: <Text color="cyan">{selectedBaseline?.name || "?"}</Text>
-          </Text>
-        </InfoBox>
-
-        <SelectInput
-          items={items}
-          onSelect={(item) => {
-            if (item.value === "save") {
-              setSavingBaseline(true);
-              setSaveBaselineName(`Post-${selectedBaseline?.name || "run"}`);
-            } else if (item.value === "back") {
-              setActiveTab("baselines");
-            }
-            // TODO: Show detail view for specific document
-          }}
-        />
-      </ScreenContainer>
-    );
-  }
-
   // Run tab
   if (activeTab === "run") {
     return (
@@ -591,6 +604,414 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
             />
           </Box>
         )}
+      </ScreenContainer>
+    );
+  }
+
+  // Comment detail view
+  if (selectedRunDetail && selectedSnapshotId && selectedCommentKey) {
+    const snapshot = selectedRunDetail.snapshots.find((s) => s.id === selectedSnapshotId);
+    if (snapshot) {
+      const data = snapshot.comparisonData as {
+        matchedComments?: Array<{ baselineComment?: { quotedText: string; header: string | null; description: string }; currentComment?: { quotedText: string; header: string | null; description: string } }>;
+        newComments?: Array<{ quotedText: string; header: string | null; description: string }>;
+        lostComments?: Array<{ quotedText: string; header: string | null; description: string }>;
+        filteredItems?: Array<{ stage: string; quotedText: string; header?: string; filterReason: string; supportLocation?: string }>;
+      } | null;
+
+      const matched = data?.matchedComments || [];
+      const newComments = data?.newComments || [];
+      const lost = data?.lostComments || [];
+      const filteredItems = data?.filteredItems || [];
+
+      let commentType = "";
+      let baselineComment: { quotedText: string; header: string | null; description: string } | null = null;
+      let currentComment: { quotedText: string; header: string | null; description: string } | null = null;
+      let filterInfo: { stage: string; filterReason: string; supportLocation?: string } | null = null;
+
+      if (selectedCommentKey.startsWith("kept-")) {
+        const idx = parseInt(selectedCommentKey.replace("kept-", ""), 10);
+        const match = matched[idx];
+        baselineComment = match?.baselineComment || null;
+        currentComment = match?.currentComment || null;
+        commentType = "Kept";
+      } else if (selectedCommentKey.startsWith("new-")) {
+        const idx = parseInt(selectedCommentKey.replace("new-", ""), 10);
+        currentComment = newComments[idx] || null;
+        commentType = "New";
+      } else if (selectedCommentKey.startsWith("lost-")) {
+        const idx = parseInt(selectedCommentKey.replace("lost-", ""), 10);
+        baselineComment = lost[idx] || null;
+        commentType = "Lost";
+
+        // Try to find filter reason for this lost comment
+        if (baselineComment && filteredItems.length > 0) {
+          // Match by quoted text (fuzzy match - check if texts contain each other)
+          const matchingFilter = filteredItems.find((f) => {
+            const fText = f.quotedText.toLowerCase().trim();
+            const bText = baselineComment!.quotedText.toLowerCase().trim();
+            // Check if either contains the other (for partial matches)
+            return fText.includes(bText) || bText.includes(fText) ||
+              // Also check header match as fallback
+              (f.header && baselineComment!.header && f.header.toLowerCase() === baselineComment!.header.toLowerCase());
+          });
+
+          if (matchingFilter) {
+            filterInfo = {
+              stage: matchingFilter.stage,
+              filterReason: matchingFilter.filterReason,
+              supportLocation: matchingFilter.supportLocation,
+            };
+          }
+        }
+      }
+
+      if (baselineComment || currentComment) {
+        const typeColor = commentType === "Kept" ? "green" : commentType === "New" ? "cyan" : "red";
+
+        // For Kept comments, show both versions side by side
+        if (commentType === "Kept" && baselineComment && currentComment) {
+          return (
+            <ScreenContainer title="Kept Comment (Baseline vs Current)" borderColor="green" height={height}>
+              <Box flexDirection="column" paddingX={1} overflowY="hidden">
+                <Box marginBottom={1}>
+                  <Text bold color="green">{baselineComment.header || currentComment.header || "(no header)"}</Text>
+                </Box>
+
+                <Box marginBottom={1} flexDirection="column">
+                  <Text dimColor bold>BASELINE:</Text>
+                  <Text color="gray" wrap="wrap">"{baselineComment.quotedText}"</Text>
+                  <Text dimColor wrap="wrap">{baselineComment.description}</Text>
+                </Box>
+
+                <Box flexDirection="column">
+                  <Text dimColor bold>CURRENT:</Text>
+                  <Text color="yellow" wrap="wrap">"{currentComment.quotedText}"</Text>
+                  <Text wrap="wrap">{currentComment.description}</Text>
+                </Box>
+              </Box>
+
+              <Box marginTop={1}>
+                <SelectInput
+                  items={[{ label: "← Back to Comments", value: "back" }]}
+                  onSelect={() => setSelectedCommentKey(null)}
+                />
+              </Box>
+            </ScreenContainer>
+          );
+        }
+
+        // For Lost comments with filter reason, show detailed view
+        if (commentType === "Lost" && baselineComment && filterInfo) {
+          return (
+            <ScreenContainer title="Lost Comment (with Filter Reason)" borderColor="red" height={height}>
+              <Box flexDirection="column" paddingX={1} overflowY="hidden">
+                <Box marginBottom={1}>
+                  <Text bold color="red">{baselineComment.header || "(no header)"}</Text>
+                </Box>
+
+                <Box marginBottom={1} flexDirection="column">
+                  <Text dimColor>Quoted text (from baseline):</Text>
+                  <Text color="yellow" wrap="wrap">"{baselineComment.quotedText}"</Text>
+                </Box>
+
+                <Box marginBottom={1} flexDirection="column">
+                  <Text dimColor>Description:</Text>
+                  <Text wrap="wrap">{baselineComment.description}</Text>
+                </Box>
+
+                <Box marginTop={1} borderStyle="single" borderColor="magenta" paddingX={1} flexDirection="column">
+                  <Text bold color="magenta">Filter Reason ({filterInfo.stage}):</Text>
+                  <Text wrap="wrap">{filterInfo.filterReason}</Text>
+                  {filterInfo.supportLocation && (
+                    <Box marginTop={1}>
+                      <Text dimColor>Support found at: </Text>
+                      <Text color="cyan" wrap="wrap">{filterInfo.supportLocation}</Text>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+
+              <Box marginTop={1}>
+                <SelectInput
+                  items={[{ label: "← Back to Comments", value: "back" }]}
+                  onSelect={() => setSelectedCommentKey(null)}
+                />
+              </Box>
+            </ScreenContainer>
+          );
+        }
+
+        // For New/Lost (without filter reason), show single version with label
+        const comment = currentComment || baselineComment;
+        const versionLabel = commentType === "New" ? "(from current run)" : "(from baseline)";
+
+        return (
+          <ScreenContainer title={`${commentType} Comment ${versionLabel}`} borderColor={typeColor} height={height}>
+            <Box flexDirection="column" paddingX={1} overflowY="hidden">
+              <Box marginBottom={1}>
+                <Text bold color={typeColor}>{comment!.header || "(no header)"}</Text>
+              </Box>
+
+              <Box marginBottom={1} flexDirection="column">
+                <Text dimColor>Quoted text:</Text>
+                <Text color="yellow" wrap="wrap">"{comment!.quotedText}"</Text>
+              </Box>
+
+              <Box flexDirection="column">
+                <Text dimColor>Description:</Text>
+                <Text wrap="wrap">{comment!.description}</Text>
+              </Box>
+
+              {commentType === "Lost" && !filterInfo && (
+                <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1} flexDirection="column">
+                  <Text bold color="gray">Why was this comment lost?</Text>
+                  <Text wrap="wrap">
+                    {data?.filteredItems !== undefined
+                      ? "This issue was not extracted by the current pipeline run. The LLM did not identify it as an issue during extraction (this is normal variance between runs)."
+                      : "No filter telemetry available for this run (run predates telemetry feature)."}
+                  </Text>
+                </Box>
+              )}
+            </Box>
+
+            <Box marginTop={1}>
+              <SelectInput
+                items={[{ label: "← Back to Comments", value: "back" }]}
+                onSelect={() => setSelectedCommentKey(null)}
+              />
+            </Box>
+          </ScreenContainer>
+        );
+      }
+    }
+  }
+
+  // Document comparison detail view
+  if (selectedRunDetail && selectedSnapshotId) {
+    const snapshot = selectedRunDetail.snapshots.find((s) => s.id === selectedSnapshotId);
+    if (snapshot) {
+      const data = snapshot.comparisonData as {
+        matchedComments?: Array<{ baselineComment?: { quotedText: string; header: string | null }; currentComment?: { quotedText: string; header: string | null } }>;
+        newComments?: Array<{ quotedText: string; header: string | null; description: string }>;
+        lostComments?: Array<{ quotedText: string; header: string | null; description: string }>;
+        filteredItems?: Array<{ stage: string; quotedText: string; header?: string; filterReason: string; supportLocation?: string }>;
+      } | null;
+
+      const matched = data?.matchedComments || [];
+      const newComments = data?.newComments || [];
+      const lost = data?.lostComments || [];
+      const filteredItems = data?.filteredItems || [];
+
+      // Helper to check if a lost comment has a filter reason
+      const hasFilterReason = (lostComment: { quotedText: string; header: string | null }) => {
+        if (filteredItems.length === 0) return false;
+        return filteredItems.some((f) => {
+          const fText = f.quotedText.toLowerCase().trim();
+          const lText = lostComment.quotedText.toLowerCase().trim();
+          return fText.includes(lText) || lText.includes(fText) ||
+            (f.header && lostComment.header && f.header.toLowerCase() === lostComment.header.toLowerCase());
+        });
+      };
+
+      // Build scrollable list of ALL comments - no truncation
+      const commentItems: Array<{ label: string; value: string }> = [];
+
+      // Add all kept comments
+      matched.forEach((c, i) => {
+        const comment = c.baselineComment || c.currentComment;
+        const label = comment ? (comment.header || truncate(comment.quotedText, 50)) : "Unknown";
+        commentItems.push({
+          label: `  ✓  ${label}`,
+          value: `kept-${i}`,
+        });
+      });
+
+      // Add all new comments
+      newComments.forEach((c, i) => {
+        commentItems.push({
+          label: `  +  ${c.header || truncate(c.quotedText, 50)}`,
+          value: `new-${i}`,
+        });
+      });
+
+      // Add all lost comments - mark those with filter reasons differently
+      lost.forEach((c, i) => {
+        const hasReason = hasFilterReason(c);
+        // ⊘ = filtered with reason, − = not extracted (no reason)
+        const indicator = hasReason ? "⊘" : "−";
+        commentItems.push({
+          label: `  ${indicator}  ${c.header || truncate(c.quotedText, 50)}`,
+          value: `lost-${i}`,
+        });
+      });
+
+      if (commentItems.length === 0) {
+        commentItems.push({ label: "  No comments in this comparison", value: "empty" });
+      }
+
+      commentItems.push({ label: "  ← Back", value: "back" });
+
+      // Count lost with/without filter reasons
+      const lostWithReason = lost.filter((c) => hasFilterReason(c)).length;
+      const lostWithoutReason = lost.length - lostWithReason;
+
+      return (
+        <ScreenContainer title={truncate(snapshot.documentTitle, 50)} borderColor="blue" height={height}>
+          <Box marginBottom={1} paddingX={1} flexDirection="column">
+            <Box>
+              <Box marginRight={2}>
+                <Text color="green">✓ {matched.length} kept</Text>
+              </Box>
+              <Box marginRight={2}>
+                <Text color="cyan">+ {newComments.length} new</Text>
+              </Box>
+              <Box>
+                <Text color="red">− {lost.length} lost</Text>
+                {lost.length > 0 && (
+                  <Text dimColor> ({lostWithReason} filtered, {lostWithoutReason} not extracted)</Text>
+                )}
+              </Box>
+            </Box>
+            <Box marginTop={1}>
+              <Text dimColor>Legend: ✓ kept  + new  ⊘ filtered (has reason)  − not extracted</Text>
+            </Box>
+          </Box>
+
+          <SelectInput
+            items={commentItems}
+            limit={maxItems}
+            onSelect={(item) => {
+              if (item.value === "back") {
+                setSelectedSnapshotId(null);
+              } else if (item.value.startsWith("kept-") || item.value.startsWith("new-") || item.value.startsWith("lost-")) {
+                setSelectedCommentKey(item.value);
+              }
+            }}
+          />
+
+          <Box marginTop={1}>
+            <Text dimColor>Enter View Comment | Escape Back to Run</Text>
+          </Box>
+        </ScreenContainer>
+      );
+    }
+  }
+
+  // Run detail view
+  if (selectedRunDetail) {
+    const formatChangeSummary = (s: { keptCount: number; newCount: number; lostCount: number }) => {
+      const parts: string[] = [];
+      if (s.keptCount > 0) parts.push(`${s.keptCount} kept`);
+      if (s.newCount > 0) parts.push(`+${s.newCount} new`);
+      if (s.lostCount > 0) parts.push(`-${s.lostCount} lost`);
+      return parts.length > 0 ? parts.join(", ") : "no comments";
+    };
+
+    const unchangedCount = selectedRunDetail.snapshots.filter((s) => s.status === "unchanged").length;
+    const changedCount = selectedRunDetail.snapshots.filter((s) => s.status === "changed").length;
+
+    const items = [
+      ...selectedRunDetail.snapshots.slice(0, maxItems - 3).map((s) => {
+        const icon = s.status === "unchanged" ? "=" : "~";
+        return {
+          label: `[${icon}] ${truncate(s.documentTitle, 35)} | ${formatChangeSummary(s)}`,
+          value: s.id,
+        };
+      }),
+      { label: "← Back to History", value: "back" },
+    ];
+
+    return (
+      <ScreenContainer title={`Run: ${selectedRunDetail.name || selectedRunDetail.id.slice(0, 8)}`} borderColor="magenta" height={height}>
+        <InfoBox>
+          <Text>
+            <Text color="green">[=] {unchangedCount} unchanged</Text>
+            {" | "}
+            <Text color="yellow">[~] {changedCount} changed</Text>
+            {" | "}
+            Baseline: <Text color="cyan">{selectedRunDetail.baseline.name}</Text>
+          </Text>
+        </InfoBox>
+
+        <SelectInput
+          items={items}
+          onSelect={(item) => {
+            if (item.value === "back") {
+              setSelectedRunDetail(null);
+              setSelectedRunId(null);
+            } else {
+              setSelectedSnapshotId(item.value);
+            }
+          }}
+        />
+
+        <Box marginTop={1}>
+          <Text dimColor>Enter View Comments | Escape Back to History</Text>
+        </Box>
+      </ScreenContainer>
+    );
+  }
+
+  // History tab
+  if (activeTab === "history") {
+    const formatDate = (d: Date) => {
+      return new Date(d).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    };
+
+    const items = [
+      ...validationRuns.slice(0, maxItems - 3).map((r) => {
+        const statusIcon = r.status === "completed"
+          ? (r.changedCount === 0 ? "=" : "~")
+          : r.status === "running" ? "*" : "x";
+
+        return {
+          label: `[${statusIcon}] ${formatDate(r.createdAt)} | ${r.summary || r.status}`,
+          value: `view:${r.id}`,
+        };
+      }),
+      { label: "← Back to Baselines", value: "back" },
+    ];
+
+    return (
+      <ScreenContainer title="Validation - Run History" borderColor="magenta" height={height}>
+        {renderTabs()}
+
+        <InfoBox>
+          <Text>
+            Baseline: <Text color="cyan">{selectedBaseline?.name || "None"}</Text>
+            {" | "}
+            {validationRuns.length} run{validationRuns.length !== 1 ? "s" : ""}
+          </Text>
+        </InfoBox>
+
+        {validationRuns.length === 0 ? (
+          <Box marginY={1}>
+            <Text dimColor>No runs yet. Go to Run tab to execute a validation run.</Text>
+          </Box>
+        ) : (
+          <SelectInput
+            items={items}
+            onSelect={(item) => {
+              if (item.value === "back") {
+                setActiveTab("baselines");
+              } else if (item.value.startsWith("view:")) {
+                const runId = item.value.replace("view:", "");
+                setSelectedRunId(runId);
+                loadRunDetail(runId);
+              }
+            }}
+          />
+        )}
+
+        <Box marginTop={1}>
+          <Text dimColor>Enter View Details | Tab Switch | Escape Back</Text>
+        </Box>
       </ScreenContainer>
     );
   }
@@ -692,6 +1113,14 @@ function extractTelemetry(raw: unknown): {
   issuesAfterFiltering: number;
   commentsGenerated: number;
   commentsKept: number;
+  filteredItems?: Array<{
+    stage: string;
+    quotedText: string;
+    header?: string;
+    filterReason: string;
+    supportLocation?: string;
+    originalIndex: number;
+  }>;
 } | null {
   if (!raw || typeof raw !== "object") return null;
 
@@ -700,6 +1129,16 @@ function extractTelemetry(raw: unknown): {
 
   if (!finalCounts) return null;
 
+  // Extract filtered items if present
+  const filteredItems = telemetry.filteredItems as Array<{
+    stage: string;
+    quotedText: string;
+    header?: string;
+    filterReason: string;
+    supportLocation?: string;
+    originalIndex: number;
+  }> | undefined;
+
   return {
     totalDurationMs: (telemetry.totalDurationMs as number) || 0,
     issuesExtracted: finalCounts.issuesExtracted || 0,
@@ -707,5 +1146,6 @@ function extractTelemetry(raw: unknown): {
     issuesAfterFiltering: finalCounts.issuesAfterFiltering || 0,
     commentsGenerated: finalCounts.commentsGenerated || 0,
     commentsKept: finalCounts.commentsKept || 0,
+    filteredItems,
   };
 }
