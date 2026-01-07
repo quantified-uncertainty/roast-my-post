@@ -227,6 +227,13 @@ FALLACY_FILTER_MODEL=google/gemini-3-flash-preview
 8. **Gemini Flash for production** - 16x cheaper, validated as accurate. Easy win.
 9. **Multi-expert aggregation** - Run multiple models, aggregate results. Higher accuracy, diminishing returns.
 
+#### Phase 5: Meta-Evaluation & Review Improvements
+*Use meta-evals scoring/rating to improve comment quality.*
+
+10. **Meta-eval scoring** - Enable quality scoring on generated comments (accuracy, clarity, importance, tone).
+11. **Review stage improvements** - Use meta-eval feedback to refine comment generation and summaries.
+12. **Feedback loop** - Iterate on prompts based on meta-eval scores, track improvement over time.
+
 #### Key Risks & Mitigations
 
 | Risk | Impact | Mitigation |
