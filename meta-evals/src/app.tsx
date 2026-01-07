@@ -345,6 +345,17 @@ export function App() {
         height={termHeight}
         maxItems={maxListItems}
         onBack={loadMainMenu}
+        onCreateBatch={async (agentId, documentIds) => {
+          // Create batch jobs for the agent on selected documents
+          const response = await apiClient.post<BatchCreateResponse>("/api/batches", {
+            agentId,
+            documentIds,
+            name: `Validation run`,
+          });
+
+          // Get job IDs from the batch
+          return await getJobsForBatch(response.batch.id);
+        }}
       />
     );
   }

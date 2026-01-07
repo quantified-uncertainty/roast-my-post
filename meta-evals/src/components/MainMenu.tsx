@@ -209,8 +209,8 @@ export function MainMenu({
         label: `${truncate(s.documentTitle, 40)} | ${s.runCount} runs | ${s.agentNames.slice(0, 2).join(", ")}`,
         value: s.id || `series-${idx}`, // Fallback key
       })),
-    { label: "+ Create New Baseline", value: "create" },
-    { label: "🔍 Validation (Compare Runs)", value: "validation" },
+    { label: "+ New Series (for Score/Rank)", value: "create" },
+    { label: "+ Validation (Regression Testing)", value: "validation" },
     { label: "Exit", value: "exit" },
   ];
 

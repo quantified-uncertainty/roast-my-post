@@ -50,14 +50,15 @@ model User {
   evalsThisMonth   Int                @default(0)
   hourResetAt      DateTime?
   monthResetAt     DateTime?
-  accounts         Account[]
-  agents           Agent[]
-  agentEvalBatches AgentEvalBatch[]
-  apiKeys          ApiKey[]
-  documents        Document[]
-  sessions         Session[]
-  cancelledJobs    Job[]
-  claimEvaluations ClaimEvaluation[]
+  accounts            Account[]
+  agents              Agent[]
+  agentEvalBatches    AgentEvalBatch[]
+  apiKeys             ApiKey[]
+  documents           Document[]
+  sessions            Session[]
+  cancelledJobs       Job[]
+  claimEvaluations    ClaimEvaluation[]
+  validationBaselines ValidationBaseline[]
 }
 
 model VerificationToken {
@@ -143,12 +144,13 @@ model EvaluationVersion {
   version           Int                 @default(1)
   isStale           Boolean             @default(false)
   pipelineTelemetry Json?
-  comments          EvaluationComment[]
-  agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
-  documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
-  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  job               Job?
-  metaEvaluations   MetaEvaluation[]
+  comments                    EvaluationComment[]
+  agentVersion                AgentVersion                 @relation(fields: [agentVersionId], references: [id])
+  documentVersion             DocumentVersion              @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
+  evaluation                  Evaluation                   @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  job                         Job?
+  metaEvaluations             MetaEvaluation[]
+  validationBaselineSnapshots ValidationBaselineSnapshot[]
 
   @@unique([evaluationId, version])
   @@index([evaluationId])
@@ -195,11 +197,12 @@ model Agent {
   isDeprecated     Boolean          @default(false)
   isRecommended    Boolean          @default(false)
   isLlmCostTracked Boolean          @default(true)
-  ephemeralBatch   AgentEvalBatch?  @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
-  submittedBy      User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  evalBatches      AgentEvalBatch[]
-  versions         AgentVersion[]
-  evaluations      Evaluation[]
+  ephemeralBatch       AgentEvalBatch?       @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
+  submittedBy          User                  @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  evalBatches          AgentEvalBatch[]
+  versions             AgentVersion[]
+  evaluations          Evaluation[]
+  validationBaselines  ValidationBaseline[]
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -439,4 +442,36 @@ model MetaEvaluationDimension {
   @@index([metaEvaluationId])
   @@index([name])
   @@index([score])
+}
+
+/// Validation baseline - a saved reference point for regression testing
+model ValidationBaseline {
+  id          String   @id @default(cuid())
+  name        String   // "Pre-refactor", "v2.0 release"
+  description String?
+  agentId     String
+  commitHash  String?  // git commit when baseline was created
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  agent     Agent                        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdBy User?                        @relation(fields: [createdById], references: [id])
+  snapshots ValidationBaselineSnapshot[]
+
+  @@index([agentId])
+  @@index([createdAt])
+}
+
+/// Links a baseline to specific evaluation versions (one per document)
+model ValidationBaselineSnapshot {
+  id                  String @id @default(cuid())
+  baselineId          String
+  evaluationVersionId String
+
+  baseline          ValidationBaseline @relation(fields: [baselineId], references: [id], onDelete: Cascade)
+  evaluationVersion EvaluationVersion  @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([baselineId, evaluationVersionId])
+  @@index([baselineId])
+  @@index([evaluationVersionId])
 }

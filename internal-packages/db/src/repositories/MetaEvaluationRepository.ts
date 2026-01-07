@@ -943,6 +943,203 @@ export class MetaEvaluationRepository {
       })),
     };
   }
+
+  // ==========================================================================
+  // Validation Baseline Methods
+  // ==========================================================================
+
+  /**
+   * Create a new validation baseline from existing evaluation versions.
+   */
+  async createValidationBaseline(input: {
+    name: string;
+    description?: string;
+    agentId: string;
+    evaluationVersionIds: string[];
+    commitHash?: string;
+    createdById?: string;
+  }): Promise<{ id: string; name: string; snapshotCount: number }> {
+    const baseline = await this.prisma.validationBaseline.create({
+      data: {
+        name: input.name,
+        description: input.description,
+        agentId: input.agentId,
+        commitHash: input.commitHash,
+        createdById: input.createdById,
+        snapshots: {
+          create: input.evaluationVersionIds.map((evId) => ({
+            evaluationVersionId: evId,
+          })),
+        },
+      },
+      include: {
+        _count: { select: { snapshots: true } },
+      },
+    });
+
+    return {
+      id: baseline.id,
+      name: baseline.name,
+      snapshotCount: baseline._count.snapshots,
+    };
+  }
+
+  /**
+   * Get all validation baselines for an agent.
+   */
+  async getValidationBaselines(agentId: string): Promise<
+    Array<{
+      id: string;
+      name: string;
+      description: string | null;
+      commitHash: string | null;
+      createdAt: Date;
+      snapshotCount: number;
+    }>
+  > {
+    const baselines = await this.prisma.validationBaseline.findMany({
+      where: { agentId },
+      include: {
+        _count: { select: { snapshots: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return baselines.map((b) => ({
+      id: b.id,
+      name: b.name,
+      description: b.description,
+      commitHash: b.commitHash,
+      createdAt: b.createdAt,
+      snapshotCount: b._count.snapshots,
+    }));
+  }
+
+  /**
+   * Get evaluation snapshots from a baseline.
+   */
+  async getBaselineSnapshots(baselineId: string): Promise<
+    Array<{
+      evaluationVersionId: string;
+      agentId: string;
+      agentName: string;
+      createdAt: Date;
+      documentId: string;
+      documentTitle: string;
+      grade: number | null;
+      pipelineTelemetry: unknown;
+      comments: Array<{
+        id: string;
+        quotedText: string;
+        header: string | null;
+        description: string;
+        importance: number | null;
+        startOffset: number;
+        endOffset: number;
+      }>;
+    }>
+  > {
+    const baseline = await this.prisma.validationBaseline.findUnique({
+      where: { id: baselineId },
+      include: {
+        snapshots: {
+          include: {
+            evaluationVersion: {
+              include: {
+                evaluation: {
+                  include: {
+                    agent: {
+                      include: {
+                        versions: {
+                          orderBy: { version: "desc" },
+                          take: 1,
+                          select: { name: true },
+                        },
+                      },
+                    },
+                    document: {
+                      include: {
+                        versions: {
+                          orderBy: { version: "desc" },
+                          take: 1,
+                          select: { title: true },
+                        },
+                      },
+                    },
+                  },
+                },
+                comments: {
+                  include: {
+                    highlight: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!baseline) return [];
+
+    return baseline.snapshots.map((s) => {
+      const ev = s.evaluationVersion;
+      return {
+        evaluationVersionId: ev.id,
+        agentId: ev.agentId,
+        agentName: ev.evaluation.agent.versions[0]?.name || ev.agentId,
+        createdAt: ev.createdAt,
+        documentId: ev.evaluation.documentId,
+        documentTitle: ev.evaluation.document.versions[0]?.title || "Unknown",
+        grade: ev.grade,
+        pipelineTelemetry: ev.pipelineTelemetry,
+        comments: ev.comments.map((c) => ({
+          id: c.id,
+          quotedText: c.highlight.quotedText,
+          header: c.header,
+          description: c.description,
+          importance: c.importance,
+          startOffset: c.highlight.startOffset,
+          endOffset: c.highlight.endOffset,
+        })),
+      };
+    });
+  }
+
+  /**
+   * Delete a validation baseline.
+   */
+  async deleteValidationBaseline(baselineId: string): Promise<void> {
+    await this.prisma.validationBaseline.delete({
+      where: { id: baselineId },
+    });
+  }
+
+  /**
+   * Get document IDs from a baseline (for running new evaluations).
+   */
+  async getBaselineDocumentIds(baselineId: string): Promise<string[]> {
+    const baseline = await this.prisma.validationBaseline.findUnique({
+      where: { id: baselineId },
+      include: {
+        snapshots: {
+          include: {
+            evaluationVersion: {
+              include: {
+                evaluation: {
+                  select: { documentId: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!baseline) return [];
+
+    return [...new Set(baseline.snapshots.map((s) => s.evaluationVersion.evaluation.documentId))];
+  }
 }
 
 // Default instance for convenience
