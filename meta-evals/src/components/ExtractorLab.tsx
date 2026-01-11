@@ -10,7 +10,7 @@ import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import { prisma, type DocumentChoice } from "@roast/db";
-import type { ExtractorConfig, MultiExtractorResult } from "@roast/ai/fallacy-extraction";
+import { runMultiExtractor, type ExtractorConfig, type MultiExtractorResult } from "@roast/ai/fallacy-extraction";
 import { truncate, formatDate } from "./helpers";
 
 interface ExtractorLabProps {
@@ -78,9 +78,6 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     setStep({ type: "running" });
 
     try {
-      // Dynamic import for the multi-extractor
-      const { runMultiExtractor } = await import("@roast/ai/fallacy-extraction");
-
       const result = await runMultiExtractor(documentText, {
         extractors: extractorConfigs,
         judgeEnabled: extractorConfigs.length > 1, // Enable judge if multiple extractors
