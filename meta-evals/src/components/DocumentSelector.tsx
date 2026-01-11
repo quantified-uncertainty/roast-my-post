@@ -83,7 +83,11 @@ export function DocumentSelector({
       clearTimeout(debounceRef.current);
     }
 
-    setIsSearching(true);
+    // Only show spinner when actively filtering (not on empty initial state)
+    if (filter.length > 0) {
+      setIsSearching(true);
+    }
+
     debounceRef.current = setTimeout(() => {
       onFilterChange(filter);
       setIsSearching(false);
