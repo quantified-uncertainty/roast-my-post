@@ -48,6 +48,10 @@
     "./tools/generated-readmes": {
       "types": "./src/tools/generated-readmes.ts",
       "default": "./src/tools/generated-readmes.ts"
+    },
+    "./fallacy-extraction": {
+      "types": "./src/analysis-plugins/plugins/fallacy-check/extraction/index.ts",
+      "default": "./src/analysis-plugins/plugins/fallacy-check/extraction/index.ts"
     }
   },
   "scripts": {

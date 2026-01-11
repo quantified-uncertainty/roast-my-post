@@ -12,6 +12,7 @@ export type Screen =
   | { type: "series-detail"; seriesId: string }
   | { type: "rank-runs"; seriesId: string }
   | { type: "score-run"; seriesId: string }
-  | { type: "validation" };
+  | { type: "validation" }
+  | { type: "extractor-lab" };
 
 export type { SeriesSummary, DocumentChoice, AgentChoice };

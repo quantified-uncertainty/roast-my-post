@@ -15,6 +15,7 @@ interface MainMenuProps {
   height: number;
   onScoreRank: () => void;
   onValidation: () => void;
+  onExtractorLab: () => void;
   onExit: () => void;
   judgeModel: string;
   availableModels: ModelInfo[];
@@ -32,6 +33,7 @@ export function MainMenu({
   height,
   onScoreRank,
   onValidation,
+  onExtractorLab,
   onExit,
   judgeModel,
   availableModels,
@@ -143,6 +145,7 @@ export function MainMenu({
   const items = [
     { label: "Score/Rank", value: "score-rank" },
     { label: "Validation", value: "validation" },
+    { label: "Extractor Lab", value: "extractor-lab" },
     { label: "Settings", value: "settings" },
     { label: "Exit", value: "exit" },
   ];
@@ -170,6 +173,7 @@ export function MainMenu({
           if (item.value === "exit") onExit();
           else if (item.value === "score-rank") onScoreRank();
           else if (item.value === "validation") onValidation();
+          else if (item.value === "extractor-lab") onExtractorLab();
           else if (item.value === "settings") setShowSettings(true);
         }}
       />

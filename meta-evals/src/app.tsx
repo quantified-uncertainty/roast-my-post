@@ -12,7 +12,7 @@ import {
   type AgentChoice,
 } from "@roast/db";
 import { apiClient } from "./utils/apiClient";
-import { MainMenu, ScoreRankMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, Validation, type Screen } from "./components";
+import { MainMenu, ScoreRankMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, Validation, ExtractorLab, type Screen } from "./components";
 import { getAvailableModels, getRecommendedJudgeModels, DEFAULT_JUDGE_MODEL, type ModelInfo } from "./utils/models";
 
 // ============================================================================
@@ -184,6 +184,38 @@ export function App() {
     }
   }
 
+  async function startExtractorLab() {
+    setScreen({ type: "loading" });
+    try {
+      // Get agents and use first one (usually Fallacy Check)
+      const userId = await apiClient.getUserId();
+      const agentChoices = await metaEvaluationRepository.getAvailableAgents(userId);
+      if (agentChoices.length === 0) {
+        setError("No agents available");
+        return;
+      }
+      const agentId = agentChoices[0].id;
+
+      // Get validation corpus for this agent (same as Validation screen)
+      const corpusDocs = await metaEvaluationRepository.getValidationCorpusDocuments(
+        agentId,
+        { limit: 50, minContentLength: 200 }
+      );
+
+      // Map to DocumentChoice format
+      const docs = corpusDocs.map((d) => ({
+        id: d.documentId,
+        title: d.title,
+        createdAt: d.lastEvaluatedAt || new Date(),
+      }));
+
+      setDocuments(docs);
+      setScreen({ type: "extractor-lab" });
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
   // Handle keyboard shortcuts
   // Disable "q" quit when on document step (text input is active)
   const isTextInputActive = screen.type === "create-baseline" && screen.step === "document";
@@ -226,6 +258,7 @@ export function App() {
         height={termHeight}
         onScoreRank={loadScoreRankMenu}
         onValidation={() => setScreen({ type: "validation" })}
+        onExtractorLab={startExtractorLab}
         onExit={exit}
         judgeModel={judgeModel}
         availableModels={availableModels}
@@ -371,6 +404,18 @@ export function App() {
           // Get job IDs from the batch
           return await getJobsForBatch(response.batch.id);
         }}
+      />
+    );
+  }
+
+  if (screen.type === "extractor-lab") {
+    return (
+      <ExtractorLab
+        height={termHeight}
+        maxItems={maxListItems}
+        documents={documents}
+        onSearchDocuments={searchDocuments}
+        onBack={loadMainMenu}
       />
     );
   }
