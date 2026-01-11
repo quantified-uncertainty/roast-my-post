@@ -12,6 +12,7 @@ import Spinner from "ink-spinner";
 import { prisma, type DocumentChoice } from "@roast/db";
 import { runMultiExtractor, getMultiExtractorConfig, type ExtractorConfig, type MultiExtractorResult, type ExtractorResult } from "@roast/ai/fallacy-extraction";
 import { truncate, formatDate } from "./helpers";
+import { ModelSelector } from "./ModelSelector";
 
 interface ExtractorLabProps {
   height: number;
@@ -24,6 +25,7 @@ interface ExtractorLabProps {
 type LabStep =
   | { type: "select-document" }
   | { type: "configure-extractors" }
+  | { type: "add-extractor" }
   | { type: "running" }
   | { type: "results"; result: MultiExtractorResult }
   | { type: "issue-detail"; result: MultiExtractorResult; extractorIdx: number; issueIdx: number };
@@ -38,11 +40,8 @@ function getInitialExtractorConfigs(): ExtractorConfig[] {
   }
 }
 
-const AVAILABLE_MODELS = [
-  { id: "claude-sonnet-4-5-20250929", label: "Claude Sonnet 4.5" },
-  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-  { id: "google/gemini-3-flash-preview", label: "Gemini 3 Flash" },
-];
+// Temperature presets for cycling
+const TEMP_PRESETS = ["default", 0, 0.3, 0.5, 0.7, 1.0] as const;
 
 export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, onBack }: ExtractorLabProps) {
   const [step, setStep] = useState<LabStep>({ type: "select-document" });
@@ -50,10 +49,15 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   const [documentText, setDocumentText] = useState<string>("");
   const [extractorConfigs, setExtractorConfigs] = useState<ExtractorConfig[]>(getInitialExtractorConfigs);
   const [error, setError] = useState<string | null>(null);
+  const [highlightedItem, setHighlightedItem] = useState<string>("");
 
   // Use ref to track current step for useInput (avoids stale closure)
   const stepRef = useRef(step);
   stepRef.current = step;
+
+  // Track highlighted item for keyboard shortcuts
+  const highlightedRef = useRef(highlightedItem);
+  highlightedRef.current = highlightedItem;
 
   async function loadDocumentText(docId: string) {
     try {
@@ -108,12 +112,41 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
         setStep({ type: "results", result: currentStep.result });
       } else if (currentStep.type === "results") {
         setStep({ type: "configure-extractors" });
+      } else if (currentStep.type === "add-extractor") {
+        setStep({ type: "configure-extractors" });
       } else if (currentStep.type === "configure-extractors") {
         setStep({ type: "select-document" });
       } else if (currentStep.type === "select-document") {
         onBack();
       }
       // Don't call onBack for running state
+    }
+
+    // Handle 'd' to delete extractor and 't' to cycle temperature (only on configure screen)
+    if (stepRef.current.type === "configure-extractors") {
+      const highlighted = highlightedRef.current;
+      if (highlighted.startsWith("config-")) {
+        const idx = parseInt(highlighted.replace("config-", ""), 10);
+
+        if (input === "d") {
+          // Delete extractor (but keep at least one)
+          setExtractorConfigs(configs => {
+            if (configs.length <= 1) return configs;
+            return configs.filter((_, i) => i !== idx);
+          });
+        } else if (input === "t") {
+          // Cycle temperature
+          setExtractorConfigs(configs =>
+            configs.map((c, i) => {
+              if (i !== idx) return c;
+              const currentTemp = c.temperature;
+              const currentIdx = TEMP_PRESETS.findIndex(t => t === currentTemp);
+              const nextIdx = (currentIdx + 1) % TEMP_PRESETS.length;
+              return { ...c, temperature: TEMP_PRESETS[nextIdx] };
+            })
+          );
+        }
+      }
     }
   });
 
@@ -185,7 +218,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
           <Box flexDirection="column">
             <Text>
               <Text bold>Document: </Text>
-              <Text color="green">{selectedDoc?.title.slice(0, 40)}</Text>
+              <Text color="green">{selectedDoc?.title}</Text>
             </Text>
             <Text>
               <Text bold>Text length: </Text>
@@ -200,18 +233,15 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
 
         <SelectInput
           items={items.filter(i => !i.value.startsWith("divider"))}
+          onHighlight={(item) => setHighlightedItem(item.value)}
           onSelect={(item) => {
             if (item.value === "back") {
               setStep({ type: "select-document" });
             } else if (item.value === "run") {
               runExtraction();
             } else if (item.value === "add") {
-              // Add another extractor with different config
-              const nextModel = AVAILABLE_MODELS[extractorConfigs.length % AVAILABLE_MODELS.length];
-              setExtractorConfigs([
-                ...extractorConfigs,
-                { model: nextModel.id, temperature: "default", thinking: false },
-              ]);
+              // Go to model selection
+              setStep({ type: "add-extractor" });
             } else if (item.value.startsWith("config-")) {
               // Toggle thinking for this extractor
               const idx = parseInt(item.value.replace("config-", ""), 10);
@@ -223,9 +253,30 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
         />
 
         <Box marginTop={1} justifyContent="center">
-          <Text dimColor>Enter on extractor toggles thinking | Escape Back</Text>
+          <Text dimColor>Enter=toggle think | t=cycle temp | d=delete | Esc=back</Text>
         </Box>
       </Box>
+    );
+  }
+
+  // Add extractor - model selection using reusable ModelSelector
+  if (step.type === "add-extractor") {
+    return (
+      <ModelSelector
+        title="Add Extractor - Select Model"
+        borderColor="cyan"
+        height={height}
+        maxItems={maxItems}
+        onSelect={(model) => {
+          // Add new extractor with selected model
+          setExtractorConfigs([
+            ...extractorConfigs,
+            { model: model.id, temperature: "default", thinking: false },
+          ]);
+          setStep({ type: "configure-extractors" });
+        }}
+        onCancel={() => setStep({ type: "configure-extractors" })}
+      />
     );
   }
 
