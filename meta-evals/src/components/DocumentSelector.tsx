@@ -5,12 +5,17 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Text, useInput } from "ink";
+import { Box, Text, useInput, useStdout } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import type { DocumentChoice } from "@roast/db";
 import { formatDate } from "./helpers";
+
+function truncate(str: string, maxLen: number): string {
+  if (str.length <= maxLen) return str;
+  return str.slice(0, maxLen - 1) + "…";
+}
 
 export interface DocumentSelectorProps {
   /** Title shown at the top */
@@ -62,12 +67,20 @@ export function DocumentSelector({
   onCancel,
   confirmLabel = "Confirm Selection",
 }: DocumentSelectorProps) {
+  const { stdout } = useStdout();
   const [filter, setFilter] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(
     externalSelectedIds || new Set()
   );
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Calculate available width for title based on terminal width
+  // Layout: border(2) + padding(2) + "❯ "(2) + "  1 | "(6) + title + " | "(3) + date(12) = 27 overhead
+  // For multiSelect: "[x] "(4) instead of index, no date = 10 overhead
+  const termWidth = stdout?.columns ?? 120;
+  const overhead = multiSelect ? 10 : 27;
+  const titleWidth = Math.max(40, termWidth - overhead);
 
   // Use external or internal selected IDs
   const selectedIds = externalSelectedIds || internalSelectedIds;
@@ -143,12 +156,12 @@ export function DocumentSelector({
     const d = displayDocs[i];
     if (multiSelect) {
       items.push({
-        label: `[${selectedIds.has(d.id) ? "x" : " "}] ${d.title}`,
+        label: `[${selectedIds.has(d.id) ? "x" : " "}] ${truncate(d.title, titleWidth)}`,
         value: d.id,
       });
     } else {
       items.push({
-        label: `${String(i + 1).padStart(2)} | ${d.title} | ${formatDate(new Date(d.createdAt))}`,
+        label: `${String(i + 1).padStart(2)} | ${truncate(d.title, titleWidth).padEnd(titleWidth)} | ${formatDate(new Date(d.createdAt))}`,
         value: d.id,
       });
     }
