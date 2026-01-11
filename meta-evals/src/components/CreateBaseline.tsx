@@ -2,13 +2,13 @@
  * Create Baseline Flow Component
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { Box, Text, useInput } from "ink";
-import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import type { DocumentChoice, AgentChoice } from "./types";
-import { truncate, formatDate } from "./helpers";
+import { truncate } from "./helpers";
+import { DocumentSelector } from "./DocumentSelector";
 
 interface CreateBaselineProps {
   step: "document" | "agents" | "confirm" | "creating";
@@ -40,35 +40,31 @@ export function CreateBaseline({
   onBack,
 }: CreateBaselineProps) {
   const [agentSelection, setAgentSelection] = useState<Set<string>>(new Set());
-  const [filter, setFilter] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Handle escape to go back (but not during text input on document step)
+  // Handle escape to go back (document step handles its own escape via DocumentSelector)
   useInput((input, key) => {
     if (key.escape && step !== "document") {
       onBack();
     }
   });
 
-  // Debounced DB search when filter changes
-  useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    setIsSearching(true);
-    debounceRef.current = setTimeout(() => {
-      onSearchDocuments(filter);
-      setIsSearching(false);
-    }, 300);
-
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, [filter]);
+  // Document selection using reusable DocumentSelector
+  if (step === "document") {
+    return (
+      <DocumentSelector
+        title="Create New Baseline - Select Document"
+        subtitle="Step 1/2: Select a document"
+        borderColor="yellow"
+        height={height}
+        maxItems={maxItems}
+        documents={documents}
+        showFilter={true}
+        onFilterChange={onSearchDocuments}
+        onSelect={onSelectDocument}
+        onCancel={onBack}
+      />
+    );
+  }
 
   if (step === "creating") {
     return (
@@ -80,6 +76,7 @@ export function CreateBaseline({
     );
   }
 
+  // Remaining steps: agents and confirm
   return (
     <Box flexDirection="column" borderStyle="round" borderColor="yellow" padding={1} height={height} overflow="hidden">
       <Box justifyContent="center" marginBottom={1}>
@@ -87,34 +84,6 @@ export function CreateBaseline({
           Create New Baseline
         </Text>
       </Box>
-
-      {step === "document" && (
-        <>
-          <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-            <Text>Step 1/2: Select a document ({documents.length} found{filter ? ` for "${filter}"` : ""})</Text>
-          </Box>
-          <Box marginBottom={1} paddingX={1}>
-            <Text dimColor>Search: </Text>
-            <TextInput
-              value={filter}
-              onChange={setFilter}
-              placeholder="type to search in DB..."
-            />
-            {isSearching && <Text dimColor> <Spinner type="dots" /></Text>}
-          </Box>
-          <SelectInput
-            items={documents.map((d, i) => ({
-              label: `${String(i + 1).padStart(2)} | ${truncate(d.title, 50).padEnd(50)} | ${formatDate(new Date(d.createdAt))}`,
-              value: d.id,
-            }))}
-            limit={maxItems - 2}
-            onSelect={(item) => {
-              const doc = documents.find((d) => d.id === item.value);
-              if (doc) onSelectDocument(doc);
-            }}
-          />
-        </>
-      )}
 
       {step === "agents" && (
         <>
@@ -178,7 +147,7 @@ export function CreateBaseline({
       )}
 
       <Box marginTop={1} justifyContent="center">
-        <Text dimColor>Esc Back | {step === "document" ? "Ctrl+C" : "q"} Quit</Text>
+        <Text dimColor>Esc Back | q Quit</Text>
       </Box>
     </Box>
   );

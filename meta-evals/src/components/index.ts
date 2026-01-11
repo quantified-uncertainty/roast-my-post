@@ -11,5 +11,6 @@ export { ScoreRun } from "./ScoreRun";
 export { Validation } from "./Validation";
 export { ExtractorLab } from "./ExtractorLab";
 export { ModelSelector, type ModelInfo } from "./ModelSelector";
+export { DocumentSelector } from "./DocumentSelector";
 export * from "./helpers";
 export * from "./types";

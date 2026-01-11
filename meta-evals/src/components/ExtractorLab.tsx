@@ -13,6 +13,7 @@ import { prisma, type DocumentChoice } from "@roast/db";
 import { runMultiExtractor, getMultiExtractorConfig, type ExtractorConfig, type MultiExtractorResult, type ExtractorResult } from "@roast/ai/fallacy-extraction";
 import { truncate, formatDate } from "./helpers";
 import { ModelSelector } from "./ModelSelector";
+import { DocumentSelector } from "./DocumentSelector";
 
 interface ExtractorLabProps {
   height: number;
@@ -159,38 +160,24 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     );
   }
 
-  // Document selection
+  // Document selection using reusable DocumentSelector
   if (step.type === "select-document") {
     return (
-      <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height}>
-        <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="magenta">Extractor Lab - Select Document</Text>
-        </Box>
-
-        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-          <Text>Select a document ({documents.length} found)</Text>
-        </Box>
-
-        <SelectInput
-          items={documents.map((d, i) => ({
-            label: `${String(i + 1).padStart(2)} | ${truncate(d.title, 50).padEnd(50)} | ${formatDate(new Date(d.createdAt))}`,
-            value: d.id,
-          }))}
-          limit={maxItems - 2}
-          onSelect={async (item) => {
-            const doc = documents.find((d) => d.id === item.value);
-            if (doc) {
-              setSelectedDoc(doc);
-              await loadDocumentText(doc.id);
-              setStep({ type: "configure-extractors" });
-            }
-          }}
-        />
-
-        <Box marginTop={1} justifyContent="center">
-          <Text dimColor>Up/Down Navigate | Enter Select | Escape Back</Text>
-        </Box>
-      </Box>
+      <DocumentSelector
+        title="Extractor Lab - Select Document"
+        borderColor="magenta"
+        height={height}
+        maxItems={maxItems}
+        documents={documents}
+        showFilter={true}
+        onFilterChange={onSearchDocuments}
+        onSelect={async (doc) => {
+          setSelectedDoc(doc);
+          await loadDocumentText(doc.id);
+          setStep({ type: "configure-extractors" });
+        }}
+        onCancel={onBack}
+      />
     );
   }
 
