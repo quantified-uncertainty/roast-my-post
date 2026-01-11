@@ -24,15 +24,17 @@ import type {
   ExtractorLabProps,
   LabStep,
   JudgeRunResult,
-  PreJudgeDedupResult,
   ExtractorIssue,
+  DedupStrategy,
+  DedupComparison,
+  MultiStrategyDedupResult,
 } from "./extractor-lab/types";
 import {
   truncate,
   simpleLogger,
   TEMP_PRESETS,
   calculateTextWidths,
-  runPreJudgeDedup as runPreJudgeDedupUtil,
+  runMultiStrategyDedup,
 } from "./extractor-lab/utils";
 import {
   ErrorView,
@@ -77,6 +79,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   const [extractorConfigs, setExtractorConfigs] = useState<ExtractorConfig[]>(getInitialExtractorConfigs);
   const [availableJudges] = useState<JudgeConfig[]>(() => getJudgesConfig());
   const [selectedJudgeIdxs, setSelectedJudgeIdxs] = useState<Set<number>>(() => new Set([0]));
+  const [selectedStrategy, setSelectedStrategy] = useState<DedupStrategy>("jaccard");
   const [error, setError] = useState<string | null>(null);
   const [highlightedItem, setHighlightedItem] = useState<string>("");
 
@@ -125,12 +128,17 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     }
   }
 
-  function runPreJudgeDedup(extractionResult: MultiExtractorResult, navigate = true): PreJudgeDedupResult {
-    const dedupResult = runPreJudgeDedupUtil(extractionResult);
-    if (navigate) {
-      setStep({ type: "pre-judge-dedup", result: extractionResult, dedupResult });
+  function runPreJudgeDedup(extractionResult: MultiExtractorResult, navigate = true): MultiStrategyDedupResult | null {
+    try {
+      const multiDedup = runMultiStrategyDedup(extractionResult);
+      if (navigate) {
+        setStep({ type: "pre-judge-dedup", result: extractionResult, multiDedup, selectedStrategy });
+      }
+      return multiDedup;
+    } catch (err) {
+      setError(`Dedup failed: ${err}`);
+      return null;
     }
-    return dedupResult;
   }
 
   async function runJudge(
@@ -179,10 +187,17 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
 
   async function runMultipleJudges(
     extractionResult: MultiExtractorResult,
-    dedupResult: PreJudgeDedupResult,
+    dedupResult: DedupComparison,
     judgeConfigs: JudgeConfig[]
   ) {
-    setStep({ type: "running-judge", result: extractionResult, dedupResult, judgeConfigs });
+    // Convert DedupComparison to PreJudgeDedupResult for running-judge step
+    // Extract just the duplicate issues (not the match info)
+    const preDedupResult = {
+      unique: dedupResult.unique,
+      duplicates: dedupResult.duplicates.map(m => m.duplicate),
+      originalCount: dedupResult.originalCount,
+    };
+    setStep({ type: "running-judge", result: extractionResult, dedupResult: preDedupResult, judgeConfigs });
 
     const results = await Promise.all(
       judgeConfigs.map((config) =>
@@ -220,8 +235,10 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
         if (judgeResults) {
           setStep({ type: "judge-comparison", result, judgeResults });
         } else {
-          const dedupResult = runPreJudgeDedup(result, false);
-          setStep({ type: "pre-judge-dedup", result, dedupResult });
+          const multiDedup = runPreJudgeDedup(result, false);
+          if (multiDedup) {
+            setStep({ type: "pre-judge-dedup", result, multiDedup, selectedStrategy });
+          }
         }
       } else if (currentStep.type === "judge-comparison") {
         setStep({ type: "results", result: currentStep.result });
@@ -363,18 +380,20 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   }
 
   if (step.type === "pre-judge-dedup") {
+    const currentDedup = step.multiDedup[step.selectedStrategy];
     return (
       <PreJudgeDedupView
         height={height}
         maxItems={maxItems}
         result={step.result}
-        dedupResult={step.dedupResult}
+        multiDedup={step.multiDedup}
+        selectedStrategy={step.selectedStrategy}
         availableJudges={availableJudges}
         selectedJudgeIdxs={selectedJudgeIdxs}
         issueTextWidth={issueTextWidth}
         generateJudgeLabel={generateJudgeLabel}
         onBack={() => setStep({ type: "results", result: step.result })}
-        onRunJudges={(configs) => runMultipleJudges(step.result, step.dedupResult, configs)}
+        onRunJudges={(configs, dedupResult) => runMultipleJudges(step.result, dedupResult, configs)}
         onToggleJudge={(idx) => {
           setSelectedJudgeIdxs(prev => {
             const next = new Set(prev);
@@ -385,6 +404,10 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
             }
             return next;
           });
+        }}
+        onSelectStrategy={(strategy) => {
+          setSelectedStrategy(strategy);
+          setStep({ type: "pre-judge-dedup", result: step.result, multiDedup: step.multiDedup, selectedStrategy: strategy });
         }}
       />
     );
@@ -439,8 +462,10 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
           if (judgeResults) {
             setStep({ type: "judge-comparison", result, judgeResults });
           } else {
-            const dedupResult = runPreJudgeDedup(result, false);
-            setStep({ type: "pre-judge-dedup", result, dedupResult });
+            const multiDedup = runPreJudgeDedup(result, false);
+            if (multiDedup) {
+              setStep({ type: "pre-judge-dedup", result, multiDedup, selectedStrategy });
+            }
           }
         }}
         onViewDecision={(decision, isRejected) => {

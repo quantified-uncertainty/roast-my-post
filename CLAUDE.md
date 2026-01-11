@@ -278,6 +278,22 @@ Details here"
 /bin/rm, /bin/cat, /bin/echo  # Use full paths
 ```
 
+## Tmux Key Sending
+
+When sending multiple keystrokes to tmux sessions (e.g., navigating CLI menus), use a loop with delays between keystrokes instead of sending them all at once.
+
+**Bad** (keys may be dropped or processed incorrectly):
+```bash
+tmux send-keys -t session Down Down Down Down Down Enter
+```
+
+**Good** (reliable keystroke delivery):
+```bash
+for i in {1..5}; do tmux send-keys -t session Down; sleep 0.1; done; tmux send-keys -t session Enter
+```
+
+This ensures each keystroke is processed before the next is sent, preventing navigation issues in terminal UIs.
+
 ## Documentation Structure
 - `/dev/docs/README.md` - Documentation index
 - `/dev/docs/development/` - Development guides

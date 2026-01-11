@@ -55,6 +55,32 @@ export interface PreJudgeDedupResult {
   originalCount: number;
 }
 
+/** Dedup strategy identifier */
+export type DedupStrategy = "exact" | "jaccard" | "fuse" | "ufuzzy";
+
+/** A duplicate issue with info about what it matched */
+export interface DuplicateMatch {
+  duplicate: ExtractorIssue;
+  matchedTo: ExtractorIssue;
+  similarity: number;  // 0-1 similarity score
+}
+
+/** Result from a single dedup strategy */
+export interface DedupComparison {
+  strategy: DedupStrategy;
+  unique: ExtractorIssue[];
+  duplicates: DuplicateMatch[];
+  originalCount: number;
+}
+
+/** Results from all dedup strategies for comparison */
+export interface MultiStrategyDedupResult {
+  exact: DedupComparison;
+  jaccard: DedupComparison;
+  fuse: DedupComparison;
+  ufuzzy: DedupComparison;
+}
+
 /** All possible steps/views in the Extractor Lab */
 export type LabStep =
   | { type: "select-document" }
@@ -63,7 +89,7 @@ export type LabStep =
   | { type: "running" }
   | { type: "results"; result: MultiExtractorResult }
   | { type: "issue-detail"; result: MultiExtractorResult; extractorIdx: number; issueIdx: number }
-  | { type: "pre-judge-dedup"; result: MultiExtractorResult; dedupResult: PreJudgeDedupResult }
+  | { type: "pre-judge-dedup"; result: MultiExtractorResult; multiDedup: MultiStrategyDedupResult; selectedStrategy: DedupStrategy }
   | { type: "running-judge"; result: MultiExtractorResult; dedupResult: PreJudgeDedupResult; judgeConfigs: JudgeConfig[] }
   | { type: "judge-comparison"; result: MultiExtractorResult; judgeResults: JudgeRunResult[] }
   | { type: "judge-results"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; judgeLabel: string; judgeResults?: JudgeRunResult[] }

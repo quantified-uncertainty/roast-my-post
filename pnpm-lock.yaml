@@ -401,6 +401,9 @@ importers:
       '@roast/db':
         specifier: workspace:*
         version: link:../db
+      fuse.js:
+        specifier: ^7.1.0
+        version: 7.1.0
       mathjs:
         specifier: ^14.0.1
         version: 14.6.0
@@ -515,6 +518,9 @@ importers:
 
   meta-evals:
     dependencies:
+      '@leeoniya/ufuzzy':
+        specifier: ^1.0.18
+        version: 1.0.18
       '@roast/ai':
         specifier: workspace:*
         version: link:../internal-packages/ai
@@ -524,6 +530,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
+      fuse.js:
+        specifier: ^7.1.0
+        version: 7.1.0
       ink:
         specifier: ^6.5.1
         version: 6.5.1(@types/react@19.2.7)(react@19.2.1)
@@ -4216,6 +4225,10 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
+  fuse.js@7.1.0:
+    resolution: {integrity: sha512-trLf4SzuuUxfusZADLINj+dE8clK1frKdmqiJNb1Es75fmI5oY6X2mxLVUciLLjxqw/xr72Dhy+lER6dGd02FQ==}
+    engines: {node: '>=10'}
+
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
@@ -5088,6 +5101,7 @@ packages:
   next@15.3.6:
     resolution: {integrity: sha512-oI6D1zbbsh6JzzZFDCSHnnx6Qpvd1fSkVJu/5d8uluqnxzuoqtodVZjYvNovooznUq8udSAiKp7MbwlfZ8Gm6w==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
+    deprecated: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/security-update-2025-12-11 for more details.
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
@@ -6582,6 +6596,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
@@ -11238,6 +11253,8 @@ snapshots:
       is-callable: 1.2.7
 
   functions-have-names@1.2.3: {}
+
+  fuse.js@7.1.0: {}
 
   gensync@1.0.0-beta.2: {}
 

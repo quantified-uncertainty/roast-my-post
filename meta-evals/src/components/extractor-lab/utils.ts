@@ -6,7 +6,8 @@ import {
   getMultiExtractorConfig,
   type ExtractorConfig,
 } from "@roast/ai/fallacy-extraction/lab";
-import type { SimpleLogger, ExtractorIssue, PreJudgeDedupResult, MultiExtractorResult } from "./types";
+import type { SimpleLogger, MultiExtractorResult, MultiStrategyDedupResult } from "./types";
+import { flattenExtractorResults, runAllDedupStrategies } from "./fuzzy-dedup";
 
 /** Temperature presets for cycling */
 export const TEMP_PRESETS = ["default", 0, 0.3, 0.5, 0.7, 1.0] as const;
@@ -43,42 +44,13 @@ export function generateExtractorLabel(config: ExtractorConfig): string {
   return `${modelShort}-${tempStr}-${thinkStr}`;
 }
 
-/** Run pre-judge deduplication on extractor results */
-export function runPreJudgeDedup(extractionResult: MultiExtractorResult): PreJudgeDedupResult {
+/** Run all pre-judge deduplication strategies on extractor results */
+export function runMultiStrategyDedup(extractionResult: MultiExtractorResult): MultiStrategyDedupResult {
   // Flatten all issues from all extractors
-  const allIssues: ExtractorIssue[] = extractionResult.extractorResults.flatMap((r) =>
-    r.issues.map((issue) => ({
-      extractorId: r.extractorId,
-      exactText: issue.exactText,
-      issueType: issue.issueType,
-      fallacyType: issue.fallacyType,
-      severityScore: issue.severityScore,
-      confidenceScore: issue.confidenceScore,
-      importanceScore: issue.importanceScore,
-      reasoning: issue.reasoning,
-    }))
-  );
+  const allIssues = flattenExtractorResults(extractionResult.extractorResults);
 
-  // Remove exact text duplicates (case-insensitive, whitespace normalized)
-  const seen = new Set<string>();
-  const unique: ExtractorIssue[] = [];
-  const duplicates: ExtractorIssue[] = [];
-
-  for (const issue of allIssues) {
-    const key = issue.exactText.toLowerCase().replace(/\s+/g, " ").trim();
-    if (!seen.has(key)) {
-      seen.add(key);
-      unique.push(issue);
-    } else {
-      duplicates.push(issue);
-    }
-  }
-
-  return {
-    unique,
-    duplicates,
-    originalCount: allIssues.length,
-  };
+  // Run all dedup strategies for comparison
+  return runAllDedupStrategies(allIssues);
 }
 
 /** Calculate text widths based on terminal width */
