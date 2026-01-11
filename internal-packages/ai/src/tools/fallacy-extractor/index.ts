@@ -4,6 +4,7 @@ import {
   ISSUE_TYPES,
 } from "../../analysis-plugins/plugins/fallacy-check/constants";
 import { callClaudeWithTool } from "../../claude/wrapper";
+import { callOpenRouterWithTool } from "../../utils/openrouter";
 import {
   Tool,
   ToolContext,
@@ -79,9 +80,15 @@ const extractedFallacyIssueSchema = z.object({
 }) satisfies z.ZodType<ExtractedFallacyIssue>;
 
 const inputSchema = z.object({
-  text: z.string().min(1).max(50000).describe("Text chunk to analyze for epistemic issues and logical fallacies"),
-  documentText: z.string().optional().describe("Full document text (optional, used for accurate location finding)"),
+  text: z.string().max(50000).optional().describe("Text chunk to analyze (optional if documentText provided)"),
+  documentText: z.string().optional().describe("Full document text - used for analysis in single-pass mode, or for location finding in chunk mode"),
   chunkStartOffset: z.number().min(0).optional().describe("Byte offset where this chunk starts in the full document (optimization for location finding)"),
+  model: z.string().optional().describe("Model to use (Claude or OpenRouter model ID)"),
+  temperature: z.union([
+    z.number().min(0).max(2),
+    z.literal('default'),
+  ]).optional().describe("Temperature for extraction (default: 0 for Claude, 0.1 for OpenRouter, 'default' to use model's native default)"),
+  thinking: z.boolean().optional().describe("Enable extended thinking/reasoning (default: true for Claude, varies for OpenRouter)"),
 }) satisfies z.ZodType<FallacyExtractorInput>;
 
 const outputSchema = z.object({
@@ -108,21 +115,47 @@ export class FallacyExtractorTool extends Tool<
     const MIN_SEVERITY_THRESHOLD = 60; // Only report significant issues
     const MAX_ISSUES = 15; // Limit to prevent overwhelming output
 
+    // Use documentText for analysis if text is not provided (single-pass mode)
+    // This allows callers to just pass documentText for full-document analysis
+    const textToAnalyze = input.text || input.documentText || "";
+
+    // Prompt version for tracking - update this when prompt changes
+    const PROMPT_VERSION = "v2-justification-check";
+
+    // Determine which model to use:
+    // 1. input.model (explicit override)
+    // 2. FALLACY_EXTRACTOR_MODEL env var (for testing different models)
+    // 3. Default (Claude via callClaudeWithTool which uses its own default)
+    const modelId = input.model || process.env.FALLACY_EXTRACTOR_MODEL || undefined;
+    const isOpenRouterModel = modelId?.includes("/") || false; // OpenRouter models have format "provider/model"
+
+    // DIRECT CONSOLE LOG FOR DEBUGGING - bypasses any logger filtering
+    console.log(`\n\n🔥🔥🔥 FALLACY EXTRACTOR RUNNING 🔥🔥🔥`);
+    console.log(`PROMPT_VERSION=${PROMPT_VERSION}`);
+    console.log(`MODEL=${modelId || "default"} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`);
+    console.log(`MODE=${input.text ? "chunk" : "single-pass"}`);
+    console.log(`DOC_LENGTH=${textToAnalyze.length}`);
+    console.log(`DOC_PREVIEW=${textToAnalyze.substring(0, 80)}...`);
+    console.log(`🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥\n\n`);
+
     // Audit log: Tool execution started
     context.logger.info(
       "[FallacyExtractor] AUDIT: Tool execution started",
       {
         timestamp: new Date().toISOString(),
-        textLength: input.text.length,
+        promptVersion: PROMPT_VERSION,
+        textLength: textToAnalyze.length,
+        textPreview: textToAnalyze.substring(0, 100),
         minSeverityThreshold: MIN_SEVERITY_THRESHOLD,
         maxIssues: MAX_ISSUES,
         hasDocumentText: !!input.documentText,
         hasChunkOffset: input.chunkStartOffset !== undefined,
+        mode: input.text ? "chunk" : "single-pass",
       }
     );
 
     context.logger.info(
-      `[FallacyExtractor] Analyzing text for epistemic issues`
+      `[FallacyExtractor] PROMPT_VERSION=${PROMPT_VERSION} MODE=${input.text ? "chunk" : "single-pass"} DOC_LENGTH=${textToAnalyze.length}`
     );
 
     const systemPrompt = `You are an expert epistemic critic analyzing reasoning quality and argumentation.
@@ -132,6 +165,13 @@ export class FallacyExtractorTool extends Tool<
 **🚨 CRITICAL: COMMITTING vs DISCUSSING**
 - Do NOT flag authors EXPLAINING, WARNING about, or ACKNOWLEDGING errors (good epistemics!)
 - Only flag authors MAKING the error themselves
+
+**🚨 CRITICAL: CHECK FOR JUSTIFICATION ELSEWHERE**
+- Before flagging a claim as unsupported or a non sequitur, CHECK if the author provides justification ELSEWHERE in the document
+- Authors often state conclusions first, then explain reasoning later - this is valid argumentation
+- A claim in paragraph 2 may be fully justified by technical explanation in paragraph 5
+- Only flag as "non sequitur" if there is NO supporting reasoning ANYWHERE in the document
+- Read the ENTIRE document before deciding whether a logical leap exists
 
 **🎯 SELECTIVITY**: Senior reviewer, not pedantic nitpicker.
 - Only flag issues that significantly mislead, clearly commit error, and matter to the argument
@@ -164,7 +204,7 @@ export class FallacyExtractorTool extends Tool<
 
 2. **Sophisticated Logical Fallacies**
    - False dichotomy (only presenting two options)
-   - Motte-bailey (defending weak claim by switching to strong one)
+   - Motte-bailey (defending controversial claim by retreating to defensible one)
    - Circular reasoning (conclusion in premises)
    - Hasty generalization (insufficient evidence → broad claim)
 
@@ -227,116 +267,149 @@ export class FallacyExtractorTool extends Tool<
 
     const userPrompt = `Analyze this text for epistemic and reasoning issues:
 
-${input.text}
+${textToAnalyze}
 
 Analyze ALL sections (argumentative, factual, biographical). Look for statistical errors, logical fallacies, rhetorical manipulation, and narrative issues like vague claims or selective self-presentation. Distribute findings across the entire text.`;
 
     const cacheSeed = generateCacheSeed("fallacy-extract", [
-      input.text,
+      textToAnalyze,
       MIN_SEVERITY_THRESHOLD,
       MAX_ISSUES,
     ]);
 
-    const result = await callClaudeWithTool<{
+    // Shared tool schema for both Claude and OpenRouter
+    const toolSchema = {
+      type: "object" as const,
+      properties: {
+        issues: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              exactText: {
+                type: "string",
+                description: "The exact text from the document",
+              },
+              issueType: {
+                type: "string",
+                enum: [
+                  ISSUE_TYPES.MISINFORMATION,
+                  ISSUE_TYPES.MISSING_CONTEXT,
+                  ISSUE_TYPES.DECEPTIVE_WORDING,
+                  ISSUE_TYPES.LOGICAL_FALLACY,
+                  ISSUE_TYPES.VERIFIED_ACCURATE,
+                ],
+                description: "Type of issue",
+              },
+              fallacyType: {
+                type: "string",
+                enum: [
+                  "ad-hominem",
+                  "straw-man",
+                  "false-dilemma",
+                  "slippery-slope",
+                  "appeal-to-authority",
+                  "appeal-to-emotion",
+                  "appeal-to-nature",
+                  "hasty-generalization",
+                  "survivorship-bias",
+                  "selection-bias",
+                  "cherry-picking",
+                  "circular-reasoning",
+                  "equivocation",
+                  "non-sequitur",
+                  "other",
+                ],
+                description: "Specific fallacy type (only for logical-fallacy issues)",
+              },
+              severityScore: {
+                type: "number",
+                description: "0-100: How severe is this issue",
+              },
+              confidenceScore: {
+                type: "number",
+                description: "0-100: How confident you are this is the fallacy",
+              },
+              reasoning: {
+                type: "string",
+                description: "Why this is an issue",
+              },
+              importanceScore: {
+                type: "number",
+                description: "0-100: How important to address",
+              },
+              approximateLineNumber: {
+                type: "number",
+                description: "Approximate line number where this text appears (optional, helps speed up location finding)",
+              },
+            },
+            required: [
+              "exactText",
+              "issueType",
+              "severityScore",
+              "confidenceScore",
+              "reasoning",
+              "importanceScore",
+            ],
+          },
+        },
+        wasComplete: {
+          type: "boolean",
+          description: "Whether analysis was complete or had to be truncated",
+        },
+      },
+      required: ["issues", "wasComplete"],
+    };
+
+    type ExtractorResults = {
       issues: ExtractedFallacyIssue[];
       wasComplete: boolean;
-    }>({
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: userPrompt,
-        },
-      ],
-      max_tokens: 8000,
-      temperature: 0,
-      toolName: "extract_fallacy_issues",
-      toolDescription: "Extract and score fallacy issues from text",
-      toolSchema: {
-        type: "object",
-        properties: {
-          issues: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                exactText: {
-                  type: "string",
-                  description: "The exact text from the document",
-                },
-                issueType: {
-                  type: "string",
-                  enum: [
-                    ISSUE_TYPES.MISINFORMATION,
-                    ISSUE_TYPES.MISSING_CONTEXT,
-                    ISSUE_TYPES.DECEPTIVE_WORDING,
-                    ISSUE_TYPES.LOGICAL_FALLACY,
-                    ISSUE_TYPES.VERIFIED_ACCURATE,
-                  ],
-                  description: "Type of issue",
-                },
-                fallacyType: {
-                  type: "string",
-                  enum: [
-                    "ad-hominem",
-                    "straw-man",
-                    "false-dilemma",
-                    "slippery-slope",
-                    "appeal-to-authority",
-                    "appeal-to-emotion",
-                    "appeal-to-nature",
-                    "hasty-generalization",
-                    "survivorship-bias",
-                    "selection-bias",
-                    "cherry-picking",
-                    "circular-reasoning",
-                    "equivocation",
-                    "non-sequitur",
-                    "other",
-                  ],
-                  description: "Specific fallacy type (only for logical-fallacy issues)",
-                },
-                severityScore: {
-                  type: "number",
-                  description: "0-100: How severe is this issue",
-                },
-                confidenceScore: {
-                  type: "number",
-                  description: "0-100: How confident you are this is the fallacy",
-                },
-                reasoning: {
-                  type: "string",
-                  description: "Why this is an issue",
-                },
-                importanceScore: {
-                  type: "number",
-                  description: "0-100: How important to address",
-                },
-                approximateLineNumber: {
-                  type: "number",
-                  description: "Approximate line number where this text appears (optional, helps speed up location finding)",
-                },
-              },
-              required: [
-                "exactText",
-                "issueType",
-                "severityScore",
-                "confidenceScore",
-                "reasoning",
-                "importanceScore",
-              ],
-            },
-          },
-          wasComplete: {
-            type: "boolean",
-            description: "Whether analysis was complete or had to be truncated",
-          },
-        },
-        required: ["issues", "wasComplete"],
-      },
-      enablePromptCaching: true,
-      cacheSeed,
-    });
+    };
+
+    let result: { toolResult: ExtractorResults };
+
+    // Determine temperature to use:
+    // - "default": Don't pass temperature, let model use its native default
+    // - undefined: Use our model-specific default (0 for Claude, 0.1 for OpenRouter)
+    // - number: Use explicit value
+    const useDefaultTemperature = input.temperature === 'default';
+    const defaultTemp = isOpenRouterModel ? 0.1 : 0;
+    const temperature = useDefaultTemperature ? undefined : (typeof input.temperature === 'number' ? input.temperature : defaultTemp);
+
+    // Thinking parameter: undefined/true = enabled, false = disabled
+    const thinkingEnabled = input.thinking !== false;
+
+    if (isOpenRouterModel && modelId) {
+      // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
+      console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`);
+      result = await callOpenRouterWithTool<ExtractorResults>({
+        model: modelId,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+        max_tokens: 8000,
+        ...(temperature !== undefined && { temperature }),
+        toolName: "extract_fallacy_issues",
+        toolDescription: "Extract and score fallacy issues from text",
+        toolSchema,
+        thinking: thinkingEnabled,
+      });
+    } else {
+      // Use Claude API directly
+      console.log(`🤖 Calling Claude API${modelId ? ` with model: ${modelId}` : ""}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`);
+      result = await callClaudeWithTool<ExtractorResults>({
+        ...(modelId && { model: modelId }),
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+        max_tokens: 8000,
+        ...(temperature !== undefined && { temperature }),
+        toolName: "extract_fallacy_issues",
+        toolDescription: "Extract and score fallacy issues from text",
+        toolSchema,
+        enablePromptCaching: true,
+        cacheSeed,
+        thinking: thinkingEnabled,
+      });
+    }
 
     let allIssues = result.toolResult.issues || [];
     const wasComplete = result.toolResult.wasComplete ?? true;
@@ -416,19 +489,19 @@ Analyze ALL sections (argumentative, factual, biographical). Look for statistica
           let locationResult;
 
           // OPTIMIZATION: If we have chunk offset, search in chunk first (much faster!)
-          if (input.chunkStartOffset !== undefined) {
+          if (input.chunkStartOffset !== undefined && input.text) {
             // Use optimized 3-tier chunk-based location finding
             locationResult = await findLocationInChunk(
               {
                 chunkText: input.text,
-                fullDocumentText: input.documentText,
+                fullDocumentText: input.documentText || input.text,
                 chunkStartOffset: input.chunkStartOffset,
                 searchText: issue.exactText,
                 lineNumberHint: issue.approximateLineNumber,
               },
               context
             );
-          } else {
+          } else if (input.documentText) {
             // No chunk offset, search in full document
             locationResult = await fuzzyTextLocatorTool.execute(
               {
@@ -443,6 +516,10 @@ Analyze ALL sections (argumentative, factual, biographical). Look for statistica
               },
               context
             );
+          } else {
+            // No document text available for location finding
+            issuesWithLocations.push(issue);
+            continue;
           }
 
           if (locationResult.found && locationResult.location) {

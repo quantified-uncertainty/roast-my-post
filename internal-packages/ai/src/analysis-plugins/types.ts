@@ -116,6 +116,7 @@ export interface AnalysisResult {
   comments: Comment[];
   cost: number;
   grade?: number; // Optional grade (0-100) for quality assessment
+  pipelineTelemetry?: Record<string, unknown>; // Pipeline execution telemetry (JSON-serializable)
 }
 
 export interface SimpleAnalysisPlugin {

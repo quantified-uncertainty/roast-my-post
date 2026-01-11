@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import { metaEvaluationRepository } from "@roast/db";
 import { scoreComments, type ScoringResult } from "@roast/ai/meta-eval";
@@ -44,6 +44,13 @@ export function ScoreRun({ seriesId, height, judgeModel, temperature, maxTokens,
   const [documentContent, setDocumentContent] = useState<string>("");
   const [showFullReasoning, setShowFullReasoning] = useState(false);
   const [isViewingSaved, setIsViewingSaved] = useState(false);
+
+  // Handle escape to go back
+  useInput((input, key) => {
+    if (key.escape) {
+      onBack();
+    }
+  });
 
   useEffect(() => {
     loadCompletedRuns();

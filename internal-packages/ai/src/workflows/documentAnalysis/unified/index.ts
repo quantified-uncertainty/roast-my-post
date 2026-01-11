@@ -34,6 +34,7 @@ export async function analyzeDocumentUnified(
   highlights: AiComment[];
   tasks: TaskResult[];
   jobLogString?: string;
+  pipelineTelemetry?: Record<string, unknown>;
 }> {
   // Check timeout before starting plugin analysis
   checkJobTimeout();
@@ -68,6 +69,7 @@ export async function analyzeDocumentUnified(
     highlights: aiCommentsToDbComments(validAiComments) as any,
     tasks: result.tasks,
     jobLogString: result.jobLogString,
+    pipelineTelemetry: result.pipelineTelemetry,
   };
 }
 

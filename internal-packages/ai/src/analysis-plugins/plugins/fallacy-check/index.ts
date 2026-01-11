@@ -4,8 +4,12 @@ import {
 import { logger } from "../../../shared/logger";
 import type { Comment, ToolChainResult } from "../../../shared/types";
 import fallacyExtractorTool from "../../../tools/fallacy-extractor";
+import type { ExtractedFallacyIssue } from "../../../tools/fallacy-extractor/types";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import fallacyReviewTool from "../../../tools/fallacy-review";
+import supportedElsewhereFilterTool from "../../../tools/supported-elsewhere-filter";
+import fallacyJudgeTool from "../../../tools/fallacy-judge";
+import { decisionToIssue } from "../../../tools/fallacy-judge/types";
 import { TextChunk } from "../../TextChunk";
 import type {
   AnalysisResult,
@@ -15,6 +19,21 @@ import type {
 import { LIMITS, THRESHOLDS, ISSUE_TYPES } from "./constants";
 import { buildFallacyComment } from "./comments/builder";
 import { FallacyIssue } from "./FallacyIssue";
+import {
+  PipelineTelemetry,
+  PIPELINE_STAGES,
+  type PipelineExecutionRecord,
+  type ExtractionPhaseTelemetry,
+  type ExtractorTelemetry,
+  type JudgeDecisionRecord,
+} from "./telemetry";
+import {
+  getMultiExtractorConfig,
+  isMultiExtractorEnabled,
+  getDefaultTemperature,
+  getConfigSummary,
+} from "./extraction/config";
+import { runMultiExtractor, simpleDeduplication } from "./extraction/multiExtractor";
 
 export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
@@ -25,6 +44,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private summary: string = "";
   private analysis: string = "";
   private processingStartTime: number = 0;
+  private telemetryRecord: PipelineExecutionRecord | null = null;
 
   constructor() {
     // Initialize empty values - they'll be set in analyze()
@@ -119,6 +139,9 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       return this.getResults();
     }
 
+    // Initialize telemetry - use local const to avoid repeated null assertions
+    const telemetry = new PipelineTelemetry(documentText.length);
+
     try {
       // Audit log: Analysis started
       logger.info("FallacyCheckPlugin: AUDIT: Analysis started", {
@@ -128,141 +151,69 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         operation: "fallacy-check-analysis",
       });
 
-      logger.info("FallacyCheckPlugin: Starting analysis");
-      logger.info(`FallacyCheckPlugin: Processing ${chunks.length} chunks`);
+      logger.info("FallacyCheckPlugin: Starting analysis (single-pass mode)");
 
-      // Phase 1: Extract epistemic issues from all chunks in parallel
-      const extractionPromises = this.chunks.map((chunk) =>
-        this.extractIssuesFromChunk(chunk)
-      );
+      // Phase 1: Single-pass extraction on full document
+      telemetry.startStage(PIPELINE_STAGES.EXTRACTION, 1); // 1 = full document
+      const extractionResult = await this.extractIssuesFromDocument(documentText, telemetry);
+      const allIssues: FallacyIssue[] = extractionResult.issues;
+      telemetry.endStage(allIssues.length, {
+        error: extractionResult.error,
+        metadata: { documentLength: documentText.length },
+      });
+      telemetry.setFinalCounts({ issuesExtracted: allIssues.length });
 
-      const extractionResults = await Promise.allSettled(extractionPromises);
-
-      // Collect all extracted issues and track errors
-      const allIssues: FallacyIssue[] = [];
-      const extractionErrors: string[] = [];
-
-      for (const result of extractionResults) {
-        if (result.status === "fulfilled" && result.value) {
-          allIssues.push(...result.value.issues);
-          if (result.value.error) {
-            extractionErrors.push(result.value.error);
-          }
-        } else if (result.status === "rejected") {
-          const error =
-            result.reason instanceof Error
-              ? result.reason.message
-              : "Unknown extraction error";
-          extractionErrors.push(error);
-          logger.warn(`Issue extraction failed for chunk: ${error}`);
-        }
+      if (extractionResult.error) {
+        logger.warn(`Issue extraction completed with error: ${extractionResult.error}`);
       }
 
-      // Log summary of errors if any occurred
-      if (extractionErrors.length > 0) {
-        logger.warn(
-          `Issue extraction completed with ${extractionErrors.length} errors`
-        );
-      }
-
-      // Audit log: Extraction phase completed
       logger.info("FallacyCheckPlugin: AUDIT: Extraction phase completed", {
         timestamp: new Date().toISOString(),
         issuesExtracted: allIssues.length,
-        extractionErrors: extractionErrors.length,
+        extractionError: extractionResult.error || null,
         phase: "extraction",
       });
 
-      // Deduplicate issues by similar text
-      this.issues = this.deduplicateIssues(allIssues);
+      // Phase 1.5: Deduplicate issues by similar text
+      telemetry.startStage(PIPELINE_STAGES.DEDUPLICATION, allIssues.length);
+      const deduplicatedIssues = this.deduplicateIssues(allIssues);
+      telemetry.endStage(deduplicatedIssues.length);
+      telemetry.setFinalCounts({ issuesAfterDedup: deduplicatedIssues.length });
 
-      // Phase 2: Generate comments for all issues in parallel
-      const commentPromises = this.issues.map(async (issue) => {
-        // Run in next tick to ensure true parallelism
-        await new Promise((resolve) => setImmediate(resolve));
-        const comment = await buildFallacyComment(
-          issue,
-          documentText,
-          { logger }
-        );
-        // Filter out comments with empty descriptions
-        if (
-          comment &&
-          comment.description &&
-          comment.description.trim() !== ""
-        ) {
-          return comment;
-        }
-        return null;
+      // Phase 2: Filter out issues supported elsewhere in the document
+      logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter started", {
+        timestamp: new Date().toISOString(),
+        issuesToFilter: deduplicatedIssues.length,
+        phase: "supported-elsewhere-filter",
       });
 
-      const commentResults = await Promise.all(commentPromises);
-      const allComments = commentResults.filter(
-        (comment): comment is Comment => comment !== null
+      telemetry.startStage(PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER, deduplicatedIssues.length);
+      const filteredIssues = await this.runSupportedElsewhereFilter(
+        deduplicatedIssues,
+        documentText,
+        telemetry
       );
+      telemetry.setFinalCounts({ issuesAfterFiltering: filteredIssues.length });
 
-      // Phase 3: Review and filter comments, generate summaries
-      try {
-        const reviewComments = allComments.map((comment, index) => ({
-          index,
-          header: comment.header || "Epistemic Issue",
-          description: comment.description,
-          level: comment.level || 'warning',
-          importance: comment.importance,
-          quotedText: comment.highlight.quotedText,
-        }));
+      this.issues = filteredIssues;
 
-        // Audit log: Review phase started
-        logger.info("FallacyCheckPlugin: AUDIT: Review phase started", {
-          timestamp: new Date().toISOString(),
-          commentsToReview: allComments.length,
-          phase: "review",
-          operation: "fallacy-review-tool",
-        });
+      // Phase 3: Generate comments for all issues in parallel
+      telemetry.startStage(PIPELINE_STAGES.COMMENT_GENERATION, this.issues.length);
+      const allComments = await this.generateCommentsForIssues(this.issues, documentText);
+      telemetry.endStage(allComments.length);
+      telemetry.setFinalCounts({ commentsGenerated: allComments.length });
 
-        const reviewResult = await fallacyReviewTool.execute(
-          {
-            documentText,
-            comments: reviewComments,
-          },
-          { logger }
-        );
-
-        // Filter comments based on review
-        this.comments = reviewResult.commentIndicesToKeep.map(
-          (idx) => allComments[idx]
-        );
-
-        // Use summaries from review
-        this.summary = reviewResult.oneLineSummary;
-        this.analysis = reviewResult.documentSummary;
-
-        // Audit log: Review phase completed
-        logger.info("FallacyCheckPlugin: AUDIT: Review phase completed", {
-          timestamp: new Date().toISOString(),
-          commentsReviewed: allComments.length,
-          commentsKept: this.comments.length,
-          commentsFiltered: allComments.length - this.comments.length,
-          phase: "review",
-        });
-
-        logger.info(
-          `FallacyCheckPlugin: Review complete - kept ${this.comments.length}/${allComments.length} comments`
-        );
-      } catch (error) {
-        logger.error("FallacyCheckPlugin: Review failed, using fallback", error);
-        // Fallback: keep all comments and use old summary generation
-        this.comments = allComments;
-        const { summary, analysisSummary } = this.generateAnalysis();
-        this.summary = summary;
-        this.analysis = analysisSummary;
-      }
+      // Phase 4: Review and filter comments, generate summaries
+      telemetry.startStage(PIPELINE_STAGES.REVIEW, allComments.length);
+      await this.reviewAndFilterComments(allComments, documentText, telemetry);
 
       this.hasRun = true;
 
-      const totalDuration = Date.now() - this.processingStartTime;
+      // Finalize telemetry
+      this.telemetryRecord = telemetry.finalize(true);
+      telemetry.logSummary();
 
-      // Audit log: Analysis completed successfully
+      const totalDuration = Date.now() - this.processingStartTime;
       logger.info("FallacyCheckPlugin: AUDIT: Analysis completed", {
         timestamp: new Date().toISOString(),
         totalDurationMs: totalDuration,
@@ -280,6 +231,10 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     } catch (error) {
       const totalDuration = Date.now() - this.processingStartTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Finalize telemetry with error
+      this.telemetryRecord = telemetry.finalize(false, errorMessage);
+      telemetry.logSummary();
 
       // Audit log: Analysis failed
       logger.error("FallacyCheckPlugin: AUDIT: Analysis failed", {
@@ -310,50 +265,262 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       analysis: this.analysis,
       comments: this.comments,
       cost: 0,
+      // Cast to Record<string, unknown> for JSON serialization
+      pipelineTelemetry: this.telemetryRecord as unknown as Record<string, unknown> | undefined,
     };
   }
 
-  private async extractIssuesFromChunk(chunk: TextChunk): Promise<{
+  /**
+   * Extract issues from the full document in a single pass.
+   * This provides complete context for better accuracy and reduces false positives
+   * from flagging intro claims that are supported later in the document.
+   *
+   * Supports multi-extractor mode when FALLACY_EXTRACTORS env var is set.
+   */
+  private async extractIssuesFromDocument(
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<{
+    issues: FallacyIssue[];
+    error?: string;
+  }> {
+    const multiExtractorEnabled = isMultiExtractorEnabled();
+
+    if (multiExtractorEnabled) {
+      return this.extractWithMultiExtractor(documentText, telemetry);
+    }
+
+    return this.extractWithSingleExtractor(documentText, telemetry);
+  }
+
+  /**
+   * Single extractor mode (default, backwards compatible)
+   */
+  private async extractWithSingleExtractor(
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<{
     issues: FallacyIssue[];
     error?: string;
   }> {
     try {
-      // Track tool execution if session manager is available
       const sessionManager = getGlobalSessionManager();
       const executeExtraction = async () => {
         return await fallacyExtractorTool.execute(
-          {
-            text: chunk.text,
-            documentText: this.documentText, // Pass full document for location finding
-            chunkStartOffset: chunk.metadata?.position?.start, // Optimize location finding to search chunk first
-          },
-          {
-            logger,
-          }
+          { documentText },
+          { logger }
         );
       };
 
       const result = sessionManager
-        ? await sessionManager.trackTool(
-            "extract-fallacy-issues",
-            executeExtraction
-          )
+        ? await sessionManager.trackTool("extract-fallacy-issues", executeExtraction)
         : await executeExtraction();
 
+      // Create a synthetic "chunk" representing the full document
+      const fullDocChunk = new TextChunk("full-document", documentText, {
+        position: { start: 0, end: documentText.length },
+      });
+
       const issues = result.issues.map(
-        (issue) => new FallacyIssue(issue, chunk, this.processingStartTime)
+        (issue) => new FallacyIssue(issue, fullDocChunk, this.processingStartTime)
       );
 
-      return {
-        issues,
+      // Record single-extractor telemetry
+      const config = getMultiExtractorConfig();
+      const extractor = config.extractors[0];
+      const extractorTelemetry: ExtractionPhaseTelemetry = {
+        multiExtractorEnabled: false,
+        extractors: [
+          {
+            extractorId: "default",
+            model: extractor.model,
+            // Resolve temperature for telemetry: "default" -> model default, number -> use as-is
+            temperature: typeof extractor.temperature === 'number'
+              ? extractor.temperature
+              : getDefaultTemperature(extractor.model),
+            // Store original config for display
+            temperatureConfig: extractor.temperature,
+            thinkingEnabled: extractor.thinking !== false,
+            issuesFound: result.issues.length,
+            durationMs: 0, // Not tracked in single mode
+            issuesByType: this.countIssuesByType(result.issues),
+          },
+        ],
+        totalIssuesBeforeJudge: result.issues.length,
+        totalIssuesAfterJudge: result.issues.length,
+        judgeDecisions: [],
       };
+      telemetry.setExtractionPhase(extractorTelemetry);
+
+      return { issues };
     } catch (error) {
-      logger.error("Error extracting issues from chunk:", error);
+      logger.error("Error extracting issues from document:", error);
       return {
         issues: [],
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
+  }
+
+  /**
+   * Multi-extractor mode with LLM judge aggregation
+   */
+  private async extractWithMultiExtractor(
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<{
+    issues: FallacyIssue[];
+    error?: string;
+  }> {
+    const config = getMultiExtractorConfig();
+
+    logger.info(`[FallacyCheckPlugin] Multi-extractor mode enabled`);
+    logger.info(getConfigSummary());
+
+    try {
+      // Phase 1: Run all extractors in parallel
+      const multiResult = await runMultiExtractor(documentText, config);
+
+      // Collect telemetry for each extractor
+      const extractorsTelemetry: ExtractorTelemetry[] = multiResult.extractorResults.map(
+        (r) => ({
+          extractorId: r.extractorId,
+          model: r.config.model,
+          // Resolve temperature for telemetry: "default" -> model default, number -> use as-is
+          temperature: typeof r.config.temperature === 'number'
+            ? r.config.temperature
+            : getDefaultTemperature(r.config.model),
+          // Store original config for display
+          temperatureConfig: r.config.temperature,
+          thinkingEnabled: r.config.thinking !== false,
+          issuesFound: r.issues.length,
+          durationMs: r.durationMs,
+          costUsd: r.costUsd,
+          error: r.error,
+          issuesByType: this.countIssuesByType(r.issues),
+        })
+      );
+
+      // Phase 2: Aggregate issues (via LLM judge or simple dedup)
+      const successfulExtractors = multiResult.extractorResults.filter((r) => !r.error);
+      let finalIssues: ExtractedFallacyIssue[];
+      let judgeDecisions: JudgeDecisionRecord[] = [];
+      let judgeDurationMs: number | undefined;
+      let judgeCostUsd: number | undefined;
+
+      if (multiResult.totalIssuesFound === 0) {
+        finalIssues = [];
+      } else if (successfulExtractors.length <= 1 || !config.judgeEnabled) {
+        // Single extractor or judge disabled - use simple deduplication
+        if (successfulExtractors.length > 1) {
+          logger.info(
+            `[FallacyCheckPlugin] Using simple deduplication (judge disabled)`
+          );
+          finalIssues = simpleDeduplication(multiResult);
+        } else {
+          logger.info(
+            `[FallacyCheckPlugin] Single extractor - no deduplication needed`
+          );
+          finalIssues = successfulExtractors.flatMap((r) => r.issues);
+        }
+      } else {
+        // Multiple extractors with judge enabled - use LLM judge
+        const judgeInput = {
+          documentText,
+          issues: multiResult.extractorResults.flatMap((r) =>
+            r.issues.map((issue) => ({
+              extractorId: r.extractorId,
+              exactText: issue.exactText,
+              issueType: issue.issueType,
+              fallacyType: issue.fallacyType,
+              severityScore: issue.severityScore,
+              confidenceScore: issue.confidenceScore,
+              importanceScore: issue.importanceScore,
+              reasoning: issue.reasoning,
+            }))
+          ),
+          extractorIds: successfulExtractors.map((r) => r.extractorId),
+        };
+
+        logger.info(
+          `[FallacyCheckPlugin] Running LLM judge on ${judgeInput.issues.length} issues from ${judgeInput.extractorIds.length} extractors`
+        );
+
+        const judgeStartTime = Date.now();
+        const judgeResult = await fallacyJudgeTool.execute(judgeInput, { logger });
+        judgeDurationMs = Date.now() - judgeStartTime;
+
+        // Convert judge decisions to issues
+        finalIssues = judgeResult.acceptedDecisions.map((d) => decisionToIssue(d));
+
+        // Record judge decisions for telemetry
+        judgeDecisions = [
+          ...judgeResult.acceptedDecisions.map((d) => ({
+            issueText: d.finalText,
+            issueType: d.finalIssueType,
+            decision: (d.decision === 'accept' || d.decision === 'merge' ? 'accepted' : 'rejected') as 'accepted' | 'merged' | 'rejected',
+            reasoning: d.judgeReasoning,
+            sourceExtractors: d.sourceExtractors,
+            finalSeverity: d.finalSeverity,
+            finalConfidence: d.finalConfidence,
+          })),
+          ...judgeResult.rejectedDecisions.map((d) => ({
+            issueText: d.finalText,
+            issueType: d.finalIssueType,
+            decision: 'rejected' as const,
+            reasoning: d.judgeReasoning,
+            sourceExtractors: d.sourceExtractors,
+            finalSeverity: d.finalSeverity,
+            finalConfidence: d.finalConfidence,
+          })),
+        ];
+
+        logger.info(
+          `[FallacyCheckPlugin] Judge aggregation complete: ${finalIssues.length} accepted, ${judgeResult.rejectedDecisions.length} rejected`
+        );
+      }
+
+      // Record extraction phase telemetry
+      const extractionTelemetry: ExtractionPhaseTelemetry = {
+        multiExtractorEnabled: true,
+        extractors: extractorsTelemetry,
+        totalIssuesBeforeJudge: multiResult.totalIssuesFound,
+        totalIssuesAfterJudge: finalIssues.length,
+        judgeModel: config.judgeModel,
+        judgeDurationMs,
+        judgeCostUsd,
+        judgeDecisions,
+      };
+      telemetry.setExtractionPhase(extractionTelemetry);
+
+      // Create FallacyIssue objects
+      const fullDocChunk = new TextChunk("full-document", documentText, {
+        position: { start: 0, end: documentText.length },
+      });
+
+      const issues = finalIssues.map(
+        (issue) => new FallacyIssue(issue, fullDocChunk, this.processingStartTime)
+      );
+
+      return { issues };
+    } catch (error) {
+      logger.error("Error in multi-extractor mode:", error);
+      return {
+        issues: [],
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  /**
+   * Count issues by type for telemetry
+   */
+  private countIssuesByType(issues: ExtractedFallacyIssue[]): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const issue of issues) {
+      counts[issue.issueType] = (counts[issue.issueType] || 0) + 1;
+    }
+    return counts;
   }
 
   private deduplicateIssues(issues: FallacyIssue[]): FallacyIssue[] {
@@ -406,6 +573,183 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     }
 
     return sortedIssues;
+  }
+
+  /**
+   * Run the supported-elsewhere filter to remove false positives
+   */
+  private async runSupportedElsewhereFilter(
+    issues: FallacyIssue[],
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<FallacyIssue[]> {
+    try {
+      const filterInput = {
+        documentText,
+        issues: issues.map((issue) => ({
+          quotedText: issue.text,
+          issueType: issue.issueType,
+          reasoning: issue.issue.reasoning,
+          locationOffset: issue.issue.location?.startOffset,
+        })),
+      };
+
+      const filterResult = await supportedElsewhereFilterTool.execute(
+        filterInput,
+        { logger }
+      );
+
+      // Keep only the issues that are NOT supported elsewhere
+      const unsupportedIndices = new Set(
+        filterResult.unsupportedIssues.map((r) => r.index)
+      );
+      const filteredIssues = issues.filter((_, idx) =>
+        unsupportedIndices.has(idx)
+      );
+
+      // Log and record what was filtered
+      const supportedCount = filterResult.supportedIssues.length;
+      if (supportedCount > 0) {
+        logger.info(
+          `FallacyCheckPlugin: Filtered out ${supportedCount} issues (supported elsewhere in document)`
+        );
+
+        // Record filtered items with their reasoning for telemetry
+        const filteredRecords = filterResult.supportedIssues.map((supported) => {
+          const originalIssue = issues[supported.index];
+          logger.debug(`  - Issue ${supported.index}: ${supported.explanation}`);
+          return {
+            stage: PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER,
+            quotedText: originalIssue?.text || `Issue at index ${supported.index}`,
+            header: originalIssue?.issueType,
+            filterReason: supported.explanation,
+            supportLocation: supported.supportLocation,
+            originalIndex: supported.index,
+          };
+        });
+        telemetry.recordFilteredItems(filteredRecords);
+      }
+
+      logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter completed", {
+        timestamp: new Date().toISOString(),
+        issuesBeforeFilter: issues.length,
+        issuesAfterFilter: filteredIssues.length,
+        issuesFiltered: supportedCount,
+        phase: "supported-elsewhere-filter",
+      });
+
+      telemetry.endStage(filteredIssues.length);
+      return filteredIssues;
+    } catch (error) {
+      logger.warn("FallacyCheckPlugin: Supported-elsewhere filter failed, keeping all issues", error);
+      telemetry.endStage(issues.length, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return issues;
+    }
+  }
+
+  /**
+   * Generate comments for all issues in parallel
+   */
+  private async generateCommentsForIssues(
+    issues: FallacyIssue[],
+    documentText: string
+  ): Promise<Comment[]> {
+    const commentPromises = issues.map(async (issue) => {
+      // Run in next tick to ensure true parallelism
+      await new Promise((resolve) => setImmediate(resolve));
+      const comment = await buildFallacyComment(issue, documentText, { logger });
+      // Filter out comments with empty descriptions
+      if (comment?.description?.trim()) {
+        return comment;
+      }
+      return null;
+    });
+
+    const commentResults = await Promise.all(commentPromises);
+    return commentResults.filter((comment): comment is Comment => comment !== null);
+  }
+
+  /**
+   * Review and filter comments, generate summaries
+   */
+  private async reviewAndFilterComments(
+    allComments: Comment[],
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<void> {
+    try {
+      const reviewComments = allComments.map((comment, index) => ({
+        index,
+        header: comment.header || "Epistemic Issue",
+        description: comment.description,
+        level: comment.level || 'warning',
+        importance: comment.importance,
+        quotedText: comment.highlight.quotedText,
+      }));
+
+      logger.info("FallacyCheckPlugin: AUDIT: Review phase started", {
+        timestamp: new Date().toISOString(),
+        commentsToReview: allComments.length,
+        phase: "review",
+        operation: "fallacy-review-tool",
+      });
+
+      const reviewResult = await fallacyReviewTool.execute(
+        { documentText, comments: reviewComments },
+        { logger }
+      );
+
+      // Filter comments based on review
+      const keptIndices = new Set(reviewResult.commentIndicesToKeep);
+      this.comments = reviewResult.commentIndicesToKeep.map((idx) => allComments[idx]);
+      this.summary = reviewResult.oneLineSummary;
+      this.analysis = reviewResult.documentSummary;
+
+      // Record comments that were filtered by review
+      const filteredComments = allComments
+        .map((comment, idx) => ({ comment, idx }))
+        .filter(({ idx }) => !keptIndices.has(idx));
+
+      if (filteredComments.length > 0) {
+        const filteredRecords = filteredComments.map(({ comment, idx }) => ({
+          stage: PIPELINE_STAGES.REVIEW,
+          quotedText: comment.highlight.quotedText,
+          header: comment.header,
+          filterReason: 'Filtered by review (redundant, low-value, or questionable)',
+          originalIndex: idx,
+        }));
+        telemetry.recordFilteredItems(filteredRecords);
+      }
+
+      logger.info("FallacyCheckPlugin: AUDIT: Review phase completed", {
+        timestamp: new Date().toISOString(),
+        commentsReviewed: allComments.length,
+        commentsKept: this.comments.length,
+        commentsFiltered: allComments.length - this.comments.length,
+        phase: "review",
+      });
+
+      telemetry.endStage(this.comments.length);
+      telemetry.setFinalCounts({ commentsKept: this.comments.length });
+
+      logger.info(
+        `FallacyCheckPlugin: Review complete - kept ${this.comments.length}/${allComments.length} comments`
+      );
+    } catch (error) {
+      logger.error("FallacyCheckPlugin: Review failed, using fallback", error);
+      // Fallback: keep all comments and use old summary generation
+      this.comments = allComments;
+      const { summary, analysisSummary } = this.generateAnalysis();
+      this.summary = summary;
+      this.analysis = analysisSummary;
+
+      telemetry.endStage(this.comments.length, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      telemetry.setFinalCounts({ commentsKept: this.comments.length });
+    }
   }
 
   private generateAnalysis(): { summary: string; analysisSummary: string } {

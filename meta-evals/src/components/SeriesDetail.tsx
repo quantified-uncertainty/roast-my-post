@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import { metaEvaluationRepository } from "@roast/db";
 import { truncate, formatDate, formatStatus, getStatusColor } from "./helpers";
@@ -57,6 +57,13 @@ export function SeriesDetail({
   const [runningAgain, setRunningAgain] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [series, setSeries] = useState<SeriesDetailData | null>(null);
+
+  // Handle escape to go back
+  useInput((input, key) => {
+    if (key.escape) {
+      onBack();
+    }
+  });
 
   // Load and poll for updates - always poll every 2 seconds
   useEffect(() => {

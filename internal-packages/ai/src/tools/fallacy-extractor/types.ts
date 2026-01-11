@@ -65,14 +65,37 @@ export interface ExtractedFallacyIssue {
  * Input for the epistemic issues extractor tool
  */
 export interface FallacyExtractorInput {
-  /** Text chunk to analyze */
-  text: string;
+  /** Text chunk to analyze (optional if documentText provided) */
+  text?: string;
 
-  /** Full document text (for accurate location finding in full doc) */
+  /** Full document text - used for analysis in single-pass mode, or for location finding in chunk mode */
   documentText?: string;
 
   /** Absolute offset where this chunk starts in the full document (optimization) */
   chunkStartOffset?: number;
+
+  /**
+   * Optional model to use for extraction.
+   * Can be a Claude model (default) or an OpenRouter model ID.
+   * Examples: "claude-sonnet-4-20250514", "google/gemini-3-flash-preview"
+   */
+  model?: string;
+
+  /**
+   * Optional temperature override for extraction.
+   * - undefined: Use model-specific default (0 for Claude, 0.1 for OpenRouter)
+   * - number: Use this specific temperature
+   * - "default": Let the model use its own default (don't pass temperature)
+   * Use higher values (0.3-0.7) to get more diverse extractions.
+   */
+  temperature?: number | 'default';
+
+  /**
+   * Whether to enable extended thinking/reasoning mode.
+   * - undefined/true: Enable extended thinking (Claude) / reasoning (OpenRouter/Gemini)
+   * - false: Disable extended thinking for faster, cheaper responses
+   */
+  thinking?: boolean;
 }
 
 /**
