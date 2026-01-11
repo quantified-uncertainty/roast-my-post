@@ -951,11 +951,14 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
         </Box>
 
         <SelectInput
-          items={comparisonItems.filter(i => !i.value.startsWith("sep-") && !i.value.startsWith("header") && !i.value.startsWith("stats-") && !i.value.startsWith("error-"))}
+          items={comparisonItems.filter(i => !i.value.startsWith("sep-") && !i.value.startsWith("header") && !i.value.startsWith("stats-"))}
           limit={maxItems - 5}
           onSelect={(item) => {
             if (item.value === "back") {
               setStep({ type: "results", result });
+            } else if (item.value.startsWith("error-")) {
+              // Error lines are not clickable, just informational
+              return;
             } else if (item.value.startsWith("judge-")) {
               const idx = parseInt(item.value.replace("judge-", ""), 10);
               const jr = judgeResults[idx];

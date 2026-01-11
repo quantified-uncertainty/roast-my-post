@@ -450,12 +450,12 @@ Group similar issues together and provide your decisions. Remember:
 
       if (useOpenRouter) {
         // Use OpenRouter for non-Claude models
-        // Use 16000 max_tokens to handle large outputs with many issues
+        // Use 32000 max_tokens to handle large outputs with many issues (esp. with thinking)
         result = await callOpenRouterWithTool<JudgeResultType>({
           model: judgeConfig.model,
           system: systemPrompt,
           messages: [{ role: 'user', content: userPrompt }],
-          max_tokens: 16000,
+          max_tokens: 32000,
           ...(temperature !== undefined && { temperature }),
           toolName: 'aggregate_fallacy_issues',
           toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
