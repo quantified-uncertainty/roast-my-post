@@ -34,6 +34,7 @@ import {
   getConfigSummary,
 } from "./extraction/config";
 import { runMultiExtractor, simpleDeduplication } from "./extraction/multiExtractor";
+import { deduplicateIssues, prioritizeAndLimitIssues } from "./dedup";
 
 export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
@@ -176,7 +177,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       // Phase 1.5: Deduplicate issues by similar text
       telemetry.startStage(PIPELINE_STAGES.DEDUPLICATION, allIssues.length);
-      const deduplicatedIssues = this.deduplicateIssues(allIssues);
+      const uniqueIssues = deduplicateIssues(allIssues);
+      const deduplicatedIssues = prioritizeAndLimitIssues(uniqueIssues);
       telemetry.endStage(deduplicatedIssues.length);
       telemetry.setFinalCounts({ issuesAfterDedup: deduplicatedIssues.length });
 
@@ -521,58 +523,6 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       counts[issue.issueType] = (counts[issue.issueType] || 0) + 1;
     }
     return counts;
-  }
-
-  private deduplicateIssues(issues: FallacyIssue[]): FallacyIssue[] {
-    const seen = new Set<string>();
-    const unique: FallacyIssue[] = [];
-
-    for (const issue of issues) {
-      const key = issue.text.toLowerCase().replace(/\s+/g, " ").trim();
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(issue);
-      }
-    }
-
-    // Calculate priority score for each issue
-    // Higher score = more important to address
-    const priorityScore = (issue: FallacyIssue) =>
-      issue.severityScore * 0.6 + issue.importanceScore * 0.4;
-
-    // Sort by priority score (most important issues first)
-    const sortedIssues = unique.sort(
-      (a, b) => priorityScore(b) - priorityScore(a)
-    );
-
-    // Limit to maximum issues if we have too many
-    if (sortedIssues.length > LIMITS.MAX_ISSUES_TO_PROCESS) {
-      logger.info(
-        `Limiting issues from ${sortedIssues.length} to ${LIMITS.MAX_ISSUES_TO_PROCESS} based on priority scores`
-      );
-
-      // Log details about what's being kept and discarded
-      const keptIssues = sortedIssues.slice(0, LIMITS.MAX_ISSUES_TO_PROCESS);
-      const discardedIssues = sortedIssues.slice(LIMITS.MAX_ISSUES_TO_PROCESS);
-
-      const avgKeptScore =
-        keptIssues.reduce((sum, i) => sum + priorityScore(i), 0) /
-        keptIssues.length;
-      const avgDiscardedScore =
-        discardedIssues.length > 0
-          ? discardedIssues.reduce((sum, i) => sum + priorityScore(i), 0) /
-            discardedIssues.length
-          : 0;
-
-      logger.debug(
-        `Priority scores - Kept issues avg: ${avgKeptScore.toFixed(1)}, ` +
-          `Discarded issues avg: ${avgDiscardedScore.toFixed(1)}`
-      );
-
-      return keptIssues;
-    }
-
-    return sortedIssues;
   }
 
   /**
