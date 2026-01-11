@@ -227,8 +227,9 @@ export function App() {
       exit();
     }
     if (key.escape) {
-      // Let ExtractorLab handle its own escape navigation internally
-      if (screen.type !== "main-menu" && screen.type !== "extractor-lab") {
+      // Screens with internal escape navigation handle it themselves
+      const screensWithInternalEscape = ["main-menu", "extractor-lab", "validation", "score-rank-menu"];
+      if (!screensWithInternalEscape.includes(screen.type)) {
         loadMainMenu();
       }
     }
