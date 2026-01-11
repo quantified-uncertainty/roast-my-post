@@ -414,6 +414,8 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
                 lostComments: comparison.lostComments,
                 // Include filter reasoning from the current run's telemetry
                 filteredItems: currentEval.pipelineTelemetry?.filteredItems,
+                // Include extraction phase telemetry for drill-down
+                extractionPhase: currentEval.pipelineTelemetry?.extractionPhase,
               },
             });
           }
@@ -796,12 +798,36 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         newComments?: Array<{ quotedText: string; header: string | null; description: string }>;
         lostComments?: Array<{ quotedText: string; header: string | null; description: string }>;
         filteredItems?: Array<{ stage: string; quotedText: string; header?: string; filterReason: string; supportLocation?: string }>;
+        extractionPhase?: {
+          multiExtractorEnabled: boolean;
+          extractors: Array<{
+            extractorId: string;
+            model: string;
+            temperature: number;
+            temperatureConfig?: number | 'default';
+            thinkingEnabled: boolean;
+            issuesFound: number;
+            durationMs: number;
+            error?: string;
+          }>;
+          totalIssuesBeforeJudge: number;
+          totalIssuesAfterJudge: number;
+          judgeModel?: string;
+          judgeDurationMs?: number;
+          judgeDecisions: Array<{
+            issueText: string;
+            decision: 'accepted' | 'merged' | 'rejected';
+            reasoning: string;
+            sourceExtractors: string[];
+          }>;
+        };
       } | null;
 
       const matched = data?.matchedComments || [];
       const newComments = data?.newComments || [];
       const lost = data?.lostComments || [];
       const filteredItems = data?.filteredItems || [];
+      const extractionPhase = data?.extractionPhase;
 
       // Helper to check if a lost comment has a filter reason
       const hasFilterReason = (lostComment: { quotedText: string; header: string | null }) => {
@@ -876,6 +902,20 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
             <Box marginTop={1}>
               <Text dimColor>Legend: ✓ kept  + new  ⊘ filtered (has reason)  − not extracted</Text>
             </Box>
+            {extractionPhase && extractionPhase.multiExtractorEnabled && (
+              <Box marginTop={1} flexDirection="column">
+                <Box>
+                  <Text color="yellow">Extraction: </Text>
+                  <Text dimColor>
+                    {extractionPhase.extractors.map(e => {
+                      const tempStr = e.temperatureConfig === 'default' ? 'tDef' : `t${e.temperature}`;
+                      const thinkStr = e.thinkingEnabled ? '' : ' noThink';
+                      return `${e.extractorId}(${tempStr}${thinkStr}):${e.issuesFound}`;
+                    }).join(' | ')} → {extractionPhase.judgeDurationMs ? 'Judge' : 'Dedup'} → {extractionPhase.totalIssuesAfterJudge}/{extractionPhase.totalIssuesBeforeJudge} kept
+                  </Text>
+                </Box>
+              </Box>
+            )}
           </Box>
 
           <SelectInput
@@ -1121,6 +1161,29 @@ function extractTelemetry(raw: unknown): {
     supportLocation?: string;
     originalIndex: number;
   }>;
+  extractionPhase?: {
+    multiExtractorEnabled: boolean;
+    extractors: Array<{
+      extractorId: string;
+      model: string;
+      temperature: number;
+      temperatureConfig?: number | 'default';
+      thinkingEnabled: boolean;
+      issuesFound: number;
+      durationMs: number;
+      error?: string;
+    }>;
+    totalIssuesBeforeJudge: number;
+    totalIssuesAfterJudge: number;
+    judgeModel?: string;
+    judgeDurationMs?: number;
+    judgeDecisions: Array<{
+      issueText: string;
+      decision: 'accepted' | 'merged' | 'rejected';
+      reasoning: string;
+      sourceExtractors: string[];
+    }>;
+  };
 } | null {
   if (!raw || typeof raw !== "object") return null;
 
@@ -1139,6 +1202,31 @@ function extractTelemetry(raw: unknown): {
     originalIndex: number;
   }> | undefined;
 
+  // Extract extraction phase telemetry if present
+  const extractionPhase = telemetry.extractionPhase as {
+    multiExtractorEnabled: boolean;
+    extractors: Array<{
+      extractorId: string;
+      model: string;
+      temperature: number;
+      temperatureConfig?: number | 'default';
+      thinkingEnabled: boolean;
+      issuesFound: number;
+      durationMs: number;
+      error?: string;
+    }>;
+    totalIssuesBeforeJudge: number;
+    totalIssuesAfterJudge: number;
+    judgeModel?: string;
+    judgeDurationMs?: number;
+    judgeDecisions: Array<{
+      issueText: string;
+      decision: 'accepted' | 'merged' | 'rejected';
+      reasoning: string;
+      sourceExtractors: string[];
+    }>;
+  } | undefined;
+
   return {
     totalDurationMs: (telemetry.totalDurationMs as number) || 0,
     issuesExtracted: finalCounts.issuesExtracted || 0,
@@ -1147,5 +1235,6 @@ function extractTelemetry(raw: unknown): {
     commentsGenerated: finalCounts.commentsGenerated || 0,
     commentsKept: finalCounts.commentsKept || 0,
     filteredItems,
+    extractionPhase,
   };
 }

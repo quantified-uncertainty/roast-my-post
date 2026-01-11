@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
-import { createOpenRouterClient, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
+import { callOpenRouterChat, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
 import { HeliconeSessionManager, setGlobalSessionManager } from "../../helicone/simpleSessionManager";
 
 // Import from new modules
@@ -140,7 +140,6 @@ const outputSchema = z.object({
  * Evaluate a claim with a single model via OpenRouter with timeout
  */
 async function evaluateWithModel(
-  client: ReturnType<typeof createOpenRouterClient>,
   input: ClaimEvaluatorInput,
   model: string,
   context: ToolContext,
@@ -173,14 +172,14 @@ async function evaluateWithModel(
         { provider, model: modelName },
         async () => {
           return Promise.race([
-            evaluateWithModelImpl(client, input, model, context),
+            evaluateWithModelImpl(input, model, context),
             timeoutPromise,
           ]);
         }
       );
     } else {
       return Promise.race([
-        evaluateWithModelImpl(client, input, model, context),
+        evaluateWithModelImpl(input, model, context),
         timeoutPromise,
       ]);
     }
@@ -200,7 +199,6 @@ async function evaluateWithModel(
  * Implementation of model evaluation (wrapped with timeout)
  */
 async function evaluateWithModelImpl(
-  client: ReturnType<typeof createOpenRouterClient>,
   input: ClaimEvaluatorInput,
   model: string,
   context: ToolContext
@@ -233,37 +231,25 @@ async function evaluateWithModelImpl(
 
     // Track response time
     const startTime = Date.now();
-    const completion = await client.chat.completions.create(
-      {
-        model,
-        messages: [
-          {
-            role: 'user',
-            content: uniquePrompt,
-          },
-        ],
-        max_tokens: maxTokens,
-        temperature: actualTemperature, // Normalized per provider (Anthropic 0-1, others 0-2)
-        // Use OpenRouter's standard response_format parameter for JSON mode
-        // Works across all providers (OpenAI, Gemini, etc.) through OpenRouter
-        response_format: { type: 'json_object' },
-      },
-      {
-        // Pass headers to disable caching (via request options)
-        // Helicone caching: Use unique seed per request to prevent cache hits
-        headers: {
-          'X-No-Cache': 'true',
-          'Helicone-Cache-Enabled': 'false',
-          'Helicone-Cache-Seed': uniqueId, // Unique seed ensures no cache reuse
-        } as Record<string, string>,
-      }
-    );
+    const completion = await callOpenRouterChat({
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: uniquePrompt,
+        },
+      ],
+      max_tokens: maxTokens,
+      temperature: actualTemperature, // Normalized per provider (Anthropic 0-1, others 0-2)
+      // Use OpenRouter's standard response_format parameter for JSON mode
+      // Works across all providers (OpenAI, Gemini, etc.) through OpenRouter
+      response_format: { type: 'json_object' },
+    });
     responseTimeMs = Date.now() - startTime;
 
-    const message = completion.choices[0]?.message as MessageWithReasoning | undefined;
-    rawContent = message?.content || undefined;
+    rawContent = completion.content || undefined;
     // Capture reasoning from both GPT-5 (reasoning) and o1/o3 (reasoning_content)
-    rawThinking = message?.reasoning || message?.reasoning_content || undefined;
+    rawThinking = completion.reasoning || undefined;
     rawTokenUsage = completion.usage as TokenUsage | undefined;
 
     if (!rawContent) {
@@ -404,8 +390,6 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     setGlobalSessionManager(sessionManager);
 
     try {
-      const client = createOpenRouterClient();
-
       // Create array of all model-run combinations
       // Each model will be run 'runs' times independently
       const modelRuns: Array<{ model: string; runIndex: number }> = [];
@@ -417,7 +401,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
       // Evaluate with all models in parallel (across all runs)
       const results = await Promise.allSettled(
-        modelRuns.map(({ model }) => evaluateWithModel(client, input, model, context, sessionManager))
+        modelRuns.map(({ model }) => evaluateWithModel(input, model, context, sessionManager))
       );
 
       // Process results, maintaining index correspondence with modelRuns

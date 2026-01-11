@@ -4,9 +4,12 @@ import {
 import { logger } from "../../../shared/logger";
 import type { Comment, ToolChainResult } from "../../../shared/types";
 import fallacyExtractorTool from "../../../tools/fallacy-extractor";
+import type { ExtractedFallacyIssue } from "../../../tools/fallacy-extractor/types";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import fallacyReviewTool from "../../../tools/fallacy-review";
 import supportedElsewhereFilterTool from "../../../tools/supported-elsewhere-filter";
+import fallacyJudgeTool from "../../../tools/fallacy-judge";
+import { decisionToIssue } from "../../../tools/fallacy-judge/types";
 import { TextChunk } from "../../TextChunk";
 import type {
   AnalysisResult,
@@ -16,7 +19,21 @@ import type {
 import { LIMITS, THRESHOLDS, ISSUE_TYPES } from "./constants";
 import { buildFallacyComment } from "./comments/builder";
 import { FallacyIssue } from "./FallacyIssue";
-import { PipelineTelemetry, PIPELINE_STAGES, type PipelineExecutionRecord } from "./telemetry";
+import {
+  PipelineTelemetry,
+  PIPELINE_STAGES,
+  type PipelineExecutionRecord,
+  type ExtractionPhaseTelemetry,
+  type ExtractorTelemetry,
+  type JudgeDecisionRecord,
+} from "./telemetry";
+import {
+  getMultiExtractorConfig,
+  isMultiExtractorEnabled,
+  getDefaultTemperature,
+  getConfigSummary,
+} from "./extraction/config";
+import { runMultiExtractor, simpleDeduplication } from "./extraction/multiExtractor";
 
 export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
@@ -138,7 +155,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       // Phase 1: Single-pass extraction on full document
       telemetry.startStage(PIPELINE_STAGES.EXTRACTION, 1); // 1 = full document
-      const extractionResult = await this.extractIssuesFromDocument(documentText);
+      const extractionResult = await this.extractIssuesFromDocument(documentText, telemetry);
       const allIssues: FallacyIssue[] = extractionResult.issues;
       telemetry.endStage(allIssues.length, {
         error: extractionResult.error,
@@ -257,33 +274,49 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
    * Extract issues from the full document in a single pass.
    * This provides complete context for better accuracy and reduces false positives
    * from flagging intro claims that are supported later in the document.
+   *
+   * Supports multi-extractor mode when FALLACY_EXTRACTORS env var is set.
    */
-  private async extractIssuesFromDocument(documentText: string): Promise<{
+  private async extractIssuesFromDocument(
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<{
+    issues: FallacyIssue[];
+    error?: string;
+  }> {
+    const multiExtractorEnabled = isMultiExtractorEnabled();
+
+    if (multiExtractorEnabled) {
+      return this.extractWithMultiExtractor(documentText, telemetry);
+    }
+
+    return this.extractWithSingleExtractor(documentText, telemetry);
+  }
+
+  /**
+   * Single extractor mode (default, backwards compatible)
+   */
+  private async extractWithSingleExtractor(
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<{
     issues: FallacyIssue[];
     error?: string;
   }> {
     try {
-      // Track tool execution if session manager is available
       const sessionManager = getGlobalSessionManager();
       const executeExtraction = async () => {
         return await fallacyExtractorTool.execute(
-          {
-            documentText, // Full document for single-pass analysis and location finding
-          },
-          {
-            logger,
-          }
+          { documentText },
+          { logger }
         );
       };
 
       const result = sessionManager
-        ? await sessionManager.trackTool(
-            "extract-fallacy-issues",
-            executeExtraction
-          )
+        ? await sessionManager.trackTool("extract-fallacy-issues", executeExtraction)
         : await executeExtraction();
 
-      // Create a synthetic "chunk" representing the full document for FallacyIssue compatibility
+      // Create a synthetic "chunk" representing the full document
       const fullDocChunk = new TextChunk("full-document", documentText, {
         position: { start: 0, end: documentText.length },
       });
@@ -292,9 +325,34 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         (issue) => new FallacyIssue(issue, fullDocChunk, this.processingStartTime)
       );
 
-      return {
-        issues,
+      // Record single-extractor telemetry
+      const config = getMultiExtractorConfig();
+      const extractor = config.extractors[0];
+      const extractorTelemetry: ExtractionPhaseTelemetry = {
+        multiExtractorEnabled: false,
+        extractors: [
+          {
+            extractorId: "default",
+            model: extractor.model,
+            // Resolve temperature for telemetry: "default" -> model default, number -> use as-is
+            temperature: typeof extractor.temperature === 'number'
+              ? extractor.temperature
+              : getDefaultTemperature(extractor.model),
+            // Store original config for display
+            temperatureConfig: extractor.temperature,
+            thinkingEnabled: extractor.thinking !== false,
+            issuesFound: result.issues.length,
+            durationMs: 0, // Not tracked in single mode
+            issuesByType: this.countIssuesByType(result.issues),
+          },
+        ],
+        totalIssuesBeforeJudge: result.issues.length,
+        totalIssuesAfterJudge: result.issues.length,
+        judgeDecisions: [],
       };
+      telemetry.setExtractionPhase(extractorTelemetry);
+
+      return { issues };
     } catch (error) {
       logger.error("Error extracting issues from document:", error);
       return {
@@ -302,6 +360,167 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
+  }
+
+  /**
+   * Multi-extractor mode with LLM judge aggregation
+   */
+  private async extractWithMultiExtractor(
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<{
+    issues: FallacyIssue[];
+    error?: string;
+  }> {
+    const config = getMultiExtractorConfig();
+
+    logger.info(`[FallacyCheckPlugin] Multi-extractor mode enabled`);
+    logger.info(getConfigSummary());
+
+    try {
+      // Phase 1: Run all extractors in parallel
+      const multiResult = await runMultiExtractor(documentText, config);
+
+      // Collect telemetry for each extractor
+      const extractorsTelemetry: ExtractorTelemetry[] = multiResult.extractorResults.map(
+        (r) => ({
+          extractorId: r.extractorId,
+          model: r.config.model,
+          // Resolve temperature for telemetry: "default" -> model default, number -> use as-is
+          temperature: typeof r.config.temperature === 'number'
+            ? r.config.temperature
+            : getDefaultTemperature(r.config.model),
+          // Store original config for display
+          temperatureConfig: r.config.temperature,
+          thinkingEnabled: r.config.thinking !== false,
+          issuesFound: r.issues.length,
+          durationMs: r.durationMs,
+          costUsd: r.costUsd,
+          error: r.error,
+          issuesByType: this.countIssuesByType(r.issues),
+        })
+      );
+
+      // Phase 2: Aggregate issues (via LLM judge or simple dedup)
+      const successfulExtractors = multiResult.extractorResults.filter((r) => !r.error);
+      let finalIssues: ExtractedFallacyIssue[];
+      let judgeDecisions: JudgeDecisionRecord[] = [];
+      let judgeDurationMs: number | undefined;
+      let judgeCostUsd: number | undefined;
+
+      if (multiResult.totalIssuesFound === 0) {
+        finalIssues = [];
+      } else if (successfulExtractors.length <= 1 || !config.judgeEnabled) {
+        // Single extractor or judge disabled - use simple deduplication
+        if (successfulExtractors.length > 1) {
+          logger.info(
+            `[FallacyCheckPlugin] Using simple deduplication (judge disabled)`
+          );
+          finalIssues = simpleDeduplication(multiResult);
+        } else {
+          logger.info(
+            `[FallacyCheckPlugin] Single extractor - no deduplication needed`
+          );
+          finalIssues = successfulExtractors.flatMap((r) => r.issues);
+        }
+      } else {
+        // Multiple extractors with judge enabled - use LLM judge
+        const judgeInput = {
+          documentText,
+          issues: multiResult.extractorResults.flatMap((r) =>
+            r.issues.map((issue) => ({
+              extractorId: r.extractorId,
+              exactText: issue.exactText,
+              issueType: issue.issueType,
+              fallacyType: issue.fallacyType,
+              severityScore: issue.severityScore,
+              confidenceScore: issue.confidenceScore,
+              importanceScore: issue.importanceScore,
+              reasoning: issue.reasoning,
+            }))
+          ),
+          extractorIds: successfulExtractors.map((r) => r.extractorId),
+        };
+
+        logger.info(
+          `[FallacyCheckPlugin] Running LLM judge on ${judgeInput.issues.length} issues from ${judgeInput.extractorIds.length} extractors`
+        );
+
+        const judgeStartTime = Date.now();
+        const judgeResult = await fallacyJudgeTool.execute(judgeInput, { logger });
+        judgeDurationMs = Date.now() - judgeStartTime;
+
+        // Convert judge decisions to issues
+        finalIssues = judgeResult.acceptedDecisions.map((d) => decisionToIssue(d));
+
+        // Record judge decisions for telemetry
+        judgeDecisions = [
+          ...judgeResult.acceptedDecisions.map((d) => ({
+            issueText: d.finalText,
+            issueType: d.finalIssueType,
+            decision: (d.decision === 'accept' || d.decision === 'merge' ? 'accepted' : 'rejected') as 'accepted' | 'merged' | 'rejected',
+            reasoning: d.judgeReasoning,
+            sourceExtractors: d.sourceExtractors,
+            finalSeverity: d.finalSeverity,
+            finalConfidence: d.finalConfidence,
+          })),
+          ...judgeResult.rejectedDecisions.map((d) => ({
+            issueText: d.finalText,
+            issueType: d.finalIssueType,
+            decision: 'rejected' as const,
+            reasoning: d.judgeReasoning,
+            sourceExtractors: d.sourceExtractors,
+            finalSeverity: d.finalSeverity,
+            finalConfidence: d.finalConfidence,
+          })),
+        ];
+
+        logger.info(
+          `[FallacyCheckPlugin] Judge aggregation complete: ${finalIssues.length} accepted, ${judgeResult.rejectedDecisions.length} rejected`
+        );
+      }
+
+      // Record extraction phase telemetry
+      const extractionTelemetry: ExtractionPhaseTelemetry = {
+        multiExtractorEnabled: true,
+        extractors: extractorsTelemetry,
+        totalIssuesBeforeJudge: multiResult.totalIssuesFound,
+        totalIssuesAfterJudge: finalIssues.length,
+        judgeModel: config.judgeModel,
+        judgeDurationMs,
+        judgeCostUsd,
+        judgeDecisions,
+      };
+      telemetry.setExtractionPhase(extractionTelemetry);
+
+      // Create FallacyIssue objects
+      const fullDocChunk = new TextChunk("full-document", documentText, {
+        position: { start: 0, end: documentText.length },
+      });
+
+      const issues = finalIssues.map(
+        (issue) => new FallacyIssue(issue, fullDocChunk, this.processingStartTime)
+      );
+
+      return { issues };
+    } catch (error) {
+      logger.error("Error in multi-extractor mode:", error);
+      return {
+        issues: [],
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  /**
+   * Count issues by type for telemetry
+   */
+  private countIssuesByType(issues: ExtractedFallacyIssue[]): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const issue of issues) {
+      counts[issue.issueType] = (counts[issue.issueType] || 0) + 1;
+    }
+    return counts;
   }
 
   private deduplicateIssues(issues: FallacyIssue[]): FallacyIssue[] {

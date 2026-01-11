@@ -11,6 +11,7 @@ import type {
   PipelineExecutionRecord,
   PipelineStage,
   FilteredItemRecord,
+  ExtractionPhaseTelemetry,
 } from './types';
 
 /** Current pipeline version - increment when making significant changes */
@@ -51,6 +52,7 @@ export class PipelineTelemetry {
   private stages: StageMetrics[] = [];
   private activeStage: ActiveStage | null = null;
   private filteredItems: FilteredItemRecord[] = [];
+  private extractionPhase: ExtractionPhaseTelemetry | null = null;
   private finalCounts: PipelineExecutionRecord['finalCounts'] = {
     issuesExtracted: 0,
     issuesAfterDedup: 0,
@@ -174,6 +176,14 @@ export class PipelineTelemetry {
   }
 
   /**
+   * Set extraction phase telemetry (for multi-extractor mode)
+   */
+  setExtractionPhase(telemetry: ExtractionPhaseTelemetry): this {
+    this.extractionPhase = telemetry;
+    return this;
+  }
+
+  /**
    * Calculate total cost from all stages
    */
   private calculateTotalCost(): number | undefined {
@@ -210,6 +220,7 @@ export class PipelineTelemetry {
       totalCostUsd: this.calculateTotalCost(),
       pipelineVersion: PIPELINE_VERSION,
       filteredItems: this.filteredItems, // Always include (even if empty) so we know telemetry was captured
+      extractionPhase: this.extractionPhase || undefined,
     };
   }
 

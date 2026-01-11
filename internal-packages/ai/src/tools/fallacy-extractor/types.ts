@@ -80,6 +80,22 @@ export interface FallacyExtractorInput {
    * Examples: "claude-sonnet-4-20250514", "google/gemini-3-flash-preview"
    */
   model?: string;
+
+  /**
+   * Optional temperature override for extraction.
+   * - undefined: Use model-specific default (0 for Claude, 0.1 for OpenRouter)
+   * - number: Use this specific temperature
+   * - "default": Let the model use its own default (don't pass temperature)
+   * Use higher values (0.3-0.7) to get more diverse extractions.
+   */
+  temperature?: number | 'default';
+
+  /**
+   * Whether to enable extended thinking/reasoning mode.
+   * - undefined/true: Enable extended thinking (Claude) / reasoning (OpenRouter/Gemini)
+   * - false: Disable extended thinking for faster, cheaper responses
+   */
+  thinking?: boolean;
 }
 
 /**

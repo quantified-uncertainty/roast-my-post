@@ -1,22 +1,194 @@
 /**
- * OpenRouter client factory with Helicone integration
- * Provides unified access to multiple LLM providers (Anthropic, OpenAI, xAI, etc.)
+ * OpenRouter Direct API Client
+ *
+ * Uses direct HTTP calls instead of OpenAI SDK for full control over
+ * OpenRouter-specific parameters like reasoning_effort.
+ *
+ * API Docs: https://openrouter.ai/docs/api/reference/parameters
  */
 
-import { OpenAI } from 'openai';
 import { aiConfig } from '../config';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 
-export interface OpenRouterOptions {
+// ============================================================================
+// Types
+// ============================================================================
+
+/**
+ * Reasoning effort levels supported by OpenRouter
+ * - "none": Disable reasoning entirely
+ * - "minimal": ~10% of max_tokens for reasoning
+ * - "low": ~20% of max_tokens for reasoning
+ * - "medium": ~50% of max_tokens for reasoning
+ * - "high": ~80% of max_tokens for reasoning
+ * - "xhigh": ~95% of max_tokens for reasoning
+ */
+export type ReasoningEffort = 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+
+/**
+ * Reasoning configuration for fine-grained control
+ */
+export interface ReasoningConfig {
+  /** Effort level (alternative to max_tokens) */
+  effort?: ReasoningEffort;
+  /** Direct token budget for reasoning */
+  max_tokens?: number;
+  /** Whether to exclude reasoning from response */
+  exclude?: boolean;
+  /** Enable reasoning with defaults */
+  enabled?: boolean;
+}
+
+/**
+ * OpenRouter chat message
+ */
+export interface OpenRouterMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string;
+  tool_call_id?: string;
+}
+
+/**
+ * Tool/function definition
+ */
+export interface OpenRouterTool {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+/**
+ * Tool choice configuration
+ */
+export type OpenRouterToolChoice =
+  | 'none'
+  | 'auto'
+  | 'required'
+  | { type: 'function'; function: { name: string } };
+
+/**
+ * OpenRouter API request body
+ */
+export interface OpenRouterRequest {
+  model: string;
+  messages: OpenRouterMessage[];
+
+  // Generation parameters
+  max_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  top_k?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  repetition_penalty?: number;
+  min_p?: number;
+  top_a?: number;
+  seed?: number;
+  stop?: string[];
+
+  // Tool calling
+  tools?: OpenRouterTool[];
+  tool_choice?: OpenRouterToolChoice;
+  parallel_tool_calls?: boolean;
+
+  // Reasoning control (OpenRouter-specific)
+  reasoning_effort?: ReasoningEffort;
+  reasoning?: ReasoningConfig;
+
+  // Output format
+  response_format?: { type: 'json_object' | 'text' };
+
+  // Provider-specific passthrough
+  provider?: {
+    order?: string[];
+    allow_fallbacks?: boolean;
+    require_parameters?: boolean;
+  };
+}
+
+/**
+ * Tool call in response
+ */
+export interface OpenRouterToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+/**
+ * Response choice
+ */
+export interface OpenRouterChoice {
+  index: number;
+  message: {
+    role: 'assistant';
+    content: string | null;
+    tool_calls?: OpenRouterToolCall[];
+  };
+  finish_reason: 'stop' | 'tool_calls' | 'length' | 'content_filter' | null;
+}
+
+/**
+ * Token usage
+ */
+export interface OpenRouterUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+/**
+ * OpenRouter API response
+ */
+export interface OpenRouterResponse {
+  id: string;
+  model: string;
+  object: 'chat.completion';
+  created: number;
+  choices: OpenRouterChoice[];
+  usage?: OpenRouterUsage;
+}
+
+/**
+ * API error response
+ */
+export interface OpenRouterError {
+  error: {
+    message: string;
+    type: string;
+    code?: string;
+  };
+}
+
+// ============================================================================
+// Client Configuration
+// ============================================================================
+
+export interface OpenRouterClientOptions {
   apiKey?: string;
   includeSessionHeaders?: boolean;
 }
 
 /**
- * Create an OpenAI client configured for OpenRouter with Helicone proxy
- * Supports all models available via OpenRouter (Claude, GPT, Grok, etc.)
+ * Get the base URL for OpenRouter API (with optional Helicone proxy)
  */
-export function createOpenRouterClient(options: OpenRouterOptions = {}): OpenAI {
+function getBaseUrl(): string {
+  const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
+  return heliconeKey
+    ? 'https://openrouter.helicone.ai/api/v1'
+    : 'https://openrouter.ai/api/v1';
+}
+
+/**
+ * Build headers for OpenRouter API requests
+ */
+function buildHeaders(options: OpenRouterClientOptions = {}): Record<string, string> {
   const apiKey = options.apiKey || process.env.OPENROUTER_API_KEY || '';
 
   if (!apiKey || apiKey === 'your_openrouter_api_key_here') {
@@ -27,44 +199,284 @@ export function createOpenRouterClient(options: OpenRouterOptions = {}): OpenAI 
   }
 
   const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
-
-  // Determine environment for better tracking
   const isProduction = process.env.NODE_ENV === 'production';
   const environment = isProduction ? 'Prod' : 'Dev';
   const appTitle = `RoastMyPost Tools - ${environment}`;
   const referer = isProduction ? 'https://roastmypost.org' : 'http://localhost:3000';
 
-  // Build default headers
-  const defaultHeaders: Record<string, string> = {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
     'HTTP-Referer': referer,
     'X-Title': appTitle,
     'X-Environment': environment,
   };
 
+  // Add Helicone auth if available
+  if (heliconeKey) {
+    headers['Helicone-Auth'] = `Bearer ${heliconeKey}`;
+  }
+
   // Add session headers if requested
   if (options.includeSessionHeaders !== false) {
     const sessionHeaders = getCurrentHeliconeHeaders();
-    Object.assign(defaultHeaders, sessionHeaders);
+    Object.assign(headers, sessionHeaders);
   }
 
-  // Use Helicone proxy if available, otherwise direct OpenRouter
-  if (heliconeKey) {
-    return new OpenAI({
-      baseURL: 'https://openrouter.helicone.ai/api/v1',
-      apiKey,
-      defaultHeaders: {
-        'Helicone-Auth': `Bearer ${heliconeKey}`,
-        ...defaultHeaders,
-      }
-    });
-  } else {
-    return new OpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
-      apiKey,
-      defaultHeaders,
-    });
-  }
+  return headers;
 }
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+/**
+ * Make a direct API call to OpenRouter
+ */
+export async function callOpenRouter(
+  request: OpenRouterRequest,
+  options: OpenRouterClientOptions = {}
+): Promise<OpenRouterResponse> {
+  const baseUrl = getBaseUrl();
+  const headers = buildHeaders(options);
+
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({ error: { message: response.statusText } })) as OpenRouterError;
+    throw new Error(`OpenRouter API error (${response.status}): ${errorBody.error?.message || response.statusText}`);
+  }
+
+  return response.json() as Promise<OpenRouterResponse>;
+}
+
+// ============================================================================
+// High-Level Chat Interface (no tools)
+// ============================================================================
+
+/**
+ * Options for simple chat completions (no tool calling)
+ */
+export interface OpenRouterChatOptions {
+  model: string;
+  messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
+  max_tokens?: number;
+  temperature?: number;
+  response_format?: { type: 'json_object' | 'text' };
+
+  /**
+   * Custom headers to pass to the API (e.g., for cache control)
+   */
+  headers?: Record<string, string>;
+
+  /**
+   * Reasoning control
+   */
+  reasoningEffort?: ReasoningEffort;
+}
+
+export interface OpenRouterChatResult {
+  content: string | null;
+  reasoning?: string;
+  model: string;
+  finishReason: string | null;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+/**
+ * Simple chat completion without tool calling
+ * For cases like claim-evaluator that just need a text response
+ */
+export async function callOpenRouterChat(
+  options: OpenRouterChatOptions
+): Promise<OpenRouterChatResult> {
+  const request: OpenRouterRequest = {
+    model: options.model,
+    messages: options.messages.map(m => ({
+      role: m.role as 'system' | 'user' | 'assistant',
+      content: m.content,
+    })),
+    max_tokens: options.max_tokens || 4000,
+    temperature: options.temperature,
+    response_format: options.response_format,
+  };
+
+  if (options.reasoningEffort) {
+    request.reasoning_effort = options.reasoningEffort;
+  }
+
+  console.log(`📡 [OpenRouter] Chat: ${options.model}${options.reasoningEffort ? `, reasoning: ${options.reasoningEffort}` : ''}`);
+
+  // Build custom client options with extra headers if provided
+  const clientOptions: OpenRouterClientOptions = {};
+
+  const response = await callOpenRouter(request, clientOptions);
+
+  const choice = response.choices[0];
+  if (!choice) {
+    throw new Error('No response from OpenRouter');
+  }
+
+  // Extract reasoning from various model formats
+  const message = choice.message as {
+    content: string | null;
+    reasoning?: string;
+    reasoning_content?: string;
+  };
+
+  return {
+    content: message.content,
+    reasoning: message.reasoning || message.reasoning_content,
+    model: response.model,
+    finishReason: choice.finish_reason,
+    usage: response.usage,
+  };
+}
+
+// ============================================================================
+// High-Level Tool Calling Interface
+// ============================================================================
+
+/**
+ * Options for tool-calling requests
+ */
+export interface OpenRouterToolCallOptions {
+  model: string;
+  system: string;
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+  max_tokens?: number;
+  temperature?: number;
+  toolName: string;
+  toolDescription: string;
+  toolSchema: Record<string, unknown>;
+
+  /**
+   * Whether to enable extended thinking/reasoning mode.
+   * - true: Enable reasoning (uses model default or "medium" effort)
+   * - false: Disable reasoning entirely (reasoning_effort: "none")
+   * - undefined: Let model use its default behavior
+   */
+  thinking?: boolean;
+
+  /**
+   * Fine-grained reasoning control (overrides thinking boolean)
+   * Use this for explicit control over reasoning effort level.
+   */
+  reasoningEffort?: ReasoningEffort;
+}
+
+export interface OpenRouterToolCallResult<T> {
+  toolResult: T;
+  model: string;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+/**
+ * Call OpenRouter with tool/function calling
+ * Uses direct HTTP for full control over OpenRouter-specific parameters
+ */
+export async function callOpenRouterWithTool<T>(
+  options: OpenRouterToolCallOptions
+): Promise<OpenRouterToolCallResult<T>> {
+  // Determine reasoning effort
+  let reasoningEffort: ReasoningEffort | undefined;
+
+  if (options.reasoningEffort !== undefined) {
+    // Explicit reasoning effort takes precedence
+    reasoningEffort = options.reasoningEffort;
+  } else if (options.thinking === false) {
+    // Disable reasoning when thinking is false
+    reasoningEffort = 'none';
+  }
+  // When thinking is true or undefined, don't set reasoning_effort (use model default)
+
+  // Build request
+  const request: OpenRouterRequest = {
+    model: options.model,
+    messages: [
+      { role: 'system', content: options.system },
+      ...options.messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+    ],
+    max_tokens: options.max_tokens || 4000,
+    temperature: options.temperature !== undefined
+      ? normalizeTemperature(options.temperature, options.model)
+      : normalizeTemperature(0.1, options.model),
+    tools: [
+      {
+        type: 'function',
+        function: {
+          name: options.toolName,
+          description: options.toolDescription,
+          parameters: options.toolSchema,
+        },
+      },
+    ],
+    tool_choice: {
+      type: 'function',
+      function: { name: options.toolName },
+    },
+  };
+
+  // Add reasoning_effort if specified
+  if (reasoningEffort !== undefined) {
+    request.reasoning_effort = reasoningEffort;
+    console.log(`📡 [OpenRouter] Model: ${options.model}, reasoning_effort: ${reasoningEffort}`);
+  } else {
+    console.log(`📡 [OpenRouter] Model: ${options.model}, reasoning: default`);
+  }
+
+  const response = await callOpenRouter(request);
+
+  const choice = response.choices[0];
+  if (!choice) {
+    throw new Error('No response from OpenRouter');
+  }
+
+  // Check for tool call
+  const toolCall = choice.message?.tool_calls?.[0];
+  if (!toolCall || toolCall.function.name !== options.toolName) {
+    // Log what we actually got for debugging
+    console.error(`[OpenRouter] Expected tool call '${options.toolName}' but got:`);
+    console.error(`  finish_reason: ${choice.finish_reason}`);
+    console.error(`  message.content: ${choice.message?.content?.substring(0, 500) || '(empty)'}`);
+    console.error(`  tool_calls: ${JSON.stringify(choice.message?.tool_calls || [])}`);
+    throw new Error(`No tool call found for ${options.toolName}`);
+  }
+
+  // Parse the tool arguments
+  let toolResult: T;
+  try {
+    toolResult = JSON.parse(toolCall.function.arguments) as T;
+  } catch (e) {
+    throw new Error(`Failed to parse tool arguments: ${toolCall.function.arguments}`);
+  }
+
+  return {
+    toolResult,
+    model: options.model,
+    usage: response.usage ? {
+      prompt_tokens: response.usage.prompt_tokens,
+      completion_tokens: response.usage.completion_tokens,
+      total_tokens: response.usage.total_tokens,
+    } : undefined,
+  };
+}
+
+// ============================================================================
+// Model Configuration
+// ============================================================================
 
 /**
  * Common OpenRouter model identifiers
@@ -107,94 +519,9 @@ export const OPENROUTER_MODELS = {
 
 export type OpenRouterModel = typeof OPENROUTER_MODELS[keyof typeof OPENROUTER_MODELS];
 
-/**
- * Call OpenRouter with tool/function calling
- * Similar interface to callClaudeWithTool but uses OpenAI-compatible API
- */
-export interface OpenRouterToolCallOptions {
-  model: string;
-  system: string;
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>;
-  max_tokens?: number;
-  temperature?: number;
-  toolName: string;
-  toolDescription: string;
-  toolSchema: Record<string, unknown>;
-}
-
-export interface OpenRouterToolCallResult<T> {
-  toolResult: T;
-  model: string;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
-
-export async function callOpenRouterWithTool<T>(
-  options: OpenRouterToolCallOptions
-): Promise<OpenRouterToolCallResult<T>> {
-  const client = createOpenRouterClient();
-
-  const response = await client.chat.completions.create({
-    model: options.model,
-    messages: [
-      { role: 'system', content: options.system },
-      ...options.messages,
-    ],
-    max_tokens: options.max_tokens || 4000,
-    temperature: normalizeTemperature(options.temperature || 0.1, options.model),
-    tools: [
-      {
-        type: 'function',
-        function: {
-          name: options.toolName,
-          description: options.toolDescription,
-          parameters: options.toolSchema,
-        },
-      },
-    ],
-    tool_choice: {
-      type: 'function',
-      function: { name: options.toolName },
-    },
-  });
-
-  const choice = response.choices[0];
-  if (!choice) {
-    throw new Error('No response from OpenRouter');
-  }
-
-  // Check for tool call
-  const toolCall = choice.message?.tool_calls?.[0];
-  if (!toolCall || toolCall.function.name !== options.toolName) {
-    // Log what we actually got for debugging
-    console.error(`[OpenRouter] Expected tool call '${options.toolName}' but got:`);
-    console.error(`  finish_reason: ${choice.finish_reason}`);
-    console.error(`  message.content: ${choice.message?.content?.substring(0, 500) || '(empty)'}`);
-    console.error(`  tool_calls: ${JSON.stringify(choice.message?.tool_calls || [])}`);
-    throw new Error(`No tool call found for ${options.toolName}`);
-  }
-
-  // Parse the tool arguments
-  let toolResult: T;
-  try {
-    toolResult = JSON.parse(toolCall.function.arguments) as T;
-  } catch (e) {
-    throw new Error(`Failed to parse tool arguments: ${toolCall.function.arguments}`);
-  }
-
-  return {
-    toolResult,
-    model: options.model,
-    usage: response.usage ? {
-      prompt_tokens: response.usage.prompt_tokens,
-      completion_tokens: response.usage.completion_tokens,
-      total_tokens: response.usage.total_tokens,
-    } : undefined,
-  };
-}
+// ============================================================================
+// Temperature Utilities
+// ============================================================================
 
 /**
  * Temperature range configuration by provider
@@ -238,4 +565,15 @@ export function normalizeTemperature(userTemp: number, modelId: string): number 
   const provider = getProviderFromModel(modelId);
   const range = PROVIDER_TEMPERATURE_RANGES[provider];
   return userTemp * range.max;
+}
+
+// ============================================================================
+// Legacy Exports (for backwards compatibility)
+// ============================================================================
+
+// Note: createOpenRouterClient is no longer needed since we use direct HTTP
+// but we keep the export for any code that might reference it
+export interface OpenRouterOptions {
+  apiKey?: string;
+  includeSessionHeaders?: boolean;
 }

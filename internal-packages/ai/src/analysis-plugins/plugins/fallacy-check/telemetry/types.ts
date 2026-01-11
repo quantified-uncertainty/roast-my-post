@@ -60,6 +60,116 @@ export interface FilteredItemRecord {
   originalIndex: number;
 }
 
+// ============================================================================
+// Multi-Extractor Telemetry Types
+// ============================================================================
+
+/**
+ * Telemetry for a single extractor run
+ */
+export interface ExtractorTelemetry {
+  /** Unique extractor ID (e.g., "sonnet-0", "gemini-flash-1") */
+  extractorId: string;
+
+  /** Model used */
+  model: string;
+
+  /**
+   * Effective temperature used for this extractor.
+   * This is the actual value sent to the API (resolved from config).
+   */
+  temperature: number;
+
+  /**
+   * Original temperature configuration.
+   * - "default": Model's native default was used
+   * - number: Explicit temperature was configured
+   * - undefined: Our model-specific default was used
+   */
+  temperatureConfig?: number | 'default';
+
+  /**
+   * Whether extended thinking/reasoning was enabled.
+   * - true: Thinking enabled (Claude) / high reasoning (OpenRouter)
+   * - false: Thinking disabled for faster, cheaper responses
+   */
+  thinkingEnabled: boolean;
+
+  /** Number of issues found by this extractor */
+  issuesFound: number;
+
+  /** Execution time in milliseconds */
+  durationMs: number;
+
+  /** Cost in USD (if available) */
+  costUsd?: number;
+
+  /** Error message if extraction failed */
+  error?: string;
+
+  /** Breakdown of issues by type */
+  issuesByType: Record<string, number>;
+}
+
+/**
+ * Record of a judge decision (for drill-down)
+ */
+export interface JudgeDecisionRecord {
+  /** The quoted text from the issue */
+  issueText: string;
+
+  /** Issue type (e.g., "logical-fallacy", "missing-context") */
+  issueType: string;
+
+  /** Judge's decision */
+  decision: 'accepted' | 'merged' | 'rejected';
+
+  /** Judge's reasoning */
+  reasoning: string;
+
+  /** Which extractors found this issue */
+  sourceExtractors: string[];
+
+  /** Final severity after judge assessment */
+  finalSeverity?: number;
+
+  /** Final confidence after judge assessment */
+  finalConfidence?: number;
+}
+
+/**
+ * Complete telemetry for the extraction phase (multi-extractor mode)
+ */
+export interface ExtractionPhaseTelemetry {
+  /** Whether multi-extractor mode was used */
+  multiExtractorEnabled: boolean;
+
+  /** Per-extractor breakdown */
+  extractors: ExtractorTelemetry[];
+
+  /** Total issues before judge aggregation */
+  totalIssuesBeforeJudge: number;
+
+  /** Total issues after judge aggregation */
+  totalIssuesAfterJudge: number;
+
+  /** Model used for judge (if multi-extractor enabled) */
+  judgeModel?: string;
+
+  /** Judge execution time (if multi-extractor enabled) */
+  judgeDurationMs?: number;
+
+  /** Judge cost in USD (if available) */
+  judgeCostUsd?: number;
+
+  /** Detailed decisions for drill-down */
+  judgeDecisions: JudgeDecisionRecord[];
+}
+
+// ============================================================================
+// Pipeline Execution Record
+// ============================================================================
+
 /**
  * Complete pipeline execution record
  */
@@ -110,6 +220,9 @@ export interface PipelineExecutionRecord {
 
   /** Details about items that were filtered out (for debugging/validation) */
   filteredItems?: FilteredItemRecord[];
+
+  /** Detailed extraction phase telemetry (multi-extractor mode) */
+  extractionPhase?: ExtractionPhaseTelemetry;
 }
 
 /**

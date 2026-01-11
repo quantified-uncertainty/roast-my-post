@@ -84,6 +84,11 @@ const inputSchema = z.object({
   documentText: z.string().optional().describe("Full document text - used for analysis in single-pass mode, or for location finding in chunk mode"),
   chunkStartOffset: z.number().min(0).optional().describe("Byte offset where this chunk starts in the full document (optimization for location finding)"),
   model: z.string().optional().describe("Model to use (Claude or OpenRouter model ID)"),
+  temperature: z.union([
+    z.number().min(0).max(2),
+    z.literal('default'),
+  ]).optional().describe("Temperature for extraction (default: 0 for Claude, 0.1 for OpenRouter, 'default' to use model's native default)"),
+  thinking: z.boolean().optional().describe("Enable extended thinking/reasoning (default: true for Claude, varies for OpenRouter)"),
 }) satisfies z.ZodType<FallacyExtractorInput>;
 
 const outputSchema = z.object({
@@ -363,33 +368,46 @@ Analyze ALL sections (argumentative, factual, biographical). Look for statistica
 
     let result: { toolResult: ExtractorResults };
 
+    // Determine temperature to use:
+    // - "default": Don't pass temperature, let model use its native default
+    // - undefined: Use our model-specific default (0 for Claude, 0.1 for OpenRouter)
+    // - number: Use explicit value
+    const useDefaultTemperature = input.temperature === 'default';
+    const defaultTemp = isOpenRouterModel ? 0.1 : 0;
+    const temperature = useDefaultTemperature ? undefined : (typeof input.temperature === 'number' ? input.temperature : defaultTemp);
+
+    // Thinking parameter: undefined/true = enabled, false = disabled
+    const thinkingEnabled = input.thinking !== false;
+
     if (isOpenRouterModel && modelId) {
       // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
-      console.log(`📡 Calling OpenRouter API with model: ${modelId}`);
+      console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`);
       result = await callOpenRouterWithTool<ExtractorResults>({
         model: modelId,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
         max_tokens: 8000,
-        temperature: 0.1, // OpenRouter doesn't support temp=0 for all models
+        ...(temperature !== undefined && { temperature }),
         toolName: "extract_fallacy_issues",
         toolDescription: "Extract and score fallacy issues from text",
         toolSchema,
+        thinking: thinkingEnabled,
       });
     } else {
       // Use Claude API directly
-      console.log(`🤖 Calling Claude API${modelId ? ` with model: ${modelId}` : ""}`);
+      console.log(`🤖 Calling Claude API${modelId ? ` with model: ${modelId}` : ""}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`);
       result = await callClaudeWithTool<ExtractorResults>({
         ...(modelId && { model: modelId }),
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
         max_tokens: 8000,
-        temperature: 0,
+        ...(temperature !== undefined && { temperature }),
         toolName: "extract_fallacy_issues",
         toolDescription: "Extract and score fallacy issues from text",
         toolSchema,
         enablePromptCaching: true,
         cacheSeed,
+        thinking: thinkingEnabled,
       });
     }
 

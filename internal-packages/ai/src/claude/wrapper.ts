@@ -25,6 +25,13 @@ export interface ClaudeCallOptions {
   enablePromptCaching?: boolean; // Enable Anthropic prompt caching
   cacheSeed?: string; // Custom cache seed for Helicone response caching
   timeout?: number; // Custom timeout in milliseconds
+  /**
+   * Whether to enable extended thinking mode.
+   * - true (default): Enable extended thinking with budget of 10000 tokens
+   * - false: Disable extended thinking for faster, cheaper responses
+   * Note: Extended thinking requires temperature=1, so temperature is ignored when enabled.
+   */
+  thinking?: boolean;
 }
 
 export interface ClaudeCallResult {
@@ -115,11 +122,23 @@ export async function callClaude(
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
+      // Determine if extended thinking is enabled (default: false for tool calls to save cost)
+      // When thinking is enabled, temperature must be 1
+      const thinkingEnabled = options.thinking === true;
+      const effectiveTemperature = thinkingEnabled ? 1 : (options.temperature ?? 0);
+
       const requestOptions: Anthropic.Messages.MessageCreateParams = {
         model,
         max_tokens: options.max_tokens || 4000,
-        temperature: options.temperature ?? 0,
-        messages: options.messages
+        temperature: effectiveTemperature,
+        messages: options.messages,
+        // Add thinking configuration when enabled
+        ...(thinkingEnabled && {
+          thinking: {
+            type: "enabled" as const,
+            budget_tokens: 10000, // Default budget for extended thinking
+          }
+        }),
       };
       
       if (options.system) {

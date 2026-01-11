@@ -10,5 +10,8 @@ export {
   type PipelineExecutionRecord,
   type PipelineStage,
   type FilteredItemRecord,
+  type ExtractorTelemetry,
+  type JudgeDecisionRecord,
+  type ExtractionPhaseTelemetry,
   PIPELINE_STAGES,
 } from './types';

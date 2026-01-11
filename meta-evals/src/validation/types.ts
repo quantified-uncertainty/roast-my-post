@@ -67,6 +67,38 @@ export interface PipelineTelemetrySnapshot {
   commentsKept: number;
   /** Items filtered out with their reasoning */
   filteredItems?: FilteredItemSnapshot[];
+  /** Extraction phase telemetry (multi-extractor mode) */
+  extractionPhase?: ExtractionPhaseSnapshot;
+}
+
+/**
+ * Telemetry for a single extractor run
+ */
+export interface ExtractorSnapshot {
+  extractorId: string;
+  model: string;
+  temperature: number;
+  issuesFound: number;
+  durationMs: number;
+  error?: string;
+}
+
+/**
+ * Extraction phase telemetry (for multi-extractor mode)
+ */
+export interface ExtractionPhaseSnapshot {
+  multiExtractorEnabled: boolean;
+  extractors: ExtractorSnapshot[];
+  totalIssuesBeforeJudge: number;
+  totalIssuesAfterJudge: number;
+  judgeModel?: string;
+  judgeDurationMs?: number;
+  judgeDecisions: Array<{
+    issueText: string;
+    decision: 'accepted' | 'merged' | 'rejected';
+    reasoning: string;
+    sourceExtractors: string[];
+  }>;
 }
 
 /**
