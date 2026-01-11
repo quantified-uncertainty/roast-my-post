@@ -10,7 +10,7 @@ import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import { prisma, type DocumentChoice } from "@roast/db";
-import { runMultiExtractor, type ExtractorConfig, type MultiExtractorResult } from "@roast/ai/fallacy-extraction";
+import { runMultiExtractor, getMultiExtractorConfig, type ExtractorConfig, type MultiExtractorResult, type ExtractorResult } from "@roast/ai/fallacy-extraction";
 import { truncate, formatDate } from "./helpers";
 
 interface ExtractorLabProps {
@@ -25,12 +25,18 @@ type LabStep =
   | { type: "select-document" }
   | { type: "configure-extractors" }
   | { type: "running" }
-  | { type: "results"; result: MultiExtractorResult };
+  | { type: "results"; result: MultiExtractorResult }
+  | { type: "issue-detail"; result: MultiExtractorResult; extractorIdx: number; issueIdx: number };
 
-// Default extractor configs for testing
-const DEFAULT_EXTRACTOR_CONFIGS: ExtractorConfig[] = [
-  { model: "claude-sonnet-4-5-20250929", temperature: "default", thinking: false },
-];
+// Load extractor configs from FALLACY_EXTRACTORS env var, fallback to default
+function getInitialExtractorConfigs(): ExtractorConfig[] {
+  try {
+    const config = getMultiExtractorConfig();
+    return config.extractors;
+  } catch {
+    return [{ model: "claude-sonnet-4-5-20250929", temperature: "default", thinking: false }];
+  }
+}
 
 const AVAILABLE_MODELS = [
   { id: "claude-sonnet-4-5-20250929", label: "Claude Sonnet 4.5" },
@@ -42,7 +48,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   const [step, setStep] = useState<LabStep>({ type: "select-document" });
   const [selectedDoc, setSelectedDoc] = useState<DocumentChoice | null>(null);
   const [documentText, setDocumentText] = useState<string>("");
-  const [extractorConfigs, setExtractorConfigs] = useState<ExtractorConfig[]>(DEFAULT_EXTRACTOR_CONFIGS);
+  const [extractorConfigs, setExtractorConfigs] = useState<ExtractorConfig[]>(getInitialExtractorConfigs);
   const [error, setError] = useState<string | null>(null);
 
   async function loadDocumentText(docId: string) {
@@ -93,7 +99,11 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   // Handle keyboard input
   useInput((input, key) => {
     if (key.escape) {
-      if (step.type === "results" || step.type === "configure-extractors") {
+      if (step.type === "issue-detail") {
+        setStep({ type: "results", result: step.result });
+      } else if (step.type === "results") {
+        setStep({ type: "configure-extractors" });
+      } else if (step.type === "configure-extractors") {
         setStep({ type: "select-document" });
       } else {
         onBack();
@@ -234,10 +244,31 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     );
   }
 
-  // Results
+  // Results - scrollable list of issues
   if (step.type === "results") {
     const { result } = step;
     const totalIssues = result.extractorResults.reduce((sum, r) => sum + r.issues.length, 0);
+
+    // Build flat list of issues with extractor info
+    const issueItems: Array<{ label: string; value: string }> = [];
+    result.extractorResults.forEach((r, extractorIdx) => {
+      // Add extractor header
+      const tempStr = r.config.temperature === 'default' ? 'tDef' : `t${r.config.temperature}`;
+      const thinkStr = r.config.thinking ? '' : ' noThink';
+      issueItems.push({
+        label: `── ${r.extractorId} (${tempStr}${thinkStr}) - ${r.issues.length} issues, ${(r.durationMs / 1000).toFixed(1)}s ──`,
+        value: `header-${extractorIdx}`,
+      });
+      // Add issues for this extractor
+      r.issues.forEach((issue, issueIdx) => {
+        const severityColor = issue.severityScore >= 70 ? '🔴' : issue.severityScore >= 40 ? '🟡' : '🟢';
+        issueItems.push({
+          label: `  ${severityColor} [${issue.issueType}] ${truncate(issue.exactText.replace(/\n/g, ' '), 60)}`,
+          value: `issue-${extractorIdx}-${issueIdx}`,
+        });
+      });
+    });
+    issueItems.push({ label: "← Back to Configure", value: "back" });
 
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="green" padding={1} height={height}>
@@ -246,45 +277,76 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
         </Box>
 
         <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
-          <Box flexDirection="column">
-            <Text>
-              <Text bold>Total Duration: </Text>
-              <Text>{(result.totalDurationMs / 1000).toFixed(1)}s</Text>
-            </Text>
-            <Text>
-              <Text bold>Total Issues: </Text>
-              <Text color="cyan">{totalIssues}</Text>
-            </Text>
+          <Text>
+            <Text bold>Duration: </Text><Text>{(result.totalDurationMs / 1000).toFixed(1)}s</Text>
+            <Text>  |  </Text>
+            <Text bold>Issues: </Text><Text color="cyan">{totalIssues}</Text>
+            <Text>  |  </Text>
+            <Text bold>Extractors: </Text><Text>{result.extractorResults.length}</Text>
+          </Text>
+        </Box>
+
+        <SelectInput
+          items={issueItems}
+          limit={maxItems - 3}
+          onSelect={(item) => {
+            if (item.value === "back") {
+              setStep({ type: "configure-extractors" });
+            } else if (item.value.startsWith("issue-")) {
+              const [, extractorIdx, issueIdx] = item.value.split("-");
+              setStep({
+                type: "issue-detail",
+                result,
+                extractorIdx: parseInt(extractorIdx),
+                issueIdx: parseInt(issueIdx),
+              });
+            }
+          }}
+        />
+
+        <Box marginTop={1} justifyContent="center">
+          <Text dimColor>Enter View Detail | Escape Back</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Issue detail view
+  if (step.type === "issue-detail") {
+    const { result, extractorIdx, issueIdx } = step;
+    const extractor = result.extractorResults[extractorIdx];
+    const issue = extractor.issues[issueIdx];
+
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1} height={height}>
+        <Box justifyContent="center" marginBottom={1}>
+          <Text bold color="blue">Issue Detail</Text>
+        </Box>
+
+        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexDirection="column">
+          <Text><Text bold>Extractor: </Text><Text color="yellow">{extractor.extractorId}</Text></Text>
+          <Text><Text bold>Type: </Text><Text color="cyan">{issue.issueType}</Text>{issue.fallacyType && <Text dimColor> ({issue.fallacyType})</Text>}</Text>
+          <Text><Text bold>Severity: </Text><Text color={issue.severityScore >= 70 ? 'red' : issue.severityScore >= 40 ? 'yellow' : 'green'}>{issue.severityScore}/100</Text></Text>
+          <Text><Text bold>Confidence: </Text><Text>{issue.confidenceScore}/100</Text></Text>
+          <Text><Text bold>Importance: </Text><Text>{issue.importanceScore}/100</Text></Text>
+        </Box>
+
+        <Box flexDirection="column" marginBottom={1}>
+          <Text bold underline>Quoted Text:</Text>
+          <Box marginLeft={1} marginTop={1}>
+            <Text color="gray">"{truncate(issue.exactText, 200)}"</Text>
           </Box>
         </Box>
 
         <Box flexDirection="column" marginBottom={1}>
-          <Text bold underline>Per-Extractor Results:</Text>
-          {result.extractorResults.map((r, idx) => (
-            <Box key={idx} flexDirection="column" marginTop={1}>
-              <Text>
-                <Text color="yellow">{r.extractorId}</Text>
-                <Text dimColor> ({(r.durationMs / 1000).toFixed(1)}s)</Text>
-              </Text>
-              {r.error ? (
-                <Text color="red">  Error: {r.error}</Text>
-              ) : (
-                <Text>  Found {r.issues.length} issues</Text>
-              )}
-              {r.issues.slice(0, 3).map((issue, i) => (
-                <Text key={i} dimColor>
-                  {"  "}- [{issue.issueType}] {issue.exactText.slice(0, 40)}...
-                </Text>
-              ))}
-              {r.issues.length > 3 && (
-                <Text dimColor>  ... and {r.issues.length - 3} more</Text>
-              )}
-            </Box>
-          ))}
+          <Text bold underline>Reasoning:</Text>
+          <Box marginLeft={1} marginTop={1}>
+            <Text wrap="wrap">{truncate(issue.reasoning, 300)}</Text>
+          </Box>
         </Box>
 
         <Box marginTop={1} justifyContent="center">
-          <Text dimColor>Press Escape to go back</Text>
+          <Text dimColor>Press Escape to go back to results</Text>
         </Box>
       </Box>
     );
