@@ -1,4 +1,4 @@
-import { IssueType } from '../../analysis-plugins/plugins/fallacy-check/constants';
+import type { IssueType } from '../../analysis-plugins/plugins/fallacy-check/constants';
 
 /**
  * Specific types of fallacies (for logical-fallacy issue type)

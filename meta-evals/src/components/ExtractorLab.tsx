@@ -6,14 +6,37 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Text, useInput } from "ink";
+import { Box, Text, useInput, useStdout } from "ink";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import { prisma, type DocumentChoice } from "@roast/db";
-import { runMultiExtractor, getMultiExtractorConfig, type ExtractorConfig, type MultiExtractorResult, type ExtractorResult } from "@roast/ai/fallacy-extraction";
-import { truncate, formatDate } from "./helpers";
+import {
+  getMultiExtractorConfig,
+  type ExtractorConfig,
+  type MultiExtractorResult,
+  type ExtractorResult,
+} from "@roast/ai/fallacy-extraction/lab";
+import { runMultiExtractor } from "@roast/ai/fallacy-extraction";
+import fallacyJudgeModule from "@roast/ai/fallacy-judge";
+// CommonJS/ESM interop: default export is wrapped
+const fallacyJudgeTool = (fallacyJudgeModule as unknown as { default?: typeof fallacyJudgeModule }).default ?? fallacyJudgeModule;
+import type { FallacyJudgeOutput, JudgeDecision } from "@roast/ai/fallacy-judge/types";
 import { ModelSelector } from "./ModelSelector";
 import { DocumentSelector } from "./DocumentSelector";
+
+/** Truncate string to fit terminal width */
+function truncate(str: string, maxLen: number): string {
+  if (str.length <= maxLen) return str;
+  return str.slice(0, maxLen - 1) + "…";
+}
+
+// Simple logger for the judge tool
+const simpleLogger = {
+  info: (...args: unknown[]) => console.error("[INFO]", ...args),
+  warn: (...args: unknown[]) => console.error("[WARN]", ...args),
+  error: (...args: unknown[]) => console.error("[ERROR]", ...args),
+  debug: (...args: unknown[]) => {},
+};
 
 interface ExtractorLabProps {
   height: number;
@@ -29,7 +52,10 @@ type LabStep =
   | { type: "add-extractor" }
   | { type: "running" }
   | { type: "results"; result: MultiExtractorResult }
-  | { type: "issue-detail"; result: MultiExtractorResult; extractorIdx: number; issueIdx: number };
+  | { type: "issue-detail"; result: MultiExtractorResult; extractorIdx: number; issueIdx: number }
+  | { type: "running-judge"; result: MultiExtractorResult }
+  | { type: "judge-results"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput }
+  | { type: "judge-decision-detail"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; decision: JudgeDecision; isRejected: boolean };
 
 // Load extractor configs from FALLACY_EXTRACTORS env var, fallback to default
 function getInitialExtractorConfigs(): ExtractorConfig[] {
@@ -45,9 +71,24 @@ function getInitialExtractorConfigs(): ExtractorConfig[] {
 const TEMP_PRESETS = ["default", 0, 0.3, 0.5, 0.7, 1.0] as const;
 
 export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, onBack }: ExtractorLabProps) {
+  const { stdout } = useStdout();
   const [step, setStep] = useState<LabStep>({ type: "select-document" });
   const [selectedDoc, setSelectedDoc] = useState<DocumentChoice | null>(null);
   const [documentText, setDocumentText] = useState<string>("");
+
+  // Calculate available width for text based on terminal width
+  // Border overhead: │ (1) + padding (1) + content + padding (1) + │ (1) = 4
+  // SelectInput indicator: "❯ " or "  " = 2
+  // Total frame overhead = 6
+  const termWidth = stdout?.columns ?? 120;
+
+  // For extraction results: "  🔴 [issueType] text"
+  // Overhead: indicator(2) + spaces(2) + emoji(2) + space(1) + [type](~18) + space(1) = ~26
+  const issueTextWidth = Math.max(40, termWidth - 6 - 26);
+
+  // For judge decisions: "[+] type.padEnd(18) text [A,B]"
+  // Overhead: indicator(2) + [+]space(4) + type(18) + space(1) + space(1) + [A,B](10) = 36
+  const judgeTextWidth = Math.max(40, termWidth - 6 - 36);
   const [extractorConfigs, setExtractorConfigs] = useState<ExtractorConfig[]>(getInitialExtractorConfigs);
   const [error, setError] = useState<string | null>(null);
   const [highlightedItem, setHighlightedItem] = useState<string>("");
@@ -95,7 +136,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     try {
       const result = await runMultiExtractor(documentText, {
         extractors: extractorConfigs,
-        judgeEnabled: extractorConfigs.length > 1, // Enable judge if multiple extractors
+        judge: { model: "", enabled: false }, // We'll run judge manually for instrumentation
       });
 
       setStep({ type: "results", result });
@@ -105,11 +146,53 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     }
   }
 
+  async function runJudge(extractionResult: MultiExtractorResult) {
+    setStep({ type: "running-judge", result: extractionResult });
+
+    try {
+      // Flatten all issues from all extractors
+      const allIssues = extractionResult.extractorResults.flatMap((r) =>
+        r.issues.map((issue) => ({
+          extractorId: r.extractorId,
+          exactText: issue.exactText,
+          issueType: issue.issueType,
+          fallacyType: issue.fallacyType,
+          severityScore: issue.severityScore,
+          confidenceScore: issue.confidenceScore,
+          importanceScore: issue.importanceScore,
+          reasoning: issue.reasoning,
+        }))
+      );
+
+      const extractorIds = extractionResult.extractorResults
+        .filter((r) => !r.error)
+        .map((r) => r.extractorId);
+
+      const judgeResult = await fallacyJudgeTool.execute(
+        {
+          documentText,
+          issues: allIssues,
+          extractorIds,
+        },
+        { logger: simpleLogger }
+      );
+
+      setStep({ type: "judge-results", result: extractionResult, judgeResult });
+    } catch (e) {
+      setError(`Judge failed: ${e}`);
+      setStep({ type: "results", result: extractionResult });
+    }
+  }
+
   // Handle keyboard input - use ref to avoid stale closure
   useInput((input, key) => {
     if (key.escape) {
       const currentStep = stepRef.current;
       if (currentStep.type === "issue-detail") {
+        setStep({ type: "results", result: currentStep.result });
+      } else if (currentStep.type === "judge-decision-detail") {
+        setStep({ type: "judge-results", result: currentStep.result, judgeResult: currentStep.judgeResult });
+      } else if (currentStep.type === "judge-results") {
         setStep({ type: "results", result: currentStep.result });
       } else if (currentStep.type === "results") {
         setStep({ type: "configure-extractors" });
@@ -120,7 +203,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
       } else if (currentStep.type === "select-document") {
         onBack();
       }
-      // Don't call onBack for running state
+      // Don't call onBack for running/running-judge states
     }
 
     // Handle 'd' to delete extractor and 't' to cycle temperature (only on configure screen)
@@ -292,9 +375,11 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   if (step.type === "results") {
     const { result } = step;
     const totalIssues = result.extractorResults.reduce((sum, r) => sum + r.issues.length, 0);
+    const hasMultipleExtractors = result.extractorResults.filter((r) => !r.error).length > 1;
 
     // Build flat list of issues with extractor info
     const issueItems: Array<{ label: string; value: string }> = [];
+
     result.extractorResults.forEach((r, extractorIdx) => {
       // Add extractor header
       const tempStr = r.config.temperature === 'default' ? 'tDef' : `t${r.config.temperature}`;
@@ -307,17 +392,27 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
       r.issues.forEach((issue, issueIdx) => {
         const severityColor = issue.severityScore >= 70 ? '🔴' : issue.severityScore >= 40 ? '🟡' : '🟢';
         issueItems.push({
-          label: `  ${severityColor} [${issue.issueType}] ${truncate(issue.exactText.replace(/\n/g, ' '), 60)}`,
+          label: `  ${severityColor} [${issue.issueType}] ${truncate(issue.exactText.replace(/\n/g, ' '), issueTextWidth)}`,
           value: `issue-${extractorIdx}-${issueIdx}`,
         });
       });
     });
+
+    // Actions at the bottom
+    issueItems.push({ label: "───────────────────────────────────────────────────────────────────────────", value: "sep-1" });
+    if (hasMultipleExtractors && totalIssues > 0) {
+      issueItems.push({
+        label: `⚖️  Run Judge (aggregate ${totalIssues} issues from ${result.extractorResults.length} extractors)`,
+        value: "run-judge",
+      });
+    }
     issueItems.push({ label: "← Back to Configure", value: "back" });
 
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="green" padding={1} height={height}>
         <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="green">Extractor Lab - Results</Text>
+          <Text bold color="green">Extractor Lab - Extraction Results: </Text>
+          <Text color="cyan">{selectedDoc?.title}</Text>
         </Box>
 
         <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
@@ -334,8 +429,13 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
           items={issueItems}
           limit={maxItems - 3}
           onSelect={(item) => {
-            if (item.value === "back") {
+            if (item.value.startsWith("sep-") || item.value.startsWith("header-")) {
+              // Ignore separators and headers
+              return;
+            } else if (item.value === "back") {
               setStep({ type: "configure-extractors" });
+            } else if (item.value === "run-judge") {
+              runJudge(result);
             } else if (item.value.startsWith("issue-")) {
               const [, extractorIdx, issueIdx] = item.value.split("-");
               setStep({
@@ -391,6 +491,199 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
 
         <Box marginTop={1} justifyContent="center">
           <Text dimColor>Press Escape to go back to results</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Running judge
+  if (step.type === "running-judge") {
+    const totalIssues = step.result.extractorResults.reduce((sum, r) => sum + r.issues.length, 0);
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor="yellow" padding={1} height={height}>
+        <Box justifyContent="center" marginBottom={1}>
+          <Text bold color="yellow">Extractor Lab - Running Judge</Text>
+        </Box>
+
+        <Box justifyContent="center" padding={2}>
+          <Text>
+            <Spinner type="dots" /> Aggregating {totalIssues} issues from {step.result.extractorResults.length} extractors...
+          </Text>
+        </Box>
+
+        <Box justifyContent="center">
+          <Text dimColor>The judge will deduplicate, merge, and filter issues</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Judge results
+  if (step.type === "judge-results") {
+    const { result, judgeResult } = step;
+    const totalInputIssues = result.extractorResults.reduce((sum, r) => sum + r.issues.length, 0);
+
+    // Create legend mapping extractor IDs to short keys (A, B, C, ...)
+    const extractorIds = result.extractorResults.map(r => r.extractorId);
+    const extractorKeys: Record<string, string> = {};
+    extractorIds.forEach((id, i) => {
+      extractorKeys[id] = String.fromCharCode(65 + i); // A, B, C, ...
+    });
+
+    // Helper to convert extractor IDs to short keys
+    const sourcesToKeys = (sources: string[]): string => {
+      return sources.map(s => extractorKeys[s] || "?").join(",");
+    };
+
+    // Build list of judge decisions
+    const decisionItems: Array<{ label: string; value: string }> = [];
+
+    // Accepted/merged decisions
+    judgeResult.acceptedDecisions.forEach((decision, idx) => {
+      const symbol = decision.decision === "merge" ? "[*]" : "[+]";
+      const keys = sourcesToKeys(decision.sourceExtractors);
+      const text = truncate(decision.finalText.replace(/\n/g, ' '), judgeTextWidth).padEnd(judgeTextWidth);
+      decisionItems.push({
+        label: `${symbol} ${decision.finalIssueType.padEnd(18)} ${text} [${keys}]`,
+        value: `accepted-${idx}`,
+      });
+    });
+
+    // Rejected decisions
+    judgeResult.rejectedDecisions.forEach((decision, idx) => {
+      const keys = sourcesToKeys(decision.sourceExtractors);
+      const text = truncate(decision.finalText.replace(/\n/g, ' '), judgeTextWidth).padEnd(judgeTextWidth);
+      decisionItems.push({
+        label: `[x] ${decision.finalIssueType.padEnd(18)} ${text} [${keys}]`,
+        value: `rejected-${idx}`,
+      });
+    });
+
+    decisionItems.push({ label: "───────────────────────────────────────────────────────────────────────────────────────", value: "sep-1" });
+    decisionItems.push({ label: "Back to Extraction Results", value: "back" });
+
+    // Build legend string
+    const legendParts = extractorIds.map((id, i) => `${String.fromCharCode(65 + i)}=${id}`);
+    const legendStr = legendParts.join("  ");
+
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1} height={height}>
+        <Box justifyContent="center" marginBottom={1}>
+          <Text bold color="cyan">Extractor Lab - Judge Results: </Text>
+          <Text color="green">{selectedDoc?.title}</Text>
+        </Box>
+
+        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexDirection="column">
+          <Text>
+            <Text bold>Input: </Text><Text>{totalInputIssues} issues</Text>
+            <Text>  --&gt;  </Text>
+            <Text bold color="green">{judgeResult.summary.acceptedCount} accepted</Text>
+            <Text>  |  </Text>
+            <Text bold color="yellow">{judgeResult.summary.mergedCount} merged</Text>
+            <Text>  |  </Text>
+            <Text bold color="red">{judgeResult.summary.rejectedCount} rejected</Text>
+          </Text>
+          <Text dimColor>Legend: [+]=accept [*]=merge [x]=reject  |  {legendStr}</Text>
+        </Box>
+
+        <SelectInput
+          items={decisionItems}
+          limit={maxItems - 5}
+          onSelect={(item) => {
+            if (item.value.startsWith("sep-")) {
+              return; // Ignore separators
+            } else if (item.value === "back") {
+              setStep({ type: "results", result });
+            } else if (item.value.startsWith("accepted-")) {
+              const idx = parseInt(item.value.replace("accepted-", ""), 10);
+              setStep({
+                type: "judge-decision-detail",
+                result,
+                judgeResult,
+                decision: judgeResult.acceptedDecisions[idx],
+                isRejected: false,
+              });
+            } else if (item.value.startsWith("rejected-")) {
+              const idx = parseInt(item.value.replace("rejected-", ""), 10);
+              setStep({
+                type: "judge-decision-detail",
+                result,
+                judgeResult,
+                decision: judgeResult.rejectedDecisions[idx],
+                isRejected: true,
+              });
+            }
+          }}
+        />
+
+        <Box marginTop={1} justifyContent="center">
+          <Text dimColor>Enter=View Detail | Escape=Back</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Judge decision detail
+  if (step.type === "judge-decision-detail") {
+    const { decision, isRejected } = step;
+
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor={isRejected ? "red" : "green"} padding={1} height={height}>
+        <Box justifyContent="center" marginBottom={1}>
+          <Text bold color={isRejected ? "red" : "green"}>
+            Judge Decision: {decision.decision.toUpperCase()}
+          </Text>
+        </Box>
+
+        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexDirection="column">
+          <Text>
+            <Text bold>Decision: </Text>
+            <Text color={isRejected ? "red" : "green"}>{decision.decision}</Text>
+          </Text>
+          <Text>
+            <Text bold>Type: </Text>
+            <Text color="cyan">{decision.finalIssueType}</Text>
+            {decision.finalFallacyType && <Text dimColor> ({decision.finalFallacyType})</Text>}
+          </Text>
+          <Text>
+            <Text bold>Severity: </Text>
+            <Text color={decision.finalSeverity >= 70 ? "red" : decision.finalSeverity >= 40 ? "yellow" : "green"}>
+              {decision.finalSeverity}/100
+            </Text>
+            <Text>  |  </Text>
+            <Text bold>Confidence: </Text><Text>{decision.finalConfidence}/100</Text>
+            <Text>  |  </Text>
+            <Text bold>Importance: </Text><Text>{decision.finalImportance}/100</Text>
+          </Text>
+          <Text>
+            <Text bold>Source Extractors: </Text>
+            <Text color="yellow">{decision.sourceExtractors.join(", ")}</Text>
+          </Text>
+        </Box>
+
+        <Box flexDirection="column" marginBottom={1}>
+          <Text bold underline>Quoted Text:</Text>
+          <Box marginLeft={1} marginTop={1}>
+            <Text color="gray" wrap="wrap">"{decision.finalText}"</Text>
+          </Box>
+        </Box>
+
+        <Box flexDirection="column" marginBottom={1}>
+          <Text bold underline>Judge Reasoning:</Text>
+          <Box marginLeft={1} marginTop={1}>
+            <Text wrap="wrap" color="cyan">{decision.judgeReasoning}</Text>
+          </Box>
+        </Box>
+
+        <Box flexDirection="column" marginBottom={1}>
+          <Text bold underline>Issue Reasoning:</Text>
+          <Box marginLeft={1} marginTop={1}>
+            <Text wrap="wrap">{decision.finalReasoning}</Text>
+          </Box>
+        </Box>
+
+        <Box marginTop={1} justifyContent="center">
+          <Text dimColor>Press Escape to go back to judge results</Text>
         </Box>
       </Box>
     );

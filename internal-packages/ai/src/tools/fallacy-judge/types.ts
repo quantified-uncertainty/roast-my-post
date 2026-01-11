@@ -8,6 +8,26 @@
 import type { ExtractedFallacyIssue } from '../fallacy-extractor/types';
 
 /**
+ * Judge configuration from FALLACY_JUDGE env var
+ *
+ * Example:
+ * FALLACY_JUDGE='{"model":"google/gemini-3-flash-preview","temperature":"default","thinking":false,"enabled":true}'
+ */
+export interface JudgeConfig {
+  /** Model to use (Claude or OpenRouter format) */
+  model: string;
+
+  /** Temperature (number or "default" for model's native default) */
+  temperature?: number | 'default';
+
+  /** Enable extended thinking/reasoning */
+  thinking?: boolean;
+
+  /** Whether the judge is enabled */
+  enabled: boolean;
+}
+
+/**
  * An issue from a specific extractor
  */
 export interface ExtractorIssueInput {

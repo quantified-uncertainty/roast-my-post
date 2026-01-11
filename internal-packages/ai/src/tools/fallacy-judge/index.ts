@@ -12,16 +12,61 @@
 import { z } from 'zod';
 import { Tool, type ToolContext } from '../base/Tool';
 import { callClaudeWithTool } from '../../claude/wrapper';
+import { callOpenRouterWithTool } from '../../utils/openrouter';
 import { fallacyJudgeConfig } from './config';
 import type {
   FallacyJudgeInput,
   FallacyJudgeOutput,
   JudgeDecision,
+  JudgeConfig,
   ExtractorIssueInput,
 } from './types';
 
 // Default model for judge (can be overridden via env var)
 const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-5-20250929';
+const DEFAULT_CLAUDE_TEMPERATURE = 0.1;
+const DEFAULT_OPENROUTER_TEMPERATURE = 0.1;
+
+/**
+ * Check if a model is an OpenRouter model (contains '/')
+ */
+function isOpenRouterModel(model: string): boolean {
+  return model.includes('/');
+}
+
+/**
+ * Parse FALLACY_JUDGE env var for full config
+ *
+ * Example:
+ * FALLACY_JUDGE='{"model":"google/gemini-3-flash-preview","temperature":"default","thinking":false,"enabled":true}'
+ */
+export function getJudgeConfig(): JudgeConfig {
+  const judgeEnv = process.env.FALLACY_JUDGE;
+
+  if (judgeEnv) {
+    try {
+      const parsed = JSON.parse(judgeEnv);
+      if (typeof parsed === 'object' && parsed !== null && typeof parsed.model === 'string') {
+        return {
+          model: parsed.model,
+          temperature: typeof parsed.temperature === 'number' ? parsed.temperature :
+                       parsed.temperature === 'default' ? 'default' : undefined,
+          thinking: typeof parsed.thinking === 'boolean' ? parsed.thinking : undefined,
+          enabled: parsed.enabled !== false, // Default to true if not specified
+        };
+      }
+      console.warn('[FallacyJudge] Invalid FALLACY_JUDGE format, using defaults');
+    } catch (e) {
+      console.warn('[FallacyJudge] Failed to parse FALLACY_JUDGE:', e);
+    }
+  }
+
+  // Default config when env var not set
+  return {
+    model: DEFAULT_JUDGE_MODEL,
+    enabled: false, // Disabled by default when not configured
+  };
+}
 
 const extractorIssueInputSchema = z.object({
   extractorId: z.string(),
@@ -123,10 +168,14 @@ export class FallacyJudgeTool extends Tool<FallacyJudgeInput, FallacyJudgeOutput
       };
     }
 
-    // Format issues for the LLM
-    const formattedIssues = input.issues
-      .map((issue, idx) => {
-        return `[Issue ${idx}] Extractor: ${issue.extractorId}
+    // Format issues for the LLM, sorted alphabetically by text to group similar issues together
+    // This makes it easier for the judge to spot duplicates/similar issues
+    const issuesWithIndices = input.issues.map((issue, idx) => ({ issue, originalIdx: idx }));
+    issuesWithIndices.sort((a, b) => a.issue.exactText.localeCompare(b.issue.exactText));
+
+    const formattedIssues = issuesWithIndices
+      .map(({ issue, originalIdx }) => {
+        return `[Issue ${originalIdx}] Extractor: ${issue.extractorId}
 Text: "${issue.exactText.substring(0, 150)}${issue.exactText.length > 150 ? '...' : ''}"
 Type: ${issue.issueType}${issue.fallacyType ? ` (${issue.fallacyType})` : ''}
 Severity: ${issue.severityScore}, Confidence: ${issue.confidenceScore}, Importance: ${issue.importanceScore}
@@ -178,9 +227,22 @@ Group similar issues together and provide your decisions. Remember:
 - Explain your reasoning for each decision`;
 
     try {
-      const judgeModel = process.env.FALLACY_JUDGE_MODEL || DEFAULT_JUDGE_MODEL;
+      const judgeConfig = getJudgeConfig();
+      const useOpenRouter = isOpenRouterModel(judgeConfig.model);
 
-      const result = await callClaudeWithTool<{
+      // Determine temperature
+      const defaultTemp = useOpenRouter ? DEFAULT_OPENROUTER_TEMPERATURE : DEFAULT_CLAUDE_TEMPERATURE;
+      const temperature = judgeConfig.temperature === 'default' ? undefined :
+                         judgeConfig.temperature ?? defaultTemp;
+
+      // Determine thinking
+      const thinkingEnabled = judgeConfig.thinking !== false;
+
+      context.logger.info(
+        `[FallacyJudge] Using ${useOpenRouter ? 'OpenRouter' : 'Claude'} model: ${judgeConfig.model}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`
+      );
+
+      type JudgeResultType = {
         decisions: Array<{
           decision: 'accept' | 'merge' | 'reject';
           finalText: string;
@@ -194,91 +256,114 @@ Group similar issues together and provide your decisions. Remember:
           sourceIssueIndices: number[];
           judgeReasoning: string;
         }>;
-      }>(
-        {
-          model: judgeModel,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: userPrompt }],
-          max_tokens: 4000,
-          temperature: 0.1,
-          toolName: 'aggregate_fallacy_issues',
-          toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
-          toolSchema: {
-            type: 'object',
-            properties: {
-              decisions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    decision: {
-                      type: 'string',
-                      enum: ['accept', 'merge', 'reject'],
-                      description: 'Judge decision for this issue/group',
-                    },
-                    finalText: {
-                      type: 'string',
-                      description: 'Final text for the issue (best formulation)',
-                    },
-                    finalIssueType: {
-                      type: 'string',
-                      description: 'Final issue type',
-                    },
-                    finalFallacyType: {
-                      type: 'string',
-                      description: 'Final fallacy type (if applicable)',
-                    },
-                    finalSeverity: {
-                      type: 'number',
-                      description: 'Final severity score (0-100)',
-                    },
-                    finalConfidence: {
-                      type: 'number',
-                      description: 'Final confidence score (0-100)',
-                    },
-                    finalImportance: {
-                      type: 'number',
-                      description: 'Final importance score (0-100)',
-                    },
-                    finalReasoning: {
-                      type: 'string',
-                      description: 'Best reasoning for this issue',
-                    },
-                    sourceExtractors: {
-                      type: 'array',
-                      items: { type: 'string' },
-                      description: 'Which extractors found this issue',
-                    },
-                    sourceIssueIndices: {
-                      type: 'array',
-                      items: { type: 'number' },
-                      description: 'Indices of original issues in this group',
-                    },
-                    judgeReasoning: {
-                      type: 'string',
-                      description: 'Why you made this decision',
-                    },
-                  },
-                  required: [
-                    'decision',
-                    'finalText',
-                    'finalIssueType',
-                    'finalSeverity',
-                    'finalConfidence',
-                    'finalImportance',
-                    'finalReasoning',
-                    'sourceExtractors',
-                    'sourceIssueIndices',
-                    'judgeReasoning',
-                  ],
+      };
+
+      const toolSchema = {
+        type: 'object' as const,
+        properties: {
+          decisions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                decision: {
+                  type: 'string',
+                  enum: ['accept', 'merge', 'reject'],
+                  description: 'Judge decision for this issue/group',
+                },
+                finalText: {
+                  type: 'string',
+                  description: 'Final text for the issue (best formulation)',
+                },
+                finalIssueType: {
+                  type: 'string',
+                  description: 'Final issue type',
+                },
+                finalFallacyType: {
+                  type: 'string',
+                  description: 'Final fallacy type (if applicable)',
+                },
+                finalSeverity: {
+                  type: 'number',
+                  description: 'Final severity score (0-100)',
+                },
+                finalConfidence: {
+                  type: 'number',
+                  description: 'Final confidence score (0-100)',
+                },
+                finalImportance: {
+                  type: 'number',
+                  description: 'Final importance score (0-100)',
+                },
+                finalReasoning: {
+                  type: 'string',
+                  description: 'Best reasoning for this issue',
+                },
+                sourceExtractors: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Which extractors found this issue',
+                },
+                sourceIssueIndices: {
+                  type: 'array',
+                  items: { type: 'number' },
+                  description: 'Indices of original issues in this group',
+                },
+                judgeReasoning: {
+                  type: 'string',
+                  description: 'Why you made this decision',
                 },
               },
+              required: [
+                'decision',
+                'finalText',
+                'finalIssueType',
+                'finalSeverity',
+                'finalConfidence',
+                'finalImportance',
+                'finalReasoning',
+                'sourceExtractors',
+                'sourceIssueIndices',
+                'judgeReasoning',
+              ],
             },
-            required: ['decisions'],
           },
         },
-        []
-      );
+        required: ['decisions'],
+      };
+
+      let result: { toolResult: JudgeResultType };
+
+      if (useOpenRouter) {
+        // Use OpenRouter for non-Claude models
+        result = await callOpenRouterWithTool<JudgeResultType>({
+          model: judgeConfig.model,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userPrompt }],
+          max_tokens: 8000,
+          ...(temperature !== undefined && { temperature }),
+          toolName: 'aggregate_fallacy_issues',
+          toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
+          toolSchema,
+          thinking: thinkingEnabled,
+        });
+      } else {
+        // Use Claude API directly
+        result = await callClaudeWithTool<JudgeResultType>(
+          {
+            model: judgeConfig.model,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: userPrompt }],
+            max_tokens: 8000,
+            ...(temperature !== undefined && { temperature }),
+            toolName: 'aggregate_fallacy_issues',
+            toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
+            toolSchema,
+            thinking: thinkingEnabled,
+          },
+          []
+        );
+      }
 
       // Separate accepted/rejected decisions
       const acceptedDecisions: JudgeDecision[] = [];

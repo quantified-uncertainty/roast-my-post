@@ -1,55 +1,137 @@
 /**
- * Multi-Extractor Configuration Parser
+ * Lab-specific exports for Extractor Lab
  *
- * Parses the FALLACY_EXTRACTORS environment variable and provides defaults.
+ * This file provides STANDALONE types and config parsing for the Extractor Lab
+ * without importing from files that have circular dependencies with the plugin system.
+ *
+ * The types here are intentionally duplicated to avoid the circular dependency chain:
+ * extraction → fallacy-extractor → constants → (back to plugin)
  */
 
-import type { ExtractorConfig, MultiExtractorConfig, JudgeConfig } from './types';
+// ============================================================================
+// Standalone Type Definitions (duplicated to avoid cycles)
+// ============================================================================
 
-/** Default model for extraction when not configured */
-const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-4-5-20250929';
+/** Type of epistemic issue (duplicated from constants.ts ISSUE_TYPES) */
+export type IssueType =
+  | 'misinformation'
+  | 'missing-context'
+  | 'deceptive-wording'
+  | 'logical-fallacy'
+  | 'verified-accurate';
 
-/** Default model for judge aggregation */
-const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-5-20250929';
+/** Specific types of fallacies */
+export type FallacyType =
+  | 'ad-hominem'
+  | 'straw-man'
+  | 'false-dilemma'
+  | 'slippery-slope'
+  | 'appeal-to-authority'
+  | 'appeal-to-emotion'
+  | 'appeal-to-nature'
+  | 'hasty-generalization'
+  | 'survivorship-bias'
+  | 'selection-bias'
+  | 'cherry-picking'
+  | 'circular-reasoning'
+  | 'equivocation'
+  | 'non-sequitur'
+  | 'other';
 
-/** Default temperature for Claude models */
-const DEFAULT_CLAUDE_TEMPERATURE = 0;
+/** Raw epistemic issue extracted from text */
+export interface ExtractedFallacyIssue {
+  exactText: string;
+  issueType: IssueType;
+  fallacyType?: FallacyType;
+  severityScore: number;
+  confidenceScore: number;
+  reasoning: string;
+  importanceScore: number;
+  approximateLineNumber?: number;
+  location?: {
+    startOffset: number;
+    endOffset: number;
+    quotedText: string;
+    strategy?: string;
+    confidence?: number;
+  };
+  [key: string]: unknown;
+}
 
-/** Default temperature for OpenRouter models */
-const DEFAULT_OPENROUTER_TEMPERATURE = 0.1;
+// ============================================================================
+// Configuration Types
+// ============================================================================
+
+export interface ExtractorConfig {
+  model: string;
+  temperature?: number | 'default';
+  label?: string;
+  thinking?: boolean;
+}
 
 /**
- * Check if a model is an OpenRouter model (contains '/')
+ * Judge configuration
  */
+export interface JudgeConfig {
+  model: string;
+  temperature?: number | 'default';
+  thinking?: boolean;
+  enabled: boolean;
+}
+
+export interface MultiExtractorConfig {
+  extractors: ExtractorConfig[];
+  judge: JudgeConfig;
+}
+
+// ============================================================================
+// Result Types
+// ============================================================================
+
+export interface ExtractorResult {
+  extractorId: string;
+  config: ExtractorConfig;
+  issues: ExtractedFallacyIssue[];
+  durationMs: number;
+  costUsd?: number;
+  error?: string;
+}
+
+export interface MultiExtractorResult {
+  extractorResults: ExtractorResult[];
+  totalDurationMs: number;
+  totalIssuesFound: number;
+}
+
+// ============================================================================
+// Config Parsing (standalone implementation)
+// ============================================================================
+
+const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-4-5-20250929';
+const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-5-20250929';
+const DEFAULT_CLAUDE_TEMPERATURE = 0;
+const DEFAULT_OPENROUTER_TEMPERATURE = 0.1;
+
 function isOpenRouterModel(model: string): boolean {
   return model.includes('/');
 }
 
-/**
- * Get default temperature for a model
- */
 export function getDefaultTemperature(model: string): number {
   return isOpenRouterModel(model)
     ? DEFAULT_OPENROUTER_TEMPERATURE
     : DEFAULT_CLAUDE_TEMPERATURE;
 }
 
-/**
- * Generate a unique label for an extractor config
- */
 export function generateExtractorLabel(config: ExtractorConfig): string {
   if (config.label) {
     return config.label;
   }
 
-  // Extract short model name
   let shortName: string;
   if (isOpenRouterModel(config.model)) {
-    // e.g., "google/gemini-3-flash-preview" -> "gemini-3-flash"
     const parts = config.model.split('/');
     shortName = parts[parts.length - 1].replace('-preview', '').replace('-latest', '');
   } else {
-    // e.g., "claude-sonnet-4-5-20250929" -> "sonnet"
     if (config.model.includes('opus')) {
       shortName = 'opus';
     } else if (config.model.includes('sonnet')) {
@@ -61,10 +143,8 @@ export function generateExtractorLabel(config: ExtractorConfig): string {
     }
   }
 
-  // Build suffix parts
   const suffixParts: string[] = [];
 
-  // Add temperature suffix if non-default
   if (config.temperature === 'default') {
     suffixParts.push('tDef');
   } else {
@@ -75,7 +155,6 @@ export function generateExtractorLabel(config: ExtractorConfig): string {
     }
   }
 
-  // Add thinking suffix if disabled
   if (config.thinking === false) {
     suffixParts.push('noThink');
   }
@@ -87,38 +166,19 @@ export function generateExtractorLabel(config: ExtractorConfig): string {
   return shortName;
 }
 
-/**
- * Generate a unique extractor ID (for telemetry correlation)
- */
 export function generateExtractorId(
   config: ExtractorConfig,
   index: number,
   allConfigs: ExtractorConfig[]
 ): string {
   const label = generateExtractorLabel(config);
-
-  // Check if this label would be duplicated
   const sameLabels = allConfigs.filter(c => generateExtractorLabel(c) === label);
-
-  // Only append index if there are duplicates
   if (sameLabels.length > 1) {
     return `${label}-${index}`;
   }
   return label;
 }
 
-/**
- * Parse and validate the FALLACY_EXTRACTORS environment variable
- *
- * Expected format:
- * ```json
- * [
- *   {"model": "claude-sonnet-4-5-20250929"},
- *   {"model": "claude-sonnet-4-5-20250929", "temperature": 0.5},
- *   {"model": "google/gemini-3-flash-preview", "temperature": 0.1}
- * ]
- * ```
- */
 function parseExtractorsEnvVar(envValue: string): ExtractorConfig[] {
   try {
     const parsed = JSON.parse(envValue);
@@ -133,15 +193,10 @@ function parseExtractorsEnvVar(envValue: string): ExtractorConfig[] {
     const configs: ExtractorConfig[] = [];
     for (const item of parsed) {
       if (typeof item !== 'object' || item === null) {
-        console.warn('[MultiExtractor] Invalid extractor config, skipping:', item);
         continue;
       }
 
       if (typeof item.model !== 'string' || !item.model) {
-        console.warn(
-          '[MultiExtractor] Extractor config missing model, skipping:',
-          item
-        );
         continue;
       }
 
@@ -149,7 +204,6 @@ function parseExtractorsEnvVar(envValue: string): ExtractorConfig[] {
         model: item.model,
       };
 
-      // Temperature can be a number or "default" string
       if (typeof item.temperature === 'number') {
         config.temperature = item.temperature;
       } else if (item.temperature === 'default') {
@@ -160,7 +214,6 @@ function parseExtractorsEnvVar(envValue: string): ExtractorConfig[] {
         config.label = item.label;
       }
 
-      // Thinking defaults to true (enabled), can be set to false
       if (typeof item.thinking === 'boolean') {
         config.thinking = item.thinking;
       }
@@ -180,9 +233,6 @@ function parseExtractorsEnvVar(envValue: string): ExtractorConfig[] {
 
 /**
  * Parse FALLACY_JUDGE env var
- *
- * Example:
- * FALLACY_JUDGE='{"model":"google/gemini-3-flash-preview","temperature":"default","thinking":false,"enabled":true}'
  */
 function parseJudgeEnvVar(): JudgeConfig {
   const judgeEnv = process.env.FALLACY_JUDGE;
@@ -211,15 +261,6 @@ function parseJudgeEnvVar(): JudgeConfig {
   };
 }
 
-/**
- * Get the multi-extractor configuration from environment variables
- *
- * Environment variables:
- * - FALLACY_EXTRACTORS: JSON array of extractor configs
- * - FALLACY_JUDGE: JSON object with judge config (model, temperature, thinking, enabled)
- *
- * Defaults to single extractor with DEFAULT_EXTRACTOR_MODEL if not configured.
- */
 export function getMultiExtractorConfig(): MultiExtractorConfig {
   const extractorsEnv = process.env.FALLACY_EXTRACTORS;
 
@@ -228,7 +269,6 @@ export function getMultiExtractorConfig(): MultiExtractorConfig {
   if (extractorsEnv) {
     extractors = parseExtractorsEnvVar(extractorsEnv);
     if (extractors.length === 0) {
-      console.warn('[MultiExtractor] No valid extractors in FALLACY_EXTRACTORS, using defaults');
       extractors = [{ model: DEFAULT_EXTRACTOR_MODEL }];
     }
   } else {
@@ -241,25 +281,6 @@ export function getMultiExtractorConfig(): MultiExtractorConfig {
   };
 }
 
-/**
- * Check if LLM judge is enabled for aggregation
- */
-export function isJudgeEnabled(): boolean {
-  const config = getMultiExtractorConfig();
-  return config.judge.enabled;
-}
-
-/**
- * Check if multi-extractor mode is enabled (more than one extractor configured)
- */
-export function isMultiExtractorEnabled(): boolean {
-  const config = getMultiExtractorConfig();
-  return config.extractors.length > 1;
-}
-
-/**
- * Get a human-readable summary of the current configuration
- */
 export function getConfigSummary(): string {
   const config = getMultiExtractorConfig();
 

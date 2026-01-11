@@ -410,7 +410,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       if (multiResult.totalIssuesFound === 0) {
         finalIssues = [];
-      } else if (successfulExtractors.length <= 1 || !config.judgeEnabled) {
+      } else if (successfulExtractors.length <= 1 || !config.judge.enabled) {
         // Single extractor or judge disabled - use simple deduplication
         if (successfulExtractors.length > 1) {
           logger.info(
@@ -486,7 +486,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         extractors: extractorsTelemetry,
         totalIssuesBeforeJudge: multiResult.totalIssuesFound,
         totalIssuesAfterJudge: finalIssues.length,
-        judgeModel: config.judgeModel,
+        judgeModel: config.judge.model,
         judgeDurationMs,
         judgeCostUsd,
         judgeDecisions,

@@ -52,6 +52,18 @@
     "./fallacy-extraction": {
       "types": "./dist/analysis-plugins/plugins/fallacy-check/extraction/index.d.ts",
       "default": "./dist/analysis-plugins/plugins/fallacy-check/extraction/index.js"
+    },
+    "./fallacy-extraction/lab": {
+      "types": "./dist/analysis-plugins/plugins/fallacy-check/extraction/lab-exports.d.ts",
+      "default": "./dist/analysis-plugins/plugins/fallacy-check/extraction/lab-exports.js"
+    },
+    "./fallacy-judge": {
+      "types": "./dist/tools/fallacy-judge/index.d.ts",
+      "default": "./dist/tools/fallacy-judge/index.js"
+    },
+    "./fallacy-judge/types": {
+      "types": "./dist/tools/fallacy-judge/types.d.ts",
+      "default": "./dist/tools/fallacy-judge/types.js"
     }
   },
   "scripts": {

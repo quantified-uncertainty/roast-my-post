@@ -38,17 +38,34 @@ export interface ExtractorConfig {
 }
 
 /**
+ * Judge configuration from FALLACY_JUDGE env var
+ *
+ * Example:
+ * FALLACY_JUDGE='{"model":"google/gemini-3-flash-preview","temperature":"default","thinking":false,"enabled":true}'
+ */
+export interface JudgeConfig {
+  /** Model to use (Claude or OpenRouter format) */
+  model: string;
+
+  /** Temperature (number or "default" for model's native default) */
+  temperature?: number | 'default';
+
+  /** Enable extended thinking/reasoning */
+  thinking?: boolean;
+
+  /** Whether the judge is enabled */
+  enabled: boolean;
+}
+
+/**
  * Configuration for multi-extractor execution
  */
 export interface MultiExtractorConfig {
   /** List of extractor configurations to run in parallel */
   extractors: ExtractorConfig[];
 
-  /** Model to use for judge aggregation (default: claude-sonnet-4-5-20250929) */
-  judgeModel?: string;
-
-  /** Whether to use LLM judge for aggregation (default: false - uses simple dedup) */
-  judgeEnabled: boolean;
+  /** Judge configuration */
+  judge: JudgeConfig;
 }
 
 // ============================================================================
