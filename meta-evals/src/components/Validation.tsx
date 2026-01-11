@@ -18,6 +18,7 @@ import Spinner from "ink-spinner";
 import { metaEvaluationRepository, type AgentChoice } from "@roast/db";
 import { truncate } from "./helpers";
 import { ScreenContainer, InfoBox } from "./shared";
+import { DocumentSelector } from "./DocumentSelector";
 import {
   type ValidationDocument,
   type DocumentComparisonResult,
@@ -43,9 +44,7 @@ interface Baseline {
   snapshotCount: number;
 }
 
-interface CorpusDocument extends ValidationDocument {
-  selected: boolean;
-}
+// CorpusDocument is just ValidationDocument (selection tracked separately via Set)
 
 interface ValidationRunSummary {
   id: string;
@@ -76,7 +75,8 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
   const [newBaselineName, setNewBaselineName] = useState("");
 
   // Corpus state (for creating new baseline)
-  const [corpusDocuments, setCorpusDocuments] = useState<CorpusDocument[]>([]);
+  const [corpusDocuments, setCorpusDocuments] = useState<ValidationDocument[]>([]);
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [showCorpusSelect, setShowCorpusSelect] = useState(false);
 
   // Run state
@@ -219,7 +219,9 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         agentId,
         { limit: 50, minContentLength: 200 }
       );
-      setCorpusDocuments(docs.map((d) => ({ ...d, selected: true })));
+      setCorpusDocuments(docs);
+      // Pre-select all documents by default
+      setSelectedDocIds(new Set(docs.map((d) => d.documentId)));
     } catch (e) {
       setError(String(e));
     }
@@ -249,15 +251,14 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
   async function createBaseline() {
     if (!selectedAgent || !newBaselineName.trim()) return;
 
-    const selectedDocs = corpusDocuments.filter((d) => d.selected);
-    if (selectedDocs.length === 0) return;
+    if (selectedDocIds.size === 0) return;
 
     try {
       setLoading(true);
 
       // Get current evaluation version IDs for selected documents
       const snapshots = await metaEvaluationRepository.getEvaluationSnapshots(
-        selectedDocs.map((d) => d.documentId),
+        Array.from(selectedDocIds),
         selectedAgent.id
       );
 
@@ -452,17 +453,6 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
     }
   }
 
-  function toggleDocument(docId: string) {
-    setCorpusDocuments((docs) =>
-      docs.map((d) => (d.documentId === docId ? { ...d, selected: !d.selected } : d))
-    );
-  }
-
-  function toggleAll() {
-    const allSelected = corpusDocuments.every((d) => d.selected);
-    setCorpusDocuments((docs) => docs.map((d) => ({ ...d, selected: !allSelected })));
-  }
-
   // Render tabs header
   const renderTabs = () => (
     <Box marginBottom={1}>
@@ -498,41 +488,33 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
     );
   }
 
-  // Creating baseline - corpus selection
+  // Creating baseline - corpus selection using DocumentSelector
   if (creatingBaseline && showCorpusSelect) {
-    const selectedCount = corpusDocuments.filter((d) => d.selected).length;
-    const items = [
-      { label: `[${selectedCount === corpusDocuments.length ? "x" : " "}] Select All (${corpusDocuments.length})`, value: "toggle-all" },
-      ...corpusDocuments.slice(0, maxItems - 4).map((d) => ({
-        label: `[${d.selected ? "x" : " "}] ${truncate(d.title, 50)}`,
-        value: d.documentId,
-      })),
-      { label: selectedCount > 0 ? `✓ Create Baseline (${selectedCount} docs)` : "Select documents first", value: "create" },
-      { label: "← Cancel", value: "cancel" },
-    ];
+    // Convert ValidationDocument[] to DocumentChoice[] format
+    const documentsForSelector = corpusDocuments.map((d) => ({
+      id: d.documentId,
+      title: d.title,
+      createdAt: d.lastEvaluatedAt || new Date(),
+    }));
 
     return (
-      <ScreenContainer title={`New Baseline: ${newBaselineName}`} borderColor="cyan" height={height}>
-        <InfoBox>
-          <Text>Select documents to include in baseline</Text>
-        </InfoBox>
-
-        <SelectInput
-          items={items}
-          onSelect={(item) => {
-            if (item.value === "cancel") {
-              setShowCorpusSelect(false);
-              setCreatingBaseline(false);
-            } else if (item.value === "toggle-all") {
-              toggleAll();
-            } else if (item.value === "create" && selectedCount > 0) {
-              createBaseline();
-            } else {
-              toggleDocument(item.value);
-            }
-          }}
-        />
-      </ScreenContainer>
+      <DocumentSelector
+        title={`New Baseline: ${newBaselineName}`}
+        subtitle="Select documents to include in baseline"
+        borderColor="cyan"
+        height={height}
+        maxItems={maxItems}
+        documents={documentsForSelector}
+        multiSelect={true}
+        selectedIds={selectedDocIds}
+        onSelectionChange={setSelectedDocIds}
+        confirmLabel="Create Baseline"
+        onConfirm={() => createBaseline()}
+        onCancel={() => {
+          setShowCorpusSelect(false);
+          setCreatingBaseline(false);
+        }}
+      />
     );
   }
 
