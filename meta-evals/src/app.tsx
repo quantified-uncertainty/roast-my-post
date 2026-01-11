@@ -228,7 +228,16 @@ export function App() {
     }
     if (key.escape) {
       // Screens with internal escape navigation handle it themselves
-      const screensWithInternalEscape = ["main-menu", "extractor-lab", "validation", "score-rank-menu"];
+      const screensWithInternalEscape = [
+        "main-menu",
+        "extractor-lab",
+        "validation",
+        "score-rank-menu",
+        "series-detail",
+        "rank-runs",
+        "score-run",
+        "create-baseline",
+      ];
       if (!screensWithInternalEscape.includes(screen.type)) {
         loadMainMenu();
       }

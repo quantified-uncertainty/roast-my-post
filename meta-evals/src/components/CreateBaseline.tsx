@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
@@ -43,6 +43,13 @@ export function CreateBaseline({
   const [filter, setFilter] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle escape to go back (but not during text input on document step)
+  useInput((input, key) => {
+    if (key.escape && step !== "document") {
+      onBack();
+    }
+  });
 
   // Debounced DB search when filter changes
   useEffect(() => {
