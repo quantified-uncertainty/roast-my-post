@@ -59,6 +59,16 @@ interface JudgeRunResult {
   error?: string;
 }
 
+/** Result from deduplication step */
+interface DedupResult {
+  /** Issues kept after dedup */
+  kept: JudgeDecision[];
+  /** Issues removed as duplicates */
+  duplicates: JudgeDecision[];
+  /** Issues removed due to limit */
+  limitDropped: JudgeDecision[];
+}
+
 type LabStep =
   | { type: "select-document" }
   | { type: "configure-extractors" }
@@ -69,7 +79,8 @@ type LabStep =
   | { type: "running-judge"; result: MultiExtractorResult; judgeConfigs: JudgeConfig[] }
   | { type: "judge-comparison"; result: MultiExtractorResult; judgeResults: JudgeRunResult[] }
   | { type: "judge-results"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; judgeLabel: string }
-  | { type: "judge-decision-detail"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; decision: JudgeDecision; isRejected: boolean; judgeLabel: string };
+  | { type: "judge-decision-detail"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; decision: JudgeDecision; isRejected: boolean; judgeLabel: string }
+  | { type: "dedup-results"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; judgeLabel: string; dedupResult: DedupResult };
 
 // Load extractor configs from FALLACY_EXTRACTORS env var, fallback to default
 function getInitialExtractorConfigs(): ExtractorConfig[] {
@@ -247,6 +258,51 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     }
   }
 
+  // Deduplication: remove duplicates, sort by priority, limit count
+  // Mirrors the pipeline's Phase 1.5 deduplication
+  const MAX_ISSUES = 25;
+
+  function runDeduplication(
+    extractionResult: MultiExtractorResult,
+    judgeResult: FallacyJudgeOutput,
+    judgeLabel: string
+  ) {
+    const decisions = judgeResult.acceptedDecisions;
+
+    // Step 1: Remove exact text duplicates (case-insensitive, whitespace normalized)
+    const seen = new Set<string>();
+    const unique: JudgeDecision[] = [];
+    const duplicates: JudgeDecision[] = [];
+
+    for (const decision of decisions) {
+      const key = decision.finalText.toLowerCase().replace(/\s+/g, " ").trim();
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(decision);
+      } else {
+        duplicates.push(decision);
+      }
+    }
+
+    // Step 2: Calculate priority score and sort (higher = more important)
+    const priorityScore = (d: JudgeDecision) =>
+      d.finalSeverity * 0.6 + d.finalImportance * 0.4;
+
+    const sorted = [...unique].sort((a, b) => priorityScore(b) - priorityScore(a));
+
+    // Step 3: Limit to MAX_ISSUES
+    const kept = sorted.slice(0, MAX_ISSUES);
+    const limitDropped = sorted.slice(MAX_ISSUES);
+
+    setStep({
+      type: "dedup-results",
+      result: extractionResult,
+      judgeResult,
+      judgeLabel,
+      dedupResult: { kept, duplicates, limitDropped },
+    });
+  }
+
   // Handle keyboard input - use ref to avoid stale closure
   useInput((input, key) => {
     if (key.escape) {
@@ -259,6 +315,8 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
         setStep({ type: "results", result: currentStep.result });
       } else if (currentStep.type === "judge-comparison") {
         setStep({ type: "results", result: currentStep.result });
+      } else if (currentStep.type === "dedup-results") {
+        setStep({ type: "judge-results", result: currentStep.result, judgeResult: currentStep.judgeResult, judgeLabel: currentStep.judgeLabel });
       } else if (currentStep.type === "results") {
         setStep({ type: "configure-extractors" });
       } else if (currentStep.type === "add-extractor") {
@@ -674,7 +732,8 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     });
 
     decisionItems.push({ label: "───────────────────────────────────────────────────────────────────────────────────────", value: "sep-1" });
-    decisionItems.push({ label: "Back to Extraction Results", value: "back" });
+    decisionItems.push({ label: `▶ Run Deduplication (${judgeResult.acceptedDecisions.length} issues)`, value: "run-dedup" });
+    decisionItems.push({ label: "← Back to Extraction Results", value: "back" });
 
     // Build legend string
     const legendParts = extractorIds.map((id, i) => `${String.fromCharCode(65 + i)}=${id}`);
@@ -707,6 +766,8 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
               return; // Ignore separators
             } else if (item.value === "back") {
               setStep({ type: "results", result });
+            } else if (item.value === "run-dedup") {
+              runDeduplication(result, judgeResult, judgeLabel || "");
             } else if (item.value.startsWith("accepted-")) {
               const idx = parseInt(item.value.replace("accepted-", ""), 10);
               setStep({
@@ -912,6 +973,92 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
 
         <Box marginTop={1} justifyContent="center">
           <Text dimColor>Enter=View Judge Details | Escape=Back to Results</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Deduplication results view
+  if (step.type === "dedup-results") {
+    const { result, judgeResult, judgeLabel, dedupResult } = step;
+    const { kept, duplicates, limitDropped } = dedupResult;
+    const totalInput = judgeResult.acceptedDecisions.length;
+
+    // Calculate priority score for display
+    const priorityScore = (d: JudgeDecision) =>
+      d.finalSeverity * 0.6 + d.finalImportance * 0.4;
+
+    // Build list items
+    const dedupItems: Array<{ label: string; value: string }> = [];
+
+    // Kept issues (sorted by priority)
+    dedupItems.push({ label: `── Kept (${kept.length}) ──`, value: "header-kept" });
+    kept.forEach((d, idx) => {
+      const score = priorityScore(d).toFixed(0);
+      const text = truncate(d.finalText.replace(/\n/g, ' '), issueTextWidth);
+      dedupItems.push({
+        label: `  [${score}] ${d.finalIssueType.padEnd(18)} ${text}`,
+        value: `kept-${idx}`,
+      });
+    });
+
+    // Duplicates removed
+    if (duplicates.length > 0) {
+      dedupItems.push({ label: `── Duplicates Removed (${duplicates.length}) ──`, value: "header-dup" });
+      duplicates.forEach((d, idx) => {
+        const text = truncate(d.finalText.replace(/\n/g, ' '), issueTextWidth);
+        dedupItems.push({
+          label: `  [dup] ${d.finalIssueType.padEnd(18)} ${text}`,
+          value: `dup-${idx}`,
+        });
+      });
+    }
+
+    // Limit dropped
+    if (limitDropped.length > 0) {
+      dedupItems.push({ label: `── Dropped by Limit (${limitDropped.length}) ──`, value: "header-limit" });
+      limitDropped.forEach((d, idx) => {
+        const score = priorityScore(d).toFixed(0);
+        const text = truncate(d.finalText.replace(/\n/g, ' '), issueTextWidth);
+        dedupItems.push({
+          label: `  [${score}] ${d.finalIssueType.padEnd(18)} ${text}`,
+          value: `limit-${idx}`,
+        });
+      });
+    }
+
+    dedupItems.push({ label: "───────────────────────────────────────────────────────────────────────────", value: "sep-1" });
+    dedupItems.push({ label: "← Back to Judge Results", value: "back" });
+
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor="yellow" padding={1} height={height}>
+        <Box justifyContent="center" marginBottom={1}>
+          <Text bold color="yellow">Deduplication Results</Text>
+        </Box>
+
+        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+          <Text>
+            <Text bold>Input: </Text><Text>{totalInput} issues</Text>
+            <Text>  →  </Text>
+            <Text bold color="green">{kept.length} kept</Text>
+            {duplicates.length > 0 && <Text>  |  <Text color="red">{duplicates.length} duplicates</Text></Text>}
+            {limitDropped.length > 0 && <Text>  |  <Text color="yellow">{limitDropped.length} over limit</Text></Text>}
+          </Text>
+        </Box>
+
+        <SelectInput
+          items={dedupItems.filter(i => !i.value.startsWith("header-") && !i.value.startsWith("sep-"))}
+          limit={maxItems - 5}
+          onSelect={(item) => {
+            if (item.value === "back") {
+              setStep({ type: "judge-results", result, judgeResult, judgeLabel });
+            }
+            // Could add detail view for individual items if needed
+          }}
+        />
+
+        <Box marginTop={1} justifyContent="center">
+          <Text dimColor>[score] = priority (sev*0.6 + imp*0.4) | Escape=Back</Text>
         </Box>
       </Box>
     );
