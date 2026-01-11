@@ -227,7 +227,8 @@ export function App() {
       exit();
     }
     if (key.escape) {
-      if (screen.type !== "main-menu") {
+      // Let ExtractorLab handle its own escape navigation internally
+      if (screen.type !== "main-menu" && screen.type !== "extractor-lab") {
         loadMainMenu();
       }
     }
