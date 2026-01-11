@@ -75,18 +75,17 @@ export function DocumentSelector({
     ? (ids: Set<string>) => onSelectionChange(ids)
     : setInternalSelectedIds;
 
-  // Debounced filter change
+  // Debounced filter change - only trigger when user actually types something
   useEffect(() => {
     if (!showFilter || !onFilterChange) return;
+    // Don't trigger search on empty filter - keep initial documents
+    if (filter.length === 0) return;
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
-    // Only show spinner when actively filtering (not on empty initial state)
-    if (filter.length > 0) {
-      setIsSearching(true);
-    }
+    setIsSearching(true);
 
     debounceRef.current = setTimeout(() => {
       onFilterChange(filter);
