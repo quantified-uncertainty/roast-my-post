@@ -23,6 +23,9 @@ export interface JudgeConfig {
   /** Enable extended thinking/reasoning */
   thinking?: boolean;
 
+  /** Optional display label (auto-generated if not provided) */
+  label?: string;
+
   /** Whether the judge is enabled */
   enabled: boolean;
 }
@@ -68,6 +71,9 @@ export interface FallacyJudgeInput {
 
   /** List of extractor IDs that contributed */
   extractorIds: string[];
+
+  /** Optional config override (if not provided, reads from FALLACY_JUDGE env var) */
+  judgeConfig?: JudgeConfig;
 }
 
 /**

@@ -10,8 +10,9 @@
  */
 
 import { z } from 'zod';
+import Anthropic from '@anthropic-ai/sdk';
 import { Tool, type ToolContext } from '../base/Tool';
-import { callClaudeWithTool } from '../../claude/wrapper';
+import { callClaude, callClaudeWithTool } from '../../claude/wrapper';
 import { callOpenRouterWithTool } from '../../utils/openrouter';
 import { fallacyJudgeConfig } from './config';
 import type {
@@ -35,7 +36,67 @@ function isOpenRouterModel(model: string): boolean {
 }
 
 /**
- * Parse FALLACY_JUDGE env var for full config
+ * Parse a single judge config object
+ */
+function parseJudgeConfigObject(parsed: unknown): JudgeConfig | null {
+  if (typeof parsed === 'object' && parsed !== null && typeof (parsed as Record<string, unknown>).model === 'string') {
+    const obj = parsed as Record<string, unknown>;
+    return {
+      model: obj.model as string,
+      temperature: typeof obj.temperature === 'number' ? obj.temperature :
+                   obj.temperature === 'default' ? 'default' : undefined,
+      thinking: typeof obj.thinking === 'boolean' ? obj.thinking : undefined,
+      label: typeof obj.label === 'string' ? obj.label : undefined,
+      enabled: obj.enabled !== false,
+    };
+  }
+  return null;
+}
+
+/**
+ * Parse FALLACY_JUDGES env var for array of judge configs
+ * Also accepts array in FALLACY_JUDGE for convenience
+ *
+ * Example:
+ * FALLACY_JUDGES='[{"model":"claude-sonnet-4-5-20250929","thinking":true},{"model":"google/gemini-3-flash-preview","thinking":false}]'
+ */
+export function getJudgesConfig(): JudgeConfig[] {
+  // Try FALLACY_JUDGES first, then FALLACY_JUDGE (both can contain arrays)
+  const judgesEnv = process.env.FALLACY_JUDGES || process.env.FALLACY_JUDGE;
+
+  if (judgesEnv) {
+    try {
+      const parsed = JSON.parse(judgesEnv);
+      if (Array.isArray(parsed)) {
+        const configs: JudgeConfig[] = [];
+        for (const item of parsed) {
+          const config = parseJudgeConfigObject(item);
+          if (config) {
+            configs.push(config);
+          }
+        }
+        if (configs.length > 0) {
+          return configs;
+        }
+      } else {
+        // Single object in FALLACY_JUDGE
+        const config = parseJudgeConfigObject(parsed);
+        if (config && config.enabled) {
+          return [config];
+        }
+      }
+      console.warn('[FallacyJudge] Invalid FALLACY_JUDGES/FALLACY_JUDGE format');
+    } catch (e) {
+      console.warn('[FallacyJudge] Failed to parse FALLACY_JUDGES/FALLACY_JUDGE:', e);
+    }
+  }
+
+  // Default: empty array (no judges configured)
+  return [];
+}
+
+/**
+ * Parse FALLACY_JUDGE env var for single judge config (legacy)
  *
  * Example:
  * FALLACY_JUDGE='{"model":"google/gemini-3-flash-preview","temperature":"default","thinking":false,"enabled":true}'
@@ -46,14 +107,9 @@ export function getJudgeConfig(): JudgeConfig {
   if (judgeEnv) {
     try {
       const parsed = JSON.parse(judgeEnv);
-      if (typeof parsed === 'object' && parsed !== null && typeof parsed.model === 'string') {
-        return {
-          model: parsed.model,
-          temperature: typeof parsed.temperature === 'number' ? parsed.temperature :
-                       parsed.temperature === 'default' ? 'default' : undefined,
-          thinking: typeof parsed.thinking === 'boolean' ? parsed.thinking : undefined,
-          enabled: parsed.enabled !== false, // Default to true if not specified
-        };
+      const config = parseJudgeConfigObject(parsed);
+      if (config) {
+        return config;
       }
       console.warn('[FallacyJudge] Invalid FALLACY_JUDGE format, using defaults');
     } catch (e) {
@@ -68,6 +124,53 @@ export function getJudgeConfig(): JudgeConfig {
   };
 }
 
+/**
+ * Generate a display label for a judge config
+ */
+export function generateJudgeLabel(config: JudgeConfig): string {
+  if (config.label) {
+    return config.label;
+  }
+
+  // Extract short model name
+  let shortName: string;
+  if (isOpenRouterModel(config.model)) {
+    const parts = config.model.split('/');
+    shortName = parts[parts.length - 1].replace('-preview', '').replace('-latest', '');
+  } else {
+    if (config.model.includes('opus')) {
+      shortName = 'opus';
+    } else if (config.model.includes('sonnet')) {
+      shortName = 'sonnet';
+    } else if (config.model.includes('haiku')) {
+      shortName = 'haiku';
+    } else {
+      shortName = config.model.slice(0, 10);
+    }
+  }
+
+  // Build suffix parts
+  const suffixParts: string[] = [];
+
+  if (config.temperature === 'default') {
+    suffixParts.push('tDef');
+  } else if (config.temperature !== undefined) {
+    suffixParts.push(`t${config.temperature}`);
+  }
+
+  if (config.thinking === false) {
+    suffixParts.push('noThink');
+  } else if (config.thinking === true) {
+    suffixParts.push('think');
+  }
+
+  if (suffixParts.length > 0) {
+    return `${shortName}-${suffixParts.join('-')}`;
+  }
+
+  return shortName;
+}
+
 const extractorIssueInputSchema = z.object({
   extractorId: z.string(),
   exactText: z.string(),
@@ -77,13 +180,22 @@ const extractorIssueInputSchema = z.object({
   confidenceScore: z.number(),
   importanceScore: z.number(),
   reasoning: z.string(),
-}) satisfies z.ZodType<ExtractorIssueInput>;
+});
+
+const judgeConfigSchema = z.object({
+  model: z.string(),
+  temperature: z.union([z.number(), z.literal('default')]).optional(),
+  thinking: z.boolean().optional(),
+  label: z.string().optional(),
+  enabled: z.boolean(),
+});
 
 const inputSchema = z.object({
   documentText: z.string().min(1),
   issues: z.array(extractorIssueInputSchema),
   extractorIds: z.array(z.string()),
-}) satisfies z.ZodType<FallacyJudgeInput>;
+  judgeConfig: judgeConfigSchema.optional(),
+});
 
 const judgeDecisionSchema = z.object({
   decision: z.enum(['accept', 'merge', 'reject']),
@@ -97,7 +209,7 @@ const judgeDecisionSchema = z.object({
   sourceExtractors: z.array(z.string()),
   sourceIssueIndices: z.array(z.number()),
   judgeReasoning: z.string(),
-}) satisfies z.ZodType<JudgeDecision>;
+});
 
 const outputSchema = z.object({
   acceptedDecisions: z.array(judgeDecisionSchema),
@@ -109,7 +221,7 @@ const outputSchema = z.object({
     mergedCount: z.number(),
     rejectedCount: z.number(),
   }),
-}) satisfies z.ZodType<FallacyJudgeOutput>;
+});
 
 export class FallacyJudgeTool extends Tool<FallacyJudgeInput, FallacyJudgeOutput> {
   config = fallacyJudgeConfig;
@@ -120,6 +232,7 @@ export class FallacyJudgeTool extends Tool<FallacyJudgeInput, FallacyJudgeOutput
     input: FallacyJudgeInput,
     context: ToolContext
   ): Promise<FallacyJudgeOutput> {
+    const startTime = Date.now();
     context.logger.info(
       `[FallacyJudge] Aggregating ${input.issues.length} issues from ${input.extractorIds.length} extractors`
     );
@@ -227,7 +340,8 @@ Group similar issues together and provide your decisions. Remember:
 - Explain your reasoning for each decision`;
 
     try {
-      const judgeConfig = getJudgeConfig();
+      // Use passed config if provided, otherwise fall back to env var config
+      const judgeConfig = input.judgeConfig ?? getJudgeConfig();
       const useOpenRouter = isOpenRouterModel(judgeConfig.model);
 
       // Determine temperature
@@ -336,11 +450,12 @@ Group similar issues together and provide your decisions. Remember:
 
       if (useOpenRouter) {
         // Use OpenRouter for non-Claude models
+        // Use 16000 max_tokens to handle large outputs with many issues
         result = await callOpenRouterWithTool<JudgeResultType>({
           model: judgeConfig.model,
           system: systemPrompt,
           messages: [{ role: 'user', content: userPrompt }],
-          max_tokens: 8000,
+          max_tokens: 16000,
           ...(temperature !== undefined && { temperature }),
           toolName: 'aggregate_fallacy_issues',
           toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
@@ -349,20 +464,52 @@ Group similar issues together and provide your decisions. Remember:
         });
       } else {
         // Use Claude API directly
-        result = await callClaudeWithTool<JudgeResultType>(
-          {
-            model: judgeConfig.model,
-            system: systemPrompt,
-            messages: [{ role: 'user', content: userPrompt }],
-            max_tokens: 8000,
-            ...(temperature !== undefined && { temperature }),
-            toolName: 'aggregate_fallacy_issues',
-            toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
-            toolSchema,
-            thinking: thinkingEnabled,
-          },
-          []
-        );
+        if (thinkingEnabled) {
+          // When thinking is enabled, use tool_choice: 'auto' to allow thinking
+          // (forced tool_choice like 'any' or specific tool is incompatible with extended thinking)
+          const claudeResult = await callClaude(
+            {
+              model: judgeConfig.model,
+              system: systemPrompt,
+              messages: [{ role: 'user', content: userPrompt }],
+              max_tokens: 16000, // Must be > thinking.budget_tokens (10000)
+              ...(temperature !== undefined && { temperature }),
+              tools: [{
+                name: 'aggregate_fallacy_issues',
+                description: 'Aggregate and deduplicate fallacy issues from multiple extractors',
+                input_schema: toolSchema,
+              }],
+              tool_choice: { type: 'auto' },
+              thinking: true,
+            },
+            []
+          );
+
+          // Extract tool result from response
+          const toolUse = claudeResult.response.content.find(
+            (c): c is Anthropic.Messages.ToolUseBlock => c.type === 'tool_use'
+          );
+          if (!toolUse) {
+            throw new Error('Judge did not call the aggregation tool - no tool use in response');
+          }
+          result = { toolResult: toolUse.input as JudgeResultType };
+        } else {
+          // Without thinking, use forced tool_choice for guaranteed structure
+          result = await callClaudeWithTool<JudgeResultType>(
+            {
+              model: judgeConfig.model,
+              system: systemPrompt,
+              messages: [{ role: 'user', content: userPrompt }],
+              max_tokens: 8000,
+              ...(temperature !== undefined && { temperature }),
+              toolName: 'aggregate_fallacy_issues',
+              toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
+              toolSchema,
+              thinking: false,
+            },
+            []
+          );
+        }
       }
 
       // Separate accepted/rejected decisions
@@ -395,8 +542,9 @@ Group similar issues together and provide your decisions. Remember:
         }
       }
 
+      const durationMs = Date.now() - startTime;
       context.logger.info(
-        `[FallacyJudge] Aggregation complete: ${acceptedDecisions.length} accepted, ${mergedCount} merged, ${rejectedDecisions.length} rejected`
+        `[FallacyJudge] Aggregation complete in ${(durationMs / 1000).toFixed(1)}s: ${acceptedDecisions.length} accepted, ${mergedCount} merged, ${rejectedDecisions.length} rejected`
       );
 
       return {
@@ -412,57 +560,8 @@ Group similar issues together and provide your decisions. Remember:
       };
     } catch (error) {
       context.logger.error('[FallacyJudge] Aggregation failed:', error);
-
-      // Fallback: Simple deduplication without LLM
-      // Keep all issues, grouping by similar text
-      const groups = new Map<string, number[]>();
-      for (let i = 0; i < input.issues.length; i++) {
-        const issue = input.issues[i];
-        const normalizedText = issue.exactText.toLowerCase().replace(/\s+/g, ' ').trim();
-        const existing = groups.get(normalizedText);
-        if (existing) {
-          existing.push(i);
-        } else {
-          groups.set(normalizedText, [i]);
-        }
-      }
-
-      const acceptedDecisions: JudgeDecision[] = [];
-      for (const [, indices] of groups) {
-        // Pick the issue with highest confidence
-        const bestIdx = indices.reduce((best, current) =>
-          input.issues[current].confidenceScore > input.issues[best].confidenceScore
-            ? current
-            : best
-        );
-        const bestIssue = input.issues[bestIdx];
-
-        acceptedDecisions.push({
-          decision: indices.length > 1 ? 'merge' : 'accept',
-          finalText: bestIssue.exactText,
-          finalIssueType: bestIssue.issueType,
-          finalFallacyType: bestIssue.fallacyType,
-          finalSeverity: bestIssue.severityScore,
-          finalConfidence: bestIssue.confidenceScore,
-          finalImportance: bestIssue.importanceScore,
-          finalReasoning: bestIssue.reasoning,
-          sourceExtractors: [...new Set(indices.map((i) => input.issues[i].extractorId))],
-          sourceIssueIndices: indices,
-          judgeReasoning: 'Fallback deduplication (LLM judge unavailable)',
-        });
-      }
-
-      return {
-        acceptedDecisions,
-        rejectedDecisions: [],
-        summary: {
-          totalInputIssues: input.issues.length,
-          uniqueGroups: groups.size,
-          acceptedCount: acceptedDecisions.length,
-          mergedCount: acceptedDecisions.filter((d) => d.decision === 'merge').length,
-          rejectedCount: 0,
-        },
-      };
+      // Re-throw to surface error to user - don't silently fallback
+      throw error;
     }
   }
 }

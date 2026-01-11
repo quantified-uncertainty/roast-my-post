@@ -18,9 +18,13 @@ import {
 } from "@roast/ai/fallacy-extraction/lab";
 import { runMultiExtractor } from "@roast/ai/fallacy-extraction";
 import fallacyJudgeModule from "@roast/ai/fallacy-judge";
-// CommonJS/ESM interop: default export is wrapped
+// CommonJS/ESM interop: default export is wrapped, named exports need unwrapping too
 const fallacyJudgeTool = (fallacyJudgeModule as unknown as { default?: typeof fallacyJudgeModule }).default ?? fallacyJudgeModule;
-import type { FallacyJudgeOutput, JudgeDecision } from "@roast/ai/fallacy-judge/types";
+const { getJudgesConfig, generateJudgeLabel } = fallacyJudgeModule as unknown as {
+  getJudgesConfig: () => import("@roast/ai/fallacy-judge/types").JudgeConfig[];
+  generateJudgeLabel: (config: import("@roast/ai/fallacy-judge/types").JudgeConfig) => string;
+};
+import type { FallacyJudgeOutput, JudgeDecision, JudgeConfig } from "@roast/ai/fallacy-judge/types";
 import { ModelSelector } from "./ModelSelector";
 import { DocumentSelector } from "./DocumentSelector";
 
@@ -46,6 +50,15 @@ interface ExtractorLabProps {
   onBack: () => void;
 }
 
+/** Result from a single judge run with its config */
+interface JudgeRunResult {
+  config: JudgeConfig;
+  label: string;
+  result: FallacyJudgeOutput;
+  durationMs: number;
+  error?: string;
+}
+
 type LabStep =
   | { type: "select-document" }
   | { type: "configure-extractors" }
@@ -53,9 +66,10 @@ type LabStep =
   | { type: "running" }
   | { type: "results"; result: MultiExtractorResult }
   | { type: "issue-detail"; result: MultiExtractorResult; extractorIdx: number; issueIdx: number }
-  | { type: "running-judge"; result: MultiExtractorResult }
-  | { type: "judge-results"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput }
-  | { type: "judge-decision-detail"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; decision: JudgeDecision; isRejected: boolean };
+  | { type: "running-judge"; result: MultiExtractorResult; judgeConfigs: JudgeConfig[] }
+  | { type: "judge-comparison"; result: MultiExtractorResult; judgeResults: JudgeRunResult[] }
+  | { type: "judge-results"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; judgeLabel: string }
+  | { type: "judge-decision-detail"; result: MultiExtractorResult; judgeResult: FallacyJudgeOutput; decision: JudgeDecision; isRejected: boolean; judgeLabel: string };
 
 // Load extractor configs from FALLACY_EXTRACTORS env var, fallback to default
 function getInitialExtractorConfigs(): ExtractorConfig[] {
@@ -90,6 +104,8 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   // Overhead: indicator(2) + [+]space(4) + type(18) + space(1) + space(1) + [A,B](10) = 36
   const judgeTextWidth = Math.max(40, termWidth - 6 - 36);
   const [extractorConfigs, setExtractorConfigs] = useState<ExtractorConfig[]>(getInitialExtractorConfigs);
+  const [availableJudges] = useState<JudgeConfig[]>(() => getJudgesConfig());
+  const [selectedJudgeIdxs, setSelectedJudgeIdxs] = useState<Set<number>>(() => new Set([0])); // First judge selected by default
   const [error, setError] = useState<string | null>(null);
   const [highlightedItem, setHighlightedItem] = useState<string>("");
 
@@ -146,40 +162,87 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     }
   }
 
-  async function runJudge(extractionResult: MultiExtractorResult) {
-    setStep({ type: "running-judge", result: extractionResult });
+  async function runJudge(extractionResult: MultiExtractorResult, judgeConfig?: JudgeConfig, judgeLabel?: string): Promise<JudgeRunResult> {
+    // Flatten all issues from all extractors
+    const allIssues = extractionResult.extractorResults.flatMap((r) =>
+      r.issues.map((issue) => ({
+        extractorId: r.extractorId,
+        exactText: issue.exactText,
+        issueType: issue.issueType,
+        fallacyType: issue.fallacyType,
+        severityScore: issue.severityScore,
+        confidenceScore: issue.confidenceScore,
+        importanceScore: issue.importanceScore,
+        reasoning: issue.reasoning,
+      }))
+    );
+
+    const extractorIds = extractionResult.extractorResults
+      .filter((r) => !r.error)
+      .map((r) => r.extractorId);
+
+    const startTime = Date.now();
+    const label = judgeLabel || (judgeConfig ? generateJudgeLabel(judgeConfig) : "default");
 
     try {
-      // Flatten all issues from all extractors
-      const allIssues = extractionResult.extractorResults.flatMap((r) =>
-        r.issues.map((issue) => ({
-          extractorId: r.extractorId,
-          exactText: issue.exactText,
-          issueType: issue.issueType,
-          fallacyType: issue.fallacyType,
-          severityScore: issue.severityScore,
-          confidenceScore: issue.confidenceScore,
-          importanceScore: issue.importanceScore,
-          reasoning: issue.reasoning,
-        }))
-      );
-
-      const extractorIds = extractionResult.extractorResults
-        .filter((r) => !r.error)
-        .map((r) => r.extractorId);
-
       const judgeResult = await fallacyJudgeTool.execute(
         {
           documentText,
           issues: allIssues,
           extractorIds,
+          judgeConfig,
         },
         { logger: simpleLogger }
       );
 
-      setStep({ type: "judge-results", result: extractionResult, judgeResult });
+      return {
+        config: judgeConfig || { model: "default", enabled: true },
+        label,
+        result: judgeResult,
+        durationMs: Date.now() - startTime,
+      };
     } catch (e) {
-      setError(`Judge failed: ${e}`);
+      return {
+        config: judgeConfig || { model: "default", enabled: true },
+        label,
+        result: {
+          acceptedDecisions: [],
+          rejectedDecisions: [],
+          summary: { totalInputIssues: allIssues.length, uniqueGroups: 0, acceptedCount: 0, mergedCount: 0, rejectedCount: 0 },
+        },
+        durationMs: Date.now() - startTime,
+        error: String(e),
+      };
+    }
+  }
+
+  async function runMultipleJudges(extractionResult: MultiExtractorResult, judgeConfigs: JudgeConfig[]) {
+    setStep({ type: "running-judge", result: extractionResult, judgeConfigs });
+
+    try {
+      // Run all judges in parallel
+      const judgePromises = judgeConfigs.map(config =>
+        runJudge(extractionResult, config, generateJudgeLabel(config))
+      );
+
+      const judgeResults = await Promise.all(judgePromises);
+
+      // Check if any had errors
+      const errored = judgeResults.filter(r => r.error);
+      if (errored.length === judgeResults.length) {
+        throw new Error(`All judges failed: ${errored[0].error}`);
+      }
+
+      // If only one judge was selected, go directly to its results
+      if (judgeResults.length === 1) {
+        const single = judgeResults[0];
+        setStep({ type: "judge-results", result: extractionResult, judgeResult: single.result, judgeLabel: single.label });
+      } else {
+        // Multiple judges - show comparison view
+        setStep({ type: "judge-comparison", result: extractionResult, judgeResults });
+      }
+    } catch (e) {
+      setError(`Judges failed: ${e}`);
       setStep({ type: "results", result: extractionResult });
     }
   }
@@ -191,8 +254,10 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
       if (currentStep.type === "issue-detail") {
         setStep({ type: "results", result: currentStep.result });
       } else if (currentStep.type === "judge-decision-detail") {
-        setStep({ type: "judge-results", result: currentStep.result, judgeResult: currentStep.judgeResult });
+        setStep({ type: "judge-results", result: currentStep.result, judgeResult: currentStep.judgeResult, judgeLabel: currentStep.judgeLabel });
       } else if (currentStep.type === "judge-results") {
+        setStep({ type: "results", result: currentStep.result });
+      } else if (currentStep.type === "judge-comparison") {
         setStep({ type: "results", result: currentStep.result });
       } else if (currentStep.type === "results") {
         setStep({ type: "configure-extractors" });
@@ -400,11 +465,40 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
 
     // Actions at the bottom
     issueItems.push({ label: "───────────────────────────────────────────────────────────────────────────", value: "sep-1" });
+
+    // Judge selection (only if we have multiple extractors with issues)
     if (hasMultipleExtractors && totalIssues > 0) {
-      issueItems.push({
-        label: `⚖️  Run Judge (aggregate ${totalIssues} issues from ${result.extractorResults.length} extractors)`,
-        value: "run-judge",
-      });
+      if (availableJudges.length > 0) {
+        // Show available judges with checkboxes for multi-select
+        availableJudges.forEach((judge, idx) => {
+          const label = generateJudgeLabel(judge);
+          const isSelected = selectedJudgeIdxs.has(idx);
+          const prefix = isSelected ? "[x]" : "[ ]";
+          const thinkStr = judge.thinking ? "think" : "noThink";
+          const tempStr = judge.temperature === 'default' ? 'tDef' : judge.temperature !== undefined ? `t${judge.temperature}` : '';
+          issueItems.push({
+            label: `${prefix} Judge: ${label} (${tempStr ? tempStr + ', ' : ''}${thinkStr})`,
+            value: `judge-${idx}`,
+          });
+        });
+
+        issueItems.push({ label: "─────────────────────────────────────────", value: "sep-2" });
+
+        const selectedCount = selectedJudgeIdxs.size;
+        const judgeLabel = selectedCount === 1
+          ? generateJudgeLabel(availableJudges[[...selectedJudgeIdxs][0]])
+          : `${selectedCount} judges`;
+        issueItems.push({
+          label: `⚖️  Run ${judgeLabel} (aggregate ${totalIssues} issues)`,
+          value: "run-judge",
+        });
+      } else {
+        // No judges configured - show hint
+        issueItems.push({
+          label: `⚠️  No judges configured. Set FALLACY_JUDGES or FALLACY_JUDGE env var`,
+          value: "no-judges",
+        });
+      }
     }
     issueItems.push({ label: "← Back to Configure", value: "back" });
 
@@ -435,7 +529,24 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
             } else if (item.value === "back") {
               setStep({ type: "configure-extractors" });
             } else if (item.value === "run-judge") {
-              runJudge(result);
+              // Run all selected judges
+              const selectedConfigs = [...selectedJudgeIdxs].map(idx => availableJudges[idx]);
+              runMultipleJudges(result, selectedConfigs);
+            } else if (item.value.startsWith("judge-")) {
+              // Toggle multi-select
+              const idx = parseInt(item.value.replace("judge-", ""), 10);
+              setSelectedJudgeIdxs(prev => {
+                const next = new Set(prev);
+                if (next.has(idx)) {
+                  // Don't allow deselecting the last one
+                  if (next.size > 1) {
+                    next.delete(idx);
+                  }
+                } else {
+                  next.add(idx);
+                }
+                return next;
+              });
             } else if (item.value.startsWith("issue-")) {
               const [, extractorIdx, issueIdx] = item.value.split("-");
               setStep({
@@ -496,13 +607,15 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     );
   }
 
-  // Running judge
+  // Running judge(s)
   if (step.type === "running-judge") {
     const totalIssues = step.result.extractorResults.reduce((sum, r) => sum + r.issues.length, 0);
+    const judgeCount = step.judgeConfigs.length;
+    const judgeNames = step.judgeConfigs.map(c => generateJudgeLabel(c)).join(", ");
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="yellow" padding={1} height={height}>
         <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="yellow">Extractor Lab - Running Judge</Text>
+          <Text bold color="yellow">Extractor Lab - Running {judgeCount > 1 ? `${judgeCount} Judges` : "Judge"}</Text>
         </Box>
 
         <Box justifyContent="center" padding={2}>
@@ -511,8 +624,9 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
           </Text>
         </Box>
 
-        <Box justifyContent="center">
-          <Text dimColor>The judge will deduplicate, merge, and filter issues</Text>
+        <Box justifyContent="center" flexDirection="column">
+          <Text dimColor>The judge{judgeCount > 1 ? "s" : ""} will deduplicate, merge, and filter issues</Text>
+          {judgeCount > 1 && <Text dimColor>Running in parallel: {judgeNames}</Text>}
         </Box>
       </Box>
     );
@@ -520,7 +634,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
 
   // Judge results
   if (step.type === "judge-results") {
-    const { result, judgeResult } = step;
+    const { result, judgeResult, judgeLabel } = step;
     const totalInputIssues = result.extractorResults.reduce((sum, r) => sum + r.issues.length, 0);
 
     // Create legend mapping extractor IDs to short keys (A, B, C, ...)
@@ -569,8 +683,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     return (
       <Box flexDirection="column" borderStyle="round" borderColor="cyan" padding={1} height={height}>
         <Box justifyContent="center" marginBottom={1}>
-          <Text bold color="cyan">Extractor Lab - Judge Results: </Text>
-          <Text color="green">{selectedDoc?.title}</Text>
+          <Text bold color="cyan">Judge Results{judgeLabel ? `: ${judgeLabel}` : ""}</Text>
         </Box>
 
         <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1} flexDirection="column">
@@ -602,6 +715,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
                 judgeResult,
                 decision: judgeResult.acceptedDecisions[idx],
                 isRejected: false,
+                judgeLabel: judgeLabel || "",
               });
             } else if (item.value.startsWith("rejected-")) {
               const idx = parseInt(item.value.replace("rejected-", ""), 10);
@@ -611,6 +725,7 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
                 judgeResult,
                 decision: judgeResult.rejectedDecisions[idx],
                 isRejected: true,
+                judgeLabel: judgeLabel || "",
               });
             }
           }}
@@ -684,6 +799,119 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
 
         <Box marginTop={1} justifyContent="center">
           <Text dimColor>Press Escape to go back to judge results</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Judge comparison view - comparing multiple judges
+  if (step.type === "judge-comparison") {
+    const { result, judgeResults } = step;
+    const totalInputIssues = result.extractorResults.reduce((sum, r) => sum + r.issues.length, 0);
+
+    // Build comparison items
+    const comparisonItems: Array<{ label: string; value: string }> = [];
+
+    // Header row
+    comparisonItems.push({
+      label: `── Judge Comparison: ${judgeResults.length} judges, ${totalInputIssues} input issues ──`,
+      value: "header",
+    });
+
+    // Each judge row
+    judgeResults.forEach((jr, idx) => {
+      const status = jr.error ? "❌ Error" : `✅ ${jr.result.summary.acceptedCount} accepted, ${jr.result.summary.mergedCount} merged, ${jr.result.summary.rejectedCount} rejected`;
+      const duration = `${(jr.durationMs / 1000).toFixed(1)}s`;
+      comparisonItems.push({
+        label: `[${idx + 1}] ${jr.label.padEnd(30)} ${duration.padEnd(8)} ${status}`,
+        value: `judge-${idx}`,
+      });
+
+      // If error, show error details
+      if (jr.error) {
+        comparisonItems.push({
+          label: `    Error: ${truncate(jr.error, termWidth - 20)}`,
+          value: `error-${idx}`,
+        });
+      }
+    });
+
+    // Summary stats
+    comparisonItems.push({
+      label: "────────────────────────────────────────────────────────────────────────────",
+      value: "sep-1",
+    });
+
+    // Agreement summary - find issues accepted by all judges
+    const successfulJudges = judgeResults.filter(jr => !jr.error);
+    if (successfulJudges.length > 1) {
+      // Get accepted issue texts from each judge for comparison
+      const acceptedByJudge = successfulJudges.map(jr =>
+        new Set(jr.result.acceptedDecisions.map(d => d.finalText.toLowerCase().trim()))
+      );
+
+      // Find issues in ALL judges (intersection)
+      const unanimouslyAccepted = [...acceptedByJudge[0]].filter(text =>
+        acceptedByJudge.every(set => set.has(text))
+      ).length;
+
+      // Find issues in ANY judge (union)
+      const allAccepted = new Set(acceptedByJudge.flatMap(set => [...set])).size;
+
+      const agreementPct = allAccepted > 0 ? Math.round((unanimouslyAccepted / allAccepted) * 100) : 0;
+
+      comparisonItems.push({
+        label: `📊 Agreement: ${unanimouslyAccepted}/${allAccepted} issues accepted by all judges (${agreementPct}%)`,
+        value: "stats-1",
+      });
+    }
+
+    comparisonItems.push({
+      label: "────────────────────────────────────────────────────────────────────────────",
+      value: "sep-2",
+    });
+    comparisonItems.push({ label: "← Back to Extraction Results", value: "back" });
+
+    return (
+      <Box flexDirection="column" borderStyle="round" borderColor="magenta" padding={1} height={height}>
+        <Box justifyContent="center" marginBottom={1}>
+          <Text bold color="magenta">Extractor Lab - Judge Comparison: </Text>
+          <Text color="green">{selectedDoc?.title}</Text>
+        </Box>
+
+        <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
+          <Text>
+            <Text bold>Input: </Text><Text>{totalInputIssues} issues from {result.extractorResults.length} extractors</Text>
+            <Text>  |  </Text>
+            <Text bold>Judges run: </Text><Text color="cyan">{judgeResults.length}</Text>
+            <Text>  |  </Text>
+            <Text bold>Successful: </Text><Text color="green">{judgeResults.filter(j => !j.error).length}</Text>
+          </Text>
+        </Box>
+
+        <SelectInput
+          items={comparisonItems.filter(i => !i.value.startsWith("sep-") && !i.value.startsWith("header") && !i.value.startsWith("stats-") && !i.value.startsWith("error-"))}
+          limit={maxItems - 5}
+          onSelect={(item) => {
+            if (item.value === "back") {
+              setStep({ type: "results", result });
+            } else if (item.value.startsWith("judge-")) {
+              const idx = parseInt(item.value.replace("judge-", ""), 10);
+              const jr = judgeResults[idx];
+              if (!jr.error) {
+                setStep({
+                  type: "judge-results",
+                  result,
+                  judgeResult: jr.result,
+                  judgeLabel: jr.label,
+                });
+              }
+            }
+          }}
+        />
+
+        <Box marginTop={1} justifyContent="center">
+          <Text dimColor>Enter=View Judge Details | Escape=Back to Results</Text>
         </Box>
       </Box>
     );

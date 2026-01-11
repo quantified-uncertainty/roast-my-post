@@ -452,6 +452,11 @@ export async function callOpenRouterWithTool<T>(
     console.error(`  finish_reason: ${choice.finish_reason}`);
     console.error(`  message.content: ${choice.message?.content?.substring(0, 500) || '(empty)'}`);
     console.error(`  tool_calls: ${JSON.stringify(choice.message?.tool_calls || [])}`);
+
+    // Provide specific error for finish_reason: length
+    if (choice.finish_reason === 'length') {
+      throw new Error(`Response truncated (max_tokens too small) - model ${options.model} ran out of tokens before completing the tool call`);
+    }
     throw new Error(`No tool call found for ${options.toolName}`);
   }
 
