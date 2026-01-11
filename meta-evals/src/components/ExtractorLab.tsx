@@ -5,7 +5,7 @@
  * for quick iteration on extractor config and prompts.
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
@@ -50,6 +50,10 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
   const [documentText, setDocumentText] = useState<string>("");
   const [extractorConfigs, setExtractorConfigs] = useState<ExtractorConfig[]>(getInitialExtractorConfigs);
   const [error, setError] = useState<string | null>(null);
+
+  // Use ref to track current step for useInput (avoids stale closure)
+  const stepRef = useRef(step);
+  stepRef.current = step;
 
   async function loadDocumentText(docId: string) {
     try {
@@ -96,18 +100,20 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
     }
   }
 
-  // Handle keyboard input
+  // Handle keyboard input - use ref to avoid stale closure
   useInput((input, key) => {
     if (key.escape) {
-      if (step.type === "issue-detail") {
-        setStep({ type: "results", result: step.result });
-      } else if (step.type === "results") {
+      const currentStep = stepRef.current;
+      if (currentStep.type === "issue-detail") {
+        setStep({ type: "results", result: currentStep.result });
+      } else if (currentStep.type === "results") {
         setStep({ type: "configure-extractors" });
-      } else if (step.type === "configure-extractors") {
+      } else if (currentStep.type === "configure-extractors") {
         setStep({ type: "select-document" });
-      } else {
+      } else if (currentStep.type === "select-document") {
         onBack();
       }
+      // Don't call onBack for running state
     }
   });
 
@@ -334,14 +340,14 @@ export function ExtractorLab({ height, maxItems, documents, onSearchDocuments, o
         <Box flexDirection="column" marginBottom={1}>
           <Text bold underline>Quoted Text:</Text>
           <Box marginLeft={1} marginTop={1}>
-            <Text color="gray">"{truncate(issue.exactText, 200)}"</Text>
+            <Text color="gray" wrap="wrap">"{issue.exactText}"</Text>
           </Box>
         </Box>
 
         <Box flexDirection="column" marginBottom={1}>
           <Text bold underline>Reasoning:</Text>
           <Box marginLeft={1} marginTop={1}>
-            <Text wrap="wrap">{truncate(issue.reasoning, 300)}</Text>
+            <Text wrap="wrap">{issue.reasoning}</Text>
           </Box>
         </Box>
 
