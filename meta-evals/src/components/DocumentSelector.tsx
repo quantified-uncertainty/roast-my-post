@@ -5,12 +5,12 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Text, useInput, useStdout } from "ink";
+import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import type { DocumentChoice } from "@roast/db";
-import { truncate, formatDate } from "./helpers";
+import { formatDate } from "./helpers";
 
 export interface DocumentSelectorProps {
   /** Title shown at the top */
@@ -62,18 +62,12 @@ export function DocumentSelector({
   onCancel,
   confirmLabel = "Confirm Selection",
 }: DocumentSelectorProps) {
-  const { stdout } = useStdout();
   const [filter, setFilter] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(
     externalSelectedIds || new Set()
   );
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Calculate available width for title (terminal width - borders - padding - index - date)
-  const termWidth = stdout?.columns || 100;
-  // Account for: border (2), padding (2), index (5), separator (3), date (12), checkbox for multiselect (4)
-  const titleWidth = Math.max(30, termWidth - 28 - (multiSelect ? 4 : 0));
 
   // Use external or internal selected IDs
   const selectedIds = externalSelectedIds || internalSelectedIds;
@@ -150,12 +144,12 @@ export function DocumentSelector({
     const d = displayDocs[i];
     if (multiSelect) {
       items.push({
-        label: `[${selectedIds.has(d.id) ? "x" : " "}] ${truncate(d.title, titleWidth)}`,
+        label: `[${selectedIds.has(d.id) ? "x" : " "}] ${d.title}`,
         value: d.id,
       });
     } else {
       items.push({
-        label: `${String(i + 1).padStart(2)} | ${truncate(d.title, titleWidth).padEnd(titleWidth)} | ${formatDate(new Date(d.createdAt))}`,
+        label: `${String(i + 1).padStart(2)} | ${d.title} | ${formatDate(new Date(d.createdAt))}`,
         value: d.id,
       });
     }
