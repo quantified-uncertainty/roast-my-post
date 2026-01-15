@@ -70,5 +70,8 @@ sed -i "s/$PROD_DB_USER/$LOCAL_DB_USER/g; s/doadmin/$LOCAL_DB_USER/g" schema.sql
 echo "Importing production schema and data..."
 cat schema.sql | psql_local "$LOCAL_DB_NAME"
 
+# Clean up dump file
+echo "Cleaning up dump file..."
+rm -f schema.sql
 
 echo "Database setup completed successfully!"

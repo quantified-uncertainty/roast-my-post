@@ -28,6 +28,11 @@ import {
 
 type Tab = "baselines" | "run" | "history";
 
+/** Sanitize baseline name - remove newlines and extra whitespace */
+function sanitizeName(name: string): string {
+  return name.replace(/\s+/g, " ").trim();
+}
+
 interface ValidationProps {
   height: number;
   maxItems: number;
@@ -213,15 +218,17 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
     }
   }
 
-  async function loadCorpus(agentId: string) {
+  async function loadCorpus(agentId: string, filter?: string) {
     try {
       const docs = await metaEvaluationRepository.getValidationCorpusDocuments(
         agentId,
-        { limit: 50, minContentLength: 200 }
+        { limit: 50, minContentLength: 200, filter }
       );
       setCorpusDocuments(docs);
-      // Pre-select all documents by default
-      setSelectedDocIds(new Set(docs.map((d) => d.documentId)));
+      // Only reset selection on initial load, not on filter changes
+      if (!filter) {
+        setSelectedDocIds(new Set());
+      }
     } catch (e) {
       setError(String(e));
     }
@@ -417,6 +424,13 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
                 filteredItems: currentEval.pipelineTelemetry?.filteredItems,
                 // Include extraction phase telemetry for drill-down
                 extractionPhase: currentEval.pipelineTelemetry?.extractionPhase,
+                // Include pipeline counts for accurate math display
+                pipelineCounts: currentEval.pipelineTelemetry ? {
+                  issuesAfterDedup: currentEval.pipelineTelemetry.issuesAfterDedup,
+                  issuesAfterFiltering: currentEval.pipelineTelemetry.issuesAfterFiltering,
+                  commentsGenerated: currentEval.pipelineTelemetry.commentsGenerated,
+                  commentsKept: currentEval.pipelineTelemetry.commentsKept,
+                } : undefined,
               },
             });
           }
@@ -508,6 +522,8 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         multiSelect={true}
         selectedIds={selectedDocIds}
         onSelectionChange={setSelectedDocIds}
+        showFilter={true}
+        onFilterChange={(f) => selectedAgent && loadCorpus(selectedAgent.id, f)}
         confirmLabel="Create Baseline"
         onConfirm={() => createBaseline()}
         onCancel={() => {
@@ -563,7 +579,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
           <Box flexDirection="column">
             <InfoBox>
               <Text>
-                Baseline: <Text color="cyan">{selectedBaseline.name}</Text>
+                Baseline: <Text color="cyan">{sanitizeName(selectedBaseline.name)}</Text>
                 {" "}({selectedBaseline.snapshotCount} docs)
               </Text>
             </InfoBox>
@@ -648,6 +664,50 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
             };
           }
         }
+      } else if (selectedCommentKey.startsWith("filtered-")) {
+        // Show filtered item detail view
+        const idx = parseInt(selectedCommentKey.replace("filtered-", ""), 10);
+        const filteredItem = filteredItems[idx];
+        if (filteredItem) {
+          const stageName = filteredItem.stage === 'supported-elsewhere-filter'
+            ? 'Supported Elsewhere Filter'
+            : filteredItem.stage === 'review'
+            ? 'Review Filter'
+            : filteredItem.stage;
+          return (
+            <ScreenContainer title={`Filtered Issue (${stageName})`} borderColor="magenta" height={height}>
+              <Box flexDirection="column" paddingX={1} overflowY="hidden">
+                <Box marginBottom={1}>
+                  <Text bold color="magenta">{filteredItem.header || "(no header)"}</Text>
+                </Box>
+
+                <Box marginBottom={1} borderStyle="single" borderColor="gray" paddingX={1} flexDirection="column">
+                  <Text bold>Quoted Text:</Text>
+                  <Text wrap="wrap">{filteredItem.quotedText}</Text>
+                </Box>
+
+                <Box marginBottom={1} borderStyle="single" borderColor="magenta" paddingX={1} flexDirection="column">
+                  <Text bold color="magenta">Why Filtered:</Text>
+                  <Text wrap="wrap">{filteredItem.filterReason}</Text>
+                </Box>
+
+                {filteredItem.supportLocation && (
+                  <Box marginBottom={1} borderStyle="single" borderColor="cyan" paddingX={1} flexDirection="column">
+                    <Text bold color="cyan">Support Found At:</Text>
+                    <Text wrap="wrap">{filteredItem.supportLocation}</Text>
+                  </Box>
+                )}
+
+                <Box marginTop={1}>
+                  <SelectInput
+                    items={[{ label: "← Back to Comments", value: "back" }]}
+                    onSelect={() => setSelectedCommentKey(null)}
+                  />
+                </Box>
+              </Box>
+            </ScreenContainer>
+          );
+        }
       }
 
       if (baselineComment || currentComment) {
@@ -656,7 +716,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         // For Kept comments, show both versions side by side
         if (commentType === "Kept" && baselineComment && currentComment) {
           return (
-            <ScreenContainer title="Kept Comment (Baseline vs Current)" borderColor="green" height={height}>
+            <ScreenContainer title="Matched Comment (in both baseline & current)" borderColor="green" height={height}>
               <Box flexDirection="column" paddingX={1} overflowY="hidden">
                 <Box marginBottom={1}>
                   <Text bold color="green">{baselineComment.header || currentComment.header || "(no header)"}</Text>
@@ -688,7 +748,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
         // For Lost comments with filter reason, show detailed view
         if (commentType === "Lost" && baselineComment && filterInfo) {
           return (
-            <ScreenContainer title="Lost Comment (with Filter Reason)" borderColor="red" height={height}>
+            <ScreenContainer title="Missing from Current (pipeline-filtered)" borderColor="red" height={height}>
               <Box flexDirection="column" paddingX={1} overflowY="hidden">
                 <Box marginBottom={1}>
                   <Text bold color="red">{baselineComment.header || "(no header)"}</Text>
@@ -728,7 +788,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
 
         // For New/Lost (without filter reason), show single version with label
         const comment = currentComment || baselineComment;
-        const versionLabel = commentType === "New" ? "(from current run)" : "(from baseline)";
+        const versionLabel = commentType === "New" ? "- new vs baseline" : "- in baseline only";
 
         return (
           <ScreenContainer title={`${commentType} Comment ${versionLabel}`} borderColor={typeColor} height={height}>
@@ -749,11 +809,11 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
 
               {commentType === "Lost" && !filterInfo && (
                 <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1} flexDirection="column">
-                  <Text bold color="gray">Why was this comment lost?</Text>
+                  <Text bold color="gray">Why is this missing from the current run?</Text>
                   <Text wrap="wrap">
                     {data?.filteredItems !== undefined
-                      ? "This issue was not extracted by the current pipeline run. The LLM did not identify it as an issue during extraction (this is normal variance between runs)."
-                      : "No filter telemetry available for this run (run predates telemetry feature)."}
+                      ? "The LLM extractors did not detect this issue in the current run. This is normal variance between runs - LLMs don't always find the same issues."
+                      : "No telemetry available for this run (run predates telemetry feature)."}
                   </Text>
                 </Box>
               )}
@@ -803,6 +863,12 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
             sourceExtractors: string[];
           }>;
         };
+        pipelineCounts?: {
+          issuesAfterDedup: number;
+          issuesAfterFiltering: number;
+          commentsGenerated: number;
+          commentsKept: number;
+        };
       } | null;
 
       const matched = data?.matchedComments || [];
@@ -810,6 +876,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
       const lost = data?.lostComments || [];
       const filteredItems = data?.filteredItems || [];
       const extractionPhase = data?.extractionPhase;
+      const pipelineCounts = data?.pipelineCounts;
 
       // Helper to check if a lost comment has a filter reason
       const hasFilterReason = (lostComment: { quotedText: string; header: string | null }) => {
@@ -825,34 +892,51 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
       // Build scrollable list of ALL comments - no truncation
       const commentItems: Array<{ label: string; value: string }> = [];
 
-      // Add all kept comments
-      matched.forEach((c, i) => {
-        const comment = c.baselineComment || c.currentComment;
-        const label = comment ? (comment.header || truncate(comment.quotedText, 50)) : "Unknown";
-        commentItems.push({
-          label: `  ✓  ${label}`,
-          value: `kept-${i}`,
+      // Add items grouped by category
+      if (matched.length > 0) {
+        matched.forEach((c, i) => {
+          const comment = c.baselineComment || c.currentComment;
+          const label = comment ? (comment.header || truncate(comment.quotedText, 50)) : "Unknown";
+          commentItems.push({
+            label: `= ${label}`,
+            value: `kept-${i}`,
+          });
         });
-      });
+      }
 
-      // Add all new comments
-      newComments.forEach((c, i) => {
-        commentItems.push({
-          label: `  +  ${c.header || truncate(c.quotedText, 50)}`,
-          value: `new-${i}`,
+      if (newComments.length > 0) {
+        newComments.forEach((c, i) => {
+          commentItems.push({
+            label: `+ ${c.header || truncate(c.quotedText, 50)}`,
+            value: `new-${i}`,
+          });
         });
-      });
+      }
 
-      // Add all lost comments - mark those with filter reasons differently
-      lost.forEach((c, i) => {
-        const hasReason = hasFilterReason(c);
-        // ⊘ = filtered with reason, − = not extracted (no reason)
-        const indicator = hasReason ? "⊘" : "−";
-        commentItems.push({
-          label: `  ${indicator}  ${c.header || truncate(c.quotedText, 50)}`,
-          value: `lost-${i}`,
+      if (lost.length > 0) {
+        lost.forEach((c, i) => {
+          const hasReason = hasFilterReason(c);
+          const suffix = hasReason ? " [filtered]" : "";
+          // Use truncated quotedText for consistency with filtered items
+          commentItems.push({
+            label: `- ${truncate(c.quotedText, 50)}${suffix}`,
+            value: `lost-${i}`,
+          });
         });
-      });
+      }
+
+      // Build filtered items list separately
+      const filteredItemsList: Array<{ label: string; value: string }> = [];
+      if (filteredItems.length > 0) {
+        filteredItemsList.push({ label: "--- Filtered by pipeline ---", value: "sep-filtered" });
+        filteredItems.forEach((f, i) => {
+          const stageLabel = f.stage === 'supported-elsewhere-filter' ? 'F' : f.stage === 'review' ? 'R' : '?';
+          filteredItemsList.push({
+            label: `[${stageLabel}] ${truncate(f.quotedText, 50)}`,
+            value: `filtered-${i}`,
+          });
+        });
+      }
 
       if (commentItems.length === 0) {
         commentItems.push({ label: "  No comments in this comparison", value: "empty" });
@@ -860,53 +944,110 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
 
       commentItems.push({ label: "  ← Back", value: "back" });
 
-      // Count lost with/without filter reasons
+      // Count lost with filter reasons
       const lostWithReason = lost.filter((c) => hasFilterReason(c)).length;
-      const lostWithoutReason = lost.length - lostWithReason;
+
+      // Calculate totals
+      const baselineTotal = matched.length + lost.length;
+      const currentTotal = matched.length + newComments.length;
+
+      // Determine if there are any differences
+      const isUnchanged = lost.length === 0 && newComments.length === 0;
 
       return (
         <ScreenContainer title={truncate(snapshot.documentTitle, 50)} borderColor="blue" height={height}>
           <Box marginBottom={1} paddingX={1} flexDirection="column">
-            <Box>
-              <Box marginRight={2}>
-                <Text color="green">✓ {matched.length} kept</Text>
-              </Box>
-              <Box marginRight={2}>
-                <Text color="cyan">+ {newComments.length} new</Text>
-              </Box>
-              <Box>
-                <Text color="red">− {lost.length} lost</Text>
-                {lost.length > 0 && (
-                  <Text dimColor> ({lostWithReason} filtered, {lostWithoutReason} not extracted)</Text>
-                )}
-              </Box>
+            {/* Summary counts */}
+            <Box marginBottom={1}>
+              <Text>
+                <Text dimColor>Baseline: </Text>
+                <Text bold>{baselineTotal} issues</Text>
+                <Text dimColor> → Current run: </Text>
+                <Text bold>{currentTotal} issues</Text>
+              </Text>
             </Box>
-            <Box marginTop={1}>
-              <Text dimColor>Legend: ✓ kept  + new  ⊘ filtered (has reason)  − not extracted</Text>
+
+            {/* Comparison: what changed between baseline and current */}
+            <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1} marginBottom={1}>
+              <Text bold>Comparison:</Text>
+              <Text>
+                <Text color="green">✓ {matched.length} issues appear in BOTH baseline and current</Text>
+              </Text>
+              <Text>
+                <Text color="cyan">+ {newComments.length} issues are NEW (in current run, not in baseline)</Text>
+              </Text>
+              <Text>
+                <Text color="red">− {lost.length} issues are GONE (were in baseline, not in current run)</Text>
+              </Text>
             </Box>
-            {extractionPhase && extractionPhase.multiExtractorEnabled && (
-              <Box marginTop={1} flexDirection="column">
-                <Box>
-                  <Text color="yellow">Extraction: </Text>
+
+            {/* Current run details: extraction → filter → review */}
+            {(extractionPhase || pipelineCounts) && (() => {
+              // Count filtered items by stage
+              const supportedElsewhereCount = filteredItems.filter(f => f.stage === 'supported-elsewhere-filter').length;
+              const reviewFilteredCount = filteredItems.filter(f => f.stage === 'review').length;
+
+              // Use actual pipeline counts when available (pipelineCounts is source of truth)
+              const afterDedup = pipelineCounts?.issuesAfterDedup ?? extractionPhase?.totalIssuesAfterJudge;
+              const afterFilter = pipelineCounts?.issuesAfterFiltering;
+              const commentsGenerated = pipelineCounts?.commentsGenerated;
+              const commentsKept = pipelineCounts?.commentsKept;
+
+              // Calculate what was filtered at each stage
+              const filteredBySupported = afterDedup !== undefined && afterFilter !== undefined ? afterDedup - afterFilter : supportedElsewhereCount;
+              const filteredByGeneration = afterFilter !== undefined && commentsGenerated !== undefined ? afterFilter - commentsGenerated : 0;
+              const filteredByReview = commentsGenerated !== undefined && commentsKept !== undefined ? commentsGenerated - commentsKept : reviewFilteredCount;
+
+              return (
+                <Box marginBottom={1} flexDirection="column">
+                  <Text bold>Current run details:</Text>
+                  {extractionPhase && (
+                    <>
+                      <Text dimColor>
+                        Extraction: {extractionPhase.extractors?.length || 0} models → {extractionPhase.totalIssuesBeforeJudge} issues → dedup → {afterDedup}
+                      </Text>
+                      {extractionPhase.extractors && extractionPhase.extractors.length > 0 && (
+                        <Text dimColor>
+                          {"  "}({extractionPhase.extractors.map(e => `${e.model.split('/').pop()}: ${e.issuesFound}`).join(', ')})
+                        </Text>
+                      )}
+                    </>
+                  )}
+                  {filteredBySupported > 0 && (
+                    <Text dimColor>
+                      Filter: {filteredBySupported} removed (supported elsewhere) → {afterFilter}
+                    </Text>
+                  )}
+                  {filteredByGeneration > 0 && (
+                    <Text dimColor>
+                      Comment gen: {filteredByGeneration} failed (empty/invalid) → {commentsGenerated}
+                    </Text>
+                  )}
+                  {filteredByReview > 0 && (
+                    <Text dimColor>
+                      Review: {filteredByReview} removed (redundant/low-value) → {commentsKept}
+                    </Text>
+                  )}
                   <Text dimColor>
-                    {extractionPhase.extractors.map(e => {
-                      const tempStr = e.temperatureConfig === 'default' ? 'tDef' : `t${e.temperature}`;
-                      const thinkStr = e.thinkingEnabled ? '' : ' noThink';
-                      return `${e.extractorId}(${tempStr}${thinkStr}):${e.issuesFound}`;
-                    }).join(' | ')} → {extractionPhase.judgeDurationMs ? 'Judge' : 'Dedup'} → {extractionPhase.totalIssuesAfterJudge}/{extractionPhase.totalIssuesBeforeJudge} kept
+                    Result: {commentsKept ?? currentTotal} comments kept
                   </Text>
                 </Box>
-              </Box>
+              );
+            })()}
+
+            {/* Simple status - no judgments, just facts */}
+            {isUnchanged && (
+              <Text color="green">✓ No differences</Text>
             )}
           </Box>
 
           <SelectInput
-            items={commentItems}
+            items={[...filteredItemsList, ...commentItems]}
             limit={maxItems}
             onSelect={(item) => {
               if (item.value === "back") {
                 setSelectedSnapshotId(null);
-              } else if (item.value.startsWith("kept-") || item.value.startsWith("new-") || item.value.startsWith("lost-")) {
+              } else if (item.value.startsWith("kept-") || item.value.startsWith("new-") || item.value.startsWith("lost-") || item.value.startsWith("filtered-")) {
                 setSelectedCommentKey(item.value);
               }
             }}
@@ -924,9 +1065,9 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
   if (selectedRunDetail) {
     const formatChangeSummary = (s: { keptCount: number; newCount: number; lostCount: number }) => {
       const parts: string[] = [];
-      if (s.keptCount > 0) parts.push(`${s.keptCount} kept`);
+      if (s.keptCount > 0) parts.push(`${s.keptCount} matched`);
       if (s.newCount > 0) parts.push(`+${s.newCount} new`);
-      if (s.lostCount > 0) parts.push(`-${s.lostCount} lost`);
+      if (s.lostCount > 0) parts.push(`-${s.lostCount} missing`);
       return parts.length > 0 ? parts.join(", ") : "no comments";
     };
 
@@ -952,7 +1093,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
             {" | "}
             <Text color="yellow">[~] {changedCount} changed</Text>
             {" | "}
-            Baseline: <Text color="cyan">{selectedRunDetail.baseline.name}</Text>
+            Baseline: <Text color="cyan">{sanitizeName(selectedRunDetail.baseline.name)}</Text>
           </Text>
         </InfoBox>
 
@@ -1006,7 +1147,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
 
         <InfoBox>
           <Text>
-            Baseline: <Text color="cyan">{selectedBaseline?.name || "None"}</Text>
+            Baseline: <Text color="cyan">{selectedBaseline ? sanitizeName(selectedBaseline.name) : "None"}</Text>
             {" | "}
             {validationRuns.length} run{validationRuns.length !== 1 ? "s" : ""}
           </Text>
@@ -1042,7 +1183,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
   const items = [
     { label: "+ Create New Baseline", value: "create" },
     ...baselines.map((b) => ({
-      label: `${selectedBaseline?.id === b.id ? "● " : "○ "}${b.name} (${b.snapshotCount} docs)`,
+      label: `${selectedBaseline?.id === b.id ? "● " : "○ "}${sanitizeName(b.name)} (${b.snapshotCount} docs)`,
       value: `select:${b.id}`,
     })),
     ...(selectedBaseline ? [{ label: "- Delete Selected Baseline", value: "delete" }] : []),
@@ -1059,7 +1200,7 @@ export function Validation({ height, maxItems, onBack, onCreateBatch }: Validati
           {selectedBaseline && (
             <>
               {" | "}
-              Selected: <Text color="green">{selectedBaseline.name}</Text>
+              Selected: <Text color="green">{sanitizeName(selectedBaseline.name)}</Text>
             </>
           )}
         </Text>

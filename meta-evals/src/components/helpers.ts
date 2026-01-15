@@ -3,8 +3,10 @@
  */
 
 export function truncate(str: string, maxLen: number): string {
-  if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen - 3) + "...";
+  // Sanitize: replace newlines/tabs with spaces, collapse multiple spaces
+  const clean = str.replace(/[\n\r\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxLen) return clean;
+  return clean.slice(0, maxLen - 3) + "...";
 }
 
 export function formatDate(date: Date): string {

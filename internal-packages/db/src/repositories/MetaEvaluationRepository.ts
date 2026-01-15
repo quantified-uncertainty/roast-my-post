@@ -724,7 +724,7 @@ export class MetaEvaluationRepository {
    */
   async getValidationCorpusDocuments(
     agentId: string,
-    options: { limit?: number; minContentLength?: number } = {}
+    options: { limit?: number; minContentLength?: number; filter?: string } = {}
   ): Promise<
     Array<{
       documentId: string;
@@ -734,11 +734,18 @@ export class MetaEvaluationRepository {
       evaluationCount: number;
     }>
   > {
-    const { limit = 50, minContentLength = 100 } = options;
+    const { limit = 50, minContentLength = 100, filter } = options;
 
     // Get documents that have evaluations from this agent
     const evaluations = await this.prisma.evaluation.findMany({
-      where: { agentId },
+      where: {
+        agentId,
+        ...(filter && {
+          document: {
+            versions: { some: { title: { contains: filter, mode: "insensitive" } } },
+          },
+        }),
+      },
       include: {
         document: {
           include: {
