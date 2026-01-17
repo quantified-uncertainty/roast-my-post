@@ -55,6 +55,12 @@ export default function MonitorLayout({ children }: MonitorLayoutProps) {
                 >
                   Docs
                 </Link>
+                <Link
+                  href="/monitor/lab"
+                  className={getLinkClass("/monitor/lab")}
+                >
+                  Lab
+                </Link>
               </nav>
             </div>
             <Link
