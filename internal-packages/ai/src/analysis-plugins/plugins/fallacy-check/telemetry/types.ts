@@ -359,6 +359,7 @@ export interface PipelineExecutionRecord {
 export const PIPELINE_STAGES = {
   EXTRACTION: 'extraction',
   DEDUPLICATION: 'deduplication',
+  PRINCIPLE_OF_CHARITY_FILTER: 'principle-of-charity-filter',
   SUPPORTED_ELSEWHERE_FILTER: 'supported-elsewhere-filter',
   COMMENT_GENERATION: 'comment-generation',
   REVIEW: 'review',

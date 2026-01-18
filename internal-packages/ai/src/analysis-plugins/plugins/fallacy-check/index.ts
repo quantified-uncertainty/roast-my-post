@@ -8,6 +8,7 @@ import type { ExtractedFallacyIssue } from "../../../tools/fallacy-extractor/typ
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
 import fallacyReviewTool from "../../../tools/fallacy-review";
 import supportedElsewhereFilterTool from "../../../tools/supported-elsewhere-filter";
+import principleOfCharityFilterTool from "../../../tools/principle-of-charity-filter";
 import fallacyJudgeTool from "../../../tools/fallacy-judge";
 import { decisionToIssue } from "../../../tools/fallacy-judge/types";
 import { TextChunk } from "../../TextChunk";
@@ -40,7 +41,9 @@ import { prioritizeAndLimitIssues } from "./dedup";
 import type {
   FallacyCheckerProfileConfig,
   SupportedElsewhereFilterConfig,
+  PrincipleOfCharityFilterConfig,
   ReasoningConfig,
+  FilterChainItem,
 } from "./profile-types";
 import { createDefaultProfileConfig } from "./profile-types";
 import { loadProfileOrDefault } from "./profile-loader";
@@ -328,33 +331,21 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       const prioritizedIssues = prioritizeAndLimitIssues(allIssues);
       telemetry.setFinalCounts({ issuesAfterDedup: prioritizedIssues.length });
 
-      // Phase 2: Filter out issues supported elsewhere in the document
-      // Find the supported-elsewhere filter config from the filter chain
-      const supportedElsewhereConfig = profileConfig.filterChain
-        .find((f): f is SupportedElsewhereFilterConfig => f.type === 'supported-elsewhere');
-      const runSupportedElsewhere = supportedElsewhereConfig?.enabled !== false;
-
-      logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter started", {
-        timestamp: new Date().toISOString(),
-        issuesToFilter: prioritizedIssues.length,
-        phase: "supported-elsewhere-filter",
-        enabled: runSupportedElsewhere,
-        model: supportedElsewhereConfig?.model,
-        temperature: supportedElsewhereConfig?.temperature,
-        reasoning: supportedElsewhereConfig?.reasoning,
-      });
-
+      // Phase 2: Run filters in filterChain order
+      // Iterate through the filter chain and run each enabled filter
       let filteredIssues = prioritizedIssues;
-      if (runSupportedElsewhere) {
-        telemetry.startStage(PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER, prioritizedIssues.length);
-        filteredIssues = await this.runSupportedElsewhereFilter(
-          prioritizedIssues,
+      for (const filterConfig of profileConfig.filterChain) {
+        if (!filterConfig.enabled) {
+          logger.info(`FallacyCheckPlugin: Filter ${filterConfig.type} is disabled, skipping`);
+          continue;
+        }
+
+        filteredIssues = await this.runFilter(
+          filterConfig,
+          filteredIssues,
           documentText,
-          telemetry,
-          supportedElsewhereConfig
+          telemetry
         );
-      } else {
-        logger.info("FallacyCheckPlugin: Supported-elsewhere filter is disabled, skipping");
       }
       telemetry.setFinalCounts({ issuesAfterFiltering: filteredIssues.length });
 
@@ -749,6 +740,197 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       counts[issue.issueType] = (counts[issue.issueType] || 0) + 1;
     }
     return counts;
+  }
+
+  /**
+   * Dispatch to the appropriate filter based on the filter config type.
+   * This enables dynamic filter chain ordering.
+   */
+  private async runFilter(
+    filterConfig: FilterChainItem,
+    issues: FallacyIssue[],
+    documentText: string,
+    telemetry: PipelineTelemetry
+  ): Promise<FallacyIssue[]> {
+    // Get the stage name for telemetry
+    const stageName = this.getFilterStageName(filterConfig.type);
+
+    logger.info(`FallacyCheckPlugin: AUDIT: ${filterConfig.type} filter started`, {
+      timestamp: new Date().toISOString(),
+      issuesToFilter: issues.length,
+      phase: stageName,
+      type: filterConfig.type,
+    });
+
+    switch (filterConfig.type) {
+      case 'principle-of-charity':
+        telemetry.startStage(stageName, issues.length);
+        return this.runPrincipleOfCharityFilter(
+          issues,
+          documentText,
+          telemetry,
+          filterConfig
+        );
+
+      case 'supported-elsewhere':
+        telemetry.startStage(stageName, issues.length);
+        return this.runSupportedElsewhereFilter(
+          issues,
+          documentText,
+          telemetry,
+          filterConfig
+        );
+
+      case 'dedup':
+        // Dedup is handled in extraction phase, but if someone re-adds it here, just pass through
+        logger.info("FallacyCheckPlugin: Dedup filter in chain (already handled in extraction phase)");
+        return issues;
+
+      case 'severity':
+        // Severity filtering - filter by minimum severity threshold
+        const minSeverity = filterConfig.minSeverity ?? 50;
+        const afterSeverity = issues.filter((issue) => issue.severityScore >= minSeverity);
+        logger.info(`FallacyCheckPlugin: Severity filter: ${issues.length} → ${afterSeverity.length} (min: ${minSeverity})`);
+        return afterSeverity;
+
+      case 'confidence':
+        // Confidence filtering - filter by minimum confidence threshold
+        const minConfidence = filterConfig.minConfidence ?? 50;
+        const afterConfidence = issues.filter((issue) => issue.confidenceScore >= minConfidence);
+        logger.info(`FallacyCheckPlugin: Confidence filter: ${issues.length} → ${afterConfidence.length} (min: ${minConfidence})`);
+        return afterConfidence;
+
+      case 'review':
+        // Review filter is handled later in the pipeline (after comment generation)
+        logger.info("FallacyCheckPlugin: Review filter in chain (handled after comment generation)");
+        return issues;
+
+      default:
+        // Exhaustive check - TypeScript will error if we miss a case
+        const _exhaustive: never = filterConfig;
+        logger.warn(`FallacyCheckPlugin: Unknown filter type, skipping: ${(filterConfig as FilterChainItem).type}`);
+        return issues;
+    }
+  }
+
+  /**
+   * Get the telemetry stage name for a filter type
+   */
+  private getFilterStageName(filterType: string): string {
+    switch (filterType) {
+      case 'principle-of-charity':
+        return PIPELINE_STAGES.PRINCIPLE_OF_CHARITY_FILTER;
+      case 'supported-elsewhere':
+        return PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER;
+      default:
+        return `${filterType}-filter`;
+    }
+  }
+
+  /**
+   * Run the principle-of-charity filter to remove issues that dissolve under charitable interpretation
+   */
+  private async runPrincipleOfCharityFilter(
+    issues: FallacyIssue[],
+    documentText: string,
+    telemetry: PipelineTelemetry,
+    filterConfig?: PrincipleOfCharityFilterConfig
+  ): Promise<FallacyIssue[]> {
+    try {
+      // Build filter input with config settings
+      const filterInput: {
+        documentText: string;
+        issues: Array<{
+          quotedText: string;
+          issueType: string;
+          reasoning: string;
+          locationOffset?: number;
+        }>;
+        model?: string;
+        temperature?: number;
+        reasoning?: ReasoningConfig;
+        customPrompt?: string;
+      } = {
+        documentText,
+        issues: issues.map((issue) => ({
+          quotedText: issue.text,
+          issueType: issue.issueType,
+          reasoning: issue.issue.reasoning,
+          locationOffset: issue.issue.location?.startOffset,
+        })),
+      };
+
+      // Apply config settings if provided
+      if (filterConfig) {
+        if (filterConfig.model) {
+          filterInput.model = filterConfig.model;
+        }
+        if (filterConfig.temperature !== undefined && filterConfig.temperature !== 'default') {
+          filterInput.temperature = filterConfig.temperature;
+        }
+        if (filterConfig.reasoning !== undefined) {
+          filterInput.reasoning = filterConfig.reasoning;
+        }
+        if (filterConfig.customPrompt) {
+          filterInput.customPrompt = filterConfig.customPrompt;
+        }
+      }
+
+      const filterResult = await principleOfCharityFilterTool.execute(
+        filterInput,
+        { logger }
+      );
+
+      // Keep only the issues that remain valid under charitable interpretation
+      const validIndices = new Set(
+        filterResult.validIssues.map((r) => r.index)
+      );
+      const filteredIssues = issues.filter((_, idx) =>
+        validIndices.has(idx)
+      );
+
+      // Log and record what was filtered
+      const dissolvedCount = filterResult.dissolvedIssues.length;
+      if (dissolvedCount > 0) {
+        logger.info(
+          `FallacyCheckPlugin: Filtered out ${dissolvedCount} issues (dissolved under charitable interpretation)`
+        );
+
+        // Record filtered items with their reasoning for telemetry
+        const filteredRecords = filterResult.dissolvedIssues.map((dissolved) => {
+          const originalIssue = issues[dissolved.index];
+          logger.debug(`  - Issue ${dissolved.index}: ${dissolved.explanation}`);
+          return {
+            stage: PIPELINE_STAGES.PRINCIPLE_OF_CHARITY_FILTER,
+            quotedText: originalIssue?.text || `Issue at index ${dissolved.index}`,
+            header: originalIssue?.issueType,
+            filterReason: `Charitable interpretation: ${dissolved.charitableInterpretation}. ${dissolved.explanation}`,
+            originalIndex: dissolved.index,
+          };
+        });
+        telemetry.recordFilteredItems(filteredRecords);
+      }
+
+      logger.info("FallacyCheckPlugin: AUDIT: Principle-of-charity filter completed", {
+        timestamp: new Date().toISOString(),
+        issuesBeforeFilter: issues.length,
+        issuesAfterFilter: filteredIssues.length,
+        issuesFiltered: dissolvedCount,
+        phase: "principle-of-charity-filter",
+        costUsd: filterResult.unifiedUsage?.costUsd,
+      });
+
+      telemetry.endStage(filteredIssues.length, {
+        costUsd: filterResult.unifiedUsage?.costUsd,
+      });
+      return filteredIssues;
+    } catch (error) {
+      logger.warn("FallacyCheckPlugin: Principle-of-charity filter failed, keeping all issues", error);
+      telemetry.endStage(issues.length, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return issues;
+    }
   }
 
   /**

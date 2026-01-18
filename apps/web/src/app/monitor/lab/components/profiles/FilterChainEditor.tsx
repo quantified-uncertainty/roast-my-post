@@ -11,6 +11,7 @@ import {
 import type {
   FilterChainItem,
   SupportedElsewhereFilterConfig,
+  PrincipleOfCharityFilterConfig,
   SeverityFilterConfig,
   ConfidenceFilterConfig,
   ReasoningConfig,
@@ -66,6 +67,15 @@ export function FilterChainEditor({
     let newFilter: FilterChainItem;
 
     switch (type) {
+      case "principle-of-charity":
+        newFilter = {
+          id,
+          type: "principle-of-charity",
+          enabled: true,
+          model: "claude-sonnet-4-5-20250929",
+          temperature: 0.2,
+        };
+        break;
       case "supported-elsewhere":
         newFilter = {
           id,
@@ -91,6 +101,11 @@ export function FilterChainEditor({
           minConfidence: 50,
         };
         break;
+      default: {
+        // For exhaustiveness - this should never happen
+        const _exhaustiveCheck: never = type;
+        throw new Error(`Unknown filter type: ${_exhaustiveCheck}`);
+      }
     }
 
     onChange([...filters, newFilter]);
@@ -247,6 +262,11 @@ function FilterItemEditor({
             className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`}
           />
           <span className="text-sm font-medium text-gray-900">{filterLabel}</span>
+          {filter.type === "principle-of-charity" && (
+            <span className="text-xs text-gray-500 font-mono">
+              {getModelDisplayName((filter as PrincipleOfCharityFilterConfig).model)}
+            </span>
+          )}
           {filter.type === "supported-elsewhere" && (
             <span className="text-xs text-gray-500 font-mono">
               {getModelDisplayName((filter as SupportedElsewhereFilterConfig).model)}
@@ -295,6 +315,13 @@ function FilterItemEditor({
       {/* Expanded Settings */}
       {isExpanded && (
         <div className="px-3 pb-3 pt-1 border-t border-orange-100 overflow-visible">
+          {filter.type === "principle-of-charity" && (
+            <PrincipleOfCharitySettings
+              filter={filter as PrincipleOfCharityFilterConfig}
+              disabled={disabled}
+              onUpdate={onUpdate}
+            />
+          )}
           {filter.type === "supported-elsewhere" && (
             <SupportedElsewhereSettings
               filter={filter as SupportedElsewhereFilterConfig}
@@ -528,6 +555,172 @@ function SupportedElsewhereSettings({
             </pre>
           </details>
         )}
+      </div>
+    </div>
+  );
+}
+
+interface PrincipleOfCharitySettingsProps {
+  filter: PrincipleOfCharityFilterConfig;
+  disabled?: boolean;
+  onUpdate: (updates: Partial<PrincipleOfCharityFilterConfig>) => void;
+}
+
+function PrincipleOfCharitySettings({
+  filter,
+  disabled,
+  onUpdate,
+}: PrincipleOfCharitySettingsProps) {
+  const { models, loading: modelsLoading } = useModels();
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [showTempDropdown, setShowTempDropdown] = useState(false);
+  const [showReasoningDropdown, setShowReasoningDropdown] = useState(false);
+
+  const tempDisplay = filter.temperature === undefined || filter.temperature === "default"
+    ? "default"
+    : filter.temperature;
+
+  const getReasoningDisplay = () => {
+    if (filter.reasoning === undefined || filter.reasoning === false) return "Off";
+    if ("effort" in filter.reasoning) return filter.reasoning.effort;
+    if ("budget_tokens" in filter.reasoning) return `${filter.reasoning.budget_tokens} tokens`;
+    return "Off";
+  };
+
+  const isReasoningEnabled = filter.reasoning !== undefined && filter.reasoning !== false;
+
+  return (
+    <div className="space-y-3 text-sm">
+      <p className="text-xs text-gray-600">
+        Applies the &quot;Principle of Charity&quot; - interprets arguments in their strongest, most
+        reasonable form before critiquing. Issues that dissolve under charitable interpretation
+        are filtered out.
+      </p>
+
+      {/* Model Selection */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-gray-500 w-20">Model</span>
+        <div className="flex-1 relative">
+          <button
+            onClick={() => !disabled && setShowModelDropdown(!showModelDropdown)}
+            disabled={disabled}
+            className="flex items-center gap-2 text-left px-2 py-1 rounded hover:bg-orange-100 disabled:hover:bg-transparent disabled:cursor-default"
+          >
+            <span className="font-mono text-sm text-orange-900">{getModelDisplayName(filter.model)}</span>
+            {!disabled && <ChevronDownIcon className="h-3 w-3 text-orange-400" />}
+          </button>
+          {showModelDropdown && (
+            <ModelSelector
+              models={models}
+              loading={modelsLoading}
+              onSelect={(model) => {
+                onUpdate({ model: model.id });
+                setShowModelDropdown(false);
+              }}
+              onCancel={() => setShowModelDropdown(false)}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Temperature Selection */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-gray-500 w-20">Temperature</span>
+        <div className="relative">
+          <button
+            onClick={() => !disabled && setShowTempDropdown(!showTempDropdown)}
+            disabled={disabled}
+            className="flex items-center gap-2 text-left px-2 py-1 rounded hover:bg-orange-100 disabled:hover:bg-transparent disabled:cursor-default min-w-[80px]"
+          >
+            <span className="font-mono text-sm text-orange-900">{tempDisplay}</span>
+            {!disabled && <ChevronDownIcon className="h-3 w-3 text-orange-400" />}
+          </button>
+          {showTempDropdown && (
+            <div className="absolute z-20 left-0 top-full mt-1 bg-white border rounded-lg shadow-lg overflow-hidden">
+              {TEMP_PRESETS.map((temp) => (
+                <button
+                  key={String(temp)}
+                  onClick={() => {
+                    onUpdate({ temperature: temp });
+                    setShowTempDropdown(false);
+                  }}
+                  className={`w-full px-3 py-1.5 text-left text-sm hover:bg-orange-50 ${
+                    tempDisplay === temp ? "bg-orange-100 font-medium" : ""
+                  }`}
+                >
+                  {temp === "default" ? "default" : temp}
+                </button>
+              ))}
+              <div className="border-t p-2">
+                <button
+                  onClick={() => setShowTempDropdown(false)}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Reasoning/Thinking Selection */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-gray-500 w-20">Reasoning</span>
+        <div className="relative">
+          <button
+            onClick={() => !disabled && setShowReasoningDropdown(!showReasoningDropdown)}
+            disabled={disabled}
+            className={`flex items-center gap-2 text-left px-2 py-1 rounded hover:bg-orange-100 disabled:hover:bg-transparent disabled:cursor-default min-w-[80px] ${
+              isReasoningEnabled ? "text-green-700" : "text-gray-600"
+            }`}
+          >
+            <span className="font-mono text-sm">{getReasoningDisplay()}</span>
+            {!disabled && <ChevronDownIcon className="h-3 w-3 text-orange-400" />}
+          </button>
+          {showReasoningDropdown && (
+            <div className="absolute z-20 left-0 top-full mt-1 bg-white border rounded-lg shadow-lg overflow-hidden min-w-[160px]">
+              <button
+                onClick={() => {
+                  onUpdate({ reasoning: false });
+                  setShowReasoningDropdown(false);
+                }}
+                className={`w-full px-3 py-1.5 text-left text-sm hover:bg-orange-50 ${
+                  !isReasoningEnabled ? "bg-orange-100 font-medium" : ""
+                }`}
+              >
+                Off
+              </button>
+              <div className="border-t border-gray-100" />
+              {REASONING_EFFORT_OPTIONS.map((effort) => {
+                const isSelected = filter.reasoning && "effort" in filter.reasoning && filter.reasoning.effort === effort;
+                return (
+                  <button
+                    key={effort}
+                    onClick={() => {
+                      onUpdate({ reasoning: { effort } });
+                      setShowReasoningDropdown(false);
+                    }}
+                    className={`w-full px-3 py-1.5 text-left text-sm hover:bg-orange-50 flex justify-between ${
+                      isSelected ? "bg-orange-100 font-medium" : ""
+                    }`}
+                  >
+                    <span>{effort}</span>
+                    <span className="text-xs text-gray-400">{EFFORT_TO_BUDGET_TOKENS[effort]} tok</span>
+                  </button>
+                );
+              })}
+              <div className="border-t p-2">
+                <button
+                  onClick={() => setShowReasoningDropdown(false)}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

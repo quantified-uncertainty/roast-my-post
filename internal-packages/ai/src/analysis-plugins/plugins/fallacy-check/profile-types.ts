@@ -104,6 +104,7 @@ export interface PromptConfig {
  */
 export type FilterType =
   | 'dedup'                   // Remove near-duplicate issues
+  | 'principle-of-charity'    // Apply charitable interpretation before critiquing
   | 'supported-elsewhere'     // Filter issues addressed elsewhere in document
   | 'severity'                // Filter by severity threshold
   | 'confidence'              // Filter by confidence threshold
@@ -129,6 +130,17 @@ interface BaseFilterConfig {
   id: string;
   type: FilterType;
   enabled: boolean;
+}
+
+/**
+ * Principle of Charity filter configuration
+ */
+export interface PrincipleOfCharityFilterConfig extends BaseFilterConfig {
+  type: 'principle-of-charity';
+  model?: string;
+  temperature?: number | 'default';
+  reasoning?: ReasoningConfig;
+  customPrompt?: string;
 }
 
 /**
@@ -169,6 +181,7 @@ export interface SimpleFilterConfig extends BaseFilterConfig {
  * Union of all filter configurations
  */
 export type FilterChainItem =
+  | PrincipleOfCharityFilterConfig
   | SupportedElsewhereFilterConfig
   | SeverityFilterConfig
   | ConfidenceFilterConfig
@@ -281,9 +294,11 @@ export const DEFAULT_THRESHOLDS: ThresholdConfig = {
 
 /**
  * Default filter chain (current behavior)
+ * Order: dedup → principle-of-charity → supported-elsewhere → review
  */
 export const DEFAULT_FILTER_CHAIN: FilterChainConfig = [
   { id: 'default-dedup', type: 'dedup', enabled: true },
+  { id: 'default-principle-of-charity', type: 'principle-of-charity', enabled: true },
   { id: 'default-supported-elsewhere', type: 'supported-elsewhere', enabled: true },
   { id: 'default-review', type: 'review', enabled: true },
 ];

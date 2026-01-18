@@ -68,7 +68,7 @@ export interface Comment {
 }
 
 export interface FilteredItem {
-  stage: "supported-elsewhere-filter" | "review";
+  stage: string; // Filter stage name (e.g., "principle-of-charity-filter", "supported-elsewhere-filter", "review")
   filterReason: string;
   quotedText: string;
   header?: string;
@@ -165,7 +165,7 @@ export interface ValidationRunDetail {
 export type TabId = "baselines" | "run" | "history";
 
 // Profile types
-export type FilterType = "dedup" | "supported-elsewhere" | "severity" | "confidence" | "review";
+export type FilterType = "dedup" | "principle-of-charity" | "supported-elsewhere" | "severity" | "confidence" | "review";
 
 /** Reasoning effort levels (maps to OpenRouter's effort parameter) */
 export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
@@ -231,6 +231,16 @@ export interface SupportedElsewhereFilterConfig extends BaseFilterConfig {
   customPrompt?: string;
 }
 
+/** Principle of Charity filter: LLM interprets arguments charitably before critiquing */
+export interface PrincipleOfCharityFilterConfig extends BaseFilterConfig {
+  type: "principle-of-charity";
+  model: string;
+  temperature?: number | "default";
+  /** Reasoning/thinking configuration */
+  reasoning?: ReasoningConfig;
+  customPrompt?: string;
+}
+
 /** Severity threshold filter: removes issues below a severity score */
 export interface SeverityFilterConfig extends BaseFilterConfig {
   type: "severity";
@@ -246,11 +256,17 @@ export interface ConfidenceFilterConfig extends BaseFilterConfig {
 /** Union of all filter configs */
 export type FilterChainItem =
   | SupportedElsewhereFilterConfig
+  | PrincipleOfCharityFilterConfig
   | SeverityFilterConfig
   | ConfidenceFilterConfig;
 
 /** Available filter types for the "Add Filter" dropdown */
 export const AVAILABLE_FILTER_TYPES = [
+  {
+    type: "principle-of-charity" as const,
+    label: "Principle of Charity",
+    description: "Interprets arguments charitably before critiquing - filters issues that dissolve under generous interpretation"
+  },
   {
     type: "supported-elsewhere" as const,
     label: "Supported Elsewhere",

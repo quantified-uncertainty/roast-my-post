@@ -259,6 +259,7 @@ function validateFilterChain(raw: unknown, defaults: FilterChainConfig): FilterC
 
   const validFilterTypes: FilterType[] = [
     'dedup',
+    'principle-of-charity',
     'supported-elsewhere',
     'severity',
     'confidence',
@@ -279,6 +280,19 @@ function validateFilterChain(raw: unknown, defaults: FilterChainConfig): FilterC
       };
 
       // Add type-specific fields
+      if (type === 'principle-of-charity') {
+        return {
+          ...base,
+          type: 'principle-of-charity' as const,
+          model: typeof raw.model === 'string' ? raw.model : undefined,
+          temperature: (typeof raw.temperature === 'number' || raw.temperature === 'default')
+            ? raw.temperature as number | 'default'
+            : undefined,
+          reasoning: validateReasoning(raw.reasoning),
+          customPrompt: typeof raw.customPrompt === 'string' ? raw.customPrompt : undefined,
+        };
+      }
+
       if (type === 'supported-elsewhere') {
         return {
           ...base,

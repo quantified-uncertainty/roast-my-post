@@ -130,9 +130,29 @@ export function PipelineView({
   const stagesCost = stages?.reduce((sum, s) => sum + (s.costUsd ?? 0), 0) ?? 0;
   const totalCostUsd = extractorsCost + judgeCost + stagesCost;
 
+  // Get filter stages from telemetry (exclude extraction, comment-generation, review which have their own sections)
+  const coreStages = new Set(["extraction", "comment-generation", "review"]);
+  const filterStages = (stages ?? [])
+    .filter((s) => !coreStages.has(s.stageName))
+    .map((s) => s.stageName);
+
   // Separate filtered items by stage
-  const filterStageItems = filteredItems.filter((item) => item.stage === "supported-elsewhere-filter");
+  const getFilteredItemsForStage = (stageName: string): FilteredItem[] =>
+    filteredItems.filter((item) => item.stage === stageName);
   const reviewStageItems = filteredItems.filter((item) => item.stage === "review");
+
+  // Helper to get a human-readable title for a filter stage
+  const getFilterStageTitle = (stageName: string, index: number): string => {
+    const titles: Record<string, string> = {
+      "principle-of-charity-filter": "Principle of Charity",
+      "supported-elsewhere-filter": "Supported-Elsewhere",
+      "severity-filter": "Severity",
+      "confidence-filter": "Confidence",
+      "dedup-filter": "Deduplication",
+    };
+    const base = titles[stageName] || stageName.replace(/-filter$/, "").replace(/-/g, " ");
+    return `${index + 2}. ${base.charAt(0).toUpperCase() + base.slice(1)} Filter`;
+  };
 
   return (
     <div className="border rounded-lg bg-white">
@@ -165,56 +185,67 @@ export function PipelineView({
           </div>
         </PipelineStep>
 
-        {/* Step 2: Filtering */}
-        <PipelineStep
-          step="filter"
-          title="2. Supported-Elsewhere Filter"
-          summary={`${afterFilter} kept, ${filterRemoved} filtered out`}
-          timing={getStageTiming("supported-elsewhere-filter")?.durationMs}
-          cost={getStageTiming("supported-elsewhere-filter")?.costUsd}
-          isExpanded={expandedSteps.has("filter")}
-          onToggle={() => toggleStep("filter")}
-          color="orange"
-        >
-          <div className="space-y-3">
-            <div className="p-3 bg-orange-50 rounded-md">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-orange-600">Input:</span>
-                  <span className="font-mono ml-2">{afterDedup}</span>
+        {/* Steps 2+: Dynamic Filter Stages */}
+        {filterStages.map((stageName, index) => {
+          const stageData = getStageTiming(stageName);
+          const stageFilteredItems = getFilteredItemsForStage(stageName);
+          const stageInputCount = stageData?.inputCount ?? afterDedup;
+          const stageOutputCount = stageData?.outputCount ?? stageInputCount;
+          const stageRemovedCount = stageFilteredItems.length;
+
+          return (
+            <PipelineStep
+              key={stageName}
+              step={stageName}
+              title={getFilterStageTitle(stageName, index)}
+              summary={`${stageOutputCount} kept, ${stageRemovedCount} filtered out`}
+              timing={stageData?.durationMs}
+              cost={stageData?.costUsd}
+              isExpanded={expandedSteps.has(stageName)}
+              onToggle={() => toggleStep(stageName)}
+              color="orange"
+            >
+              <div className="space-y-3">
+                <div className="p-3 bg-orange-50 rounded-md">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-orange-600">Input:</span>
+                      <span className="font-mono ml-2">{stageInputCount}</span>
+                    </div>
+                    <div>
+                      <span className="text-orange-600">Output:</span>
+                      <span className="font-mono ml-2">{stageOutputCount}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-orange-600">Output:</span>
-                  <span className="font-mono ml-2">{afterFilter}</span>
-                </div>
+
+                {stageFilteredItems.length > 0 && (
+                  <div>
+                    <h5 className="text-sm font-medium text-orange-800 mb-2">
+                      Filtered Items ({stageFilteredItems.length})
+                    </h5>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {stageFilteredItems.map((item, i) => (
+                        <FilteredItemCard key={i} item={item} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {stageFilteredItems.length === 0 && stageRemovedCount > 0 && (
+                  <p className="text-sm text-gray-500 italic">
+                    {stageRemovedCount} items filtered (details not available)
+                  </p>
+                )}
               </div>
-            </div>
+            </PipelineStep>
+          );
+        })}
 
-            {filterStageItems.length > 0 && (
-              <div>
-                <h5 className="text-sm font-medium text-orange-800 mb-2">
-                  Filtered Items ({filterStageItems.length})
-                </h5>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {filterStageItems.map((item, i) => (
-                    <FilteredItemCard key={i} item={item} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {filterStageItems.length === 0 && filterRemoved > 0 && (
-              <p className="text-sm text-gray-500 italic">
-                {filterRemoved} items filtered (details not available)
-              </p>
-            )}
-          </div>
-        </PipelineStep>
-
-        {/* Step 3: Comment Generation */}
+        {/* Comment Generation (step number = 2 + filterStages.length) */}
         <PipelineStep
           step="generation"
-          title="3. Comment Generation"
+          title={`${2 + filterStages.length}. Comment Generation`}
           summary={`${commentsGenerated} comments generated`}
           timing={getStageTiming("comment-generation")?.durationMs}
           cost={getStageTiming("comment-generation")?.costUsd}
@@ -239,10 +270,10 @@ export function PipelineView({
           </div>
         </PipelineStep>
 
-        {/* Step 4: Review */}
+        {/* Review (step number = 3 + filterStages.length) */}
         <PipelineStep
           step="review"
-          title="4. Review Filter"
+          title={`${3 + filterStages.length}. Review Filter`}
           summary={`${commentsKept} kept, ${reviewRemoved} removed`}
           timing={getStageTiming("review")?.durationMs}
           cost={getStageTiming("review")?.costUsd}
@@ -391,6 +422,17 @@ function PipelineStep({
   );
 }
 
+function getFilterStageBadgeText(stage: string): string {
+  const labels: Record<string, string> = {
+    "principle-of-charity-filter": "Charity",
+    "supported-elsewhere-filter": "Elsewhere",
+    "severity-filter": "Severity",
+    "confidence-filter": "Confidence",
+    "review": "Review",
+  };
+  return labels[stage] || stage.replace(/-filter$/, "");
+}
+
 function FilteredItemCard({ item }: { item: FilteredItem }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -403,7 +445,7 @@ function FilteredItemCard({ item }: { item: FilteredItem }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2">
             <span className="px-1.5 py-0.5 bg-orange-200 text-orange-800 rounded text-xs">
-              {item.stage === "supported-elsewhere-filter" ? "Filter" : "Review"}
+              {getFilterStageBadgeText(item.stage)}
             </span>
             {item.header && (
               <span className="text-xs text-orange-700">[{item.header}]</span>
