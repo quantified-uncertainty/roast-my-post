@@ -1,4 +1,5 @@
 import type { IssueType } from '../../analysis-plugins/plugins/fallacy-check/constants';
+import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
 
 /**
  * Specific types of fallacies (for logical-fallacy issue type)
@@ -98,6 +99,22 @@ export interface FallacyExtractorInput {
   thinking?: boolean;
 
   /**
+   * Reasoning effort level for OpenRouter models (Gemini, etc.)
+   * - 'none': Disable reasoning
+   * - 'minimal', 'low', 'medium', 'high', 'xhigh': Effort levels
+   */
+  reasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+
+  /**
+   * Provider routing preferences (OpenRouter only)
+   * Allows specifying preferred providers for a model
+   */
+  provider?: {
+    order?: string[];
+    allow_fallbacks?: boolean;
+  };
+
+  /**
    * Optional custom system prompt override.
    * If provided, replaces the default system prompt entirely.
    */
@@ -123,6 +140,34 @@ export interface FallacyExtractorInput {
   maxIssues?: number;
 }
 
+/** Actual API parameters sent to the provider */
+export interface ActualApiParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  thinking?: {
+    type: 'enabled';
+    budget_tokens: number;
+  };
+  reasoning?: {
+    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+    max_tokens?: number;
+  };
+}
+
+/** Response metrics from API call */
+export interface ApiResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  stopReason?: string;
+  errorType?: string;
+  errorMessage?: string;
+}
+
 /**
  * Output from the epistemic issues extractor tool
  */
@@ -135,4 +180,13 @@ export interface FallacyExtractorOutput {
 
   /** Whether the analysis was complete or truncated */
   wasComplete: boolean;
+
+  /** Actual parameters sent to the API (source of truth) */
+  actualApiParams?: ActualApiParams;
+
+  /** Response metrics from the API call */
+  responseMetrics?: ApiResponseMetrics;
+
+  /** Unified usage metrics (includes cost, tokens, latency across providers) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }

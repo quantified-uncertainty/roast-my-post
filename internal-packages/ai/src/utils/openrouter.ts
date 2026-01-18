@@ -9,6 +9,11 @@
 
 import { aiConfig } from '../config';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
+import {
+  UnifiedUsageMetrics,
+  fromOpenRouterUsage,
+  OpenRouterRawUsage
+} from './usageMetrics';
 
 // ============================================================================
 // Types
@@ -135,12 +140,28 @@ export interface OpenRouterChoice {
 }
 
 /**
- * Token usage
+ * Token usage with full cost details from OpenRouter
  */
 export interface OpenRouterUsage {
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
+  cost?: number;
+  is_byok?: boolean;
+  prompt_tokens_details?: {
+    cached_tokens?: number;
+    audio_tokens?: number;
+    video_tokens?: number;
+  };
+  cost_details?: {
+    upstream_inference_cost?: number | null;
+    upstream_inference_prompt_cost?: number;
+    upstream_inference_completions_cost?: number;
+  };
+  completion_tokens_details?: {
+    reasoning_tokens?: number;
+    image_tokens?: number;
+  };
 }
 
 /**
@@ -149,6 +170,7 @@ export interface OpenRouterUsage {
 export interface OpenRouterResponse {
   id: string;
   model: string;
+  provider?: string;  // Which provider handled the request (e.g., "Google AI Studio", "Cerebras")
   object: 'chat.completion';
   created: number;
   choices: OpenRouterChoice[];
@@ -240,6 +262,19 @@ export async function callOpenRouter(
   const baseUrl = getBaseUrl();
   const headers = buildHeaders(options);
 
+  // Log the ACTUAL request being sent to OpenRouter
+  console.log(`📡 [OpenRouter] ACTUAL REQUEST:`, JSON.stringify({
+    model: request.model,
+    max_tokens: request.max_tokens,
+    temperature: request.temperature,
+    reasoning: request.reasoning,
+    reasoning_effort: request.reasoning_effort,
+    tool_choice: request.tool_choice,
+    provider: request.provider,
+    tools: request.tools?.map(t => t.function.name),
+    messages_count: request.messages?.length,
+  }));
+
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers,
@@ -257,6 +292,18 @@ export async function callOpenRouter(
 // ============================================================================
 // High-Level Chat Interface (no tools)
 // ============================================================================
+
+/**
+ * Provider routing configuration
+ */
+export interface ProviderPreferences {
+  /** Ordered list of preferred providers (e.g., ["anthropic", "google"]) */
+  order?: string[];
+  /** Allow fallback to other providers if preferred ones fail */
+  allow_fallbacks?: boolean;
+  /** Require all parameters to be supported by provider */
+  require_parameters?: boolean;
+}
 
 /**
  * Options for simple chat completions (no tool calling)
@@ -277,6 +324,11 @@ export interface OpenRouterChatOptions {
    * Reasoning control
    */
   reasoningEffort?: ReasoningEffort;
+
+  /**
+   * Provider routing preferences
+   */
+  provider?: ProviderPreferences;
 }
 
 export interface OpenRouterChatResult {
@@ -289,6 +341,10 @@ export interface OpenRouterChatResult {
     completion_tokens: number;
     total_tokens: number;
   };
+  /** Unified usage metrics (includes cost, cache tokens, reasoning tokens) */
+  unifiedUsage?: UnifiedUsageMetrics;
+  /** Provider that handled the request */
+  provider?: string;
 }
 
 /**
@@ -309,16 +365,24 @@ export async function callOpenRouterChat(
     response_format: options.response_format,
   };
 
+  // Use the `reasoning` object format which is more widely supported than `reasoning_effort`
   if (options.reasoningEffort) {
-    request.reasoning_effort = options.reasoningEffort;
+    request.reasoning = { effort: options.reasoningEffort };
   }
 
-  console.log(`📡 [OpenRouter] Chat: ${options.model}${options.reasoningEffort ? `, reasoning: ${options.reasoningEffort}` : ''}`);
+  if (options.provider) {
+    request.provider = options.provider;
+  }
+
+  console.log(`📡 [OpenRouter] Chat: ${options.model}${options.reasoningEffort ? `, reasoning.effort: ${options.reasoningEffort}` : ''}`);
 
   // Build custom client options with extra headers if provided
   const clientOptions: OpenRouterClientOptions = {};
 
+  // Capture timing for unified metrics
+  const startTime = Date.now();
   const response = await callOpenRouter(request, clientOptions);
+  const latencyMs = Date.now() - startTime;
 
   const choice = response.choices[0];
   if (!choice) {
@@ -332,12 +396,20 @@ export async function callOpenRouterChat(
     reasoning_content?: string;
   };
 
+  // Build unified usage metrics
+  const rawUsage = response.usage as OpenRouterRawUsage | undefined;
+  const unifiedUsage = rawUsage
+    ? fromOpenRouterUsage(rawUsage, response.provider || 'openrouter', response.model, latencyMs)
+    : undefined;
+
   return {
     content: message.content,
     reasoning: message.reasoning || message.reasoning_content,
     model: response.model,
     finishReason: choice.finish_reason,
     usage: response.usage,
+    unifiedUsage,
+    provider: response.provider,
   };
 }
 
@@ -371,6 +443,11 @@ export interface OpenRouterToolCallOptions {
    * Use this for explicit control over reasoning effort level.
    */
   reasoningEffort?: ReasoningEffort;
+
+  /**
+   * Provider routing preferences
+   */
+  provider?: ProviderPreferences;
 }
 
 /** Actual API params as sent to OpenRouter */
@@ -393,6 +470,10 @@ export interface OpenRouterResponseMetrics {
   stopReason?: string;
   errorType?: string;
   errorMessage?: string;
+  /** Full raw usage from OpenRouter (includes cost, cache, reasoning tokens) */
+  rawUsage?: OpenRouterRawUsage;
+  /** Provider that handled the request (e.g., "Google AI Studio", "Cerebras") */
+  provider?: string;
 }
 
 export interface OpenRouterToolCallResult<T> {
@@ -407,6 +488,8 @@ export interface OpenRouterToolCallResult<T> {
   actualParams: OpenRouterActualParams;
   /** Response metrics */
   responseMetrics: OpenRouterResponseMetrics;
+  /** Unified usage metrics (includes cost, cache tokens, reasoning tokens) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 /**
@@ -449,19 +532,28 @@ export async function callOpenRouterWithTool<T>(
         },
       },
     ],
-    tool_choice: {
-      type: 'function',
-      function: { name: options.toolName },
-    },
+    // Tool choice strategy:
+    // - Default: Force specific tool for reliability
+    // - With reasoning: Use "required" (model must use a tool)
+    // - With reasoning + specific provider routing: Use "auto" (some providers like z-ai
+    //   don't support "required" combined with reasoning)
+    tool_choice: reasoningEffort !== undefined
+      ? (options.provider?.order ? 'auto' : 'required')
+      : { type: 'function', function: { name: options.toolName } },
   };
 
-  // Add reasoning_effort if specified
+  // Add reasoning if specified - use the `reasoning` object format which is more widely supported
+  // than the top-level `reasoning_effort` parameter
   if (reasoningEffort !== undefined) {
-    request.reasoning_effort = reasoningEffort;
-    console.log(`📡 [OpenRouter] Model: ${options.model}, reasoning_effort: ${reasoningEffort}`);
-  } else {
-    console.log(`📡 [OpenRouter] Model: ${options.model}, reasoning: default`);
+    request.reasoning = { effort: reasoningEffort };
   }
+
+  // Add provider preferences if specified
+  if (options.provider) {
+    request.provider = options.provider;
+  }
+
+  // Logging is done in callOpenRouter function
 
   // Capture actual params being sent to API (for telemetry)
   const actualParams: OpenRouterActualParams = {
@@ -508,6 +600,9 @@ export async function callOpenRouterWithTool<T>(
     throw new Error(`Failed to parse tool arguments: ${toolCall.function.arguments}`);
   }
 
+  // Cast usage to raw format for unified metrics
+  const rawUsage = response.usage as OpenRouterRawUsage | undefined;
+
   // Build response metrics for telemetry
   const responseMetrics: OpenRouterResponseMetrics = {
     success: true,
@@ -515,7 +610,14 @@ export async function callOpenRouterWithTool<T>(
     inputTokens: response.usage?.prompt_tokens,
     outputTokens: response.usage?.completion_tokens,
     stopReason: choice.finish_reason ?? undefined,
+    rawUsage,
+    provider: response.provider,
   };
+
+  // Build unified usage metrics
+  const unifiedUsage = rawUsage
+    ? fromOpenRouterUsage(rawUsage, response.provider || 'openrouter', response.model, latencyMs)
+    : undefined;
 
   return {
     toolResult,
@@ -527,6 +629,7 @@ export async function callOpenRouterWithTool<T>(
     } : undefined,
     actualParams,
     responseMetrics,
+    unifiedUsage,
   };
 }
 
@@ -589,6 +692,9 @@ export const PROVIDER_TEMPERATURE_RANGES = {
   google: { min: 0, max: 2.0 },
   'x-ai': { min: 0, max: 2.0 },
   deepseek: { min: 0, max: 2.0 },
+  'z-ai': { min: 0, max: 1.5 },
+  // Default for unknown providers - use conservative max
+  default: { min: 0, max: 1.5 },
 } as const;
 
 export type ProviderName = keyof typeof PROVIDER_TEMPERATURE_RANGES;
@@ -604,22 +710,38 @@ export function getProviderFromModel(modelId: string): ProviderName {
   if (modelId.includes('gemini') || modelId.startsWith('google/')) return 'google';
   if (modelId.includes('grok') || modelId.startsWith('x-ai/')) return 'x-ai';
   if (modelId.includes('deepseek') || modelId.startsWith('deepseek/')) return 'deepseek';
-  return 'openai'; // Default fallback to OpenAI's range
+  if (modelId.startsWith('z-ai/')) return 'z-ai';
+  return 'default'; // Default fallback to conservative range
 }
 
 /**
- * Normalize temperature from user-facing 0-1 scale to provider-specific range
- * @param userTemp - User-provided temperature (0-1 scale)
+ * Normalize temperature to the valid range for a given provider.
+ *
+ * Handles two input conventions:
+ * - Values 0-1: Treated as normalized scale, mapped to provider's full range
+ * - Values > 1: Treated as actual temperature values, capped to provider max
+ *
+ * @param userTemp - User-provided temperature (0-1 normalized, or actual value)
  * @param modelId - Full model ID to determine provider
- * @returns Actual temperature value for the provider's API
+ * @returns Actual temperature value capped to provider's max
  *
  * @example
- * normalizeTemperature(0.7, 'anthropic/claude-3-haiku') // Returns 0.7 (Anthropic max is 1.0)
- * normalizeTemperature(0.7, 'openai/gpt-4') // Returns 1.4 (OpenAI max is 2.0)
+ * normalizeTemperature(0.7, 'anthropic/claude-3-haiku') // Returns 0.7 (within Anthropic's 0-1 range)
+ * normalizeTemperature(0.7, 'openai/gpt-4') // Returns 1.4 (0.7 * 2.0 for OpenAI's 0-2 range)
+ * normalizeTemperature(1.5, 'anthropic/claude-3-haiku') // Returns 1.0 (capped to Anthropic max)
+ * normalizeTemperature(1.5, 'openai/gpt-4') // Returns 1.5 (within OpenAI's 0-2 range)
  */
 export function normalizeTemperature(userTemp: number, modelId: string): number {
   const provider = getProviderFromModel(modelId);
   const range = PROVIDER_TEMPERATURE_RANGES[provider];
+
+  // If value is > 1, treat as actual temperature (don't scale)
+  // Just cap to provider max
+  if (userTemp > 1) {
+    return Math.min(userTemp, range.max);
+  }
+
+  // If value is 0-1, scale to provider's range
   return userTemp * range.max;
 }
 

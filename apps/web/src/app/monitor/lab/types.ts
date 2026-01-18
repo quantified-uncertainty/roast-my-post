@@ -83,19 +83,62 @@ export interface PipelineCounts {
   commentsKept: number;
 }
 
+/** Actual API parameters sent to the provider */
+export interface ActualApiParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  thinking?: {
+    type: "enabled";
+    budget_tokens: number;
+  };
+  reasoning?: {
+    effort?: "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+    max_tokens?: number;
+  };
+}
+
+/** Response metrics from API call */
+export interface ApiResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  stopReason?: string;
+  errorType?: string;
+  errorMessage?: string;
+}
+
 export interface ExtractorInfo {
   extractorId: string;
   model: string;
   issuesFound: number;
   durationMs?: number;
   costUsd?: number;
+  /** Temperature that was configured (number or "default") */
+  temperatureConfig?: number | "default";
+  /** Whether thinking/reasoning was enabled */
+  thinkingEnabled?: boolean;
+  /** Error message if extraction failed */
+  error?: string;
+  /** Actual parameters sent to the API */
+  actualApiParams?: ActualApiParams;
+  /** Response metrics from the API */
+  responseMetrics?: ApiResponseMetrics;
+  /** Issues breakdown by type */
+  issuesByType?: Record<string, number>;
 }
 
 export interface ExtractionPhase {
   totalIssuesBeforeJudge: number;
+  totalIssuesAfterDedup?: number;
   totalIssuesAfterJudge: number;
   extractors?: ExtractorInfo[];
   judgeDurationMs?: number;
+  judgeCostUsd?: number;
+  judgeModel?: string;
 }
 
 export interface StageMetrics {
@@ -142,6 +185,14 @@ export const EFFORT_TO_BUDGET_TOKENS: Record<ReasoningEffort, number> = {
   xhigh: 32768,
 };
 
+/** Provider routing preferences for OpenRouter */
+export interface ProviderPreferences {
+  /** Ordered list of preferred providers (e.g., ["anthropic", "google"]) */
+  order?: string[];
+  /** Allow fallback to other providers if preferred ones fail */
+  allow_fallbacks?: boolean;
+}
+
 export interface ExtractorConfig {
   model: string;
   temperature?: number | "default";
@@ -150,6 +201,8 @@ export interface ExtractorConfig {
   thinking?: boolean;
   /** Reasoning/thinking configuration */
   reasoning?: ReasoningConfig;
+  /** Provider routing preferences (OpenRouter only) */
+  provider?: ProviderPreferences;
 }
 
 export interface JudgeConfig {

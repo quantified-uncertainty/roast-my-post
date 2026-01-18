@@ -13,10 +13,13 @@ import { fallacyExtractorConfig } from "../configs";
 import { generateCacheSeed } from "../shared/cache-utils";
 import fuzzyTextLocatorTool from "../smart-text-searcher";
 import { findLocationInChunk } from "../smart-text-searcher/chunk-location-finder";
+import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
 import type {
   FallacyExtractorInput,
   FallacyExtractorOutput,
   ExtractedFallacyIssue,
+  ActualApiParams,
+  ApiResponseMetrics,
 } from "./types";
 import {
   DEFAULT_EXTRACTOR_SYSTEM_PROMPT,
@@ -267,7 +270,10 @@ export class FallacyExtractorTool extends Tool<
       wasComplete: boolean;
     };
 
-    let result: { toolResult: ExtractorResults };
+    let result: { toolResult: ExtractorResults; actualParams?: ActualApiParams; responseMetrics?: ApiResponseMetrics; unifiedUsage?: UnifiedUsageMetrics };
+    let actualApiParams: ActualApiParams | undefined;
+    let responseMetrics: ApiResponseMetrics | undefined;
+    let unifiedUsage: UnifiedUsageMetrics | undefined;
 
     // Determine temperature to use:
     // - "default": Don't pass temperature, let model use its native default
@@ -282,8 +288,9 @@ export class FallacyExtractorTool extends Tool<
 
     if (isOpenRouterModel && modelId) {
       // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
-      console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`);
-      result = await callOpenRouterWithTool<ExtractorResults>({
+      const providerInfo = input.provider?.order ? `, provider: [${input.provider.order.join(', ')}]` : '';
+      console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}, reasoningEffort: ${input.reasoningEffort ?? 'not set'}${providerInfo}`);
+      const openRouterResult = await callOpenRouterWithTool<ExtractorResults>({
         model: modelId,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
@@ -293,11 +300,25 @@ export class FallacyExtractorTool extends Tool<
         toolDescription: "Extract and score fallacy issues from text",
         toolSchema,
         thinking: thinkingEnabled,
+        // Pass explicit reasoning effort if provided (from profile config)
+        ...(input.reasoningEffort !== undefined && { reasoningEffort: input.reasoningEffort }),
+        // Pass provider preferences if specified
+        ...(input.provider && { provider: input.provider }),
       });
+      result = openRouterResult;
+      // Capture actual API params from OpenRouter response
+      actualApiParams = {
+        model: openRouterResult.actualParams.model,
+        temperature: openRouterResult.actualParams.temperature,
+        maxTokens: openRouterResult.actualParams.maxTokens,
+        reasoning: openRouterResult.actualParams.reasoning,
+      };
+      responseMetrics = openRouterResult.responseMetrics;
+      unifiedUsage = openRouterResult.unifiedUsage;
     } else {
       // Use Claude API directly
       console.log(`🤖 Calling Claude API${modelId ? ` with model: ${modelId}` : ""}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`);
-      result = await callClaudeWithTool<ExtractorResults>({
+      const claudeResult = await callClaudeWithTool<ExtractorResults>({
         ...(modelId && { model: modelId }),
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
@@ -310,6 +331,16 @@ export class FallacyExtractorTool extends Tool<
         cacheSeed,
         thinking: thinkingEnabled,
       });
+      result = claudeResult;
+      // Capture actual API params from Claude response
+      actualApiParams = {
+        model: claudeResult.actualParams.model,
+        temperature: claudeResult.actualParams.temperature,
+        maxTokens: claudeResult.actualParams.maxTokens,
+        thinking: claudeResult.actualParams.thinking,
+      };
+      responseMetrics = claudeResult.responseMetrics;
+      unifiedUsage = claudeResult.unifiedUsage;
     }
 
     let allIssues = result.toolResult.issues || [];
@@ -478,6 +509,9 @@ export class FallacyExtractorTool extends Tool<
       issues: issuesWithLocations,
       totalIssuesFound: allIssues.length,
       wasComplete,
+      actualApiParams,
+      responseMetrics,
+      unifiedUsage,
     };
   }
 }

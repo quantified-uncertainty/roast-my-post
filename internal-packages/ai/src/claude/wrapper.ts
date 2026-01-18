@@ -5,6 +5,11 @@ import { withRetry } from '../utils/retryUtils';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
 import { getRemainingTimeMs } from '../shared/jobContext';
+import {
+  UnifiedUsageMetrics,
+  fromAnthropicUsage,
+  AnthropicRawUsage
+} from '../utils/usageMetrics';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -63,6 +68,8 @@ export interface ClaudeResponseMetrics {
   stopReason?: string;
   errorType?: string;
   errorMessage?: string;
+  /** Full raw usage from Anthropic API */
+  rawUsage?: AnthropicRawUsage;
 }
 
 export interface ClaudeCallResult {
@@ -72,6 +79,8 @@ export interface ClaudeCallResult {
   actualParams: ClaudeActualParams;
   /** Response metrics */
   responseMetrics: ClaudeResponseMetrics;
+  /** Unified usage metrics (includes calculated cost) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 function buildPromptString(
@@ -165,7 +174,10 @@ export async function callClaude(
       const thinkingBudget = typeof options.thinking === 'object' && options.thinking?.budget_tokens
         ? options.thinking.budget_tokens
         : 10000; // Default budget
-      const effectiveTemperature = thinkingEnabled ? 1 : (options.temperature ?? 0);
+      // Claude's temperature range is 0-1 (unlike some other providers that allow 0-2)
+      // Cap any out-of-range values to prevent API errors
+      const requestedTemp = options.temperature ?? 0;
+      const effectiveTemperature = thinkingEnabled ? 1 : Math.min(Math.max(requestedTemp, 0), 1);
       // When thinking is enabled, max_tokens must be greater than budget_tokens
       const requestedMaxTokens = options.max_tokens || 4000;
       const effectiveMaxTokens = thinkingEnabled
@@ -323,22 +335,38 @@ export async function callClaude(
     previousInteractions.push(interaction);
   }
 
+  // Build raw usage object for unified metrics
+  const rawUsage: AnthropicRawUsage = {
+    input_tokens: response.usage.input_tokens,
+    output_tokens: response.usage.output_tokens,
+    cache_creation_input_tokens: (response.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens,
+    cache_read_input_tokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens,
+  };
+
+  // Calculate latency
+  const latencyMs = apiCallStartTime > 0 ? Date.now() - apiCallStartTime : Date.now() - startTime;
+
   // Build response metrics for telemetry
   const responseMetrics: ClaudeResponseMetrics = {
     success: true,
-    latencyMs: apiCallStartTime > 0 ? Date.now() - apiCallStartTime : Date.now() - startTime,
+    latencyMs,
     inputTokens: response.usage.input_tokens,
     outputTokens: response.usage.output_tokens,
-    cacheReadTokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens,
-    cacheWriteTokens: (response.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens,
+    cacheReadTokens: rawUsage.cache_read_input_tokens,
+    cacheWriteTokens: rawUsage.cache_creation_input_tokens,
     stopReason: response.stop_reason ?? undefined,
+    rawUsage,
   };
+
+  // Build unified usage metrics (includes calculated cost)
+  const unifiedUsage = fromAnthropicUsage(rawUsage, model, latencyMs);
 
   return {
     response,
     interaction,
     actualParams: actualParams!,
     responseMetrics,
+    unifiedUsage,
   };
 }
 

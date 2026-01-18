@@ -22,6 +22,7 @@ import type {
   JudgeConfig,
   ExtractorIssueInput,
 } from './types';
+import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT } from './prompts';
 
 // Default model for judge (can be overridden via env var)
@@ -286,15 +287,17 @@ export class FallacyJudgeTool extends Tool<FallacyJudgeInput, FallacyJudgeOutput
     // Format issues for the LLM, sorted alphabetically by text to group similar issues together
     // This makes it easier for the judge to spot duplicates/similar issues
     const issuesWithIndices = input.issues.map((issue, idx) => ({ issue, originalIdx: idx }));
-    issuesWithIndices.sort((a, b) => a.issue.exactText.localeCompare(b.issue.exactText));
+    issuesWithIndices.sort((a, b) => (a.issue.exactText || '').localeCompare(b.issue.exactText || ''));
 
     const formattedIssues = issuesWithIndices
       .map(({ issue, originalIdx }) => {
+        const reasoning = issue.reasoning || '(no reasoning provided)';
+        const exactText = issue.exactText || '(no text)';
         return `[Issue ${originalIdx}] Extractor: ${issue.extractorId}
-Text: "${issue.exactText.substring(0, 150)}${issue.exactText.length > 150 ? '...' : ''}"
+Text: "${exactText.substring(0, 150)}${exactText.length > 150 ? '...' : ''}"
 Type: ${issue.issueType}${issue.fallacyType ? ` (${issue.fallacyType})` : ''}
 Severity: ${issue.severityScore}, Confidence: ${issue.confidenceScore}, Importance: ${issue.importanceScore}
-Reasoning: ${issue.reasoning.substring(0, 200)}${issue.reasoning.length > 200 ? '...' : ''}`;
+Reasoning: ${reasoning.substring(0, 200)}${reasoning.length > 200 ? '...' : ''}`;
       })
       .join('\n\n');
 
@@ -424,12 +427,12 @@ Group similar issues together and provide your decisions. Remember:
         required: ['decisions'],
       };
 
-      let result: { toolResult: JudgeResultType };
+      let result: { toolResult: JudgeResultType; unifiedUsage?: UnifiedUsageMetrics };
 
       if (useOpenRouter) {
         // Use OpenRouter for non-Claude models
         // Use 32000 max_tokens to handle large outputs with many issues (esp. with thinking)
-        result = await callOpenRouterWithTool<JudgeResultType>({
+        const openRouterResult = await callOpenRouterWithTool<JudgeResultType>({
           model: judgeConfig.model,
           system: systemPrompt,
           messages: [{ role: 'user', content: userPrompt }],
@@ -440,6 +443,10 @@ Group similar issues together and provide your decisions. Remember:
           toolSchema,
           thinking: thinkingEnabled,
         });
+        result = {
+          toolResult: openRouterResult.toolResult,
+          unifiedUsage: openRouterResult.unifiedUsage,
+        };
       } else {
         // Use Claude API directly
         if (thinkingEnabled) {
@@ -470,10 +477,13 @@ Group similar issues together and provide your decisions. Remember:
           if (!toolUse) {
             throw new Error('Judge did not call the aggregation tool - no tool use in response');
           }
-          result = { toolResult: toolUse.input as JudgeResultType };
+          result = {
+            toolResult: toolUse.input as JudgeResultType,
+            unifiedUsage: claudeResult.unifiedUsage,
+          };
         } else {
           // Without thinking, use forced tool_choice for guaranteed structure
-          result = await callClaudeWithTool<JudgeResultType>(
+          const claudeResult = await callClaudeWithTool<JudgeResultType>(
             {
               model: judgeConfig.model,
               system: systemPrompt,
@@ -487,6 +497,10 @@ Group similar issues together and provide your decisions. Remember:
             },
             []
           );
+          result = {
+            toolResult: claudeResult.toolResult,
+            unifiedUsage: claudeResult.unifiedUsage,
+          };
         }
       }
 
@@ -535,6 +549,7 @@ Group similar issues together and provide your decisions. Remember:
           mergedCount,
           rejectedCount: rejectedDecisions.length,
         },
+        unifiedUsage: result.unifiedUsage,
       };
     } catch (error) {
       context.logger.error('[FallacyJudge] Aggregation failed:', error);

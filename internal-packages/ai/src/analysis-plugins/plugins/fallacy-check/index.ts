@@ -34,8 +34,9 @@ import {
   getDefaultTemperature,
   getConfigSummary,
 } from "./extraction/config";
-import { runMultiExtractor, simpleDeduplication } from "./extraction/multiExtractor";
-import { deduplicateIssues, prioritizeAndLimitIssues } from "./dedup";
+import { runMultiExtractor, deduplicateExtractedIssues } from "./extraction/multiExtractor";
+import type { MultiExtractorConfig, ExtractorConfig, JudgeConfig } from "./extraction/types";
+import { prioritizeAndLimitIssues } from "./dedup";
 import type {
   FallacyCheckerProfileConfig,
   SupportedElsewhereFilterConfig,
@@ -132,6 +133,53 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     return defaultConfig;
   }
 
+  /**
+   * Resolve thinking boolean from extractor config
+   * Checks reasoning config first, falls back to thinking boolean
+   */
+  private resolveThinkingForExtractor(config: ExtractorConfig | undefined): boolean {
+    if (!config) return true; // default enabled
+
+    // New reasoning config takes precedence
+    if (config.reasoning !== undefined) {
+      if (config.reasoning === false) return false;
+      return true; // any effort level or budget_tokens = enabled
+    }
+
+    // Fall back to legacy thinking boolean (default true)
+    return config.thinking !== false;
+  }
+
+  /**
+   * Resolve reasoning effort for OpenRouter models
+   */
+  private resolveReasoningEffortForExtractor(
+    config: ExtractorConfig | undefined
+  ): 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | undefined {
+    if (!config) return undefined;
+    if (config.reasoning === undefined) return undefined;
+    if (config.reasoning === false) return 'none';
+
+    if ('effort' in config.reasoning) return config.reasoning.effort;
+    if ('budget_tokens' in config.reasoning) return 'xhigh'; // map budget to highest effort
+
+    return undefined;
+  }
+
+  /**
+   * Resolve thinking boolean for judge config.
+   * Checks reasoning config first, falls back to thinking boolean.
+   */
+  private resolveThinkingForJudge(config: JudgeConfig): boolean {
+    // New reasoning config takes precedence
+    if (config.reasoning !== undefined) {
+      if (config.reasoning === false) return false;
+      return true; // any effort level or budget_tokens = enabled
+    }
+
+    // Fall back to legacy thinking boolean (default true)
+    return config.thinking !== false;
+  }
 
   name(): string {
     return "FALLACY_CHECK";
@@ -275,12 +323,10 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         phase: "extraction",
       });
 
-      // Phase 1.5: Deduplicate issues by similar text
-      telemetry.startStage(PIPELINE_STAGES.DEDUPLICATION, allIssues.length);
-      const uniqueIssues = deduplicateIssues(allIssues);
-      const deduplicatedIssues = prioritizeAndLimitIssues(uniqueIssues);
-      telemetry.endStage(deduplicatedIssues.length);
-      telemetry.setFinalCounts({ issuesAfterDedup: deduplicatedIssues.length });
+      // Deduplication now happens inside extraction phase, so allIssues is already deduplicated
+      // Just prioritize and limit
+      const prioritizedIssues = prioritizeAndLimitIssues(allIssues);
+      telemetry.setFinalCounts({ issuesAfterDedup: prioritizedIssues.length });
 
       // Phase 2: Filter out issues supported elsewhere in the document
       // Find the supported-elsewhere filter config from the filter chain
@@ -290,7 +336,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter started", {
         timestamp: new Date().toISOString(),
-        issuesToFilter: deduplicatedIssues.length,
+        issuesToFilter: prioritizedIssues.length,
         phase: "supported-elsewhere-filter",
         enabled: runSupportedElsewhere,
         model: supportedElsewhereConfig?.model,
@@ -298,11 +344,11 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         reasoning: supportedElsewhereConfig?.reasoning,
       });
 
-      let filteredIssues = deduplicatedIssues;
+      let filteredIssues = prioritizedIssues;
       if (runSupportedElsewhere) {
-        telemetry.startStage(PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER, deduplicatedIssues.length);
+        telemetry.startStage(PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER, prioritizedIssues.length);
         filteredIssues = await this.runSupportedElsewhereFilter(
-          deduplicatedIssues,
+          prioritizedIssues,
           documentText,
           telemetry,
           supportedElsewhereConfig
@@ -419,16 +465,26 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private async extractWithSingleExtractor(
     documentText: string,
     telemetry: PipelineTelemetry,
-    config: { extractors: Array<{ model: string; temperature?: number | 'default'; thinking?: boolean; label?: string }> }
+    config: MultiExtractorConfig
   ): Promise<{
     issues: FallacyIssue[];
     error?: string;
   }> {
     try {
       const sessionManager = getGlobalSessionManager();
+      const extractorConfig = config.extractors[0];
+
+      // Resolve thinking/reasoning from extractor config
+      const thinkingEnabled = this.resolveThinkingForExtractor(extractorConfig);
+      const reasoningEffort = this.resolveReasoningEffortForExtractor(extractorConfig);
 
       // Log threshold configuration from profile
-      logger.info('FallacyCheckPlugin: Using profile thresholds', {
+      logger.info('FallacyCheckPlugin: Using profile thresholds (single extractor)', {
+        model: extractorConfig?.model,
+        temperature: extractorConfig?.temperature,
+        thinking: thinkingEnabled,
+        reasoningEffort,
+        reasoning: extractorConfig?.reasoning,
         minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
         maxIssues: this.profileConfig?.thresholds?.maxIssues,
         hasCustomPrompts: !!this.profileConfig?.prompts,
@@ -438,6 +494,11 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         return await fallacyExtractorTool.execute(
           {
             documentText,
+            // Pass extractor model/config
+            model: extractorConfig?.model,
+            temperature: extractorConfig?.temperature,
+            thinking: thinkingEnabled,
+            reasoningEffort,
             // Pass profile prompts and thresholds to the extractor
             customSystemPrompt: this.profileConfig?.prompts?.extractorSystemPrompt,
             customUserPrompt: this.profileConfig?.prompts?.extractorUserPrompt,
@@ -541,41 +602,50 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           thinkingEnabled: r.config.thinking !== false,
           issuesFound: r.issues.length,
           durationMs: r.durationMs,
-          costUsd: r.costUsd,
+          // Get cost from unified usage (preferred) or legacy costUsd field
+          costUsd: r.unifiedUsage?.costUsd ?? r.costUsd,
           error: r.error,
           issuesByType: this.countIssuesByType(r.issues),
+          // Include actual API params and response metrics for UI display
+          actualApiParams: r.actualApiParams,
+          responseMetrics: r.responseMetrics,
+          // Include unified usage for detailed cost/token tracking
+          unifiedUsage: r.unifiedUsage,
         })
       );
 
-      // Phase 2: Aggregate issues (via LLM judge or simple dedup)
+      // Phase 2: Deduplicate all issues using Jaccard similarity
       const successfulExtractors = multiResult.extractorResults.filter((r) => !r.error);
+      const allExtractedIssues = successfulExtractors.flatMap((r) => r.issues);
+
       let finalIssues: ExtractedFallacyIssue[];
       let judgeDecisions: JudgeDecisionRecord[] = [];
       let judgeDurationMs: number | undefined;
       let judgeCostUsd: number | undefined;
+      let judgeUnifiedUsage: typeof multiResult.extractorResults[0]['unifiedUsage'];
+      let issuesAfterDedup = allExtractedIssues.length;
 
-      if (multiResult.totalIssuesFound === 0) {
+      if (allExtractedIssues.length === 0) {
         finalIssues = [];
-      } else if (successfulExtractors.length <= 1 || !config.judge.enabled) {
-        // Single extractor or judge disabled - use simple deduplication
-        if (successfulExtractors.length > 1) {
-          logger.info(
-            `[FallacyCheckPlugin] Using simple deduplication (judge disabled)`
-          );
-          finalIssues = simpleDeduplication(multiResult);
-        } else {
-          logger.info(
-            `[FallacyCheckPlugin] Single extractor - no deduplication needed`
-          );
-          finalIssues = successfulExtractors.flatMap((r) => r.issues);
-        }
       } else {
-        // Multiple extractors with judge enabled - use LLM judge
-        const judgeInput = {
-          documentText,
-          issues: multiResult.extractorResults.flatMap((r) =>
-            r.issues.map((issue) => ({
-              extractorId: r.extractorId,
+        // Always run Jaccard deduplication first
+        const dedupResult = deduplicateExtractedIssues(allExtractedIssues);
+        issuesAfterDedup = dedupResult.deduplicated.length;
+
+        logger.info(
+          `[FallacyCheckPlugin] Deduplication: ${allExtractedIssues.length} → ${issuesAfterDedup} issues (${dedupResult.removedCount} duplicates removed)`
+        );
+
+        if (!config.judge.enabled) {
+          // Judge disabled - deduplication is the final step
+          logger.info(`[FallacyCheckPlugin] Judge disabled, using deduplicated issues`);
+          finalIssues = dedupResult.deduplicated;
+        } else {
+          // Judge enabled - run judge on deduplicated issues
+          const judgeInput = {
+            documentText,
+            issues: dedupResult.deduplicated.map((issue) => ({
+              extractorId: 'deduped', // Issues are already merged
               exactText: issue.exactText,
               issueType: issue.issueType,
               fallacyType: issue.fallacyType,
@@ -583,47 +653,57 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
               confidenceScore: issue.confidenceScore,
               importanceScore: issue.importanceScore,
               reasoning: issue.reasoning,
-            }))
-          ),
-          extractorIds: successfulExtractors.map((r) => r.extractorId),
-        };
+            })),
+            extractorIds: successfulExtractors.map((r) => r.extractorId),
+            // Pass judge config from profile to avoid env var fallback
+            judgeConfig: {
+              model: config.judge.model,
+              temperature: config.judge.temperature,
+              thinking: this.resolveThinkingForJudge(config.judge),
+              enabled: true, // We're inside the enabled branch
+            },
+          };
 
-        logger.info(
-          `[FallacyCheckPlugin] Running LLM judge on ${judgeInput.issues.length} issues from ${judgeInput.extractorIds.length} extractors`
-        );
+          logger.info(
+            `[FallacyCheckPlugin] Running LLM judge on ${judgeInput.issues.length} deduplicated issues`
+          );
 
-        const judgeStartTime = Date.now();
-        const judgeResult = await fallacyJudgeTool.execute(judgeInput, { logger });
-        judgeDurationMs = Date.now() - judgeStartTime;
+          const judgeStartTime = Date.now();
+          const judgeResult = await fallacyJudgeTool.execute(judgeInput, { logger });
+          judgeDurationMs = Date.now() - judgeStartTime;
+          // Get cost and unified usage from judge result
+          judgeCostUsd = judgeResult.unifiedUsage?.costUsd;
+          judgeUnifiedUsage = judgeResult.unifiedUsage;
 
-        // Convert judge decisions to issues
-        finalIssues = judgeResult.acceptedDecisions.map((d) => decisionToIssue(d));
+          // Convert judge decisions to issues
+          finalIssues = judgeResult.acceptedDecisions.map((d) => decisionToIssue(d));
 
-        // Record judge decisions for telemetry
-        judgeDecisions = [
-          ...judgeResult.acceptedDecisions.map((d) => ({
-            issueText: d.finalText,
-            issueType: d.finalIssueType,
-            decision: (d.decision === 'accept' || d.decision === 'merge' ? 'accepted' : 'rejected') as 'accepted' | 'merged' | 'rejected',
-            reasoning: d.judgeReasoning,
-            sourceExtractors: d.sourceExtractors,
-            finalSeverity: d.finalSeverity,
-            finalConfidence: d.finalConfidence,
-          })),
-          ...judgeResult.rejectedDecisions.map((d) => ({
-            issueText: d.finalText,
-            issueType: d.finalIssueType,
-            decision: 'rejected' as const,
-            reasoning: d.judgeReasoning,
-            sourceExtractors: d.sourceExtractors,
-            finalSeverity: d.finalSeverity,
-            finalConfidence: d.finalConfidence,
-          })),
-        ];
+          // Record judge decisions for telemetry
+          judgeDecisions = [
+            ...judgeResult.acceptedDecisions.map((d) => ({
+              issueText: d.finalText,
+              issueType: d.finalIssueType,
+              decision: (d.decision === 'accept' || d.decision === 'merge' ? 'accepted' : 'rejected') as 'accepted' | 'merged' | 'rejected',
+              reasoning: d.judgeReasoning,
+              sourceExtractors: d.sourceExtractors,
+              finalSeverity: d.finalSeverity,
+              finalConfidence: d.finalConfidence,
+            })),
+            ...judgeResult.rejectedDecisions.map((d) => ({
+              issueText: d.finalText,
+              issueType: d.finalIssueType,
+              decision: 'rejected' as const,
+              reasoning: d.judgeReasoning,
+              sourceExtractors: d.sourceExtractors,
+              finalSeverity: d.finalSeverity,
+              finalConfidence: d.finalConfidence,
+            })),
+          ];
 
-        logger.info(
-          `[FallacyCheckPlugin] Judge aggregation complete: ${finalIssues.length} accepted, ${judgeResult.rejectedDecisions.length} rejected`
-        );
+          logger.info(
+            `[FallacyCheckPlugin] Judge aggregation complete: ${finalIssues.length} accepted, ${judgeResult.rejectedDecisions.length} rejected`
+          );
+        }
       }
 
       // Record extraction phase telemetry
@@ -631,10 +711,12 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         multiExtractorEnabled: true,
         extractors: extractorsTelemetry,
         totalIssuesBeforeJudge: multiResult.totalIssuesFound,
+        totalIssuesAfterDedup: issuesAfterDedup,
         totalIssuesAfterJudge: finalIssues.length,
         judgeModel: config.judge.model,
         judgeDurationMs,
         judgeCostUsd,
+        judgeUnifiedUsage,
         judgeDecisions,
       };
       telemetry.setExtractionPhase(extractionTelemetry);
@@ -760,9 +842,12 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         issuesAfterFilter: filteredIssues.length,
         issuesFiltered: supportedCount,
         phase: "supported-elsewhere-filter",
+        costUsd: filterResult.unifiedUsage?.costUsd,
       });
 
-      telemetry.endStage(filteredIssues.length);
+      telemetry.endStage(filteredIssues.length, {
+        costUsd: filterResult.unifiedUsage?.costUsd,
+      });
       return filteredIssues;
     } catch (error) {
       logger.warn("FallacyCheckPlugin: Supported-elsewhere filter failed, keeping all issues", error);
@@ -853,9 +938,12 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         commentsKept: this.comments.length,
         commentsFiltered: allComments.length - this.comments.length,
         phase: "review",
+        costUsd: reviewResult.unifiedUsage?.costUsd,
       });
 
-      telemetry.endStage(this.comments.length);
+      telemetry.endStage(this.comments.length, {
+        costUsd: reviewResult.unifiedUsage?.costUsd,
+      });
       telemetry.setFinalCounts({ commentsKept: this.comments.length });
 
       logger.info(

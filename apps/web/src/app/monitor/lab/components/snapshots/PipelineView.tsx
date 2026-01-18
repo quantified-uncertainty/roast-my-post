@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import type { ExtractionPhase, PipelineCounts, FilteredItem, Comment, StageMetrics } from "../../types";
+import { ChevronDownIcon, ChevronRightIcon, ExclamationTriangleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import type { ExtractionPhase, PipelineCounts, FilteredItem, Comment, StageMetrics, ExtractorInfo } from "../../types";
 import { truncate } from "../../utils/formatters";
 
 interface PipelineViewProps {
@@ -25,6 +25,68 @@ function formatDuration(ms: number | undefined): string {
 function formatCost(usd: number | undefined): string {
   if (usd === undefined) return "";
   return `$${usd.toFixed(4)}`;
+}
+
+function formatTokens(tokens: number | undefined): string {
+  if (tokens === undefined) return "";
+  if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}k`;
+  return String(tokens);
+}
+
+/** Extract a friendly model name from the full model ID */
+function getModelDisplayName(model: string): string {
+  // Remove provider prefix (e.g., "google/gemini-2.5-flash" -> "gemini-2.5-flash")
+  const withoutProvider = model.includes("/") ? model.split("/")[1] : model;
+
+  // Shorten common model names
+  const shortcuts: Record<string, string> = {
+    "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5",
+    "claude-3-5-sonnet-20241022": "Claude 3.5 Sonnet",
+    "claude-3-haiku-20240307": "Claude 3 Haiku",
+    "gemini-3-flash-preview": "Gemini 3 Flash",
+    "gemini-2.5-flash": "Gemini 2.5 Flash",
+    "gemini-2.5-pro": "Gemini 2.5 Pro",
+    "gpt-4-turbo": "GPT-4 Turbo",
+    "gpt-4o": "GPT-4o",
+  };
+
+  return shortcuts[withoutProvider] || withoutProvider;
+}
+
+/** Format temperature for display */
+function formatTemperature(ext: ExtractorInfo): string {
+  // Check actualApiParams first (source of truth)
+  if (ext.actualApiParams?.temperature !== undefined) {
+    return `temp ${ext.actualApiParams.temperature}`;
+  }
+  // Fall back to temperatureConfig
+  if (ext.temperatureConfig === "default") {
+    return "temp default";
+  }
+  if (typeof ext.temperatureConfig === "number") {
+    return `temp ${ext.temperatureConfig}`;
+  }
+  return "";
+}
+
+/** Format reasoning/thinking for display */
+function formatReasoning(ext: ExtractorInfo): string {
+  // Check actualApiParams for Claude-style thinking
+  if (ext.actualApiParams?.thinking?.type === "enabled") {
+    const budget = ext.actualApiParams.thinking.budget_tokens;
+    return `thinking ${formatTokens(budget)} tokens`;
+  }
+  // Check for OpenRouter-style reasoning effort
+  if (ext.actualApiParams?.reasoning?.effort) {
+    return `reasoning: ${ext.actualApiParams.reasoning.effort}`;
+  }
+  if (ext.thinkingEnabled === true) {
+    return "thinking enabled";
+  }
+  if (ext.thinkingEnabled === false) {
+    return "no thinking";
+  }
+  return "";
 }
 
 export function PipelineView({
@@ -59,9 +121,14 @@ export function PipelineView({
   const commentsGenerated = counts?.commentsGenerated ?? 0;
   const commentsKept = counts?.commentsKept ?? 0;
 
-  const dedupRemoved = totalExtracted - afterDedup;
   const filterRemoved = afterDedup - afterFilter;
   const reviewRemoved = commentsGenerated - commentsKept;
+
+  // Calculate total cost from all extractors + judge + stages
+  const extractorsCost = extractors.reduce((sum, ext) => sum + (ext.costUsd ?? 0), 0);
+  const judgeCost = extraction?.judgeCostUsd ?? 0;
+  const stagesCost = stages?.reduce((sum, s) => sum + (s.costUsd ?? 0), 0) ?? 0;
+  const totalCostUsd = extractorsCost + judgeCost + stagesCost;
 
   // Separate filtered items by stage
   const filterStageItems = filteredItems.filter((item) => item.stage === "supported-elsewhere-filter");
@@ -78,116 +145,33 @@ export function PipelineView({
         <PipelineStep
           step="extraction"
           title="1. Extraction"
-          summary={`${totalExtracted} issues from ${extractors.length} models`}
+          summary={`${totalExtracted} issues from ${extractors.length} model${extractors.length !== 1 ? "s" : ""}`}
           timing={getStageTiming("extraction")?.durationMs}
+          cost={extractorsCost}
           isExpanded={expandedSteps.has("extraction")}
           onToggle={() => toggleStep("extraction")}
           color="blue"
         >
           <div className="space-y-3">
             {extractors.map((ext, i) => (
-              <div key={i} className="p-3 bg-blue-50 rounded-md">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-blue-900">{ext.extractorId}</span>
-                  <div className="flex items-center gap-3">
-                    {ext.durationMs !== undefined && (
-                      <span className="text-xs text-blue-500 font-mono">{formatDuration(ext.durationMs)}</span>
-                    )}
-                    {ext.costUsd !== undefined && (
-                      <span className="text-xs text-blue-400">{formatCost(ext.costUsd)}</span>
-                    )}
-                    <span className="text-blue-700 font-mono">{ext.issuesFound} issues</span>
-                  </div>
-                </div>
-                <div className="text-xs text-blue-600 mt-1">{ext.model}</div>
-              </div>
+              <ExtractorCard key={i} ext={ext} />
             ))}
             {extractors.length === 0 && (
               <p className="text-sm text-gray-500 italic">No extractor data available</p>
             )}
-            {extraction?.judgeDurationMs !== undefined && (
-              <div className="p-2 bg-blue-100 rounded-md text-xs text-blue-700">
-                Judge aggregation: {formatDuration(extraction.judgeDurationMs)}
-              </div>
+            {extraction && (
+              <DeduplicationCard extraction={extraction} extractorCount={extractors.length} />
             )}
           </div>
         </PipelineStep>
 
-        {/* Step 2: Deduplication */}
-        <PipelineStep
-          step="dedup"
-          title="2. Deduplication"
-          summary={`${afterDedup} kept, ${dedupRemoved} duplicates removed`}
-          timing={getStageTiming("deduplication")?.durationMs}
-          isExpanded={expandedSteps.has("dedup")}
-          onToggle={() => toggleStep("dedup")}
-          color="purple"
-        >
-          <div className="space-y-3">
-            {/* Per-model input breakdown */}
-            {extractors.length > 0 && (
-              <div>
-                <h5 className="text-sm font-medium text-purple-800 mb-2">Input by Model</h5>
-                <div className="grid grid-cols-1 gap-2">
-                  {extractors.map((ext, i) => {
-                    // Calculate approximate survival rate (proportional)
-                    const survivalRate = totalExtracted > 0
-                      ? (afterDedup / totalExtracted)
-                      : 0;
-                    const estimatedKept = Math.round(ext.issuesFound * survivalRate);
-
-                    return (
-                      <div key={i} className="p-2 bg-purple-50 rounded-md flex items-center justify-between">
-                        <span className="text-sm text-purple-900">{ext.extractorId}</span>
-                        <div className="text-sm">
-                          <span className="font-mono text-purple-700">{ext.issuesFound}</span>
-                          <span className="text-purple-400 mx-1">→</span>
-                          <span className="font-mono text-purple-600">~{estimatedKept}</span>
-                          <span className="text-purple-400 text-xs ml-1">(est.)</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Summary stats */}
-            <div className="p-3 bg-purple-100 rounded-md">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-purple-600">Total Input:</span>
-                  <span className="font-mono ml-2">{totalExtracted}</span>
-                </div>
-                <div>
-                  <span className="text-purple-600">Total Output:</span>
-                  <span className="font-mono ml-2 font-bold">{afterDedup}</span>
-                </div>
-                <div>
-                  <span className="text-purple-600">Duplicates Removed:</span>
-                  <span className="font-mono ml-2 text-red-600">-{dedupRemoved}</span>
-                </div>
-                <div>
-                  <span className="text-purple-600">Dedup Rate:</span>
-                  <span className="font-mono ml-2">
-                    {totalExtracted > 0 ? Math.round((dedupRemoved / totalExtracted) * 100) : 0}%
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-500">
-              Semantic deduplication merges similar issues across models. Per-model estimates assume uniform dedup rate.
-            </p>
-          </div>
-        </PipelineStep>
-
-        {/* Step 3: Filtering */}
+        {/* Step 2: Filtering */}
         <PipelineStep
           step="filter"
-          title="3. Supported-Elsewhere Filter"
+          title="2. Supported-Elsewhere Filter"
           summary={`${afterFilter} kept, ${filterRemoved} filtered out`}
           timing={getStageTiming("supported-elsewhere-filter")?.durationMs}
+          cost={getStageTiming("supported-elsewhere-filter")?.costUsd}
           isExpanded={expandedSteps.has("filter")}
           onToggle={() => toggleStep("filter")}
           color="orange"
@@ -227,12 +211,13 @@ export function PipelineView({
           </div>
         </PipelineStep>
 
-        {/* Step 4: Comment Generation */}
+        {/* Step 3: Comment Generation */}
         <PipelineStep
           step="generation"
-          title="4. Comment Generation"
+          title="3. Comment Generation"
           summary={`${commentsGenerated} comments generated`}
           timing={getStageTiming("comment-generation")?.durationMs}
+          cost={getStageTiming("comment-generation")?.costUsd}
           isExpanded={expandedSteps.has("generation")}
           onToggle={() => toggleStep("generation")}
           color="teal"
@@ -254,12 +239,13 @@ export function PipelineView({
           </div>
         </PipelineStep>
 
-        {/* Step 5: Review */}
+        {/* Step 4: Review */}
         <PipelineStep
           step="review"
-          title="5. Review Filter"
+          title="4. Review Filter"
           summary={`${commentsKept} kept, ${reviewRemoved} removed`}
           timing={getStageTiming("review")?.durationMs}
+          cost={getStageTiming("review")?.costUsd}
           isExpanded={expandedSteps.has("review")}
           onToggle={() => toggleStep("review")}
           color="green"
@@ -329,6 +315,11 @@ export function PipelineView({
             {totalDurationMs !== undefined && (
               <span className="font-mono">{formatDuration(totalDurationMs)}</span>
             )}
+            {totalCostUsd > 0 && (
+              <span className="font-mono text-emerald-600" title="Total pipeline cost">
+                {formatCost(totalCostUsd)}
+              </span>
+            )}
             <span>
               {totalExtracted > 0
                 ? `${Math.round((commentsKept / totalExtracted) * 100)}% yield`
@@ -346,6 +337,7 @@ interface PipelineStepProps {
   title: string;
   summary: string;
   timing?: number;
+  cost?: number;
   isExpanded: boolean;
   onToggle: () => void;
   color: "blue" | "purple" | "orange" | "teal" | "green";
@@ -356,6 +348,7 @@ function PipelineStep({
   title,
   summary,
   timing,
+  cost,
   isExpanded,
   onToggle,
   color,
@@ -386,6 +379,9 @@ function PipelineStep({
           </span>
           {timing !== undefined && (
             <span className="text-xs text-gray-400 font-mono">{formatDuration(timing)}</span>
+          )}
+          {cost !== undefined && cost > 0 && (
+            <span className="text-xs text-emerald-500 font-mono">{formatCost(cost)}</span>
           )}
         </div>
         <span className="text-sm text-gray-600">{summary}</span>
@@ -460,6 +456,280 @@ function CommentCard({ comment, variant }: { comment: Comment; variant: "kept" |
             <p className="text-xs text-gray-500 mt-1">
               <span className="font-medium">Importance:</span> {comment.importance}
             </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Individual extractor card with collapsible details */
+function ExtractorCard({ ext }: { ext: ExtractorInfo }) {
+  const [showDetails, setShowDetails] = useState(false);
+  const hasError = !!ext.error;
+  const modelName = getModelDisplayName(ext.model);
+  const tempDisplay = formatTemperature(ext);
+  const reasoningDisplay = formatReasoning(ext);
+  const inputTokens = ext.responseMetrics?.inputTokens;
+  const outputTokens = ext.responseMetrics?.outputTokens;
+  const cacheReadTokens = ext.responseMetrics?.cacheReadTokens;
+  const cacheWriteTokens = ext.responseMetrics?.cacheWriteTokens;
+
+  return (
+    <div
+      className={`p-3 rounded-md border ${
+        hasError
+          ? "bg-red-50 border-red-200"
+          : "bg-blue-50 border-blue-100"
+      }`}
+    >
+      {/* Header row: Model name + status */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {hasError ? (
+            <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
+          ) : (
+            <CheckCircleIcon className="h-4 w-4 text-green-500" />
+          )}
+          <span className={`font-medium ${hasError ? "text-red-900" : "text-blue-900"}`}>
+            {modelName}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          {ext.durationMs !== undefined && (
+            <span className="text-xs text-gray-500 font-mono">
+              {formatDuration(ext.durationMs)}
+            </span>
+          )}
+          {ext.costUsd !== undefined && (
+            <span className="text-xs text-gray-400">{formatCost(ext.costUsd)}</span>
+          )}
+          <span className={`font-mono ${hasError ? "text-red-700" : "text-blue-700"}`}>
+            {ext.issuesFound} issue{ext.issuesFound !== 1 ? "s" : ""}
+          </span>
+        </div>
+      </div>
+
+      {/* Config row: temperature, reasoning */}
+      <div className="flex flex-wrap gap-2 mt-2">
+        {tempDisplay && (
+          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+            {tempDisplay}
+          </span>
+        )}
+        {reasoningDisplay && (
+          <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">
+            {reasoningDisplay}
+          </span>
+        )}
+      </div>
+
+      {/* Error display */}
+      {hasError && (
+        <div className="mt-2 p-2 bg-red-100 rounded text-xs text-red-700">
+          <span className="font-medium">Error:</span> {ext.error}
+        </div>
+      )}
+
+      {/* Issue type breakdown if available */}
+      {ext.issuesByType && Object.keys(ext.issuesByType).length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {Object.entries(ext.issuesByType).map(([type, count]) => (
+            <span
+              key={type}
+              className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded"
+            >
+              {type}: {count}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Collapsible details toggle */}
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="mt-2 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+      >
+        {showDetails ? (
+          <ChevronDownIcon className="h-3 w-3" />
+        ) : (
+          <ChevronRightIcon className="h-3 w-3" />
+        )}
+        {showDetails ? "Hide details" : "Show details"}
+      </button>
+
+      {/* Collapsible details section */}
+      {showDetails && (
+        <div className="mt-2 pt-2 border-t border-gray-200 space-y-1.5">
+          {/* Token usage */}
+          {(inputTokens || outputTokens) && (
+            <div className="text-xs text-gray-500">
+              <span className="font-medium text-gray-600">Tokens:</span>{" "}
+              {inputTokens && <span>in: {formatTokens(inputTokens)}</span>}
+              {inputTokens && outputTokens && " · "}
+              {outputTokens && <span>out: {formatTokens(outputTokens)}</span>}
+              {cacheReadTokens ? (
+                <span className="ml-2 text-green-600">cache read: {formatTokens(cacheReadTokens)}</span>
+              ) : null}
+              {cacheWriteTokens ? (
+                <span className="ml-2 text-yellow-600">cache write: {formatTokens(cacheWriteTokens)}</span>
+              ) : null}
+            </div>
+          )}
+
+          {/* API params details */}
+          {ext.actualApiParams && (
+            <div className="text-xs text-gray-500">
+              <span className="font-medium text-gray-600">API params:</span>{" "}
+              temp={ext.actualApiParams.temperature}, maxTokens={ext.actualApiParams.maxTokens}
+              {ext.actualApiParams.thinking && (
+                <span className="ml-1">
+                  , thinking budget: {formatTokens(ext.actualApiParams.thinking.budget_tokens)}
+                </span>
+              )}
+              {ext.actualApiParams.reasoning?.effort && (
+                <span className="ml-1">, reasoning: {ext.actualApiParams.reasoning.effort}</span>
+              )}
+            </div>
+          )}
+
+          {/* Response metrics */}
+          {ext.responseMetrics && (
+            <div className="text-xs text-gray-500">
+              <span className="font-medium text-gray-600">Response:</span>{" "}
+              {ext.responseMetrics.success ? "success" : "failed"}, latency: {ext.responseMetrics.latencyMs}ms
+              {ext.responseMetrics.stopReason && (
+                <span className="ml-1">, stop: {ext.responseMetrics.stopReason}</span>
+              )}
+            </div>
+          )}
+
+          {/* Full model ID */}
+          <div className="text-xs text-gray-400">
+            <span className="font-medium text-gray-600">Model ID:</span>{" "}
+            <code className="bg-gray-100 px-1 rounded">{ext.model}</code>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Deduplication & Aggregation card showing both Jaccard dedup and Judge stages */
+function DeduplicationCard({ extraction, extractorCount }: { extraction: ExtractionPhase; extractorCount: number }) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  const totalFromExtractors = extraction.totalIssuesBeforeJudge ?? 0;
+  const afterJaccardDedup = extraction.totalIssuesAfterDedup ?? totalFromExtractors;
+  const afterJudge = extraction.totalIssuesAfterJudge ?? afterJaccardDedup;
+
+  const jaccardRemoved = totalFromExtractors - afterJaccardDedup;
+  const judgeRemoved = afterJaccardDedup - afterJudge;
+  const totalRemoved = totalFromExtractors - afterJudge;
+
+  const hasJudge = extraction.judgeDurationMs !== undefined;
+  const judgeCost = extraction.judgeCostUsd;
+  const overallRate = totalFromExtractors > 0 ? Math.round((totalRemoved / totalFromExtractors) * 100) : 0;
+
+  return (
+    <div className="p-3 bg-purple-50 border border-purple-100 rounded-md">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-purple-900">Deduplication & Aggregation</span>
+        {hasJudge && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-purple-600 font-mono">
+              judge: {formatDuration(extraction.judgeDurationMs)}
+            </span>
+            {judgeCost !== undefined && judgeCost > 0 && (
+              <span className="text-xs text-purple-400 font-mono">
+                {formatCost(judgeCost)}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Flow visualization */}
+      <div className="mt-3 flex items-center gap-2 text-xs">
+        <div className="bg-purple-100 rounded px-2 py-1 text-center">
+          <div className="text-purple-600 text-[10px]">Raw</div>
+          <div className="font-mono text-purple-900 font-bold">{totalFromExtractors}</div>
+        </div>
+        <span className="text-purple-400">→</span>
+        <div className="bg-purple-100 rounded px-2 py-1 text-center">
+          <div className="text-purple-600 text-[10px]">Jaccard</div>
+          <div className="font-mono text-purple-900">{afterJaccardDedup}</div>
+          {jaccardRemoved > 0 && (
+            <div className="text-[10px] text-red-500">-{jaccardRemoved}</div>
+          )}
+        </div>
+        {hasJudge && (
+          <>
+            <span className="text-purple-400">→</span>
+            <div className="bg-purple-100 rounded px-2 py-1 text-center">
+              <div className="text-purple-600 text-[10px]">Judge</div>
+              <div className="font-mono text-purple-900">{afterJudge}</div>
+              {judgeRemoved > 0 && (
+                <div className="text-[10px] text-red-500">-{judgeRemoved}</div>
+              )}
+            </div>
+          </>
+        )}
+        <span className="text-purple-400">=</span>
+        <div className="bg-green-100 rounded px-2 py-1 text-center">
+          <div className="text-green-600 text-[10px]">Final</div>
+          <div className="font-mono text-green-900 font-bold">{afterJudge}</div>
+        </div>
+        <span className="ml-2 text-purple-500 text-[10px]">
+          ({overallRate}% reduced)
+        </span>
+      </div>
+
+      {/* Collapsible details toggle */}
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="mt-2 text-xs text-purple-400 hover:text-purple-600 flex items-center gap-1"
+      >
+        {showDetails ? (
+          <ChevronDownIcon className="h-3 w-3" />
+        ) : (
+          <ChevronRightIcon className="h-3 w-3" />
+        )}
+        {showDetails ? "Hide details" : "Show details"}
+      </button>
+
+      {/* Collapsible details */}
+      {showDetails && (
+        <div className="mt-2 pt-2 border-t border-purple-200 text-xs text-purple-700 space-y-2">
+          <div>
+            <span className="font-medium">Jaccard Dedup:</span> Merges issues with 70%+ word overlap, keeping higher quality version.
+            {jaccardRemoved > 0 ? (
+              <span className="ml-1 text-red-600">Removed {jaccardRemoved} duplicates.</span>
+            ) : (
+              <span className="ml-1 text-green-600">No duplicates found.</span>
+            )}
+          </div>
+          {hasJudge && (
+            <div>
+              <span className="font-medium">LLM Judge:</span> Evaluates and merges semantically similar issues.
+              {judgeRemoved > 0 ? (
+                <span className="ml-1 text-red-600">Removed {judgeRemoved} issues.</span>
+              ) : (
+                <span className="ml-1 text-green-600">Kept all issues.</span>
+              )}
+            </div>
+          )}
+          {extraction.extractors && extraction.extractors.length > 0 && (
+            <div>
+              <span className="font-medium">Issues per extractor:</span>
+              <ul className="ml-3 list-disc">
+                {extraction.extractors.map((ext, i) => (
+                  <li key={i}>
+                    {ext.extractorId || getModelDisplayName(ext.model)}: {ext.issuesFound}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}

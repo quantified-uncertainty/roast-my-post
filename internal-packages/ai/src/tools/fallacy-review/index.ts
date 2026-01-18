@@ -171,10 +171,15 @@ Please review these comments and provide:
         `[FallacyReview] Filtered ${input.comments.length} comments down to ${validIndices.length}`
       );
 
+      if (result.unifiedUsage) {
+        context.logger.info(`[FallacyReview] Cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
+      }
+
       return {
         commentIndicesToKeep: validIndices,
         documentSummary: result.toolResult.documentSummary,
         oneLineSummary: result.toolResult.oneLineSummary,
+        unifiedUsage: result.unifiedUsage,
       };
     } catch (error) {
       context.logger.error("[FallacyReview] Review failed:", error);

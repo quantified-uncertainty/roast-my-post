@@ -6,6 +6,8 @@
  * well-structured writing where intro claims are backed up later.
  */
 
+import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
+
 /** Reasoning effort levels */
 export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
 
@@ -59,6 +61,9 @@ export interface SupportedElsewhereFilterOutput {
 
   /** Issues that ARE supported elsewhere (filter out) */
   supportedIssues: SupportedElsewhereResult[];
+
+  /** Unified usage metrics (includes cost, tokens, latency) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 export interface SupportedElsewhereResult {

@@ -6,6 +6,7 @@
  */
 
 import type { ExtractedFallacyIssue } from '../fallacy-extractor/types';
+import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
 
 /**
  * Judge configuration from FALLACY_JUDGE env var
@@ -135,6 +136,9 @@ export interface FallacyJudgeOutput {
     mergedCount: number;
     rejectedCount: number;
   };
+
+  /** Unified usage metrics (includes cost, tokens, latency) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 /**

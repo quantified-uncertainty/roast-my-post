@@ -16,6 +16,7 @@ import type {
   SupportedElsewhereFilterOutput,
   SupportedElsewhereResult,
 } from "./types";
+import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
 import { DEFAULT_SUPPORTED_ELSEWHERE_SYSTEM_PROMPT } from "./prompts";
 
 const issueSchema = z.object({
@@ -178,13 +179,13 @@ For each issue, determine if it is supported elsewhere in the document.`;
     };
 
     try {
-      let result: { toolResult: FilterResults };
+      let result: { toolResult: FilterResults; unifiedUsage?: UnifiedUsageMetrics };
 
       if (isOpenRouterModel) {
         // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
         // Use higher max_tokens for OpenRouter models (some need more space)
         console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature}`);
-        result = await callOpenRouterWithTool<FilterResults>({
+        const openRouterResult = await callOpenRouterWithTool<FilterResults>({
           model: modelId,
           system: systemPrompt,
           messages: [{ role: "user", content: userPrompt }],
@@ -194,6 +195,10 @@ For each issue, determine if it is supported elsewhere in the document.`;
           toolDescription: "Results of checking each issue for support elsewhere",
           toolSchema,
         });
+        result = {
+          toolResult: openRouterResult.toolResult,
+          unifiedUsage: openRouterResult.unifiedUsage,
+        };
       } else {
         // Use Claude API directly
         // Build thinking config from reasoning settings
@@ -215,7 +220,7 @@ For each issue, determine if it is supported elsewhere in the document.`;
 
         console.log(`🤖 Calling Claude API with model: ${modelId}, temp: ${temperature}, thinking: ${thinkingConfig ? `enabled (${thinkingConfig.budget_tokens} tokens)` : 'disabled'}`);
 
-        result = await callClaudeWithTool<FilterResults>({
+        const claudeResult = await callClaudeWithTool<FilterResults>({
           model: modelId,
           system: systemPrompt,
           messages: [{ role: "user", content: userPrompt }],
@@ -226,6 +231,10 @@ For each issue, determine if it is supported elsewhere in the document.`;
           toolSchema,
           thinking: thinkingConfig,
         });
+        result = {
+          toolResult: claudeResult.toolResult,
+          unifiedUsage: claudeResult.unifiedUsage,
+        };
       }
 
       // Process results
@@ -270,9 +279,14 @@ For each issue, determine if it is supported elsewhere in the document.`;
         `[SupportedElsewhereFilter] ${supportedIssues.length}/${input.issues.length} issues filtered (supported elsewhere), ${unsupportedIssues.length} kept`
       );
 
+      if (result.unifiedUsage) {
+        console.log(`💰 Filter cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
+      }
+
       return {
         unsupportedIssues,
         supportedIssues,
+        unifiedUsage: result.unifiedUsage,
       };
     } catch (error) {
       context.logger.error("[SupportedElsewhereFilter] Filter failed:", error);
