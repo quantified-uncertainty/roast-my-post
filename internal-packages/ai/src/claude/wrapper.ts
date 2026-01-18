@@ -160,13 +160,17 @@ export async function callClaude(
       }
 
       // Determine if extended thinking is enabled (default: false for tool calls to save cost)
-      // When thinking is enabled, temperature must be 1
+      // When thinking is enabled, temperature must be 1 and max_tokens must be > budget_tokens
       const thinkingEnabled = options.thinking === true || (typeof options.thinking === 'object' && options.thinking?.type === 'enabled');
       const thinkingBudget = typeof options.thinking === 'object' && options.thinking?.budget_tokens
         ? options.thinking.budget_tokens
         : 10000; // Default budget
       const effectiveTemperature = thinkingEnabled ? 1 : (options.temperature ?? 0);
-      const effectiveMaxTokens = options.max_tokens || 4000;
+      // When thinking is enabled, max_tokens must be greater than budget_tokens
+      const requestedMaxTokens = options.max_tokens || 4000;
+      const effectiveMaxTokens = thinkingEnabled
+        ? Math.max(requestedMaxTokens, thinkingBudget + 1000) // Ensure max_tokens > budget_tokens with buffer
+        : requestedMaxTokens;
 
       const requestOptions: Anthropic.Messages.MessageCreateParams = {
         model,
