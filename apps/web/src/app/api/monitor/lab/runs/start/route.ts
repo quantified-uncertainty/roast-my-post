@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { baselineId, name } = body;
+    const { baselineId, name, profileId } = body;
 
     if (!baselineId) {
       return NextResponse.json({ error: "baselineId is required" }, { status: 400 });
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     const run = await metaEvaluationRepository.createValidationRun({
       baselineId,
       name: name || `Run ${new Date().toLocaleString()}`,
+      profileId: profileId || undefined,
     });
 
     // Create batch for the jobs
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
     logger.info("Validation run started", {
       runId: run.id,
       baselineId,
+      profileId: profileId || null,
       documentCount: documentIds.length,
       jobCount: jobIds.length,
     });

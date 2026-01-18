@@ -12,6 +12,7 @@ import type {
   PipelineStage,
   FilteredItemRecord,
   ExtractionPhaseTelemetry,
+  ProfileInfo,
 } from './types';
 
 /** Current pipeline version - increment when making significant changes */
@@ -53,6 +54,7 @@ export class PipelineTelemetry {
   private activeStage: ActiveStage | null = null;
   private filteredItems: FilteredItemRecord[] = [];
   private extractionPhase: ExtractionPhaseTelemetry | null = null;
+  private profileInfo: ProfileInfo | null = null;
   private finalCounts: PipelineExecutionRecord['finalCounts'] = {
     issuesExtracted: 0,
     issuesAfterDedup: 0,
@@ -65,6 +67,14 @@ export class PipelineTelemetry {
     this.executionId = uuidv4();
     this.startedAt = new Date();
     this.documentLength = documentLength;
+  }
+
+  /**
+   * Set profile info for this execution
+   */
+  setProfileInfo(info: ProfileInfo): this {
+    this.profileInfo = info;
+    return this;
   }
 
   /**
@@ -221,6 +231,7 @@ export class PipelineTelemetry {
       pipelineVersion: PIPELINE_VERSION,
       filteredItems: this.filteredItems, // Always include (even if empty) so we know telemetry was captured
       extractionPhase: this.extractionPhase || undefined,
+      profileInfo: this.profileInfo || undefined,
     };
   }
 

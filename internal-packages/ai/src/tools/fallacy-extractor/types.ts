@@ -96,6 +96,31 @@ export interface FallacyExtractorInput {
    * - false: Disable extended thinking for faster, cheaper responses
    */
   thinking?: boolean;
+
+  /**
+   * Optional custom system prompt override.
+   * If provided, replaces the default system prompt entirely.
+   */
+  customSystemPrompt?: string;
+
+  /**
+   * Optional custom user prompt override.
+   * If provided, replaces the default user prompt entirely.
+   * The document text will be appended to the end.
+   */
+  customUserPrompt?: string;
+
+  /**
+   * Optional minimum severity threshold override.
+   * Default: 60
+   */
+  minSeverityThreshold?: number;
+
+  /**
+   * Optional max issues override.
+   * Default: 15
+   */
+  maxIssues?: number;
 }
 
 /**

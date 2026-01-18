@@ -14,7 +14,7 @@ import {
   getAllModels,
   filterModels,
   type ModelInfo,
-} from "../utils/allModels";
+} from "@roast/ai";
 
 export interface ModelSelectorProps {
   /** Title shown at the top */

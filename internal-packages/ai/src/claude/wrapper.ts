@@ -13,6 +13,12 @@ export const MODEL_CONFIG = {
   forecasting: ANALYSIS_MODEL,
 } as const;
 
+/** Extended thinking configuration */
+export interface ThinkingConfig {
+  type: "enabled";
+  budget_tokens: number;
+}
+
 export interface ClaudeCallOptions {
   model?: string;
   system?: string;
@@ -26,17 +32,46 @@ export interface ClaudeCallOptions {
   cacheSeed?: string; // Custom cache seed for Helicone response caching
   timeout?: number; // Custom timeout in milliseconds
   /**
-   * Whether to enable extended thinking mode.
-   * - true (default): Enable extended thinking with budget of 10000 tokens
-   * - false: Disable extended thinking for faster, cheaper responses
+   * Extended thinking mode configuration.
+   * - true: Enable with default budget of 10000 tokens
+   * - false/undefined: Disable extended thinking
+   * - ThinkingConfig: Enable with custom budget_tokens
    * Note: Extended thinking requires temperature=1, so temperature is ignored when enabled.
    */
-  thinking?: boolean;
+  thinking?: boolean | ThinkingConfig;
+}
+
+/** Actual API params as sent to Anthropic */
+export interface ClaudeActualParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  thinking?: {
+    type: 'enabled';
+    budget_tokens: number;
+  };
+}
+
+/** Response metrics from Claude API */
+export interface ClaudeResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  stopReason?: string;
+  errorType?: string;
+  errorMessage?: string;
 }
 
 export interface ClaudeCallResult {
   response: Anthropic.Message;
   interaction: RichLLMInteraction;
+  /** Actual params sent to API - captured right before the call */
+  actualParams: ClaudeActualParams;
+  /** Response metrics */
+  responseMetrics: ClaudeResponseMetrics;
 }
 
 function buildPromptString(
@@ -113,7 +148,9 @@ export async function callClaude(
   let response: Anthropic.Messages.Message;
   let lastError: Error | null = null;
   const maxRetries = 3;
-  
+  let actualParams: ClaudeActualParams | undefined;
+  let apiCallStartTime: number = 0;
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // Add delay between retries (exponential backoff)
@@ -124,19 +161,36 @@ export async function callClaude(
 
       // Determine if extended thinking is enabled (default: false for tool calls to save cost)
       // When thinking is enabled, temperature must be 1
-      const thinkingEnabled = options.thinking === true;
+      const thinkingEnabled = options.thinking === true || (typeof options.thinking === 'object' && options.thinking?.type === 'enabled');
+      const thinkingBudget = typeof options.thinking === 'object' && options.thinking?.budget_tokens
+        ? options.thinking.budget_tokens
+        : 10000; // Default budget
       const effectiveTemperature = thinkingEnabled ? 1 : (options.temperature ?? 0);
+      const effectiveMaxTokens = options.max_tokens || 4000;
 
       const requestOptions: Anthropic.Messages.MessageCreateParams = {
         model,
-        max_tokens: options.max_tokens || 4000,
+        max_tokens: effectiveMaxTokens,
         temperature: effectiveTemperature,
         messages: options.messages,
         // Add thinking configuration when enabled
         ...(thinkingEnabled && {
           thinking: {
             type: "enabled" as const,
-            budget_tokens: 10000, // Default budget for extended thinking
+            budget_tokens: thinkingBudget,
+          }
+        }),
+      };
+
+      // Capture actual params being sent to API (for telemetry)
+      actualParams = {
+        model,
+        temperature: effectiveTemperature,
+        maxTokens: effectiveMaxTokens,
+        ...(thinkingEnabled && {
+          thinking: {
+            type: 'enabled' as const,
+            budget_tokens: thinkingBudget,
           }
         }),
       };
@@ -185,7 +239,10 @@ export async function callClaude(
           reject(new Error(`Claude API call timed out after ${timeoutMs}ms`));
         }, timeoutMs);
       });
-      
+
+      // Capture timing for telemetry
+      apiCallStartTime = Date.now();
+
       const result = await Promise.race([
         anthropic.messages.create(requestOptions),
         timeoutPromise
@@ -262,7 +319,23 @@ export async function callClaude(
     previousInteractions.push(interaction);
   }
 
-  return { response, interaction };
+  // Build response metrics for telemetry
+  const responseMetrics: ClaudeResponseMetrics = {
+    success: true,
+    latencyMs: apiCallStartTime > 0 ? Date.now() - apiCallStartTime : Date.now() - startTime,
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+    cacheReadTokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens,
+    cacheWriteTokens: (response.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens,
+    stopReason: response.stop_reason ?? undefined,
+  };
+
+  return {
+    response,
+    interaction,
+    actualParams: actualParams!,
+    responseMetrics,
+  };
 }
 
 /**

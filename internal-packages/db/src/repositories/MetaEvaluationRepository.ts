@@ -1159,12 +1159,14 @@ export class MetaEvaluationRepository {
     baselineId: string;
     name?: string;
     commitHash?: string;
-  }): Promise<{ id: string; baselineId: string; status: string }> {
+    profileId?: string;
+  }): Promise<{ id: string; baselineId: string; status: string; profileId?: string }> {
     const run = await this.prisma.validationRun.create({
       data: {
         baselineId: input.baselineId,
         name: input.name,
         commitHash: input.commitHash,
+        profileId: input.profileId,
         status: "running",
       },
     });
@@ -1173,6 +1175,7 @@ export class MetaEvaluationRepository {
       id: run.id,
       baselineId: run.baselineId,
       status: run.status,
+      profileId: run.profileId ?? undefined,
     };
   }
 

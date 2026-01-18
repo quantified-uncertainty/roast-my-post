@@ -6,6 +6,15 @@
  * well-structured writing where intro claims are backed up later.
  */
 
+/** Reasoning effort levels */
+export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
+
+/** Reasoning configuration */
+export type ReasoningConfig =
+  | false
+  | { effort: ReasoningEffort }
+  | { budget_tokens: number };
+
 export interface SupportedElsewhereFilterInput {
   /** Full document text to search for support */
   documentText: string;
@@ -19,6 +28,15 @@ export interface SupportedElsewhereFilterInput {
    * Examples: "claude-sonnet-4-20250514", "google/gemini-3-flash-preview"
    */
   model?: string;
+
+  /** Temperature for the LLM (0-2). Default is 0.1 for precise filtering. */
+  temperature?: number;
+
+  /** Reasoning/thinking configuration for Claude models */
+  reasoning?: ReasoningConfig;
+
+  /** Custom system prompt (overrides default) */
+  customPrompt?: string;
 }
 
 export interface SupportedElsewhereIssue {

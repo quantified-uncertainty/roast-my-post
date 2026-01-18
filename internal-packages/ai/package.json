@@ -64,6 +64,18 @@
     "./fallacy-judge/types": {
       "types": "./dist/tools/fallacy-judge/types.d.ts",
       "default": "./dist/tools/fallacy-judge/types.js"
+    },
+    "./fallacy-extractor/prompts": {
+      "types": "./src/tools/fallacy-extractor/prompts.ts",
+      "default": "./src/tools/fallacy-extractor/prompts.ts"
+    },
+    "./fallacy-judge/prompts": {
+      "types": "./src/tools/fallacy-judge/prompts.ts",
+      "default": "./src/tools/fallacy-judge/prompts.ts"
+    },
+    "./supported-elsewhere-filter/prompts": {
+      "types": "./src/tools/supported-elsewhere-filter/prompts.ts",
+      "default": "./src/tools/supported-elsewhere-filter/prompts.ts"
     }
   },
   "scripts": {

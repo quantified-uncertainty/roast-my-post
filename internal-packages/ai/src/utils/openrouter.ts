@@ -373,6 +373,28 @@ export interface OpenRouterToolCallOptions {
   reasoningEffort?: ReasoningEffort;
 }
 
+/** Actual API params as sent to OpenRouter */
+export interface OpenRouterActualParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  reasoning?: {
+    effort?: ReasoningEffort;
+    max_tokens?: number;
+  };
+}
+
+/** Response metrics from OpenRouter API */
+export interface OpenRouterResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  stopReason?: string;
+  errorType?: string;
+  errorMessage?: string;
+}
+
 export interface OpenRouterToolCallResult<T> {
   toolResult: T;
   model: string;
@@ -381,6 +403,10 @@ export interface OpenRouterToolCallResult<T> {
     completion_tokens: number;
     total_tokens: number;
   };
+  /** Actual params sent to API - captured right before the call */
+  actualParams: OpenRouterActualParams;
+  /** Response metrics */
+  responseMetrics: OpenRouterResponseMetrics;
 }
 
 /**
@@ -437,7 +463,21 @@ export async function callOpenRouterWithTool<T>(
     console.log(`📡 [OpenRouter] Model: ${options.model}, reasoning: default`);
   }
 
+  // Capture actual params being sent to API (for telemetry)
+  const actualParams: OpenRouterActualParams = {
+    model: options.model,
+    temperature: request.temperature!,
+    maxTokens: request.max_tokens!,
+    ...(reasoningEffort !== undefined && {
+      reasoning: { effort: reasoningEffort },
+    }),
+  };
+
+  // Capture timing for telemetry
+  const apiCallStartTime = Date.now();
+
   const response = await callOpenRouter(request);
+  const latencyMs = Date.now() - apiCallStartTime;
 
   const choice = response.choices[0];
   if (!choice) {
@@ -468,6 +508,15 @@ export async function callOpenRouterWithTool<T>(
     throw new Error(`Failed to parse tool arguments: ${toolCall.function.arguments}`);
   }
 
+  // Build response metrics for telemetry
+  const responseMetrics: OpenRouterResponseMetrics = {
+    success: true,
+    latencyMs,
+    inputTokens: response.usage?.prompt_tokens,
+    outputTokens: response.usage?.completion_tokens,
+    stopReason: choice.finish_reason ?? undefined,
+  };
+
   return {
     toolResult,
     model: options.model,
@@ -476,6 +525,8 @@ export async function callOpenRouterWithTool<T>(
       completion_tokens: response.usage.completion_tokens,
       total_tokens: response.usage.total_tokens,
     } : undefined,
+    actualParams,
+    responseMetrics,
   };
 }
 

@@ -120,3 +120,127 @@ export interface ValidationRunDetail {
 }
 
 export type TabId = "baselines" | "run" | "history";
+
+// Profile types
+export type FilterType = "dedup" | "supported-elsewhere" | "severity" | "confidence" | "review";
+
+/** Reasoning effort levels (maps to OpenRouter's effort parameter) */
+export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
+
+/** Reasoning configuration - either off, effort level, or custom token budget */
+export type ReasoningConfig =
+  | false                           // Off
+  | { effort: ReasoningEffort }     // Effort level (minimal, low, medium, high, xhigh)
+  | { budget_tokens: number };      // Custom token budget (min 1024)
+
+/** Maps effort levels to Anthropic budget_tokens values */
+export const EFFORT_TO_BUDGET_TOKENS: Record<ReasoningEffort, number> = {
+  minimal: 1024,    // Minimum allowed
+  low: 2048,
+  medium: 8192,
+  high: 16384,
+  xhigh: 32768,
+};
+
+export interface ExtractorConfig {
+  model: string;
+  temperature?: number | "default";
+  label?: string;
+  /** @deprecated Use reasoning instead */
+  thinking?: boolean;
+  /** Reasoning/thinking configuration */
+  reasoning?: ReasoningConfig;
+}
+
+export interface JudgeConfig {
+  model: string;
+  temperature?: number | "default";
+  /** @deprecated Use reasoning instead */
+  thinking?: boolean;
+  /** Reasoning/thinking configuration */
+  reasoning?: ReasoningConfig;
+  enabled: boolean;
+}
+
+/** Base filter configuration - all filters have these */
+interface BaseFilterConfig {
+  id: string;  // Unique ID for this filter instance
+  enabled: boolean;
+}
+
+/** Supported-elsewhere filter: LLM checks if issues are explained elsewhere in document */
+export interface SupportedElsewhereFilterConfig extends BaseFilterConfig {
+  type: "supported-elsewhere";
+  model: string;
+  temperature?: number | "default";
+  /** Reasoning/thinking configuration */
+  reasoning?: ReasoningConfig;
+  customPrompt?: string;
+}
+
+/** Severity threshold filter: removes issues below a severity score */
+export interface SeverityFilterConfig extends BaseFilterConfig {
+  type: "severity";
+  minSeverity: number;  // 0-100
+}
+
+/** Confidence threshold filter: removes issues below a confidence score */
+export interface ConfidenceFilterConfig extends BaseFilterConfig {
+  type: "confidence";
+  minConfidence: number;  // 0-100
+}
+
+/** Union of all filter configs */
+export type FilterChainItem =
+  | SupportedElsewhereFilterConfig
+  | SeverityFilterConfig
+  | ConfidenceFilterConfig;
+
+/** Available filter types for the "Add Filter" dropdown */
+export const AVAILABLE_FILTER_TYPES = [
+  {
+    type: "supported-elsewhere" as const,
+    label: "Supported Elsewhere",
+    description: "LLM checks if issues are explained/supported elsewhere in the document"
+  },
+  // Note: Severity filtering happens during extraction (minSeverityThreshold)
+  // Note: Confidence filtering is not yet implemented
+] as const;
+
+export interface PromptConfig {
+  extractorSystemPrompt?: string;
+  extractorUserPrompt?: string;
+  judgeSystemPrompt?: string;
+  filterSystemPrompt?: string;
+  reviewSystemPrompt?: string;
+}
+
+export interface ThresholdConfig {
+  minSeverityThreshold: number;
+  maxIssues: number;
+  dedupThreshold: number;
+  maxIssuesToProcess: number;
+}
+
+export interface ProfileConfig {
+  version: 1;
+  models: {
+    extractors: ExtractorConfig[];
+    judge: JudgeConfig;
+  };
+  thresholds: ThresholdConfig;
+  prompts?: PromptConfig;
+  /** Ordered list of filters to apply. Filters run in sequence. */
+  filterChain: FilterChainItem[];
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  description: string | null;
+  agentId: string;
+  config: ProfileConfig;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

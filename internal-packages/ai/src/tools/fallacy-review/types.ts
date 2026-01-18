@@ -34,6 +34,9 @@ export interface FallacyReviewInput {
 
   /** Array of comments to review */
   comments: ReviewComment[];
+
+  /** Optional custom system prompt override */
+  customSystemPrompt?: string;
 }
 
 /**

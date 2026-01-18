@@ -58,6 +58,17 @@ export interface JudgeConfig {
 }
 
 /**
+ * Threshold configuration for extraction filtering
+ */
+export interface ExtractionThresholds {
+  /** Minimum severity score to include (0-100, default: 60) */
+  minSeverityThreshold?: number;
+
+  /** Maximum issues to return per extractor (default: 15) */
+  maxIssues?: number;
+}
+
+/**
  * Configuration for multi-extractor execution
  */
 export interface MultiExtractorConfig {
@@ -66,6 +77,9 @@ export interface MultiExtractorConfig {
 
   /** Judge configuration */
   judge: JudgeConfig;
+
+  /** Threshold configuration applied to each extractor */
+  thresholds?: ExtractionThresholds;
 }
 
 // ============================================================================

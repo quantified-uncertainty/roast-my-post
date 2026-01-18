@@ -50,6 +50,10 @@ export interface PluginManagerConfig {
   jobId?: string; // For logging integration
   pluginSelection?: PluginSelection; // Optional plugin selection configuration
   useIsolation?: boolean; // Enable plugin state isolation
+  /** Profile ID for FallacyCheckPlugin configuration */
+  fallacyCheckProfileId?: string;
+  /** Agent ID for FallacyCheckPlugin default profile loading */
+  fallacyCheckAgentId?: string;
 }
 
 export interface SimpleDocumentAnalysisResult {
@@ -106,12 +110,20 @@ export class PluginManager {
   private isolatedExecutor?: IsolatedPluginExecutor;
   private factory?: PluginFactory;
 
+  // Profile configuration for FallacyCheckPlugin
+  private fallacyCheckProfileId?: string;
+  private fallacyCheckAgentId?: string;
+
   constructor(config: PluginManagerConfig = {}) {
     // Use provided session manager, or fall back to global if available
     this.sessionManager = config.sessionManager || getGlobalSessionManager();
     this.pluginLogger = new PluginLogger(config.jobId);
     this.pluginSelection = config.pluginSelection;
     this.useIsolation = config.useIsolation || false;
+
+    // Profile configuration for FallacyCheckPlugin
+    this.fallacyCheckProfileId = config.fallacyCheckProfileId;
+    this.fallacyCheckAgentId = config.fallacyCheckAgentId;
 
     // Initialize refactored components
     this.registry = new PluginRegistry();
@@ -687,10 +699,17 @@ export class PluginManager {
       [PluginType.FACT_CHECK, new FactCheckPlugin()],
       [PluginType.FORECAST, new ForecastPlugin()],
       [PluginType.LINK_ANALYSIS, new LinkPlugin()],
-      [PluginType.FALLACY_CHECK, new FallacyCheckPlugin()],
+      // Pass profile options to FallacyCheckPlugin
+      [PluginType.FALLACY_CHECK, new FallacyCheckPlugin({
+        profileId: this.fallacyCheckProfileId,
+        agentId: this.fallacyCheckAgentId,
+      })],
     ]);
 
-    logger.info(`Created fresh instances of ${plugins.size} plugins`);
+    logger.info(`Created fresh instances of ${plugins.size} plugins`, {
+      fallacyCheckProfileId: this.fallacyCheckProfileId,
+      fallacyCheckAgentId: this.fallacyCheckAgentId,
+    });
     return plugins;
   }
 

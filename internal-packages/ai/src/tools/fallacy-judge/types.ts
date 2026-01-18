@@ -74,6 +74,9 @@ export interface FallacyJudgeInput {
 
   /** Optional config override (if not provided, reads from FALLACY_JUDGE env var) */
   judgeConfig?: JudgeConfig;
+
+  /** Optional custom system prompt override */
+  customSystemPrompt?: string;
 }
 
 /**

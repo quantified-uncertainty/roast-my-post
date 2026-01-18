@@ -19,6 +19,10 @@ export interface UnifiedAnalysisOptions {
     include?: readonly PluginType[];
     exclude?: readonly PluginType[];
   };
+  /** Profile ID for FallacyCheckPlugin configuration */
+  fallacyCheckProfileId?: string;
+  /** Agent ID for FallacyCheckPlugin default profile loading */
+  fallacyCheckAgentId?: string;
 }
 
 export async function analyzeDocumentUnified(
@@ -47,6 +51,9 @@ export async function analyzeDocumentUnified(
       include: options.plugins.include ? [...options.plugins.include] : undefined,
       exclude: options.plugins.exclude ? [...options.plugins.exclude] : undefined,
     } : undefined,
+    // Pass profile options for FallacyCheckPlugin
+    fallacyCheckProfileId: options.fallacyCheckProfileId,
+    fallacyCheckAgentId: options.fallacyCheckAgentId,
   });
 
   // Delegate to plugin system

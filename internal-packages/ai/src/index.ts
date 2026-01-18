@@ -21,6 +21,7 @@ export * from './utils/tokenUtils';
 export * from './utils/anthropic';
 export * from './utils/retryUtils';
 export * from './utils/openrouter';
+export * from './utils/allModels';
 export * from './types';
 
 // Configuration
@@ -40,6 +41,12 @@ export {
 export * from './tools/configs';
 export { toolSchemas, getToolSchema, type ToolId } from './tools/generated-schemas';
 export { toolReadmes, getToolReadme } from './tools/generated-readmes';
+
+// Default prompts for fallacy extractor (used by profile editor UI)
+export {
+  DEFAULT_EXTRACTOR_SYSTEM_PROMPT,
+  DEFAULT_EXTRACTOR_USER_PROMPT,
+} from './tools/fallacy-extractor/prompts';
 
 // Tool types (implementations in @roast/ai/server)
 export type { Tool, ToolContext, ToolConfig } from './tools/base/Tool';

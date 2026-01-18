@@ -13,6 +13,7 @@ import type {
   MultiExtractorConfig,
   ExtractorResult,
   MultiExtractorResult,
+  ExtractionThresholds,
 } from './types';
 import { generateExtractorId, getDefaultTemperature } from './config';
 
@@ -22,7 +23,8 @@ import { generateExtractorId, getDefaultTemperature } from './config';
 async function runSingleExtractor(
   documentText: string,
   config: ExtractorConfig,
-  extractorId: string
+  extractorId: string,
+  thresholds?: ExtractionThresholds
 ): Promise<ExtractorResult> {
   const startTime = Date.now();
 
@@ -36,6 +38,8 @@ async function runSingleExtractor(
     temperature: temperatureForLog,
     thinking: config.thinking !== false,
     documentLength: documentText.length,
+    minSeverityThreshold: thresholds?.minSeverityThreshold,
+    maxIssues: thresholds?.maxIssues,
   });
 
   try {
@@ -47,6 +51,9 @@ async function runSingleExtractor(
         temperature: config.temperature,
         // Pass thinking parameter (undefined or boolean)
         thinking: config.thinking,
+        // Pass thresholds from profile config
+        minSeverityThreshold: thresholds?.minSeverityThreshold,
+        maxIssues: thresholds?.maxIssues,
       },
       { logger }
     );
@@ -112,7 +119,7 @@ export async function runMultiExtractor(
 
   // Run all extractors in parallel
   const extractorPromises = extractorsWithIds.map(({ config: extConfig, extractorId }) =>
-    runSingleExtractor(documentText, extConfig, extractorId)
+    runSingleExtractor(documentText, extConfig, extractorId, config.thresholds)
   );
 
   const settledResults = await Promise.allSettled(extractorPromises);

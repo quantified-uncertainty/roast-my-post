@@ -2,9 +2,11 @@
  * Multi-Extractor Configuration Parser
  *
  * Parses the FALLACY_EXTRACTORS environment variable and provides defaults.
+ * Also supports profile-based configuration from the database.
  */
 
 import type { ExtractorConfig, MultiExtractorConfig, JudgeConfig } from './types';
+import type { FallacyCheckerProfileConfig } from '../profile-types';
 
 /** Default model for extraction when not configured */
 const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-4-5-20250929';
@@ -255,6 +257,34 @@ export function isJudgeEnabled(): boolean {
 export function isMultiExtractorEnabled(): boolean {
   const config = getMultiExtractorConfig();
   return config.extractors.length > 1;
+}
+
+/**
+ * Convert a profile config to MultiExtractorConfig
+ *
+ * This allows using database-stored profiles instead of environment variables.
+ */
+export function profileToMultiExtractorConfig(
+  profileConfig: FallacyCheckerProfileConfig
+): MultiExtractorConfig {
+  return {
+    extractors: profileConfig.models.extractors,
+    judge: profileConfig.models.judge,
+  };
+}
+
+/**
+ * Get multi-extractor configuration from a profile or fall back to environment variables
+ *
+ * @param profileConfig Optional profile config from database
+ */
+export function getMultiExtractorConfigFromProfile(
+  profileConfig?: FallacyCheckerProfileConfig
+): MultiExtractorConfig {
+  if (profileConfig) {
+    return profileToMultiExtractorConfig(profileConfig);
+  }
+  return getMultiExtractorConfig();
 }
 
 /**

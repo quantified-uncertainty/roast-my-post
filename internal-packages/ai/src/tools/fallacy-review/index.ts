@@ -30,6 +30,7 @@ const reviewCommentSchema = z.object({
 const inputSchema = z.object({
   documentText: z.string().min(1).describe("The full document text being analyzed for epistemic issues"),
   comments: z.array(reviewCommentSchema).min(0).describe("Array of epistemic comments to review and filter for redundancy"),
+  customSystemPrompt: z.string().optional().describe("Custom system prompt override"),
 }) satisfies z.ZodType<FallacyReviewInput>;
 
 const outputSchema = z.object({
@@ -74,7 +75,8 @@ Description: ${comment.description}
       })
       .join('\n---\n\n');
 
-    const systemPrompt = `You are an expert epistemic review editor. Your job is to:
+    // Default system prompt - can be overridden via input.customSystemPrompt
+    const defaultSystemPrompt = `You are an expert epistemic review editor. Your job is to:
 
 1. **Filter Comments** - Remove redundant, weak, or overly similar comments
    - Target keeping 50-90% of comments (be selective!)
@@ -101,6 +103,8 @@ Description: ${comment.description}
 - Don't keep every minor issue - focus on what matters
 - Be ruthless about redundancy
 - The document summary should read like a professional analysis, not just a list of issues`;
+
+    const systemPrompt = input.customSystemPrompt || defaultSystemPrompt;
 
     const userPrompt = `Review the following epistemic analysis:
 

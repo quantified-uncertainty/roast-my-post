@@ -485,6 +485,7 @@ model ValidationRun {
   baselineId  String
   name        String?   // Optional name for the run
   commitHash  String?   // git commit when run was executed
+  profileId   String?   // Optional profile ID used for this run
   status      String    @default("running") // "running" | "completed" | "failed"
   summary     String?   // Quick summary: "4 unchanged, 2 changed"
   createdAt   DateTime  @default(now())
@@ -522,4 +523,20 @@ model ValidationRunSnapshot {
   @@index([runId])
   @@index([baselineSnapshotId])
   @@index([status])
+}
+
+/// Configuration profile for the fallacy checker pipeline
+model FallacyCheckerProfile {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  agentId     String   // Links to agent (e.g., "system-fallacy-check")
+  config      Json     // FallacyCheckerProfileConfig
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([agentId, name])
+  @@index([agentId])
+  @@index([isDefault])
 }

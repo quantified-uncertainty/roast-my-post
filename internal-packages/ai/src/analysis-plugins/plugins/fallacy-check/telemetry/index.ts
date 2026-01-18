@@ -13,5 +13,6 @@ export {
   type ExtractorTelemetry,
   type JudgeDecisionRecord,
   type ExtractionPhaseTelemetry,
+  type ProfileInfo,
   PIPELINE_STAGES,
 } from './types';

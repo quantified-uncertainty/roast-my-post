@@ -29,12 +29,43 @@ import {
 } from "./telemetry";
 import {
   getMultiExtractorConfig,
+  getMultiExtractorConfigFromProfile,
   isMultiExtractorEnabled,
   getDefaultTemperature,
   getConfigSummary,
 } from "./extraction/config";
 import { runMultiExtractor, simpleDeduplication } from "./extraction/multiExtractor";
 import { deduplicateIssues, prioritizeAndLimitIssues } from "./dedup";
+import type {
+  FallacyCheckerProfileConfig,
+  SupportedElsewhereFilterConfig,
+  ReasoningConfig,
+} from "./profile-types";
+import { createDefaultProfileConfig } from "./profile-types";
+import { loadProfileOrDefault } from "./profile-loader";
+
+/**
+ * Options for FallacyCheckPlugin
+ */
+export interface FallacyCheckPluginOptions {
+  /**
+   * Profile ID to load from database.
+   * If provided, profile config is loaded from the database.
+   */
+  profileId?: string;
+
+  /**
+   * Agent ID used to load default profile if profileId is not found.
+   * Defaults to "system-fallacy-check".
+   */
+  agentId?: string;
+
+  /**
+   * Direct profile config - bypasses database loading.
+   * Use this for testing or when the config is already loaded.
+   */
+  profileConfig?: FallacyCheckerProfileConfig;
+}
 
 export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private documentText: string;
@@ -47,11 +78,60 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private processingStartTime: number = 0;
   private telemetryRecord: PipelineExecutionRecord | null = null;
 
-  constructor() {
+  // Profile configuration
+  private options: FallacyCheckPluginOptions;
+  private profileConfig: FallacyCheckerProfileConfig | null = null;
+  private profileLoaded = false;
+
+  constructor(options: FallacyCheckPluginOptions = {}) {
     // Initialize empty values - they'll be set in analyze()
     this.documentText = "";
     this.chunks = [];
+    this.options = options;
   }
+
+  /**
+   * Load the profile configuration.
+   * Called at the start of analyze() to ensure profile is loaded before use.
+   */
+  private async loadProfile(): Promise<FallacyCheckerProfileConfig> {
+    if (this.profileLoaded && this.profileConfig) {
+      return this.profileConfig;
+    }
+
+    // If config was provided directly, use it
+    if (this.options.profileConfig) {
+      this.profileConfig = this.options.profileConfig;
+      this.profileLoaded = true;
+      return this.profileConfig;
+    }
+
+    // If profileId is provided, load from database
+    if (this.options.profileId || this.options.agentId) {
+      try {
+        this.profileConfig = await loadProfileOrDefault(
+          this.options.profileId,
+          this.options.agentId || 'system-fallacy-check'
+        );
+        this.profileLoaded = true;
+        logger.info('FallacyCheckPlugin: Loaded profile config', {
+          profileId: this.options.profileId,
+          agentId: this.options.agentId,
+          hasProfileConfig: !!this.profileConfig,
+        });
+        return this.profileConfig;
+      } catch (error) {
+        logger.warn('FallacyCheckPlugin: Failed to load profile, using defaults', error);
+      }
+    }
+
+    // Fall back to default config (uses env vars internally)
+    const defaultConfig = createDefaultProfileConfig();
+    this.profileConfig = defaultConfig;
+    this.profileLoaded = true;
+    return defaultConfig;
+  }
+
 
   name(): string {
     return "FALLACY_CHECK";
@@ -140,8 +220,21 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       return this.getResults();
     }
 
+    // Load profile configuration FIRST before any analysis
+    const profileConfig = await this.loadProfile();
+
     // Initialize telemetry - use local const to avoid repeated null assertions
     const telemetry = new PipelineTelemetry(documentText.length);
+
+    // Record profile info in telemetry
+    telemetry.setProfileInfo({
+      profileId: this.options.profileId,
+      agentId: this.options.agentId || 'system-fallacy-check',
+      thresholds: profileConfig.thresholds,
+      extractorCount: profileConfig.models.extractors.length,
+      judgeEnabled: profileConfig.models.judge.enabled,
+      hasCustomPrompts: !!profileConfig.prompts,
+    });
 
     try {
       // Audit log: Analysis started
@@ -150,9 +243,16 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         documentLength: documentText.length,
         chunkCount: chunks.length,
         operation: "fallacy-check-analysis",
+        profileId: this.options.profileId,
+        thresholds: profileConfig.thresholds,
+        hasCustomPrompts: !!profileConfig.prompts,
       });
 
-      logger.info("FallacyCheckPlugin: Starting analysis (single-pass mode)");
+      logger.info("FallacyCheckPlugin: Starting analysis (single-pass mode)", {
+        profileId: this.options.profileId,
+        extractorCount: profileConfig.models.extractors.length,
+        judgeEnabled: profileConfig.models.judge.enabled,
+      });
 
       // Phase 1: Single-pass extraction on full document
       telemetry.startStage(PIPELINE_STAGES.EXTRACTION, 1); // 1 = full document
@@ -183,18 +283,33 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       telemetry.setFinalCounts({ issuesAfterDedup: deduplicatedIssues.length });
 
       // Phase 2: Filter out issues supported elsewhere in the document
+      // Find the supported-elsewhere filter config from the filter chain
+      const supportedElsewhereConfig = profileConfig.filterChain
+        .find((f): f is SupportedElsewhereFilterConfig => f.type === 'supported-elsewhere');
+      const runSupportedElsewhere = supportedElsewhereConfig?.enabled !== false;
+
       logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter started", {
         timestamp: new Date().toISOString(),
         issuesToFilter: deduplicatedIssues.length,
         phase: "supported-elsewhere-filter",
+        enabled: runSupportedElsewhere,
+        model: supportedElsewhereConfig?.model,
+        temperature: supportedElsewhereConfig?.temperature,
+        reasoning: supportedElsewhereConfig?.reasoning,
       });
 
-      telemetry.startStage(PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER, deduplicatedIssues.length);
-      const filteredIssues = await this.runSupportedElsewhereFilter(
-        deduplicatedIssues,
-        documentText,
-        telemetry
-      );
+      let filteredIssues = deduplicatedIssues;
+      if (runSupportedElsewhere) {
+        telemetry.startStage(PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER, deduplicatedIssues.length);
+        filteredIssues = await this.runSupportedElsewhereFilter(
+          deduplicatedIssues,
+          documentText,
+          telemetry,
+          supportedElsewhereConfig
+        );
+      } else {
+        logger.info("FallacyCheckPlugin: Supported-elsewhere filter is disabled, skipping");
+      }
       telemetry.setFinalCounts({ issuesAfterFiltering: filteredIssues.length });
 
       this.issues = filteredIssues;
@@ -277,7 +392,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
    * This provides complete context for better accuracy and reduces false positives
    * from flagging intro claims that are supported later in the document.
    *
-   * Supports multi-extractor mode when FALLACY_EXTRACTORS env var is set.
+   * Supports multi-extractor mode when multiple extractors are configured
+   * in the profile or FALLACY_EXTRACTORS env var.
    */
   private async extractIssuesFromDocument(
     documentText: string,
@@ -286,13 +402,15 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     issues: FallacyIssue[];
     error?: string;
   }> {
-    const multiExtractorEnabled = isMultiExtractorEnabled();
+    // Use profile-based config if available, otherwise fall back to env vars
+    const config = getMultiExtractorConfigFromProfile(this.profileConfig || undefined);
+    const multiExtractorEnabled = config.extractors.length > 1;
 
     if (multiExtractorEnabled) {
-      return this.extractWithMultiExtractor(documentText, telemetry);
+      return this.extractWithMultiExtractor(documentText, telemetry, config);
     }
 
-    return this.extractWithSingleExtractor(documentText, telemetry);
+    return this.extractWithSingleExtractor(documentText, telemetry, config);
   }
 
   /**
@@ -300,16 +418,32 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
    */
   private async extractWithSingleExtractor(
     documentText: string,
-    telemetry: PipelineTelemetry
+    telemetry: PipelineTelemetry,
+    config: { extractors: Array<{ model: string; temperature?: number | 'default'; thinking?: boolean; label?: string }> }
   ): Promise<{
     issues: FallacyIssue[];
     error?: string;
   }> {
     try {
       const sessionManager = getGlobalSessionManager();
+
+      // Log threshold configuration from profile
+      logger.info('FallacyCheckPlugin: Using profile thresholds', {
+        minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
+        maxIssues: this.profileConfig?.thresholds?.maxIssues,
+        hasCustomPrompts: !!this.profileConfig?.prompts,
+      });
+
       const executeExtraction = async () => {
         return await fallacyExtractorTool.execute(
-          { documentText },
+          {
+            documentText,
+            // Pass profile prompts and thresholds to the extractor
+            customSystemPrompt: this.profileConfig?.prompts?.extractorSystemPrompt,
+            customUserPrompt: this.profileConfig?.prompts?.extractorUserPrompt,
+            minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
+            maxIssues: this.profileConfig?.thresholds?.maxIssues,
+          },
           { logger }
         );
       };
@@ -328,7 +462,6 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       );
 
       // Record single-extractor telemetry
-      const config = getMultiExtractorConfig();
       const extractor = config.extractors[0];
       const extractorTelemetry: ExtractionPhaseTelemetry = {
         multiExtractorEnabled: false,
@@ -369,19 +502,30 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
    */
   private async extractWithMultiExtractor(
     documentText: string,
-    telemetry: PipelineTelemetry
+    telemetry: PipelineTelemetry,
+    config: { extractors: Array<{ model: string; temperature?: number | 'default'; thinking?: boolean; label?: string }>; judge: { model: string; temperature?: number | 'default'; thinking?: boolean; enabled: boolean } }
   ): Promise<{
     issues: FallacyIssue[];
     error?: string;
   }> {
-    const config = getMultiExtractorConfig();
-
-    logger.info(`[FallacyCheckPlugin] Multi-extractor mode enabled`);
+    logger.info(`[FallacyCheckPlugin] Multi-extractor mode enabled`, {
+      extractorCount: config.extractors.length,
+      judgeEnabled: config.judge.enabled,
+      minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
+      maxIssues: this.profileConfig?.thresholds?.maxIssues,
+      hasCustomPrompts: !!this.profileConfig?.prompts,
+    });
     logger.info(getConfigSummary());
 
     try {
       // Phase 1: Run all extractors in parallel
-      const multiResult = await runMultiExtractor(documentText, config);
+      const multiResult = await runMultiExtractor(documentText, {
+        ...config,
+        thresholds: {
+          minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
+          maxIssues: this.profileConfig?.thresholds?.maxIssues,
+        },
+      });
 
       // Collect telemetry for each extractor
       const extractorsTelemetry: ExtractorTelemetry[] = multiResult.extractorResults.map(
@@ -531,10 +675,24 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private async runSupportedElsewhereFilter(
     issues: FallacyIssue[],
     documentText: string,
-    telemetry: PipelineTelemetry
+    telemetry: PipelineTelemetry,
+    filterConfig?: SupportedElsewhereFilterConfig
   ): Promise<FallacyIssue[]> {
     try {
-      const filterInput = {
+      // Build filter input with config settings
+      const filterInput: {
+        documentText: string;
+        issues: Array<{
+          quotedText: string;
+          issueType: string;
+          reasoning: string;
+          locationOffset?: number;
+        }>;
+        model?: string;
+        temperature?: number;
+        reasoning?: ReasoningConfig;
+        customPrompt?: string;
+      } = {
         documentText,
         issues: issues.map((issue) => ({
           quotedText: issue.text,
@@ -543,6 +701,22 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           locationOffset: issue.issue.location?.startOffset,
         })),
       };
+
+      // Apply config settings if provided
+      if (filterConfig) {
+        if (filterConfig.model) {
+          filterInput.model = filterConfig.model;
+        }
+        if (filterConfig.temperature !== undefined && filterConfig.temperature !== 'default') {
+          filterInput.temperature = filterConfig.temperature;
+        }
+        if (filterConfig.reasoning !== undefined) {
+          filterInput.reasoning = filterConfig.reasoning;
+        }
+        if (filterConfig.customPrompt) {
+          filterInput.customPrompt = filterConfig.customPrompt;
+        }
+      }
 
       const filterResult = await supportedElsewhereFilterTool.execute(
         filterInput,

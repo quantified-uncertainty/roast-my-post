@@ -65,6 +65,77 @@ export interface FilteredItemRecord {
 // ============================================================================
 
 /**
+ * Actual API request parameters as sent to the provider.
+ * This is captured right before the API call for debugging/audit.
+ */
+export interface ActualApiParams {
+  /** Provider: 'anthropic' or 'openrouter' */
+  provider: 'anthropic' | 'openrouter';
+
+  /** Model ID sent to API */
+  model: string;
+
+  /** Temperature sent to API */
+  temperature: number;
+
+  /** Max tokens sent to API */
+  maxTokens: number;
+
+  /**
+   * Anthropic thinking config (if applicable)
+   * Exactly as sent: { type: "enabled", budget_tokens: number }
+   */
+  anthropicThinking?: {
+    type: 'enabled';
+    budget_tokens: number;
+  };
+
+  /**
+   * OpenRouter reasoning config (if applicable)
+   * Exactly as sent: { effort: string } or { max_tokens: number }
+   */
+  openrouterReasoning?: {
+    effort?: string;
+    max_tokens?: number;
+  };
+}
+
+/**
+ * Response metrics from the API call
+ */
+export interface ApiResponseMetrics {
+  /** Whether the call succeeded */
+  success: boolean;
+
+  /** Latency in milliseconds */
+  latencyMs: number;
+
+  /** Input tokens used */
+  inputTokens?: number;
+
+  /** Output tokens used */
+  outputTokens?: number;
+
+  /** Thinking/reasoning tokens used (if extended thinking was enabled) */
+  thinkingTokens?: number;
+
+  /** Cache read tokens (if prompt caching was used) */
+  cacheReadTokens?: number;
+
+  /** Cache write tokens (if prompt caching was used) */
+  cacheWriteTokens?: number;
+
+  /** Stop reason from API */
+  stopReason?: string;
+
+  /** Error type if failed */
+  errorType?: string;
+
+  /** Error message if failed (sanitized) */
+  errorMessage?: string;
+}
+
+/**
  * Telemetry for a single extractor run
  */
 export interface ExtractorTelemetry {
@@ -75,8 +146,8 @@ export interface ExtractorTelemetry {
   model: string;
 
   /**
+   * @deprecated Use actualApiParams.temperature instead
    * Effective temperature used for this extractor.
-   * This is the actual value sent to the API (resolved from config).
    */
   temperature: number;
 
@@ -89,9 +160,8 @@ export interface ExtractorTelemetry {
   temperatureConfig?: number | 'default';
 
   /**
+   * @deprecated Use actualApiParams for actual thinking config
    * Whether extended thinking/reasoning was enabled.
-   * - true: Thinking enabled (Claude) / high reasoning (OpenRouter)
-   * - false: Thinking disabled for faster, cheaper responses
    */
   thinkingEnabled: boolean;
 
@@ -109,6 +179,17 @@ export interface ExtractorTelemetry {
 
   /** Breakdown of issues by type */
   issuesByType: Record<string, number>;
+
+  /**
+   * Actual API request parameters as sent to the provider.
+   * Captured right before the API call - this is the source of truth.
+   */
+  actualApiParams?: ActualApiParams;
+
+  /**
+   * Response metrics from the API call.
+   */
+  responseMetrics?: ApiResponseMetrics;
 }
 
 /**
@@ -164,6 +245,38 @@ export interface ExtractionPhaseTelemetry {
 
   /** Detailed decisions for drill-down */
   judgeDecisions: JudgeDecisionRecord[];
+}
+
+// ============================================================================
+// Profile Info
+// ============================================================================
+
+/**
+ * Information about the profile used for this execution
+ */
+export interface ProfileInfo {
+  /** Profile ID from database (if loaded from DB) */
+  profileId?: string;
+
+  /** Agent ID used for profile loading */
+  agentId: string;
+
+  /** Threshold configuration from profile */
+  thresholds: {
+    minSeverityThreshold: number;
+    maxIssues: number;
+    dedupThreshold: number;
+    maxIssuesToProcess: number;
+  };
+
+  /** Number of extractors configured */
+  extractorCount: number;
+
+  /** Whether judge is enabled */
+  judgeEnabled: boolean;
+
+  /** Whether custom prompts are configured in the profile */
+  hasCustomPrompts: boolean;
 }
 
 // ============================================================================
@@ -223,6 +336,9 @@ export interface PipelineExecutionRecord {
 
   /** Detailed extraction phase telemetry (multi-extractor mode) */
   extractionPhase?: ExtractionPhaseTelemetry;
+
+  /** Profile configuration used for this execution */
+  profileInfo?: ProfileInfo;
 }
 
 /**
