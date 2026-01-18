@@ -349,6 +349,11 @@ export async function callClaudeWithTool<T>(
   },
   previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult & { toolResult: T }> {
+  // When thinking is enabled, we must use tool_choice: 'auto' because
+  // forced tool_choice is incompatible with extended thinking
+  const thinkingEnabled = options.thinking === true ||
+    (typeof options.thinking === 'object' && options.thinking?.type === 'enabled');
+
   const toolOptions: ClaudeCallOptions = {
     ...options,
     tools: [{
@@ -356,7 +361,10 @@ export async function callClaudeWithTool<T>(
       description: options.toolDescription,
       input_schema: options.toolSchema
     }],
-    tool_choice: { type: "tool", name: options.toolName },
+    // Use 'auto' when thinking is enabled, otherwise force the specific tool
+    tool_choice: thinkingEnabled
+      ? { type: "auto" }
+      : { type: "tool", name: options.toolName },
     cacheSeed: options.cacheSeed // Pass through cache seed
   };
 
