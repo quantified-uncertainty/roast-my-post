@@ -44,7 +44,16 @@ export async function loadProfile(profileId: string): Promise<FallacyCheckerProf
     throw new Error(`Profile not found: ${profileId}`);
   }
 
-  return validateAndMergeConfig(profile.config);
+  // DEBUG: Log raw config from database
+  const rawConfig = profile.config as Record<string, unknown>;
+  console.log(`🔍 [Profile Loader] Raw config from DB:`, JSON.stringify(rawConfig?.models, null, 2));
+
+  const validated = validateAndMergeConfig(profile.config);
+
+  // DEBUG: Log validated config
+  console.log(`🔍 [Profile Loader] Validated extractors:`, JSON.stringify(validated.models.extractors, null, 2));
+
+  return validated;
 }
 
 /**
@@ -153,6 +162,8 @@ function validateModels(raw: unknown, defaults: ModelConfig): ModelConfig {
           : undefined,
         label: typeof e.label === 'string' ? e.label : undefined,
         thinking: typeof e.thinking === 'boolean' ? e.thinking : undefined,
+        reasoning: validateReasoning(e.reasoning),
+        provider: validateProvider(e.provider),
       }));
 
     if (extractors.length === 0) {
@@ -170,6 +181,7 @@ function validateModels(raw: unknown, defaults: ModelConfig): ModelConfig {
         ? j.temperature
         : undefined,
       thinking: typeof j.thinking === 'boolean' ? j.thinking : undefined,
+      reasoning: validateReasoning(j.reasoning),
       enabled: typeof j.enabled === 'boolean' ? j.enabled : false,
     };
   }
@@ -326,6 +338,29 @@ function validateReasoning(raw: unknown): ReasoningConfig | undefined {
   }
 
   return undefined;
+}
+
+/**
+ * Validate provider preferences
+ */
+function validateProvider(raw: unknown): { order?: string[]; allow_fallbacks?: boolean } | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+
+  const p = raw as Record<string, unknown>;
+  const result: { order?: string[]; allow_fallbacks?: boolean } = {};
+
+  if (Array.isArray(p.order) && p.order.every((item) => typeof item === 'string')) {
+    result.order = p.order;
+  }
+
+  if (typeof p.allow_fallbacks === 'boolean') {
+    result.allow_fallbacks = p.allow_fallbacks;
+  }
+
+  // Return undefined if no valid fields found
+  if (Object.keys(result).length === 0) return undefined;
+
+  return result;
 }
 
 // ============================================================================

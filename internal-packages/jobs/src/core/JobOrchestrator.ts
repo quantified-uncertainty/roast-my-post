@@ -18,8 +18,13 @@ import {
 import { analyzeDocument, getWorkerId } from '@roast/ai/server';
 import { JobService } from './JobService';
 
+export interface JobProcessingOptions {
+  /** Profile ID for plugin configuration (e.g., FallacyCheckPlugin) */
+  profileId?: string;
+}
+
 export interface JobOrchestratorInterface {
-  processJob(job: JobWithRelations): Promise<JobProcessingResult>;
+  processJob(job: JobWithRelations, options?: JobProcessingOptions): Promise<JobProcessingResult>;
 }
 
 export class JobOrchestrator implements JobOrchestratorInterface {
@@ -38,8 +43,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   /**
    * Process a complete job from start to finish
    */
-  async processJob(job: JobWithRelations): Promise<JobProcessingResult> {
-    this.logger.info(this.formatLog(job.id, 'Starting processing...'));
+  async processJob(job: JobWithRelations, options?: JobProcessingOptions): Promise<JobProcessingResult> {
+    this.logger.info(this.formatLog(job.id, `Starting processing...${options?.profileId ? ` (profile: ${options.profileId})` : ''}`));
     const startTime = Date.now();
     let sessionManager: HeliconeSessionManager | undefined;
 
@@ -66,10 +71,11 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       this.logger.info(this.formatLog(job.id, 'Executing analysis...'));
       // Execute document analysis using @roast/ai workflows
       const analysisResult = await this.executeAnalysis(
-        documentForAnalysis, 
-        agent, 
-        job.id, 
-        sessionManager
+        documentForAnalysis,
+        agent,
+        job.id,
+        sessionManager,
+        options?.profileId
       );
 
       this.logger.info(this.formatLog(job.id, 'Saving analysis results...'));
@@ -213,17 +219,26 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * Execute the document analysis workflow
    */
   private async executeAnalysis(
-    documentForAnalysis: Document, 
-    agent: Agent, 
-    jobId: string, 
-    sessionManager?: HeliconeSessionManager
+    documentForAnalysis: Document,
+    agent: Agent,
+    jobId: string,
+    sessionManager?: HeliconeSessionManager,
+    profileId?: string
   ) {
+    // Use options-based signature to pass profileId
+    const analysisOptions = {
+      targetWordCount: 500,
+      targetHighlights: 5,
+      jobId,
+      fallacyCheckProfileId: profileId,
+    };
+
     // Track the analysis phase with session manager
-    return await (sessionManager 
+    return await (sessionManager
       ? sessionManager.trackAnalysis('document', async () => {
-          return analyzeDocument(documentForAnalysis, agent, 500, 5, jobId);
+          return analyzeDocument(documentForAnalysis, agent, analysisOptions);
         })
-      : analyzeDocument(documentForAnalysis, agent, 500, 5, jobId));
+      : analyzeDocument(documentForAnalysis, agent, analysisOptions));
   }
 
   /**

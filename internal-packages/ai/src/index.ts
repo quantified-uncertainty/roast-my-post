@@ -37,6 +37,20 @@ export {
   type ModelName
 } from './utils/costCalculator';
 
+// Unified usage metrics
+export {
+  type UnifiedUsageMetrics,
+  type OpenRouterRawUsage,
+  type AnthropicRawUsage,
+  fromOpenRouterUsage,
+  fromAnthropicUsage,
+  calculateAnthropicCost,
+  getAnthropicPricing,
+  formatCost,
+  aggregateUsageMetrics,
+  ANTHROPIC_PRICING,
+} from './utils/usageMetrics';
+
 // Tool configs and generated metadata
 export * from './tools/configs';
 export { toolSchemas, getToolSchema, type ToolId } from './tools/generated-schemas';

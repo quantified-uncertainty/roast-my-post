@@ -27,8 +27,12 @@ export class JobService {
   /**
    * Create a job for processing
    * Creates both Job table record and pg-boss queue entry
+   *
+   * @param evaluationId - The evaluation to process
+   * @param agentEvalBatchId - Optional batch ID for grouping jobs
+   * @param profileId - Optional profile ID for plugin configuration (e.g., FallacyCheckPlugin)
    */
-  async createJob(evaluationId: string, agentEvalBatchId?: string): Promise<JobEntity> {
+  async createJob(evaluationId: string, agentEvalBatchId?: string, profileId?: string): Promise<JobEntity> {
     // Lazy-init prevents race conditions by ensuring the queue is connected
     // before we try to use it. Safe to call repeatedly due to promise locking.
     //
@@ -47,6 +51,7 @@ export class JobService {
       jobId: job.id,
       evaluationId,
       agentEvalBatchId: agentEvalBatchId || null,
+      profileId: profileId || null,
     };
 
     try {

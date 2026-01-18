@@ -6,10 +6,52 @@
  */
 
 import type { ExtractedFallacyIssue } from '../../../../tools/fallacy-extractor/types';
+import type { UnifiedUsageMetrics } from '../../../../utils/usageMetrics';
+
+// ============================================================================
+// Reasoning Configuration Types
+// ============================================================================
+
+/**
+ * Reasoning effort levels (maps to thinking budget_tokens)
+ */
+export type ReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+
+/**
+ * Reasoning configuration for extended thinking
+ * - false: Disabled
+ * - { effort: ReasoningEffort }: Use effort level (mapped to budget_tokens)
+ * - { budget_tokens: number }: Custom token budget (min 1024)
+ */
+export type ReasoningConfig =
+  | false
+  | { effort: ReasoningEffort }
+  | { budget_tokens: number };
+
+/**
+ * Maps effort levels to Anthropic budget_tokens values
+ */
+export const EFFORT_TO_BUDGET_TOKENS: Record<ReasoningEffort, number> = {
+  minimal: 1024,
+  low: 2048,
+  medium: 8192,
+  high: 16384,
+  xhigh: 32768,
+};
 
 // ============================================================================
 // Configuration Types
 // ============================================================================
+
+/**
+ * Provider routing preferences for OpenRouter
+ */
+export interface ProviderPreferences {
+  /** Ordered list of preferred providers (e.g., ["anthropic", "google"]) */
+  order?: string[];
+  /** Allow fallback to other providers if preferred ones fail (default: true) */
+  allow_fallbacks?: boolean;
+}
 
 /**
  * Configuration for a single extractor instance
@@ -30,11 +72,27 @@ export interface ExtractorConfig {
   label?: string;
 
   /**
+   * @deprecated Use reasoning instead
    * Whether to enable extended thinking/reasoning mode.
    * - true (default): Enable extended thinking (Claude) / reasoning (OpenRouter/Gemini)
    * - false: Disable extended thinking for faster, cheaper responses
    */
   thinking?: boolean;
+
+  /**
+   * Reasoning/thinking configuration (preferred over thinking boolean)
+   * - undefined: Use default (thinking enabled)
+   * - false: Disable thinking
+   * - { effort: ReasoningEffort }: Use effort level
+   * - { budget_tokens: number }: Custom token budget
+   */
+  reasoning?: ReasoningConfig;
+
+  /**
+   * Provider routing preferences (OpenRouter only)
+   * Allows specifying preferred providers for a model
+   */
+  provider?: ProviderPreferences;
 }
 
 /**
@@ -50,8 +108,16 @@ export interface JudgeConfig {
   /** Temperature (number or "default" for model's native default) */
   temperature?: number | 'default';
 
-  /** Enable extended thinking/reasoning */
+  /**
+   * @deprecated Use reasoning instead
+   * Enable extended thinking/reasoning
+   */
   thinking?: boolean;
+
+  /**
+   * Reasoning/thinking configuration (preferred over thinking boolean)
+   */
+  reasoning?: ReasoningConfig;
 
   /** Whether the judge is enabled */
   enabled: boolean;
@@ -86,6 +152,34 @@ export interface MultiExtractorConfig {
 // Extractor Result Types
 // ============================================================================
 
+/** Actual API parameters sent to the provider */
+export interface ActualApiParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  thinking?: {
+    type: 'enabled';
+    budget_tokens: number;
+  };
+  reasoning?: {
+    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+    max_tokens?: number;
+  };
+}
+
+/** Response metrics from API call */
+export interface ApiResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  stopReason?: string;
+  errorType?: string;
+  errorMessage?: string;
+}
+
 /**
  * Result from a single extractor run
  */
@@ -107,6 +201,15 @@ export interface ExtractorResult {
 
   /** Error message if extraction failed */
   error?: string;
+
+  /** Actual parameters sent to the API (source of truth) */
+  actualApiParams?: ActualApiParams;
+
+  /** Response metrics from the API call */
+  responseMetrics?: ApiResponseMetrics;
+
+  /** Unified usage metrics (includes cost, tokens, latency) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 /**
@@ -170,6 +273,9 @@ export interface JudgeOutput {
 
   /** Judge cost in USD (if available) */
   costUsd?: number;
+
+  /** Unified usage metrics for the judge */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 // ============================================================================

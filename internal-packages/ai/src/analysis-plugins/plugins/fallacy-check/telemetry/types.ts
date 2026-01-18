@@ -5,6 +5,8 @@
  * Used for observability, debugging, and regression detection.
  */
 
+import type { UnifiedUsageMetrics } from '../../../../utils/usageMetrics';
+
 /**
  * Metrics for a single pipeline stage
  */
@@ -69,9 +71,6 @@ export interface FilteredItemRecord {
  * This is captured right before the API call for debugging/audit.
  */
 export interface ActualApiParams {
-  /** Provider: 'anthropic' or 'openrouter' */
-  provider: 'anthropic' | 'openrouter';
-
   /** Model ID sent to API */
   model: string;
 
@@ -82,10 +81,10 @@ export interface ActualApiParams {
   maxTokens: number;
 
   /**
-   * Anthropic thinking config (if applicable)
+   * Claude thinking config (if applicable)
    * Exactly as sent: { type: "enabled", budget_tokens: number }
    */
-  anthropicThinking?: {
+  thinking?: {
     type: 'enabled';
     budget_tokens: number;
   };
@@ -94,8 +93,8 @@ export interface ActualApiParams {
    * OpenRouter reasoning config (if applicable)
    * Exactly as sent: { effort: string } or { max_tokens: number }
    */
-  openrouterReasoning?: {
-    effort?: string;
+  reasoning?: {
+    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
     max_tokens?: number;
   };
 }
@@ -190,6 +189,13 @@ export interface ExtractorTelemetry {
    * Response metrics from the API call.
    */
   responseMetrics?: ApiResponseMetrics;
+
+  /**
+   * Unified usage metrics (includes cost, tokens, latency).
+   * This provides a consistent format across all providers (OpenRouter, Anthropic).
+   * The costUsd is directly from API for OpenRouter, calculated for Anthropic.
+   */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 /**
@@ -228,10 +234,13 @@ export interface ExtractionPhaseTelemetry {
   /** Per-extractor breakdown */
   extractors: ExtractorTelemetry[];
 
-  /** Total issues before judge aggregation */
+  /** Total issues from all extractors (before dedup) */
   totalIssuesBeforeJudge: number;
 
-  /** Total issues after judge aggregation */
+  /** Total issues after Jaccard deduplication (before judge) */
+  totalIssuesAfterDedup?: number;
+
+  /** Total issues after judge aggregation (final output) */
   totalIssuesAfterJudge: number;
 
   /** Model used for judge (if multi-extractor enabled) */
@@ -242,6 +251,9 @@ export interface ExtractionPhaseTelemetry {
 
   /** Judge cost in USD (if available) */
   judgeCostUsd?: number;
+
+  /** Unified usage metrics for the judge (if multi-extractor enabled) */
+  judgeUnifiedUsage?: UnifiedUsageMetrics;
 
   /** Detailed decisions for drill-down */
   judgeDecisions: JudgeDecisionRecord[];

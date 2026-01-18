@@ -16,3 +16,6 @@ export {
   type ProfileInfo,
   PIPELINE_STAGES,
 } from './types';
+
+// Re-export UnifiedUsageMetrics for consumers
+export type { UnifiedUsageMetrics } from '../../../../utils/usageMetrics';

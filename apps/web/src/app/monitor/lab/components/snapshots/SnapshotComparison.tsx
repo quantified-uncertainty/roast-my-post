@@ -200,29 +200,59 @@ function ComparisonSection({
 }
 
 function MatchedCommentItem({ match }: { match: CommentMatch }) {
+  const [expanded, setExpanded] = useState(false);
   const comment = match.baselineComment || match.currentComment;
   if (!comment) return null;
 
+  const needsExpand = comment.quotedText.length > 100 || comment.description.length > 150;
+
   return (
-    <div className="p-3 bg-green-50 rounded-md border border-green-100">
-      <div className="text-sm">
-        <span className="font-medium text-gray-900">{comment.header || "Comment"}</span>
-        <span className="text-gray-500 ml-2">
-          (confidence: {Math.round((match.matchConfidence ?? 1) * 100)}%)
-        </span>
+    <div
+      className={`p-3 bg-green-50 rounded-md border border-green-100 ${needsExpand ? "cursor-pointer hover:bg-green-100" : ""}`}
+      onClick={() => needsExpand && setExpanded(!expanded)}
+    >
+      <div className="text-sm flex items-center justify-between">
+        <div>
+          <span className="font-medium text-gray-900">{comment.header || "Comment"}</span>
+          <span className="text-gray-500 ml-2">
+            (confidence: {Math.round((match.matchConfidence ?? 1) * 100)}%)
+          </span>
+        </div>
+        {needsExpand && (
+          <span className="text-xs text-green-600">{expanded ? "collapse" : "expand"}</span>
+        )}
       </div>
-      <p className="text-sm text-gray-600 mt-1">{truncate(comment.quotedText, 100)}</p>
-      <p className="text-xs text-gray-500 mt-1">{truncate(comment.description, 150)}</p>
+      <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+        {expanded ? comment.quotedText : truncate(comment.quotedText, 100)}
+      </p>
+      <p className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">
+        {expanded ? comment.description : truncate(comment.description, 150)}
+      </p>
     </div>
   );
 }
 
 function CommentItem({ comment }: { comment: Comment }) {
+  const [expanded, setExpanded] = useState(false);
+  const needsExpand = comment.quotedText.length > 100 || comment.description.length > 150;
+
   return (
-    <div className="p-3 bg-gray-50 rounded-md">
-      <div className="text-sm font-medium text-gray-900">{comment.header || "Comment"}</div>
-      <p className="text-sm text-gray-600 mt-1">{truncate(comment.quotedText, 100)}</p>
-      <p className="text-xs text-gray-500 mt-1">{truncate(comment.description, 150)}</p>
+    <div
+      className={`p-3 bg-gray-50 rounded-md ${needsExpand ? "cursor-pointer hover:bg-gray-100" : ""}`}
+      onClick={() => needsExpand && setExpanded(!expanded)}
+    >
+      <div className="text-sm font-medium text-gray-900 flex items-center justify-between">
+        <span>{comment.header || "Comment"}</span>
+        {needsExpand && (
+          <span className="text-xs text-gray-400">{expanded ? "collapse" : "expand"}</span>
+        )}
+      </div>
+      <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+        {expanded ? comment.quotedText : truncate(comment.quotedText, 100)}
+      </p>
+      <p className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">
+        {expanded ? comment.description : truncate(comment.description, 150)}
+      </p>
     </div>
   );
 }

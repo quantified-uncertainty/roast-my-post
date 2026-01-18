@@ -14,8 +14,48 @@ import type {
   ExtractorResult,
   MultiExtractorResult,
   ExtractionThresholds,
+  ReasoningConfig,
 } from './types';
 import { generateExtractorId, getDefaultTemperature } from './config';
+
+/** Reasoning effort type for OpenRouter */
+type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+
+/**
+ * Resolve reasoning config to thinking boolean and reasoning effort level.
+ *
+ * @param reasoning - The reasoning config from profile
+ * @param thinking - The deprecated thinking boolean (fallback)
+ * @returns Object with thinkingEnabled and optional reasoningEffort
+ */
+function resolveReasoning(
+  reasoning: ReasoningConfig | undefined,
+  thinking?: boolean
+): { thinkingEnabled: boolean; reasoningEffort?: ReasoningEffortLevel } {
+  // New reasoning config takes precedence
+  if (reasoning !== undefined) {
+    // false = disabled
+    if (reasoning === false) {
+      return { thinkingEnabled: false, reasoningEffort: 'none' };
+    }
+    // Effort level specified
+    if ('effort' in reasoning) {
+      return { thinkingEnabled: true, reasoningEffort: reasoning.effort };
+    }
+    // Budget tokens specified - use xhigh (we can't pass custom budget to OpenRouter)
+    if ('budget_tokens' in reasoning) {
+      return { thinkingEnabled: true, reasoningEffort: 'xhigh' };
+    }
+  }
+
+  // Fall back to legacy thinking boolean (default true)
+  if (thinking === false) {
+    return { thinkingEnabled: false, reasoningEffort: 'none' };
+  }
+
+  // Default: enabled without explicit effort (let model decide)
+  return { thinkingEnabled: true };
+}
 
 /**
  * Run a single extractor with the given configuration
@@ -33,10 +73,15 @@ async function runSingleExtractor(
     ? 'default'
     : (typeof config.temperature === 'number' ? config.temperature : getDefaultTemperature(config.model));
 
+  // Resolve thinking and reasoning effort from config
+  const { thinkingEnabled, reasoningEffort } = resolveReasoning(config.reasoning, config.thinking);
+
   logger.info(`[MultiExtractor] Starting extractor: ${extractorId}`, {
     model: config.model,
     temperature: temperatureForLog,
-    thinking: config.thinking !== false,
+    thinking: thinkingEnabled,
+    reasoningEffort,
+    reasoning: config.reasoning,
     documentLength: documentText.length,
     minSeverityThreshold: thresholds?.minSeverityThreshold,
     maxIssues: thresholds?.maxIssues,
@@ -49,11 +94,15 @@ async function runSingleExtractor(
         model: config.model,
         // Pass temperature as-is (can be number, "default", or undefined)
         temperature: config.temperature,
-        // Pass thinking parameter (undefined or boolean)
-        thinking: config.thinking,
+        // Pass resolved thinking value (new reasoning takes precedence over legacy thinking)
+        thinking: thinkingEnabled,
+        // Pass reasoning effort for OpenRouter models
+        reasoningEffort,
         // Pass thresholds from profile config
         minSeverityThreshold: thresholds?.minSeverityThreshold,
         maxIssues: thresholds?.maxIssues,
+        // Pass provider preferences for OpenRouter
+        ...(config.provider && { provider: config.provider }),
       },
       { logger }
     );
@@ -71,7 +120,9 @@ async function runSingleExtractor(
       config,
       issues: result.issues,
       durationMs,
-      // TODO: Add cost tracking from API response when available
+      actualApiParams: result.actualApiParams,
+      responseMetrics: result.responseMetrics,
+      unifiedUsage: result.unifiedUsage,
     };
   } catch (error) {
     const durationMs = Date.now() - startTime;
@@ -194,81 +245,104 @@ export function flattenExtractorIssues(
   return allIssues;
 }
 
+/** Similarity threshold for considering two issues as duplicates (70%) */
+const JACCARD_THRESHOLD = 0.7;
+
 /**
- * Group issues by their quoted text for deduplication
- * Issues with similar text (after normalization) are grouped together
- *
- * @param issues - Flattened issues with extractor IDs
- * @returns Map of normalized text to array of issues
+ * Normalize text for comparison.
  */
-export function groupIssuesByText(
-  issues: Array<ExtractedFallacyIssue & { extractorId: string }>
-): Map<string, Array<ExtractedFallacyIssue & { extractorId: string }>> {
-  const groups = new Map<string, Array<ExtractedFallacyIssue & { extractorId: string }>>();
-
-  for (const issue of issues) {
-    // Normalize text for comparison
-    const normalizedText = issue.exactText
-      .toLowerCase()
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    const existing = groups.get(normalizedText);
-    if (existing) {
-      existing.push(issue);
-    } else {
-      groups.set(normalizedText, [issue]);
-    }
-  }
-
-  return groups;
+function normalizeTextForDedup(text: string | undefined | null): string {
+  if (!text) return '';
+  return text.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
 /**
- * Simple majority-vote deduplication (for use when judge is disabled)
- * Keeps issues found by multiple extractors OR high-confidence single-source issues
- *
- * @param result - Multi-extractor result
- * @param options - Dedup options
- * @returns Deduplicated issues
+ * Calculate Jaccard similarity between two texts based on word overlap.
+ * Returns a value between 0 (no overlap) and 1 (identical).
  */
-export function simpleDeduplication(
-  result: MultiExtractorResult,
-  options: {
-    /** Minimum extractors that must agree for low-confidence issues */
-    minAgreement?: number;
-    /** Confidence threshold for single-source acceptance */
-    singleSourceConfidenceThreshold?: number;
-  } = {}
-): ExtractedFallacyIssue[] {
-  const {
-    minAgreement = 2,
-    singleSourceConfidenceThreshold = 85,
-  } = options;
+function calculateJaccardSimilarity(textA: string, textB: string): number {
+  const wordsA = new Set(normalizeTextForDedup(textA).split(/\s+/).filter(Boolean));
+  const wordsB = new Set(normalizeTextForDedup(textB).split(/\s+/).filter(Boolean));
 
-  const flatIssues = flattenExtractorIssues(result);
-  const grouped = groupIssuesByText(flatIssues);
-  const deduped: ExtractedFallacyIssue[] = [];
+  if (wordsA.size === 0 && wordsB.size === 0) return 1;
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
 
-  for (const [, issues] of grouped) {
-    const sourceCount = new Set(issues.map((i) => i.extractorId)).size;
+  let intersection = 0;
+  for (const word of wordsA) {
+    if (wordsB.has(word)) intersection++;
+  }
 
-    // Keep if multiple extractors found it
-    if (sourceCount >= minAgreement) {
-      // Pick the issue with highest confidence
-      const bestIssue = issues.reduce((best, current) =>
-        current.confidenceScore > best.confidenceScore ? current : best
-      );
-      deduped.push(bestIssue);
-      continue;
+  const union = wordsA.size + wordsB.size - intersection;
+  return union > 0 ? intersection / union : 0;
+}
+
+/**
+ * Compute a quality score for an extracted issue.
+ * Higher = better quality (prefer to keep).
+ */
+function computeExtractedIssueQuality(issue: ExtractedFallacyIssue): number {
+  const textLength = issue.exactText?.length ?? 0;
+  const lengthScore = Math.log10(textLength + 1) / 4;
+  const severityNorm = (issue.severityScore ?? 0) / 100;
+  const confidenceNorm = (issue.confidenceScore ?? 0) / 100;
+  const importanceNorm = (issue.importanceScore ?? 0) / 100;
+
+  return (
+    lengthScore * 0.4 +
+    confidenceNorm * 0.25 +
+    severityNorm * 0.2 +
+    importanceNorm * 0.15
+  );
+}
+
+/**
+ * Deduplicate extracted issues using Jaccard word-overlap similarity.
+ * When duplicates are found, keeps the higher-quality issue.
+ *
+ * This runs BEFORE the judge to reduce the number of issues it needs to process.
+ */
+export function deduplicateExtractedIssues(
+  issues: ExtractedFallacyIssue[]
+): { deduplicated: ExtractedFallacyIssue[]; removedCount: number } {
+  // Filter out issues with no text (malformed responses from LLM)
+  const validIssues = issues.filter(issue => issue.exactText && issue.exactText.trim().length > 0);
+  if (validIssues.length < issues.length) {
+    logger.info(`[Dedup] Filtered out ${issues.length - validIssues.length} issues with empty/missing text`);
+  }
+
+  const unique: ExtractedFallacyIssue[] = [];
+
+  for (const issue of validIssues) {
+    let bestMatch: { keptIdx: number; kept: ExtractedFallacyIssue; similarity: number } | null = null;
+
+    for (let i = 0; i < unique.length; i++) {
+      const kept = unique[i];
+      const similarity = calculateJaccardSimilarity(issue.exactText, kept.exactText);
+
+      if (similarity >= JACCARD_THRESHOLD) {
+        if (!bestMatch || similarity > bestMatch.similarity) {
+          bestMatch = { keptIdx: i, kept, similarity };
+        }
+      }
     }
 
-    // Keep single-source issues only if high confidence
-    const bestIssue = issues[0];
-    if (bestIssue.confidenceScore >= singleSourceConfidenceThreshold) {
-      deduped.push(bestIssue);
+    if (bestMatch) {
+      const newQuality = computeExtractedIssueQuality(issue);
+      const keptQuality = computeExtractedIssueQuality(bestMatch.kept);
+
+      if (newQuality > keptQuality) {
+        unique[bestMatch.keptIdx] = issue;
+      }
+    } else {
+      unique.push(issue);
     }
   }
 
-  return deduped;
+  const duplicatesRemoved = validIssues.length - unique.length;
+  const totalRemoved = issues.length - unique.length;
+  if (duplicatesRemoved > 0) {
+    logger.info(`[Dedup] Reduced ${validIssues.length} issues to ${unique.length} (${duplicatesRemoved} duplicates removed)`);
+  }
+
+  return { deduplicated: unique, removedCount: totalRemoved };
 }

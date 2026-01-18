@@ -81,9 +81,18 @@ async function fetchOpenRouterModels(): Promise<ModelInfo[]> {
       })
       .map((m) => {
         // Determine max temperature based on provider
-        const isGoogle = m.id.startsWith("google/") || m.id.includes("gemini");
-        const isAnthropic = m.id.startsWith("anthropic/") || m.id.includes("claude");
-        const maxTemp = (isGoogle || isAnthropic) ? 2 : 1;
+        // Match the ranges in openrouter.ts PROVIDER_TEMPERATURE_RANGES
+        const getMaxTemp = (modelId: string): number => {
+          if (modelId.startsWith("google/") || modelId.includes("gemini")) return 2;
+          if (modelId.startsWith("anthropic/") || modelId.includes("claude")) return 2;
+          if (modelId.startsWith("openai/") || modelId.includes("gpt")) return 2;
+          if (modelId.startsWith("x-ai/") || modelId.includes("grok")) return 2;
+          if (modelId.startsWith("deepseek/")) return 2;
+          if (modelId.startsWith("z-ai/")) return 1.5;
+          // Default to 1.5 for unknown providers (conservative)
+          return 1.5;
+        };
+        const maxTemp = getMaxTemp(m.id);
 
         return {
           id: m.id,

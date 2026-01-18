@@ -85,8 +85,8 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Create job
-      const job = await jobService.createJob(evaluation.id, batch.id);
+      // Create job with profile ID for plugin configuration
+      const job = await jobService.createJob(evaluation.id, batch.id, profileId);
       jobIds.push(job.id);
     }
 
