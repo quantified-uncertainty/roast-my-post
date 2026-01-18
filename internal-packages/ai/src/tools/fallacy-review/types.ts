@@ -2,6 +2,8 @@
  * Types for the fallacy review tool
  */
 
+import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
+
 /**
  * Simplified comment representation for review
  */
@@ -34,6 +36,9 @@ export interface FallacyReviewInput {
 
   /** Array of comments to review */
   comments: ReviewComment[];
+
+  /** Optional custom system prompt override */
+  customSystemPrompt?: string;
 }
 
 /**
@@ -48,4 +53,7 @@ export interface FallacyReviewOutput {
 
   /** One-sentence summary for evaluation header */
   oneLineSummary: string;
+
+  /** Unified usage metrics (includes cost, tokens, latency) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }

@@ -166,10 +166,10 @@ class PgBossWorker {
   }
 
   private async processJob(pgBossJob: JobWithMetadata<DocumentEvaluationJobData>) {
-    const { jobId } = pgBossJob.data;
+    const { jobId, profileId } = pgBossJob.data;
     const { retryCount, retryLimit } = pgBossJob;
 
-    logger.info(this.formatLog(jobId, `Processing (attempt ${retryCount + 1}/${retryLimit + 1})`));
+    logger.info(this.formatLog(jobId, `Processing (attempt ${retryCount + 1}/${retryLimit + 1})${profileId ? ` with profile ${profileId}` : ''}`));
 
     try {
       const job = await this.jobRepository.findByIdWithRelations(jobId);
@@ -186,7 +186,7 @@ class PgBossWorker {
         { jobId, timeoutMs },
         async () => {
           await this.jobService.markAsRunning(jobId, retryCount + 1);
-          return this.jobOrchestrator.processJob(job);
+          return this.jobOrchestrator.processJob(job, { profileId: profileId || undefined });
         }
       );
 

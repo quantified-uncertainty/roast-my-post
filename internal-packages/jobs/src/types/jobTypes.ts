@@ -24,6 +24,8 @@ export interface DocumentEvaluationJobData {
   jobId: string; // Reference to Job table record
   evaluationId: string;
   agentEvalBatchId?: string | null;
+  /** Profile ID for plugin configuration (e.g., FallacyCheckPlugin) */
+  profileId?: string | null;
 }
 
 /**

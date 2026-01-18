@@ -5,6 +5,11 @@ import { withRetry } from '../utils/retryUtils';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
 import { getRemainingTimeMs } from '../shared/jobContext';
+import {
+  UnifiedUsageMetrics,
+  fromAnthropicUsage,
+  AnthropicRawUsage
+} from '../utils/usageMetrics';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -12,6 +17,12 @@ export const MODEL_CONFIG = {
   routing: 'claude-3-haiku-20240307', // Faster model for routing decisions
   forecasting: ANALYSIS_MODEL,
 } as const;
+
+/** Extended thinking configuration */
+export interface ThinkingConfig {
+  type: "enabled";
+  budget_tokens: number;
+}
 
 export interface ClaudeCallOptions {
   model?: string;
@@ -25,11 +36,51 @@ export interface ClaudeCallOptions {
   enablePromptCaching?: boolean; // Enable Anthropic prompt caching
   cacheSeed?: string; // Custom cache seed for Helicone response caching
   timeout?: number; // Custom timeout in milliseconds
+  /**
+   * Extended thinking mode configuration.
+   * - true: Enable with default budget of 10000 tokens
+   * - false/undefined: Disable extended thinking
+   * - ThinkingConfig: Enable with custom budget_tokens
+   * Note: Extended thinking requires temperature=1, so temperature is ignored when enabled.
+   */
+  thinking?: boolean | ThinkingConfig;
+}
+
+/** Actual API params as sent to Anthropic */
+export interface ClaudeActualParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  thinking?: {
+    type: 'enabled';
+    budget_tokens: number;
+  };
+}
+
+/** Response metrics from Claude API */
+export interface ClaudeResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  stopReason?: string;
+  errorType?: string;
+  errorMessage?: string;
+  /** Full raw usage from Anthropic API */
+  rawUsage?: AnthropicRawUsage;
 }
 
 export interface ClaudeCallResult {
   response: Anthropic.Message;
   interaction: RichLLMInteraction;
+  /** Actual params sent to API - captured right before the call */
+  actualParams: ClaudeActualParams;
+  /** Response metrics */
+  responseMetrics: ClaudeResponseMetrics;
+  /** Unified usage metrics (includes calculated cost) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 function buildPromptString(
@@ -106,7 +157,9 @@ export async function callClaude(
   let response: Anthropic.Messages.Message;
   let lastError: Error | null = null;
   const maxRetries = 3;
-  
+  let actualParams: ClaudeActualParams | undefined;
+  let apiCallStartTime: number = 0;
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // Add delay between retries (exponential backoff)
@@ -115,11 +168,47 @@ export async function callClaude(
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
+      // Determine if extended thinking is enabled (default: false for tool calls to save cost)
+      // When thinking is enabled, temperature must be 1 and max_tokens must be > budget_tokens
+      const thinkingEnabled = options.thinking === true || (typeof options.thinking === 'object' && options.thinking?.type === 'enabled');
+      const thinkingBudget = typeof options.thinking === 'object' && options.thinking?.budget_tokens
+        ? options.thinking.budget_tokens
+        : 10000; // Default budget
+      // Claude's temperature range is 0-1 (unlike some other providers that allow 0-2)
+      // Cap any out-of-range values to prevent API errors
+      const requestedTemp = options.temperature ?? 0;
+      const effectiveTemperature = thinkingEnabled ? 1 : Math.min(Math.max(requestedTemp, 0), 1);
+      // When thinking is enabled, max_tokens must be greater than budget_tokens
+      const requestedMaxTokens = options.max_tokens || 4000;
+      const effectiveMaxTokens = thinkingEnabled
+        ? Math.max(requestedMaxTokens, thinkingBudget + 1000) // Ensure max_tokens > budget_tokens with buffer
+        : requestedMaxTokens;
+
       const requestOptions: Anthropic.Messages.MessageCreateParams = {
         model,
-        max_tokens: options.max_tokens || 4000,
-        temperature: options.temperature ?? 0,
-        messages: options.messages
+        max_tokens: effectiveMaxTokens,
+        temperature: effectiveTemperature,
+        messages: options.messages,
+        // Add thinking configuration when enabled
+        ...(thinkingEnabled && {
+          thinking: {
+            type: "enabled" as const,
+            budget_tokens: thinkingBudget,
+          }
+        }),
+      };
+
+      // Capture actual params being sent to API (for telemetry)
+      actualParams = {
+        model,
+        temperature: effectiveTemperature,
+        maxTokens: effectiveMaxTokens,
+        ...(thinkingEnabled && {
+          thinking: {
+            type: 'enabled' as const,
+            budget_tokens: thinkingBudget,
+          }
+        }),
       };
       
       if (options.system) {
@@ -166,7 +255,10 @@ export async function callClaude(
           reject(new Error(`Claude API call timed out after ${timeoutMs}ms`));
         }, timeoutMs);
       });
-      
+
+      // Capture timing for telemetry
+      apiCallStartTime = Date.now();
+
       const result = await Promise.race([
         anthropic.messages.create(requestOptions),
         timeoutPromise
@@ -243,7 +335,39 @@ export async function callClaude(
     previousInteractions.push(interaction);
   }
 
-  return { response, interaction };
+  // Build raw usage object for unified metrics
+  const rawUsage: AnthropicRawUsage = {
+    input_tokens: response.usage.input_tokens,
+    output_tokens: response.usage.output_tokens,
+    cache_creation_input_tokens: (response.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens,
+    cache_read_input_tokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens,
+  };
+
+  // Calculate latency
+  const latencyMs = apiCallStartTime > 0 ? Date.now() - apiCallStartTime : Date.now() - startTime;
+
+  // Build response metrics for telemetry
+  const responseMetrics: ClaudeResponseMetrics = {
+    success: true,
+    latencyMs,
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+    cacheReadTokens: rawUsage.cache_read_input_tokens,
+    cacheWriteTokens: rawUsage.cache_creation_input_tokens,
+    stopReason: response.stop_reason ?? undefined,
+    rawUsage,
+  };
+
+  // Build unified usage metrics (includes calculated cost)
+  const unifiedUsage = fromAnthropicUsage(rawUsage, model, latencyMs);
+
+  return {
+    response,
+    interaction,
+    actualParams: actualParams!,
+    responseMetrics,
+    unifiedUsage,
+  };
 }
 
 /**
@@ -257,6 +381,11 @@ export async function callClaudeWithTool<T>(
   },
   previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult & { toolResult: T }> {
+  // When thinking is enabled, we must use tool_choice: 'auto' because
+  // forced tool_choice is incompatible with extended thinking
+  const thinkingEnabled = options.thinking === true ||
+    (typeof options.thinking === 'object' && options.thinking?.type === 'enabled');
+
   const toolOptions: ClaudeCallOptions = {
     ...options,
     tools: [{
@@ -264,7 +393,10 @@ export async function callClaudeWithTool<T>(
       description: options.toolDescription,
       input_schema: options.toolSchema
     }],
-    tool_choice: { type: "tool", name: options.toolName },
+    // Use 'auto' when thinking is enabled, otherwise force the specific tool
+    tool_choice: thinkingEnabled
+      ? { type: "auto" }
+      : { type: "tool", name: options.toolName },
     cacheSeed: options.cacheSeed // Pass through cache seed
   };
 

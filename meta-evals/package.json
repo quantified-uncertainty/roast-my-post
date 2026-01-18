@@ -8,12 +8,15 @@
     "start": "node --import tsx/esm src/index.tsx"
   },
   "dependencies": {
+    "@leeoniya/ufuzzy": "^1.0.18",
     "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
     "dotenv": "^16.4.5",
+    "fuse.js": "^7.1.0",
     "ink": "^6.5.1",
     "ink-select-input": "^6.2.0",
     "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
     "react": "^19.2.1"
   },
   "devDependencies": {

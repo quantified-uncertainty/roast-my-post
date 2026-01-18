@@ -12,7 +12,7 @@ import {
   type AgentChoice,
 } from "@roast/db";
 import { apiClient } from "./utils/apiClient";
-import { MainMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, type Screen } from "./components";
+import { MainMenu, ScoreRankMenu, CreateBaseline, SeriesDetail, RankRuns, ScoreRun, Validation, ExtractorLab, type Screen } from "./components";
 import { getAvailableModels, getRecommendedJudgeModels, DEFAULT_JUDGE_MODEL, type ModelInfo } from "./utils/models";
 
 // ============================================================================
@@ -128,8 +128,8 @@ export function App() {
 
   // Load initial data
   useEffect(() => {
-    loadMainMenu();
     loadModels();
+    setScreen({ type: "main-menu" });
   }, []);
 
   async function loadModels() {
@@ -144,10 +144,14 @@ export function App() {
   }
 
   async function loadMainMenu() {
+    setScreen({ type: "main-menu" });
+  }
+
+  async function loadScoreRankMenu() {
     setScreen({ type: "loading" });
     try {
       const series = await metaEvaluationRepository.getSeries();
-      setScreen({ type: "main-menu", series });
+      setScreen({ type: "score-rank-menu", series });
     } catch (e) {
       setError(String(e));
     }
@@ -171,13 +175,70 @@ export function App() {
     }
   }
 
+  async function searchDocuments(filter: string) {
+    try {
+      const docs = await metaEvaluationRepository.getRecentDocuments(filter || undefined);
+      setDocuments(docs);
+    } catch (e) {
+      // Silently fail - keep existing documents
+    }
+  }
+
+  async function startExtractorLab() {
+    setScreen({ type: "loading" });
+    try {
+      // Get agents and use first one (usually Fallacy Check)
+      const userId = await apiClient.getUserId();
+      const agentChoices = await metaEvaluationRepository.getAvailableAgents(userId);
+      if (agentChoices.length === 0) {
+        setError("No agents available");
+        return;
+      }
+      const agentId = agentChoices[0].id;
+
+      // Get validation corpus for this agent (same as Validation screen)
+      const corpusDocs = await metaEvaluationRepository.getValidationCorpusDocuments(
+        agentId,
+        { limit: 50, minContentLength: 200 }
+      );
+
+      // Map to DocumentChoice format
+      const docs = corpusDocs.map((d) => ({
+        id: d.documentId,
+        title: d.title,
+        createdAt: d.lastEvaluatedAt || new Date(),
+      }));
+
+      setDocuments(docs);
+      setScreen({ type: "extractor-lab" });
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
   // Handle keyboard shortcuts
+  // Disable "q" quit when on document step (text input is active)
+  const isTextInputActive = screen.type === "create-baseline" && screen.step === "document";
   useInput((input, key) => {
-    if (input === "q" || (key.ctrl && input === "c")) {
+    if (key.ctrl && input === "c") {
+      exit();
+    }
+    if (input === "q" && !isTextInputActive) {
       exit();
     }
     if (key.escape) {
-      if (screen.type !== "main-menu") {
+      // Screens with internal escape navigation handle it themselves
+      const screensWithInternalEscape = [
+        "main-menu",
+        "extractor-lab",
+        "validation",
+        "score-rank-menu",
+        "series-detail",
+        "rank-runs",
+        "score-run",
+        "create-baseline",
+      ];
+      if (!screensWithInternalEscape.includes(screen.type)) {
         loadMainMenu();
       }
     }
@@ -205,11 +266,10 @@ export function App() {
   if (screen.type === "main-menu") {
     return (
       <MainMenu
-        series={screen.series}
-        maxItems={maxListItems}
         height={termHeight}
-        onCreateBaseline={startCreateBaseline}
-        onSelectSeries={(id) => setScreen({ type: "series-detail", seriesId: id })}
+        onScoreRank={loadScoreRankMenu}
+        onValidation={() => setScreen({ type: "validation" })}
+        onExtractorLab={startExtractorLab}
         onExit={exit}
         judgeModel={judgeModel}
         availableModels={availableModels}
@@ -218,6 +278,25 @@ export function App() {
         onSetTemperature={setTemperature}
         maxTokens={maxTokens}
         onSetMaxTokens={setMaxTokens}
+      />
+    );
+  }
+
+  if (screen.type === "score-rank-menu") {
+    return (
+      <ScoreRankMenu
+        series={screen.series}
+        maxItems={maxListItems}
+        height={termHeight}
+        judgeModel={judgeModel}
+        onCreateSeries={startCreateBaseline}
+        onSelectSeries={(id) => setScreen({ type: "series-detail", seriesId: id })}
+        onDeleteSeries={async (id) => {
+          await metaEvaluationRepository.deleteSeries(id);
+          // Reload the menu
+          loadScoreRankMenu();
+        }}
+        onBack={loadMainMenu}
       />
     );
   }
@@ -240,6 +319,7 @@ export function App() {
           setSelectedAgents(ags);
           setScreen({ type: "create-baseline", step: "confirm" });
         }}
+        onSearchDocuments={searchDocuments}
         onConfirm={async () => {
           setScreen({ type: "create-baseline", step: "creating" });
           try {
@@ -252,10 +332,10 @@ export function App() {
             setScreen({ type: "series-detail", seriesId });
           } catch (e) {
             setError(String(e));
-            loadMainMenu();
+            loadScoreRankMenu();
           }
         }}
-        onBack={loadMainMenu}
+        onBack={loadScoreRankMenu}
       />
     );
   }
@@ -266,7 +346,7 @@ export function App() {
         seriesId={screen.seriesId}
         maxItems={maxListItems}
         height={termHeight}
-        onBack={loadMainMenu}
+        onBack={loadScoreRankMenu}
         onRunAgain={async (seriesId, documentId) => {
           try {
             await runAgain(seriesId, documentId);
@@ -314,6 +394,39 @@ export function App() {
         temperature={temperature}
         maxTokens={maxTokens}
         onBack={() => setScreen({ type: "series-detail", seriesId: screen.seriesId })}
+      />
+    );
+  }
+
+  if (screen.type === "validation") {
+    return (
+      <Validation
+        height={termHeight}
+        maxItems={maxListItems}
+        onBack={loadMainMenu}
+        onCreateBatch={async (agentId, documentIds) => {
+          // Create batch jobs for the agent on selected documents
+          const response = await apiClient.post<BatchCreateResponse>("/api/batches", {
+            agentId,
+            documentIds,
+            name: `Validation run`,
+          });
+
+          // Get job IDs from the batch
+          return await getJobsForBatch(response.batch.id);
+        }}
+      />
+    );
+  }
+
+  if (screen.type === "extractor-lab") {
+    return (
+      <ExtractorLab
+        height={termHeight}
+        maxItems={maxListItems}
+        documents={documents}
+        onSearchDocuments={searchDocuments}
+        onBack={loadMainMenu}
       />
     );
   }
