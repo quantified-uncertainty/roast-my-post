@@ -6,6 +6,7 @@
  */
 
 import { prisma } from '@roast/db';
+import { logger } from '../../../shared/logger';
 import type {
   FallacyCheckerProfile,
   FallacyCheckerProfileConfig,
@@ -44,16 +45,7 @@ export async function loadProfile(profileId: string): Promise<FallacyCheckerProf
     throw new Error(`Profile not found: ${profileId}`);
   }
 
-  // DEBUG: Log raw config from database
-  const rawConfig = profile.config as Record<string, unknown>;
-  console.log(`🔍 [Profile Loader] Raw config from DB:`, JSON.stringify(rawConfig?.models, null, 2));
-
-  const validated = validateAndMergeConfig(profile.config);
-
-  // DEBUG: Log validated config
-  console.log(`🔍 [Profile Loader] Validated extractors:`, JSON.stringify(validated.models.extractors, null, 2));
-
-  return validated;
+  return validateAndMergeConfig(profile.config);
 }
 
 /**
@@ -89,7 +81,7 @@ export async function loadProfileOrDefault(
       return await loadProfile(profileId);
     } catch (error) {
       // Log warning and fall back to default
-      console.warn(`Failed to load profile ${profileId}, using default:`, error);
+      logger.warn(`Failed to load profile ${profileId}, using default:`, error);
     }
   }
   return loadDefaultProfile(agentId);

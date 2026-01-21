@@ -6,6 +6,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '../../../../shared/logger';
 import type {
   StageMetrics,
   PipelineExecutionRecord,
@@ -87,7 +88,7 @@ export class PipelineTelemetry {
   ): this {
     // If there's an active stage that wasn't ended, end it with error
     if (this.activeStage) {
-      console.warn(
+      logger.warn(
         `[PipelineTelemetry] Stage '${this.activeStage.stageName}' was not properly ended. Ending with error.`
       );
       this.endStage(0, { error: 'Stage was not properly ended' });
@@ -118,7 +119,7 @@ export class PipelineTelemetry {
     }
   ): this {
     if (!this.activeStage) {
-      console.warn(
+      logger.warn(
         '[PipelineTelemetry] endStage called without an active stage'
       );
       return this;
@@ -252,41 +253,29 @@ export class PipelineTelemetry {
    * Log a summary of the current telemetry state
    */
   logSummary(): void {
-    console.log('\n========== PIPELINE TELEMETRY SUMMARY ==========');
-    console.log(`Execution ID: ${this.executionId}`);
-    console.log(`Document length: ${this.documentLength} chars`);
-    console.log(`\nStages completed: ${this.stages.length}`);
-
-    for (const stage of this.stages) {
-      const status = stage.error ? '❌' : '✅';
-      console.log(`  ${status} ${stage.stageName}:`);
-      console.log(`      Duration: ${stage.durationMs}ms`);
-      console.log(`      In: ${stage.inputCount} → Out: ${stage.outputCount} (filtered: ${stage.filteredCount})`);
-      if (stage.model) {
-        console.log(`      Model: ${stage.model}`);
-      }
-      if (stage.costUsd !== undefined) {
-        console.log(`      Cost: $${stage.costUsd.toFixed(4)}`);
-      }
-      if (stage.error) {
-        console.log(`      Error: ${stage.error}`);
-      }
-    }
-
-    console.log('\nFinal counts:');
-    console.log(`  Issues extracted: ${this.finalCounts.issuesExtracted}`);
-    console.log(`  After dedup: ${this.finalCounts.issuesAfterDedup}`);
-    console.log(`  After filtering: ${this.finalCounts.issuesAfterFiltering}`);
-    console.log(`  Comments generated: ${this.finalCounts.commentsGenerated}`);
-    console.log(`  Comments kept: ${this.finalCounts.commentsKept}`);
+    const stagesSummary = this.stages.map(stage => ({
+      name: stage.stageName,
+      status: stage.error ? 'error' : 'ok',
+      durationMs: stage.durationMs,
+      input: stage.inputCount,
+      output: stage.outputCount,
+      filtered: stage.filteredCount,
+      model: stage.model,
+      costUsd: stage.costUsd,
+      error: stage.error,
+    }));
 
     const totalCost = this.calculateTotalCost();
-    if (totalCost !== undefined) {
-      console.log(`\nTotal cost: $${totalCost.toFixed(4)}`);
-    }
-
     const elapsed = Date.now() - this.startedAt.getTime();
-    console.log(`Total elapsed: ${elapsed}ms`);
-    console.log('================================================\n');
+
+    logger.debug('[PipelineTelemetry] Summary', {
+      executionId: this.executionId,
+      documentLength: this.documentLength,
+      stagesCompleted: this.stages.length,
+      stages: stagesSummary,
+      finalCounts: this.finalCounts,
+      totalCostUsd: totalCost,
+      totalElapsedMs: elapsed,
+    });
   }
 }

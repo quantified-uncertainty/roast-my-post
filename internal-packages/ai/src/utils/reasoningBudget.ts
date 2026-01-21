@@ -8,6 +8,7 @@
  */
 
 import type { ReasoningEffort } from './openrouter';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Types
@@ -101,7 +102,7 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
  */
 export function invalidateEndpointsCache(modelId: string): void {
   endpointsCache.delete(modelId);
-  console.log(`[ReasoningBudget] Cache invalidated for ${modelId}`);
+  logger.debug(`[ReasoningBudget] Cache invalidated for ${modelId}`);
 }
 
 /**
@@ -109,7 +110,7 @@ export function invalidateEndpointsCache(modelId: string): void {
  */
 export function invalidateAllEndpointsCache(): void {
   endpointsCache.clear();
-  console.log(`[ReasoningBudget] All cache invalidated`);
+  logger.debug(`[ReasoningBudget] All cache invalidated`);
 }
 
 // ============================================================================
@@ -134,7 +135,7 @@ async function fetchModelEndpoints(modelId: string): Promise<ModelEndpointData[]
     );
 
     if (!response.ok) {
-      console.warn(`[ReasoningBudget] Failed to fetch endpoints for ${modelId}: ${response.status}`);
+      logger.warn(`[ReasoningBudget] Failed to fetch endpoints for ${modelId}: ${response.status}`);
       return [];
     }
 
@@ -172,7 +173,7 @@ async function fetchModelEndpoints(modelId: string): Promise<ModelEndpointData[]
 
     return parsed;
   } catch (e) {
-    console.warn(`[ReasoningBudget] Error fetching endpoints for ${modelId}:`, e);
+    logger.warn(`[ReasoningBudget] Error fetching endpoints for ${modelId}:`, e);
     return [];
   }
 }
@@ -300,7 +301,7 @@ export async function resolveReasoningBudget(
   // Check API compatibility
   const usesExplicit = supportsExplicitBudget(modelId);
 
-  console.log(`[ReasoningBudget] ${modelId}: effectiveMax=${effectiveMax}, outputReserve=${outputReserve}, available=${available}, effort=${effort} (${effortPercentage * 100}%), reasoningBudget=${reasoningBudget}, usesExplicit=${usesExplicit}`);
+  logger.debug(`[ReasoningBudget] ${modelId}: effectiveMax=${effectiveMax}, outputReserve=${outputReserve}, available=${available}, effort=${effort} (${effortPercentage * 100}%), reasoningBudget=${reasoningBudget}, usesExplicit=${usesExplicit}`);
 
   if (usesExplicit) {
     // Use explicit max_tokens for reasoning

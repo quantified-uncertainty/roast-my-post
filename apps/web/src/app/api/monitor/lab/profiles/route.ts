@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * Default profile configuration - matches the real fallacy checker defaults
+ * Uses the NEW filterChain array format (not the old { filters: [...] } format)
  */
 function getDefaultConfig() {
   return {
@@ -121,13 +122,14 @@ function getDefaultConfig() {
       dedupThreshold: 0.7,
       maxIssuesToProcess: 25,
     },
-    filterChain: {
-      filters: [
-        { type: "dedup", enabled: true },
-        { type: "supported-elsewhere", enabled: true },
-        { type: "severity", enabled: true },
-        { type: "review", enabled: true },
-      ],
-    },
+    filterChain: [
+      {
+        id: "default-supported-elsewhere",
+        type: "supported-elsewhere",
+        enabled: true,
+        model: "claude-sonnet-4-5-20250929",
+        temperature: 0.1,
+      },
+    ],
   };
 }

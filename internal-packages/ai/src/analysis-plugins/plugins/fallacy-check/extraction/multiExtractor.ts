@@ -17,9 +17,7 @@ import type {
   ReasoningConfig,
 } from './types';
 import { generateExtractorId, getDefaultTemperature } from './config';
-
-/** Reasoning effort type for OpenRouter */
-type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+import { JACCARD_SIMILARITY_THRESHOLD, type ReasoningEffort } from '../../../../types/common';
 
 /**
  * Resolve reasoning config to thinking boolean and reasoning effort level.
@@ -31,7 +29,7 @@ type ReasoningEffortLevel = 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xh
 function resolveReasoning(
   reasoning: ReasoningConfig | undefined,
   thinking?: boolean
-): { thinkingEnabled: boolean; reasoningEffort?: ReasoningEffortLevel } {
+): { thinkingEnabled: boolean; reasoningEffort?: ReasoningEffort } {
   // New reasoning config takes precedence
   if (reasoning !== undefined) {
     // false = disabled
@@ -245,9 +243,6 @@ export function flattenExtractorIssues(
   return allIssues;
 }
 
-/** Similarity threshold for considering two issues as duplicates (70%) */
-const JACCARD_THRESHOLD = 0.7;
-
 /**
  * Normalize text for comparison.
  */
@@ -319,7 +314,7 @@ export function deduplicateExtractedIssues(
       const kept = unique[i];
       const similarity = calculateJaccardSimilarity(issue.exactText, kept.exactText);
 
-      if (similarity >= JACCARD_THRESHOLD) {
+      if (similarity >= JACCARD_SIMILARITY_THRESHOLD) {
         if (!bestMatch || similarity > bestMatch.similarity) {
           bestMatch = { keptIdx: i, kept, similarity };
         }

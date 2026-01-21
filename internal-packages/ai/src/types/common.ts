@@ -47,15 +47,19 @@ export const EFFORT_TO_BUDGET_TOKENS: Record<Exclude<ReasoningEffort, 'none'>, n
  */
 export function effortToBudgetTokens(effort: ReasoningEffort | string): number {
   if (effort === 'none') return 0;
-  const mapping: Record<string, number> = {
-    minimal: 1024,
-    low: 2048,
-    medium: 8192,
-    high: 16384,
-    xhigh: 32768,
-  };
-  return mapping[effort] || 8192; // Default to medium
+  return EFFORT_TO_BUDGET_TOKENS[effort as Exclude<ReasoningEffort, 'none'>] || 8192; // Default to medium
 }
+
+// ============================================================================
+// Deduplication Constants
+// ============================================================================
+
+/**
+ * Jaccard similarity threshold for deduplication.
+ * Issues with word overlap >= this threshold are considered duplicates.
+ * Used by both Jaccard dedup and multi-extractor merge.
+ */
+export const JACCARD_SIMILARITY_THRESHOLD = 0.7;
 
 // ============================================================================
 // Provider Configuration Types

@@ -8,20 +8,22 @@
 
 import { z } from "zod";
 import { Tool, type ToolContext } from "../base/Tool";
-import { callClaudeWithTool } from "../../claude/wrapper";
-import { MODEL_CONFIG } from "../../claude/wrapper";
-import { callOpenRouterWithTool } from "../../utils/openrouter";
+import {
+  callLLMFilter,
+  type ReasoningConfig,
+  type ProviderPreferences,
+} from "../shared/llm-filter-utils";
 import type {
   PrincipleOfCharityFilterInput,
   PrincipleOfCharityFilterOutput,
   CharityFilterResult,
-  ActualApiParams,
-  ApiResponseMetrics,
 } from "./types";
-import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
-import { effortToBudgetTokens } from "../../types/common";
 import { DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT } from "./prompts";
 import { principleOfCharityFilterConfig } from "./config";
+
+// ============================================================================
+// Schemas
+// ============================================================================
 
 const issueSchema = z.object({
   quotedText: z.string().describe("The exact text flagged as an issue"),
@@ -63,6 +65,66 @@ const outputSchema = z.object({
   dissolvedIssues: z.array(resultSchema).describe("Issues that dissolve under charity"),
 });
 
+// ============================================================================
+// Constants
+// ============================================================================
+
+const FILTER_NAME = "PrincipleOfCharityFilter";
+const DEFAULT_TEMPERATURE = 0.2;
+const INTRO_LENGTH = 2000;
+const CONCLUSION_LENGTH = 1500;
+const CONTEXT_RADIUS = 500;
+const MAX_CONTEXT_LENGTH = 12000;
+
+// ============================================================================
+// Tool Schema for LLM
+// ============================================================================
+
+const toolSchema = {
+  type: "object" as const,
+  properties: {
+    results: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          index: {
+            type: "number",
+            description: "Index of the issue (0-based)",
+          },
+          remainsValid: {
+            type: "boolean",
+            description: "Whether issue remains valid under charitable interpretation",
+          },
+          charitableInterpretation: {
+            type: "string",
+            description: "The most charitable interpretation of the author's argument",
+          },
+          explanation: {
+            type: "string",
+            description: "Explanation of why the issue does/doesn't hold",
+          },
+        },
+        required: ["index", "remainsValid", "charitableInterpretation", "explanation"],
+      },
+    },
+  },
+  required: ["results"],
+};
+
+type FilterResults = {
+  results: Array<{
+    index: number;
+    remainsValid: boolean;
+    charitableInterpretation: string;
+    explanation: string;
+  }>;
+};
+
+// ============================================================================
+// Tool Implementation
+// ============================================================================
+
 export class PrincipleOfCharityFilterTool extends Tool<
   PrincipleOfCharityFilterInput,
   PrincipleOfCharityFilterOutput
@@ -75,21 +137,16 @@ export class PrincipleOfCharityFilterTool extends Tool<
     input: PrincipleOfCharityFilterInput,
     context: ToolContext
   ): Promise<PrincipleOfCharityFilterOutput> {
-    // Determine which model to use
-    const modelId = input.model || process.env.CHARITY_FILTER_MODEL || MODEL_CONFIG.analysis;
-    const isOpenRouterModel = modelId.includes("/");
-
-    context.logger.debug(
-      `[PrincipleOfCharityFilter] Starting - Model: ${modelId} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`
-    );
+    // Log input issues
+    context.logger.debug(`[${FILTER_NAME}] Starting with ${input.issues.length} issues`);
     for (let i = 0; i < input.issues.length; i++) {
       context.logger.debug(
-        `[PrincipleOfCharityFilter] Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..." (${input.issues[i].issueType})`
+        `[${FILTER_NAME}] Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..." (${input.issues[i].issueType})`
       );
     }
 
     context.logger.info(
-      `[PrincipleOfCharityFilter] Evaluating ${input.issues.length} issues with principle of charity`
+      `[${FILTER_NAME}] Evaluating ${input.issues.length} issues with principle of charity`
     );
 
     // If no issues, return empty result
@@ -111,16 +168,11 @@ Reasoning: ${issue.reasoning}
       })
       .join("\n---\n\n");
 
-    // Use custom prompt if provided, otherwise use default
-    const systemPrompt = input.customPrompt || DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT;
-
-    // Temperature defaults to 0.2 for thoughtful analysis
-    const temperature = input.temperature ?? 0.2;
-
-    // For longer documents, show relevant context
-    const docForPrompt = input.documentText.length <= 15000
-      ? input.documentText
-      : this.extractRelevantContext(input.documentText, input.issues);
+    // Prepare document text (truncate if needed)
+    const docForPrompt =
+      input.documentText.length <= 15000
+        ? input.documentText
+        : this.extractRelevantContext(input.documentText, input.issues);
 
     const userPrompt = `Apply the Principle of Charity to evaluate these flagged issues:
 
@@ -136,145 +188,23 @@ For each issue:
 2. Then determine if the issue still holds under that interpretation
 3. Explain your reasoning`;
 
-    // Shared tool schema for both Claude and OpenRouter
-    const toolSchema = {
-      type: "object" as const,
-      properties: {
-        results: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              index: {
-                type: "number",
-                description: "Index of the issue (0-based)",
-              },
-              remainsValid: {
-                type: "boolean",
-                description: "Whether issue remains valid under charitable interpretation",
-              },
-              charitableInterpretation: {
-                type: "string",
-                description: "The most charitable interpretation of the author's argument",
-              },
-              explanation: {
-                type: "string",
-                description: "Explanation of why the issue does/doesn't hold",
-              },
-            },
-            required: ["index", "remainsValid", "charitableInterpretation", "explanation"],
-          },
-        },
-      },
-      required: ["results"],
-    };
-
-    type FilterResults = {
-      results: Array<{
-        index: number;
-        remainsValid: boolean;
-        charitableInterpretation: string;
-        explanation: string;
-      }>;
-    };
-
     try {
-      let result: {
-        toolResult: FilterResults;
-        unifiedUsage?: UnifiedUsageMetrics;
-        actualApiParams?: ActualApiParams;
-        responseMetrics?: ApiResponseMetrics;
-      };
-
-      if (isOpenRouterModel) {
-        // Determine reasoning settings for OpenRouter
-        const thinkingEnabled = input.reasoning !== undefined && input.reasoning !== false;
-        const reasoningEffort = thinkingEnabled && input.reasoning && "effort" in input.reasoning
-          ? input.reasoning.effort
-          : undefined;
-
-        const reasoningInfo = reasoningEffort ? `, reasoning: ${reasoningEffort}` : '';
-        context.logger.debug(`[PrincipleOfCharityFilter] Calling OpenRouter: model=${modelId}, temp=${temperature}${reasoningInfo}`);
-
-        const openRouterResult = await callOpenRouterWithTool<FilterResults>({
-          model: modelId,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
-          max_tokens: 8000,
-          temperature,
+      const result = await callLLMFilter<FilterResults>(
+        {
+          model: input.model,
+          modelEnvVar: "CHARITY_FILTER_MODEL",
+          systemPrompt: input.customPrompt || DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT,
+          userPrompt,
+          temperature: input.temperature ?? DEFAULT_TEMPERATURE,
+          reasoning: input.reasoning as ReasoningConfig | undefined,
+          provider: input.provider as ProviderPreferences | undefined,
           toolName: "principle_of_charity_results",
           toolDescription: "Results of evaluating issues with principle of charity",
           toolSchema,
-          thinking: thinkingEnabled,
-          ...(reasoningEffort && { reasoningEffort }),
-          ...(input.provider && { provider: input.provider }),
-        });
-        result = {
-          toolResult: openRouterResult.toolResult,
-          unifiedUsage: openRouterResult.unifiedUsage,
-          actualApiParams: {
-            model: openRouterResult.actualParams.model,
-            temperature: openRouterResult.actualParams.temperature ?? 0,
-            maxTokens: openRouterResult.actualParams.maxTokens,
-            reasoning: openRouterResult.actualParams.reasoning,
-          },
-          responseMetrics: {
-            success: openRouterResult.responseMetrics.success,
-            latencyMs: openRouterResult.responseMetrics.latencyMs,
-            inputTokens: openRouterResult.responseMetrics.inputTokens,
-            outputTokens: openRouterResult.responseMetrics.outputTokens,
-            stopReason: openRouterResult.responseMetrics.stopReason,
-          },
-        };
-      } else {
-        // Use Claude API directly
-        let thinkingConfig: { type: "enabled"; budget_tokens: number } | undefined;
-
-        if (input.reasoning !== undefined && input.reasoning !== false) {
-          if ("effort" in input.reasoning) {
-            thinkingConfig = {
-              type: "enabled",
-              budget_tokens: effortToBudgetTokens(input.reasoning.effort),
-            };
-          } else if ("budget_tokens" in input.reasoning) {
-            thinkingConfig = {
-              type: "enabled",
-              budget_tokens: input.reasoning.budget_tokens,
-            };
-          }
-        }
-
-        context.logger.debug(`[PrincipleOfCharityFilter] Calling Claude: model=${modelId}, temp=${temperature}, thinking=${thinkingConfig ? `enabled (${thinkingConfig.budget_tokens} tokens)` : 'disabled'}`);
-
-        const claudeResult = await callClaudeWithTool<FilterResults>({
-          model: modelId,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
-          max_tokens: 4000,
-          temperature,
-          toolName: "principle_of_charity_results",
-          toolDescription: "Results of evaluating issues with principle of charity",
-          toolSchema,
-          thinking: thinkingConfig,
-        });
-        result = {
-          toolResult: claudeResult.toolResult,
-          unifiedUsage: claudeResult.unifiedUsage,
-          actualApiParams: {
-            model: modelId,
-            temperature: temperature,
-            maxTokens: 4000,
-            reasoning: thinkingConfig ? { max_tokens: thinkingConfig.budget_tokens } : undefined,
-          },
-          responseMetrics: {
-            success: true,
-            latencyMs: 0, // Claude wrapper doesn't expose latency
-            inputTokens: claudeResult.unifiedUsage?.inputTokens,
-            outputTokens: claudeResult.unifiedUsage?.outputTokens,
-            stopReason: 'tool_use',
-          },
-        };
-      }
+          filterName: FILTER_NAME,
+        },
+        context
+      );
 
       // Process results
       const validIssues: CharityFilterResult[] = [];
@@ -283,7 +213,7 @@ For each issue:
       for (const r of result.toolResult.results || []) {
         // Validate index is in range
         if (r.index < 0 || r.index >= input.issues.length) {
-          context.logger.warn(`[PrincipleOfCharityFilter] Invalid index ${r.index}, skipping`);
+          context.logger.warn(`[${FILTER_NAME}] Invalid index ${r.index}, skipping`);
           continue;
         }
 
@@ -302,23 +232,25 @@ For each issue:
       }
 
       context.logger.info(
-        `[PrincipleOfCharityFilter] ${dissolvedIssues.length}/${input.issues.length} issues dissolved (filtered out), ${validIssues.length} remain valid`
+        `[${FILTER_NAME}] ${dissolvedIssues.length}/${input.issues.length} issues dissolved (filtered out), ${validIssues.length} remain valid`
       );
 
-      // Debug: log individual results
+      // Debug logging
       for (const issue of validIssues) {
         context.logger.debug(
-          `[PrincipleOfCharityFilter] Issue ${issue.index} REMAINS VALID: ${issue.explanation.substring(0, 100)}...`
+          `[${FILTER_NAME}] Issue ${issue.index} REMAINS VALID: ${issue.explanation.substring(0, 100)}...`
         );
       }
       for (const issue of dissolvedIssues) {
         context.logger.debug(
-          `[PrincipleOfCharityFilter] Issue ${issue.index} DISSOLVED: ${issue.explanation.substring(0, 100)}...`
+          `[${FILTER_NAME}] Issue ${issue.index} DISSOLVED: ${issue.explanation.substring(0, 100)}...`
         );
       }
 
       if (result.unifiedUsage) {
-        context.logger.debug(`[PrincipleOfCharityFilter] Cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
+        context.logger.debug(
+          `[${FILTER_NAME}] Cost: $${result.unifiedUsage.costUsd?.toFixed(6) || "N/A"}`
+        );
       }
 
       return {
@@ -329,7 +261,7 @@ For each issue:
         responseMetrics: result.responseMetrics,
       };
     } catch (error) {
-      context.logger.error("[PrincipleOfCharityFilter] Filter failed:", error);
+      context.logger.error(`[${FILTER_NAME}] Filter failed:`, error);
       // Fallback: assume all issues remain valid (keep them)
       return {
         validIssues: input.issues.map((_, idx) => ({
@@ -346,30 +278,41 @@ For each issue:
   /**
    * Extract relevant context around the flagged issues
    */
-  private extractRelevantContext(documentText: string, issues: PrincipleOfCharityFilterInput['issues']): string {
+  private extractRelevantContext(
+    documentText: string,
+    issues: PrincipleOfCharityFilterInput["issues"]
+  ): string {
     const chunks: string[] = [];
 
-    // Always include first ~2000 chars (intro/context)
-    chunks.push("**[INTRODUCTION]**\n" + documentText.substring(0, 2000));
+    // Always include intro
+    chunks.push("**[INTRODUCTION]**\n" + documentText.substring(0, INTRO_LENGTH));
 
     // Include context around each issue
     for (const issue of issues) {
       if (issue.locationOffset !== undefined) {
-        const start = Math.max(0, issue.locationOffset - 500);
-        const end = Math.min(documentText.length, issue.locationOffset + issue.quotedText.length + 500);
-        chunks.push(`**[CONTEXT FOR: "${issue.quotedText.substring(0, 50)}..."]**\n` + documentText.substring(start, end));
+        const start = Math.max(0, issue.locationOffset - CONTEXT_RADIUS);
+        const end = Math.min(
+          documentText.length,
+          issue.locationOffset + issue.quotedText.length + CONTEXT_RADIUS
+        );
+        chunks.push(
+          `**[CONTEXT FOR: "${issue.quotedText.substring(0, 50)}..."]**\n` +
+            documentText.substring(start, end)
+        );
       }
     }
 
-    // Always include last ~1500 chars (conclusion)
-    if (documentText.length > 3500) {
-      chunks.push("**[CONCLUSION]**\n" + documentText.substring(documentText.length - 1500));
+    // Always include conclusion if document is long enough
+    if (documentText.length > INTRO_LENGTH + CONCLUSION_LENGTH) {
+      chunks.push(
+        "**[CONCLUSION]**\n" + documentText.substring(documentText.length - CONCLUSION_LENGTH)
+      );
     }
 
-    // Don't exceed ~12000 chars total
+    // Combine and truncate to max length
     let result = chunks.join("\n\n---\n\n");
-    if (result.length > 12000) {
-      result = result.substring(0, 12000) + "\n...[truncated]...";
+    if (result.length > MAX_CONTEXT_LENGTH) {
+      result = result.substring(0, MAX_CONTEXT_LENGTH) + "\n...[truncated]...";
     }
 
     return result;

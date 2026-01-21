@@ -9,9 +9,7 @@
 import { logger } from "../../../shared/logger";
 import type { FallacyIssue } from "./FallacyIssue";
 import { LIMITS } from "./constants";
-
-/** Similarity threshold for considering two issues as duplicates (70%) */
-const JACCARD_THRESHOLD = 0.7;
+import { JACCARD_SIMILARITY_THRESHOLD } from "../../../types/common";
 
 /**
  * Calculate priority score for an issue.
@@ -91,7 +89,7 @@ export function deduplicateIssues(issues: FallacyIssue[]): FallacyIssue[] {
       const kept = unique[i];
       const similarity = calculateJaccardSimilarity(issue.text, kept.text);
 
-      if (similarity >= JACCARD_THRESHOLD) {
+      if (similarity >= JACCARD_SIMILARITY_THRESHOLD) {
         if (!bestMatch || similarity > bestMatch.similarity) {
           bestMatch = { keptIdx: i, kept, similarity };
         }
