@@ -90,14 +90,14 @@ export class SupportedElsewhereFilterTool extends Tool<
     const modelId = input.model || process.env.FALLACY_FILTER_MODEL || MODEL_CONFIG.analysis;
     const isOpenRouterModel = modelId.includes("/"); // OpenRouter models have format "provider/model"
 
-    console.log(`\n\n🔍🔍🔍 SUPPORTED-ELSEWHERE FILTER RUNNING 🔍🔍🔍`);
-    console.log(`Model: ${modelId} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`);
-    console.log(`Checking ${input.issues.length} issues for support elsewhere`);
+    context.logger.debug(
+      `[SupportedElsewhereFilter] Starting - Model: ${modelId} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`
+    );
     for (let i = 0; i < input.issues.length; i++) {
-      console.log(`  Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..."`);
-      console.log(`    Type: ${input.issues[i].issueType}`);
+      context.logger.debug(
+        `[SupportedElsewhereFilter] Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..." (${input.issues[i].issueType})`
+      );
     }
-    console.log(`🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍🔍\n`);
 
     context.logger.info(
       `[SupportedElsewhereFilter] Checking ${input.issues.length} issues for support elsewhere`
@@ -206,7 +206,7 @@ For each issue, determine if it is supported elsewhere in the document.`;
           : undefined;
 
         const reasoningInfo = reasoningEffort ? `, reasoning: ${reasoningEffort}` : '';
-        console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature}${reasoningInfo}`);
+        context.logger.debug(`[SupportedElsewhereFilter] Calling OpenRouter: model=${modelId}, temp=${temperature}${reasoningInfo}`);
 
         const openRouterResult = await callOpenRouterWithTool<FilterResults>({
           model: modelId,
@@ -257,7 +257,7 @@ For each issue, determine if it is supported elsewhere in the document.`;
           }
         }
 
-        console.log(`🤖 Calling Claude API with model: ${modelId}, temp: ${temperature}, thinking: ${thinkingConfig ? `enabled (${thinkingConfig.budget_tokens} tokens)` : 'disabled'}`);
+        context.logger.debug(`[SupportedElsewhereFilter] Calling Claude: model=${modelId}, temp=${temperature}, thinking=${thinkingConfig ? `enabled (${thinkingConfig.budget_tokens} tokens)` : 'disabled'}`);
 
         const claudeResult = await callClaudeWithTool<FilterResults>({
           model: modelId,
@@ -314,25 +314,24 @@ For each issue, determine if it is supported elsewhere in the document.`;
         }
       }
 
-      console.log(`\n\n✅✅✅ SUPPORTED-ELSEWHERE FILTER RESULTS ✅✅✅`);
-      console.log(`KEPT (unsupported): ${unsupportedIssues.length} issues`);
-      for (const issue of unsupportedIssues) {
-        console.log(`  Issue ${issue.index}: NOT supported`);
-        console.log(`    Reason: ${issue.explanation}`);
-      }
-      console.log(`FILTERED (supported): ${supportedIssues.length} issues`);
-      for (const issue of supportedIssues) {
-        console.log(`  Issue ${issue.index}: SUPPORTED at "${issue.supportLocation || 'N/A'}"`);
-        console.log(`    Reason: ${issue.explanation}`);
-      }
-      console.log(`✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\n\n`);
-
       context.logger.info(
         `[SupportedElsewhereFilter] ${supportedIssues.length}/${input.issues.length} issues filtered (supported elsewhere), ${unsupportedIssues.length} kept`
       );
 
+      // Debug: log individual results
+      for (const issue of unsupportedIssues) {
+        context.logger.debug(
+          `[SupportedElsewhereFilter] Issue ${issue.index} NOT SUPPORTED: ${issue.explanation}`
+        );
+      }
+      for (const issue of supportedIssues) {
+        context.logger.debug(
+          `[SupportedElsewhereFilter] Issue ${issue.index} SUPPORTED at "${issue.supportLocation || 'N/A'}": ${issue.explanation}`
+        );
+      }
+
       if (result.unifiedUsage) {
-        console.log(`💰 Filter cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
+        context.logger.debug(`[SupportedElsewhereFilter] Cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
       }
 
       return {

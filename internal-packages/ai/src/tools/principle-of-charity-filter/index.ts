@@ -79,14 +79,14 @@ export class PrincipleOfCharityFilterTool extends Tool<
     const modelId = input.model || process.env.CHARITY_FILTER_MODEL || MODEL_CONFIG.analysis;
     const isOpenRouterModel = modelId.includes("/");
 
-    console.log(`\n\n🤝🤝🤝 PRINCIPLE OF CHARITY FILTER RUNNING 🤝🤝🤝`);
-    console.log(`Model: ${modelId} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`);
-    console.log(`Evaluating ${input.issues.length} issues with principle of charity`);
+    context.logger.debug(
+      `[PrincipleOfCharityFilter] Starting - Model: ${modelId} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`
+    );
     for (let i = 0; i < input.issues.length; i++) {
-      console.log(`  Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..."`);
-      console.log(`    Type: ${input.issues[i].issueType}`);
+      context.logger.debug(
+        `[PrincipleOfCharityFilter] Issue ${i}: "${input.issues[i].quotedText.substring(0, 60)}..." (${input.issues[i].issueType})`
+      );
     }
-    console.log(`🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝🤝\n`);
 
     context.logger.info(
       `[PrincipleOfCharityFilter] Evaluating ${input.issues.length} issues with principle of charity`
@@ -194,7 +194,7 @@ For each issue:
           : undefined;
 
         const reasoningInfo = reasoningEffort ? `, reasoning: ${reasoningEffort}` : '';
-        console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature}${reasoningInfo}`);
+        context.logger.debug(`[PrincipleOfCharityFilter] Calling OpenRouter: model=${modelId}, temp=${temperature}${reasoningInfo}`);
 
         const openRouterResult = await callOpenRouterWithTool<FilterResults>({
           model: modelId,
@@ -244,7 +244,7 @@ For each issue:
           }
         }
 
-        console.log(`🤖 Calling Claude API with model: ${modelId}, temp: ${temperature}, thinking: ${thinkingConfig ? `enabled (${thinkingConfig.budget_tokens} tokens)` : 'disabled'}`);
+        context.logger.debug(`[PrincipleOfCharityFilter] Calling Claude: model=${modelId}, temp=${temperature}, thinking=${thinkingConfig ? `enabled (${thinkingConfig.budget_tokens} tokens)` : 'disabled'}`);
 
         const claudeResult = await callClaudeWithTool<FilterResults>({
           model: modelId,
@@ -301,27 +301,24 @@ For each issue:
         }
       }
 
-      console.log(`\n\n✅✅✅ PRINCIPLE OF CHARITY FILTER RESULTS ✅✅✅`);
-      console.log(`KEPT (remain valid): ${validIssues.length} issues`);
-      for (const issue of validIssues) {
-        console.log(`  Issue ${issue.index}: REMAINS VALID`);
-        console.log(`    Charitable interpretation: ${issue.charitableInterpretation.substring(0, 100)}...`);
-        console.log(`    Reason: ${issue.explanation.substring(0, 100)}...`);
-      }
-      console.log(`FILTERED (dissolved): ${dissolvedIssues.length} issues`);
-      for (const issue of dissolvedIssues) {
-        console.log(`  Issue ${issue.index}: DISSOLVED`);
-        console.log(`    Charitable interpretation: ${issue.charitableInterpretation.substring(0, 100)}...`);
-        console.log(`    Reason: ${issue.explanation.substring(0, 100)}...`);
-      }
-      console.log(`✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\n\n`);
-
       context.logger.info(
         `[PrincipleOfCharityFilter] ${dissolvedIssues.length}/${input.issues.length} issues dissolved (filtered out), ${validIssues.length} remain valid`
       );
 
+      // Debug: log individual results
+      for (const issue of validIssues) {
+        context.logger.debug(
+          `[PrincipleOfCharityFilter] Issue ${issue.index} REMAINS VALID: ${issue.explanation.substring(0, 100)}...`
+        );
+      }
+      for (const issue of dissolvedIssues) {
+        context.logger.debug(
+          `[PrincipleOfCharityFilter] Issue ${issue.index} DISSOLVED: ${issue.explanation.substring(0, 100)}...`
+        );
+      }
+
       if (result.unifiedUsage) {
-        console.log(`💰 Charity filter cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
+        context.logger.debug(`[PrincipleOfCharityFilter] Cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
       }
 
       return {
