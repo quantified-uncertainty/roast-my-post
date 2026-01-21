@@ -19,21 +19,14 @@ import {
   invalidateEndpointsCache,
   type ReasoningBudgetResult,
 } from './reasoningBudget';
+import type { ReasoningEffort as CommonReasoningEffort, ProviderPreferences as CommonProviderPreferences } from '../types/common';
+
+// Use the common ReasoningEffort type
+export type ReasoningEffort = CommonReasoningEffort;
 
 // ============================================================================
 // Types
 // ============================================================================
-
-/**
- * Reasoning effort levels supported by OpenRouter
- * - "none": Disable reasoning entirely
- * - "minimal": ~10% of max_tokens for reasoning
- * - "low": ~20% of max_tokens for reasoning
- * - "medium": ~50% of max_tokens for reasoning
- * - "high": ~80% of max_tokens for reasoning
- * - "xhigh": ~95% of max_tokens for reasoning
- */
-export type ReasoningEffort = 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
 
 /**
  * Reasoning configuration for fine-grained control

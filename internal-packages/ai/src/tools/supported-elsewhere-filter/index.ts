@@ -19,6 +19,7 @@ import type {
   ApiResponseMetrics,
 } from "./types";
 import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
+import { effortToBudgetTokens } from "../../types/common";
 import { DEFAULT_SUPPORTED_ELSEWHERE_SYSTEM_PROMPT } from "./prompts";
 
 const issueSchema = z.object({
@@ -246,7 +247,7 @@ For each issue, determine if it is supported elsewhere in the document.`;
           if ("effort" in input.reasoning) {
             thinkingConfig = {
               type: "enabled",
-              budget_tokens: this.effortToBudgetTokens(input.reasoning.effort),
+              budget_tokens: effortToBudgetTokens(input.reasoning.effort),
             };
           } else if ("budget_tokens" in input.reasoning) {
             thinkingConfig = {
@@ -353,20 +354,6 @@ For each issue, determine if it is supported elsewhere in the document.`;
         supportedIssues: [],
       };
     }
-  }
-
-  /**
-   * Convert reasoning effort level to budget tokens
-   */
-  private effortToBudgetTokens(effort: string): number {
-    const mapping: Record<string, number> = {
-      minimal: 1024,
-      low: 2048,
-      medium: 8192,
-      high: 16384,
-      xhigh: 32768,
-    };
-    return mapping[effort] || 8192; // Default to medium
   }
 
   /**

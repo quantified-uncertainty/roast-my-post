@@ -7,18 +7,15 @@
 
 import type { ExtractedFallacyIssue } from '../fallacy-extractor/types';
 import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
+import type {
+  ReasoningConfig,
+  ProviderPreferences,
+  ActualApiParams,
+  ApiResponseMetrics,
+} from '../../types/common';
 
-/** Reasoning configuration (matches profile format) */
-export type ReasoningConfig =
-  | false
-  | { effort: 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' }
-  | { budget_tokens: number };
-
-/** Provider routing preferences */
-export interface ProviderPreferences {
-  order?: string[];
-  allow_fallbacks?: boolean;
-}
+// Re-export for backwards compatibility
+export type { ReasoningConfig, ProviderPreferences, ActualApiParams, ApiResponseMetrics };
 
 /**
  * Judge configuration from profile or FALLACY_JUDGE env var
@@ -134,34 +131,6 @@ export interface JudgeDecision {
 
   /** Judge's reasoning for this decision */
   judgeReasoning: string;
-}
-
-/** Actual API parameters sent to the provider */
-export interface ActualApiParams {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  thinking?: {
-    type: 'enabled';
-    budget_tokens: number;
-  };
-  reasoning?: {
-    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-    max_tokens?: number;
-  };
-}
-
-/** Response metrics from API call */
-export interface ApiResponseMetrics {
-  success: boolean;
-  latencyMs: number;
-  inputTokens?: number;
-  outputTokens?: number;
-  cacheReadTokens?: number;
-  cacheWriteTokens?: number;
-  stopReason?: string;
-  errorType?: string;
-  errorMessage?: string;
 }
 
 /**

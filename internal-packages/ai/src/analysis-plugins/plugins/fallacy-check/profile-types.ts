@@ -6,7 +6,7 @@
  * parameters: models, thresholds, and prompts.
  */
 
-import type { ExtractorConfig, JudgeConfig, ProviderPreferences } from './extraction/types';
+import type { ExtractorConfig, JudgeConfig, ProviderPreferences, ReasoningEffort, ReasoningConfig } from './extraction/types';
 
 // ============================================================================
 // Model Configuration Types
@@ -110,18 +110,8 @@ export type FilterType =
   | 'confidence'              // Filter by confidence threshold
   | 'review';                 // Human review / AI review filter
 
-/**
- * Reasoning effort levels (maps to thinking budget_tokens)
- */
-export type ReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-
-/**
- * Reasoning configuration for filters that support extended thinking
- */
-export type ReasoningConfig =
-  | false                           // Off
-  | { effort: ReasoningEffort }     // Effort level
-  | { budget_tokens: number };      // Custom token budget
+// Re-export for backwards compatibility
+export type { ReasoningEffort, ReasoningConfig };
 
 /**
  * Base filter configuration

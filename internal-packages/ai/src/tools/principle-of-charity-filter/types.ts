@@ -7,21 +7,16 @@
  */
 
 import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
+import type {
+  ReasoningEffort,
+  ReasoningConfig,
+  ProviderPreferences,
+  ActualApiParams,
+  ApiResponseMetrics,
+} from '../../types/common';
 
-/** Reasoning effort levels */
-export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
-
-/** Reasoning configuration */
-export type ReasoningConfig =
-  | false
-  | { effort: ReasoningEffort }
-  | { budget_tokens: number };
-
-/** Provider routing preferences */
-export interface ProviderPreferences {
-  order?: string[];
-  allow_fallbacks?: boolean;
-}
+// Re-export for backwards compatibility
+export type { ReasoningEffort, ReasoningConfig, ProviderPreferences, ActualApiParams, ApiResponseMetrics };
 
 export interface PrincipleOfCharityFilterInput {
   /** Full document text for context */
@@ -62,23 +57,6 @@ export interface CharityFilterIssue {
 
   /** Approximate location in document (character offset) */
   locationOffset?: number;
-}
-
-/** Actual API parameters sent to the model */
-export interface ActualApiParams {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  reasoning?: { effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'; max_tokens?: number };
-}
-
-/** Response metrics from the API call */
-export interface ApiResponseMetrics {
-  success: boolean;
-  latencyMs: number;
-  inputTokens?: number;
-  outputTokens?: number;
-  stopReason?: string;
 }
 
 export interface PrincipleOfCharityFilterOutput {

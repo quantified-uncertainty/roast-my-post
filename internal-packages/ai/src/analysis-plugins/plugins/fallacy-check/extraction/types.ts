@@ -8,50 +8,27 @@
 import type { ExtractedFallacyIssue } from '../../../../tools/fallacy-extractor/types';
 import type { UnifiedUsageMetrics } from '../../../../utils/usageMetrics';
 
-// ============================================================================
-// Reasoning Configuration Types
-// ============================================================================
+// Re-export common types for backwards compatibility
+export {
+  type ReasoningEffort,
+  type ReasoningConfig,
+  type ProviderPreferences,
+  type ActualApiParams,
+  type ApiResponseMetrics,
+  EFFORT_TO_BUDGET_TOKENS,
+} from '../../../../types/common';
 
-/**
- * Reasoning effort levels (maps to thinking budget_tokens)
- */
-export type ReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-
-/**
- * Reasoning configuration for extended thinking
- * - false: Disabled
- * - { effort: ReasoningEffort }: Use effort level (mapped to budget_tokens)
- * - { budget_tokens: number }: Custom token budget (min 1024)
- */
-export type ReasoningConfig =
-  | false
-  | { effort: ReasoningEffort }
-  | { budget_tokens: number };
-
-/**
- * Maps effort levels to Anthropic budget_tokens values
- */
-export const EFFORT_TO_BUDGET_TOKENS: Record<ReasoningEffort, number> = {
-  minimal: 1024,
-  low: 2048,
-  medium: 8192,
-  high: 16384,
-  xhigh: 32768,
-};
+import type {
+  ReasoningEffort,
+  ReasoningConfig,
+  ProviderPreferences,
+  ActualApiParams,
+  ApiResponseMetrics,
+} from '../../../../types/common';
 
 // ============================================================================
 // Configuration Types
 // ============================================================================
-
-/**
- * Provider routing preferences for OpenRouter
- */
-export interface ProviderPreferences {
-  /** Ordered list of preferred providers (e.g., ["anthropic", "google"]) */
-  order?: string[];
-  /** Allow fallback to other providers if preferred ones fail (default: true) */
-  allow_fallbacks?: boolean;
-}
 
 /**
  * Configuration for a single extractor instance
@@ -156,34 +133,6 @@ export interface MultiExtractorConfig {
 // ============================================================================
 // Extractor Result Types
 // ============================================================================
-
-/** Actual API parameters sent to the provider */
-export interface ActualApiParams {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  thinking?: {
-    type: 'enabled';
-    budget_tokens: number;
-  };
-  reasoning?: {
-    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-    max_tokens?: number;
-  };
-}
-
-/** Response metrics from API call */
-export interface ApiResponseMetrics {
-  success: boolean;
-  latencyMs: number;
-  inputTokens?: number;
-  outputTokens?: number;
-  cacheReadTokens?: number;
-  cacheWriteTokens?: number;
-  stopReason?: string;
-  errorType?: string;
-  errorMessage?: string;
-}
 
 /**
  * Result from a single extractor run

@@ -25,6 +25,16 @@ export * from './utils/allModels';
 export * from './utils/reasoningBudget';
 export * from './utils/modelConfigResolver';
 export * from './types';
+// Export common types (note: ReasoningEffort is also exported from openrouter with same definition,
+// and ReasoningConfig has different meaning in openrouter - profile config vs API format)
+export {
+  type ReasoningConfig as ProfileReasoningConfig,
+  type ProviderPreferences,
+  type ActualApiParams,
+  type ApiResponseMetrics,
+  EFFORT_TO_BUDGET_TOKENS,
+  effortToBudgetTokens,
+} from './types/common';
 
 // Configuration
 export { initializeAI, type AIConfig } from './config';

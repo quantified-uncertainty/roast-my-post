@@ -1,5 +1,9 @@
 import type { IssueType } from '../../analysis-plugins/plugins/fallacy-check/constants';
 import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
+import type { ActualApiParams, ApiResponseMetrics } from '../../types/common';
+
+// Re-export for backwards compatibility
+export type { ActualApiParams, ApiResponseMetrics };
 
 /**
  * Specific types of fallacies (for logical-fallacy issue type)
@@ -138,34 +142,6 @@ export interface FallacyExtractorInput {
    * Default: 15
    */
   maxIssues?: number;
-}
-
-/** Actual API parameters sent to the provider */
-export interface ActualApiParams {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  thinking?: {
-    type: 'enabled';
-    budget_tokens: number;
-  };
-  reasoning?: {
-    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-    max_tokens?: number;
-  };
-}
-
-/** Response metrics from API call */
-export interface ApiResponseMetrics {
-  success: boolean;
-  latencyMs: number;
-  inputTokens?: number;
-  outputTokens?: number;
-  cacheReadTokens?: number;
-  cacheWriteTokens?: number;
-  stopReason?: string;
-  errorType?: string;
-  errorMessage?: string;
 }
 
 /**

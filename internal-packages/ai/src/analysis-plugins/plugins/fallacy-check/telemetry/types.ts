@@ -6,6 +6,10 @@
  */
 
 import type { UnifiedUsageMetrics } from '../../../../utils/usageMetrics';
+import type { ActualApiParams, ApiResponseMetrics } from '../../../../types/common';
+
+// Re-export for backwards compatibility
+export type { ActualApiParams, ApiResponseMetrics };
 
 /**
  * Metrics for a single pipeline stage
@@ -74,74 +78,6 @@ export interface FilteredItemRecord {
 // ============================================================================
 // Multi-Extractor Telemetry Types
 // ============================================================================
-
-/**
- * Actual API request parameters as sent to the provider.
- * This is captured right before the API call for debugging/audit.
- */
-export interface ActualApiParams {
-  /** Model ID sent to API */
-  model: string;
-
-  /** Temperature sent to API */
-  temperature: number;
-
-  /** Max tokens sent to API */
-  maxTokens: number;
-
-  /**
-   * Claude thinking config (if applicable)
-   * Exactly as sent: { type: "enabled", budget_tokens: number }
-   */
-  thinking?: {
-    type: 'enabled';
-    budget_tokens: number;
-  };
-
-  /**
-   * OpenRouter reasoning config (if applicable)
-   * Exactly as sent: { effort: string } or { max_tokens: number }
-   */
-  reasoning?: {
-    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
-    max_tokens?: number;
-  };
-}
-
-/**
- * Response metrics from the API call
- */
-export interface ApiResponseMetrics {
-  /** Whether the call succeeded */
-  success: boolean;
-
-  /** Latency in milliseconds */
-  latencyMs: number;
-
-  /** Input tokens used */
-  inputTokens?: number;
-
-  /** Output tokens used */
-  outputTokens?: number;
-
-  /** Thinking/reasoning tokens used (if extended thinking was enabled) */
-  thinkingTokens?: number;
-
-  /** Cache read tokens (if prompt caching was used) */
-  cacheReadTokens?: number;
-
-  /** Cache write tokens (if prompt caching was used) */
-  cacheWriteTokens?: number;
-
-  /** Stop reason from API */
-  stopReason?: string;
-
-  /** Error type if failed */
-  errorType?: string;
-
-  /** Error message if failed (sanitized) */
-  errorMessage?: string;
-}
 
 /**
  * Telemetry for a single extractor run
