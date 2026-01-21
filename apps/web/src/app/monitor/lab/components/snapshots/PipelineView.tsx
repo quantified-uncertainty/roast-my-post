@@ -222,6 +222,40 @@ export function PipelineView({
                       <span className="font-mono ml-2">{stageOutputCount}</span>
                     </div>
                   </div>
+                  {/* Filter telemetry details */}
+                  {stageData?.model && (
+                    <div className="mt-2 pt-2 border-t border-orange-200 text-xs text-gray-500">
+                      <span className="font-medium text-gray-600">Model:</span>{" "}
+                      <code className="bg-gray-100 px-1 rounded">{stageData.model}</code>
+                    </div>
+                  )}
+                  {stageData?.actualApiParams && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      <span className="font-medium text-gray-600">API params:</span>{" "}
+                      temp={stageData.actualApiParams.temperature}, maxTokens={stageData.actualApiParams.maxTokens}
+                      {stageData.actualApiParams.reasoning?.max_tokens && (
+                        <span>, reasoning: {formatTokens(stageData.actualApiParams.reasoning.max_tokens)}</span>
+                      )}
+                      {stageData.actualApiParams.reasoning?.effort && !stageData.actualApiParams.reasoning?.max_tokens && (
+                        <span>, reasoning: {stageData.actualApiParams.reasoning.effort}</span>
+                      )}
+                    </div>
+                  )}
+                  {stageData?.responseMetrics && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      <span className="font-medium text-gray-600">Response:</span>{" "}
+                      {stageData.responseMetrics.inputTokens && (
+                        <span>in: {formatTokens(stageData.responseMetrics.inputTokens)}</span>
+                      )}
+                      {stageData.responseMetrics.inputTokens && stageData.responseMetrics.outputTokens && " · "}
+                      {stageData.responseMetrics.outputTokens && (
+                        <span>out: {formatTokens(stageData.responseMetrics.outputTokens)}</span>
+                      )}
+                      {stageData.responseMetrics.latencyMs && (
+                        <span>, latency: {stageData.responseMetrics.latencyMs}ms</span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {stageFilteredItems.length > 0 && (
@@ -760,14 +794,62 @@ function DeduplicationCard({ extraction, extractorCount }: { extraction: Extract
             )}
           </div>
           {hasJudge && (
-            <div>
-              <span className="font-medium">LLM Judge:</span> Evaluates and merges semantically similar issues.
-              {judgeRemoved > 0 ? (
-                <span className="ml-1 text-red-600">Removed {judgeRemoved} issues.</span>
-              ) : (
-                <span className="ml-1 text-green-600">Kept all issues.</span>
+            <>
+              <div>
+                <span className="font-medium">LLM Judge:</span> Evaluates and merges semantically similar issues.
+                {judgeRemoved > 0 ? (
+                  <span className="ml-1 text-red-600">Removed {judgeRemoved} issues.</span>
+                ) : (
+                  <span className="ml-1 text-green-600">Kept all issues.</span>
+                )}
+              </div>
+              {/* Judge telemetry details */}
+              {extraction.judgeModel && (
+                <div className="text-gray-500">
+                  <span className="font-medium text-gray-600">Model:</span>{" "}
+                  <code className="bg-gray-100 px-1 rounded">{extraction.judgeModel}</code>
+                </div>
               )}
-            </div>
+              {extraction.judgeActualApiParams && (
+                <div className="text-gray-500">
+                  <span className="font-medium text-gray-600">API params:</span>{" "}
+                  temp={extraction.judgeActualApiParams.temperature}, maxTokens={extraction.judgeActualApiParams.maxTokens}
+                  {extraction.judgeActualApiParams.thinking && (
+                    <span className="ml-1">
+                      , thinking: {formatTokens(extraction.judgeActualApiParams.thinking.budget_tokens)}
+                    </span>
+                  )}
+                  {extraction.judgeActualApiParams.reasoning?.max_tokens && (
+                    <span className="ml-1">
+                      , reasoning: {formatTokens(extraction.judgeActualApiParams.reasoning.max_tokens)}
+                    </span>
+                  )}
+                  {extraction.judgeActualApiParams.reasoning?.effort && !extraction.judgeActualApiParams.reasoning?.max_tokens && (
+                    <span className="ml-1">
+                      , reasoning: {extraction.judgeActualApiParams.reasoning.effort}
+                    </span>
+                  )}
+                </div>
+              )}
+              {extraction.judgeResponseMetrics && (
+                <div className="text-gray-500">
+                  <span className="font-medium text-gray-600">Response:</span>{" "}
+                  {extraction.judgeResponseMetrics.success ? "success" : "failed"}
+                  {extraction.judgeResponseMetrics.latencyMs && (
+                    <span>, latency: {extraction.judgeResponseMetrics.latencyMs}ms</span>
+                  )}
+                  {extraction.judgeResponseMetrics.inputTokens && (
+                    <span>, in: {formatTokens(extraction.judgeResponseMetrics.inputTokens)}</span>
+                  )}
+                  {extraction.judgeResponseMetrics.outputTokens && (
+                    <span>, out: {formatTokens(extraction.judgeResponseMetrics.outputTokens)}</span>
+                  )}
+                  {extraction.judgeResponseMetrics.stopReason && (
+                    <span>, stop: {extraction.judgeResponseMetrics.stopReason}</span>
+                  )}
+                </div>
+              )}
+            </>
           )}
           {extraction.extractors && extraction.extractors.length > 0 && (
             <div>

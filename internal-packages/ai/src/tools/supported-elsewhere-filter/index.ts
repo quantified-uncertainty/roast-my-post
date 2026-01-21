@@ -15,6 +15,8 @@ import type {
   SupportedElsewhereFilterInput,
   SupportedElsewhereFilterOutput,
   SupportedElsewhereResult,
+  ActualApiParams,
+  ApiResponseMetrics,
 } from "./types";
 import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
 import { DEFAULT_SUPPORTED_ELSEWHERE_SYSTEM_PROMPT } from "./prompts";
@@ -185,7 +187,12 @@ For each issue, determine if it is supported elsewhere in the document.`;
     };
 
     try {
-      let result: { toolResult: FilterResults; unifiedUsage?: UnifiedUsageMetrics };
+      let result: {
+        toolResult: FilterResults;
+        unifiedUsage?: UnifiedUsageMetrics;
+        actualApiParams?: ActualApiParams;
+        responseMetrics?: ApiResponseMetrics;
+      };
 
       if (isOpenRouterModel) {
         // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
@@ -216,6 +223,19 @@ For each issue, determine if it is supported elsewhere in the document.`;
         result = {
           toolResult: openRouterResult.toolResult,
           unifiedUsage: openRouterResult.unifiedUsage,
+          actualApiParams: {
+            model: openRouterResult.actualParams.model,
+            temperature: openRouterResult.actualParams.temperature ?? 0,
+            maxTokens: openRouterResult.actualParams.maxTokens,
+            reasoning: openRouterResult.actualParams.reasoning,
+          },
+          responseMetrics: {
+            success: openRouterResult.responseMetrics.success,
+            latencyMs: openRouterResult.responseMetrics.latencyMs,
+            inputTokens: openRouterResult.responseMetrics.inputTokens,
+            outputTokens: openRouterResult.responseMetrics.outputTokens,
+            stopReason: openRouterResult.responseMetrics.stopReason,
+          },
         };
       } else {
         // Use Claude API directly
@@ -252,6 +272,19 @@ For each issue, determine if it is supported elsewhere in the document.`;
         result = {
           toolResult: claudeResult.toolResult,
           unifiedUsage: claudeResult.unifiedUsage,
+          actualApiParams: {
+            model: modelId,
+            temperature: temperature,
+            maxTokens: 4000,
+            reasoning: thinkingConfig ? { max_tokens: thinkingConfig.budget_tokens } : undefined,
+          },
+          responseMetrics: {
+            success: true,
+            latencyMs: 0, // Claude wrapper doesn't expose latency
+            inputTokens: claudeResult.unifiedUsage?.inputTokens,
+            outputTokens: claudeResult.unifiedUsage?.outputTokens,
+            stopReason: 'tool_use',
+          },
         };
       }
 
@@ -305,6 +338,8 @@ For each issue, determine if it is supported elsewhere in the document.`;
         unsupportedIssues,
         supportedIssues,
         unifiedUsage: result.unifiedUsage,
+        actualApiParams: result.actualApiParams,
+        responseMetrics: result.responseMetrics,
       };
     } catch (error) {
       context.logger.error("[SupportedElsewhereFilter] Filter failed:", error);

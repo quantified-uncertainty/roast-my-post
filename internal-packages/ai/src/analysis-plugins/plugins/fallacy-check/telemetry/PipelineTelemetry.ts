@@ -112,6 +112,9 @@ export class PipelineTelemetry {
       costUsd?: number;
       error?: string;
       metadata?: Record<string, unknown>;
+      actualApiParams?: StageMetrics['actualApiParams'];
+      responseMetrics?: StageMetrics['responseMetrics'];
+      unifiedUsage?: StageMetrics['unifiedUsage'];
     }
   ): this {
     if (!this.activeStage) {
@@ -134,6 +137,9 @@ export class PipelineTelemetry {
       costUsd: options?.costUsd,
       error: options?.error,
       metadata: options?.metadata,
+      actualApiParams: options?.actualApiParams,
+      responseMetrics: options?.responseMetrics,
+      unifiedUsage: options?.unifiedUsage,
     };
 
     this.stages.push(metrics);

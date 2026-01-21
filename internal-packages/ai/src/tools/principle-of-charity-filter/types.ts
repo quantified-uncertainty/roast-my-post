@@ -64,6 +64,23 @@ export interface CharityFilterIssue {
   locationOffset?: number;
 }
 
+/** Actual API parameters sent to the model */
+export interface ActualApiParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  reasoning?: { effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'; max_tokens?: number };
+}
+
+/** Response metrics from the API call */
+export interface ApiResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  stopReason?: string;
+}
+
 export interface PrincipleOfCharityFilterOutput {
   /** Issues that remain valid even under charitable interpretation (keep flagging) */
   validIssues: CharityFilterResult[];
@@ -73,6 +90,12 @@ export interface PrincipleOfCharityFilterOutput {
 
   /** Unified usage metrics (includes cost, tokens, latency) */
   unifiedUsage?: UnifiedUsageMetrics;
+
+  /** Actual API parameters sent */
+  actualApiParams?: ActualApiParams;
+
+  /** Response metrics */
+  responseMetrics?: ApiResponseMetrics;
 }
 
 export interface CharityFilterResult {

@@ -835,6 +835,9 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       telemetry.endStage(filteredIssues.length, {
         costUsd: filterResult.unifiedUsage?.costUsd,
+        actualApiParams: filterResult.actualApiParams,
+        responseMetrics: filterResult.responseMetrics,
+        unifiedUsage: filterResult.unifiedUsage,
       });
       return filteredIssues;
     } catch (error) {
@@ -946,6 +949,9 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       telemetry.endStage(filteredIssues.length, {
         costUsd: filterResult.unifiedUsage?.costUsd,
+        actualApiParams: filterResult.actualApiParams,
+        responseMetrics: filterResult.responseMetrics,
+        unifiedUsage: filterResult.unifiedUsage,
       });
       return filteredIssues;
     } catch (error) {

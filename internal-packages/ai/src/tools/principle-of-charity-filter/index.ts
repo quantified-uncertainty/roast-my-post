@@ -15,6 +15,8 @@ import type {
   PrincipleOfCharityFilterInput,
   PrincipleOfCharityFilterOutput,
   CharityFilterResult,
+  ActualApiParams,
+  ApiResponseMetrics,
 } from "./types";
 import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
 import { DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT } from "./prompts";
@@ -176,7 +178,12 @@ For each issue:
     };
 
     try {
-      let result: { toolResult: FilterResults; unifiedUsage?: UnifiedUsageMetrics };
+      let result: {
+        toolResult: FilterResults;
+        unifiedUsage?: UnifiedUsageMetrics;
+        actualApiParams?: ActualApiParams;
+        responseMetrics?: ApiResponseMetrics;
+      };
 
       if (isOpenRouterModel) {
         // Determine reasoning settings for OpenRouter
@@ -204,6 +211,19 @@ For each issue:
         result = {
           toolResult: openRouterResult.toolResult,
           unifiedUsage: openRouterResult.unifiedUsage,
+          actualApiParams: {
+            model: openRouterResult.actualParams.model,
+            temperature: openRouterResult.actualParams.temperature ?? 0,
+            maxTokens: openRouterResult.actualParams.maxTokens,
+            reasoning: openRouterResult.actualParams.reasoning,
+          },
+          responseMetrics: {
+            success: openRouterResult.responseMetrics.success,
+            latencyMs: openRouterResult.responseMetrics.latencyMs,
+            inputTokens: openRouterResult.responseMetrics.inputTokens,
+            outputTokens: openRouterResult.responseMetrics.outputTokens,
+            stopReason: openRouterResult.responseMetrics.stopReason,
+          },
         };
       } else {
         // Use Claude API directly
@@ -239,6 +259,19 @@ For each issue:
         result = {
           toolResult: claudeResult.toolResult,
           unifiedUsage: claudeResult.unifiedUsage,
+          actualApiParams: {
+            model: modelId,
+            temperature: temperature,
+            maxTokens: 4000,
+            reasoning: thinkingConfig ? { max_tokens: thinkingConfig.budget_tokens } : undefined,
+          },
+          responseMetrics: {
+            success: true,
+            latencyMs: 0, // Claude wrapper doesn't expose latency
+            inputTokens: claudeResult.unifiedUsage?.inputTokens,
+            outputTokens: claudeResult.unifiedUsage?.outputTokens,
+            stopReason: 'tool_use',
+          },
         };
       }
 
@@ -294,6 +327,8 @@ For each issue:
         validIssues,
         dissolvedIssues,
         unifiedUsage: result.unifiedUsage,
+        actualApiParams: result.actualApiParams,
+        responseMetrics: result.responseMetrics,
       };
     } catch (error) {
       context.logger.error("[PrincipleOfCharityFilter] Filter failed:", error);
