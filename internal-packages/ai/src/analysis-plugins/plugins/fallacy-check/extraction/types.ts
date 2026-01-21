@@ -119,6 +119,11 @@ export interface JudgeConfig {
    */
   reasoning?: ReasoningConfig;
 
+  /**
+   * Provider routing preferences (OpenRouter only)
+   */
+  provider?: ProviderPreferences;
+
   /** Whether the judge is enabled */
   enabled: boolean;
 }

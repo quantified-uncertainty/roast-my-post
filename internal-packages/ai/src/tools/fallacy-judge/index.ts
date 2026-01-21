@@ -22,6 +22,8 @@ import type {
   JudgeDecision,
   JudgeConfig,
   ExtractorIssueInput,
+  ActualApiParams,
+  ApiResponseMetrics,
 } from './types';
 import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT } from './prompts';
@@ -467,7 +469,12 @@ Group similar issues together and provide your decisions. Remember:
         required: ['decisions'],
       };
 
-      let result: { toolResult: JudgeResultType; unifiedUsage?: UnifiedUsageMetrics };
+      let result: {
+        toolResult: JudgeResultType;
+        unifiedUsage?: UnifiedUsageMetrics;
+        actualApiParams?: ActualApiParams;
+        responseMetrics?: ApiResponseMetrics;
+      };
 
       if (resolved.isOpenRouter) {
         // Use OpenRouter for non-Claude models
@@ -490,6 +497,19 @@ Group similar issues together and provide your decisions. Remember:
         result = {
           toolResult: openRouterResult.toolResult,
           unifiedUsage: openRouterResult.unifiedUsage,
+          actualApiParams: {
+            model: openRouterResult.actualParams.model,
+            temperature: openRouterResult.actualParams.temperature ?? 0,
+            maxTokens: openRouterResult.actualParams.maxTokens,
+            reasoning: openRouterResult.actualParams.reasoning,
+          },
+          responseMetrics: {
+            success: openRouterResult.responseMetrics.success,
+            latencyMs: openRouterResult.responseMetrics.latencyMs,
+            inputTokens: openRouterResult.responseMetrics.inputTokens,
+            outputTokens: openRouterResult.responseMetrics.outputTokens,
+            stopReason: openRouterResult.responseMetrics.stopReason,
+          },
         };
       } else {
         // Use Claude API directly
@@ -600,6 +620,8 @@ Group similar issues together and provide your decisions. Remember:
           rejectedCount: rejectedDecisions.length,
         },
         unifiedUsage: result.unifiedUsage,
+        actualApiParams: result.actualApiParams,
+        responseMetrics: result.responseMetrics,
       };
     } catch (error) {
       context.logger.error('[FallacyJudge] Aggregation failed:', error);

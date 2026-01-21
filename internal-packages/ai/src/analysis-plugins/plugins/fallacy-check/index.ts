@@ -27,6 +27,8 @@ import {
   type ExtractionPhaseTelemetry,
   type ExtractorTelemetry,
   type JudgeDecisionRecord,
+  type ActualApiParams,
+  type ApiResponseMetrics,
 } from "./telemetry";
 import {
   getMultiExtractorConfig,
@@ -454,7 +456,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private async extractWithMultiExtractor(
     documentText: string,
     telemetry: PipelineTelemetry,
-    config: { extractors: Array<{ model: string; temperature?: number | 'default'; thinking?: boolean; label?: string }>; judge: { model: string; temperature?: number | 'default'; thinking?: boolean; enabled: boolean } }
+    config: MultiExtractorConfig
   ): Promise<{
     issues: FallacyIssue[];
     error?: string;
@@ -513,6 +515,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       let judgeDurationMs: number | undefined;
       let judgeCostUsd: number | undefined;
       let judgeUnifiedUsage: typeof multiResult.extractorResults[0]['unifiedUsage'];
+      let judgeActualApiParams: ActualApiParams | undefined;
+      let judgeResponseMetrics: ApiResponseMetrics | undefined;
       let issuesAfterDedup = allExtractedIssues.length;
 
       if (allExtractedIssues.length === 0) {
@@ -550,6 +554,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
               model: config.judge.model,
               temperature: config.judge.temperature,
               thinking: this.resolveThinkingForJudge(config.judge),
+              reasoning: config.judge.reasoning,
+              provider: config.judge.provider,
               enabled: true, // We're inside the enabled branch
             },
           };
@@ -564,6 +570,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           // Get cost and unified usage from judge result
           judgeCostUsd = judgeResult.unifiedUsage?.costUsd;
           judgeUnifiedUsage = judgeResult.unifiedUsage;
+          judgeActualApiParams = judgeResult.actualApiParams;
+          judgeResponseMetrics = judgeResult.responseMetrics;
 
           // Convert judge decisions to issues
           finalIssues = judgeResult.acceptedDecisions.map((d) => decisionToIssue(d));
@@ -607,6 +615,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         judgeDurationMs,
         judgeCostUsd,
         judgeUnifiedUsage,
+        judgeActualApiParams,
+        judgeResponseMetrics,
         judgeDecisions,
       };
       telemetry.setExtractionPhase(extractionTelemetry);

@@ -37,6 +37,15 @@ export interface StageMetrics {
 
   /** Additional stage-specific metadata */
   metadata?: Record<string, unknown>;
+
+  /** Actual API parameters sent to the provider (for LLM-based stages) */
+  actualApiParams?: ActualApiParams;
+
+  /** Response metrics from API call (for LLM-based stages) */
+  responseMetrics?: ApiResponseMetrics;
+
+  /** Unified usage metrics (includes cost, tokens, latency) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }
 
 /**
@@ -254,6 +263,12 @@ export interface ExtractionPhaseTelemetry {
 
   /** Unified usage metrics for the judge (if multi-extractor enabled) */
   judgeUnifiedUsage?: UnifiedUsageMetrics;
+
+  /** Actual API parameters sent for judge call */
+  judgeActualApiParams?: ActualApiParams;
+
+  /** Response metrics from judge API call */
+  judgeResponseMetrics?: ApiResponseMetrics;
 
   /** Detailed decisions for drill-down */
   judgeDecisions: JudgeDecisionRecord[];

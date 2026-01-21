@@ -14,6 +14,8 @@ export {
   type JudgeDecisionRecord,
   type ExtractionPhaseTelemetry,
   type ProfileInfo,
+  type ActualApiParams,
+  type ApiResponseMetrics,
   PIPELINE_STAGES,
 } from './types';
 

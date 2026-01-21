@@ -136,6 +136,34 @@ export interface JudgeDecision {
   judgeReasoning: string;
 }
 
+/** Actual API parameters sent to the provider */
+export interface ActualApiParams {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  thinking?: {
+    type: 'enabled';
+    budget_tokens: number;
+  };
+  reasoning?: {
+    effort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+    max_tokens?: number;
+  };
+}
+
+/** Response metrics from API call */
+export interface ApiResponseMetrics {
+  success: boolean;
+  latencyMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  stopReason?: string;
+  errorType?: string;
+  errorMessage?: string;
+}
+
 /**
  * Output from the fallacy judge tool
  */
@@ -157,6 +185,12 @@ export interface FallacyJudgeOutput {
 
   /** Unified usage metrics (includes cost, tokens, latency) */
   unifiedUsage?: UnifiedUsageMetrics;
+
+  /** Actual API parameters sent to the provider */
+  actualApiParams?: ActualApiParams;
+
+  /** Response metrics from API call */
+  responseMetrics?: ApiResponseMetrics;
 }
 
 /**

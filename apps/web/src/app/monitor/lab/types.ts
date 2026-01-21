@@ -147,6 +147,10 @@ export interface ExtractionPhase {
   judgeDurationMs?: number;
   judgeCostUsd?: number;
   judgeModel?: string;
+  /** Actual API parameters sent for judge call */
+  judgeActualApiParams?: ActualApiParams;
+  /** Response metrics from judge API call */
+  judgeResponseMetrics?: ApiResponseMetrics;
 }
 
 export interface StageMetrics {
@@ -156,6 +160,10 @@ export interface StageMetrics {
   outputCount: number;
   model?: string;
   costUsd?: number;
+  /** Actual API parameters sent to the provider (for LLM-based stages) */
+  actualApiParams?: ActualApiParams;
+  /** Response metrics from API call (for LLM-based stages) */
+  responseMetrics?: ApiResponseMetrics;
 }
 
 export interface ValidationRunDetail {
