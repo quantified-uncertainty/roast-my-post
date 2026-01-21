@@ -17,6 +17,14 @@ export interface CorpusDocument {
   evaluationCount: number;
 }
 
+export interface EvaluationVersionSummary {
+  id: string;
+  createdAt: string;
+  grade: number | null;
+  summary: string | null;
+  version: number;
+}
+
 export interface ValidationRun {
   id: string;
   name: string | null;

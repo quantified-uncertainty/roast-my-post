@@ -91,6 +91,11 @@ restart_dev() {
     echo "Dev environment restarted in existing session."
 }
 
+psql_dev() {
+    source "$SCRIPT_DIR/dev/db/lib/db_functions.sh"
+    psql_local "${LOCAL_DB_NAME:-roast_my_post}" "$@"
+}
+
 case "${1:-start}" in
     start)
         start_dev
@@ -107,8 +112,12 @@ case "${1:-start}" in
     restart)
         restart_dev
         ;;
+    psql)
+        shift
+        psql_dev "$@"
+        ;;
     *)
-        echo "Usage: $0 [start|stop|status|attach|restart]"
+        echo "Usage: $0 [start|stop|status|attach|restart|psql]"
         exit 1
         ;;
 esac

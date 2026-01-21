@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { XMarkIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import type { CorpusDocument } from "../../types";
+import { XMarkIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import type { CorpusDocument, EvaluationVersionSummary } from "../../types";
 import { truncate } from "../../utils/formatters";
 
 interface CreateBaselineModalProps {
@@ -17,14 +17,28 @@ function getDefaultName(): string {
   return `Baseline ${date}`;
 }
 
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleString();
+}
+
 export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBaselineModalProps) {
   const [name, setName] = useState(getDefaultName);
   const [description, setDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [documents, setDocuments] = useState<CorpusDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [creating, setCreating] = useState(false);
+
+  // Selected version per document: Map<documentId, versionId>
+  const [selectedVersions, setSelectedVersions] = useState<Map<string, string>>(new Map());
+
+  // Expanded documents for viewing versions
+  const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
+  const [versions, setVersions] = useState<EvaluationVersionSummary[]>([]);
+  const [loadingVersions, setLoadingVersions] = useState(false);
+
+  // Cache versions per document to avoid refetching
+  const [versionsCache, setVersionsCache] = useState<Map<string, EvaluationVersionSummary[]>>(new Map());
 
   const fetchDocuments = useCallback(async (filter?: string) => {
     setLoading(true);
@@ -41,6 +55,27 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
     }
   }, [agentId]);
 
+  const fetchVersions = useCallback(async (documentId: string): Promise<EvaluationVersionSummary[]> => {
+    // Check cache first
+    const cached = versionsCache.get(documentId);
+    if (cached) return cached;
+
+    setLoadingVersions(true);
+    try {
+      const params = new URLSearchParams({ agentId, documentId });
+      const res = await fetch(`/api/monitor/lab/corpus/versions?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        const fetchedVersions = data.versions as EvaluationVersionSummary[];
+        setVersionsCache(prev => new Map(prev).set(documentId, fetchedVersions));
+        return fetchedVersions;
+      }
+    } finally {
+      setLoadingVersions(false);
+    }
+    return [];
+  }, [agentId, versionsCache]);
+
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
@@ -49,26 +84,55 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
     fetchDocuments(searchQuery || undefined);
   };
 
-  const toggleDocument = (docId: string) => {
-    const newSet = new Set(selectedIds);
-    if (newSet.has(docId)) {
-      newSet.delete(docId);
+  const toggleDocument = async (docId: string) => {
+    const newSelected = new Map(selectedVersions);
+    if (newSelected.has(docId)) {
+      // Deselect document
+      newSelected.delete(docId);
     } else {
-      newSet.add(docId);
+      // Select document - auto-select latest version
+      const docVersions = versionsCache.get(docId) || await fetchVersions(docId);
+      if (docVersions.length > 0) {
+        newSelected.set(docId, docVersions[0].id); // Latest version (ordered desc)
+      }
     }
-    setSelectedIds(newSet);
+    setSelectedVersions(newSelected);
   };
 
-  const handleSelectAll = () => {
-    setSelectedIds(new Set(documents.map((d) => d.documentId)));
+  const selectVersion = (docId: string, versionId: string) => {
+    const newSelected = new Map(selectedVersions);
+    newSelected.set(docId, versionId);
+    setSelectedVersions(newSelected);
+  };
+
+  const toggleExpand = async (docId: string) => {
+    if (expandedDocId === docId) {
+      setExpandedDocId(null);
+      setVersions([]);
+    } else {
+      setExpandedDocId(docId);
+      const docVersions = await fetchVersions(docId);
+      setVersions(docVersions);
+    }
+  };
+
+  const handleSelectAll = async () => {
+    const newSelected = new Map<string, string>();
+    for (const doc of documents) {
+      const docVersions = versionsCache.get(doc.documentId) || await fetchVersions(doc.documentId);
+      if (docVersions.length > 0) {
+        newSelected.set(doc.documentId, docVersions[0].id);
+      }
+    }
+    setSelectedVersions(newSelected);
   };
 
   const handleSelectNone = () => {
-    setSelectedIds(new Set());
+    setSelectedVersions(new Map());
   };
 
   const handleCreate = async () => {
-    if (!name.trim() || selectedIds.size === 0) return;
+    if (!name.trim() || selectedVersions.size === 0) return;
     setCreating(true);
     try {
       const res = await fetch("/api/monitor/lab/baselines", {
@@ -78,7 +142,7 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
           agentId,
           name: name.trim(),
           description: description.trim() || undefined,
-          documentIds: Array.from(selectedIds),
+          evaluationVersionIds: Array.from(selectedVersions.values()),
         }),
       });
       if (res.ok) {
@@ -132,7 +196,7 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                Select Documents ({selectedIds.size} selected)
+                Select Documents ({selectedVersions.size} selected)
               </label>
               <div className="space-x-2">
                 <button
@@ -171,35 +235,102 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
               </button>
             </div>
 
+            <p className="text-xs text-gray-500 mb-2">
+              Expand a document to select a specific version. By default, the latest version is used.
+            </p>
+
             {/* Document List */}
-            <div className="border rounded-md max-h-64 overflow-y-auto">
+            <div className="border rounded-md max-h-72 overflow-y-auto">
               {loading ? (
                 <div className="p-4 text-center text-gray-500">Loading documents...</div>
               ) : documents.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">No documents found</div>
               ) : (
                 <div className="divide-y">
-                  {documents.map((doc) => (
-                    <label
-                      key={doc.documentId}
-                      className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(doc.documentId)}
-                        onChange={() => toggleDocument(doc.documentId)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                      />
-                      <div className="ml-3 flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {truncate(doc.title, 60)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {doc.evaluationCount} evaluations
-                        </p>
+                  {documents.map((doc) => {
+                    const isSelected = selectedVersions.has(doc.documentId);
+                    const selectedVersionId = selectedVersions.get(doc.documentId);
+
+                    return (
+                      <div key={doc.documentId}>
+                        <div className="flex items-center p-3 hover:bg-gray-50">
+                          {/* Expand button */}
+                          <button
+                            onClick={() => toggleExpand(doc.documentId)}
+                            className="mr-2 text-gray-400 hover:text-gray-600"
+                          >
+                            {expandedDocId === doc.documentId ? (
+                              <ChevronDownIcon className="h-4 w-4" />
+                            ) : (
+                              <ChevronRightIcon className="h-4 w-4" />
+                            )}
+                          </button>
+
+                          {/* Checkbox */}
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleDocument(doc.documentId)}
+                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                          />
+
+                          {/* Document info */}
+                          <div className="ml-3 flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {truncate(doc.title, 60)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {doc.evaluationCount} evaluations
+                              {isSelected && selectedVersionId && (
+                                <span className="ml-2 text-blue-600">
+                                  (version selected)
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Expanded versions */}
+                        {expandedDocId === doc.documentId && (
+                          <div className="bg-gray-50 px-10 py-2 border-t border-gray-100">
+                            {loadingVersions ? (
+                              <p className="text-xs text-gray-500">Loading versions...</p>
+                            ) : versions.length === 0 ? (
+                              <p className="text-xs text-gray-500">No versions found</p>
+                            ) : (
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-gray-600 mb-2">
+                                  Select version ({versions.length} available):
+                                </p>
+                                {versions.map((v, idx) => (
+                                  <label
+                                    key={v.id}
+                                    className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={`version-${doc.documentId}`}
+                                      checked={selectedVersionId === v.id}
+                                      onChange={() => selectVersion(doc.documentId, v.id)}
+                                      className="h-3 w-3 text-blue-600 border-gray-300"
+                                    />
+                                    <span className="font-mono text-gray-400">v{v.version}</span>
+                                    <span>{formatDate(v.createdAt)}</span>
+                                    {v.grade !== null && (
+                                      <span className="text-gray-500">Grade: {v.grade}</span>
+                                    )}
+                                    {idx === 0 && (
+                                      <span className="text-blue-500 text-[10px]">(latest)</span>
+                                    )}
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </label>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -216,10 +347,10 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
           </button>
           <button
             onClick={handleCreate}
-            disabled={!name.trim() || selectedIds.size === 0 || creating}
+            disabled={!name.trim() || selectedVersions.size === 0 || creating}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
-            {creating ? "Creating..." : `Create Baseline (${selectedIds.size} docs)`}
+            {creating ? "Creating..." : `Create Baseline (${selectedVersions.size} docs)`}
           </button>
         </div>
       </div>

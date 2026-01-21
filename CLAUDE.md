@@ -186,6 +186,20 @@ pnpm --filter @roast/db run gen       # Generate Prisma client
 pnpm --filter @roast/db run db:push   # Push schema changes
 ```
 
+### Dev Environment & Database Access (Primary)
+**Use these scripts for all dev environment and database operations:**
+```bash
+dev/scripts/dev-env.sh start|stop|status|attach|restart  # Manage tmux dev session
+dev/scripts/dev-env.sh psql [args]                       # Connect to local DB via Docker
+```
+
+**Database utilities** (Docker-based, no local psql needed):
+- `dev/scripts/dev/db/lib/db_functions.sh` - Core DB functions (`psql_local`, `psql_prod`, `pg_dump_prod`, `copy_data`)
+- `dev/scripts/dev/db/lib/common_utils.sh` - Shared bash utilities
+- `dev/scripts/dev/db/setup_db.sh` - Example: sync prod schema to local
+
+**AI agents should prefer these tools over raw docker/psql commands.**
+
 ### Testing
 ```bash
 # Test categories by cost/dependencies:

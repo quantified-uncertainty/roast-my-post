@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, description, agentId, documentIds, evaluationVersionIds } = body;
+    const { name, description, agentId, documentIds, evaluationVersionIds, beforeDate } = body;
 
     if (!name || !agentId) {
       return NextResponse.json(
@@ -47,13 +47,14 @@ export async function POST(request: NextRequest) {
     // Get evaluation version IDs from document IDs if not provided directly
     let evalVersionIds = evaluationVersionIds;
     if (!evalVersionIds?.length && documentIds?.length) {
-      // Get the latest evaluation version for each document
+      // Get the latest evaluation version for each document (optionally before cutoff date)
       const evaluations = await prisma.evaluationVersion.findMany({
         where: {
           agentId,
           evaluation: {
             documentId: { in: documentIds },
           },
+          ...(beforeDate ? { createdAt: { lt: new Date(beforeDate) } } : {}),
         },
         orderBy: { createdAt: "desc" },
         select: {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Keep only the latest version per document
+      // Keep only the latest version per document (before cutoff if specified)
       const latestByDoc = new Map<string, string>();
       for (const ev of evaluations) {
         if (!latestByDoc.has(ev.evaluation.documentId)) {
