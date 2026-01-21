@@ -18,6 +18,8 @@ export interface ModelInfo {
   maxTemperature?: number;
   /** Whether the model supports extended thinking/reasoning */
   supportsReasoning?: boolean;
+  /** Maximum completion tokens from provider (top_provider.max_completion_tokens) */
+  maxCompletionTokens?: number;
 }
 
 // Cache for models
@@ -69,6 +71,9 @@ async function fetchOpenRouterModels(): Promise<ModelInfo[]> {
         default_parameters?: {
           temperature?: number | null;
         };
+        top_provider?: {
+          max_completion_tokens?: number | null;
+        };
       }>;
     };
 
@@ -105,6 +110,7 @@ async function fetchOpenRouterModels(): Promise<ModelInfo[]> {
           maxTemperature: maxTemp,
           supportsReasoning: m.supported_parameters?.includes("reasoning") ||
             m.supported_parameters?.includes("include_reasoning"),
+          maxCompletionTokens: m.top_provider?.max_completion_tokens ?? undefined,
         };
       });
   } catch (e) {

@@ -76,7 +76,12 @@ function formatReasoning(ext: ExtractorInfo): string {
     const budget = ext.actualApiParams.thinking.budget_tokens;
     return `thinking ${formatTokens(budget)} tokens`;
   }
-  // Check for OpenRouter-style reasoning effort
+  // Check for OpenRouter-style reasoning with explicit max_tokens (preferred)
+  if (ext.actualApiParams?.reasoning?.max_tokens) {
+    const budget = ext.actualApiParams.reasoning.max_tokens;
+    return `reasoning ${formatTokens(budget)} tokens`;
+  }
+  // Check for OpenRouter-style reasoning effort (fallback)
   if (ext.actualApiParams?.reasoning?.effort) {
     return `reasoning: ${ext.actualApiParams.reasoning.effort}`;
   }
@@ -629,7 +634,10 @@ function ExtractorCard({ ext }: { ext: ExtractorInfo }) {
                   , thinking budget: {formatTokens(ext.actualApiParams.thinking.budget_tokens)}
                 </span>
               )}
-              {ext.actualApiParams.reasoning?.effort && (
+              {ext.actualApiParams.reasoning?.max_tokens && (
+                <span className="ml-1">, reasoning budget: {formatTokens(ext.actualApiParams.reasoning.max_tokens)}</span>
+              )}
+              {ext.actualApiParams.reasoning?.effort && !ext.actualApiParams.reasoning?.max_tokens && (
                 <span className="ml-1">, reasoning: {ext.actualApiParams.reasoning.effort}</span>
               )}
             </div>

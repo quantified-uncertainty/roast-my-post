@@ -6,7 +6,7 @@
  * parameters: models, thresholds, and prompts.
  */
 
-import type { ExtractorConfig, JudgeConfig } from './extraction/types';
+import type { ExtractorConfig, JudgeConfig, ProviderPreferences } from './extraction/types';
 
 // ============================================================================
 // Model Configuration Types
@@ -140,6 +140,8 @@ export interface PrincipleOfCharityFilterConfig extends BaseFilterConfig {
   model?: string;
   temperature?: number | 'default';
   reasoning?: ReasoningConfig;
+  /** Provider routing preferences (OpenRouter only) */
+  provider?: ProviderPreferences;
   customPrompt?: string;
 }
 
@@ -151,6 +153,8 @@ export interface SupportedElsewhereFilterConfig extends BaseFilterConfig {
   model?: string;
   temperature?: number | 'default';
   reasoning?: ReasoningConfig;
+  /** Provider routing preferences (OpenRouter only) */
+  provider?: ProviderPreferences;
   customPrompt?: string;
 }
 

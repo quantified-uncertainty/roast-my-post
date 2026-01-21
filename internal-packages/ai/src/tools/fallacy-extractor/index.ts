@@ -286,6 +286,34 @@ export class FallacyExtractorTool extends Tool<
     // Thinking parameter: undefined/true = enabled, false = disabled
     const thinkingEnabled = input.thinking !== false;
 
+    // For Anthropic models, convert reasoning effort to budget_tokens
+    // Anthropic supports up to 128K thinking tokens
+    const ANTHROPIC_MAX_THINKING_TOKENS = 128000;
+    const EFFORT_PERCENTAGES: Record<string, number> = {
+      minimal: 0.1,
+      low: 0.3,
+      medium: 0.5,
+      high: 0.7,
+      xhigh: 0.9,
+    };
+
+    // Calculate thinking config for Claude based on reasoning effort
+    const getClaudeThinkingConfig = (): boolean | { type: 'enabled'; budget_tokens: number } => {
+      if (!thinkingEnabled) return false;
+
+      // Only set explicit budget if effort level is specified
+      if (input.reasoningEffort && input.reasoningEffort !== 'none') {
+        const percentage = EFFORT_PERCENTAGES[input.reasoningEffort];
+        if (percentage) {
+          const budgetTokens = Math.floor(ANTHROPIC_MAX_THINKING_TOKENS * percentage);
+          return { type: 'enabled' as const, budget_tokens: budgetTokens };
+        }
+      }
+
+      // No effort specified - just return true, let wrapper use its default
+      return true;
+    };
+
     if (isOpenRouterModel && modelId) {
       // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
       const providerInfo = input.provider?.order ? `, provider: [${input.provider.order.join(', ')}]` : '';
@@ -317,7 +345,11 @@ export class FallacyExtractorTool extends Tool<
       unifiedUsage = openRouterResult.unifiedUsage;
     } else {
       // Use Claude API directly
-      console.log(`🤖 Calling Claude API${modelId ? ` with model: ${modelId}` : ""}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`);
+      const claudeThinkingConfig = getClaudeThinkingConfig();
+      const thinkingBudgetInfo = typeof claudeThinkingConfig === 'object'
+        ? `budget: ${claudeThinkingConfig.budget_tokens}`
+        : (claudeThinkingConfig ? 'default' : 'disabled');
+      console.log(`🤖 Calling Claude API${modelId ? ` with model: ${modelId}` : ""}, temp: ${temperature ?? 'default'}, thinking: ${thinkingBudgetInfo}, reasoningEffort: ${input.reasoningEffort ?? 'not set'}`);
       const claudeResult = await callClaudeWithTool<ExtractorResults>({
         ...(modelId && { model: modelId }),
         system: systemPrompt,
@@ -329,7 +361,7 @@ export class FallacyExtractorTool extends Tool<
         toolSchema,
         enablePromptCaching: true,
         cacheSeed,
-        thinking: thinkingEnabled,
+        thinking: claudeThinkingConfig,
       });
       result = claudeResult;
       // Capture actual API params from Claude response

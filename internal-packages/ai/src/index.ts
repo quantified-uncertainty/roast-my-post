@@ -22,6 +22,8 @@ export * from './utils/anthropic';
 export * from './utils/retryUtils';
 export * from './utils/openrouter';
 export * from './utils/allModels';
+export * from './utils/reasoningBudget';
+export * from './utils/modelConfigResolver';
 export * from './types';
 
 // Configuration

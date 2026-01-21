@@ -32,12 +32,18 @@ const reasoningSchema = z.union([
   z.object({ budget_tokens: z.number().min(1024) }),
 ]);
 
+const providerSchema = z.object({
+  order: z.array(z.string()).optional(),
+  allow_fallbacks: z.boolean().optional(),
+});
+
 const inputSchema = z.object({
   documentText: z.string().min(1).max(200000).describe("Full document text to search"),
   issues: z.array(issueSchema).describe("Issues to check for support elsewhere"),
   model: z.string().optional().describe("Model to use (Claude or OpenRouter model ID)"),
   temperature: z.number().min(0).max(2).optional().describe("Temperature (0-2). Default 0.1"),
   reasoning: reasoningSchema.optional().describe("Reasoning/thinking configuration"),
+  provider: providerSchema.optional().describe("Provider routing preferences (OpenRouter only)"),
   customPrompt: z.string().optional().describe("Custom system prompt (overrides default)"),
 });
 
@@ -184,7 +190,16 @@ For each issue, determine if it is supported elsewhere in the document.`;
       if (isOpenRouterModel) {
         // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
         // Use higher max_tokens for OpenRouter models (some need more space)
-        console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature}`);
+
+        // Determine reasoning settings for OpenRouter
+        const thinkingEnabled = input.reasoning !== undefined && input.reasoning !== false;
+        const reasoningEffort = thinkingEnabled && input.reasoning && "effort" in input.reasoning
+          ? input.reasoning.effort
+          : undefined;
+
+        const reasoningInfo = reasoningEffort ? `, reasoning: ${reasoningEffort}` : '';
+        console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature}${reasoningInfo}`);
+
         const openRouterResult = await callOpenRouterWithTool<FilterResults>({
           model: modelId,
           system: systemPrompt,
@@ -194,6 +209,9 @@ For each issue, determine if it is supported elsewhere in the document.`;
           toolName: "supported_elsewhere_results",
           toolDescription: "Results of checking each issue for support elsewhere",
           toolSchema,
+          thinking: thinkingEnabled,
+          ...(reasoningEffort && { reasoningEffort }),
+          ...(input.provider && { provider: input.provider }),
         });
         result = {
           toolResult: openRouterResult.toolResult,

@@ -17,6 +17,12 @@ export type ReasoningConfig =
   | { effort: ReasoningEffort }
   | { budget_tokens: number };
 
+/** Provider routing preferences */
+export interface ProviderPreferences {
+  order?: string[];
+  allow_fallbacks?: boolean;
+}
+
 export interface PrincipleOfCharityFilterInput {
   /** Full document text for context */
   documentText: string;
@@ -36,6 +42,9 @@ export interface PrincipleOfCharityFilterInput {
 
   /** Reasoning/thinking configuration for Claude models */
   reasoning?: ReasoningConfig;
+
+  /** Provider routing preferences (OpenRouter only) */
+  provider?: ProviderPreferences;
 
   /** Custom system prompt (overrides default) */
   customPrompt?: string;

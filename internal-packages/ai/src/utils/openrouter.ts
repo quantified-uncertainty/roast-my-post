@@ -14,6 +14,11 @@ import {
   fromOpenRouterUsage,
   OpenRouterRawUsage
 } from './usageMetrics';
+import {
+  resolveReasoningBudget,
+  invalidateEndpointsCache,
+  type ReasoningBudgetResult,
+} from './reasoningBudget';
 
 // ============================================================================
 // Types
@@ -511,17 +516,35 @@ export async function callOpenRouterWithTool<T>(
   }
   // When thinking is true or undefined, don't set reasoning_effort (use model default)
 
+  // Resolve reasoning budget using the new resolver (handles provider-specific limits)
+  let budgetResult: ReasoningBudgetResult | undefined;
+  let effectiveMaxTokens = options.max_tokens || 4000;
+
+  if (reasoningEffort && reasoningEffort !== 'none') {
+    budgetResult = await resolveReasoningBudget({
+      effort: reasoningEffort,
+      modelId: options.model,
+      selectedProviders: options.provider?.order,
+    });
+    effectiveMaxTokens = budgetResult.maxTokens;
+
+    console.log(`📡 [OpenRouter] Reasoning budget resolved: effort=${reasoningEffort}, maxTokens=${effectiveMaxTokens}, budget=${budgetResult.displayBudget}, usesExplicit=${budgetResult.usesExplicitBudget}`);
+  }
+
   // Build request
+  // Only set temperature if explicitly provided - otherwise let model use its native default
+  const effectiveTemperature = options.temperature !== undefined
+    ? normalizeTemperature(options.temperature, options.model)
+    : undefined;
+
   const request: OpenRouterRequest = {
     model: options.model,
     messages: [
       { role: 'system', content: options.system },
       ...options.messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ],
-    max_tokens: options.max_tokens || 4000,
-    temperature: options.temperature !== undefined
-      ? normalizeTemperature(options.temperature, options.model)
-      : normalizeTemperature(0.1, options.model),
+    max_tokens: effectiveMaxTokens,
+    ...(effectiveTemperature !== undefined && { temperature: effectiveTemperature }),
     tools: [
       {
         type: 'function',
@@ -542,9 +565,12 @@ export async function callOpenRouterWithTool<T>(
       : { type: 'function', function: { name: options.toolName } },
   };
 
-  // Add reasoning if specified - use the `reasoning` object format which is more widely supported
-  // than the top-level `reasoning_effort` parameter
-  if (reasoningEffort !== undefined) {
+  // Add reasoning configuration from budget resolver or simple effort
+  if (budgetResult) {
+    // Use the resolved reasoning config (may be explicit max_tokens or effort-based)
+    request.reasoning = budgetResult.reasoning;
+  } else if (reasoningEffort !== undefined) {
+    // Fallback for 'none' effort
     request.reasoning = { effort: reasoningEffort };
   }
 
@@ -558,11 +584,10 @@ export async function callOpenRouterWithTool<T>(
   // Capture actual params being sent to API (for telemetry)
   const actualParams: OpenRouterActualParams = {
     model: options.model,
-    temperature: request.temperature!,
+    // Use effectiveTemperature or -1 to indicate "not set" (model uses native default)
+    temperature: effectiveTemperature ?? -1,
     maxTokens: request.max_tokens!,
-    ...(reasoningEffort !== undefined && {
-      reasoning: { effort: reasoningEffort },
-    }),
+    ...(request.reasoning && { reasoning: request.reasoning }),
   };
 
   // Capture timing for telemetry
@@ -576,6 +601,12 @@ export async function callOpenRouterWithTool<T>(
     throw new Error('No response from OpenRouter');
   }
 
+  // Detect truncation and invalidate cache for future requests
+  if (choice.finish_reason === 'length') {
+    console.warn(`⚠️ [OpenRouter] Response truncated for ${options.model} - invalidating endpoints cache`);
+    invalidateEndpointsCache(options.model);
+  }
+
   // Check for tool call
   const toolCall = choice.message?.tool_calls?.[0];
   if (!toolCall || toolCall.function.name !== options.toolName) {
@@ -587,7 +618,7 @@ export async function callOpenRouterWithTool<T>(
 
     // Provide specific error for finish_reason: length
     if (choice.finish_reason === 'length') {
-      throw new Error(`Response truncated (max_tokens too small) - model ${options.model} ran out of tokens before completing the tool call`);
+      throw new Error(`Response truncated (max_tokens too small) - model ${options.model} ran out of tokens before completing the tool call. Consider using a lower reasoning effort level.`);
     }
     throw new Error(`No tool call found for ${options.toolName}`);
   }

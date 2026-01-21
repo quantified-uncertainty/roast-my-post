@@ -31,7 +31,6 @@ import {
 import {
   getMultiExtractorConfig,
   getMultiExtractorConfigFromProfile,
-  isMultiExtractorEnabled,
   getDefaultTemperature,
   getConfigSummary,
 } from "./extraction/config";
@@ -440,117 +439,17 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     error?: string;
   }> {
     // Use profile-based config if available, otherwise fall back to env vars
+    // Always use the multi-extractor path - it handles 1+ extractors, does dedup
+    // (useful even for single extractor since LLMs can produce duplicates),
+    // and has proper telemetry capture
     const config = getMultiExtractorConfigFromProfile(this.profileConfig || undefined);
-    const multiExtractorEnabled = config.extractors.length > 1;
-
-    if (multiExtractorEnabled) {
-      return this.extractWithMultiExtractor(documentText, telemetry, config);
-    }
-
-    return this.extractWithSingleExtractor(documentText, telemetry, config);
+    return this.extractWithMultiExtractor(documentText, telemetry, config);
   }
 
   /**
-   * Single extractor mode (default, backwards compatible)
-   */
-  private async extractWithSingleExtractor(
-    documentText: string,
-    telemetry: PipelineTelemetry,
-    config: MultiExtractorConfig
-  ): Promise<{
-    issues: FallacyIssue[];
-    error?: string;
-  }> {
-    try {
-      const sessionManager = getGlobalSessionManager();
-      const extractorConfig = config.extractors[0];
-
-      // Resolve thinking/reasoning from extractor config
-      const thinkingEnabled = this.resolveThinkingForExtractor(extractorConfig);
-      const reasoningEffort = this.resolveReasoningEffortForExtractor(extractorConfig);
-
-      // Log threshold configuration from profile
-      logger.info('FallacyCheckPlugin: Using profile thresholds (single extractor)', {
-        model: extractorConfig?.model,
-        temperature: extractorConfig?.temperature,
-        thinking: thinkingEnabled,
-        reasoningEffort,
-        reasoning: extractorConfig?.reasoning,
-        minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
-        maxIssues: this.profileConfig?.thresholds?.maxIssues,
-        hasCustomPrompts: !!this.profileConfig?.prompts,
-      });
-
-      const executeExtraction = async () => {
-        return await fallacyExtractorTool.execute(
-          {
-            documentText,
-            // Pass extractor model/config
-            model: extractorConfig?.model,
-            temperature: extractorConfig?.temperature,
-            thinking: thinkingEnabled,
-            reasoningEffort,
-            // Pass profile prompts and thresholds to the extractor
-            customSystemPrompt: this.profileConfig?.prompts?.extractorSystemPrompt,
-            customUserPrompt: this.profileConfig?.prompts?.extractorUserPrompt,
-            minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
-            maxIssues: this.profileConfig?.thresholds?.maxIssues,
-          },
-          { logger }
-        );
-      };
-
-      const result = sessionManager
-        ? await sessionManager.trackTool("extract-fallacy-issues", executeExtraction)
-        : await executeExtraction();
-
-      // Create a synthetic "chunk" representing the full document
-      const fullDocChunk = new TextChunk("full-document", documentText, {
-        position: { start: 0, end: documentText.length },
-      });
-
-      const issues = result.issues.map(
-        (issue) => new FallacyIssue(issue, fullDocChunk, this.processingStartTime)
-      );
-
-      // Record single-extractor telemetry
-      const extractor = config.extractors[0];
-      const extractorTelemetry: ExtractionPhaseTelemetry = {
-        multiExtractorEnabled: false,
-        extractors: [
-          {
-            extractorId: "default",
-            model: extractor.model,
-            // Resolve temperature for telemetry: "default" -> model default, number -> use as-is
-            temperature: typeof extractor.temperature === 'number'
-              ? extractor.temperature
-              : getDefaultTemperature(extractor.model),
-            // Store original config for display
-            temperatureConfig: extractor.temperature,
-            thinkingEnabled: extractor.thinking !== false,
-            issuesFound: result.issues.length,
-            durationMs: 0, // Not tracked in single mode
-            issuesByType: this.countIssuesByType(result.issues),
-          },
-        ],
-        totalIssuesBeforeJudge: result.issues.length,
-        totalIssuesAfterJudge: result.issues.length,
-        judgeDecisions: [],
-      };
-      telemetry.setExtractionPhase(extractorTelemetry);
-
-      return { issues };
-    } catch (error) {
-      logger.error("Error extracting issues from document:", error);
-      return {
-        issues: [],
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  }
-
-  /**
-   * Multi-extractor mode with LLM judge aggregation
+   * Extract issues using the unified extractor path.
+   * Handles 1+ extractors, always does dedup (useful even with 1 extractor),
+   * and optionally runs the judge if enabled.
    */
   private async extractWithMultiExtractor(
     documentText: string,
@@ -560,7 +459,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     issues: FallacyIssue[];
     error?: string;
   }> {
-    logger.info(`[FallacyCheckPlugin] Multi-extractor mode enabled`, {
+    logger.info(`[FallacyCheckPlugin] Starting extraction`, {
       extractorCount: config.extractors.length,
       judgeEnabled: config.judge.enabled,
       minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
@@ -849,6 +748,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         model?: string;
         temperature?: number;
         reasoning?: ReasoningConfig;
+        provider?: { order?: string[]; allow_fallbacks?: boolean };
         customPrompt?: string;
       } = {
         documentText,
@@ -870,6 +770,9 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         }
         if (filterConfig.reasoning !== undefined) {
           filterInput.reasoning = filterConfig.reasoning;
+        }
+        if (filterConfig.provider) {
+          filterInput.provider = filterConfig.provider;
         }
         if (filterConfig.customPrompt) {
           filterInput.customPrompt = filterConfig.customPrompt;
@@ -955,6 +858,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         model?: string;
         temperature?: number;
         reasoning?: ReasoningConfig;
+        provider?: { order?: string[]; allow_fallbacks?: boolean };
         customPrompt?: string;
       } = {
         documentText,
@@ -976,6 +880,9 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         }
         if (filterConfig.reasoning !== undefined) {
           filterInput.reasoning = filterConfig.reasoning;
+        }
+        if (filterConfig.provider) {
+          filterInput.provider = filterConfig.provider;
         }
         if (filterConfig.customPrompt) {
           filterInput.customPrompt = filterConfig.customPrompt;

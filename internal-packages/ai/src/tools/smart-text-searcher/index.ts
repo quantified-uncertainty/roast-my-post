@@ -129,9 +129,8 @@ export class FuzzyTextLocatorTool extends Tool<
       );
       logger.debug("locationResult", {
         locationResult,
-        documentText: input.documentText,
-        searchText: input.searchText,
-        locationOptions,
+        documentLength: input.documentText.length,
+        searchText: input.searchText.substring(0, 100) + (input.searchText.length > 100 ? '...' : ''),
       });
 
       // Check if LLM was used based on the strategy

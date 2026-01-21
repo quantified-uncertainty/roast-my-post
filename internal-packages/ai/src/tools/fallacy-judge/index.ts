@@ -14,6 +14,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { Tool, type ToolContext } from '../base/Tool';
 import { callClaude, callClaudeWithTool } from '../../claude/wrapper';
 import { callOpenRouterWithTool } from '../../utils/openrouter';
+import { resolveModelConfig, getReasoningDisplayString } from '../../utils/modelConfigResolver';
 import { fallacyJudgeConfig } from './config';
 import type {
   FallacyJudgeInput,
@@ -43,11 +44,39 @@ function isOpenRouterModel(model: string): boolean {
 function parseJudgeConfigObject(parsed: unknown): JudgeConfig | null {
   if (typeof parsed === 'object' && parsed !== null && typeof (parsed as Record<string, unknown>).model === 'string') {
     const obj = parsed as Record<string, unknown>;
+
+    // Parse reasoning config
+    let reasoning: JudgeConfig['reasoning'] = undefined;
+    if (obj.reasoning !== undefined) {
+      if (obj.reasoning === false) {
+        reasoning = false;
+      } else if (typeof obj.reasoning === 'object' && obj.reasoning !== null) {
+        const r = obj.reasoning as Record<string, unknown>;
+        if (typeof r.effort === 'string') {
+          reasoning = { effort: r.effort as 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' };
+        } else if (typeof r.budget_tokens === 'number') {
+          reasoning = { budget_tokens: r.budget_tokens };
+        }
+      }
+    }
+
+    // Parse provider preferences
+    let provider: JudgeConfig['provider'] = undefined;
+    if (typeof obj.provider === 'object' && obj.provider !== null) {
+      const p = obj.provider as Record<string, unknown>;
+      provider = {
+        order: Array.isArray(p.order) ? p.order as string[] : undefined,
+        allow_fallbacks: typeof p.allow_fallbacks === 'boolean' ? p.allow_fallbacks : undefined,
+      };
+    }
+
     return {
       model: obj.model as string,
       temperature: typeof obj.temperature === 'number' ? obj.temperature :
                    obj.temperature === 'default' ? 'default' : undefined,
       thinking: typeof obj.thinking === 'boolean' ? obj.thinking : undefined,
+      reasoning,
+      provider,
       label: typeof obj.label === 'string' ? obj.label : undefined,
       enabled: obj.enabled !== false,
     };
@@ -184,10 +213,23 @@ const extractorIssueInputSchema = z.object({
   reasoning: z.string(),
 });
 
+const reasoningConfigSchema = z.union([
+  z.literal(false),
+  z.object({ effort: z.enum(['minimal', 'low', 'medium', 'high', 'xhigh']) }),
+  z.object({ budget_tokens: z.number() }),
+]);
+
+const providerPreferencesSchema = z.object({
+  order: z.array(z.string()).optional(),
+  allow_fallbacks: z.boolean().optional(),
+});
+
 const judgeConfigSchema = z.object({
   model: z.string(),
   temperature: z.union([z.number(), z.literal('default')]).optional(),
   thinking: z.boolean().optional(),
+  reasoning: reasoningConfigSchema.optional(),
+  provider: providerPreferencesSchema.optional(),
   label: z.string().optional(),
   enabled: z.boolean(),
 });
@@ -323,18 +365,16 @@ Group similar issues together and provide your decisions. Remember:
     try {
       // Use passed config if provided, otherwise fall back to env var config
       const judgeConfig = input.judgeConfig ?? getJudgeConfig();
-      const useOpenRouter = isOpenRouterModel(judgeConfig.model);
 
-      // Determine temperature
-      const defaultTemp = useOpenRouter ? DEFAULT_OPENROUTER_TEMPERATURE : DEFAULT_CLAUDE_TEMPERATURE;
-      const temperature = judgeConfig.temperature === 'default' ? undefined :
-                         judgeConfig.temperature ?? defaultTemp;
+      // Use the unified model config resolver
+      const isOpenRouter = judgeConfig.model.includes('/');
+      const resolved = resolveModelConfig(judgeConfig, {
+        defaultTemperature: isOpenRouter ? DEFAULT_OPENROUTER_TEMPERATURE : DEFAULT_CLAUDE_TEMPERATURE,
+      });
 
-      // Determine thinking
-      const thinkingEnabled = judgeConfig.thinking !== false;
-
+      const reasoningDisplay = getReasoningDisplayString(judgeConfig);
       context.logger.info(
-        `[FallacyJudge] Using ${useOpenRouter ? 'OpenRouter' : 'Claude'} model: ${judgeConfig.model}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}`
+        `[FallacyJudge] Using ${resolved.isOpenRouter ? 'OpenRouter' : 'Claude'} model: ${judgeConfig.model}, temp: ${resolved.temperature ?? 'default'}, reasoning: ${reasoningDisplay}`
       );
 
       type JudgeResultType = {
@@ -429,19 +469,23 @@ Group similar issues together and provide your decisions. Remember:
 
       let result: { toolResult: JudgeResultType; unifiedUsage?: UnifiedUsageMetrics };
 
-      if (useOpenRouter) {
+      if (resolved.isOpenRouter) {
         // Use OpenRouter for non-Claude models
         // Use 32000 max_tokens to handle large outputs with many issues (esp. with thinking)
         const openRouterResult = await callOpenRouterWithTool<JudgeResultType>({
-          model: judgeConfig.model,
+          model: resolved.model,
           system: systemPrompt,
           messages: [{ role: 'user', content: userPrompt }],
           max_tokens: 32000,
-          ...(temperature !== undefined && { temperature }),
+          ...(resolved.temperature !== undefined && { temperature: resolved.temperature }),
           toolName: 'aggregate_fallacy_issues',
           toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
           toolSchema,
-          thinking: thinkingEnabled,
+          thinking: resolved.thinkingEnabled,
+          // Pass reasoning effort for budget calculation
+          ...(resolved.reasoningEffort && { reasoningEffort: resolved.reasoningEffort }),
+          // Pass provider preferences for routing
+          ...(resolved.provider && { provider: resolved.provider }),
         });
         result = {
           toolResult: openRouterResult.toolResult,
@@ -449,23 +493,29 @@ Group similar issues together and provide your decisions. Remember:
         };
       } else {
         // Use Claude API directly
-        if (thinkingEnabled) {
+        if (resolved.thinkingEnabled) {
           // When thinking is enabled, use tool_choice: 'auto' to allow thinking
           // (forced tool_choice like 'any' or specific tool is incompatible with extended thinking)
+          // Calculate max_tokens to accommodate thinking budget
+          const thinkingBudget = typeof resolved.claudeThinkingConfig === 'object'
+            ? resolved.claudeThinkingConfig.budget_tokens
+            : 10000;
+          const maxTokens = Math.max(16000, thinkingBudget + 4000);
+
           const claudeResult = await callClaude(
             {
-              model: judgeConfig.model,
+              model: resolved.model,
               system: systemPrompt,
               messages: [{ role: 'user', content: userPrompt }],
-              max_tokens: 16000, // Must be > thinking.budget_tokens (10000)
-              ...(temperature !== undefined && { temperature }),
+              max_tokens: maxTokens,
+              ...(resolved.temperature !== undefined && { temperature: resolved.temperature }),
               tools: [{
                 name: 'aggregate_fallacy_issues',
                 description: 'Aggregate and deduplicate fallacy issues from multiple extractors',
                 input_schema: toolSchema,
               }],
               tool_choice: { type: 'auto' },
-              thinking: true,
+              thinking: resolved.claudeThinkingConfig,
             },
             []
           );
@@ -485,11 +535,11 @@ Group similar issues together and provide your decisions. Remember:
           // Without thinking, use forced tool_choice for guaranteed structure
           const claudeResult = await callClaudeWithTool<JudgeResultType>(
             {
-              model: judgeConfig.model,
+              model: resolved.model,
               system: systemPrompt,
               messages: [{ role: 'user', content: userPrompt }],
               max_tokens: 8000,
-              ...(temperature !== undefined && { temperature }),
+              ...(resolved.temperature !== undefined && { temperature: resolved.temperature }),
               toolName: 'aggregate_fallacy_issues',
               toolDescription: 'Aggregate and deduplicate fallacy issues from multiple extractors',
               toolSchema,

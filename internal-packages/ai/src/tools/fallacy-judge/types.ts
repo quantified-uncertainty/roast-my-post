@@ -8,11 +8,23 @@
 import type { ExtractedFallacyIssue } from '../fallacy-extractor/types';
 import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
 
+/** Reasoning configuration (matches profile format) */
+export type ReasoningConfig =
+  | false
+  | { effort: 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' }
+  | { budget_tokens: number };
+
+/** Provider routing preferences */
+export interface ProviderPreferences {
+  order?: string[];
+  allow_fallbacks?: boolean;
+}
+
 /**
- * Judge configuration from FALLACY_JUDGE env var
+ * Judge configuration from profile or FALLACY_JUDGE env var
  *
  * Example:
- * FALLACY_JUDGE='{"model":"google/gemini-3-flash-preview","temperature":"default","thinking":false,"enabled":true}'
+ * FALLACY_JUDGE='{"model":"google/gemini-3-flash-preview","temperature":"default","reasoning":{"effort":"high"},"enabled":true}'
  */
 export interface JudgeConfig {
   /** Model to use (Claude or OpenRouter format) */
@@ -21,8 +33,14 @@ export interface JudgeConfig {
   /** Temperature (number or "default" for model's native default) */
   temperature?: number | 'default';
 
-  /** Enable extended thinking/reasoning */
+  /** @deprecated Use reasoning instead */
   thinking?: boolean;
+
+  /** Reasoning/thinking configuration */
+  reasoning?: ReasoningConfig;
+
+  /** Provider routing preferences (OpenRouter only) */
+  provider?: ProviderPreferences;
 
   /** Optional display label (auto-generated if not provided) */
   label?: string;
