@@ -2,23 +2,10 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { logger as defaultLogger } from '../../shared/logger';
 import { getGlobalSessionManager } from '../../helicone/simpleSessionManager';
+import type { ToolConfig, ToolContext } from './types';
 
-export interface ToolConfig {
-  id: string;
-  name: string;
-  description: string;
-  version: string;
-  category: 'extraction' | 'checker' | 'research' | 'utility';
-  costEstimate?: string;
-  path?: string; // UI route path
-  status?: 'stable' | 'experimental' | 'beta';
-}
-
-export interface ToolContext {
-  userId?: string;
-  apiKey?: string;
-  logger: typeof defaultLogger;
-}
+// Re-export types for backwards compatibility
+export type { ToolConfig, ToolContext } from './types';
 
 export abstract class Tool<TInput = unknown, TOutput = unknown> {
   abstract config: ToolConfig;
