@@ -15,6 +15,7 @@ import { Tool, type ToolContext } from '../base/Tool';
 import { callClaude, callClaudeWithTool } from '../../claude/wrapper';
 import { callOpenRouterWithTool } from '../../utils/openrouter';
 import { resolveModelConfig, getReasoningDisplayString } from '../../utils/modelConfigResolver';
+import { withDateContext } from '../shared/llm-filter-utils';
 import { fallacyJudgeConfig } from './config';
 import type {
   FallacyJudgeInput,
@@ -346,7 +347,9 @@ Reasoning: ${reasoning.substring(0, 200)}${reasoning.length > 200 ? '...' : ''}`
       .join('\n\n');
 
     // Use custom prompt if provided, otherwise use default from prompts.ts
-    const systemPrompt = input.customSystemPrompt || DEFAULT_JUDGE_SYSTEM_PROMPT;
+    // Always prepend date context to prevent false positives on recent dates
+    const baseSystemPrompt = input.customSystemPrompt || DEFAULT_JUDGE_SYSTEM_PROMPT;
+    const systemPrompt = withDateContext(baseSystemPrompt);
 
     const userPrompt = `Aggregate these ${input.issues.length} issues from ${input.extractorIds.length} extractors (${input.extractorIds.join(', ')}):
 

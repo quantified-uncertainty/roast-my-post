@@ -10,6 +10,7 @@ import { z } from "zod";
 import { Tool, type ToolContext } from "../base/Tool";
 import {
   callLLMFilter,
+  withDateContext,
   type ReasoningConfig,
   type ProviderPreferences,
 } from "../shared/llm-filter-utils";
@@ -189,11 +190,13 @@ For each issue:
 3. Explain your reasoning`;
 
     try {
+      // Always prepend date context to prevent false positives on recent dates
+      const basePrompt = input.customPrompt || DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT;
       const result = await callLLMFilter<FilterResults>(
         {
           model: input.model,
           modelEnvVar: "CHARITY_FILTER_MODEL",
-          systemPrompt: input.customPrompt || DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT,
+          systemPrompt: withDateContext(basePrompt),
           userPrompt,
           temperature: input.temperature ?? DEFAULT_TEMPERATURE,
           reasoning: input.reasoning as ReasoningConfig | undefined,

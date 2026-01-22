@@ -11,6 +11,7 @@ import {
 } from "../base/Tool";
 import { fallacyExtractorConfig } from "../configs";
 import { generateCacheSeed } from "../shared/cache-utils";
+import { withDateContext } from "../shared/llm-filter-utils";
 import fuzzyTextLocatorTool from "../smart-text-searcher";
 import { findLocationInChunk } from "../smart-text-searcher/chunk-location-finder";
 import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
@@ -166,7 +167,9 @@ export class FallacyExtractorTool extends Tool<
     );
 
     // Use custom prompts if provided, otherwise use defaults from prompts.ts
-    const systemPrompt = input.customSystemPrompt || DEFAULT_EXTRACTOR_SYSTEM_PROMPT;
+    // Always prepend date context to prevent false positives on recent dates
+    const baseSystemPrompt = input.customSystemPrompt || DEFAULT_EXTRACTOR_SYSTEM_PROMPT;
+    const systemPrompt = withDateContext(baseSystemPrompt);
     const userPrompt = input.customUserPrompt
       ? `${input.customUserPrompt}\n\n${textToAnalyze}`
       : `${DEFAULT_EXTRACTOR_USER_PROMPT}\n\n${textToAnalyze}`;

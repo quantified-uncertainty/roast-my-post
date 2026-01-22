@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Tool, type ToolContext } from "../base/Tool";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
+import { withDateContext } from "../shared/llm-filter-utils";
 import { fallacyReviewConfig } from "./config";
 import type {
   FallacyReviewInput,
@@ -104,7 +105,9 @@ Description: ${comment.description}
 - Be ruthless about redundancy
 - The document summary should read like a professional analysis, not just a list of issues`;
 
-    const systemPrompt = input.customSystemPrompt || defaultSystemPrompt;
+    // Always prepend date context to prevent false positives on recent dates
+    const basePrompt = input.customSystemPrompt || defaultSystemPrompt;
+    const systemPrompt = withDateContext(basePrompt);
 
     const userPrompt = `Review the following epistemic analysis:
 

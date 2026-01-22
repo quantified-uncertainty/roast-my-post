@@ -382,3 +382,45 @@ export function truncateDocumentForContext(
 
   return result;
 }
+
+// ============================================================================
+// Date Context Utilities
+// ============================================================================
+
+/**
+ * Generate a date context string to prepend to system prompts.
+ *
+ * This is CRITICAL for preventing false positives where the model thinks
+ * recent dates are "in the future" due to training cutoff.
+ *
+ * @example
+ * const prompt = getDateContext() + baseSystemPrompt;
+ */
+export function getDateContext(): string {
+  const now = new Date();
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  };
+  const formattedDate = now.toLocaleDateString('en-US', options);
+
+  return `**CURRENT DATE**: ${formattedDate}
+
+Use this date as your reference point when evaluating claims about timing and events.
+
+---
+
+`;
+}
+
+/**
+ * Prepend date context to a system prompt.
+ *
+ * @param systemPrompt - The base system prompt
+ * @returns System prompt with date context prepended
+ */
+export function withDateContext(systemPrompt: string): string {
+  return getDateContext() + systemPrompt;
+}

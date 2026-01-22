@@ -11,6 +11,7 @@ import { Tool, type ToolContext } from "../base/Tool";
 import {
   callLLMFilter,
   truncateDocumentForContext,
+  withDateContext,
   type ReasoningConfig,
   type ProviderPreferences,
 } from "../shared/llm-filter-utils";
@@ -202,11 +203,13 @@ ${formattedIssues}
 For each issue, determine if it is supported elsewhere in the document.`;
 
     try {
+      // Always prepend date context to prevent false positives on recent dates
+      const basePrompt = input.customPrompt || DEFAULT_SUPPORTED_ELSEWHERE_SYSTEM_PROMPT;
       const result = await callLLMFilter<FilterResults>(
         {
           model: input.model,
           modelEnvVar: "FALLACY_FILTER_MODEL",
-          systemPrompt: input.customPrompt || DEFAULT_SUPPORTED_ELSEWHERE_SYSTEM_PROMPT,
+          systemPrompt: withDateContext(basePrompt),
           userPrompt,
           temperature: input.temperature ?? DEFAULT_TEMPERATURE,
           reasoning: input.reasoning as ReasoningConfig | undefined,
