@@ -9,6 +9,7 @@
 
 import { aiConfig } from '../config';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
+import { logger } from '../shared/logger';
 import {
   UnifiedUsageMetrics,
   fromOpenRouterUsage,
@@ -260,18 +261,8 @@ export async function callOpenRouter(
   const baseUrl = getBaseUrl();
   const headers = buildHeaders(options);
 
-  // Log the ACTUAL request being sent to OpenRouter
-  console.log(`📡 [OpenRouter] ACTUAL REQUEST:`, JSON.stringify({
-    model: request.model,
-    max_tokens: request.max_tokens,
-    temperature: request.temperature,
-    reasoning: request.reasoning,
-    reasoning_effort: request.reasoning_effort,
-    tool_choice: request.tool_choice,
-    provider: request.provider,
-    tools: request.tools?.map(t => t.function.name),
-    messages_count: request.messages?.length,
-  }));
+  // Log request details at debug level
+  logger.debug(`[OpenRouter] Request: model=${request.model}, max_tokens=${request.max_tokens}, temp=${request.temperature}, reasoning=${JSON.stringify(request.reasoning)}, tools=[${request.tools?.map(t => t.function.name).join(', ') || ''}]`);
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
@@ -280,8 +271,23 @@ export async function callOpenRouter(
   });
 
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ error: { message: response.statusText } })) as OpenRouterError;
-    throw new Error(`OpenRouter API error (${response.status}): ${errorBody.error?.message || response.statusText}`);
+    const errorText = await response.text().catch(() => '');
+    let errorMessage = response.statusText;
+    let errorDetails = '';
+
+    try {
+      const errorBody = JSON.parse(errorText) as OpenRouterError;
+      errorMessage = errorBody.error?.message || response.statusText;
+      // Include full error body for debugging (especially useful for 429 rate limits)
+      errorDetails = ` | Full response: ${errorText}`;
+    } catch {
+      // If not JSON, include raw text
+      if (errorText) {
+        errorDetails = ` | Response: ${errorText.substring(0, 500)}`;
+      }
+    }
+
+    throw new Error(`OpenRouter API error (${response.status}): ${errorMessage}${errorDetails}`);
   }
 
   return response.json() as Promise<OpenRouterResponse>;
@@ -372,7 +378,7 @@ export async function callOpenRouterChat(
     request.provider = options.provider;
   }
 
-  console.log(`📡 [OpenRouter] Chat: ${options.model}${options.reasoningEffort ? `, reasoning.effort: ${options.reasoningEffort}` : ''}`);
+  logger.debug(`[OpenRouter] Chat: model=${options.model}${options.reasoningEffort ? `, reasoning.effort=${options.reasoningEffort}` : ''}`);
 
   // Build custom client options with extra headers if provided
   const clientOptions: OpenRouterClientOptions = {};
@@ -521,7 +527,7 @@ export async function callOpenRouterWithTool<T>(
     });
     effectiveMaxTokens = budgetResult.maxTokens;
 
-    console.log(`📡 [OpenRouter] Reasoning budget resolved: effort=${reasoningEffort}, maxTokens=${effectiveMaxTokens}, budget=${budgetResult.displayBudget}, usesExplicit=${budgetResult.usesExplicitBudget}`);
+    logger.debug(`[OpenRouter] Reasoning budget: effort=${reasoningEffort}, maxTokens=${effectiveMaxTokens}, budget=${budgetResult.displayBudget}, usesExplicit=${budgetResult.usesExplicitBudget}`);
   }
 
   // Build request

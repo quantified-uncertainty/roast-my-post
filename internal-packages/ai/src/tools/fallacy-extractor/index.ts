@@ -140,14 +140,10 @@ export class FallacyExtractorTool extends Tool<
     const modelId = input.model || process.env.FALLACY_EXTRACTOR_MODEL || undefined;
     const isOpenRouterModel = modelId?.includes("/") || false; // OpenRouter models have format "provider/model"
 
-    // DIRECT CONSOLE LOG FOR DEBUGGING - bypasses any logger filtering
-    console.log(`\n\n🔥🔥🔥 FALLACY EXTRACTOR RUNNING 🔥🔥🔥`);
-    console.log(`PROMPT_VERSION=${PROMPT_VERSION}`);
-    console.log(`MODEL=${modelId || "default"} (${isOpenRouterModel ? "OpenRouter" : "Claude"})`);
-    console.log(`MODE=${input.text ? "chunk" : "single-pass"}`);
-    console.log(`DOC_LENGTH=${textToAnalyze.length}`);
-    console.log(`DOC_PREVIEW=${textToAnalyze.substring(0, 80)}...`);
-    console.log(`🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥\n\n`);
+    // Debug logging for development
+    context.logger.debug(
+      `[FallacyExtractor] Running: model=${modelId || "default"} (${isOpenRouterModel ? "OpenRouter" : "Claude"}), mode=${input.text ? "chunk" : "single-pass"}, docLength=${textToAnalyze.length}`
+    );
 
     // Audit log: Tool execution started
     context.logger.info(
@@ -317,7 +313,7 @@ export class FallacyExtractorTool extends Tool<
     if (isOpenRouterModel && modelId) {
       // Use OpenRouter for non-Claude models (Gemini, GPT, etc.)
       const providerInfo = input.provider?.order ? `, provider: [${input.provider.order.join(', ')}]` : '';
-      console.log(`📡 Calling OpenRouter API with model: ${modelId}, temp: ${temperature ?? 'default'}, thinking: ${thinkingEnabled}, reasoningEffort: ${input.reasoningEffort ?? 'not set'}${providerInfo}`);
+      context.logger.debug(`[FallacyExtractor] Calling OpenRouter: model=${modelId}, temp=${temperature ?? 'default'}, thinking=${thinkingEnabled}, reasoningEffort=${input.reasoningEffort ?? 'not set'}${providerInfo}`);
       const openRouterResult = await callOpenRouterWithTool<ExtractorResults>({
         model: modelId,
         system: systemPrompt,
