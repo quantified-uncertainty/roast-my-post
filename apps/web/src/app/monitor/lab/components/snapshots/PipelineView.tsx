@@ -6,6 +6,7 @@ import type {
   ExtractionPhase,
   PipelineCounts,
   FilteredItem,
+  PassedItem,
   Comment,
   StageMetrics,
 } from "../../types";
@@ -15,13 +16,14 @@ import {
   formatTokens,
   getFilterStageTitle,
 } from "./pipelineUtils";
-import { FilteredItemCard, CommentCard } from "./ItemCards";
+import { FilteredItemCard, PassedItemCard, CommentCard } from "./ItemCards";
 import { ExtractorCard, DeduplicationCard } from "./ExtractorCards";
 
 interface PipelineViewProps {
   extraction?: ExtractionPhase;
   counts?: PipelineCounts;
   filteredItems: FilteredItem[];
+  passedItems?: PassedItem[];
   stages?: StageMetrics[];
   totalDurationMs?: number;
   finalComments: Comment[];
@@ -32,6 +34,7 @@ export function PipelineView({
   extraction,
   counts,
   filteredItems,
+  passedItems,
   stages,
   totalDurationMs,
   finalComments,
@@ -42,6 +45,17 @@ export function PipelineView({
     return stages?.find((s) => s.stageName === stageName);
   };
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+  const [expandedPassedSections, setExpandedPassedSections] = useState<Set<string>>(new Set());
+
+  const togglePassedSection = (stageName: string) => {
+    const newSet = new Set(expandedPassedSections);
+    if (newSet.has(stageName)) {
+      newSet.delete(stageName);
+    } else {
+      newSet.add(stageName);
+    }
+    setExpandedPassedSections(newSet);
+  };
 
   const toggleStep = (step: string) => {
     const newSet = new Set(expandedSteps);
@@ -78,6 +92,8 @@ export function PipelineView({
   // Separate filtered items by stage
   const getFilteredItemsForStage = (stageName: string): FilteredItem[] =>
     filteredItems.filter((item) => item.stage === stageName);
+  const getPassedItemsForStage = (stageName: string): PassedItem[] =>
+    (passedItems ?? []).filter((item) => item.stage === stageName);
   const reviewStageItems = filteredItems.filter((item) => item.stage === "review");
 
   return (
@@ -115,6 +131,7 @@ export function PipelineView({
         {filterStages.map((stageName, index) => {
           const stageData = getStageTiming(stageName);
           const stageFilteredItems = getFilteredItemsForStage(stageName);
+          const stagePassedItems = getPassedItemsForStage(stageName);
           const stageInputCount = stageData?.inputCount ?? afterDedup;
           const stageOutputCount = stageData?.outputCount ?? stageInputCount;
           const stageRemovedCount = stageFilteredItems.length;
@@ -185,10 +202,34 @@ export function PipelineView({
                   )}
                 </div>
 
+                {/* Passed Items (collapsed by default) */}
+                {stagePassedItems.length > 0 && (
+                  <div>
+                    <button
+                      onClick={() => togglePassedSection(stageName)}
+                      className="flex items-center gap-1 text-sm font-medium text-green-700 hover:text-green-800 mb-2"
+                    >
+                      {expandedPassedSections.has(stageName) ? (
+                        <ChevronDownIcon className="h-4 w-4" />
+                      ) : (
+                        <ChevronRightIcon className="h-4 w-4" />
+                      )}
+                      Passed Through ({stagePassedItems.length})
+                    </button>
+                    {expandedPassedSections.has(stageName) && (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {stagePassedItems.map((item, i) => (
+                          <PassedItemCard key={i} item={item} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {stageFilteredItems.length > 0 && (
                   <div>
                     <h5 className="text-sm font-medium text-orange-800 mb-2">
-                      Filtered Items ({stageFilteredItems.length})
+                      Filtered Out ({stageFilteredItems.length})
                     </h5>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {stageFilteredItems.map((item, i) => (

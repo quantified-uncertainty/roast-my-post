@@ -54,6 +54,7 @@ export interface ComparisonData {
   newComments: Comment[];
   lostComments: Comment[];
   filteredItems?: FilteredItem[];
+  passedItems?: PassedItem[];
   pipelineCounts?: PipelineCounts;
   extractionPhase?: ExtractionPhase;
   stages?: StageMetrics[];
@@ -82,6 +83,14 @@ export interface FilteredItem {
   header?: string;
   originalIndex?: number;
   supportLocation?: string;
+}
+
+export interface PassedItem {
+  stage: string; // Filter stage name
+  quotedText: string;
+  header?: string;
+  passReason: string;
+  originalIndex?: number;
 }
 
 export interface PipelineCounts {

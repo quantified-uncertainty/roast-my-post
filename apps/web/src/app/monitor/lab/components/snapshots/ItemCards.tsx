@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
-import type { FilteredItem, Comment } from "../../types";
+import type { FilteredItem, PassedItem, Comment } from "../../types";
 import { truncate } from "../../utils/formatters";
 import { getFilterStageBadgeText } from "./pipelineUtils";
 
@@ -78,6 +78,44 @@ export function CommentCard({ comment, variant }: { comment: Comment; variant: "
               <span className="font-medium">Importance:</span> {comment.importance}
             </p>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Card component for displaying a passed item (kept by a filter stage)
+ */
+export function PassedItemCard({ item }: { item: PassedItem }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="p-3 bg-green-50 rounded-md border border-green-100">
+      <div
+        className="flex items-start justify-between cursor-pointer"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2">
+            <span className="px-1.5 py-0.5 bg-green-200 text-green-800 rounded text-xs">
+              Kept
+            </span>
+            {item.header && (
+              <span className="text-xs text-green-700">[{item.header}]</span>
+            )}
+          </div>
+          <p className="text-sm text-gray-700 mt-1">{truncate(item.quotedText, 80)}</p>
+        </div>
+        <ChevronRightIcon
+          className={`h-4 w-4 text-gray-400 transition-transform ${expanded ? "rotate-90" : ""}`}
+        />
+      </div>
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-green-200">
+          <p className="text-xs text-gray-600">
+            <span className="font-medium">Why it passed:</span> {item.passReason}
+          </p>
         </div>
       )}
     </div>

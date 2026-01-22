@@ -4,15 +4,17 @@ import { useState, useCallback } from "react";
 import { useBaselines } from "./hooks/useBaselines";
 import { useRuns } from "./hooks/useRuns";
 import { useProfiles, getActiveProfile } from "./hooks/useProfiles";
+import { useAllEvaluations } from "./hooks/useAllEvaluations";
 import type { Baseline, Profile, ProfileConfig } from "./types";
 import { formatDate } from "./utils/formatters";
-import { PlusIcon, PlayIcon, ArrowPathIcon, TrashIcon, BeakerIcon, CpuChipIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PlayIcon, ArrowPathIcon, TrashIcon, BeakerIcon, CpuChipIcon, DocumentMagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { CreateBaselineModal } from "./components/baselines/CreateBaselineModal";
 import { RunDetail } from "./components/history/RunDetail";
 import { ProfilesList } from "./components/profiles/ProfilesList";
 import { ProfileDetailView } from "./components/profiles/ProfileDetailView";
+import { AllEvaluationsList } from "./components/evaluations/AllEvaluationsList";
 
-type SidebarTab = "baselines" | "profiles";
+type SidebarTab = "baselines" | "profiles" | "evaluations";
 
 const AGENT_ID = "system-fallacy-check";
 
@@ -24,6 +26,7 @@ function getDefaultRunName(): string {
 export default function LabPage() {
   const { baselines, loading: baselinesLoading, refresh: refreshBaselines, deleteBaseline } = useBaselines(AGENT_ID);
   const { profiles, loading: profilesLoading, refresh: refreshProfiles, deleteProfile, setDefault: setDefaultProfile, updateProfile, createProfile } = useProfiles(AGENT_ID);
+  const { evaluations, loading: evaluationsLoading, error: evaluationsError, refresh: refreshEvaluations } = useAllEvaluations(AGENT_ID);
 
   // Sidebar tab state
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("baselines");
@@ -234,6 +237,22 @@ export default function LabPage() {
             <CpuChipIcon className="h-4 w-4" />
             Profiles
           </button>
+          <button
+            onClick={() => {
+              setSidebarTab("evaluations");
+              setSelectedBaseline(null);
+              setExpandedRun(null);
+              setSelectedProfileForEdit(null);
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+              sidebarTab === "evaluations"
+                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            }`}
+          >
+            <DocumentMagnifyingGlassIcon className="h-4 w-4" />
+            All Evals
+          </button>
         </div>
 
         {/* Sidebar Content */}
@@ -294,7 +313,7 @@ export default function LabPage() {
               )}
             </div>
           </>
-        ) : (
+        ) : sidebarTab === "profiles" ? (
           <ProfilesList
             profiles={profiles}
             loading={profilesLoading}
@@ -304,13 +323,31 @@ export default function LabPage() {
             onDeleteProfile={deleteProfile}
             onSetDefault={setDefaultProfile}
           />
+        ) : (
+          /* Evaluations tab - sidebar info */
+          <div className="p-4">
+            <h2 className="font-semibold text-gray-900 mb-2">All Evaluations</h2>
+            <p className="text-xs text-gray-500">
+              View telemetry from all user-facing evaluations, not just validation runs.
+            </p>
+          </div>
         )}
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Profiles Tab Main Content */}
-        {sidebarTab === "profiles" ? (
+        {/* Evaluations Tab Main Content */}
+        {sidebarTab === "evaluations" ? (
+          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <AllEvaluationsList
+              evaluations={evaluations}
+              loading={evaluationsLoading}
+              error={evaluationsError}
+              onRefresh={refreshEvaluations}
+            />
+          </div>
+        ) : /* Profiles Tab Main Content */
+        sidebarTab === "profiles" ? (
           selectedProfileForEdit ? (
             <ProfileDetailView profile={selectedProfileForEdit} onSave={handleSaveProfile} />
           ) : (

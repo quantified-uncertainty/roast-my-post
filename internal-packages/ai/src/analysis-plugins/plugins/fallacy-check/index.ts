@@ -824,6 +824,21 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         telemetry.recordFilteredItems(filteredRecords);
       }
 
+      // Record passed items (issues that remain valid)
+      if (filterResult.validIssues.length > 0) {
+        const passedRecords = filterResult.validIssues.map((valid) => {
+          const originalIssue = issues[valid.index];
+          return {
+            stage: PIPELINE_STAGES.PRINCIPLE_OF_CHARITY_FILTER,
+            quotedText: originalIssue?.text || `Issue at index ${valid.index}`,
+            header: originalIssue?.issueType,
+            passReason: valid.explanation,
+            originalIndex: valid.index,
+          };
+        });
+        telemetry.recordPassedItems(passedRecords);
+      }
+
       logger.info("FallacyCheckPlugin: AUDIT: Principle-of-charity filter completed", {
         timestamp: new Date().toISOString(),
         issuesBeforeFilter: issues.length,
@@ -936,6 +951,21 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           };
         });
         telemetry.recordFilteredItems(filteredRecords);
+      }
+
+      // Record passed items (issues that are NOT supported elsewhere)
+      if (filterResult.unsupportedIssues.length > 0) {
+        const passedRecords = filterResult.unsupportedIssues.map((unsupported) => {
+          const originalIssue = issues[unsupported.index];
+          return {
+            stage: PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER,
+            quotedText: originalIssue?.text || `Issue at index ${unsupported.index}`,
+            header: originalIssue?.issueType,
+            passReason: unsupported.explanation,
+            originalIndex: unsupported.index,
+          };
+        });
+        telemetry.recordPassedItems(passedRecords);
       }
 
       logger.info("FallacyCheckPlugin: AUDIT: Supported-elsewhere filter completed", {

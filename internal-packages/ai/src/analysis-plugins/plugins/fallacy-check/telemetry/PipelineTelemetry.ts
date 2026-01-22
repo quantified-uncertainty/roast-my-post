@@ -12,6 +12,7 @@ import type {
   PipelineExecutionRecord,
   PipelineStage,
   FilteredItemRecord,
+  PassedItemRecord,
   ExtractionPhaseTelemetry,
   ProfileInfo,
 } from './types';
@@ -54,6 +55,7 @@ export class PipelineTelemetry {
   private stages: StageMetrics[] = [];
   private activeStage: ActiveStage | null = null;
   private filteredItems: FilteredItemRecord[] = [];
+  private passedItems: PassedItemRecord[] = [];
   private extractionPhase: ExtractionPhaseTelemetry | null = null;
   private profileInfo: ProfileInfo | null = null;
   private finalCounts: PipelineExecutionRecord['finalCounts'] = {
@@ -193,6 +195,22 @@ export class PipelineTelemetry {
   }
 
   /**
+   * Record an item that passed through a filter
+   */
+  recordPassedItem(item: PassedItemRecord): this {
+    this.passedItems.push(item);
+    return this;
+  }
+
+  /**
+   * Record multiple passed items
+   */
+  recordPassedItems(items: PassedItemRecord[]): this {
+    this.passedItems.push(...items);
+    return this;
+  }
+
+  /**
    * Set extraction phase telemetry (for multi-extractor mode)
    */
   setExtractionPhase(telemetry: ExtractionPhaseTelemetry): this {
@@ -237,6 +255,7 @@ export class PipelineTelemetry {
       totalCostUsd: this.calculateTotalCost(),
       pipelineVersion: PIPELINE_VERSION,
       filteredItems: this.filteredItems, // Always include (even if empty) so we know telemetry was captured
+      passedItems: this.passedItems.length > 0 ? this.passedItems : undefined, // Only include if there are items
       extractionPhase: this.extractionPhase || undefined,
       profileInfo: this.profileInfo || undefined,
     };

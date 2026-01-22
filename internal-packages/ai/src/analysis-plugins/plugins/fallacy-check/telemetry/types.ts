@@ -75,6 +75,26 @@ export interface FilteredItemRecord {
   originalIndex: number;
 }
 
+/**
+ * Details about an item that passed through a filter
+ */
+export interface PassedItemRecord {
+  /** Stage where this item was evaluated */
+  stage: string;
+
+  /** Original text of the issue */
+  quotedText: string;
+
+  /** Header/type of the issue */
+  header?: string;
+
+  /** Why this item passed / the filter's reasoning */
+  passReason: string;
+
+  /** Original index in the input array */
+  originalIndex: number;
+}
+
 // ============================================================================
 // Multi-Extractor Telemetry Types
 // ============================================================================
@@ -296,6 +316,9 @@ export interface PipelineExecutionRecord {
 
   /** Details about items that were filtered out (for debugging/validation) */
   filteredItems?: FilteredItemRecord[];
+
+  /** Details about items that passed through filters (for debugging/validation) */
+  passedItems?: PassedItemRecord[];
 
   /** Detailed extraction phase telemetry (multi-extractor mode) */
   extractionPhase?: ExtractionPhaseTelemetry;
