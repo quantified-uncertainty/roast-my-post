@@ -213,13 +213,13 @@ export default function LabPage() {
               setSidebarTab("baselines");
               setSelectedProfileForEdit(null);
             }}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
               sidebarTab === "baselines"
                 ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             }`}
           >
-            <BeakerIcon className="h-4 w-4" />
+            <BeakerIcon className="h-4 w-4 flex-shrink-0" />
             Baselines
           </button>
           <button
@@ -228,13 +228,13 @@ export default function LabPage() {
               setSelectedBaseline(null);
               setExpandedRun(null);
             }}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
               sidebarTab === "profiles"
                 ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             }`}
           >
-            <CpuChipIcon className="h-4 w-4" />
+            <CpuChipIcon className="h-4 w-4 flex-shrink-0" />
             Profiles
           </button>
           <button
@@ -244,14 +244,14 @@ export default function LabPage() {
               setExpandedRun(null);
               setSelectedProfileForEdit(null);
             }}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
               sidebarTab === "evaluations"
                 ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             }`}
           >
-            <DocumentMagnifyingGlassIcon className="h-4 w-4" />
-            All Evals
+            <DocumentMagnifyingGlassIcon className="h-4 w-4 flex-shrink-0" />
+            Evals
           </button>
         </div>
 
