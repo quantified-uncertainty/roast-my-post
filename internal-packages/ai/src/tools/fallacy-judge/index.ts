@@ -471,12 +471,14 @@ Group similar issues together and provide your decisions. Remember:
         required: ['decisions'],
       };
 
-      let result: {
+      type JudgeCallResult = {
         toolResult: JudgeResultType;
         unifiedUsage?: UnifiedUsageMetrics;
         actualApiParams?: ActualApiParams;
         responseMetrics?: ApiResponseMetrics;
       };
+
+      let result: JudgeCallResult;
 
       if (resolved.isOpenRouter) {
         // Use OpenRouter for non-Claude models

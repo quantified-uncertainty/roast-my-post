@@ -4,6 +4,7 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
 import { prisma } from "@roast/db";
+import type { RouteIdParams } from "../../types";
 
 /**
  * GET /api/monitor/lab/profiles/[id]
@@ -11,7 +12,7 @@ import { prisma } from "@roast/db";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: RouteIdParams
 ) {
   const userId = await authenticateRequest(request);
   if (!userId) return commonErrors.unauthorized();
@@ -43,7 +44,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: RouteIdParams
 ) {
   const userId = await authenticateRequest(request);
   if (!userId) return commonErrors.unauthorized();
@@ -117,7 +118,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: RouteIdParams
 ) {
   const userId = await authenticateRequest(request);
   if (!userId) return commonErrors.unauthorized();

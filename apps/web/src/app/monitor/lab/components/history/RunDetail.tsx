@@ -10,6 +10,11 @@ interface RunDetailProps {
   runId: string;
 }
 
+interface SnapshotRowProps {
+  snapshot: RunSnapshot;
+  onClick: () => void;
+}
+
 export function RunDetail({ runId }: RunDetailProps) {
   const [run, setRun] = useState<ValidationRunDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,7 +113,7 @@ export function RunDetail({ runId }: RunDetailProps) {
   );
 }
 
-function SnapshotRow({ snapshot, onClick }: { snapshot: RunSnapshot; onClick: () => void }) {
+function SnapshotRow({ snapshot, onClick }: SnapshotRowProps) {
   return (
     <div
       onClick={onClick}

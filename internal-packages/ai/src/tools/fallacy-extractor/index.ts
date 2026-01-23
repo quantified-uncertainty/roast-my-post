@@ -269,7 +269,14 @@ export class FallacyExtractorTool extends Tool<
       wasComplete: boolean;
     };
 
-    let result: { toolResult: ExtractorResults; actualParams?: ActualApiParams; responseMetrics?: ApiResponseMetrics; unifiedUsage?: UnifiedUsageMetrics };
+    type ExtractorCallResult = {
+      toolResult: ExtractorResults;
+      actualParams?: ActualApiParams;
+      responseMetrics?: ApiResponseMetrics;
+      unifiedUsage?: UnifiedUsageMetrics;
+    };
+
+    let result: ExtractorCallResult;
     let actualApiParams: ActualApiParams | undefined;
     let responseMetrics: ApiResponseMetrics | undefined;
     let unifiedUsage: UnifiedUsageMetrics | undefined;

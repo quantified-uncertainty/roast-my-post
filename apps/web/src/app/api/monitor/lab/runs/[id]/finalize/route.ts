@@ -4,6 +4,7 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
 import { prisma, metaEvaluationRepository } from "@roast/db";
+import type { RouteIdParams } from "../../../types";
 
 interface CommentData {
   id: string;
@@ -41,7 +42,7 @@ interface EvaluationSnapshot {
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: RouteIdParams
 ) {
   const userId = await authenticateRequest(request);
   if (!userId) return commonErrors.unauthorized();

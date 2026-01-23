@@ -32,6 +32,14 @@ import { getAgentTimeout } from '../config/agentTimeouts';
 import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
 
+interface JobWithAgentVersions {
+  evaluation: {
+    agent: {
+      versions: Array<{ extendedCapabilityId?: string | null }>;
+    };
+  };
+}
+
 // Schedule constants
 const HELICONE_POLLER_SCHEDULE = '*/5 * * * *'; // Every 5 minutes
 const JOB_RECONCILIATION_SCHEDULE = '*/10 * * * *'; // Every 10 minutes
@@ -160,7 +168,7 @@ class PgBossWorker {
     return `${workerPrefix}[Job ${jobId}] ${message}`;
   }
 
-  private getJobTimeout(job: { evaluation: { agent: { versions: Array<{ extendedCapabilityId?: string | null }> } } }): number {
+  private getJobTimeout(job: JobWithAgentVersions): number {
     const agentVersion = job.evaluation.agent.versions[0];
     return getAgentTimeout(agentVersion.extendedCapabilityId ?? undefined);
   }

@@ -19,6 +19,22 @@ import type {
 import { generateExtractorId, getDefaultTemperature } from './config';
 import { JACCARD_SIMILARITY_THRESHOLD, type ReasoningEffort } from '../../../../types/common';
 
+interface ResolvedReasoning {
+  thinkingEnabled: boolean;
+  reasoningEffort?: ReasoningEffort;
+}
+
+interface DeduplicationResult {
+  deduplicated: ExtractedFallacyIssue[];
+  removedCount: number;
+}
+
+interface DuplicateMatch<T> {
+  keptIdx: number;
+  kept: T;
+  similarity: number;
+}
+
 /**
  * Resolve reasoning config to thinking boolean and reasoning effort level.
  *
@@ -29,7 +45,7 @@ import { JACCARD_SIMILARITY_THRESHOLD, type ReasoningEffort } from '../../../../
 function resolveReasoning(
   reasoning: ReasoningConfig | undefined,
   thinking?: boolean
-): { thinkingEnabled: boolean; reasoningEffort?: ReasoningEffort } {
+): ResolvedReasoning {
   // New reasoning config takes precedence
   if (reasoning !== undefined) {
     // false = disabled
@@ -298,7 +314,7 @@ function computeExtractedIssueQuality(issue: ExtractedFallacyIssue): number {
  */
 export function deduplicateExtractedIssues(
   issues: ExtractedFallacyIssue[]
-): { deduplicated: ExtractedFallacyIssue[]; removedCount: number } {
+): DeduplicationResult {
   // Filter out issues with no text (malformed responses from LLM)
   const validIssues = issues.filter(issue => issue.exactText && issue.exactText.trim().length > 0);
   if (validIssues.length < issues.length) {
@@ -308,7 +324,7 @@ export function deduplicateExtractedIssues(
   const unique: ExtractedFallacyIssue[] = [];
 
   for (const issue of validIssues) {
-    let bestMatch: { keptIdx: number; kept: ExtractedFallacyIssue; similarity: number } | null = null;
+    let bestMatch: DuplicateMatch<ExtractedFallacyIssue> | null = null;
 
     for (let i = 0; i < unique.length; i++) {
       const kept = unique[i];

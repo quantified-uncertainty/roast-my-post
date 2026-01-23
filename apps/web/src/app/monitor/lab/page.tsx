@@ -16,6 +16,13 @@ import { AllEvaluationsList } from "./components/evaluations/AllEvaluationsList"
 
 type SidebarTab = "baselines" | "profiles" | "evaluations";
 
+interface RunProgress {
+  phase: "idle" | "starting" | "running" | "comparing" | "done" | "error";
+  message: string;
+  completed: number;
+  total: number;
+}
+
 const AGENT_ID = "system-fallacy-check";
 
 function getDefaultRunName(): string {
@@ -45,12 +52,12 @@ export default function LabPage() {
 
   // Run state
   const [runName, setRunName] = useState(getDefaultRunName);
-  const [runProgress, setRunProgress] = useState<{
-    phase: "idle" | "starting" | "running" | "comparing" | "done" | "error";
-    message: string;
-    completed: number;
-    total: number;
-  }>({ phase: "idle", message: "", completed: 0, total: 0 });
+  const [runProgress, setRunProgress] = useState<RunProgress>({
+    phase: "idle",
+    message: "",
+    completed: 0,
+    total: 0,
+  });
 
   // Get runs for selected baseline
   const { runs, loading: runsLoading, refresh: refreshRuns } = useRuns(selectedBaseline?.id ?? null);

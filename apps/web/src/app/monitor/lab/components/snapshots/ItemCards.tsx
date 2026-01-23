@@ -6,10 +6,23 @@ import type { FilteredItem, PassedItem, Comment } from "../../types";
 import { truncate } from "../../utils/formatters";
 import { getFilterStageBadgeText } from "./pipelineUtils";
 
+interface FilteredItemCardProps {
+  item: FilteredItem;
+}
+
+interface CommentCardProps {
+  comment: Comment;
+  variant: "kept" | "lost";
+}
+
+interface PassedItemCardProps {
+  item: PassedItem;
+}
+
 /**
  * Card component for displaying a filtered item (removed by a filter stage)
  */
-export function FilteredItemCard({ item }: { item: FilteredItem }) {
+export function FilteredItemCard({ item }: FilteredItemCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -52,7 +65,7 @@ export function FilteredItemCard({ item }: { item: FilteredItem }) {
 /**
  * Card component for displaying a comment (kept or lost)
  */
-export function CommentCard({ comment, variant }: { comment: Comment; variant: "kept" | "lost" }) {
+export function CommentCard({ comment, variant }: CommentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const bgColor = variant === "kept" ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100";
 
@@ -87,7 +100,7 @@ export function CommentCard({ comment, variant }: { comment: Comment; variant: "
 /**
  * Card component for displaying a passed item (kept by a filter stage)
  */
-export function PassedItemCard({ item }: { item: PassedItem }) {
+export function PassedItemCard({ item }: PassedItemCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (

@@ -11,6 +11,12 @@ import type { FallacyIssue } from "./FallacyIssue";
 import { LIMITS } from "./constants";
 import { JACCARD_SIMILARITY_THRESHOLD } from "../../../types/common";
 
+interface DuplicateMatch<T> {
+  keptIdx: number;
+  kept: T;
+  similarity: number;
+}
+
 /**
  * Calculate priority score for an issue.
  * Higher score = more important to address.
@@ -83,7 +89,7 @@ export function deduplicateIssues(issues: FallacyIssue[]): FallacyIssue[] {
 
   for (const issue of issues) {
     // Check if this issue is a duplicate of any already-kept issue
-    let bestMatch: { keptIdx: number; kept: FallacyIssue; similarity: number } | null = null;
+    let bestMatch: DuplicateMatch<FallacyIssue> | null = null;
 
     for (let i = 0; i < unique.length; i++) {
       const kept = unique[i];

@@ -17,10 +17,14 @@ import {
   formatReasoning,
 } from "./pipelineUtils";
 
+interface ExtractorCardProps {
+  ext: ExtractorInfo;
+}
+
 /**
  * Individual extractor card with collapsible details
  */
-export function ExtractorCard({ ext }: { ext: ExtractorInfo }) {
+export function ExtractorCard({ ext }: ExtractorCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const hasError = !!ext.error;
   const modelName = getModelDisplayName(ext.model);

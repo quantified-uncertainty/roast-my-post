@@ -11,6 +11,18 @@ interface SnapshotComparisonProps {
   onBack: () => void;
 }
 
+interface StatusSummaryProps {
+  snapshot: RunSnapshot;
+}
+
+interface MatchedCommentItemProps {
+  match: CommentMatch;
+}
+
+interface CommentItemProps {
+  comment: Comment;
+}
+
 type ViewTab = "pipeline" | "comparison";
 
 export function SnapshotComparison({ snapshot, onBack }: SnapshotComparisonProps) {
@@ -110,7 +122,7 @@ function TabButton({
   );
 }
 
-function StatusSummary({ snapshot }: { snapshot: RunSnapshot }) {
+function StatusSummary({ snapshot }: StatusSummaryProps) {
   return (
     <div className="flex items-center space-x-4 mt-2 text-sm">
       <span className={snapshot.status === "unchanged" ? "text-green-600" : "text-orange-600"}>
@@ -199,7 +211,7 @@ function ComparisonSection({
   );
 }
 
-function MatchedCommentItem({ match }: { match: CommentMatch }) {
+function MatchedCommentItem({ match }: MatchedCommentItemProps) {
   const [expanded, setExpanded] = useState(false);
   const comment = match.baselineComment;
 
@@ -231,7 +243,7 @@ function MatchedCommentItem({ match }: { match: CommentMatch }) {
   );
 }
 
-function CommentItem({ comment }: { comment: Comment }) {
+function CommentItem({ comment }: CommentItemProps) {
   const [expanded, setExpanded] = useState(false);
   const needsExpand = comment.quotedText.length > 100 || comment.description.length > 150;
 
