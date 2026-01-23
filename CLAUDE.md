@@ -239,6 +239,29 @@ pnpm --filter @roast/web run typecheck  # TypeScript
 # MUST run both - linter doesn't catch type errors!
 ```
 
+### 🚨 Type Definitions: NO INLINE TYPES 🚨
+
+**NEVER use inline types.** Always define named interfaces or type aliases.
+
+```typescript
+// ❌ WRONG - inline types
+function Foo({ data }: { data: string; count: number }) { }
+const [state, setState] = useState<{ loading: boolean; error?: string }>();
+let result: { success: boolean; value: number };
+
+// ✅ CORRECT - named types
+interface FooProps { data: string; count: number; }
+function Foo({ data }: FooProps) { }
+
+interface LoadingState { loading: boolean; error?: string; }
+const [state, setState] = useState<LoadingState>();
+
+interface Result { success: boolean; value: number; }
+let result: Result;
+```
+
+**Why:** Inline types hurt readability, reusability, and refactoring. Named types are self-documenting and can be exported/shared.
+
 ## MCP Server Quick Fix
 
 **Problem**: Claude Code caches MCP servers, changes don't take effect
