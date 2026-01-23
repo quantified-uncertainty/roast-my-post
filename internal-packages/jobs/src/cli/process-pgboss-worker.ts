@@ -28,7 +28,7 @@ import { logger } from '../utils/logger';
 import { DOCUMENT_EVALUATION_JOB, type DocumentEvaluationJobData } from '../types/jobTypes';
 import type { JobWithMetadata } from 'pg-boss';
 import { isRetryableError } from '../errors/retryableErrors';
-import { getAgentTimeout, formatTimeout } from '../config/agentTimeouts';
+import { getAgentTimeout } from '../config/agentTimeouts';
 import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
 
@@ -160,9 +160,9 @@ class PgBossWorker {
     return `${workerPrefix}[Job ${jobId}] ${message}`;
   }
 
-  private getJobTimeout(job: any): number {
+  private getJobTimeout(job: { evaluation: { agent: { versions: Array<{ extendedCapabilityId?: string | null }> } } }): number {
     const agentVersion = job.evaluation.agent.versions[0];
-    return getAgentTimeout(agentVersion?.extendedCapabilityId ?? undefined);
+    return getAgentTimeout(agentVersion.extendedCapabilityId ?? undefined);
   }
 
   private async processJob(pgBossJob: JobWithMetadata<DocumentEvaluationJobData>) {
@@ -238,8 +238,8 @@ class PgBossWorker {
 // Bootstrap
 const worker = new PgBossWorker();
 
-process.on('SIGTERM', () => worker.shutdown());
-process.on('SIGINT', () => worker.shutdown());
+process.on('SIGTERM', () => void worker.shutdown());
+process.on('SIGINT', () => void worker.shutdown());
 
 worker.start().catch(async (error) => {
   logger.error('🔥 Fatal error:', error);

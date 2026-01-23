@@ -62,7 +62,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       }
 
       // Setup Helicone session tracking
-      sessionManager = await this.setupSessionTracking(job);
+      sessionManager = this.setupSessionTracking(job);
 
       this.logger.info(this.formatLog(job.id, 'Preparing job data...'));
       // Extract and validate job data
@@ -132,41 +132,40 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   /**
    * Setup Helicone session tracking for the job
    */
-  private async setupSessionTracking(job: JobWithRelations): Promise<HeliconeSessionManager | undefined> {
+  private setupSessionTracking(job: JobWithRelations): HeliconeSessionManager | undefined {
     try {
+      // TypeScript types guarantee these are defined (Prisma include with take: 1)
       const documentVersion = job.evaluation.document.versions[0];
       const agentVersion = job.evaluation.agent.versions[0];
-      
-      if (documentVersion && agentVersion) {
-        // Use originalJobId for retries to group them under the same session
-        const sessionId = job.originalJobId || job.id;
-        const truncatedTitle = documentVersion.title.length > 50 
-          ? documentVersion.title.slice(0, 50) + '...' 
-          : documentVersion.title;
-        
-        const sessionManager = HeliconeSessionManager.forJob(
-          sessionId,
-          `${agentVersion.name} evaluating ${truncatedTitle}`,
-          {
-            JobId: job.id,
-            JobAttempt: job.originalJobId ? 'retry' : 'initial',
-            DocumentId: job.evaluation.document.id,
-            AgentId: job.evaluation.agent.id,
-            AgentVersion: agentVersion.version.toString(),
-            EvaluationId: job.evaluation.id,
-            UserId: job.evaluation.agent.submittedBy?.id || 'anonymous',
-          }
-        );
-        
-        // Set as global for automatic header propagation
-        setGlobalSessionManager(sessionManager);
-        return sessionManager;
-      }
+
+      // Use originalJobId for retries to group them under the same session
+      const sessionId = job.originalJobId || job.id;
+      const truncatedTitle = documentVersion.title.length > 50
+        ? documentVersion.title.slice(0, 50) + '...'
+        : documentVersion.title;
+
+      const sessionManager = HeliconeSessionManager.forJob(
+        sessionId,
+        `${agentVersion.name} evaluating ${truncatedTitle}`,
+        {
+          JobId: job.id,
+          JobAttempt: job.originalJobId ? 'retry' : 'initial',
+          DocumentId: job.evaluation.document.id,
+          AgentId: job.evaluation.agent.id,
+          AgentVersion: agentVersion.version.toString(),
+          EvaluationId: job.evaluation.id,
+          UserId: job.evaluation.agent.submittedBy?.id ?? 'anonymous',
+        }
+      );
+
+      // Set as global for automatic header propagation
+      setGlobalSessionManager(sessionManager);
+      return sessionManager;
     } catch (error) {
       this.logger.warn(this.formatLog(job.id, '⚠️ Failed to create Helicone session manager:'), error);
       // Continue without session tracking rather than failing the job
     }
-    
+
     return undefined;
   }
 
@@ -174,16 +173,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * Prepare document and agent data for analysis
    */
   private prepareJobData(job: JobWithRelations) {
+    // TypeScript types guarantee these are defined (Prisma include with take: 1)
     const documentVersion = job.evaluation.document.versions[0];
     const agentVersion = job.evaluation.agent.versions[0];
-
-    if (!documentVersion) {
-      throw new Error('Document version not found');
-    }
-
-    if (!agentVersion) {
-      throw new Error('Agent version not found');
-    }
 
     // Prepare document for analysis using Prisma's computed fullContent field
     const documentForAnalysis: Document = {
@@ -209,7 +201,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
       providesGrades: agentVersion.providesGrades || false,
       extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
-      pluginIds: (agentVersion.pluginIds || []) as PluginType[], // Cast to PluginType[] since DB stores as strings
+      pluginIds: agentVersion.pluginIds as PluginType[], // Cast to PluginType[] since DB stores as strings
     };
 
     return { documentForAnalysis, agent, documentVersion, agentVersion };
@@ -313,7 +305,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * This ensures every highlight has an associated comment for context.
    */
   private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string, jobId: string) {
-    if (!highlights || highlights.length === 0) {
+    if (highlights.length === 0) {
       return;
     }
 
