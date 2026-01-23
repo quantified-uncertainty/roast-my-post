@@ -94,7 +94,7 @@ export type { ToolContext, ToolConfig } from './tools/base/types';
 // export type { MathErrorDetails, MathVerificationStatus } from './tools/shared/math-schemas';
 // export type { FullDocumentAnalysisResult } from './analysis-plugins/PluginManager';
 // export type { Finding } from './analysis-plugins/types';
-// export { PluginType } from './analysis-plugins/types/plugin-types';
+export { PluginType } from './analysis-plugins/types/plugin-types';
 
 // Document and agent schemas
 export * from './types/agentSchema';

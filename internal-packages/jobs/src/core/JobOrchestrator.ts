@@ -14,8 +14,9 @@ import {
   PluginType,
   HeliconeSessionManager,
   setGlobalSessionManager,
+  Comment,
 } from '@roast/ai';
-import { analyzeDocument, getWorkerId } from '@roast/ai/server';
+import { analyzeDocument, getWorkerId, DocumentAnalysisResult } from '@roast/ai/server';
 import { JobService } from './JobService';
 
 export interface JobProcessingOptions {
@@ -236,7 +237,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   /**
    * Save analysis results to database
    */
-  private async saveAnalysisResults(job: JobWithRelations, analysisResult: any, agent: Agent) {
+  private async saveAnalysisResults(job: JobWithRelations, analysisResult: DocumentAnalysisResult, agent: Agent) {
     const { tasks, ...evaluationOutputs } = analysisResult;
 
     // Get the latest version number for this evaluation
@@ -265,7 +266,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         agentVersionId: agentVersion.id,
         evaluationId: job.evaluation.id,
         documentVersionId: documentVersion.id,
-        pipelineTelemetry: evaluationOutputs.pipelineTelemetry || null,
+        pipelineTelemetry: evaluationOutputs.pipelineTelemetry ?? undefined,
         job: {
           connect: {
             id: job.id,
@@ -289,7 +290,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     }
 
     // Save highlights to database
-    const highlights = evaluationOutputs.highlights || [];
+    const highlights = evaluationOutputs.highlights;
     if (highlights.length > 0) {
       // Use fullContent (which includes markdownPrepend) for validation
       // since highlights were generated based on the full content
@@ -300,11 +301,11 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
   /**
    * Save highlights with validation
-   * 
+   *
    * Note: Highlights are linked to evaluations through comments (not directly).
    * This ensures every highlight has an associated comment for context.
    */
-  private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string, jobId: string) {
+  private async saveHighlights(highlights: Comment[], evaluationVersionId: string, fullContent: string, jobId: string) {
     if (highlights.length === 0) {
       return;
     }
@@ -313,34 +314,22 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Validate highlight by checking if quotedText matches document at specified offsets
       let isValid = true;
       let error: string | null = null;
-      
-      if (!comment.highlight) {
-        isValid = false;
-        error = 'Highlight is missing';
-      } else {
-        try {
-          const actualText = fullContent.slice(
-            comment.highlight.startOffset, 
-            comment.highlight.endOffset
-          );
-          
-          if (actualText !== comment.highlight.quotedText) {
-            isValid = false;
-            error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
-            this.logger.warn(this.formatLog(jobId, `Invalid highlight detected: ${error}`));
-          }
-        } catch (highlightError) {
-          isValid = false;
-          error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
-          this.logger.warn(this.formatLog(jobId, `Highlight validation failed: ${error}`));
-        }
-      }
 
-      // Only create highlight if we have highlight data
-      if (!comment.highlight) {
-        // Skip this comment if no highlight data
-        this.logger.warn(this.formatLog(jobId, `Skipping comment without highlight data: ${comment.description}`));
-        continue;
+      try {
+        const actualText = fullContent.slice(
+          comment.highlight.startOffset,
+          comment.highlight.endOffset
+        );
+
+        if (actualText !== comment.highlight.quotedText) {
+          isValid = false;
+          error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+          this.logger.warn(this.formatLog(jobId, `Invalid highlight detected: ${error}`));
+        }
+      } catch (highlightError) {
+        isValid = false;
+        error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
+        this.logger.warn(this.formatLog(jobId, `Highlight validation failed: ${error}`));
       }
 
       // Create highlight with validation status
@@ -359,12 +348,12 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       await prisma.evaluationComment.create({
         data: {
           description: comment.description || 'No description',
-          importance: comment.importance || null,
-          grade: comment.grade || null,
-          header: comment.header || null,
-          level: comment.level || null,
-          source: comment.source || null,
-          metadata: comment.metadata || null,
+          importance: comment.importance ?? null,
+          grade: comment.grade ?? null,
+          header: comment.header ?? null,
+          level: comment.level ?? null,
+          source: comment.source ?? null,
+          metadata: comment.metadata ?? undefined,
           evaluationVersionId,
           highlightId: createdHighlight.id,
         },
@@ -378,7 +367,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    */
   private createExecutionLog(
     job: JobWithRelations,
-    analysisResult: any,
+    analysisResult: DocumentAnalysisResult,
     durationInSeconds: number,
     startTime: number
   ): string {
@@ -398,14 +387,14 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       `- Status: SUCCESS`,
       ``,
       `## Analysis Summary`,
-      `- Highlights generated: ${analysisResult.highlights?.length || 0}`,
+      `- Highlights generated: ${analysisResult.highlights.length}`,
       `- Grade: ${analysisResult.grade || 'N/A'}`,
       `- Self-critique: ${analysisResult.selfCritique ? 'Yes' : 'No'}`,
       ``,
       `## Task Breakdown`,
     ];
 
-    if (analysisResult.tasks && analysisResult.tasks.length > 0) {
+    if (analysisResult.tasks.length > 0) {
       for (const task of analysisResult.tasks) {
         log.push(`### ${task.name}`);
         log.push(`- Model: ${task.modelName}`);

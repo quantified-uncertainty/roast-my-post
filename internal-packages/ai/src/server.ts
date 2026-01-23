@@ -9,6 +9,7 @@ export * from './claude/wrapper';
 
 // Document analysis workflows (uses logger)
 export * from './workflows';
+export type { DocumentAnalysisResult } from './workflows';
 
 // Tools system - full implementations
 export * from './tools';

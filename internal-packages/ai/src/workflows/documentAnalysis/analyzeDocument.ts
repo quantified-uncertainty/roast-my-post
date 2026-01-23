@@ -1,11 +1,10 @@
 import { logger } from "../../utils/logger";
 import type { Document } from "../../types/documents";
 import type { Agent } from "../../types/agentSchema";
-import type { Comment } from "../../shared/types";
 import { checkJobTimeout } from "../../shared/jobContext";
 import { analyzeDocumentUnified } from "./unified";
 import { PluginType } from "../../analysis-plugins/types/plugin-types";
-import type { TaskResult } from "./shared/types";
+import type { DocumentAnalysisResult, TaskResult } from "./shared/types";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateSelfCritique } from "./selfCritique";
@@ -24,17 +23,7 @@ export async function analyzeDocument(
   targetWordCountOrOptions: number | AnalyzeDocumentOptions = 500,
   targetHighlights: number = 5,
   jobId?: string
-): Promise<{
-  thinking: string;
-  analysis: string;
-  summary: string;
-  grade?: number;
-  selfCritique?: string;
-  highlights: Comment[];
-  tasks: TaskResult[];
-  jobLogString?: string; // Include job log string for Job.logs field
-  pipelineTelemetry?: Record<string, unknown>; // Pipeline telemetry from fallacy checker
-}> {
+): Promise<DocumentAnalysisResult> {
   // Handle both old signature (positional args) and new signature (options object)
   let options: AnalyzeDocumentOptions;
   if (typeof targetWordCountOrOptions === 'object') {

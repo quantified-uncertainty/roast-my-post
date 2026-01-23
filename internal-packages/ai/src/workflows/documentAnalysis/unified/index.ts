@@ -10,7 +10,7 @@ import type { Agent, Comment as AiComment, Document } from "@roast/ai";
 import { checkJobTimeout } from "../../../shared/jobContext";
 import { PluginType } from "../../../analysis-plugins/types/plugin-types";
 import { PluginManager } from "../../../analysis-plugins/PluginManager";
-import type { TaskResult } from "../shared/types";
+import type { DocumentAnalysisResult } from "../shared/types";
 
 export interface UnifiedAnalysisOptions {
   targetHighlights?: number;
@@ -29,17 +29,7 @@ export async function analyzeDocumentUnified(
   document: Document,
   agentInfo: Agent,
   options: UnifiedAnalysisOptions = {}
-): Promise<{
-  thinking: string;
-  analysis: string;
-  summary: string;
-  grade?: number;
-  selfCritique?: string;
-  highlights: AiComment[];
-  tasks: TaskResult[];
-  jobLogString?: string;
-  pipelineTelemetry?: Record<string, unknown>;
-}> {
+): Promise<DocumentAnalysisResult> {
   // Check timeout before starting plugin analysis
   checkJobTimeout();
 
