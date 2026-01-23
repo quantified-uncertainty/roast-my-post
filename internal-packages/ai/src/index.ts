@@ -77,23 +77,32 @@ export {
 } from './tools/fallacy-extractor/prompts';
 
 // Tool types - client-safe imports from types.ts (no logger dependency)
-// NOTE: Tool class type is server-only, import from @roast/ai/server
+// NOTE: Tool class is server-only, import from @roast/ai/server
 export type { ToolContext, ToolConfig } from './tools/base/types';
 
-// TEMPORARILY COMMENTED OUT - These pull in server dependencies via Tool.ts imports
-// TODO: Create separate types files for each tool to avoid this
-// export type { DocumentChunkerOutput } from './tools/document-chunker';
-// export type { TextLocationFinderOutput } from './tools/smart-text-searcher';
-// export type { CheckMathOutput } from './tools/math-validator-llm';
-// export type { CheckMathAgenticOutput as CheckMathWithMathJSOutput } from './tools/math-validator-mathjs/types';
-// export type { CheckSpellingGrammarOutput, SpellingGrammarError } from './tools/spelling-grammar-checker';
-// export type { ExtractFactualClaimsOutput, ExtractedFactualClaim } from './tools/factual-claims-extractor';
-// export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './tools/binary-forecasting-claims-extractor';
-// export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './tools/math-expressions-extractor';
-// export type { DetectLanguageConventionOutput } from './tools/language-convention-detector';
-// export type { MathErrorDetails, MathVerificationStatus } from './tools/shared/math-schemas';
-// export type { FullDocumentAnalysisResult } from './analysis-plugins/PluginManager';
-// export type { Finding } from './analysis-plugins/types';
+// Client-safe tool output types (extracted to avoid server dependencies)
+export type {
+  DocumentChunk,
+  DocumentChunkerOutput,
+  TextLocationFinderOutput,
+  CheckMathOutput,
+  CheckMathWithMathJSOutput,
+  CheckSpellingGrammarOutput,
+  SpellingGrammarError,
+  ExtractFactualClaimsOutput,
+  ExtractedFactualClaim,
+  ExtractForecastingClaimsOutput,
+  ExtractedForecast,
+  ExtractMathExpressionsOutput,
+  ExtractedMathExpression,
+  DetectLanguageConventionOutput,
+  MathErrorDetails,
+  MathVerificationStatus,
+  MathErrorType,
+  MathSeverity,
+  MathVerificationDetails,
+} from './tools/client-types';
+
 export { PluginType } from './analysis-plugins/types/plugin-types';
 
 // Document and agent schemas

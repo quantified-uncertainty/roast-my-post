@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Tool } from '@roast/ai';
+import { Tool, logger as aiLogger } from '@roast/ai/server';
 import { logger } from '@/infrastructure/logging/logger';
-import { logger as aiLogger } from '@roast/ai/server';
 import { auth } from '@/infrastructure/auth/auth';
 import { config } from '@roast/domain';
 
