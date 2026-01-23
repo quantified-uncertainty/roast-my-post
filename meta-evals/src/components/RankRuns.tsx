@@ -70,8 +70,11 @@ export function RankRuns({ seriesId, height, judgeModel, temperature, maxTokens,
     loadData();
   }, [seriesId]);
 
-  // Handle tab key to switch between tabs (must be before any conditional returns)
+  // Handle keyboard shortcuts (must be before any conditional returns)
   useInput((input, key) => {
+    if (key.escape) {
+      onBack();
+    }
     if (key.tab && savedSessions.length > 0 && !results) {
       setActiveTab((prev) => (prev === "saved" ? "new" : "saved"));
     }
