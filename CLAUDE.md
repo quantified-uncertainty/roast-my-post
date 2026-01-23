@@ -177,6 +177,18 @@ pnpm --filter @roast/web run test:ci  # MUST actually run, not assume
 # TypeScript compiles ≠ tests pass
 ```
 
+### Development Workflow: Modify → Check Loop
+
+When making code changes, especially to internal packages (`@roast/ai`, `@roast/db`, `@roast/domain`, `@roast/jobs`), follow this verification loop before committing:
+
+1. **After modifying internal packages**: Run `pnpm turbo run typecheck` (not just `pnpm --filter @roast/web typecheck`). Turbo handles the dependency graph—it rebuilds packages first, then typechecks consumers with fresh `.d.ts` files. This mimics CI's clean-build behavior.
+
+2. **After modifying web app only**: Run `pnpm --filter @roast/web run typecheck && pnpm --filter @roast/web run lint`.
+
+3. **Before pushing**: Always run the full check: `pnpm turbo run typecheck lint --parallel`. This catches cross-package type errors that per-package checks miss due to stale `dist/` folders.
+
+4. **Why this matters**: TypeScript project references use compiled `dist/` for type resolution. Local dev accumulates stale builds; CI starts fresh. If you see typecheck errors and assume they're "pre-existing," verify by rebuilding the source package first (`pnpm --filter @roast/ai run build`).
+
 ## Commands Quick Reference
 
 ### Development
