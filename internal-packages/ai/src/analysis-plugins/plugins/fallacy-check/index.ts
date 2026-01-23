@@ -151,22 +151,6 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   }
 
   /**
-   * Resolve reasoning effort for OpenRouter models
-   */
-  private resolveReasoningEffortForExtractor(
-    config: ExtractorConfig | undefined
-  ): 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | undefined {
-    if (!config) return undefined;
-    if (config.reasoning === undefined) return undefined;
-    if (config.reasoning === false) return 'none';
-
-    if ('effort' in config.reasoning) return config.reasoning.effort;
-    if ('budget_tokens' in config.reasoning) return 'xhigh'; // map budget to highest effort
-
-    return undefined;
-  }
-
-  /**
    * Resolve thinking boolean for judge config.
    * Checks reasoning config first, falls back to thinking boolean.
    */
