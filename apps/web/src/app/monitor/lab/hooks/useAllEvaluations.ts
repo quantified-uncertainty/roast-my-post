@@ -61,7 +61,7 @@ export function useAllEvaluations(agentId?: string): UseAllEvaluationsReturn {
   }, [agentId]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   return { evaluations, loading, error, refresh };

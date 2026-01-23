@@ -14,7 +14,7 @@ interface ExtractorEditorProps {
 }
 
 export function ExtractorEditor({ extractors, onChange, disabled }: ExtractorEditorProps) {
-  const { models, loading: modelsLoading, error: modelsError } = useModels();
+  const { models, loading: modelsLoading } = useModels();
   const [addingExtractor, setAddingExtractor] = useState(false);
 
   const updateExtractor = (index: number, updates: Partial<ExtractorConfig>) => {

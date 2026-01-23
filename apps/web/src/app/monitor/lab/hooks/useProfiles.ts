@@ -34,7 +34,7 @@ export function useProfiles(agentId: string): UseProfilesReturn {
   }, [agentId]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   const createProfile = useCallback(

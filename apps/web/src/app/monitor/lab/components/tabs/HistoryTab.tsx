@@ -22,12 +22,12 @@ export function HistoryTab({ agentId, selectedBaseline, onSelectBaseline }: Hist
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
-    refreshBaselines();
+    void refreshBaselines();
   }, [refreshBaselines]);
 
   useEffect(() => {
     if (selectedBaseline) {
-      refreshRuns();
+      void refreshRuns();
       setSelectedRun(null);
       setSelectedSnapshot(null);
     }
@@ -106,8 +106,8 @@ export function HistoryTab({ agentId, selectedBaseline, onSelectBaseline }: Hist
                     key={run.id}
                     run={run}
                     isSelected={selectedRun?.id === run.id}
-                    onSelect={() => handleSelectRun(run)}
-                    onDelete={() => handleDeleteRun(run.id)}
+                    onSelect={() => void handleSelectRun(run)}
+                    onDelete={() => void handleDeleteRun(run.id)}
                   />
                 ))
               )}

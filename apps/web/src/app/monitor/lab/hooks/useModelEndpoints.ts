@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 export interface ModelEndpoint {
   name: string;
@@ -100,7 +100,7 @@ export function useModelEndpoints(modelId: string | null): UseModelEndpointsRetu
       }
     };
 
-    fetchEndpoints();
+    void fetchEndpoints();
   }, [modelId]);
 
   return { endpoints, loading, error };

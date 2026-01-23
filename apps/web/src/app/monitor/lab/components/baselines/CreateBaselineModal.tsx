@@ -77,11 +77,11 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
   }, [agentId, versionsCache]);
 
   useEffect(() => {
-    fetchDocuments();
+    void fetchDocuments();
   }, [fetchDocuments]);
 
   const handleSearch = () => {
-    fetchDocuments(searchQuery || undefined);
+    void fetchDocuments(searchQuery || undefined);
   };
 
   const toggleDocument = async (docId: string) => {
@@ -200,7 +200,7 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
               </label>
               <div className="space-x-2">
                 <button
-                  onClick={handleSelectAll}
+                  onClick={() => void handleSelectAll()}
                   className="text-xs text-blue-600 hover:underline"
                 >
                   Select All
@@ -256,7 +256,7 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
                         <div className="flex items-center p-3 hover:bg-gray-50">
                           {/* Expand button */}
                           <button
-                            onClick={() => toggleExpand(doc.documentId)}
+                            onClick={() => void toggleExpand(doc.documentId)}
                             className="mr-2 text-gray-400 hover:text-gray-600"
                           >
                             {expandedDocId === doc.documentId ? (
@@ -270,7 +270,7 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => toggleDocument(doc.documentId)}
+                            onChange={() => void toggleDocument(doc.documentId)}
                             className="h-4 w-4 text-blue-600 rounded border-gray-300"
                           />
 
@@ -346,7 +346,7 @@ export function CreateBaselineModal({ agentId, onClose, onCreated }: CreateBasel
             Cancel
           </button>
           <button
-            onClick={handleCreate}
+            onClick={() => void handleCreate()}
             disabled={!name.trim() || selectedVersions.size === 0 || creating}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >

@@ -3,7 +3,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
-import { prisma, metaEvaluationRepository, generateId } from "@roast/db";
+import { prisma, metaEvaluationRepository } from "@roast/db";
 import { getServices } from "@/application/services/ServiceFactory";
 
 /**

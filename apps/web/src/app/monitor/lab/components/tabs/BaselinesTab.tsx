@@ -17,12 +17,12 @@ export function BaselinesTab({ agentId, selectedBaseline, onSelectBaseline }: Ba
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   const handleBaselineCreated = () => {
     setShowCreateModal(false);
-    refresh();
+    void refresh();
   };
 
   const handleDelete = async (id: string) => {
@@ -64,7 +64,7 @@ export function BaselinesTab({ agentId, selectedBaseline, onSelectBaseline }: Ba
           baselines={baselines}
           selectedId={selectedBaseline?.id ?? null}
           onSelect={onSelectBaseline}
-          onDelete={handleDelete}
+          onDelete={(id) => void handleDelete(id)}
         />
       )}
 

@@ -261,22 +261,22 @@ function FilterItemEditor({
           <span className="text-sm font-medium text-gray-900">{filterLabel}</span>
           {filter.type === "principle-of-charity" && (
             <span className="text-xs text-gray-500 font-mono">
-              {getModelDisplayName((filter as PrincipleOfCharityFilterConfig).model)}
+              {getModelDisplayName(filter.model)}
             </span>
           )}
           {filter.type === "supported-elsewhere" && (
             <span className="text-xs text-gray-500 font-mono">
-              {getModelDisplayName((filter as SupportedElsewhereFilterConfig).model)}
+              {getModelDisplayName(filter.model)}
             </span>
           )}
           {filter.type === "severity" && (
             <span className="text-xs text-gray-500">
-              ≥ {(filter as SeverityFilterConfig).minSeverity}
+              ≥ {filter.minSeverity}
             </span>
           )}
           {filter.type === "confidence" && (
             <span className="text-xs text-gray-500">
-              ≥ {(filter as ConfidenceFilterConfig).minConfidence}
+              ≥ {filter.minConfidence}
             </span>
           )}
         </button>
@@ -314,7 +314,7 @@ function FilterItemEditor({
         <div className="px-3 pb-3 pt-1 border-t border-orange-100 overflow-visible">
           {filter.type === "principle-of-charity" && (
             <LLMFilterSettings
-              filter={filter as PrincipleOfCharityFilterConfig}
+              filter={filter}
               disabled={disabled}
               onUpdate={onUpdate}
               description='Applies the "Principle of Charity" - interprets arguments in their strongest, most reasonable form before critiquing. Issues that dissolve under charitable interpretation are filtered out.'
@@ -322,7 +322,7 @@ function FilterItemEditor({
           )}
           {filter.type === "supported-elsewhere" && (
             <LLMFilterSettings
-              filter={filter as SupportedElsewhereFilterConfig}
+              filter={filter}
               disabled={disabled}
               defaultPrompt={defaultFilterPrompt}
               onUpdate={onUpdate}
@@ -332,14 +332,14 @@ function FilterItemEditor({
           )}
           {filter.type === "severity" && (
             <SeveritySettings
-              filter={filter as SeverityFilterConfig}
+              filter={filter}
               disabled={disabled}
               onUpdate={onUpdate}
             />
           )}
           {filter.type === "confidence" && (
             <ConfidenceSettings
-              filter={filter as ConfidenceFilterConfig}
+              filter={filter}
               disabled={disabled}
               onUpdate={onUpdate}
             />

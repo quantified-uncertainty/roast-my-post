@@ -30,7 +30,7 @@ export function useDefaultPrompts() {
       }
     }
 
-    fetchPrompts();
+    void fetchPrompts();
   }, []);
 
   return { prompts, loading, error };

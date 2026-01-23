@@ -93,7 +93,7 @@ export async function POST(
 
     for (const baselineSnapshot of baselineSnapshots) {
       const newSnapshot = newSnapshots.find(
-        (s) => s && s.documentId === baselineSnapshot.documentId
+        (s) => s.documentId === baselineSnapshot.documentId
       );
 
       if (newSnapshot) {
@@ -139,7 +139,7 @@ export async function POST(
             runId,
             baselineSnapshotId: baselineSnapshotRecord.id,
             newEvaluationId: newSnapshot.evaluationVersionId,
-            status: status as "unchanged" | "changed",
+            status,
             keptCount: comparison.matchedComments.length,
             newCount: comparison.newComments.length,
             lostCount: comparison.lostComments.length,
@@ -149,8 +149,8 @@ export async function POST(
               lostComments: comparison.lostComments,
               filteredItems: telemetry?.filteredItems,
               extractionPhase: telemetry?.extractionPhase,
-              stages: fullTelemetry?.stages,
-              totalDurationMs: fullTelemetry?.totalDurationMs,
+              stages: fullTelemetry.stages,
+              totalDurationMs: fullTelemetry.totalDurationMs,
               pipelineCounts: finalCounts
                 ? {
                     issuesAfterDedup: finalCounts.issuesAfterDedup ?? 0,

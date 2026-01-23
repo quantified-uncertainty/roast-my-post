@@ -12,7 +12,7 @@ import { DEFAULT_SUPPORTED_ELSEWHERE_SYSTEM_PROMPT } from "@roast/ai/supported-e
  * Returns the default prompts for the fallacy extractor, judge, and filter.
  * Used by the profile editor UI to show placeholders.
  */
-export async function GET() {
+export function GET() {
   return NextResponse.json({
     extractorSystemPrompt: DEFAULT_EXTRACTOR_SYSTEM_PROMPT,
     extractorUserPrompt: DEFAULT_EXTRACTOR_USER_PROMPT,

@@ -36,7 +36,7 @@ export function useRuns(baselineId: string | null): UseRunsReturn {
   }, [baselineId]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   const startRun = useCallback(

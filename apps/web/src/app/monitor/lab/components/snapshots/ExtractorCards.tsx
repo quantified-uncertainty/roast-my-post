@@ -148,7 +148,7 @@ export function ExtractorCard({ ext }: { ext: ExtractorInfo }) {
                 </span>
               )}
               {ext.actualApiParams.reasoning?.effort &&
-                !ext.actualApiParams.reasoning?.max_tokens && (
+                !ext.actualApiParams.reasoning.max_tokens && (
                   <span className="ml-1">, reasoning: {ext.actualApiParams.reasoning.effort}</span>
                 )}
             </div>
@@ -189,9 +189,9 @@ export function DeduplicationCard({
 }) {
   const [showDetails, setShowDetails] = useState(false);
 
-  const totalFromExtractors = extraction.totalIssuesBeforeJudge ?? 0;
+  const totalFromExtractors = extraction.totalIssuesBeforeJudge;
   const afterJaccardDedup = extraction.totalIssuesAfterDedup ?? totalFromExtractors;
-  const afterJudge = extraction.totalIssuesAfterJudge ?? afterJaccardDedup;
+  const afterJudge = extraction.totalIssuesAfterJudge;
 
   const jaccardRemoved = totalFromExtractors - afterJaccardDedup;
   const judgeRemoved = afterJaccardDedup - afterJudge;
@@ -309,7 +309,7 @@ export function DeduplicationCard({
                     </span>
                   )}
                   {extraction.judgeActualApiParams.reasoning?.effort &&
-                    !extraction.judgeActualApiParams.reasoning?.max_tokens && (
+                    !extraction.judgeActualApiParams.reasoning.max_tokens && (
                       <span className="ml-1">
                         , reasoning: {extraction.judgeActualApiParams.reasoning.effort}
                       </span>

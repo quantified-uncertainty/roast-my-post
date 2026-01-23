@@ -32,7 +32,7 @@ export function RunTab({ agentId, selectedBaseline, onSelectBaseline }: RunTabPr
   });
 
   useEffect(() => {
-    refreshBaselines();
+    void refreshBaselines();
   }, [refreshBaselines]);
 
   const pollJobStatus = useCallback(async (jobIds: string[]): Promise<boolean> => {
@@ -194,7 +194,7 @@ export function RunTab({ agentId, selectedBaseline, onSelectBaseline }: RunTabPr
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={startRun}
+                onClick={() => void startRun()}
                 disabled={isRunning}
                 className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -228,7 +228,10 @@ function ProgressPanel({ progress }: { progress: RunProgress }) {
         return "bg-green-50 border-green-200";
       case "error":
         return "bg-red-50 border-red-200";
-      default:
+      case "idle":
+      case "starting":
+      case "running":
+      case "comparing":
         return "bg-blue-50 border-blue-200";
     }
   };
@@ -239,7 +242,10 @@ function ProgressPanel({ progress }: { progress: RunProgress }) {
         return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
       case "error":
         return <XCircleIcon className="h-5 w-5 text-red-600" />;
-      default:
+      case "idle":
+      case "starting":
+      case "running":
+      case "comparing":
         return <ArrowPathIcon className="h-5 w-5 text-blue-600 animate-spin" />;
     }
   };

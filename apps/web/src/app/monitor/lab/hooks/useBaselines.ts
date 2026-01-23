@@ -32,7 +32,7 @@ export function useBaselines(agentId: string): UseBaselinesReturn {
   }, [agentId]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   const createBaseline = useCallback(

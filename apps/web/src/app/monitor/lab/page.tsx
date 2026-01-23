@@ -25,7 +25,7 @@ function getDefaultRunName(): string {
 
 export default function LabPage() {
   const { baselines, loading: baselinesLoading, refresh: refreshBaselines, deleteBaseline } = useBaselines(AGENT_ID);
-  const { profiles, loading: profilesLoading, refresh: refreshProfiles, deleteProfile, setDefault: setDefaultProfile, updateProfile, createProfile } = useProfiles(AGENT_ID);
+  const { profiles, loading: profilesLoading, deleteProfile, setDefault: setDefaultProfile, updateProfile, createProfile } = useProfiles(AGENT_ID);
   const { evaluations, loading: evaluationsLoading, error: evaluationsError, refresh: refreshEvaluations } = useAllEvaluations(AGENT_ID);
 
   // Sidebar tab state
@@ -128,7 +128,7 @@ export default function LabPage() {
       });
 
       setRunName(getDefaultRunName());
-      refreshRuns();
+      void refreshRuns();
     } catch (error) {
       setRunProgress((p) => ({
         ...p,
@@ -143,7 +143,7 @@ export default function LabPage() {
 
   const handleBaselineCreated = () => {
     setShowCreateModal(false);
-    refreshBaselines();
+    void refreshBaselines();
   };
 
   const handleDeleteBaseline = async (id: string) => {
@@ -300,7 +300,7 @@ export default function LabPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteBaseline(baseline.id);
+                            void handleDeleteBaseline(baseline.id);
                           }}
                           className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
                         >
@@ -319,9 +319,9 @@ export default function LabPage() {
             loading={profilesLoading}
             selectedProfile={selectedProfileForEdit}
             onSelectProfile={setSelectedProfileForEdit}
-            onCreateProfile={handleCreateProfile}
-            onDeleteProfile={deleteProfile}
-            onSetDefault={setDefaultProfile}
+            onCreateProfile={() => void handleCreateProfile()}
+            onDeleteProfile={(id) => void deleteProfile(id)}
+            onSetDefault={(id) => void setDefaultProfile(id)}
           />
         ) : (
           /* Evaluations tab - sidebar info */
@@ -343,7 +343,7 @@ export default function LabPage() {
               evaluations={evaluations}
               loading={evaluationsLoading}
               error={evaluationsError}
-              onRefresh={refreshEvaluations}
+              onRefresh={() => void refreshEvaluations()}
             />
           </div>
         ) : /* Profiles Tab Main Content */
@@ -357,7 +357,7 @@ export default function LabPage() {
                 <p className="text-lg">Select a profile to view or edit</p>
                 <p className="text-sm mt-1">or create a new one</p>
                 <button
-                  onClick={handleCreateProfile}
+                  onClick={() => void handleCreateProfile()}
                   className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
                   Create Profile
@@ -415,7 +415,7 @@ export default function LabPage() {
                     className="px-3 py-2 border rounded-md text-sm w-48 disabled:bg-gray-100"
                   />
                   <button
-                    onClick={startRun}
+                    onClick={() => void startRun()}
                     disabled={isRunning}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >

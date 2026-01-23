@@ -51,7 +51,7 @@ function migrateFilterChain(config: Profile["config"] | undefined): FilterChainI
   }
 
   // Old format: { filters: Array<{ type, enabled }> }
-  const oldFormat = config.filterChain as unknown as { filters: Array<{ type: string; enabled: boolean }> };
+  const oldFormat = config.filterChain as unknown as { filters?: Array<{ type: string; enabled: boolean }> };
   if (oldFormat.filters && Array.isArray(oldFormat.filters)) {
     // Convert old format to new format - only migrate supported-elsewhere
     const supportedElsewhere = oldFormat.filters.find(f => f.type === "supported-elsewhere");
@@ -80,13 +80,13 @@ export function ProfileDetailView({ profile, onSave }: ProfileDetailViewProps) {
   const mergedConfig: ProfileConfig = {
     ...DEFAULT_CONFIG,
     ...profile.config,
-    thresholds: { ...DEFAULT_CONFIG.thresholds, ...profile.config?.thresholds },
+    thresholds: { ...DEFAULT_CONFIG.thresholds, ...profile.config.thresholds },
     models: {
-      extractors: profile.config?.models?.extractors || DEFAULT_CONFIG.models.extractors,
-      judge: { ...DEFAULT_CONFIG.models.judge, ...profile.config?.models?.judge },
+      extractors: profile.config.models.extractors.length > 0 ? profile.config.models.extractors : DEFAULT_CONFIG.models.extractors,
+      judge: { ...DEFAULT_CONFIG.models.judge, ...profile.config.models.judge },
     },
     filterChain: migrateFilterChain(profile.config),
-    prompts: profile.config?.prompts,
+    prompts: profile.config.prompts,
   };
 
   const [editedConfig, setEditedConfig] = useState<ProfileConfig>(mergedConfig);
@@ -97,19 +97,19 @@ export function ProfileDetailView({ profile, onSave }: ProfileDetailViewProps) {
     const newMergedConfig: ProfileConfig = {
       ...DEFAULT_CONFIG,
       ...profile.config,
-      thresholds: { ...DEFAULT_CONFIG.thresholds, ...profile.config?.thresholds },
+      thresholds: { ...DEFAULT_CONFIG.thresholds, ...profile.config.thresholds },
       models: {
-        extractors: profile.config?.models?.extractors || DEFAULT_CONFIG.models.extractors,
-        judge: { ...DEFAULT_CONFIG.models.judge, ...profile.config?.models?.judge },
+        extractors: profile.config.models.extractors.length > 0 ? profile.config.models.extractors : DEFAULT_CONFIG.models.extractors,
+        judge: { ...DEFAULT_CONFIG.models.judge, ...profile.config.models.judge },
       },
       filterChain: migrateFilterChain(profile.config),
-      prompts: profile.config?.prompts,
+      prompts: profile.config.prompts,
     };
     setEditedName(profile.name);
     setEditedDescription(profile.description || "");
     setEditedConfig(newMergedConfig);
     setIsEditing(false);
-  }, [profile.id]);
+  }, [profile.id, profile.name, profile.description, profile.config]);
 
   const toggleSection = (section: string) => {
     const newSet = new Set(expandedSections);
@@ -142,13 +142,13 @@ export function ProfileDetailView({ profile, onSave }: ProfileDetailViewProps) {
     const newMergedConfig: ProfileConfig = {
       ...DEFAULT_CONFIG,
       ...profile.config,
-      thresholds: { ...DEFAULT_CONFIG.thresholds, ...profile.config?.thresholds },
+      thresholds: { ...DEFAULT_CONFIG.thresholds, ...profile.config.thresholds },
       models: {
-        extractors: profile.config?.models?.extractors || DEFAULT_CONFIG.models.extractors,
-        judge: { ...DEFAULT_CONFIG.models.judge, ...profile.config?.models?.judge },
+        extractors: profile.config.models.extractors.length > 0 ? profile.config.models.extractors : DEFAULT_CONFIG.models.extractors,
+        judge: { ...DEFAULT_CONFIG.models.judge, ...profile.config.models.judge },
       },
       filterChain: migrateFilterChain(profile.config),
-      prompts: profile.config?.prompts,
+      prompts: profile.config.prompts,
     };
     setEditedName(profile.name);
     setEditedDescription(profile.description || "");
@@ -244,7 +244,7 @@ export function ProfileDetailView({ profile, onSave }: ProfileDetailViewProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={handleSave}
+                  onClick={() => void handleSave()}
                   disabled={saving || !editedName.trim()}
                   className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >

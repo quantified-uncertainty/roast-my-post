@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { ChevronDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { ReasoningConfig, ReasoningEffort, ProviderPreferences } from "../../types";
-import { useModels, type ModelInfo } from "../../hooks/useModels";
+import { useModels } from "../../hooks/useModels";
 import { useModelEndpoints } from "../../hooks/useModelEndpoints";
 import { resolveReasoningBudgetSync, type ModelEndpointData } from "@roast/ai";
 import { ModelSelector, getModelDisplayName } from "./ModelSelector";
@@ -92,7 +92,7 @@ export function ModelConfigurator({
   onDelete,
   deleteDisabled = false,
   deleteDisabledReason,
-  layout = "compact",
+  layout: _layout = "compact",
 }: ModelConfiguratorProps) {
   const { models, loading: modelsLoading } = useModels();
   const [showModelDropdown, setShowModelDropdown] = useState(false);

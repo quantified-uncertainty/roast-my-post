@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         allDone,
       },
     });
-  } catch (error) {
+  } catch {
     return commonErrors.serverError("Failed to get job status");
   }
 }

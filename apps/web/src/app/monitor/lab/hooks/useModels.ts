@@ -46,7 +46,7 @@ export function useModels(): UseModelsReturn {
   }, []);
 
   useEffect(() => {
-    fetchModels();
+    void fetchModels();
   }, [fetchModels]);
 
   const filterModels = useCallback(

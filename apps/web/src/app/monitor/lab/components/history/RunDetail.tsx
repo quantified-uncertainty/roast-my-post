@@ -28,7 +28,7 @@ export function RunDetail({ runId }: RunDetailProps) {
         setLoading(false);
       }
     };
-    fetchRun();
+    void fetchRun();
   }, [runId]);
 
   if (loading) {

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { PlusIcon, TrashIcon, PencilIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../../types";
 import { formatDate } from "../../utils/formatters";
 
@@ -24,7 +23,7 @@ export function ProfilesList({
   onDeleteProfile,
   onSetDefault,
 }: ProfilesListProps) {
-  const handleDelete = async (e: React.MouseEvent, profile: Profile) => {
+  const handleDelete = (e: React.MouseEvent, profile: Profile) => {
     e.stopPropagation();
     if (profile.isDefault) {
       alert("Cannot delete the default profile. Set another profile as default first.");
@@ -34,7 +33,7 @@ export function ProfilesList({
     onDeleteProfile(profile.id);
   };
 
-  const handleSetDefault = async (e: React.MouseEvent, profile: Profile) => {
+  const handleSetDefault = (e: React.MouseEvent, profile: Profile) => {
     e.stopPropagation();
     if (profile.isDefault) return;
     onSetDefault(profile.id);

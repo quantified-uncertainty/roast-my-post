@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import type { RunSnapshot, ComparisonData, CommentMatch, Comment } from "../../types";
+import type { RunSnapshot, CommentMatch, Comment } from "../../types";
 import { truncate } from "../../utils/formatters";
 import { PipelineView } from "./PipelineView";
 
@@ -16,7 +16,7 @@ type ViewTab = "pipeline" | "comparison";
 export function SnapshotComparison({ snapshot, onBack }: SnapshotComparisonProps) {
   const [activeTab, setActiveTab] = useState<ViewTab>("pipeline");
 
-  const comparison = snapshot.comparisonData as ComparisonData | null;
+  const comparison = snapshot.comparisonData;
   const matched = comparison?.matchedComments ?? [];
   const newComments = comparison?.newComments ?? [];
   const lostComments = comparison?.lostComments ?? [];
@@ -28,7 +28,7 @@ export function SnapshotComparison({ snapshot, onBack }: SnapshotComparisonProps
 
   // Collect all final comments for the pipeline view
   const allFinalComments: Comment[] = [
-    ...matched.map((m) => m.currentComment || m.baselineComment).filter(Boolean),
+    ...matched.map((m) => m.currentComment),
     ...newComments,
   ];
 
@@ -201,8 +201,7 @@ function ComparisonSection({
 
 function MatchedCommentItem({ match }: { match: CommentMatch }) {
   const [expanded, setExpanded] = useState(false);
-  const comment = match.baselineComment || match.currentComment;
-  if (!comment) return null;
+  const comment = match.baselineComment;
 
   const needsExpand = comment.quotedText.length > 100 || comment.description.length > 150;
 
@@ -215,7 +214,7 @@ function MatchedCommentItem({ match }: { match: CommentMatch }) {
         <div>
           <span className="font-medium text-gray-900">{comment.header || "Comment"}</span>
           <span className="text-gray-500 ml-2">
-            (confidence: {Math.round((match.matchConfidence ?? 1) * 100)}%)
+            (confidence: {Math.round(match.matchConfidence * 100)}%)
           </span>
         </div>
         {needsExpand && (

@@ -178,7 +178,7 @@ export function PipelineView({
                         </span>
                       )}
                       {stageData.actualApiParams.reasoning?.effort &&
-                        !stageData.actualApiParams.reasoning?.max_tokens && (
+                        !stageData.actualApiParams.reasoning.max_tokens && (
                           <span>, reasoning: {stageData.actualApiParams.reasoning.effort}</span>
                         )}
                     </div>
