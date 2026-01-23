@@ -27,8 +27,6 @@ import {
   DEFAULT_EXTRACTOR_USER_PROMPT,
 } from "./prompts";
 
-// Removed severity-calibration and genre imports - we trust the LLM's scores
-
 // Zod schemas
 const extractedFallacyIssueSchema = z.object({
   exactText: z
@@ -355,7 +353,7 @@ export class FallacyExtractorTool extends Tool<
       const thinkingBudgetInfo = typeof claudeThinkingConfig === 'object'
         ? `budget: ${claudeThinkingConfig.budget_tokens}`
         : (claudeThinkingConfig ? 'default' : 'disabled');
-      console.log(`🤖 Calling Claude API${modelId ? ` with model: ${modelId}` : ""}, temp: ${temperature ?? 'default'}, thinking: ${thinkingBudgetInfo}, reasoningEffort: ${input.reasoningEffort ?? 'not set'}`);
+      context.logger.debug(`[FallacyExtractor] Calling Claude API: model=${modelId || 'default'}, temp=${temperature ?? 'default'}, thinking=${thinkingBudgetInfo}, reasoningEffort=${input.reasoningEffort ?? 'not set'}`);
       const claudeResult = await callClaudeWithTool<ExtractorResults>({
         ...(modelId && { model: modelId }),
         system: systemPrompt,
@@ -554,6 +552,5 @@ export class FallacyExtractorTool extends Tool<
   }
 }
 
-// Export singleton instance
 export const fallacyExtractorTool = new FallacyExtractorTool();
 export default fallacyExtractorTool;

@@ -112,19 +112,16 @@ export function getJudgesConfig(): JudgeConfig[] {
           return configs;
         }
       } else {
-        // Single object in FALLACY_JUDGE
         const config = parseJudgeConfigObject(parsed);
         if (config && config.enabled) {
           return [config];
         }
       }
-      console.warn('[FallacyJudge] Invalid FALLACY_JUDGES/FALLACY_JUDGE format');
-    } catch (e) {
-      console.warn('[FallacyJudge] Failed to parse FALLACY_JUDGES/FALLACY_JUDGE:', e);
+    } catch {
+      // Invalid JSON - fall through to default
     }
   }
 
-  // Default: empty array (no judges configured)
   return [];
 }
 

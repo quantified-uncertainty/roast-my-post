@@ -85,7 +85,6 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
   private profileLoaded = false;
 
   constructor(options: FallacyCheckPluginOptions = {}) {
-    // Initialize empty values - they'll be set in analyze()
     this.documentText = "";
     this.chunks = [];
     this.options = options;
@@ -243,7 +242,6 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     chunks: TextChunk[],
     documentText: string
   ): Promise<AnalysisResult> {
-    // Store the inputs
     this.processingStartTime = Date.now();
     this.documentText = documentText;
     this.chunks = chunks;
