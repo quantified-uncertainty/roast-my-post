@@ -239,8 +239,9 @@ export async function runTestSuite<TInput, TExpected>(
   const results: TestResult[] = [];
   let totalScore = 0;
   
-  const testCasesToRun = options.filter 
-    ? suite.testCases.filter(tc => options.filter!.includes(tc.id))
+  const filterIds = options.filter;
+  const testCasesToRun = filterIds
+    ? suite.testCases.filter(tc => filterIds.includes(tc.id))
     : suite.testCases;
   
   for (let i = 0; i < testCasesToRun.length; i++) {

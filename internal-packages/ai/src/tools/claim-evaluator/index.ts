@@ -7,13 +7,9 @@ import { HeliconeSessionManager, setGlobalSessionManager } from "../../helicone/
 // Import from new modules
 import { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
 import {
-  RefusalReason,
   TokenUsage,
-  MessageWithReasoning,
   EvaluationError,
   ClaimEvaluatorInput,
-  ModelEvaluation,
-  FailedEvaluation,
   EvaluationResult,
   ClaimEvaluatorOutput,
   extractProvider,
@@ -270,7 +266,7 @@ async function evaluateWithModelImpl(
     let parsed: unknown;
     try {
       parsed = extractAndParseJSON(rawContent);
-    } catch (parseError: unknown) {
+    } catch {
       // Don't expose JSON parsing details to end users
       throw createEvaluationError(
         'Model returned invalid JSON',
@@ -514,7 +510,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     }
   }
 
-  override async beforeExecute(
+  override beforeExecute(
     input: ClaimEvaluatorInput,
     context: ToolContext
   ): Promise<void> {
@@ -523,9 +519,10 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     context.logger.info(
       `[ClaimEvaluator] Starting evaluation with ${modelCount} models, ${runs} run(s) each (${modelCount * runs} total evaluations)`
     );
+    return Promise.resolve();
   }
 
-  override async afterExecute(
+  override afterExecute(
     output: ClaimEvaluatorOutput,
     context: ToolContext
   ): Promise<void> {
@@ -533,6 +530,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     context.logger.info(
       `[ClaimEvaluator] Completed with ${successCount} successful evaluations`
     );
+    return Promise.resolve();
   }
 }
 

@@ -160,7 +160,7 @@ export function resolveModelConfig(
  */
 function resolveReasoning(
   config: ProfileModelConfig,
-  isOpenRouter: boolean
+  _isOpenRouter: boolean
 ): {
   thinkingEnabled: boolean;
   reasoningEffort: ReasoningEffort | undefined;

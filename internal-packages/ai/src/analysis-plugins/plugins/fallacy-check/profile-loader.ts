@@ -276,7 +276,7 @@ function validateFilterChain(raw: unknown, defaults: FilterChainConfig): FilterC
           type: 'principle-of-charity' as const,
           model: typeof raw.model === 'string' ? raw.model : undefined,
           temperature: (typeof raw.temperature === 'number' || raw.temperature === 'default')
-            ? raw.temperature as number | 'default'
+            ? (raw.temperature as number | 'default')
             : undefined,
           reasoning: validateReasoning(raw.reasoning),
           customPrompt: typeof raw.customPrompt === 'string' ? raw.customPrompt : undefined,
@@ -289,7 +289,7 @@ function validateFilterChain(raw: unknown, defaults: FilterChainConfig): FilterC
           type: 'supported-elsewhere' as const,
           model: typeof raw.model === 'string' ? raw.model : undefined,
           temperature: (typeof raw.temperature === 'number' || raw.temperature === 'default')
-            ? raw.temperature as number | 'default'
+            ? (raw.temperature as number | 'default')
             : undefined,
           reasoning: validateReasoning(raw.reasoning),
           customPrompt: typeof raw.customPrompt === 'string' ? raw.customPrompt : undefined,

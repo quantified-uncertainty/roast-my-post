@@ -64,7 +64,7 @@ export async function analyzeDocumentUnified(
   // Filter and convert comments as needed
   const validAiComments = result.highlights.filter(
     (h): h is AiComment =>
-      !!(h.description && h.highlight && typeof h.highlight?.isValid === "boolean")
+      !!(h.description && h.highlight && typeof h.highlight.isValid === "boolean")
   );
 
   return {

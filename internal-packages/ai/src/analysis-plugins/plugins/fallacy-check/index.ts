@@ -444,8 +444,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
     logger.info(`[FallacyCheckPlugin] Starting extraction`, {
       extractorCount: config.extractors.length,
       judgeEnabled: config.judge.enabled,
-      minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
-      maxIssues: this.profileConfig?.thresholds?.maxIssues,
+      minSeverityThreshold: this.profileConfig?.thresholds.minSeverityThreshold,
+      maxIssues: this.profileConfig?.thresholds.maxIssues,
       hasCustomPrompts: !!this.profileConfig?.prompts,
     });
     logger.info(getConfigSummary());
@@ -455,8 +455,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       const multiResult = await runMultiExtractor(documentText, {
         ...config,
         thresholds: {
-          minSeverityThreshold: this.profileConfig?.thresholds?.minSeverityThreshold,
-          maxIssues: this.profileConfig?.thresholds?.maxIssues,
+          minSeverityThreshold: this.profileConfig?.thresholds.minSeverityThreshold,
+          maxIssues: this.profileConfig?.thresholds.maxIssues,
         },
       });
 
@@ -677,14 +677,14 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
 
       case 'severity':
         // Severity filtering - filter by minimum severity threshold
-        const minSeverity = filterConfig.minSeverity ?? 50;
+        const minSeverity = filterConfig.minSeverity;
         const afterSeverity = issues.filter((issue) => issue.severityScore >= minSeverity);
         logger.info(`FallacyCheckPlugin: Severity filter: ${issues.length} → ${afterSeverity.length} (min: ${minSeverity})`);
         return afterSeverity;
 
       case 'confidence':
         // Confidence filtering - filter by minimum confidence threshold
-        const minConfidence = filterConfig.minConfidence ?? 50;
+        const minConfidence = filterConfig.minConfidence;
         const afterConfidence = issues.filter((issue) => issue.confidenceScore >= minConfidence);
         logger.info(`FallacyCheckPlugin: Confidence filter: ${issues.length} → ${afterConfidence.length} (min: ${minConfidence})`);
         return afterConfidence;
@@ -795,8 +795,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           logger.debug(`  - Issue ${dissolved.index}: ${dissolved.explanation}`);
           return {
             stage: PIPELINE_STAGES.PRINCIPLE_OF_CHARITY_FILTER,
-            quotedText: originalIssue?.text || `Issue at index ${dissolved.index}`,
-            header: originalIssue?.issueType,
+            quotedText: originalIssue.text || `Issue at index ${dissolved.index}`,
+            header: originalIssue.issueType,
             filterReason: `Charitable interpretation: ${dissolved.charitableInterpretation}. ${dissolved.explanation}`,
             originalIndex: dissolved.index,
           };
@@ -810,8 +810,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           const originalIssue = issues[valid.index];
           return {
             stage: PIPELINE_STAGES.PRINCIPLE_OF_CHARITY_FILTER,
-            quotedText: originalIssue?.text || `Issue at index ${valid.index}`,
-            header: originalIssue?.issueType,
+            quotedText: originalIssue.text || `Issue at index ${valid.index}`,
+            header: originalIssue.issueType,
             passReason: valid.explanation,
             originalIndex: valid.index,
           };
@@ -923,8 +923,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           logger.debug(`  - Issue ${supported.index}: ${supported.explanation}`);
           return {
             stage: PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER,
-            quotedText: originalIssue?.text || `Issue at index ${supported.index}`,
-            header: originalIssue?.issueType,
+            quotedText: originalIssue.text || `Issue at index ${supported.index}`,
+            header: originalIssue.issueType,
             filterReason: supported.explanation,
             supportLocation: supported.supportLocation,
             originalIndex: supported.index,
@@ -939,8 +939,8 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
           const originalIssue = issues[unsupported.index];
           return {
             stage: PIPELINE_STAGES.SUPPORTED_ELSEWHERE_FILTER,
-            quotedText: originalIssue?.text || `Issue at index ${unsupported.index}`,
-            header: originalIssue?.issueType,
+            quotedText: originalIssue.text || `Issue at index ${unsupported.index}`,
+            header: originalIssue.issueType,
             passReason: unsupported.explanation,
             originalIndex: unsupported.index,
           };
@@ -985,7 +985,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
       await new Promise((resolve) => setImmediate(resolve));
       const comment = await buildFallacyComment(issue, documentText, { logger });
       // Filter out comments with empty descriptions
-      if (comment?.description?.trim()) {
+      if (comment?.description.trim()) {
         return comment;
       }
       return null;

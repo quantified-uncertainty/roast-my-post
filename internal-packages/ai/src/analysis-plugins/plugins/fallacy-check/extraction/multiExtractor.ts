@@ -276,11 +276,11 @@ function calculateJaccardSimilarity(textA: string, textB: string): number {
  * Higher = better quality (prefer to keep).
  */
 function computeExtractedIssueQuality(issue: ExtractedFallacyIssue): number {
-  const textLength = issue.exactText?.length ?? 0;
+  const textLength = issue.exactText.length;
   const lengthScore = Math.log10(textLength + 1) / 4;
-  const severityNorm = (issue.severityScore ?? 0) / 100;
-  const confidenceNorm = (issue.confidenceScore ?? 0) / 100;
-  const importanceNorm = (issue.importanceScore ?? 0) / 100;
+  const severityNorm = issue.severityScore / 100;
+  const confidenceNorm = issue.confidenceScore / 100;
+  const importanceNorm = issue.importanceScore / 100;
 
   return (
     lengthScore * 0.4 +

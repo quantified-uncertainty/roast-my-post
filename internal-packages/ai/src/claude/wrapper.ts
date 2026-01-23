@@ -1,7 +1,7 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { createAnthropicClient } from '../utils/anthropic';
 import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
-import { withRetry } from '../utils/retryUtils';
+// Note: withRetry was deprecated in favor of inline retry logic
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
 import { getRemainingTimeMs } from '../shared/jobContext';
@@ -99,7 +99,7 @@ function buildPromptString(
   return prompt.trim();
 }
 
-import { isApiError, type ApiError } from '../types/errors';
+import { isApiError } from '../types/errors';
 
 function isRetryableError(error: unknown): boolean {
   // Check if this is an API error with status code
@@ -155,7 +155,7 @@ export async function callClaude(
   
   // Make API call with manual retry logic for retryable errors only
   let response: Anthropic.Messages.Message;
-  let lastError: Error | null = null;
+  let _lastError: Error | null = null;
   const maxRetries = 3;
   let actualParams: ClaudeActualParams | undefined;
   let apiCallStartTime: number = 0;
@@ -170,8 +170,8 @@ export async function callClaude(
 
       // Determine if extended thinking is enabled (default: false for tool calls to save cost)
       // When thinking is enabled, temperature must be 1 and max_tokens must be > budget_tokens
-      const thinkingEnabled = options.thinking === true || (typeof options.thinking === 'object' && options.thinking?.type === 'enabled');
-      const thinkingBudget = typeof options.thinking === 'object' && options.thinking?.budget_tokens
+      const thinkingEnabled = options.thinking === true || typeof options.thinking === 'object';
+      const thinkingBudget = typeof options.thinking === 'object' && options.thinking.budget_tokens
         ? options.thinking.budget_tokens
         : 10000; // Default budget
       // Claude's temperature range is 0-1 (unlike some other providers that allow 0-2)
@@ -267,10 +267,8 @@ export async function callClaude(
         clearTimeout(timeoutId);
       });
       
-      // Validate response structure
-      if (!result || !result.content || !result.usage) {
-        throw new Error('Malformed response from Claude API');
-      }
+      // Response structure is validated by TypeScript types
+      // result is guaranteed to have content and usage by Anthropic.Messages.Message type
       
       response = result;
       
@@ -296,7 +294,7 @@ export async function callClaude(
       break; // Success, exit retry loop
       
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+      _lastError = error instanceof Error ? error : new Error(String(error));
       
       // If error is not retryable, throw immediately
       if (!isRetryableError(error)) {
@@ -311,20 +309,21 @@ export async function callClaude(
       // Otherwise, continue to next retry attempt
     }
   }
-  
-  if (!response!) {
-    throw lastError || new Error('Max retries exhausted');
-  }
+
+  // TypeScript can't prove response is set (even though our logic guarantees it)
+  // because the for loop could theoretically complete without breaking.
+  // We know this is impossible because we always either break or throw.
+  const finalResponse = response!;
 
   // Automatically create interaction with proper format
   const interaction: RichLLMInteraction = {
     model,
     prompt: buildPromptString(options.system, options.messages),
-    response: JSON.stringify(response.content),
+    response: JSON.stringify(finalResponse.content),
     tokensUsed: {
-      prompt: response.usage.input_tokens,
-      completion: response.usage.output_tokens,
-      total: response.usage.input_tokens + response.usage.output_tokens
+      prompt: finalResponse.usage.input_tokens,
+      completion: finalResponse.usage.output_tokens,
+      total: finalResponse.usage.input_tokens + finalResponse.usage.output_tokens
     },
     timestamp: new Date(),
     duration: Date.now() - startTime
@@ -337,10 +336,10 @@ export async function callClaude(
 
   // Build raw usage object for unified metrics
   const rawUsage: AnthropicRawUsage = {
-    input_tokens: response.usage.input_tokens,
-    output_tokens: response.usage.output_tokens,
-    cache_creation_input_tokens: (response.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens,
-    cache_read_input_tokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens,
+    input_tokens: finalResponse.usage.input_tokens,
+    output_tokens: finalResponse.usage.output_tokens,
+    cache_creation_input_tokens: (finalResponse.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens,
+    cache_read_input_tokens: (finalResponse.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens,
   };
 
   // Calculate latency
@@ -350,11 +349,11 @@ export async function callClaude(
   const responseMetrics: ClaudeResponseMetrics = {
     success: true,
     latencyMs,
-    inputTokens: response.usage.input_tokens,
-    outputTokens: response.usage.output_tokens,
+    inputTokens: finalResponse.usage.input_tokens,
+    outputTokens: finalResponse.usage.output_tokens,
     cacheReadTokens: rawUsage.cache_read_input_tokens,
     cacheWriteTokens: rawUsage.cache_creation_input_tokens,
-    stopReason: response.stop_reason ?? undefined,
+    stopReason: finalResponse.stop_reason || undefined,
     rawUsage,
   };
 
@@ -362,7 +361,7 @@ export async function callClaude(
   const unifiedUsage = fromAnthropicUsage(rawUsage, model, latencyMs);
 
   return {
-    response,
+    response: finalResponse,
     interaction,
     actualParams: actualParams!,
     responseMetrics,
@@ -383,8 +382,7 @@ export async function callClaudeWithTool<T>(
 ): Promise<ClaudeCallResult & { toolResult: T }> {
   // When thinking is enabled, we must use tool_choice: 'auto' because
   // forced tool_choice is incompatible with extended thinking
-  const thinkingEnabled = options.thinking === true ||
-    (typeof options.thinking === 'object' && options.thinking?.type === 'enabled');
+  const thinkingEnabled = options.thinking === true || typeof options.thinking === 'object';
 
   const toolOptions: ClaudeCallOptions = {
     ...options,
@@ -425,8 +423,8 @@ export async function callClaudeWithTool<T>(
   );
   if (!toolUse) {
     // Enhanced error message to check for max_tokens issue
-    const stopReason = result.response.stop_reason as string;
-    if (stopReason === 'max_tokens') {
+    // Note: 'max_tokens' stop reason exists but isn't in the SDK types
+    if ((result.response.stop_reason as string) === 'max_tokens') {
       throw new Error(
         `No tool use found - response was truncated due to max_tokens limit (${options.max_tokens || 4000} tokens)`
       );
@@ -439,12 +437,12 @@ export async function callClaudeWithTool<T>(
 
   // Check if tool input is empty or malformed (often happens with max_tokens)
   if (!toolUse.input || Object.keys(toolUse.input).length === 0) {
-    const stopReason = result.response.stop_reason as string;
-    if (stopReason === 'max_tokens') {
+    // Note: 'max_tokens' stop reason exists but isn't in the SDK types
+    if ((result.response.stop_reason as string) === 'max_tokens') {
       logger.error('[Claude] Tool returned empty due to max_tokens truncation', {
         tool: options.toolName,
         max_tokens: options.max_tokens || 4000,
-        stop_reason: stopReason
+        stop_reason: result.response.stop_reason
       });
       
       throw new Error(

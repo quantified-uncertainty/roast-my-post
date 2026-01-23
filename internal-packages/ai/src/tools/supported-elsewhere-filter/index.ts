@@ -226,7 +226,7 @@ For each issue, determine if it is supported elsewhere in the document.`;
       const unsupportedIssues: SupportedElsewhereResult[] = [];
       const supportedIssues: SupportedElsewhereResult[] = [];
 
-      for (const r of result.toolResult.results || []) {
+      for (const r of result.toolResult.results) {
         // Validate index is in range
         if (r.index < 0 || r.index >= input.issues.length) {
           context.logger.warn(`[${FILTER_NAME}] Invalid index ${r.index}, skipping`);
@@ -265,7 +265,7 @@ For each issue, determine if it is supported elsewhere in the document.`;
 
       if (result.unifiedUsage) {
         context.logger.debug(
-          `[${FILTER_NAME}] Cost: $${result.unifiedUsage.costUsd?.toFixed(6) || "N/A"}`
+          `[${FILTER_NAME}] Cost: $${result.unifiedUsage.costUsd.toFixed(6)}`
         );
       }
 

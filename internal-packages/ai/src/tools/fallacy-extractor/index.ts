@@ -374,8 +374,8 @@ export class FallacyExtractorTool extends Tool<
       unifiedUsage = claudeResult.unifiedUsage;
     }
 
-    let allIssues = result.toolResult.issues || [];
-    const wasComplete = result.toolResult.wasComplete ?? true;
+    let allIssues = result.toolResult.issues;
+    const wasComplete = result.toolResult.wasComplete;
 
     // Handle case where LLM returns issues as a JSON string
     if (typeof allIssues === "string") {

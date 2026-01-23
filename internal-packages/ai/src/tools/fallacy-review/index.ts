@@ -175,7 +175,7 @@ Please review these comments and provide:
       );
 
       if (result.unifiedUsage) {
-        context.logger.info(`[FallacyReview] Cost: $${result.unifiedUsage.costUsd?.toFixed(6) || 'N/A'}`);
+        context.logger.info(`[FallacyReview] Cost: $${result.unifiedUsage.costUsd.toFixed(6)}`);
       }
 
       return {

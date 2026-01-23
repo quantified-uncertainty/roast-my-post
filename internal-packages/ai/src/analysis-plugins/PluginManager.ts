@@ -301,7 +301,7 @@ export class PluginManager {
       const pluginPromises = plugins.map(async (plugin) => {
         const pluginName = plugin.name();
         const maxRetries = 2;
-        let lastError: Error | unknown = null;
+        let lastError: unknown = null;
 
         // Start plugin logging
         this.pluginLogger.pluginStarted(pluginName);
@@ -482,7 +482,7 @@ export class PluginManager {
         result,
         success,
         error,
-        recoveryAction,
+        recoveryAction: _recoveryAction,
       } of results) {
         if (success && result) {
           pluginResults.set(plugin, result);
@@ -587,7 +587,7 @@ export class PluginManager {
       const pluginStartTime = Date.now();
 
       // Get selected plugins
-      const plugins = await this.getSelectedPlugins();
+      const plugins = this.getSelectedPlugins();
 
       // Run analysis on document content using new API
       const pluginResults = await this.analyzeDocumentSimple(
@@ -716,7 +716,7 @@ export class PluginManager {
   /**
    * Get selected plugins based on configuration
    */
-  private async getSelectedPlugins(): Promise<SimpleAnalysisPlugin[]> {
+  private getSelectedPlugins(): SimpleAnalysisPlugin[] {
     const allPlugins = this.createPluginInstances();
 
     // Default plugins if no selection specified
@@ -770,26 +770,20 @@ export class PluginManager {
   private deduplicateHighlights(highlights: Comment[]): Comment[] {
     if (highlights.length <= 1) return highlights;
 
-    // Filter out comments without highlights first
-    const withHighlights = highlights.filter(
-      (h) => h.highlight && h.highlight.startOffset !== undefined
-    );
-    if (withHighlights.length <= 1) return withHighlights;
-
     // Sort by start offset
-    const sorted = [...withHighlights].sort(
-      (a, b) => a.highlight!.startOffset! - b.highlight!.startOffset!
+    const sorted = [...highlights].sort(
+      (a, b) => a.highlight.startOffset - b.highlight.startOffset
     );
 
     const unique: Comment[] = [];
 
-    for (const highlight of sorted) {
+    for (const comment of sorted) {
       // Check if this highlight overlaps with any existing unique highlight
       const overlaps = unique.some((existing) => {
-        const existingStart = existing.highlight!.startOffset!;
-        const existingEnd = existing.highlight!.endOffset!;
-        const currentStart = highlight.highlight!.startOffset!;
-        const currentEnd = highlight.highlight!.endOffset!;
+        const existingStart = existing.highlight.startOffset;
+        const existingEnd = existing.highlight.endOffset;
+        const currentStart = comment.highlight.startOffset;
+        const currentEnd = comment.highlight.endOffset;
 
         // Check for overlap (fixed off-by-one error)
         return (
@@ -800,7 +794,7 @@ export class PluginManager {
       });
 
       if (!overlaps) {
-        unique.push(highlight);
+        unique.push(comment);
       }
     }
 
@@ -814,7 +808,7 @@ export class PluginManager {
     if (!error) return false;
 
     // Check for common retryable error patterns
-    const errorMessage = (error as unknown as Error)?.message || String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Network/timeout errors are retryable
     if (
@@ -860,7 +854,7 @@ export class PluginManager {
    * Determine the appropriate recovery action for a failed plugin
    */
   private determineRecoveryAction(pluginName: string, error: unknown): string {
-    const errorMessage = (error as unknown as Error)?.message || String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Specific recovery actions based on error type
     if (errorMessage.includes("timeout")) {

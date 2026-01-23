@@ -22,7 +22,6 @@ import type {
   FallacyJudgeOutput,
   JudgeDecision,
   JudgeConfig,
-  ExtractorIssueInput,
   ActualApiParams,
   ApiResponseMetrics,
 } from './types';
@@ -502,7 +501,7 @@ Group similar issues together and provide your decisions. Remember:
           unifiedUsage: openRouterResult.unifiedUsage,
           actualApiParams: {
             model: openRouterResult.actualParams.model,
-            temperature: openRouterResult.actualParams.temperature ?? 0,
+            temperature: openRouterResult.actualParams.temperature,
             maxTokens: openRouterResult.actualParams.maxTokens,
             reasoning: openRouterResult.actualParams.reasoning,
           },

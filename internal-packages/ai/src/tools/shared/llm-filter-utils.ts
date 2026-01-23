@@ -107,7 +107,8 @@ export function resolveModelId(
   envVarName: string | undefined
 ): string {
   if (inputModel) return inputModel;
-  if (envVarName && process.env[envVarName]) return process.env[envVarName]!;
+  const envValue = envVarName ? process.env[envVarName] : undefined;
+  if (envValue) return envValue;
   return MODEL_CONFIG.analysis;
 }
 
@@ -243,7 +244,7 @@ async function callOpenRouterFilter<T>(
     unifiedUsage: result.unifiedUsage,
     actualApiParams: {
       model: result.actualParams.model,
-      temperature: result.actualParams.temperature ?? 0,
+      temperature: result.actualParams.temperature,
       maxTokens: result.actualParams.maxTokens,
       reasoning: mappedReasoning,
     },

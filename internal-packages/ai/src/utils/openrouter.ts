@@ -20,7 +20,7 @@ import {
   invalidateEndpointsCache,
   type ReasoningBudgetResult,
 } from './reasoningBudget';
-import type { ReasoningEffort as CommonReasoningEffort, ProviderPreferences as CommonProviderPreferences } from '../types/common';
+import type { ReasoningEffort as CommonReasoningEffort } from '../types/common';
 
 // Use the common ReasoningEffort type
 export type ReasoningEffort = CommonReasoningEffort;
@@ -277,7 +277,7 @@ export async function callOpenRouter(
 
     try {
       const errorBody = JSON.parse(errorText) as OpenRouterError;
-      errorMessage = errorBody.error?.message || response.statusText;
+      errorMessage = errorBody.error.message || response.statusText;
       // Include full error body for debugging (especially useful for 429 rate limits)
       errorDetails = ` | Full response: ${errorText}`;
     } catch {
@@ -361,7 +361,7 @@ export async function callOpenRouterChat(
   const request: OpenRouterRequest = {
     model: options.model,
     messages: options.messages.map(m => ({
-      role: m.role as 'system' | 'user' | 'assistant',
+      role: m.role,
       content: m.content,
     })),
     max_tokens: options.max_tokens || 4000,
@@ -540,7 +540,7 @@ export async function callOpenRouterWithTool<T>(
     model: options.model,
     messages: [
       { role: 'system', content: options.system },
-      ...options.messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      ...options.messages.map(m => ({ role: m.role, content: m.content })),
     ],
     max_tokens: effectiveMaxTokens,
     ...(effectiveTemperature !== undefined && { temperature: effectiveTemperature }),
@@ -607,13 +607,14 @@ export async function callOpenRouterWithTool<T>(
   }
 
   // Check for tool call
-  const toolCall = choice.message?.tool_calls?.[0];
+  const toolCalls = choice.message.tool_calls;
+  const toolCall = toolCalls?.[0];
   if (!toolCall || toolCall.function.name !== options.toolName) {
     // Log what we actually got for debugging
     console.error(`[OpenRouter] Expected tool call '${options.toolName}' but got:`);
     console.error(`  finish_reason: ${choice.finish_reason}`);
-    console.error(`  message.content: ${choice.message?.content?.substring(0, 500) || '(empty)'}`);
-    console.error(`  tool_calls: ${JSON.stringify(choice.message?.tool_calls || [])}`);
+    console.error(`  message.content: ${choice.message.content?.substring(0, 500) || '(empty)'}`);
+    console.error(`  tool_calls: ${JSON.stringify(toolCalls || [])}`);
 
     // Provide specific error for finish_reason: length
     if (choice.finish_reason === 'length') {
@@ -626,7 +627,7 @@ export async function callOpenRouterWithTool<T>(
   let toolResult: T;
   try {
     toolResult = JSON.parse(toolCall.function.arguments) as T;
-  } catch (e) {
+  } catch {
     throw new Error(`Failed to parse tool arguments: ${toolCall.function.arguments}`);
   }
 
@@ -639,7 +640,7 @@ export async function callOpenRouterWithTool<T>(
     latencyMs,
     inputTokens: response.usage?.prompt_tokens,
     outputTokens: response.usage?.completion_tokens,
-    stopReason: choice.finish_reason ?? undefined,
+    stopReason: choice.finish_reason || undefined,
     rawUsage,
     provider: response.provider,
   };
