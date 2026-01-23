@@ -7,6 +7,7 @@
 
 import type { ExtractorConfig, MultiExtractorConfig, JudgeConfig } from './types';
 import type { FallacyCheckerProfileConfig } from '../profile-types';
+import { logger } from '../../../../shared/logger';
 
 /** Default model for extraction when not configured */
 const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-4-5-20250929';
@@ -126,24 +127,19 @@ function parseExtractorsEnvVar(envValue: string): ExtractorConfig[] {
     const parsed = JSON.parse(envValue);
 
     if (!Array.isArray(parsed)) {
-      console.warn(
-        '[MultiExtractor] FALLACY_EXTRACTORS must be a JSON array, using defaults'
-      );
+      logger.warn('[MultiExtractor] FALLACY_EXTRACTORS must be a JSON array, using defaults');
       return [];
     }
 
     const configs: ExtractorConfig[] = [];
     for (const item of parsed) {
       if (typeof item !== 'object' || item === null) {
-        console.warn('[MultiExtractor] Invalid extractor config, skipping:', item);
+        logger.warn('[MultiExtractor] Invalid extractor config, skipping:', { item });
         continue;
       }
 
       if (typeof item.model !== 'string' || !item.model) {
-        console.warn(
-          '[MultiExtractor] Extractor config missing model, skipping:',
-          item
-        );
+        logger.warn('[MultiExtractor] Extractor config missing model, skipping:', { item });
         continue;
       }
 
@@ -172,10 +168,9 @@ function parseExtractorsEnvVar(envValue: string): ExtractorConfig[] {
 
     return configs;
   } catch (error) {
-    console.warn(
-      '[MultiExtractor] Failed to parse FALLACY_EXTRACTORS:',
-      error instanceof Error ? error.message : error
-    );
+    logger.warn('[MultiExtractor] Failed to parse FALLACY_EXTRACTORS:', {
+      error: error instanceof Error ? error.message : error,
+    });
     return [];
   }
 }
@@ -201,8 +196,8 @@ function parseJudgeEnvVar(): JudgeConfig {
           enabled: parsed.enabled !== false,
         };
       }
-    } catch (e) {
-      console.warn('[Config] Failed to parse FALLACY_JUDGE:', e);
+    } catch {
+      // Invalid JSON - fall through to default
     }
   }
 
@@ -230,7 +225,7 @@ export function getMultiExtractorConfig(): MultiExtractorConfig {
   if (extractorsEnv) {
     extractors = parseExtractorsEnvVar(extractorsEnv);
     if (extractors.length === 0) {
-      console.warn('[MultiExtractor] No valid extractors in FALLACY_EXTRACTORS, using defaults');
+      logger.warn('[MultiExtractor] No valid extractors in FALLACY_EXTRACTORS, using defaults');
       extractors = [{ model: DEFAULT_EXTRACTOR_MODEL }];
     }
   } else {

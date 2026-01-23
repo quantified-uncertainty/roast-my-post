@@ -602,7 +602,7 @@ export async function callOpenRouterWithTool<T>(
 
   // Detect truncation and invalidate cache for future requests
   if (choice.finish_reason === 'length') {
-    console.warn(`⚠️ [OpenRouter] Response truncated for ${options.model} - invalidating endpoints cache`);
+    logger.warn(`[OpenRouter] Response truncated for ${options.model} - invalidating endpoints cache`);
     invalidateEndpointsCache(options.model);
   }
 
@@ -610,13 +610,12 @@ export async function callOpenRouterWithTool<T>(
   const toolCalls = choice.message.tool_calls;
   const toolCall = toolCalls?.[0];
   if (!toolCall || toolCall.function.name !== options.toolName) {
-    // Log what we actually got for debugging
-    console.error(`[OpenRouter] Expected tool call '${options.toolName}' but got:`);
-    console.error(`  finish_reason: ${choice.finish_reason}`);
-    console.error(`  message.content: ${choice.message.content?.substring(0, 500) || '(empty)'}`);
-    console.error(`  tool_calls: ${JSON.stringify(toolCalls || [])}`);
+    logger.error(`[OpenRouter] Expected tool call '${options.toolName}' but got:`, {
+      finish_reason: choice.finish_reason,
+      message_content: choice.message.content?.substring(0, 500) || '(empty)',
+      tool_calls: toolCalls || [],
+    });
 
-    // Provide specific error for finish_reason: length
     if (choice.finish_reason === 'length') {
       throw new Error(`Response truncated (max_tokens too small) - model ${options.model} ran out of tokens before completing the tool call. Consider using a lower reasoning effort level.`);
     }

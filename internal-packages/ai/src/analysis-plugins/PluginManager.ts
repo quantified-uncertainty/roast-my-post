@@ -10,8 +10,6 @@ import {
   HeliconeSessionManager,
 } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
-// Document and Comment types are passed as parameters to avoid circular dependencies
-// LLMInteraction type removed - was unused
 import type { Comment } from "../shared/types";
 import { ANALYSIS_MODEL } from "../types";
 // Import plugin ID constants
@@ -215,7 +213,6 @@ export class PluginManager {
         preserveContext: true,
       });
 
-      // Debug: Verify chunk positions
       logger.info("Verifying chunk positions after creation", {
         textLength: text.length,
         textStartsWith: text.slice(0, 100),
@@ -223,7 +220,6 @@ export class PluginManager {
       });
 
       for (const chunk of chunks.slice(0, 3)) {
-        // Check first 3 chunks
         if (chunk.metadata?.position) {
           const extractedText = text.substring(
             chunk.metadata.position.start,
@@ -333,7 +329,6 @@ export class PluginManager {
             // Get the chunks assigned to this plugin
             const assignedChunks = chunksPerPlugin.get(pluginName) || [];
 
-            // Check if this is an always-run plugin
             const isrunOnAllChunks = plugin.runOnAllChunks === true;
 
             logger.info(
@@ -359,7 +354,6 @@ export class PluginManager {
               };
             }
 
-            // Add basic logging wrapper around plugin execution
             pluginLoggerInstance.startPhase(
               "initialization",
               `Starting ${pluginName} analysis with ${assignedChunks.length} chunks`
