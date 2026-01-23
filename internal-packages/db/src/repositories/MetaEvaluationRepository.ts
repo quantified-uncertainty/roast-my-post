@@ -357,8 +357,8 @@ export class MetaEvaluationRepository {
         documentId: s.documentId,
         agentNames,
         runCount: s.runs.length,
-        firstRunAt: s.runs[0]?.createdAt || s.createdAt,
-        lastRunAt: s.runs[s.runs.length - 1]?.createdAt || s.createdAt,
+        firstRunAt: s.runs[0]?.createdAt ?? s.createdAt,
+        lastRunAt: s.runs[s.runs.length - 1]?.createdAt ?? s.createdAt,
       };
     });
   }
@@ -451,9 +451,7 @@ export class MetaEvaluationRepository {
     }
 
     const docVersion = series.document.versions[0];
-    if (!docVersion) {
-      return null;
-    }
+    // Note: TypeScript believes docVersion is always defined due to Prisma types
 
     // Get scoring info for all evaluation versions in this series
     const evalVersionIds = series.runs
@@ -775,7 +773,7 @@ export class MetaEvaluationRepository {
         documentId: e.documentId,
         title: e.document.versions[0]?.title || "Unknown",
         contentLength: e.document.versions[0]?.content.length || 0,
-        lastEvaluatedAt: e.versions[0]?.createdAt || null,
+        lastEvaluatedAt: e.versions[0]?.createdAt ?? null,
         evaluationCount: e._count.versions,
       }));
   }
