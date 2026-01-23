@@ -20,8 +20,6 @@ import type {
 } from './profile-types';
 import {
   createDefaultProfileConfig,
-  DEFAULT_THRESHOLDS,
-  DEFAULT_FILTER_CHAIN,
   DEFAULT_EXTRACTOR_MODEL,
   DEFAULT_JUDGE_MODEL,
   migrateFilterChainConfig,

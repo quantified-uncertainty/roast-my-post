@@ -19,7 +19,6 @@ export {
 } from '../../../../types/common';
 
 import type {
-  ReasoningEffort,
   ReasoningConfig,
   ProviderPreferences,
   ActualApiParams,

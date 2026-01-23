@@ -1,8 +1,5 @@
-import {
-  getGlobalSessionManager,
-} from "../../../helicone/simpleSessionManager";
 import { logger } from "../../../shared/logger";
-import type { Comment, ToolChainResult } from "../../../shared/types";
+import type { Comment } from "../../../shared/types";
 import fallacyExtractorTool from "../../../tools/fallacy-extractor";
 import type { ExtractedFallacyIssue } from "../../../tools/fallacy-extractor/types";
 import fuzzyTextLocatorTool from "../../../tools/smart-text-searcher";
@@ -17,7 +14,7 @@ import type {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { LIMITS, THRESHOLDS, ISSUE_TYPES } from "./constants";
+import { THRESHOLDS, ISSUE_TYPES } from "./constants";
 import { buildFallacyComment } from "./comments/builder";
 import { FallacyIssue } from "./FallacyIssue";
 import {
@@ -31,7 +28,6 @@ import {
   type ApiResponseMetrics,
 } from "./telemetry";
 import {
-  getMultiExtractorConfig,
   getMultiExtractorConfigFromProfile,
   getDefaultTemperature,
   getConfigSummary,
