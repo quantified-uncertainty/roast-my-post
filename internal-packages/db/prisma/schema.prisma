@@ -50,14 +50,15 @@ model User {
   evalsThisMonth   Int                @default(0)
   hourResetAt      DateTime?
   monthResetAt     DateTime?
-  accounts         Account[]
-  agents           Agent[]
-  agentEvalBatches AgentEvalBatch[]
-  apiKeys          ApiKey[]
-  documents        Document[]
-  sessions         Session[]
-  cancelledJobs    Job[]
-  claimEvaluations ClaimEvaluation[]
+  accounts            Account[]
+  agents              Agent[]
+  agentEvalBatches    AgentEvalBatch[]
+  apiKeys             ApiKey[]
+  documents           Document[]
+  sessions            Session[]
+  cancelledJobs       Job[]
+  claimEvaluations    ClaimEvaluation[]
+  validationBaselines ValidationBaseline[]
 }
 
 model VerificationToken {
@@ -142,12 +143,15 @@ model EvaluationVersion {
   selfCritique      String?
   version           Int                 @default(1)
   isStale           Boolean             @default(false)
-  comments          EvaluationComment[]
-  agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
-  documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
-  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  job               Job?
-  metaEvaluations   MetaEvaluation[]
+  pipelineTelemetry Json?
+  comments                    EvaluationComment[]
+  agentVersion                AgentVersion                 @relation(fields: [agentVersionId], references: [id])
+  documentVersion             DocumentVersion              @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
+  evaluation                  Evaluation                   @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  job                         Job?
+  metaEvaluations             MetaEvaluation[]
+  validationBaselineSnapshots ValidationBaselineSnapshot[]
+  validationRunSnapshots      ValidationRunSnapshot[]      @relation("ValidationRunNewEvaluation")
 
   @@unique([evaluationId, version])
   @@index([evaluationId])
@@ -194,11 +198,12 @@ model Agent {
   isDeprecated     Boolean          @default(false)
   isRecommended    Boolean          @default(false)
   isLlmCostTracked Boolean          @default(true)
-  ephemeralBatch   AgentEvalBatch?  @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
-  submittedBy      User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  evalBatches      AgentEvalBatch[]
-  versions         AgentVersion[]
-  evaluations      Evaluation[]
+  ephemeralBatch       AgentEvalBatch?       @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
+  submittedBy          User                  @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  evalBatches          AgentEvalBatch[]
+  versions             AgentVersion[]
+  evaluations          Evaluation[]
+  validationBaselines  ValidationBaseline[]
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -438,4 +443,100 @@ model MetaEvaluationDimension {
   @@index([metaEvaluationId])
   @@index([name])
   @@index([score])
+}
+
+/// Validation baseline - a saved reference point for regression testing
+model ValidationBaseline {
+  id          String   @id @default(cuid())
+  name        String   // "Pre-refactor", "v2.0 release"
+  description String?
+  agentId     String
+  commitHash  String?  // git commit when baseline was created
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  agent     Agent                        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdBy User?                        @relation(fields: [createdById], references: [id])
+  snapshots ValidationBaselineSnapshot[]
+  runs      ValidationRun[]
+
+  @@index([agentId])
+  @@index([createdAt])
+}
+
+/// Links a baseline to specific evaluation versions (one per document)
+model ValidationBaselineSnapshot {
+  id                  String @id @default(cuid())
+  baselineId          String
+  evaluationVersionId String
+
+  baseline          ValidationBaseline      @relation(fields: [baselineId], references: [id], onDelete: Cascade)
+  evaluationVersion EvaluationVersion       @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
+  runSnapshots      ValidationRunSnapshot[]
+
+  @@unique([baselineId, evaluationVersionId])
+  @@index([baselineId])
+  @@index([evaluationVersionId])
+}
+
+/// A validation run - comparing new pipeline output against a baseline
+model ValidationRun {
+  id          String    @id @default(cuid())
+  baselineId  String
+  name        String?   // Optional name for the run
+  commitHash  String?   // git commit when run was executed
+  profileId   String?   // Optional profile ID used for this run
+  status      String    @default("running") // "running" | "completed" | "failed"
+  summary     String?   // Quick summary: "4 unchanged, 2 changed"
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  baseline  ValidationBaseline      @relation(fields: [baselineId], references: [id], onDelete: Cascade)
+  snapshots ValidationRunSnapshot[]
+
+  @@index([baselineId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+/// Per-document results from a validation run
+model ValidationRunSnapshot {
+  id                 String @id @default(cuid())
+  runId              String
+  baselineSnapshotId String // The baseline snapshot being compared against
+  newEvaluationId    String // The new evaluation version from this run
+
+  // Comparison results
+  status    String // "unchanged" | "changed"
+  keptCount Int    @default(0) // Comments that matched
+  newCount  Int    @default(0) // New comments not in baseline
+  lostCount Int    @default(0) // Baseline comments not in new
+
+  // Store detailed diff as JSON for viewing later
+  comparisonData Json? // { matchedComments, newComments, lostComments }
+
+  run              ValidationRun              @relation(fields: [runId], references: [id], onDelete: Cascade)
+  baselineSnapshot ValidationBaselineSnapshot @relation(fields: [baselineSnapshotId], references: [id], onDelete: Cascade)
+  newEvaluation    EvaluationVersion          @relation("ValidationRunNewEvaluation", fields: [newEvaluationId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, baselineSnapshotId])
+  @@index([runId])
+  @@index([baselineSnapshotId])
+  @@index([status])
+}
+
+/// Configuration profile for the fallacy checker pipeline
+model FallacyCheckerProfile {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  agentId     String   // Links to agent (e.g., "system-fallacy-check")
+  config      Json     // FallacyCheckerProfileConfig
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([agentId, name])
+  @@index([agentId])
+  @@index([isDefault])
 }

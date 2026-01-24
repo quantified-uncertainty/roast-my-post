@@ -1,4 +1,9 @@
-import { IssueType } from '../../analysis-plugins/plugins/fallacy-check/constants';
+import type { IssueType } from '../../analysis-plugins/plugins/fallacy-check/constants';
+import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
+import type { ActualApiParams, ApiResponseMetrics } from '../../types/common';
+
+// Re-export for backwards compatibility
+export type { ActualApiParams, ApiResponseMetrics };
 
 /**
  * Specific types of fallacies (for logical-fallacy issue type)
@@ -65,14 +70,78 @@ export interface ExtractedFallacyIssue {
  * Input for the epistemic issues extractor tool
  */
 export interface FallacyExtractorInput {
-  /** Text chunk to analyze */
-  text: string;
+  /** Text chunk to analyze (optional if documentText provided) */
+  text?: string;
 
-  /** Full document text (for accurate location finding in full doc) */
+  /** Full document text - used for analysis in single-pass mode, or for location finding in chunk mode */
   documentText?: string;
 
   /** Absolute offset where this chunk starts in the full document (optimization) */
   chunkStartOffset?: number;
+
+  /**
+   * Optional model to use for extraction.
+   * Can be a Claude model (default) or an OpenRouter model ID.
+   * Examples: "claude-sonnet-4-20250514", "google/gemini-3-flash-preview"
+   */
+  model?: string;
+
+  /**
+   * Optional temperature override for extraction.
+   * - undefined: Use model-specific default (0 for Claude, 0.1 for OpenRouter)
+   * - number: Use this specific temperature
+   * - "default": Let the model use its own default (don't pass temperature)
+   * Use higher values (0.3-0.7) to get more diverse extractions.
+   */
+  temperature?: number | 'default';
+
+  /**
+   * Whether to enable extended thinking/reasoning mode.
+   * - undefined/true: Enable extended thinking (Claude) / reasoning (OpenRouter/Gemini)
+   * - false: Disable extended thinking for faster, cheaper responses
+   */
+  thinking?: boolean;
+
+  /**
+   * Reasoning effort level for OpenRouter models (Gemini, etc.)
+   * - 'none': Disable reasoning
+   * - 'minimal', 'low', 'medium', 'high', 'xhigh': Effort levels
+   */
+  reasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+
+  /**
+   * Provider routing preferences (OpenRouter only)
+   * Allows specifying preferred providers for a model
+   */
+  provider?: {
+    order?: string[];
+    allow_fallbacks?: boolean;
+  };
+
+  /**
+   * Optional custom system prompt override.
+   * If provided, replaces the default system prompt entirely.
+   */
+  customSystemPrompt?: string;
+
+  /**
+   * Optional custom user prompt override.
+   * If provided, replaces the default user prompt entirely.
+   * The document text will be appended to the end.
+   */
+  customUserPrompt?: string;
+
+  /**
+   * Optional minimum severity threshold override.
+   * Default: 60
+   */
+  minSeverityThreshold?: number;
+
+  /**
+   * Optional max issues override.
+   * Default: 15
+   */
+  maxIssues?: number;
 }
 
 /**
@@ -87,4 +156,13 @@ export interface FallacyExtractorOutput {
 
   /** Whether the analysis was complete or truncated */
   wasComplete: boolean;
+
+  /** Actual parameters sent to the API (source of truth) */
+  actualApiParams?: ActualApiParams;
+
+  /** Response metrics from the API call */
+  responseMetrics?: ApiResponseMetrics;
+
+  /** Unified usage metrics (includes cost, tokens, latency across providers) */
+  unifiedUsage?: UnifiedUsageMetrics;
 }

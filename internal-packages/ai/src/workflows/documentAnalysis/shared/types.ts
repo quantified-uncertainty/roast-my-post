@@ -1,4 +1,4 @@
-// Shared types used across documentAnalysis modules  
+// Shared types used across documentAnalysis modules
 import type { Comment } from "../../../shared/types";
 
 export interface TaskResult {
@@ -7,6 +7,22 @@ export interface TaskResult {
   priceInDollars: number;
   timeInSeconds: number;
   log: string;
+}
+
+/**
+ * Complete result from document analysis workflow.
+ * Returned by analyzeDocument() function.
+ */
+export interface DocumentAnalysisResult {
+  thinking: string;
+  analysis: string;
+  summary: string;
+  grade?: number;
+  selfCritique?: string;
+  highlights: Comment[];
+  tasks: TaskResult[];
+  jobLogString?: string;
+  pipelineTelemetry?: Record<string, unknown>;
 }
 
 export interface ThinkingOutputs {

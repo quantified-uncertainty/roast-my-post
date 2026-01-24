@@ -98,8 +98,8 @@ export class FuzzyTextLocatorTool extends Tool<
   ): Promise<TextLocationFinderOutput> {
     const startTime = Date.now();
 
-    // Validate input exists
-    if (!input || !input.documentText || !input.searchText) {
+    // Validate required fields
+    if (!input.documentText || !input.searchText) {
       throw new Error(
         `Invalid input: documentText and searchText are required. Received: ${JSON.stringify(input)}`
       );
@@ -129,9 +129,8 @@ export class FuzzyTextLocatorTool extends Tool<
       );
       logger.debug("locationResult", {
         locationResult,
-        documentText: input.documentText,
-        searchText: input.searchText,
-        locationOptions,
+        documentLength: input.documentText.length,
+        searchText: input.searchText.substring(0, 100) + (input.searchText.length > 100 ? '...' : ''),
       });
 
       // Check if LLM was used based on the strategy
@@ -181,9 +180,9 @@ export class FuzzyTextLocatorTool extends Tool<
   }
 
   // Validation specific to this tool
-  override async validateAccess(context: ToolContext): Promise<boolean> {
+  override validateAccess(_context: ToolContext): Promise<boolean> {
     // This tool requires no special permissions - it's a pure utility
-    return true;
+    return Promise.resolve(true);
   }
 
   // Optional: provide usage examples
@@ -249,7 +248,8 @@ export class FuzzyTextLocatorTool extends Tool<
 }
 
 // Export the tool instance
-export default new FuzzyTextLocatorTool();
+const fuzzyTextLocatorTool = new FuzzyTextLocatorTool();
+export default fuzzyTextLocatorTool;
 
 // Simple document location interface for compatibility
 export interface DocumentLocation {

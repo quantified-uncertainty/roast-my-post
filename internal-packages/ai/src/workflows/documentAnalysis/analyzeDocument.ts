@@ -1,33 +1,50 @@
 import { logger } from "../../utils/logger";
 import type { Document } from "../../types/documents";
 import type { Agent } from "../../types/agentSchema";
-import type { Comment } from "../../shared/types";
 import { checkJobTimeout } from "../../shared/jobContext";
 import { analyzeDocumentUnified } from "./unified";
 import { PluginType } from "../../analysis-plugins/types/plugin-types";
-import type { TaskResult } from "./shared/types";
+import type { DocumentAnalysisResult, TaskResult } from "./shared/types";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateSelfCritique } from "./selfCritique";
 
+export interface AnalyzeDocumentOptions {
+  targetWordCount?: number;
+  targetHighlights?: number;
+  jobId?: string;
+  /** Profile ID for FallacyCheckPlugin configuration */
+  fallacyCheckProfileId?: string;
+}
+
 export async function analyzeDocument(
   document: Document,
   agentInfo: Agent,
-  targetWordCount: number = 500,
+  targetWordCountOrOptions: number | AnalyzeDocumentOptions = 500,
   targetHighlights: number = 5,
   jobId?: string
-): Promise<{
-  thinking: string;
-  analysis: string;
-  summary: string;
-  grade?: number;
-  selfCritique?: string;
-  highlights: Comment[];
-  tasks: TaskResult[];
-  jobLogString?: string; // Include job log string for Job.logs field
-}> {
-  const logPrefix = `[Job ${jobId || 'N/A'}]`;
-  logger.info(`${logPrefix} Starting document analysis for agent ${agentInfo.name}`);
+): Promise<DocumentAnalysisResult> {
+  // Handle both old signature (positional args) and new signature (options object)
+  let options: AnalyzeDocumentOptions;
+  if (typeof targetWordCountOrOptions === 'object') {
+    options = targetWordCountOrOptions;
+  } else {
+    options = {
+      targetWordCount: targetWordCountOrOptions,
+      targetHighlights,
+      jobId,
+    };
+  }
+
+  const effectiveJobId = options.jobId;
+  const effectiveTargetHighlights = options.targetHighlights ?? 5;
+  const effectiveTargetWordCount = options.targetWordCount ?? 500;
+  const fallacyCheckProfileId = options.fallacyCheckProfileId;
+
+  const logPrefix = `[Job ${effectiveJobId || 'N/A'}]`;
+  logger.info(`${logPrefix} Starting document analysis for agent ${agentInfo.name}`, {
+    fallacyCheckProfileId,
+  });
   // Validate that all plugin IDs are valid PluginType entries
   const validPlugins = (agentInfo.pluginIds || []).filter((p): p is PluginType =>
     Object.values(PluginType).includes(p as PluginType)
@@ -47,13 +64,15 @@ export async function analyzeDocument(
       .join(', ')
       .slice(0, 500);
     logger.info(`${logPrefix} Using plugin-based workflow for agent ${agentInfo.name} with plugins: ${pluginListForLog}`);
-    
+
     return await analyzeDocumentUnified(document, agentInfo, {
-      targetHighlights,
-      jobId,
+      targetHighlights: effectiveTargetHighlights,
+      jobId: effectiveJobId,
       plugins: {
         include: validPlugins
-      }
+      },
+      fallacyCheckProfileId,
+      fallacyCheckAgentId: agentInfo.id,
     });
   } else {
     // No plugins configured - use traditional LLM-based comprehensive analysis
@@ -69,8 +88,8 @@ export async function analyzeDocument(
     const comprehensiveAnalysisResult = await generateComprehensiveAnalysis(
       document,
       agentInfo,
-      targetWordCount,
-      targetHighlights
+      effectiveTargetWordCount,
+      effectiveTargetHighlights
     );
     tasks.push(comprehensiveAnalysisResult.task);
 
@@ -83,7 +102,7 @@ export async function analyzeDocument(
       document,
       agentInfo,
       comprehensiveAnalysisResult.outputs,
-      targetHighlights
+      effectiveTargetHighlights
     );
     tasks.push(highlightExtractionResult.task);
     
@@ -123,7 +142,8 @@ export async function analyzeDocument(
       selfCritique,
       highlights: highlightExtractionResult.outputs.highlights,
       tasks,
-      jobLogString
+      jobLogString,
+      pipelineTelemetry: undefined, // LLM workflow doesn't use pipeline telemetry
     };
   }
 }

@@ -48,6 +48,34 @@
     "./tools/generated-readmes": {
       "types": "./src/tools/generated-readmes.ts",
       "default": "./src/tools/generated-readmes.ts"
+    },
+    "./fallacy-extraction": {
+      "types": "./dist/analysis-plugins/plugins/fallacy-check/extraction/index.d.ts",
+      "default": "./dist/analysis-plugins/plugins/fallacy-check/extraction/index.js"
+    },
+    "./fallacy-extraction/lab": {
+      "types": "./dist/analysis-plugins/plugins/fallacy-check/extraction/lab-exports.d.ts",
+      "default": "./dist/analysis-plugins/plugins/fallacy-check/extraction/lab-exports.js"
+    },
+    "./fallacy-judge": {
+      "types": "./dist/tools/fallacy-judge/index.d.ts",
+      "default": "./dist/tools/fallacy-judge/index.js"
+    },
+    "./fallacy-judge/types": {
+      "types": "./dist/tools/fallacy-judge/types.d.ts",
+      "default": "./dist/tools/fallacy-judge/types.js"
+    },
+    "./fallacy-extractor/prompts": {
+      "types": "./src/tools/fallacy-extractor/prompts.ts",
+      "default": "./src/tools/fallacy-extractor/prompts.ts"
+    },
+    "./fallacy-judge/prompts": {
+      "types": "./src/tools/fallacy-judge/prompts.ts",
+      "default": "./src/tools/fallacy-judge/prompts.ts"
+    },
+    "./supported-elsewhere-filter/prompts": {
+      "types": "./src/tools/supported-elsewhere-filter/prompts.ts",
+      "default": "./src/tools/supported-elsewhere-filter/prompts.ts"
     }
   },
   "scripts": {
@@ -74,6 +102,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
     "@leeoniya/ufuzzy": "^1.0.18",
+    "fuse.js": "^7.1.0",
     "mathjs": "^14.0.1",
     "openai": "^4.77.0",
     "tiktoken": "^1.0.17",

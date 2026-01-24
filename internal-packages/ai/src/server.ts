@@ -9,6 +9,7 @@ export * from './claude/wrapper';
 
 // Document analysis workflows (uses logger)
 export * from './workflows';
+export type { DocumentAnalysisResult } from './workflows';
 
 // Tools system - full implementations
 export * from './tools';
@@ -41,6 +42,20 @@ export {
   checkJobTimeout,
   JobTimeoutError
 } from './shared/jobContext';
+
+// Reasoning budget resolver (full async version with caching)
+export {
+  resolveReasoningBudget,
+  invalidateEndpointsCache,
+  invalidateAllEndpointsCache,
+} from './utils/reasoningBudget';
+
+// OpenRouter API functions (server-only - require API calls)
+export {
+  callOpenRouter,
+  callOpenRouterChat,
+  callOpenRouterWithTool,
+} from './utils/openrouter';
 
 // Meta-evaluation system (uses Claude API)
 export * from './meta-eval';

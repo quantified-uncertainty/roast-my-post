@@ -20,8 +20,23 @@ export type { SimpleSessionConfig } from './helicone/simpleSessionManager';
 export * from './utils/tokenUtils';
 export * from './utils/anthropic';
 export * from './utils/retryUtils';
-export * from './utils/openrouter';
+// Client-safe openrouter types and constants (no async API functions)
+export * from './utils/openrouter-types';
+export * from './utils/allModels';
+// Client-safe reasoning budget utilities (no logger dependency)
+export * from './utils/reasoningBudget-client';
+export * from './utils/modelConfigResolver';
 export * from './types';
+// Export common types (note: ReasoningEffort is also exported from openrouter with same definition,
+// and ReasoningConfig has different meaning in openrouter - profile config vs API format)
+export {
+  type ReasoningConfig as ProfileReasoningConfig,
+  type ProviderPreferences,
+  type ActualApiParams,
+  type ApiResponseMetrics,
+  EFFORT_TO_BUDGET_TOKENS,
+  effortToBudgetTokens,
+} from './types/common';
 
 // Configuration
 export { initializeAI, type AIConfig } from './config';
@@ -36,27 +51,58 @@ export {
   type ModelName
 } from './utils/costCalculator';
 
+// Unified usage metrics
+export {
+  type UnifiedUsageMetrics,
+  type OpenRouterRawUsage,
+  type AnthropicRawUsage,
+  fromOpenRouterUsage,
+  fromAnthropicUsage,
+  calculateAnthropicCost,
+  getAnthropicPricing,
+  formatCost,
+  aggregateUsageMetrics,
+  ANTHROPIC_PRICING,
+} from './utils/usageMetrics';
+
 // Tool configs and generated metadata
 export * from './tools/configs';
 export { toolSchemas, getToolSchema, type ToolId } from './tools/generated-schemas';
 export { toolReadmes, getToolReadme } from './tools/generated-readmes';
 
-// Tool types (implementations in @roast/ai/server)
-export type { Tool, ToolContext, ToolConfig } from './tools/base/Tool';
-export type { DocumentChunkerOutput } from './tools/document-chunker';
-export type { TextLocationFinderOutput } from './tools/smart-text-searcher';
-export type { CheckMathOutput } from './tools/math-validator-llm';
-export type { CheckMathAgenticOutput as CheckMathWithMathJSOutput } from './tools/math-validator-mathjs/types';
-export type { CheckSpellingGrammarOutput, SpellingGrammarError } from './tools/spelling-grammar-checker';
-export type { ExtractFactualClaimsOutput, ExtractedFactualClaim } from './tools/factual-claims-extractor';
-export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './tools/binary-forecasting-claims-extractor';
-export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './tools/math-expressions-extractor';
-export type { DetectLanguageConventionOutput } from './tools/language-convention-detector';
-export type { MathErrorDetails, MathVerificationStatus } from './tools/shared/math-schemas';
+// Default prompts for fallacy extractor (used by profile editor UI)
+export {
+  DEFAULT_EXTRACTOR_SYSTEM_PROMPT,
+  DEFAULT_EXTRACTOR_USER_PROMPT,
+} from './tools/fallacy-extractor/prompts';
 
-// Plugin types (implementations in @roast/ai/server)
-export type { FullDocumentAnalysisResult } from './analysis-plugins/PluginManager';
-export type { Finding } from './analysis-plugins/types';
+// Tool types - client-safe imports from types.ts (no logger dependency)
+// NOTE: Tool class is server-only, import from @roast/ai/server
+export type { ToolContext, ToolConfig } from './tools/base/types';
+
+// Client-safe tool output types (extracted to avoid server dependencies)
+export type {
+  DocumentChunk,
+  DocumentChunkerOutput,
+  TextLocationFinderOutput,
+  CheckMathOutput,
+  CheckMathWithMathJSOutput,
+  CheckSpellingGrammarOutput,
+  SpellingGrammarError,
+  ExtractFactualClaimsOutput,
+  ExtractedFactualClaim,
+  ExtractForecastingClaimsOutput,
+  ExtractedForecast,
+  ExtractMathExpressionsOutput,
+  ExtractedMathExpression,
+  DetectLanguageConventionOutput,
+  MathErrorDetails,
+  MathVerificationStatus,
+  MathErrorType,
+  MathSeverity,
+  MathVerificationDetails,
+} from './tools/client-types';
+
 export { PluginType } from './analysis-plugins/types/plugin-types';
 
 // Document and agent schemas
