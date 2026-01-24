@@ -11,4 +11,4 @@ export { extractHighlightsFromAnalysis } from "./documentAnalysis/highlightExtra
 export { generateSelfCritique } from "./documentAnalysis/selfCritique";
 
 // Export types
-export type { TaskResult } from "./documentAnalysis/shared/types";
+export type { TaskResult, DocumentAnalysisResult } from "./documentAnalysis/shared/types";

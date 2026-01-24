@@ -5,22 +5,6 @@ import { ISSUE_TYPES } from "../constants";
  * Pure functions for generating markdown content for epistemic critic comments.
  */
 
-// Helper to escape markdown special characters
-function escapeMd(s: string): string {
-  return s.replace(/[[\]()*_`>]/g, (m) => `\\${m}`);
-}
-
-// Helper to sanitize URLs
-function sanitizeUrl(u: string): string {
-  try {
-    const url = new URL(u, "https://example.com");
-    const scheme = url.protocol.replace(":", "");
-    return scheme === "http" || scheme === "https" ? u : "#";
-  } catch {
-    return "#";
-  }
-}
-
 /**
  * Build the main description content for an epistemic issue comment
  */

@@ -177,6 +177,18 @@ pnpm --filter @roast/web run test:ci  # MUST actually run, not assume
 # TypeScript compiles ≠ tests pass
 ```
 
+### Development Workflow: Modify → Check Loop
+
+When making code changes, especially to internal packages (`@roast/ai`, `@roast/db`, `@roast/domain`, `@roast/jobs`), follow this verification loop before committing:
+
+1. **After modifying internal packages**: Run `pnpm turbo run typecheck` (not just `pnpm --filter @roast/web typecheck`). Turbo handles the dependency graph—it rebuilds packages first, then typechecks consumers with fresh `.d.ts` files. This mimics CI's clean-build behavior.
+
+2. **After modifying web app only**: Run `pnpm --filter @roast/web run typecheck && pnpm --filter @roast/web run lint`.
+
+3. **Before pushing**: Always run the full check: `pnpm turbo run typecheck lint --parallel`. This catches cross-package type errors that per-package checks miss due to stale `dist/` folders.
+
+4. **Why this matters**: TypeScript project references use compiled `dist/` for type resolution. Local dev accumulates stale builds; CI starts fresh. If you see typecheck errors and assume they're "pre-existing," verify by rebuilding the source package first (`pnpm --filter @roast/ai run build`).
+
 ## Commands Quick Reference
 
 ### Development
@@ -185,6 +197,30 @@ pnpm --filter @roast/web dev          # Start dev server (check port 3000 first!
 pnpm --filter @roast/db run gen       # Generate Prisma client
 pnpm --filter @roast/db run db:push   # Push schema changes
 ```
+
+### Dev Environment & Database Access (Primary)
+
+**🚨 MANDATORY: Use ONLY these scripts for database access - NO EXCEPTIONS 🚨**
+
+```bash
+dev/scripts/dev-env.sh start|stop|status|attach|restart  # Manage tmux dev session
+dev/scripts/dev-env.sh psql [args]                       # Connect to local DB via Docker
+```
+
+**FORBIDDEN database access methods** (DO NOT USE):
+```bash
+❌ psql -h localhost ...           # Direct psql - FORBIDDEN
+❌ PGPASSWORD=... psql ...         # Direct psql with password - FORBIDDEN
+❌ docker run ... postgres psql    # Docker-based psql - FORBIDDEN
+❌ Any other method                # If it's not dev-env.sh psql, DON'T USE IT
+```
+
+**Database utilities** (Docker-based, no local psql needed):
+- `dev/scripts/dev/db/lib/db_functions.sh` - Core DB functions (`psql_local`, `psql_prod`, `pg_dump_prod`, `copy_data`)
+- `dev/scripts/dev/db/lib/common_utils.sh` - Shared bash utilities
+- `dev/scripts/dev/db/setup_db.sh` - Example: sync prod schema to local
+
+**AI agents MUST use `dev/scripts/dev-env.sh psql` - no alternatives allowed.**
 
 ### Testing
 ```bash
@@ -202,6 +238,29 @@ pnpm --filter @roast/web run lint       # ESLint
 pnpm --filter @roast/web run typecheck  # TypeScript
 # MUST run both - linter doesn't catch type errors!
 ```
+
+### 🚨 Type Definitions: NO INLINE TYPES 🚨
+
+**NEVER use inline types.** Always define named interfaces or type aliases.
+
+```typescript
+// ❌ WRONG - inline types
+function Foo({ data }: { data: string; count: number }) { }
+const [state, setState] = useState<{ loading: boolean; error?: string }>();
+let result: { success: boolean; value: number };
+
+// ✅ CORRECT - named types
+interface FooProps { data: string; count: number; }
+function Foo({ data }: FooProps) { }
+
+interface LoadingState { loading: boolean; error?: string; }
+const [state, setState] = useState<LoadingState>();
+
+interface Result { success: boolean; value: number; }
+let result: Result;
+```
+
+**Why:** Inline types hurt readability, reusability, and refactoring. Named types are self-documenting and can be exported/shared.
 
 ## MCP Server Quick Fix
 
@@ -277,6 +336,22 @@ Details here"
 # File operations:
 /bin/rm, /bin/cat, /bin/echo  # Use full paths
 ```
+
+## Tmux Key Sending
+
+When sending multiple keystrokes to tmux sessions (e.g., navigating CLI menus), use a loop with delays between keystrokes instead of sending them all at once.
+
+**Bad** (keys may be dropped or processed incorrectly):
+```bash
+tmux send-keys -t session Down Down Down Down Down Enter
+```
+
+**Good** (reliable keystroke delivery):
+```bash
+for i in {1..5}; do tmux send-keys -t session Down; sleep 0.1; done; tmux send-keys -t session Enter
+```
+
+This ensures each keystroke is processed before the next is sent, preventing navigation issues in terminal UIs.
 
 ## Documentation Structure
 - `/dev/docs/README.md` - Documentation index

@@ -14,12 +14,18 @@ import {
   PluginType,
   HeliconeSessionManager,
   setGlobalSessionManager,
+  Comment,
 } from '@roast/ai';
-import { analyzeDocument, getWorkerId } from '@roast/ai/server';
+import { analyzeDocument, getWorkerId, DocumentAnalysisResult } from '@roast/ai/server';
 import { JobService } from './JobService';
 
+export interface JobProcessingOptions {
+  /** Profile ID for plugin configuration (e.g., FallacyCheckPlugin) */
+  profileId?: string;
+}
+
 export interface JobOrchestratorInterface {
-  processJob(job: JobWithRelations): Promise<JobProcessingResult>;
+  processJob(job: JobWithRelations, options?: JobProcessingOptions): Promise<JobProcessingResult>;
 }
 
 export class JobOrchestrator implements JobOrchestratorInterface {
@@ -38,8 +44,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   /**
    * Process a complete job from start to finish
    */
-  async processJob(job: JobWithRelations): Promise<JobProcessingResult> {
-    this.logger.info(this.formatLog(job.id, 'Starting processing...'));
+  async processJob(job: JobWithRelations, options?: JobProcessingOptions): Promise<JobProcessingResult> {
+    this.logger.info(this.formatLog(job.id, `Starting processing...${options?.profileId ? ` (profile: ${options.profileId})` : ''}`));
     const startTime = Date.now();
     let sessionManager: HeliconeSessionManager | undefined;
 
@@ -57,7 +63,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       }
 
       // Setup Helicone session tracking
-      sessionManager = await this.setupSessionTracking(job);
+      sessionManager = this.setupSessionTracking(job);
 
       this.logger.info(this.formatLog(job.id, 'Preparing job data...'));
       // Extract and validate job data
@@ -66,10 +72,11 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       this.logger.info(this.formatLog(job.id, 'Executing analysis...'));
       // Execute document analysis using @roast/ai workflows
       const analysisResult = await this.executeAnalysis(
-        documentForAnalysis, 
-        agent, 
-        job.id, 
-        sessionManager
+        documentForAnalysis,
+        agent,
+        job.id,
+        sessionManager,
+        options?.profileId
       );
 
       this.logger.info(this.formatLog(job.id, 'Saving analysis results...'));
@@ -126,41 +133,40 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   /**
    * Setup Helicone session tracking for the job
    */
-  private async setupSessionTracking(job: JobWithRelations): Promise<HeliconeSessionManager | undefined> {
+  private setupSessionTracking(job: JobWithRelations): HeliconeSessionManager | undefined {
     try {
+      // TypeScript types guarantee these are defined (Prisma include with take: 1)
       const documentVersion = job.evaluation.document.versions[0];
       const agentVersion = job.evaluation.agent.versions[0];
-      
-      if (documentVersion && agentVersion) {
-        // Use originalJobId for retries to group them under the same session
-        const sessionId = job.originalJobId || job.id;
-        const truncatedTitle = documentVersion.title.length > 50 
-          ? documentVersion.title.slice(0, 50) + '...' 
-          : documentVersion.title;
-        
-        const sessionManager = HeliconeSessionManager.forJob(
-          sessionId,
-          `${agentVersion.name} evaluating ${truncatedTitle}`,
-          {
-            JobId: job.id,
-            JobAttempt: job.originalJobId ? 'retry' : 'initial',
-            DocumentId: job.evaluation.document.id,
-            AgentId: job.evaluation.agent.id,
-            AgentVersion: agentVersion.version.toString(),
-            EvaluationId: job.evaluation.id,
-            UserId: job.evaluation.agent.submittedBy?.id || 'anonymous',
-          }
-        );
-        
-        // Set as global for automatic header propagation
-        setGlobalSessionManager(sessionManager);
-        return sessionManager;
-      }
+
+      // Use originalJobId for retries to group them under the same session
+      const sessionId = job.originalJobId || job.id;
+      const truncatedTitle = documentVersion.title.length > 50
+        ? documentVersion.title.slice(0, 50) + '...'
+        : documentVersion.title;
+
+      const sessionManager = HeliconeSessionManager.forJob(
+        sessionId,
+        `${agentVersion.name} evaluating ${truncatedTitle}`,
+        {
+          JobId: job.id,
+          JobAttempt: job.originalJobId ? 'retry' : 'initial',
+          DocumentId: job.evaluation.document.id,
+          AgentId: job.evaluation.agent.id,
+          AgentVersion: agentVersion.version.toString(),
+          EvaluationId: job.evaluation.id,
+          UserId: job.evaluation.agent.submittedBy?.id ?? 'anonymous',
+        }
+      );
+
+      // Set as global for automatic header propagation
+      setGlobalSessionManager(sessionManager);
+      return sessionManager;
     } catch (error) {
       this.logger.warn(this.formatLog(job.id, '⚠️ Failed to create Helicone session manager:'), error);
       // Continue without session tracking rather than failing the job
     }
-    
+
     return undefined;
   }
 
@@ -168,16 +174,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * Prepare document and agent data for analysis
    */
   private prepareJobData(job: JobWithRelations) {
+    // TypeScript types guarantee these are defined (Prisma include with take: 1)
     const documentVersion = job.evaluation.document.versions[0];
     const agentVersion = job.evaluation.agent.versions[0];
-
-    if (!documentVersion) {
-      throw new Error('Document version not found');
-    }
-
-    if (!agentVersion) {
-      throw new Error('Agent version not found');
-    }
 
     // Prepare document for analysis using Prisma's computed fullContent field
     const documentForAnalysis: Document = {
@@ -203,7 +202,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
       providesGrades: agentVersion.providesGrades || false,
       extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
-      pluginIds: (agentVersion.pluginIds || []) as PluginType[], // Cast to PluginType[] since DB stores as strings
+      pluginIds: agentVersion.pluginIds as PluginType[], // Cast to PluginType[] since DB stores as strings
     };
 
     return { documentForAnalysis, agent, documentVersion, agentVersion };
@@ -213,23 +212,32 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    * Execute the document analysis workflow
    */
   private async executeAnalysis(
-    documentForAnalysis: Document, 
-    agent: Agent, 
-    jobId: string, 
-    sessionManager?: HeliconeSessionManager
+    documentForAnalysis: Document,
+    agent: Agent,
+    jobId: string,
+    sessionManager?: HeliconeSessionManager,
+    profileId?: string
   ) {
+    // Use options-based signature to pass profileId
+    const analysisOptions = {
+      targetWordCount: 500,
+      targetHighlights: 5,
+      jobId,
+      fallacyCheckProfileId: profileId,
+    };
+
     // Track the analysis phase with session manager
-    return await (sessionManager 
+    return await (sessionManager
       ? sessionManager.trackAnalysis('document', async () => {
-          return analyzeDocument(documentForAnalysis, agent, 500, 5, jobId);
+          return analyzeDocument(documentForAnalysis, agent, analysisOptions);
         })
-      : analyzeDocument(documentForAnalysis, agent, 500, 5, jobId));
+      : analyzeDocument(documentForAnalysis, agent, analysisOptions));
   }
 
   /**
    * Save analysis results to database
    */
-  private async saveAnalysisResults(job: JobWithRelations, analysisResult: any, agent: Agent) {
+  private async saveAnalysisResults(job: JobWithRelations, analysisResult: DocumentAnalysisResult, agent: Agent) {
     const { tasks, ...evaluationOutputs } = analysisResult;
 
     // Get the latest version number for this evaluation
@@ -258,6 +266,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         agentVersionId: agentVersion.id,
         evaluationId: job.evaluation.id,
         documentVersionId: documentVersion.id,
+        pipelineTelemetry: evaluationOutputs.pipelineTelemetry ?? undefined,
         job: {
           connect: {
             id: job.id,
@@ -281,7 +290,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     }
 
     // Save highlights to database
-    const highlights = evaluationOutputs.highlights || [];
+    const highlights = evaluationOutputs.highlights;
     if (highlights.length > 0) {
       // Use fullContent (which includes markdownPrepend) for validation
       // since highlights were generated based on the full content
@@ -292,12 +301,12 @@ export class JobOrchestrator implements JobOrchestratorInterface {
 
   /**
    * Save highlights with validation
-   * 
+   *
    * Note: Highlights are linked to evaluations through comments (not directly).
    * This ensures every highlight has an associated comment for context.
    */
-  private async saveHighlights(highlights: any[], evaluationVersionId: string, fullContent: string, jobId: string) {
-    if (!highlights || highlights.length === 0) {
+  private async saveHighlights(highlights: Comment[], evaluationVersionId: string, fullContent: string, jobId: string) {
+    if (highlights.length === 0) {
       return;
     }
 
@@ -305,34 +314,22 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Validate highlight by checking if quotedText matches document at specified offsets
       let isValid = true;
       let error: string | null = null;
-      
-      if (!comment.highlight) {
-        isValid = false;
-        error = 'Highlight is missing';
-      } else {
-        try {
-          const actualText = fullContent.slice(
-            comment.highlight.startOffset, 
-            comment.highlight.endOffset
-          );
-          
-          if (actualText !== comment.highlight.quotedText) {
-            isValid = false;
-            error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
-            this.logger.warn(this.formatLog(jobId, `Invalid highlight detected: ${error}`));
-          }
-        } catch (highlightError) {
-          isValid = false;
-          error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
-          this.logger.warn(this.formatLog(jobId, `Highlight validation failed: ${error}`));
-        }
-      }
 
-      // Only create highlight if we have highlight data
-      if (!comment.highlight) {
-        // Skip this comment if no highlight data
-        this.logger.warn(this.formatLog(jobId, `Skipping comment without highlight data: ${comment.description}`));
-        continue;
+      try {
+        const actualText = fullContent.slice(
+          comment.highlight.startOffset,
+          comment.highlight.endOffset
+        );
+
+        if (actualText !== comment.highlight.quotedText) {
+          isValid = false;
+          error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+          this.logger.warn(this.formatLog(jobId, `Invalid highlight detected: ${error}`));
+        }
+      } catch (highlightError) {
+        isValid = false;
+        error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
+        this.logger.warn(this.formatLog(jobId, `Highlight validation failed: ${error}`));
       }
 
       // Create highlight with validation status
@@ -351,12 +348,12 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       await prisma.evaluationComment.create({
         data: {
           description: comment.description || 'No description',
-          importance: comment.importance || null,
-          grade: comment.grade || null,
-          header: comment.header || null,
-          level: comment.level || null,
-          source: comment.source || null,
-          metadata: comment.metadata || null,
+          importance: comment.importance ?? null,
+          grade: comment.grade ?? null,
+          header: comment.header ?? null,
+          level: comment.level ?? null,
+          source: comment.source ?? null,
+          metadata: comment.metadata ?? undefined,
           evaluationVersionId,
           highlightId: createdHighlight.id,
         },
@@ -370,7 +367,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
    */
   private createExecutionLog(
     job: JobWithRelations,
-    analysisResult: any,
+    analysisResult: DocumentAnalysisResult,
     durationInSeconds: number,
     startTime: number
   ): string {
@@ -390,14 +387,14 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       `- Status: SUCCESS`,
       ``,
       `## Analysis Summary`,
-      `- Highlights generated: ${analysisResult.highlights?.length || 0}`,
+      `- Highlights generated: ${analysisResult.highlights.length}`,
       `- Grade: ${analysisResult.grade || 'N/A'}`,
       `- Self-critique: ${analysisResult.selfCritique ? 'Yes' : 'No'}`,
       ``,
       `## Task Breakdown`,
     ];
 
-    if (analysisResult.tasks && analysisResult.tasks.length > 0) {
+    if (analysisResult.tasks.length > 0) {
       for (const task of analysisResult.tasks) {
         log.push(`### ${task.name}`);
         log.push(`- Model: ${task.modelName}`);

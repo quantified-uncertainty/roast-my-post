@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Tool, type ToolContext } from "../base/Tool";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
+import { withDateContext } from "../shared/llm-filter-utils";
 import { fallacyReviewConfig } from "./config";
 import type {
   FallacyReviewInput,
@@ -30,6 +31,7 @@ const reviewCommentSchema = z.object({
 const inputSchema = z.object({
   documentText: z.string().min(1).describe("The full document text being analyzed for epistemic issues"),
   comments: z.array(reviewCommentSchema).min(0).describe("Array of epistemic comments to review and filter for redundancy"),
+  customSystemPrompt: z.string().optional().describe("Custom system prompt override"),
 }) satisfies z.ZodType<FallacyReviewInput>;
 
 const outputSchema = z.object({
@@ -74,7 +76,8 @@ Description: ${comment.description}
       })
       .join('\n---\n\n');
 
-    const systemPrompt = `You are an expert epistemic review editor. Your job is to:
+    // Default system prompt - can be overridden via input.customSystemPrompt
+    const defaultSystemPrompt = `You are an expert epistemic review editor. Your job is to:
 
 1. **Filter Comments** - Remove redundant, weak, or overly similar comments
    - Target keeping 50-90% of comments (be selective!)
@@ -101,6 +104,10 @@ Description: ${comment.description}
 - Don't keep every minor issue - focus on what matters
 - Be ruthless about redundancy
 - The document summary should read like a professional analysis, not just a list of issues`;
+
+    // Always prepend date context to prevent false positives on recent dates
+    const basePrompt = input.customSystemPrompt || defaultSystemPrompt;
+    const systemPrompt = withDateContext(basePrompt);
 
     const userPrompt = `Review the following epistemic analysis:
 
@@ -167,10 +174,15 @@ Please review these comments and provide:
         `[FallacyReview] Filtered ${input.comments.length} comments down to ${validIndices.length}`
       );
 
+      if (result.unifiedUsage) {
+        context.logger.info(`[FallacyReview] Cost: $${result.unifiedUsage.costUsd.toFixed(6)}`);
+      }
+
       return {
         commentIndicesToKeep: validIndices,
         documentSummary: result.toolResult.documentSummary,
         oneLineSummary: result.toolResult.oneLineSummary,
+        unifiedUsage: result.unifiedUsage,
       };
     } catch (error) {
       context.logger.error("[FallacyReview] Review failed:", error);
