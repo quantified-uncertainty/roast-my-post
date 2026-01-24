@@ -8,7 +8,7 @@ import { metaEvaluationRepository } from "@roast/db";
 
 const querySchema = z.object({
   agentId: z.string().min(1, "agentId is required"),
-  filter: z.string().nullable().transform(v => v ?? undefined),
+  filter: z.string().optional(),
   limit: z.coerce.number().min(1).max(1000).default(500),
 });
 
@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const parsed = querySchema.safeParse({
     agentId: params.get("agentId"),
-    filter: params.get("filter"),
-    limit: params.get("limit"),
+    filter: params.get("filter") ?? undefined,
+    limit: params.get("limit") ?? undefined,
   });
 
   if (!parsed.success) {

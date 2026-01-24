@@ -207,6 +207,8 @@ dev/scripts/dev-env.sh start|stop|status|attach|restart  # Manage tmux dev sessi
 dev/scripts/dev-env.sh psql [args]                       # Connect to local DB via Docker
 ```
 
+**IMPORTANT:** When restarting the dev environment, use `dev/scripts/dev-env.sh restart` - NOT `stop && start`. Using stop kills the user's tmux session and kicks them out.
+
 **FORBIDDEN database access methods** (DO NOT USE):
 ```bash
 ❌ psql -h localhost ...           # Direct psql - FORBIDDEN
@@ -238,6 +240,15 @@ pnpm --filter @roast/web run lint       # ESLint
 pnpm --filter @roast/web run typecheck  # TypeScript
 # MUST run both - linter doesn't catch type errors!
 ```
+
+#### Strict PR Lint (Higher Code Quality Without Legacy Cleanup)
+```bash
+dev/scripts/lint-pr-strict.sh           # Strict lint on PR-changed files only
+dev/scripts/lint-pr-strict.sh -l        # List files that would be checked
+dev/scripts/lint-pr-strict.sh apps/web  # Only check specific path
+```
+
+**Purpose**: Enforces stricter type-aware ESLint rules (dead code, promise/async bugs, logic errors, type safety) on files changed in the current branch vs main. Catches real bugs without requiring the whole codebase to pass these stricter rules—useful for improving code quality incrementally in PRs.
 
 ### 🚨 Type Definitions: NO INLINE TYPES 🚨
 

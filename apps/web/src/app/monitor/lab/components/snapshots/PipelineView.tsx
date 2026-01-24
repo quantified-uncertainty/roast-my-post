@@ -109,7 +109,7 @@ export function PipelineView({
           title="1. Extraction"
           summary={`${totalExtracted} issues from ${extractors.length} model${extractors.length !== 1 ? "s" : ""}`}
           timing={getStageTiming("extraction")?.durationMs}
-          cost={extractorsCost}
+          cost={extractorsCost + judgeCost}
           isExpanded={expandedSteps.has("extraction")}
           onToggle={() => toggleStep("extraction")}
           color="blue"

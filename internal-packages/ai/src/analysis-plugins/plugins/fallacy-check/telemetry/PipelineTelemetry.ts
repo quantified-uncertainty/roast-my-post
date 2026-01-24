@@ -219,15 +219,37 @@ export class PipelineTelemetry {
   }
 
   /**
-   * Calculate total cost from all stages
+   * Calculate total cost from extractors + judge + all stages
    */
   private calculateTotalCost(): number | undefined {
-    const costs = this.stages
-      .map((s) => s.costUsd)
-      .filter((c): c is number => c !== undefined);
+    let total = 0;
+    let hasCost = false;
 
-    if (costs.length === 0) return undefined;
-    return costs.reduce((sum, cost) => sum + cost, 0);
+    // Add extractor costs
+    if (this.extractionPhase?.extractors) {
+      for (const ext of this.extractionPhase.extractors) {
+        if (ext.costUsd != null) {
+          total += ext.costUsd;
+          hasCost = true;
+        }
+      }
+    }
+
+    // Add judge cost
+    if (this.extractionPhase?.judgeCostUsd != null) {
+      total += this.extractionPhase.judgeCostUsd;
+      hasCost = true;
+    }
+
+    // Add stage costs
+    for (const stage of this.stages) {
+      if (stage.costUsd != null) {
+        total += stage.costUsd;
+        hasCost = true;
+      }
+    }
+
+    return hasCost ? total : undefined;
   }
 
   /**
