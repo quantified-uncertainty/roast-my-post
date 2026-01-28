@@ -10,8 +10,6 @@ import {
   HeliconeSessionManager,
 } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
-// Document and Comment types are passed as parameters to avoid circular dependencies
-// LLMInteraction type removed - was unused
 import type { Comment } from "../shared/types";
 import { ANALYSIS_MODEL } from "../types";
 // Import plugin ID constants
@@ -50,6 +48,10 @@ export interface PluginManagerConfig {
   jobId?: string; // For logging integration
   pluginSelection?: PluginSelection; // Optional plugin selection configuration
   useIsolation?: boolean; // Enable plugin state isolation
+  /** Profile ID for FallacyCheckPlugin configuration */
+  fallacyCheckProfileId?: string;
+  /** Agent ID for FallacyCheckPlugin default profile loading */
+  fallacyCheckAgentId?: string;
 }
 
 export interface SimpleDocumentAnalysisResult {
@@ -66,6 +68,7 @@ export interface SimpleDocumentAnalysisResult {
   };
   logSummary: JobLogSummary;
   jobLogString: string; // Formatted string for Job.logs field
+  pipelineTelemetry?: Record<string, unknown>; // Pipeline telemetry from plugins (e.g., FallacyCheckPlugin)
 }
 
 export interface FullDocumentAnalysisResult {
@@ -88,6 +91,7 @@ export interface FullDocumentAnalysisResult {
   }>;
   logSummary: JobLogSummary;
   jobLogString: string; // Formatted string for Job.logs field
+  pipelineTelemetry?: Record<string, unknown>; // Pipeline telemetry from plugins (e.g., FallacyCheckPlugin)
 }
 
 export class PluginManager {
@@ -104,12 +108,20 @@ export class PluginManager {
   private isolatedExecutor?: IsolatedPluginExecutor;
   private factory?: PluginFactory;
 
+  // Profile configuration for FallacyCheckPlugin
+  private fallacyCheckProfileId?: string;
+  private fallacyCheckAgentId?: string;
+
   constructor(config: PluginManagerConfig = {}) {
     // Use provided session manager, or fall back to global if available
     this.sessionManager = config.sessionManager || getGlobalSessionManager();
     this.pluginLogger = new PluginLogger(config.jobId);
     this.pluginSelection = config.pluginSelection;
     this.useIsolation = config.useIsolation || false;
+
+    // Profile configuration for FallacyCheckPlugin
+    this.fallacyCheckProfileId = config.fallacyCheckProfileId;
+    this.fallacyCheckAgentId = config.fallacyCheckAgentId;
 
     // Initialize refactored components
     this.registry = new PluginRegistry();
@@ -201,7 +213,6 @@ export class PluginManager {
         preserveContext: true,
       });
 
-      // Debug: Verify chunk positions
       logger.info("Verifying chunk positions after creation", {
         textLength: text.length,
         textStartsWith: text.slice(0, 100),
@@ -209,7 +220,6 @@ export class PluginManager {
       });
 
       for (const chunk of chunks.slice(0, 3)) {
-        // Check first 3 chunks
         if (chunk.metadata?.position) {
           const extractedText = text.substring(
             chunk.metadata.position.start,
@@ -287,7 +297,7 @@ export class PluginManager {
       const pluginPromises = plugins.map(async (plugin) => {
         const pluginName = plugin.name();
         const maxRetries = 2;
-        let lastError: Error | unknown = null;
+        let lastError: unknown = null;
 
         // Start plugin logging
         this.pluginLogger.pluginStarted(pluginName);
@@ -319,7 +329,6 @@ export class PluginManager {
             // Get the chunks assigned to this plugin
             const assignedChunks = chunksPerPlugin.get(pluginName) || [];
 
-            // Check if this is an always-run plugin
             const isrunOnAllChunks = plugin.runOnAllChunks === true;
 
             logger.info(
@@ -345,7 +354,6 @@ export class PluginManager {
               };
             }
 
-            // Add basic logging wrapper around plugin execution
             pluginLoggerInstance.startPhase(
               "initialization",
               `Starting ${pluginName} analysis with ${assignedChunks.length} chunks`
@@ -462,12 +470,13 @@ export class PluginManager {
       const results = await Promise.all(pluginPromises);
 
       // Process results with error tracking
+      const failedPlugins: Array<{ plugin: string; error: string }> = [];
       for (const {
         plugin,
         result,
         success,
         error,
-        recoveryAction,
+        recoveryAction: _recoveryAction,
       } of results) {
         if (success && result) {
           pluginResults.set(plugin, result);
@@ -475,6 +484,7 @@ export class PluginManager {
           totalCost += result.cost;
         } else {
           logger.warn(`Plugin ${plugin} failed: ${error}`);
+          failedPlugins.push({ plugin, error: error || "Unknown error" });
         }
       }
 
@@ -489,9 +499,23 @@ export class PluginManager {
         .map(([name, result]) => `## ${name} Analysis\n\n${result.analysis}`)
         .join("\n\n");
 
-      const summary = `Analyzed ${chunks.length} sections with ${plugins.length} plugins. Found ${allComments.length} total issues.`;
+      // Build summary with error information if any plugins failed
+      let summary = `Analyzed ${chunks.length} sections with ${plugins.length} plugins. Found ${allComments.length} total issues.`;
+      if (failedPlugins.length > 0) {
+        const failedNames = failedPlugins.map((f) => f.plugin).join(", ");
+        summary += ` ⚠️ ${failedPlugins.length} plugin(s) failed: ${failedNames}.`;
+      }
 
-      const analysis = `**Document Analysis Summary**\n\nThis document was analyzed by ${plugins.length} specialized plugins that examined ${chunks.length} sections.\n\n${pluginSummaries}${detailedAnalyses ? "\n\n---\n\n" + detailedAnalyses : ""}`;
+      // Build analysis with error details if any plugins failed
+      let failedPluginsSection = "";
+      if (failedPlugins.length > 0) {
+        const failureDetails = failedPlugins
+          .map((f) => `- **${f.plugin}**: ${f.error}`)
+          .join("\n");
+        failedPluginsSection = `\n\n## ⚠️ Plugin Failures\n\nThe following plugins encountered errors during analysis:\n\n${failureDetails}`;
+      }
+
+      const analysis = `**Document Analysis Summary**\n\nThis document was analyzed by ${plugins.length} specialized plugins that examined ${chunks.length} sections.\n\n${pluginSummaries}${failedPluginsSection}${detailedAnalyses ? "\n\n---\n\n" + detailedAnalyses : ""}`;
 
       // Calculate statistics
       const commentsByPlugin = new Map<string, number>();
@@ -504,6 +528,13 @@ export class PluginManager {
       // Generate log summary and job log string
       const logSummary = this.pluginLogger.generateSummary();
       const jobLogString = this.pluginLogger.generateJobLogString();
+
+      // Collect pipeline telemetry from plugins that provide it (e.g., FALLACY_CHECK)
+      let pipelineTelemetry: Record<string, unknown> | undefined;
+      const fallacyResult = pluginResults.get('FALLACY_CHECK');
+      if (fallacyResult?.pipelineTelemetry) {
+        pipelineTelemetry = fallacyResult.pipelineTelemetry;
+      }
 
       return {
         summary,
@@ -519,6 +550,7 @@ export class PluginManager {
         },
         logSummary,
         jobLogString,
+        pipelineTelemetry,
       };
     } finally {
       // Cleanup if needed
@@ -549,7 +581,7 @@ export class PluginManager {
       const pluginStartTime = Date.now();
 
       // Get selected plugins
-      const plugins = await this.getSelectedPlugins();
+      const plugins = this.getSelectedPlugins();
 
       // Run analysis on document content using new API
       const pluginResults = await this.analyzeDocumentSimple(
@@ -608,6 +640,7 @@ export class PluginManager {
         errors: undefined, // TODO: Add better error tracking
         logSummary: pluginResults.logSummary,
         jobLogString: pluginResults.jobLogString,
+        pipelineTelemetry: pluginResults.pipelineTelemetry,
       };
     } catch (error) {
       logger.error(
@@ -644,6 +677,7 @@ export class PluginManager {
         ],
         logSummary: this.pluginLogger.generateSummary(),
         jobLogString: this.pluginLogger.generateJobLogString(),
+        pipelineTelemetry: undefined,
       };
     }
   }
@@ -659,17 +693,24 @@ export class PluginManager {
       [PluginType.FACT_CHECK, new FactCheckPlugin()],
       [PluginType.FORECAST, new ForecastPlugin()],
       [PluginType.LINK_ANALYSIS, new LinkPlugin()],
-      [PluginType.FALLACY_CHECK, new FallacyCheckPlugin()],
+      // Pass profile options to FallacyCheckPlugin
+      [PluginType.FALLACY_CHECK, new FallacyCheckPlugin({
+        profileId: this.fallacyCheckProfileId,
+        agentId: this.fallacyCheckAgentId,
+      })],
     ]);
 
-    logger.info(`Created fresh instances of ${plugins.size} plugins`);
+    logger.info(`Created fresh instances of ${plugins.size} plugins`, {
+      fallacyCheckProfileId: this.fallacyCheckProfileId,
+      fallacyCheckAgentId: this.fallacyCheckAgentId,
+    });
     return plugins;
   }
 
   /**
    * Get selected plugins based on configuration
    */
-  private async getSelectedPlugins(): Promise<SimpleAnalysisPlugin[]> {
+  private getSelectedPlugins(): SimpleAnalysisPlugin[] {
     const allPlugins = this.createPluginInstances();
 
     // Default plugins if no selection specified
@@ -723,26 +764,20 @@ export class PluginManager {
   private deduplicateHighlights(highlights: Comment[]): Comment[] {
     if (highlights.length <= 1) return highlights;
 
-    // Filter out comments without highlights first
-    const withHighlights = highlights.filter(
-      (h) => h.highlight && h.highlight.startOffset !== undefined
-    );
-    if (withHighlights.length <= 1) return withHighlights;
-
     // Sort by start offset
-    const sorted = [...withHighlights].sort(
-      (a, b) => a.highlight!.startOffset! - b.highlight!.startOffset!
+    const sorted = [...highlights].sort(
+      (a, b) => a.highlight.startOffset - b.highlight.startOffset
     );
 
     const unique: Comment[] = [];
 
-    for (const highlight of sorted) {
+    for (const comment of sorted) {
       // Check if this highlight overlaps with any existing unique highlight
       const overlaps = unique.some((existing) => {
-        const existingStart = existing.highlight!.startOffset!;
-        const existingEnd = existing.highlight!.endOffset!;
-        const currentStart = highlight.highlight!.startOffset!;
-        const currentEnd = highlight.highlight!.endOffset!;
+        const existingStart = existing.highlight.startOffset;
+        const existingEnd = existing.highlight.endOffset;
+        const currentStart = comment.highlight.startOffset;
+        const currentEnd = comment.highlight.endOffset;
 
         // Check for overlap (fixed off-by-one error)
         return (
@@ -753,7 +788,7 @@ export class PluginManager {
       });
 
       if (!overlaps) {
-        unique.push(highlight);
+        unique.push(comment);
       }
     }
 
@@ -767,7 +802,7 @@ export class PluginManager {
     if (!error) return false;
 
     // Check for common retryable error patterns
-    const errorMessage = (error as unknown as Error)?.message || String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Network/timeout errors are retryable
     if (
@@ -813,7 +848,7 @@ export class PluginManager {
    * Determine the appropriate recovery action for a failed plugin
    */
   private determineRecoveryAction(pluginName: string, error: unknown): string {
-    const errorMessage = (error as unknown as Error)?.message || String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Specific recovery actions based on error type
     if (errorMessage.includes("timeout")) {

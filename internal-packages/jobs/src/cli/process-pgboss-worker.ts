@@ -28,9 +28,17 @@ import { logger } from '../utils/logger';
 import { DOCUMENT_EVALUATION_JOB, type DocumentEvaluationJobData } from '../types/jobTypes';
 import type { JobWithMetadata } from 'pg-boss';
 import { isRetryableError } from '../errors/retryableErrors';
-import { getAgentTimeout, formatTimeout } from '../config/agentTimeouts';
+import { getAgentTimeout } from '../config/agentTimeouts';
 import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
+
+interface JobWithAgentVersions {
+  evaluation: {
+    agent: {
+      versions: Array<{ extendedCapabilityId?: string | null }>;
+    };
+  };
+}
 
 // Schedule constants
 const HELICONE_POLLER_SCHEDULE = '*/5 * * * *'; // Every 5 minutes
@@ -160,16 +168,16 @@ class PgBossWorker {
     return `${workerPrefix}[Job ${jobId}] ${message}`;
   }
 
-  private getJobTimeout(job: any): number {
+  private getJobTimeout(job: JobWithAgentVersions): number {
     const agentVersion = job.evaluation.agent.versions[0];
-    return getAgentTimeout(agentVersion?.extendedCapabilityId ?? undefined);
+    return getAgentTimeout(agentVersion.extendedCapabilityId ?? undefined);
   }
 
   private async processJob(pgBossJob: JobWithMetadata<DocumentEvaluationJobData>) {
-    const { jobId } = pgBossJob.data;
+    const { jobId, profileId } = pgBossJob.data;
     const { retryCount, retryLimit } = pgBossJob;
 
-    logger.info(this.formatLog(jobId, `Processing (attempt ${retryCount + 1}/${retryLimit + 1})`));
+    logger.info(this.formatLog(jobId, `Processing (attempt ${retryCount + 1}/${retryLimit + 1})${profileId ? ` with profile ${profileId}` : ''}`));
 
     try {
       const job = await this.jobRepository.findByIdWithRelations(jobId);
@@ -186,7 +194,7 @@ class PgBossWorker {
         { jobId, timeoutMs },
         async () => {
           await this.jobService.markAsRunning(jobId, retryCount + 1);
-          return this.jobOrchestrator.processJob(job);
+          return this.jobOrchestrator.processJob(job, { profileId: profileId || undefined });
         }
       );
 
@@ -238,8 +246,8 @@ class PgBossWorker {
 // Bootstrap
 const worker = new PgBossWorker();
 
-process.on('SIGTERM', () => worker.shutdown());
-process.on('SIGINT', () => worker.shutdown());
+process.on('SIGTERM', () => void worker.shutdown());
+process.on('SIGINT', () => void worker.shutdown());
 
 worker.start().catch(async (error) => {
   logger.error('🔥 Fatal error:', error);

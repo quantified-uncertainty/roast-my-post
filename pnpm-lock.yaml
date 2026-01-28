@@ -401,6 +401,9 @@ importers:
       '@roast/db':
         specifier: workspace:*
         version: link:../db
+      fuse.js:
+        specifier: ^7.1.0
+        version: 7.1.0
       mathjs:
         specifier: ^14.0.1
         version: 14.6.0
@@ -515,6 +518,9 @@ importers:
 
   meta-evals:
     dependencies:
+      '@leeoniya/ufuzzy':
+        specifier: ^1.0.18
+        version: 1.0.18
       '@roast/ai':
         specifier: workspace:*
         version: link:../internal-packages/ai
@@ -524,6 +530,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
+      fuse.js:
+        specifier: ^7.1.0
+        version: 7.1.0
       ink:
         specifier: ^6.5.1
         version: 6.5.1(@types/react@19.2.7)(react@19.2.1)
@@ -533,6 +542,9 @@ importers:
       ink-spinner:
         specifier: ^5.0.0
         version: 5.0.0(ink@6.5.1(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)
+      ink-text-input:
+        specifier: ^6.0.0
+        version: 6.0.0(ink@6.5.1(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)
       react:
         specifier: ^19.2.1
         version: 19.2.1
@@ -4213,6 +4225,10 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
+  fuse.js@7.1.0:
+    resolution: {integrity: sha512-trLf4SzuuUxfusZADLINj+dE8clK1frKdmqiJNb1Es75fmI5oY6X2mxLVUciLLjxqw/xr72Dhy+lER6dGd02FQ==}
+    engines: {node: '>=10'}
+
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
@@ -4424,6 +4440,13 @@ packages:
     peerDependencies:
       ink: '>=4.0.0'
       react: '>=18.0.0'
+
+  ink-text-input@6.0.0:
+    resolution: {integrity: sha512-Fw64n7Yha5deb1rHY137zHTAbSTNelUKuB5Kkk2HACXEtwIHBCf9OH2tP/LQ9fRYTl1F0dZgbW0zPnZk6FA9Lw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      ink: '>=5'
+      react: '>=18'
 
   ink@6.5.1:
     resolution: {integrity: sha512-wF3j/DmkM8q5E+OtfdQhCRw8/0ahkc8CUTgEddxZzpEWPslu7YPL3t64MWRoI9m6upVGpfAg4ms2BBvxCdKRLQ==}
@@ -11229,6 +11252,8 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
+  fuse.js@7.1.0: {}
+
   gensync@1.0.0-beta.2: {}
 
   get-east-asian-width@1.4.0: {}
@@ -11500,6 +11525,13 @@ snapshots:
       cli-spinners: 2.9.2
       ink: 6.5.1(@types/react@19.2.7)(react@19.2.1)
       react: 19.2.1
+
+  ink-text-input@6.0.0(ink@6.5.1(@types/react@19.2.7)(react@19.2.1))(react@19.2.1):
+    dependencies:
+      chalk: 5.6.2
+      ink: 6.5.1(@types/react@19.2.7)(react@19.2.1)
+      react: 19.2.1
+      type-fest: 4.41.0
 
   ink@6.5.1(@types/react@19.2.7)(react@19.2.1):
     dependencies:

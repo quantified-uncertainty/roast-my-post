@@ -1,12 +1,10 @@
 /**
- * Main Menu Screen Component
+ * Main Menu Screen Component - Clean Router
  */
 
 import React, { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
-import type { SeriesSummary } from "./types";
-import { truncate } from "./helpers";
 
 interface ModelInfo {
   id: string;
@@ -14,11 +12,10 @@ interface ModelInfo {
 }
 
 interface MainMenuProps {
-  series: SeriesSummary[];
-  maxItems: number;
   height: number;
-  onCreateBaseline: () => void;
-  onSelectSeries: (id: string) => void;
+  onScoreRank: () => void;
+  onValidation: () => void;
+  onExtractorLab: () => void;
   onExit: () => void;
   judgeModel: string;
   availableModels: ModelInfo[];
@@ -33,11 +30,10 @@ const TEMPERATURE_OPTIONS = [0, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0];
 const MAX_TOKENS_OPTIONS = [2048, 4096, 8192, 16384, 32768];
 
 export function MainMenu({
-  series,
-  maxItems,
   height,
-  onCreateBaseline,
-  onSelectSeries,
+  onScoreRank,
+  onValidation,
+  onExtractorLab,
   onExit,
   judgeModel,
   availableModels,
@@ -47,42 +43,21 @@ export function MainMenu({
   maxTokens,
   onSetMaxTokens,
 }: MainMenuProps) {
-  const [activeTab, setActiveTab] = useState<"series" | "settings">("series");
+  const [showSettings, setShowSettings] = useState(false);
   const [settingsSection, setSettingsSection] = useState<"model" | "temperature" | "maxTokens">("model");
 
-  // Handle tab switching
+  // Handle keyboard input
   useInput((input, key) => {
-    if (key.tab) {
-      setActiveTab((prev) => (prev === "series" ? "settings" : "series"));
+    if (key.escape && showSettings) {
+      setShowSettings(false);
     }
   });
 
   // Get display name for current model
   const currentModelName = availableModels.find((m) => m.id === judgeModel)?.displayName || judgeModel;
 
-  // Render tabs header
-  const renderTabs = () => (
-    <Box marginBottom={1}>
-      <Text
-        bold={activeTab === "series"}
-        color={activeTab === "series" ? "cyan" : "gray"}
-      >
-        [Series]
-      </Text>
-      <Text> </Text>
-      <Text
-        bold={activeTab === "settings"}
-        color={activeTab === "settings" ? "yellow" : "gray"}
-      >
-        [Settings]
-      </Text>
-      <Text dimColor>  (Tab to switch)</Text>
-    </Box>
-  );
-
-  // Settings tab
-  if (activeTab === "settings") {
-    // Build items based on current section
+  // Settings panel
+  if (showSettings) {
     let settingsItems: { label: string; value: string }[] = [];
     let sectionTitle = "";
 
@@ -95,7 +70,7 @@ export function MainMenu({
         })),
         { label: "-> Temperature", value: "goto:temperature" },
         { label: "-> Max Tokens", value: "goto:maxTokens" },
-        { label: "<- Back to Series", value: "back" },
+        { label: "<- Back", value: "back" },
       ];
     } else if (settingsSection === "temperature") {
       sectionTitle = "Temperature";
@@ -125,10 +100,9 @@ export function MainMenu({
           </Text>
         </Box>
 
-        {renderTabs()}
-
         <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
           <Box flexDirection="column">
+            <Text dimColor>For Score/Rank AI judge:</Text>
             <Text>
               <Text bold>Model: </Text>
               <Text color="green">{currentModelName}</Text>
@@ -147,7 +121,7 @@ export function MainMenu({
           items={settingsItems}
           onSelect={(item) => {
             if (item.value === "back") {
-              setActiveTab("series");
+              setShowSettings(false);
             } else if (item.value.startsWith("goto:")) {
               setSettingsSection(item.value.replace("goto:", "") as "model" | "temperature" | "maxTokens");
             } else if (item.value.startsWith("model:")) {
@@ -161,23 +135,18 @@ export function MainMenu({
         />
 
         <Box marginTop={1} justifyContent="center">
-          <Text dimColor>Tab Switch | Up/Down Navigate | Enter Select | q Quit</Text>
+          <Text dimColor>Up/Down Navigate | Enter Select | Escape Back</Text>
         </Box>
       </Box>
     );
   }
 
-  // Series tab (default)
-  // Limit series shown, reserve 2 slots for create/exit
-  const visibleSeries = series.slice(0, maxItems - 2);
+  // Main menu items
   const items = [
-    ...visibleSeries
-      .filter((s) => s.id) // Ensure valid IDs
-      .map((s, idx) => ({
-        label: `${truncate(s.documentTitle, 40)} | ${s.runCount} runs | ${s.agentNames.slice(0, 2).join(", ")}`,
-        value: s.id || `series-${idx}`, // Fallback key
-      })),
-    { label: "+ Create New Baseline", value: "create" },
+    { label: "Score/Rank", value: "score-rank" },
+    { label: "Validation", value: "validation" },
+    { label: "Extractor Lab", value: "extractor-lab" },
+    { label: "Settings", value: "settings" },
     { label: "Exit", value: "exit" },
   ];
 
@@ -189,37 +158,28 @@ export function MainMenu({
         </Text>
       </Box>
 
-      {renderTabs()}
-
       <Box borderStyle="single" borderColor="gray" marginBottom={1} paddingX={1}>
         <Box flexDirection="column">
-          <Text>
-            {series.length === 0
-              ? "No evaluation series yet. Create a baseline to get started."
-              : visibleSeries.length < series.length
-                ? `Showing ${visibleSeries.length} of ${series.length} series`
-                : `${series.length} series available`}
-          </Text>
+          <Text>Compare and evaluate agent outputs</Text>
           <Text dimColor>
             Judge: <Text color="green">{currentModelName}</Text>
-            {" "}| Temp: <Text color="green">{temperature}</Text>
-            {" "}| Tokens: <Text color="green">{maxTokens}</Text>
           </Text>
         </Box>
       </Box>
 
       <SelectInput
         items={items}
-        limit={maxItems}
         onSelect={(item) => {
           if (item.value === "exit") onExit();
-          else if (item.value === "create") onCreateBaseline();
-          else onSelectSeries(item.value);
+          else if (item.value === "score-rank") onScoreRank();
+          else if (item.value === "validation") onValidation();
+          else if (item.value === "extractor-lab") onExtractorLab();
+          else if (item.value === "settings") setShowSettings(true);
         }}
       />
 
       <Box marginTop={1} justifyContent="center">
-        <Text dimColor>Tab Switch | Up/Down Navigate | Enter Select | q Quit</Text>
+        <Text dimColor>Up/Down Navigate | Enter Select | q Quit</Text>
       </Box>
     </Box>
   );

@@ -10,7 +10,7 @@ import type { Agent, Comment as AiComment, Document } from "@roast/ai";
 import { checkJobTimeout } from "../../../shared/jobContext";
 import { PluginType } from "../../../analysis-plugins/types/plugin-types";
 import { PluginManager } from "../../../analysis-plugins/PluginManager";
-import type { TaskResult } from "../shared/types";
+import type { DocumentAnalysisResult } from "../shared/types";
 
 export interface UnifiedAnalysisOptions {
   targetHighlights?: number;
@@ -19,22 +19,17 @@ export interface UnifiedAnalysisOptions {
     include?: readonly PluginType[];
     exclude?: readonly PluginType[];
   };
+  /** Profile ID for FallacyCheckPlugin configuration */
+  fallacyCheckProfileId?: string;
+  /** Agent ID for FallacyCheckPlugin default profile loading */
+  fallacyCheckAgentId?: string;
 }
 
 export async function analyzeDocumentUnified(
   document: Document,
   agentInfo: Agent,
   options: UnifiedAnalysisOptions = {}
-): Promise<{
-  thinking: string;
-  analysis: string;
-  summary: string;
-  grade?: number;
-  selfCritique?: string;
-  highlights: AiComment[];
-  tasks: TaskResult[];
-  jobLogString?: string;
-}> {
+): Promise<DocumentAnalysisResult> {
   // Check timeout before starting plugin analysis
   checkJobTimeout();
 
@@ -46,6 +41,9 @@ export async function analyzeDocumentUnified(
       include: options.plugins.include ? [...options.plugins.include] : undefined,
       exclude: options.plugins.exclude ? [...options.plugins.exclude] : undefined,
     } : undefined,
+    // Pass profile options for FallacyCheckPlugin
+    fallacyCheckProfileId: options.fallacyCheckProfileId,
+    fallacyCheckAgentId: options.fallacyCheckAgentId,
   });
 
   // Delegate to plugin system
@@ -56,7 +54,7 @@ export async function analyzeDocumentUnified(
   // Filter and convert comments as needed
   const validAiComments = result.highlights.filter(
     (h): h is AiComment =>
-      !!(h.description && h.highlight && typeof h.highlight?.isValid === "boolean")
+      !!(h.description && h.highlight && typeof h.highlight.isValid === "boolean")
   );
 
   return {
@@ -68,6 +66,7 @@ export async function analyzeDocumentUnified(
     highlights: aiCommentsToDbComments(validAiComments) as any,
     tasks: result.tasks,
     jobLogString: result.jobLogString,
+    pipelineTelemetry: result.pipelineTelemetry,
   };
 }
 

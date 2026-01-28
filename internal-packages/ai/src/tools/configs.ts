@@ -1,7 +1,7 @@
 // Tool configurations for client-side use (no implementations)
 // These can be safely imported in browser code
 // This is the single source of truth for tool metadata
-import type { ToolConfig } from "./base/Tool";
+import type { ToolConfig } from "./base/types";
 
 // ============================================================================
 // Tool Configs - Single Source of Truth
