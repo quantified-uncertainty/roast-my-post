@@ -1,6 +1,5 @@
-import { SVGProps } from "react";
+"use client";
 
-// Import inline React SVG components (Turbopack compatible)
 import {
   EaFallacyAuditorIcon,
   FallacyVerificationIcon,
@@ -16,7 +15,7 @@ import {
  * AgentIcon component
  * Displays an icon for a system agent based on its ID
  *
- * Uses SVGR to inline SVG icons at build time for fill="currentColor" support.
+ * Uses react-inlinesvg to load SVG files at runtime with fill="currentColor" support.
  */
 
 interface AgentIconProps {
@@ -25,8 +24,8 @@ interface AgentIconProps {
   className?: string;
 }
 
-// Map agent icon names to their SVGR components
-const iconMap: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
+// Map agent icon names to their icon components
+const iconMap: Record<string, typeof EaFallacyAuditorIcon> = {
   // New agent IDs (current)
   "ea-fallacy-auditor": EaFallacyAuditorIcon,
   "fallacy-check": FallacyCheckIcon,
