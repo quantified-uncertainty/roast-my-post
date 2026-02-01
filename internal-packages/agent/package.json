@@ -1,0 +1,27 @@
+{
+  "name": "@roast/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "start": "dotenv -e ../../apps/web/.env.local -- node --import tsx/esm src/cli/run-agent.ts",
+    "build": "tsc --build",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.29",
+    "@roast/ai": "workspace:*",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "dotenv-cli": "^7.4.4",
+    "typescript": "^5",
+    "tsx": "^4.7.0"
+  }
+}
