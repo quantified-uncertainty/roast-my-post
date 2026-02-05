@@ -12,7 +12,7 @@ interface UseProfilesReturn {
   setDefault: (id: string) => Promise<void>;
 }
 
-export function useProfiles(agentId: string): UseProfilesReturn {
+export function useProfiles(agentId: string, pluginType = "fallacy-check"): UseProfilesReturn {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export function useProfiles(agentId: string): UseProfilesReturn {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/monitor/lab/profiles?agentId=${agentId}`);
+      const res = await fetch(`/api/monitor/lab/profiles?agentId=${agentId}&pluginType=${pluginType}`);
       if (!res.ok) throw new Error("Failed to fetch profiles");
       const data = await res.json();
       setProfiles(data.profiles);
@@ -34,7 +34,7 @@ export function useProfiles(agentId: string): UseProfilesReturn {
     } finally {
       setLoading(false);
     }
-  }, [agentId]);
+  }, [agentId, pluginType]);
 
   useEffect(() => {
     void refresh();
@@ -45,7 +45,7 @@ export function useProfiles(agentId: string): UseProfilesReturn {
       const res = await fetch("/api/monitor/lab/profiles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, agentId, config }),
+        body: JSON.stringify({ name, description, agentId, config, pluginType }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -55,7 +55,7 @@ export function useProfiles(agentId: string): UseProfilesReturn {
       await refresh();
       return data.profile;
     },
-    [agentId, refresh]
+    [agentId, pluginType, refresh]
   );
 
   const updateProfile = useCallback(

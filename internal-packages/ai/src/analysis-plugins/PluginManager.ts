@@ -33,6 +33,7 @@ import { LinkPlugin } from "./plugins/link-analysis";
 import { MathPlugin } from "./plugins/math";
 import { SpellingPlugin } from "./plugins/spelling";
 import { FallacyCheckPlugin } from "./plugins/fallacy-check";
+import { AgenticPlugin } from "./plugins/agentic";
 import {
   AnalysisResult,
   SimpleAnalysisPlugin,
@@ -153,6 +154,7 @@ export class PluginManager {
     this.registry.register(PluginType.LINK_ANALYSIS, LinkPlugin);
     this.registry.register(PluginType.FACT_CHECK, FactCheckPlugin);
     this.registry.register(PluginType.FALLACY_CHECK, FallacyCheckPlugin);
+    this.registry.register(PluginType.AGENTIC, AgenticPlugin);
   }
 
   /**
@@ -698,6 +700,7 @@ export class PluginManager {
         profileId: this.fallacyCheckProfileId,
         agentId: this.fallacyCheckAgentId,
       })],
+      [PluginType.AGENTIC, new AgenticPlugin()],
     ]);
 
     logger.info(`Created fresh instances of ${plugins.size} plugins`, {

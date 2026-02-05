@@ -721,7 +721,7 @@ export class MetaEvaluationRepository {
    * Returns documents that have been evaluated by the specified agent.
    */
   async getValidationCorpusDocuments(
-    agentId: string,
+    agentId: string | undefined,
     options: { limit?: number; minContentLength?: number; filter?: string } = {}
   ): Promise<
     Array<{
@@ -733,6 +733,40 @@ export class MetaEvaluationRepository {
     }>
   > {
     const { limit = 50, minContentLength = 100, filter } = options;
+
+    // When no agentId, return all documents directly
+    if (!agentId) {
+      const documents = await this.prisma.document.findMany({
+        where: {
+          ...(filter && {
+            versions: { some: { title: { contains: filter, mode: "insensitive" } } },
+          }),
+        },
+        include: {
+          versions: {
+            orderBy: { version: "desc" },
+            take: 1,
+            select: { title: true, content: true },
+          },
+          _count: { select: { evaluations: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      });
+
+      return documents
+        .filter((d) => {
+          const content = d.versions[0]?.content;
+          return content && content.length >= minContentLength;
+        })
+        .map((d) => ({
+          documentId: d.id,
+          title: d.versions[0]?.title || "Unknown",
+          contentLength: d.versions[0]?.content.length || 0,
+          lastEvaluatedAt: null,
+          evaluationCount: d._count.evaluations,
+        }));
+    }
 
     // Get documents that have evaluations from this agent
     const evaluations = await this.prisma.evaluation.findMany({
