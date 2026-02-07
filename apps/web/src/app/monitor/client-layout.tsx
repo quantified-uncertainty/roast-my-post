@@ -11,10 +11,13 @@ export default function MonitorLayout({ children }: MonitorLayoutProps) {
   const pathname = usePathname();
 
   const getLinkClass = (href: string) => {
-    const isActive = pathname === href || (href === "/monitor" && pathname === "/monitor");
+    const isActive =
+      pathname === href ||
+      (href === "/monitor" && pathname === "/monitor") ||
+      (href === "/monitor/lab" && pathname.startsWith("/monitor/lab"));
     return `font-medium transition-colors ${
-      isActive 
-        ? "text-blue-600 border-b-2 border-blue-600" 
+      isActive
+        ? "text-blue-600 border-b-2 border-blue-600"
         : "text-gray-600 hover:text-gray-900"
     }`;
   };
@@ -60,12 +63,6 @@ export default function MonitorLayout({ children }: MonitorLayoutProps) {
                   className={getLinkClass("/monitor/lab")}
                 >
                   Lab
-                </Link>
-                <Link
-                  href="/monitor/agentic"
-                  className={getLinkClass("/monitor/agentic")}
-                >
-                  Agentic
                 </Link>
               </nav>
             </div>

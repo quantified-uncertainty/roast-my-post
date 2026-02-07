@@ -22,6 +22,8 @@ import { CommentBuilder } from "../../utils/CommentBuilder";
 import { logger } from "../../../shared/logger";
 import { findTextLocation } from "../../../tools/smart-text-searcher/core";
 import { loadAgenticProfileOrDefault } from "./profile-loader";
+import { buildAgenticQueryOptions } from "./orchestrator";
+import { createEvaluationServer } from "./tools";
 
 // ---------------------------------------------------------------------------
 // Streaming event types
@@ -35,12 +37,57 @@ export type AgenticStreamEvent =
   | { type: "status"; message: string }
   | { type: "cost_update"; cost: number; turns: number }
   | { type: "result"; findings: number; grade: number; cost: number }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  // Sub-agent tracking events (v2 multi-agent mode)
+  | { type: "subagent_start"; agentName: string; taskId: string }
+  | { type: "subagent_text"; agentName: string; text: string }
+  | { type: "subagent_tool_use"; agentName: string; toolName: string; input: string }
+  | { type: "subagent_tool_result"; agentName: string; output: string }
+  | { type: "subagent_complete"; agentName: string; taskId: string };
 
 export interface AgenticPluginOptions {
   onMessage?: (event: AgenticStreamEvent) => void;
   maxBudgetUsd?: number;
   profileId?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-agent tracker — maps SDK tool_use IDs to agent names
+// ---------------------------------------------------------------------------
+
+export class SubAgentTracker {
+  // Maps tool_use_id (from Task tool calls) → agentName
+  private taskMap = new Map<string, string>();
+
+  /**
+   * When the orchestrator calls the Task tool, extract the agent name
+   * from the input and remember the mapping.
+   */
+  trackTaskSpawn(toolUseId: string, input: unknown): string | null {
+    if (!input || typeof input !== "object") return null;
+    const inp = input as Record<string, unknown>;
+
+    // The Task tool input typically has a "description" or "prompt" field
+    // that indicates which subagent is being spawned. The SDK uses
+    // "subagent_type" or the agent name directly.
+    const agentName =
+      (typeof inp.subagent_type === "string" && inp.subagent_type) ||
+      (typeof inp.description === "string" && inp.description) ||
+      null;
+
+    if (agentName) {
+      this.taskMap.set(toolUseId, agentName);
+    }
+    return agentName;
+  }
+
+  /**
+   * Look up the agent name for a message that has a parent_tool_use_id.
+   */
+  getAgentName(parentToolUseId: string | undefined): string | null {
+    if (!parentToolUseId) return null;
+    return this.taskMap.get(parentToolUseId) ?? null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -231,20 +278,33 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     documentText: string
   ): Promise<AgenticAnalysisOutput> {
     const config = await loadAgenticProfileOrDefault(this.profileId, "system-agentic");
-    const systemPrompt = config.systemPrompt || AGENTIC_SYSTEM_PROMPT;
+    logger.info(`Loaded agentic config: version=${config.version} enableSubAgents=${config.enableSubAgents} model=${config.model} profileId=${this.profileId ?? "default"}`);
+
+    // Create MCP evaluation server with config (e.g., fallacy checker profile)
+    const evaluationServer = createEvaluationServer({
+      fallacyCheckProfileId: config.fallacyCheckProfileId,
+    });
+
+    // Build SDK options — branches between single-agent and multi-agent modes
+    const queryOptions = buildAgenticQueryOptions(config, evaluationServer);
 
     const prompt = `<document>\n${documentText}\n</document>\n\nAnalyze this document thoroughly. For each issue found, quote the exact text from the document.`;
+
+    // Create sub-agent tracker for v2 mode
+    const tracker = config.enableSubAgents ? new SubAgentTracker() : null;
+
+    if (config.enableSubAgents) {
+      const agentNames = queryOptions.agents ? Object.keys(queryOptions.agents) : [];
+      this.emit({
+        type: "status",
+        message: `Multi-agent mode enabled with ${agentNames.length} sub-agents: ${agentNames.join(", ")}${config.enableMcpTools ? " (MCP tools ON)" : ""}`,
+      });
+    }
 
     for await (const message of query({
       prompt,
       options: {
-        model: config.model,
-        maxTurns: config.maxTurns,
-        maxBudgetUsd: config.maxBudgetUsd,
-        systemPrompt,
-        allowedTools: config.allowedTools,
-        permissionMode: config.permissionMode,
-        ...(config.maxThinkingTokens && { maxThinkingTokens: config.maxThinkingTokens }),
+        ...queryOptions,
         persistSession: false,
         outputFormat: {
           type: "json_schema",
@@ -258,19 +318,42 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
           model: message.model,
           tools: message.tools,
         });
+        // Log agent info if present
+        if ("agents" in message && Array.isArray(message.agents) && message.agents.length > 0) {
+          this.emit({
+            type: "status",
+            message: `SDK initialized with agents: ${(message.agents as string[]).join(", ")}`,
+          });
+        }
       } else if (message.type === "assistant") {
+        const agentName = tracker?.getAgentName(message.parent_tool_use_id ?? undefined);
+
         for (const block of message.message.content) {
           if (block.type === "text") {
-            this.emit({ type: "assistant_text", text: block.text });
+            this.emit(
+              agentName
+                ? { type: "subagent_text", agentName, text: block.text }
+                : { type: "assistant_text", text: block.text }
+            );
           } else if (block.type === "tool_use") {
-            this.emit({
-              type: "tool_use",
-              toolName: block.name,
-              input: JSON.stringify(block.input),
-            });
+            // Track Task tool spawns for sub-agent mapping
+            if (block.name === "Task" && tracker) {
+              const spawned = tracker.trackTaskSpawn(block.id, block.input);
+              if (spawned) {
+                this.emit({ type: "subagent_start", agentName: spawned, taskId: block.id });
+              }
+            }
+
+            this.emit(
+              agentName
+                ? { type: "subagent_tool_use", agentName, toolName: block.name, input: JSON.stringify(block.input) }
+                : { type: "tool_use", toolName: block.name, input: JSON.stringify(block.input) }
+            );
           }
         }
       } else if (message.type === "user") {
+        const agentName = tracker?.getAgentName(message.parent_tool_use_id ?? undefined);
+
         // Extract full tool result from message.message content blocks
         const parts: string[] = [];
         const msg = message.message;
@@ -300,7 +383,11 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
         }
         const output = parts.join("\n");
         if (output) {
-          this.emit({ type: "tool_result", output });
+          this.emit(
+            agentName
+              ? { type: "subagent_tool_result", agentName, output }
+              : { type: "tool_result", output }
+          );
         }
       } else if (message.type === "result") {
         if (message.subtype === "success") {

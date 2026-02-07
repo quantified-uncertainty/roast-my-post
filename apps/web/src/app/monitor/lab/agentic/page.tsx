@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAgenticStream } from "./hooks/useAgenticStream";
-import { useProfiles, getActiveProfile } from "../lab/hooks/useProfiles";
+import { useProfiles, getActiveProfile } from "../hooks/useProfiles";
 import { ActivityFeed } from "./components/ActivityFeed";
 import { ResultsPanel } from "./components/ResultsPanel";
 import { DocumentPickerModal } from "./components/DocumentPickerModal";

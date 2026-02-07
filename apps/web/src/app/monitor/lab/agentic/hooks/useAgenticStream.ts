@@ -1,7 +1,21 @@
 import { useState, useRef, useCallback } from "react";
 
 export interface AgenticStreamEvent {
-  type: "init" | "assistant_text" | "tool_use" | "tool_result" | "status" | "cost_update" | "result" | "error";
+  type:
+    | "init"
+    | "assistant_text"
+    | "tool_use"
+    | "tool_result"
+    | "status"
+    | "cost_update"
+    | "result"
+    | "error"
+    // Sub-agent events (v2 multi-agent mode)
+    | "subagent_start"
+    | "subagent_text"
+    | "subagent_tool_use"
+    | "subagent_tool_result"
+    | "subagent_complete";
   [key: string]: unknown;
 }
 

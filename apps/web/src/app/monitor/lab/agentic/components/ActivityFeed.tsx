@@ -51,6 +51,32 @@ function formatEvent(event: AgenticStreamEvent): { label: string; color: string 
         label: `Error: ${event.message}`,
         color: "text-red-600",
       };
+    // Sub-agent events (v2 multi-agent mode)
+    case "subagent_start":
+      return {
+        label: `Sub-agent started: ${event.agentName}`,
+        color: "text-purple-600 font-medium",
+      };
+    case "subagent_text":
+      return {
+        label: `[${event.agentName}] ${event.text}`,
+        color: "text-purple-700",
+      };
+    case "subagent_tool_use":
+      return {
+        label: `[${event.agentName}] Using: ${event.toolName}`,
+        color: "text-orange-500",
+      };
+    case "subagent_tool_result":
+      return {
+        label: `[${event.agentName}] ${event.output}`,
+        color: "text-teal-500",
+      };
+    case "subagent_complete":
+      return {
+        label: `Sub-agent done: ${event.agentName}`,
+        color: "text-green-500",
+      };
     default:
       return {
         label: JSON.stringify(event),

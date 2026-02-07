@@ -89,8 +89,14 @@ const profileConfigSchema = z.object({
   filterChain: z.array(filterChainItemSchema),
 });
 
+const subAgentConfigSchema = z.object({
+  enabled: z.boolean(),
+  model: z.enum(["sonnet", "opus", "haiku", "inherit"]).optional(),
+  maxTurns: z.number().min(1).max(50).optional(),
+});
+
 const agenticConfigSchema = z.object({
-  version: z.literal(1),
+  version: z.union([z.literal(1), z.literal(2)]),
   model: z.enum(["sonnet", "opus", "haiku"]),
   maxTurns: z.number().min(1).max(50),
   maxBudgetUsd: z.number().min(0.01).max(10),
@@ -98,6 +104,13 @@ const agenticConfigSchema = z.object({
   allowedTools: z.array(z.string()),
   systemPrompt: z.string(),
   permissionMode: z.enum(["default", "acceptEdits", "plan"]),
+  // v2 multi-agent fields
+  enableSubAgents: z.boolean().optional(),
+  subAgents: z.record(z.string(), subAgentConfigSchema).optional(),
+  orchestratorPrompt: z.string().optional(),
+  enableMcpTools: z.boolean().optional(),
+  // MCP tool configuration
+  fallacyCheckProfileId: z.string().optional(),
 });
 
 const updateProfileSchema = z.object({

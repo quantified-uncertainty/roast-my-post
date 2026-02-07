@@ -76,6 +76,10 @@
     "./supported-elsewhere-filter/prompts": {
       "types": "./src/tools/supported-elsewhere-filter/prompts.ts",
       "default": "./src/tools/supported-elsewhere-filter/prompts.ts"
+    },
+    "./agentic/prompts": {
+      "types": "./src/analysis-plugins/plugins/agentic/orchestrator.ts",
+      "default": "./src/analysis-plugins/plugins/agentic/orchestrator.ts"
     }
   },
   "scripts": {
