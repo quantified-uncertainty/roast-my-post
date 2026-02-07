@@ -120,7 +120,9 @@ export async function GET(request: NextRequest) {
           passedItems: telemetry.passedItems,
           pipelineCounts: telemetry.finalCounts,
           totalDurationMs: telemetry.totalDurationMs,
-          totalCostUsd: telemetry.totalCostUsd,
+          // Unified cost field: agentic uses costUsd, fallacy checker uses totalCostUsd
+          totalCostUsd: (telemetry.costUsd ?? telemetry.totalCostUsd) as number | undefined,
+          profileName: telemetry.profileName as string | undefined,
           documentLength: telemetry.documentLength,
           profileInfo: telemetry.profileInfo,
         } : null,

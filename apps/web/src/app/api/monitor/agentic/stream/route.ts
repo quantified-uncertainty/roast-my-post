@@ -1,11 +1,124 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@roast/db";
 import { AgenticPlugin } from "@roast/ai/server";
-import type { AgenticStreamEvent } from "@roast/ai/server";
+import type { AgenticStreamEvent, AnalysisResult } from "@roast/ai/server";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
 import { logger } from "@/infrastructure/logging/logger";
+
+const AGENTIC_AGENT_ID = "system-agentic";
+
+interface PersistParams {
+  documentId: string;
+  documentVersionId: string;
+  profileId?: string;
+  result: AnalysisResult;
+}
+
+async function persistAgenticResult({ documentId, documentVersionId, profileId, result }: PersistParams) {
+  // Get or create the evaluation for this document + agent
+  let evaluation = await prisma.evaluation.findUnique({
+    where: {
+      documentId_agentId: {
+        documentId,
+        agentId: AGENTIC_AGENT_ID,
+      },
+    },
+  });
+
+  if (!evaluation) {
+    evaluation = await prisma.evaluation.create({
+      data: {
+        documentId,
+        agentId: AGENTIC_AGENT_ID,
+      },
+    });
+  }
+
+  // Get the next version number
+  const lastVersion = await prisma.evaluationVersion.findFirst({
+    where: { evaluationId: evaluation.id },
+    orderBy: { version: "desc" },
+    select: { version: true },
+  });
+  const nextVersion = (lastVersion?.version ?? 0) + 1;
+
+  // Get the current agent version
+  const agentVersion = await prisma.agentVersion.findFirst({
+    where: { agentId: AGENTIC_AGENT_ID },
+    orderBy: { version: "desc" },
+    select: { id: true },
+  });
+
+  if (!agentVersion) {
+    logger.warn("No agent version found for agentic agent, skipping persistence");
+    return null;
+  }
+
+  // Fetch profile name if profileId provided
+  let profileName: string | null = null;
+  if (profileId) {
+    const profile = await prisma.pluginProfile.findUnique({
+      where: { id: profileId },
+      select: { name: true },
+    });
+    profileName = profile?.name ?? null;
+  }
+
+  // Build pipeline telemetry
+  const pipelineTelemetry = {
+    costUsd: result.cost ?? 0,
+    profileId: profileId ?? null,
+    profileName: profileName ?? "Default",
+    analysisType: "agentic",
+  };
+
+  // Create the evaluation version
+  const evalVersion = await prisma.evaluationVersion.create({
+    data: {
+      evaluationId: evaluation.id,
+      agentId: AGENTIC_AGENT_ID,
+      agentVersionId: agentVersion.id,
+      documentVersionId,
+      version: nextVersion,
+      summary: result.summary ?? null,
+      analysis: result.analysis ?? null,
+      grade: result.grade ?? null,
+      pipelineTelemetry,
+    },
+  });
+
+  // Create comments with highlights
+  for (const comment of result.comments) {
+    const highlight = await prisma.evaluationHighlight.create({
+      data: {
+        startOffset: comment.highlight.startOffset,
+        endOffset: comment.highlight.endOffset,
+        prefix: comment.highlight.prefix ?? null,
+        quotedText: comment.highlight.quotedText ?? "",
+        isValid: comment.highlight.isValid ?? true,
+        error: comment.highlight.error ?? null,
+      },
+    });
+
+    await prisma.evaluationComment.create({
+      data: {
+        evaluationVersionId: evalVersion.id,
+        highlightId: highlight.id,
+        header: comment.header ?? null,
+        description: comment.description,
+        level: comment.level ?? "info",
+        source: comment.source ?? null,
+        importance: comment.importance ?? null,
+        grade: comment.grade ?? null,
+        metadata: comment.metadata ?? undefined,
+      },
+    });
+  }
+
+  return evalVersion.id;
+}
 
 export async function POST(request: NextRequest) {
   const userId = await authenticateRequest(request);
@@ -36,7 +149,7 @@ export async function POST(request: NextRequest) {
       versions: {
         orderBy: { version: "desc" },
         take: 1,
-        select: { content: true, markdownPrepend: true, title: true },
+        select: { id: true, content: true, markdownPrepend: true, title: true },
       },
     },
   });
@@ -76,8 +189,23 @@ export async function POST(request: NextRequest) {
 
         const result = await plugin.analyze([], fullContent);
 
+        // Persist the result to the database
+        let evaluationVersionId: string | null = null;
+        try {
+          evaluationVersionId = await persistAgenticResult({
+            documentId: body.documentId,
+            documentVersionId: version.id,
+            profileId: body.profileId,
+            result,
+          });
+        } catch (persistError) {
+          logger.error("Failed to persist agentic result:", persistError);
+          // Continue - we still want to return the result even if persistence fails
+        }
+
         sendEvent({
           type: "complete",
+          evaluationVersionId,
           summary: result.summary ?? "",
           grade: result.grade ?? 0,
           cost: result.cost ?? 0,

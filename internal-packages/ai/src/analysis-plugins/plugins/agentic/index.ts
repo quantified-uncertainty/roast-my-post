@@ -318,8 +318,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
           model: message.model,
           tools: message.tools,
         });
-        // Log agent info if present
-        if ("agents" in message && Array.isArray(message.agents) && message.agents.length > 0) {
+        // Only log agent info in multi-agent mode (when we've defined custom agents)
+        if (config.enableSubAgents && "agents" in message && Array.isArray(message.agents) && message.agents.length > 0) {
           this.emit({
             type: "status",
             message: `SDK initialized with agents: ${(message.agents as string[]).join(", ")}`,

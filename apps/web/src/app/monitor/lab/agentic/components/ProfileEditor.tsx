@@ -8,6 +8,7 @@ interface SubAgentConfig {
   enabled: boolean;
   model?: "sonnet" | "opus" | "haiku" | "inherit";
   maxTurns?: number;
+  prompt?: string;
 }
 
 interface AgenticConfig {
@@ -48,7 +49,7 @@ const AVAILABLE_TOOLS = [
 const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
   "fact-checker": { enabled: true, model: "sonnet" },
   "fallacy-checker": { enabled: true, model: "sonnet" },
-  "spell-checker": { enabled: true, model: "haiku" },
+  "clarity-checker": { enabled: true, model: "haiku" },
   "math-checker": { enabled: true, model: "sonnet" },
 };
 
@@ -104,6 +105,15 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
     setDraft((prev) => {
       const subAgents = { ...DEFAULT_SUBAGENTS, ...prev.subAgents };
       subAgents[name] = { ...subAgents[name], model };
+      return { ...prev, subAgents };
+    });
+    setDirty(true);
+  }
+
+  function updateSubAgentPrompt(name: string, prompt: string) {
+    setDraft((prev) => {
+      const subAgents = { ...DEFAULT_SUBAGENTS, ...prev.subAgents };
+      subAgents[name] = { ...subAgents[name], prompt: prompt || undefined };
       return { ...prev, subAgents };
     });
     setDirty(true);
@@ -302,27 +312,50 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
           {/* Sub-Agents */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">Sub-Agents</label>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {Object.entries({ ...DEFAULT_SUBAGENTS, ...draft.subAgents }).map(([name, sa]) => (
-                <div key={name} className="flex items-center gap-3 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={sa.enabled}
-                    onChange={() => toggleSubAgent(name)}
-                    className="rounded border-gray-300"
-                  />
-                  <span className="w-36 font-mono text-xs">{name}</span>
-                  <select
-                    value={sa.model ?? "inherit"}
-                    onChange={(e) => updateSubAgentModel(name, e.target.value as SubAgentConfig["model"])}
-                    className="border border-gray-300 rounded px-1.5 py-0.5 text-xs"
-                    disabled={!sa.enabled}
-                  >
-                    <option value="inherit">Inherit</option>
-                    <option value="sonnet">Sonnet</option>
-                    <option value="opus">Opus</option>
-                    <option value="haiku">Haiku</option>
-                  </select>
+                <div key={name} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={sa.enabled}
+                      onChange={() => toggleSubAgent(name)}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="flex-1 font-mono text-xs font-medium">{name}</span>
+                    <select
+                      value={sa.model ?? "inherit"}
+                      onChange={(e) => updateSubAgentModel(name, e.target.value as SubAgentConfig["model"])}
+                      className="border border-gray-300 rounded px-1.5 py-0.5 text-xs"
+                      disabled={!sa.enabled}
+                    >
+                      <option value="inherit">Inherit</option>
+                      <option value="sonnet">Sonnet</option>
+                      <option value="opus">Opus</option>
+                      <option value="haiku">Haiku</option>
+                    </select>
+                  </div>
+                  {sa.enabled && (
+                    <div className="mt-2">
+                      <textarea
+                        value={sa.prompt ?? ""}
+                        onChange={(e) => updateSubAgentPrompt(name, e.target.value)}
+                        rows={3}
+                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs font-mono"
+                        placeholder="Leave empty to use default prompt..."
+                      />
+                      {defaultPrompts?.subAgentPrompts?.[name] && !sa.prompt && (
+                        <details className="text-xs mt-1">
+                          <summary className="text-gray-500 cursor-pointer hover:text-gray-700">
+                            View default prompt
+                          </summary>
+                          <pre className="mt-1 p-2 bg-gray-50 border rounded max-h-32 overflow-auto whitespace-pre-wrap text-gray-600">
+                            {defaultPrompts.subAgentPrompts[name]}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

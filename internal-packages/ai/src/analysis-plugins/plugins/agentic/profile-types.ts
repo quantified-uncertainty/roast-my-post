@@ -9,6 +9,7 @@ export interface SubAgentConfig {
   enabled: boolean;
   model?: "sonnet" | "opus" | "haiku" | "inherit";
   maxTurns?: number;
+  prompt?: string; // Custom prompt override (empty = use default)
 }
 
 export interface AgenticProfileConfig {
@@ -34,7 +35,7 @@ export interface AgenticProfileConfig {
 export const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
   "fact-checker": { enabled: true, model: "sonnet" },
   "fallacy-checker": { enabled: true, model: "sonnet" },
-  "spell-checker": { enabled: true, model: "haiku" },
+  "clarity-checker": { enabled: true, model: "haiku" },
   "math-checker": { enabled: true, model: "sonnet" },
 };
 
@@ -127,6 +128,7 @@ export function validateAgenticConfig(raw: unknown): AgenticProfileConfig {
             typeof sa.maxTurns === "number" && sa.maxTurns >= 1 && sa.maxTurns <= 50
               ? sa.maxTurns
               : undefined,
+          prompt: typeof sa.prompt === "string" ? sa.prompt : undefined,
         };
       }
     }

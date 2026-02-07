@@ -31,7 +31,7 @@ export {
   SpellingPlugin,
   AgenticPlugin,
 } from './analysis-plugins';
-export type { AgenticStreamEvent, AgenticPluginOptions } from './analysis-plugins';
+export type { AgenticStreamEvent, AgenticPluginOptions, AnalysisResult } from './analysis-plugins';
 
 // Job context (uses AsyncLocalStorage)
 export {
