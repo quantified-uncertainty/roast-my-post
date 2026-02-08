@@ -49,6 +49,8 @@ export interface AgenticPluginOptions {
   onMessage?: (event: AgenticStreamEvent) => void;
   maxBudgetUsd?: number;
   profileId?: string;
+  /** Path to temp workspace where document and findings are stored */
+  workspacePath?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -198,11 +200,13 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
   private onMessage?: (event: AgenticStreamEvent) => void;
   private maxBudgetUsd: number;
   private profileId?: string;
+  private workspacePath?: string;
 
   constructor(options?: AgenticPluginOptions) {
     this.onMessage = options?.onMessage;
     this.maxBudgetUsd = options?.maxBudgetUsd ?? 2.0;
     this.profileId = options?.profileId;
+    this.workspacePath = options?.workspacePath;
   }
 
   name(): string {
@@ -286,9 +290,14 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     });
 
     // Build SDK options — branches between single-agent and multi-agent modes
-    const queryOptions = buildAgenticQueryOptions(config, evaluationServer);
+    const queryOptions = buildAgenticQueryOptions(config, evaluationServer, this.workspacePath);
 
-    const prompt = `<document>\n${documentText}\n</document>\n\nAnalyze this document thoroughly. For each issue found, quote the exact text from the document.`;
+    // If workspace is available, tell the agent where to find the document
+    const workspaceInfo = this.workspacePath
+      ? `\n\nThe document is available at: ${this.workspacePath}/document.md\nYou can use Read, Grep, and Glob tools to access it. You may also write notes to the workspace.`
+      : "";
+
+    const prompt = `<document>\n${documentText}\n</document>\n\nAnalyze this document thoroughly. For each issue found, quote the exact text from the document.${workspaceInfo}`;
 
     // Create sub-agent tracker for v2 mode
     const tracker = config.enableSubAgents ? new SubAgentTracker() : null;

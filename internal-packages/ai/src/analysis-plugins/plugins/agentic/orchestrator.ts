@@ -36,6 +36,17 @@ Your job is to systematically analyze documents by decomposing the task, delegat
    - **clarity-checker**: Assesses writing quality, coherence, misleading framing, missing context
    - **math-checker**: Validates calculations, statistics, and methodological soundness
 
+   **CRITICAL**: When spawning sub-agents, you MUST include the document content in the task prompt!
+   Sub-agents cannot see the document unless you provide it. Format your task prompts like:
+
+   "Analyze this document for [specific task]:
+
+   <document>
+   [paste the full document content here]
+   </document>
+
+   Focus on: [specific aspects to check]"
+
 3. **TRIANGULATE**: Compare findings across sub-agents:
    - Look for corroborating evidence from multiple angles
    - Identify conflicts between findings that need resolution
@@ -253,18 +264,23 @@ const SUBAGENT_DESCRIPTIONS: Record<string, string> = {
   "math-checker": "Validates calculations, statistics, and methodological soundness",
 };
 
-// Which sub-agents get web search tools (vs pure reasoning)
+// Which sub-agents get web search tools
 const SUBAGENTS_WITH_WEB_TOOLS = new Set([
   "fact-checker",
+  "fallacy-checker", // Can verify cited sources, check appeals to authority
   "math-checker",
 ]);
+
+// File tools for workspace access
+const FILE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "TodoWrite"] as const;
 
 // ---------------------------------------------------------------------------
 // Build sub-agent definitions from profile config
 // ---------------------------------------------------------------------------
 
 export function buildSubAgentDefinitions(
-  config: AgenticProfileConfig
+  config: AgenticProfileConfig,
+  workspacePath?: string
 ): Record<string, AgentDefinition> {
   const subAgentConfigs = config.subAgents ?? DEFAULT_SUBAGENTS;
   const agents: Record<string, AgentDefinition> = {};
@@ -276,10 +292,24 @@ export function buildSubAgentDefinitions(
     if (!defaultPrompt) continue;
 
     // Use custom prompt if provided, otherwise use default
-    const prompt = sa.prompt?.trim() || defaultPrompt;
+    let prompt = sa.prompt?.trim() || defaultPrompt;
+
+    // If workspace is available, add it to the prompt
+    if (workspacePath) {
+      prompt += `\n\n## Workspace\nThe document is available at: ${workspacePath}/document.md
+- Use Read to access the document
+- Use Grep to search for specific text
+- Use Write to save your findings to ${workspacePath}/findings/
+- Use TodoWrite to track your investigation progress`;
+    }
 
     // Build tools list
     const tools: string[] = [];
+
+    // File tools for workspace access (always available when workspace exists)
+    if (workspacePath) {
+      tools.push(...FILE_TOOLS);
+    }
 
     // Web tools for agents that need them
     if (SUBAGENTS_WITH_WEB_TOOLS.has(name)) {
@@ -331,19 +361,25 @@ function getMcpToolsForAgent(agentName: string): string[] {
 
 export function buildAgenticQueryOptions(
   config: AgenticProfileConfig,
-  evaluationServer: McpSdkServerConfigWithInstance
+  evaluationServer: McpSdkServerConfigWithInstance,
+  workspacePath?: string
 ): Partial<Options> {
-  logger.info(`buildAgenticQueryOptions: version=${config.version} enableSubAgents=${config.enableSubAgents} enableMcpTools=${config.enableMcpTools}`);
+  logger.info(`buildAgenticQueryOptions: version=${config.version} enableSubAgents=${config.enableSubAgents} enableMcpTools=${config.enableMcpTools} workspace=${workspacePath ?? "none"}`);
 
   if (!config.enableSubAgents) {
     // Single-agent mode - explicitly pass empty agents to disable built-in agents
     logger.info("Using single-agent mode");
+    const allowedTools = [...config.allowedTools];
+    // Add file tools if workspace is available
+    if (workspacePath) {
+      allowedTools.push(...FILE_TOOLS);
+    }
     return {
       model: config.model,
       maxTurns: config.maxTurns,
       maxBudgetUsd: config.maxBudgetUsd,
       systemPrompt: config.systemPrompt || AGENTIC_SYSTEM_PROMPT,
-      allowedTools: config.allowedTools,
+      allowedTools,
       permissionMode: config.permissionMode,
       agents: {}, // Disable built-in agents like Bash, Explore, etc.
       ...(config.maxThinkingTokens && { maxThinkingTokens: config.maxThinkingTokens }),
@@ -351,7 +387,7 @@ export function buildAgenticQueryOptions(
   }
 
   // Multi-agent mode
-  const agents = buildSubAgentDefinitions(config);
+  const agents = buildSubAgentDefinitions(config, workspacePath);
   logger.info(`Using multi-agent mode with ${Object.keys(agents).length} agents: ${Object.keys(agents).join(", ")}`);
 
   // Build allowed tools for orchestrator
@@ -359,6 +395,11 @@ export function buildAgenticQueryOptions(
     "Task", // Required for spawning sub-agents
     ...config.allowedTools,
   ];
+
+  // Add file tools if workspace is available
+  if (workspacePath) {
+    allowedTools.push(...FILE_TOOLS);
+  }
 
   // Add MCP tool names to allowed list if MCP tools are enabled
   if (config.enableMcpTools) {

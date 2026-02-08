@@ -25,12 +25,13 @@ export default function LabSelectionPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Fallacy Checker Lab</h2>
-              <p className="text-sm text-gray-500">Multi-extractor pipeline</p>
+              <p className="text-sm text-gray-500">Configurable analysis pipeline</p>
             </div>
           </div>
           <p className="text-gray-600 text-sm">
-            Configure and test the fallacy checker with multiple extractors,
-            judge models, and filter chains. Compare runs against baselines.
+            Build and iterate on fallacy detection pipelines with configurable
+            components. Create profiles, run analyses with deep introspection,
+            and compare runs to catch regressions and improvements.
           </p>
         </Link>
 
@@ -45,12 +46,12 @@ export default function LabSelectionPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Agentic Lab</h2>
-              <p className="text-sm text-gray-500">Claude Agent SDK</p>
+              <p className="text-sm text-gray-500">Agentic plugin</p>
             </div>
           </div>
           <p className="text-gray-600 text-sm">
-            Test agentic document analysis with web search, multi-agent orchestration,
-            and MCP evaluation tools. Stream results in real-time.
+            Develop and test the agentic analysis plugin — autonomous investigation,
+            evidence gathering, and reasoning about document claims.
           </p>
         </Link>
       </div>

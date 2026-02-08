@@ -119,7 +119,8 @@ export async function GET(request: NextRequest) {
           filteredItems: telemetry.filteredItems,
           passedItems: telemetry.passedItems,
           pipelineCounts: telemetry.finalCounts,
-          totalDurationMs: telemetry.totalDurationMs,
+          // Unified duration field: agentic uses durationMs, fallacy checker uses totalDurationMs
+          totalDurationMs: (telemetry.durationMs ?? telemetry.totalDurationMs) as number | undefined,
           // Unified cost field: agentic uses costUsd, fallacy checker uses totalCostUsd
           totalCostUsd: (telemetry.costUsd ?? telemetry.totalCostUsd) as number | undefined,
           profileName: telemetry.profileName as string | undefined,

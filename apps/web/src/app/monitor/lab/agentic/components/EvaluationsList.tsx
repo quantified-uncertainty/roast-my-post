@@ -7,6 +7,7 @@ import {
   ArrowPathIcon,
   DocumentTextIcon,
   CurrencyDollarIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 import type { AgenticEvaluation } from "../hooks/useAgenticEvaluations";
 
@@ -132,7 +133,17 @@ function EvaluationRow({ evaluation, isExpanded, onToggle }: EvaluationRowProps)
   });
 
   const cost = evaluation.telemetry?.totalCostUsd;
+  const durationMs = evaluation.telemetry?.totalDurationMs;
   const profileName = evaluation.telemetry?.profileName;
+
+  // Format duration as "Xm Ys" or "Xs"
+  const formatDuration = (ms: number) => {
+    const seconds = Math.round(ms / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+  };
 
   return (
     <div className="bg-white">
@@ -175,6 +186,14 @@ function EvaluationRow({ evaluation, isExpanded, onToggle }: EvaluationRowProps)
             <DocumentTextIcon className="w-4 h-4" />
             {evaluation.comments.length}
           </span>
+
+          {/* Duration */}
+          {durationMs !== undefined && (
+            <span className="flex items-center gap-1">
+              <ClockIcon className="w-4 h-4" />
+              {formatDuration(durationMs)}
+            </span>
+          )}
 
           {/* Cost */}
           {cost !== undefined && (

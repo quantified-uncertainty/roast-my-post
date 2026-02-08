@@ -20,6 +20,7 @@ export interface AgenticEvaluation {
   }[];
   telemetry: {
     totalCostUsd?: number;
+    totalDurationMs?: number;
     profileName?: string | null;
   } | null;
 }

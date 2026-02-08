@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
+import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
 import type { AgenticStreamEvent } from "../hooks/useAgenticStream";
 
 interface ActivityFeedProps {
@@ -110,6 +111,7 @@ function EventRow({ index, event }: { index: number; event: AgenticStreamEvent }
 
 export function ActivityFeed({ events }: ActivityFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -117,6 +119,21 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
       el.scrollTop = el.scrollHeight;
     }
   }, [events.length]);
+
+  const handleCopy = useCallback(() => {
+    // Format events as plain text for copying
+    const text = events
+      .map((event) => {
+        const { label } = formatEvent(event);
+        return `${event.type}${label}`;
+      })
+      .join("\n");
+
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [events]);
 
   if (events.length === 0) {
     return (
@@ -127,10 +144,34 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
   }
 
   return (
-    <div ref={containerRef} className="overflow-y-auto h-full space-y-1 p-3 font-mono text-xs">
-      {events.map((event, i) => (
-        <EventRow key={i} index={i} event={event} />
-      ))}
+    <div className="flex flex-col h-full">
+      {/* Header with copy button */}
+      <div className="flex-shrink-0 flex items-center justify-between px-3 py-1.5 border-b bg-gray-50">
+        <span className="text-xs text-gray-500">{events.length} events</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+          title="Copy activity feed to clipboard"
+        >
+          {copied ? (
+            <>
+              <CheckIcon className="h-3.5 w-3.5 text-green-600" />
+              <span className="text-green-600">Copied</span>
+            </>
+          ) : (
+            <>
+              <ClipboardDocumentIcon className="h-3.5 w-3.5" />
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+      {/* Events list */}
+      <div ref={containerRef} className="flex-1 overflow-y-auto space-y-1 p-3 font-mono text-xs">
+        {events.map((event, i) => (
+          <EventRow key={i} index={i} event={event} />
+        ))}
+      </div>
     </div>
   );
 }

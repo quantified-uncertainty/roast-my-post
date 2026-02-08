@@ -6,6 +6,9 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
 import { logger } from "@/infrastructure/logging/logger";
+import { mkdir, writeFile, rm } from "fs/promises";
+import { randomUUID } from "crypto";
+import { join } from "path";
 
 const AGENTIC_AGENT_ID = "system-agentic";
 
@@ -14,9 +17,10 @@ interface PersistParams {
   documentVersionId: string;
   profileId?: string;
   result: AnalysisResult;
+  durationMs: number;
 }
 
-async function persistAgenticResult({ documentId, documentVersionId, profileId, result }: PersistParams) {
+async function persistAgenticResult({ documentId, documentVersionId, profileId, result, durationMs }: PersistParams) {
   // Get or create the evaluation for this document + agent
   let evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -72,6 +76,7 @@ async function persistAgenticResult({ documentId, documentVersionId, profileId, 
     profileId: profileId ?? null,
     profileName: profileName ?? "Default",
     analysisType: "agentic",
+    durationMs,
   };
 
   // Create the evaluation version
@@ -163,6 +168,10 @@ export async function POST(request: NextRequest) {
     ? `${version.markdownPrepend}\n\n${version.content}`
     : version.content;
 
+  // Create temp workspace for agents to read/write
+  const workspaceId = randomUUID();
+  const workspacePath = join("/tmp", `agentic-${workspaceId}`);
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -178,16 +187,37 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Set up workspace with document
+      try {
+        await mkdir(workspacePath, { recursive: true });
+        await mkdir(join(workspacePath, "findings"), { recursive: true });
+        await writeFile(join(workspacePath, "document.md"), fullContent, "utf-8");
+        await writeFile(
+          join(workspacePath, "metadata.json"),
+          JSON.stringify({ title: version.title, documentId: body.documentId }, null, 2),
+          "utf-8"
+        );
+        logger.info(`Created workspace at ${workspacePath}`);
+      } catch (err) {
+        logger.error("Failed to create workspace:", err);
+        sendEvent({ type: "error", message: "Failed to create analysis workspace" });
+        controller.close();
+        return;
+      }
+
       const plugin = new AgenticPlugin({
         onMessage: (event: AgenticStreamEvent) => sendEvent(event),
         maxBudgetUsd: 2.0,
         profileId: body.profileId,
+        workspacePath, // Pass workspace path to plugin
       });
 
       try {
         sendEvent({ type: "status", message: `Analyzing: ${version.title}` });
 
+        const startTime = Date.now();
         const result = await plugin.analyze([], fullContent);
+        const durationMs = Date.now() - startTime;
 
         // Persist the result to the database
         let evaluationVersionId: string | null = null;
@@ -197,6 +227,7 @@ export async function POST(request: NextRequest) {
             documentVersionId: version.id,
             profileId: body.profileId,
             result,
+            durationMs,
           });
         } catch (persistError) {
           logger.error("Failed to persist agentic result:", persistError);
@@ -223,6 +254,13 @@ export async function POST(request: NextRequest) {
         logger.error("Agentic stream error:", error instanceof Error ? error : new Error(errorMessage));
         sendEvent({ type: "error", message: errorMessage });
       } finally {
+        // Clean up workspace
+        try {
+          await rm(workspacePath, { recursive: true, force: true });
+          logger.info(`Cleaned up workspace at ${workspacePath}`);
+        } catch (cleanupErr) {
+          logger.warn(`Failed to clean up workspace: ${cleanupErr instanceof Error ? cleanupErr.message : String(cleanupErr)}`);
+        }
         controller.close();
       }
     },

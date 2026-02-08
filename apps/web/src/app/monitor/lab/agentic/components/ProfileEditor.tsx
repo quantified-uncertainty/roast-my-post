@@ -35,22 +35,26 @@ interface ProfileEditorProps {
   saving?: boolean;
 }
 
-const AVAILABLE_TOOLS = [
+// Tools the orchestrator can use directly (sub-agents get tools automatically)
+const ORCHESTRATOR_TOOLS = [
   "WebSearch",
   "WebFetch",
-  "Bash",
-  "Read",
-  "Write",
-  "Edit",
-  "Glob",
-  "Grep",
 ];
 
+// These are automatically added when workspace exists - shown for info only
+const AUTO_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "TodoWrite"];
+
+// Note: These names must match SUBAGENT_PROMPTS keys in orchestrator.ts
 const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
   "fact-checker": { enabled: true, model: "sonnet" },
   "fallacy-checker": { enabled: true, model: "sonnet" },
   "clarity-checker": { enabled: true, model: "haiku" },
   "math-checker": { enabled: true, model: "sonnet" },
+};
+
+// Map old names to new names for migration
+const AGENT_NAME_MIGRATIONS: Record<string, string> = {
+  "spell-checker": "clarity-checker",
 };
 
 const DEFAULT_CONFIG: AgenticConfig = {
@@ -198,9 +202,11 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
 
       {/* Allowed Tools */}
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Allowed Tools</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">
+          Orchestrator Tools <span className="text-gray-400">(optional)</span>
+        </label>
         <div className="flex flex-wrap gap-2">
-          {AVAILABLE_TOOLS.map((tool) => (
+          {ORCHESTRATOR_TOOLS.map((tool) => (
             <label
               key={tool}
               className="flex items-center gap-1 text-sm cursor-pointer"
@@ -215,6 +221,9 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
             </label>
           ))}
         </div>
+        <p className="text-xs text-gray-400 mt-2">
+          Auto-included: {AUTO_TOOLS.join(", ")} (workspace tools)
+        </p>
       </div>
 
       {/* System Prompt */}
@@ -313,7 +322,12 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">Sub-Agents</label>
             <div className="space-y-3">
-              {Object.entries({ ...DEFAULT_SUBAGENTS, ...draft.subAgents }).map(([name, sa]) => (
+              {/* Only show agents defined in DEFAULT_SUBAGENTS, merge in saved config */}
+              {Object.entries(DEFAULT_SUBAGENTS).map(([name, defaultSa]) => {
+                // Check if there's a saved config for this agent (or migrated from old name)
+                const savedConfig = draft.subAgents?.[name];
+                const sa = savedConfig ?? defaultSa;
+                return (
                 <div key={name} className="border border-gray-200 rounded-lg p-3">
                   <div className="flex items-center gap-3 text-sm">
                     <input
@@ -357,7 +371,8 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
 
