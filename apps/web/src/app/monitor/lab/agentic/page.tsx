@@ -36,7 +36,7 @@ export default function AgenticPage() {
   const [selectedProfileForEdit, setSelectedProfileForEdit] = useState<Profile | null>(null);
 
   const stream = useAgenticStream();
-  const { profiles, loading: profilesLoading, createProfile, updateProfile, deleteProfile, setDefault: setDefaultProfile } = useProfiles(AGENT_ID, "agentic");
+  const { profiles, loading: profilesLoading, createProfile, updateProfile, deleteProfile, setDefault: setDefaultProfile, duplicateProfile } = useProfiles(AGENT_ID, "agentic");
   const { evaluations, loading: evalsLoading, error: evalsError, refresh: refreshEvals } = useAgenticEvaluations();
 
   const activeProfile = getActiveProfile(profiles, selectedProfileId);
@@ -103,6 +103,15 @@ export default function AgenticPage() {
       }
     } catch (err) {
       console.error("Failed to rename profile:", err);
+    }
+  };
+
+  const handleDuplicateProfile = async (profile: Profile) => {
+    try {
+      const duplicated = await duplicateProfile(profile);
+      setSelectedProfileForEdit(duplicated as Profile);
+    } catch (err) {
+      console.error("Failed to duplicate profile:", err);
     }
   };
 
@@ -189,30 +198,12 @@ export default function AgenticPage() {
                   </option>
                 ))}
               </select>
-              <div className="flex gap-2 mt-1">
-                <button
-                  onClick={() => void handleCreateProfile()}
-                  className="text-xs text-blue-600 hover:text-blue-800"
-                >
-                  + New
-                </button>
-                {activeProfile && (
-                  <>
-                    <button
-                      onClick={() => setShowEditor((v) => !v)}
-                      className="text-xs text-gray-500 hover:text-gray-700"
-                    >
-                      {showEditor ? "Hide" : "Edit"}
-                    </button>
-                    <button
-                      onClick={() => void handleDeleteProfile()}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Delete
-                    </button>
-                  </>
-                )}
-              </div>
+              <button
+                onClick={() => setSidebarTab("profiles")}
+                className="mt-1 text-xs text-blue-600 hover:text-blue-800"
+              >
+                Manage profiles →
+              </button>
             </div>
 
             {/* Run button */}
@@ -253,6 +244,7 @@ export default function AgenticPage() {
             onDeleteProfile={(id) => void handleDeleteProfile(id)}
             onSetDefault={(id) => void setDefaultProfile(id)}
             onRenameProfile={(id, name) => void handleRenameProfile(id, name)}
+            onDuplicateProfile={(p) => void handleDuplicateProfile(p)}
           />
         )}
       </div>

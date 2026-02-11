@@ -126,6 +126,7 @@ export async function GET(request: NextRequest) {
           profileName: telemetry.profileName as string | undefined,
           documentLength: telemetry.documentLength,
           profileInfo: telemetry.profileInfo,
+          numTurns: telemetry.numTurns as number | undefined,
         } : null,
       };
     });

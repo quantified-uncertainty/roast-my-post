@@ -70,13 +70,15 @@ async function persistAgenticResult({ documentId, documentVersionId, profileId, 
     profileName = profile?.name ?? null;
   }
 
-  // Build pipeline telemetry
+  // Build pipeline telemetry (merge with plugin's telemetry)
+  const pluginTelemetry = result.pipelineTelemetry ?? {};
   const pipelineTelemetry = {
     costUsd: result.cost ?? 0,
     profileId: profileId ?? null,
     profileName: profileName ?? "Default",
     analysisType: "agentic",
     durationMs,
+    numTurns: (pluginTelemetry as { numTurns?: number }).numTurns ?? 0,
   };
 
   // Create the evaluation version

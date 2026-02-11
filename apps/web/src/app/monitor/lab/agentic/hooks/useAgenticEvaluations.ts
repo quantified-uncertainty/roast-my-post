@@ -22,6 +22,7 @@ export interface AgenticEvaluation {
     totalCostUsd?: number;
     totalDurationMs?: number;
     profileName?: string | null;
+    numTurns?: number;
   } | null;
 }
 

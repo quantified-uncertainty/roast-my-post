@@ -201,6 +201,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
   private maxBudgetUsd: number;
   private profileId?: string;
   private workspacePath?: string;
+  private numTurns = 0;
 
   constructor(options?: AgenticPluginOptions) {
     this.onMessage = options?.onMessage;
@@ -402,6 +403,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
         if (message.subtype === "success") {
           const successMsg = message as SDKResultSuccess;
           this.totalCost = successMsg.total_cost_usd;
+          this.numTurns = successMsg.num_turns;
 
           this.emit({
             type: "cost_update",
@@ -527,6 +529,9 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       comments: this.comments,
       cost: this.totalCost,
       grade: this.gradeValue,
+      pipelineTelemetry: {
+        numTurns: this.numTurns,
+      },
     };
   }
 }

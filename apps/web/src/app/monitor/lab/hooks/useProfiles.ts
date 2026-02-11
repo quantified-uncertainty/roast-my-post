@@ -10,6 +10,7 @@ interface UseProfilesReturn {
   updateProfile: (id: string, updates: Partial<Profile>) => Promise<Profile>;
   deleteProfile: (id: string) => Promise<void>;
   setDefault: (id: string) => Promise<void>;
+  duplicateProfile: (profile: Profile) => Promise<Profile>;
 }
 
 export function useProfiles(agentId: string, pluginType = "fallacy-check"): UseProfilesReturn {
@@ -92,7 +93,16 @@ export function useProfiles(agentId: string, pluginType = "fallacy-check"): UseP
     [updateProfile]
   );
 
-  return { profiles, loading, error, refresh, createProfile, updateProfile, deleteProfile, setDefault };
+  const duplicateProfile = useCallback(
+    async (profile: Profile): Promise<Profile> => {
+      const newName = `${profile.name} (copy)`;
+      const description = profile.description || "Duplicated profile";
+      return createProfile(newName, description, profile.config as Partial<ProfileConfig>);
+    },
+    [createProfile]
+  );
+
+  return { profiles, loading, error, refresh, createProfile, updateProfile, deleteProfile, setDefault, duplicateProfile };
 }
 
 /**

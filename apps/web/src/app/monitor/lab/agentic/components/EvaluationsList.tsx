@@ -8,6 +8,7 @@ import {
   DocumentTextIcon,
   CurrencyDollarIcon,
   ClockIcon,
+  ArrowPathRoundedSquareIcon,
 } from "@heroicons/react/24/outline";
 import type { AgenticEvaluation } from "../hooks/useAgenticEvaluations";
 
@@ -135,6 +136,7 @@ function EvaluationRow({ evaluation, isExpanded, onToggle }: EvaluationRowProps)
   const cost = evaluation.telemetry?.totalCostUsd;
   const durationMs = evaluation.telemetry?.totalDurationMs;
   const profileName = evaluation.telemetry?.profileName;
+  const numTurns = evaluation.telemetry?.numTurns;
 
   // Format duration as "Xm Ys" or "Xs"
   const formatDuration = (ms: number) => {
@@ -192,6 +194,14 @@ function EvaluationRow({ evaluation, isExpanded, onToggle }: EvaluationRowProps)
             <span className="flex items-center gap-1">
               <ClockIcon className="w-4 h-4" />
               {formatDuration(durationMs)}
+            </span>
+          )}
+
+          {/* Turns */}
+          {numTurns !== undefined && numTurns > 0 && (
+            <span className="flex items-center gap-1" title="API turns">
+              <ArrowPathRoundedSquareIcon className="w-4 h-4" />
+              {numTurns}
             </span>
           )}
 

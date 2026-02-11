@@ -35,13 +35,19 @@ export function DocumentPickerModal({ onSelect, onClose }: DocumentPickerModalPr
     }
   }, []);
 
+  // Initial load
   useEffect(() => {
     void fetchDocuments();
   }, [fetchDocuments]);
 
-  const handleSearch = () => {
-    void fetchDocuments(searchQuery.trim() || undefined);
-  };
+  // Debounced real-time search
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    const timer = setTimeout(() => {
+      void fetchDocuments(trimmed || undefined);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchDocuments]);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -56,26 +62,16 @@ export function DocumentPickerModal({ onSelect, onClose }: DocumentPickerModalPr
 
         {/* Search */}
         <div className="px-6 pt-4 pb-2">
-          <div className="flex items-center space-x-2">
-            <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Filter documents..."
-                autoFocus
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm disabled:opacity-50"
-            >
-              Search
-            </button>
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter documents..."
+              autoFocus
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
           </div>
         </div>
 

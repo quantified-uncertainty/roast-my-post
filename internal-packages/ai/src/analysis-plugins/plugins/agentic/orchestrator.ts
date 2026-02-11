@@ -5,11 +5,50 @@
  * for multi-agent document analysis. Used when enableSubAgents: true in the profile.
  */
 
+import { resolve } from "path";
 import type { AgentDefinition, Options, McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-sdk";
 import type { AgenticProfileConfig } from "./profile-types";
 import { DEFAULT_SUBAGENTS } from "./profile-types";
 import { AGENTIC_SYSTEM_PROMPT } from "./index";
 import { logger } from "../../../shared/logger";
+
+// ---------------------------------------------------------------------------
+// Workspace filesystem guard — denies Read/Write/Edit/Glob/Grep outside workspace
+// ---------------------------------------------------------------------------
+
+const FILE_ACCESS_TOOLS = new Set(["Read", "Write", "Edit", "Glob", "Grep", "NotebookEdit"]);
+
+function createWorkspaceGuard(workspacePath: string) {
+  const resolvedWorkspace = resolve(workspacePath);
+
+  return async (toolName: string, input: Record<string, unknown>) => {
+    if (!FILE_ACCESS_TOOLS.has(toolName)) {
+      return { behavior: "allow" as const, updatedInput: input };
+    }
+
+    // Extract path from tool input (different field names per tool)
+    const filePath =
+      (input as { file_path?: string }).file_path ??
+      (input as { path?: string }).path ??
+      (input as { notebook_path?: string }).notebook_path;
+
+    // If no path specified, tool defaults to cwd which is workspace — allow
+    if (!filePath || typeof filePath !== "string") {
+      return { behavior: "allow" as const, updatedInput: input };
+    }
+
+    const resolvedPath = resolve(workspacePath, filePath);
+    if (!resolvedPath.startsWith(resolvedWorkspace)) {
+      logger.warn(`Workspace guard denied ${toolName} access to: ${filePath}`);
+      return {
+        behavior: "deny" as const,
+        message: `Access denied: ${filePath} is outside workspace ${workspacePath}`,
+      };
+    }
+
+    return { behavior: "allow" as const, updatedInput: input };
+  };
+}
 
 // Re-export for use by API endpoint
 export { AGENTIC_SYSTEM_PROMPT };
@@ -77,6 +116,29 @@ Your job is to systematically analyze documents by decomposing the task, delegat
 - **error**: Demonstrably false claims, serious logical errors, significant factual mistakes
 - **warning**: Unsupported claims, weak reasoning, potentially misleading framing
 - **info**: Minor clarity issues, missing context that doesn't fundamentally mislead
+`;
+
+// Addendum for when MCP evaluation tools are enabled
+const ORCHESTRATOR_MCP_ADDENDUM = `
+
+## Specialized Evaluation Tools
+
+Your sub-agents have access to MCP evaluation tools that provide structured baseline analysis:
+
+- **fact-checker** has \`fact_check\` - returns verified/refuted claims with evidence
+- **fallacy-checker** has \`fallacy_check\` - returns detected fallacies with explanations
+- **clarity-checker** has \`spell_check\` - returns writing quality issues
+- **math-checker** has \`math_check\` + \`forecast_check\` - returns calculation/prediction errors
+
+Sub-agents will:
+1. **First** call MCP tools to get structured baseline findings
+2. **Then** verify, expand, or filter using their own analysis (web search, reasoning)
+3. **Synthesize** both sources into refined findings
+
+When synthesizing sub-agent results:
+- Findings verified by both MCP tool + agent research = highest confidence
+- MCP findings the agent couldn't verify = note uncertainty
+- Agent findings beyond MCP analysis = valuable additions
 `;
 
 // ---------------------------------------------------------------------------
@@ -264,14 +326,7 @@ const SUBAGENT_DESCRIPTIONS: Record<string, string> = {
   "math-checker": "Validates calculations, statistics, and methodological soundness",
 };
 
-// Which sub-agents get web search tools
-const SUBAGENTS_WITH_WEB_TOOLS = new Set([
-  "fact-checker",
-  "fallacy-checker", // Can verify cited sources, check appeals to authority
-  "math-checker",
-]);
-
-// File tools for workspace access
+// File tools for workspace access (used in allowedTools for orchestrator)
 const FILE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "TodoWrite"] as const;
 
 // ---------------------------------------------------------------------------
@@ -303,33 +358,34 @@ export function buildSubAgentDefinitions(
 - Use TodoWrite to track your investigation progress`;
     }
 
-    // Build tools list
-    const tools: string[] = [];
-
-    // File tools for workspace access (always available when workspace exists)
-    if (workspacePath) {
-      tools.push(...FILE_TOOLS);
-    }
-
-    // Web tools for agents that need them
-    if (SUBAGENTS_WITH_WEB_TOOLS.has(name)) {
-      tools.push("WebSearch", "WebFetch");
-    }
-
-    // MCP evaluation tools if enabled
+    // If MCP tools are enabled, add instructions for using them
     if (config.enableMcpTools) {
-      const mcpTools = getMcpToolsForAgent(name);
-      tools.push(...mcpTools);
+      const mcpInstructions = getMcpToolInstructions(name);
+      if (mcpInstructions) {
+        prompt += `\n\n${mcpInstructions}`;
+      }
     }
 
+    // Don't set tools — let agents inherit ALL tools including MCP.
+    // Setting tools explicitly prevents MCP access (SDK bug #13605).
     agents[name] = {
       description: SUBAGENT_DESCRIPTIONS[name] || `Specialized sub-agent: ${name}`,
       prompt,
       model: sa.model === "inherit" ? undefined : (sa.model ?? undefined),
-      tools: tools.length > 0 ? tools : undefined,
       ...(sa.maxTurns && { maxTurns: sa.maxTurns }),
     };
   }
+
+  // Override the built-in general-purpose agent so the orchestrator doesn't
+  // spawn it to duplicate the custom sub-agents' work. Redirect it to delegate.
+  const agentNames = Object.keys(agents);
+  agents["general-purpose"] = {
+    description: "Do NOT use this agent. Delegate to the specialized sub-agents instead: " + agentNames.join(", "),
+    prompt: `You are disabled. Do not perform any analysis yourself.
+Instead, tell the orchestrator to use the specialized sub-agents: ${agentNames.join(", ")}.
+Return immediately with a message explaining which sub-agent should handle the task.`,
+    model: "haiku",
+  };
 
   return agents;
 }
@@ -355,6 +411,88 @@ function getMcpToolsForAgent(agentName: string): string[] {
   }
 }
 
+/**
+ * Get MCP tool usage instructions to append to agent prompts
+ */
+function getMcpToolInstructions(agentName: string): string {
+  switch (agentName) {
+    case "fact-checker":
+      return `## MCP Evaluation Tool
+
+You have access to \`mcp__roast-evaluators__fact_check\` - a specialized fact-checking pipeline.
+
+**Workflow:**
+1. **First**, call the MCP tool with the full document text to get structured findings
+   - It returns claims with verdicts (TRUE/FALSE/MISLEADING/etc.) and evidence
+2. **Then**, use web search to verify, expand, or challenge those findings:
+   - Verify: Search for primary sources to confirm the tool's verdicts
+   - Expand: Find additional context the tool may have missed
+   - Challenge: If something seems off, investigate with fresh searches
+3. **Synthesize**: Combine MCP findings + your research into final analysis
+   - Corroborated findings = high confidence
+   - Tool findings you couldn't verify = lower confidence, note uncertainty
+   - Issues you found that tool missed = include with your own evidence`;
+
+    case "fallacy-checker":
+      return `## MCP Evaluation Tool
+
+You have access to \`mcp__roast-evaluators__fallacy_check\` - a specialized logical fallacy detection pipeline.
+
+**Workflow:**
+1. **First**, call the MCP tool with the full document text to get structured findings
+   - It returns fallacies with quoted text, type classification, and explanations
+   - The tool applies principle of charity - flagged issues are likely significant
+2. **Then**, apply your own reasoning to review and refine:
+   - Verify each finding: Is this really a fallacy the author is MAKING (not explaining)?
+   - Check context: Does surrounding text justify or acknowledge the issue?
+   - Look for missed issues: Map the argument structure yourself
+3. **Synthesize**: Combine MCP findings + your analysis
+   - Keep findings where you agree with the tool's assessment
+   - Filter out findings where context shows the tool misread intent
+   - Add issues you found that the tool missed`;
+
+    case "clarity-checker":
+      return `## MCP Evaluation Tool
+
+You have access to \`mcp__roast-evaluators__spell_check\` - a writing quality analyzer.
+
+**Workflow:**
+1. **First**, call the MCP tool with the full document text
+   - It returns grammar, spelling, and style issues with locations
+2. **Then**, apply your own analysis to review and expand:
+   - Filter: Only keep issues that meaningfully affect reader understanding
+   - Ignore: Minor style preferences, acceptable informal language
+   - Add: Check for contradictions, ambiguity, misleading framing (tool may miss these)
+3. **Synthesize**: Prioritize substantive clarity issues
+   - Misleading framing > missing context > grammar errors
+   - Don't report minor corrections unless they cause confusion`;
+
+    case "math-checker":
+      return `## MCP Evaluation Tools
+
+You have access to two specialized tools:
+- \`mcp__roast-evaluators__math_check\` - validates calculations and statistics
+- \`mcp__roast-evaluators__forecast_check\` - analyzes predictions and forecasts
+
+**Workflow:**
+1. **First**, call the relevant MCP tool(s) with the full document text
+   - math_check: for calculations, percentages, statistics
+   - forecast_check: for predictions, projections, probability claims
+   - They return structured findings with error types and explanations
+2. **Then**, verify and expand with your own analysis:
+   - Check arithmetic yourself for flagged calculations
+   - Use web search to verify formulas, constants, methodologies
+   - Look for statistical issues the tool may miss (base rate neglect, cherry-picking)
+3. **Synthesize**: Combine tool findings + your verification
+   - Tool error + your verification = high confidence issue
+   - Tool finding you can't verify = note uncertainty
+   - Issues you found independently = include with your reasoning`;
+
+    default:
+      return "";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Build full SDK query options from profile config
 // ---------------------------------------------------------------------------
@@ -365,6 +503,21 @@ export function buildAgenticQueryOptions(
   workspacePath?: string
 ): Partial<Options> {
   logger.info(`buildAgenticQueryOptions: version=${config.version} enableSubAgents=${config.enableSubAgents} enableMcpTools=${config.enableMcpTools} workspace=${workspacePath ?? "none"}`);
+
+  // Strip ANTHROPIC_API_KEY from the SDK subprocess env so it uses
+  // subscription auth, while keeping it in process.env for in-process MCP tools.
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => key !== "ANTHROPIC_API_KEY")
+  ) as Record<string, string>;
+
+  // Workspace security: cwd + sandbox + canUseTool guard
+  const workspaceOptions = workspacePath
+    ? {
+        cwd: workspacePath,
+        sandbox: { enabled: true, allowUnsandboxedCommands: false },
+        canUseTool: createWorkspaceGuard(workspacePath),
+      }
+    : {};
 
   if (!config.enableSubAgents) {
     // Single-agent mode - explicitly pass empty agents to disable built-in agents
@@ -382,6 +535,8 @@ export function buildAgenticQueryOptions(
       allowedTools,
       permissionMode: config.permissionMode,
       agents: {}, // Disable built-in agents like Bash, Explore, etc.
+      env,
+      ...workspaceOptions,
       ...(config.maxThinkingTokens && { maxThinkingTokens: config.maxThinkingTokens }),
     };
   }
@@ -412,17 +567,25 @@ export function buildAgenticQueryOptions(
     );
   }
 
+  // Build orchestrator prompt with optional MCP addendum
+  let orchestratorPrompt = config.orchestratorPrompt || ORCHESTRATOR_PROMPT;
+  if (config.enableMcpTools) {
+    orchestratorPrompt += ORCHESTRATOR_MCP_ADDENDUM;
+  }
+
   return {
     model: config.model,
     maxTurns: config.maxTurns,
     maxBudgetUsd: config.maxBudgetUsd,
-    systemPrompt: config.orchestratorPrompt || ORCHESTRATOR_PROMPT,
+    systemPrompt: orchestratorPrompt,
     agents,
     mcpServers: config.enableMcpTools
       ? { "roast-evaluators": evaluationServer }
       : undefined,
     allowedTools: [...new Set(allowedTools)], // dedupe
     permissionMode: config.permissionMode,
+    env,
+    ...workspaceOptions,
     ...(config.maxThinkingTokens && { maxThinkingTokens: config.maxThinkingTokens }),
   };
 }

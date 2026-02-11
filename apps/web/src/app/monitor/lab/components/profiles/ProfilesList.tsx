@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusIcon, TrashIcon, CheckCircleIcon, PencilIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon, CheckCircleIcon, PencilIcon, CheckIcon, XMarkIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../../types";
 import { formatDate } from "../../utils/formatters";
 
@@ -14,6 +14,7 @@ interface ProfilesListProps {
   onDeleteProfile: (id: string) => void;
   onSetDefault: (id: string) => void;
   onRenameProfile?: (id: string, newName: string) => void;
+  onDuplicateProfile?: (profile: Profile) => void;
 }
 
 export function ProfilesList({
@@ -25,6 +26,7 @@ export function ProfilesList({
   onDeleteProfile,
   onSetDefault,
   onRenameProfile,
+  onDuplicateProfile,
 }: ProfilesListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
@@ -64,6 +66,11 @@ export function ProfilesList({
     e.stopPropagation();
     setEditingId(null);
     setEditingName("");
+  };
+
+  const handleDuplicate = (e: React.MouseEvent, profile: Profile) => {
+    e.stopPropagation();
+    onDuplicateProfile?.(profile);
   };
 
   return (
@@ -166,6 +173,15 @@ export function ProfilesList({
                           title="Rename profile"
                         >
                           <PencilIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                      {onDuplicateProfile && (
+                        <button
+                          onClick={(e) => handleDuplicate(e, profile)}
+                          className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                          title="Duplicate profile"
+                        >
+                          <DocumentDuplicateIcon className="h-4 w-4" />
                         </button>
                       )}
                       {!profile.isDefault && (

@@ -206,7 +206,7 @@ pnpm --filter @roast/db run db:push   # Push schema changes
 dev/scripts/dev-env.sh start|stop|status|attach|restart  # Manage tmux dev session
 dev/scripts/dev-env.sh psql [args]                       # Connect to local DB via Docker
 
-# JSON output with jq formatting (-t removes headers, -A removes padding):
+# Just for JSON output alone, we'd want to do that with jq formatting (-t removes headers, -A removes padding). For non JSON retrievals use without -t -A.
 dev/scripts/dev-env.sh psql -t -A -c "SELECT config FROM \"Table\" WHERE id='...'" | jq .
 ```
 
