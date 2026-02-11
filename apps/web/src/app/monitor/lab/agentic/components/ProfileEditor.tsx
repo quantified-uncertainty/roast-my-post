@@ -405,7 +405,12 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
       {/* Save */}
       <div className="flex justify-end">
         <button
-          onClick={() => onSave(draft)}
+          onClick={() => onSave({
+            ...draft,
+            // Persist the displayed fallacy profile ID (the dropdown shows defaultFallacyProfileId
+            // as a display fallback, but without this the actual value stays undefined on save)
+            fallacyCheckProfileId: draft.fallacyCheckProfileId ?? defaultFallacyProfileId,
+          })}
           disabled={!dirty || saving}
           className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >

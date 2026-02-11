@@ -127,6 +127,12 @@ export interface MultiExtractorConfig {
 
   /** Threshold configuration applied to each extractor */
   thresholds?: ExtractionThresholds;
+
+  /** Custom prompt overrides passed to each extractor */
+  customPrompts?: {
+    extractorSystemPrompt?: string;
+    extractorUserPrompt?: string;
+  };
 }
 
 // ============================================================================

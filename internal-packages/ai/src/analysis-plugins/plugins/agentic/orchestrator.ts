@@ -79,7 +79,34 @@ export { AGENTIC_SYSTEM_PROMPT };
 // Orchestrator prompt — drives the main agent to decompose, delegate, synthesize
 // ---------------------------------------------------------------------------
 
-export const ORCHESTRATOR_PROMPT = `You are a research orchestrator agent specialized in rigorous document analysis.
+// Agent brief descriptions for the orchestrator DELEGATE section
+const ORCHESTRATOR_AGENT_BRIEFS: Record<string, string> = {
+  "fact-checker": "Verifies factual claims via web search (statistics, dates, quotes, events)",
+  "fallacy-checker": "Identifies genuine logical fallacies and reasoning errors",
+  "clarity-checker": "Assesses writing quality, coherence, misleading framing, missing context",
+  "math-checker": "Validates calculations, statistics, and methodological soundness",
+};
+
+// MCP tool descriptions per agent for the orchestrator MCP addendum
+const ORCHESTRATOR_MCP_AGENT_BRIEFS: Record<string, string> = {
+  "fact-checker": "uses web search directly (no MCP tools)",
+  "fallacy-checker": "has `fallacy_extract` + `fallacy_charity_filter` + `fallacy_supported_elsewhere` - granular pipeline with full visibility into filtering decisions",
+  "clarity-checker": "has `spell_check` - returns writing quality issues",
+  "math-checker": "has `math_check` + `forecast_check` - returns calculation/prediction errors",
+};
+
+/**
+ * Build the orchestrator prompt dynamically based on which agents are enabled.
+ * This prevents the orchestrator from trying to spawn agents that don't exist,
+ * which would cause the SDK to fall back to built-in general-purpose.
+ */
+function buildOrchestratorPrompt(enabledAgents: string[]): string {
+  const agentBullets = enabledAgents
+    .filter((name) => ORCHESTRATOR_AGENT_BRIEFS[name])
+    .map((name) => `   - **${name}**: ${ORCHESTRATOR_AGENT_BRIEFS[name]}`)
+    .join("\n");
+
+  return `You are a research orchestrator agent specialized in rigorous document analysis.
 
 Your job is to systematically analyze documents by decomposing the task, delegating to specialized sub-agents, and synthesizing their findings into a coherent assessment.
 
@@ -92,21 +119,13 @@ Your job is to systematically analyze documents by decomposing the task, delegat
    - Areas where clarity or framing might mislead readers
 
 2. **DELEGATE**: Use the Task tool to spawn specialized sub-agents IN PARALLEL when possible:
-   - **fact-checker**: Verifies factual claims via web search (statistics, dates, quotes, events)
-   - **fallacy-checker**: Identifies genuine logical fallacies and reasoning errors
-   - **clarity-checker**: Assesses writing quality, coherence, misleading framing, missing context
-   - **math-checker**: Validates calculations, statistics, and methodological soundness
+${agentBullets}
 
-   **CRITICAL**: When spawning sub-agents, you MUST include the document content in the task prompt!
-   Sub-agents cannot see the document unless you provide it. Format your task prompts like:
+   IMPORTANT: Only use the agents listed above. Do NOT spawn any other agent types.
 
-   "Analyze this document for [specific task]:
+   Sub-agents have access to the document via the workspace filesystem (they will Read it themselves). Do NOT paste the document content into the task prompt — it wastes tokens. Keep task prompts concise — just tell the sub-agent what to focus on:
 
-   <document>
-   [paste the full document content here]
-   </document>
-
-   Focus on: [specific aspects to check]"
+   "Analyze the document for [specific task]. Focus on: [specific aspects to check]"
 
 3. **TRIANGULATE**: Compare findings across sub-agents:
    - Look for corroborating evidence from multiple angles
@@ -139,18 +158,24 @@ Your job is to systematically analyze documents by decomposing the task, delegat
 - **warning**: Unsupported claims, weak reasoning, potentially misleading framing
 - **info**: Minor clarity issues, missing context that doesn't fundamentally mislead
 `;
+}
 
-// Addendum for when MCP evaluation tools are enabled
-const ORCHESTRATOR_MCP_ADDENDUM = `
+/**
+ * Build MCP addendum listing only the enabled agents' tool descriptions.
+ */
+function buildOrchestratorMcpAddendum(enabledAgents: string[]): string {
+  const agentBullets = enabledAgents
+    .filter((name) => ORCHESTRATOR_MCP_AGENT_BRIEFS[name])
+    .map((name) => `- **${name}** ${ORCHESTRATOR_MCP_AGENT_BRIEFS[name]}`)
+    .join("\n");
+
+  return `
 
 ## Specialized Evaluation Tools
 
 Your sub-agents have access to MCP evaluation tools that provide structured baseline analysis:
 
-- **fact-checker** has \`fact_check\` - returns verified/refuted claims with evidence
-- **fallacy-checker** has \`fallacy_check\` - returns detected fallacies with explanations
-- **clarity-checker** has \`spell_check\` - returns writing quality issues
-- **math-checker** has \`math_check\` + \`forecast_check\` - returns calculation/prediction errors
+${agentBullets}
 
 Sub-agents will:
 1. **First** call MCP tools to get structured baseline findings
@@ -162,6 +187,10 @@ When synthesizing sub-agent results:
 - MCP findings the agent couldn't verify = note uncertainty
 - Agent findings beyond MCP analysis = valuable additions
 `;
+}
+
+// Default orchestrator prompt with all agents listed (used as reference/placeholder by UI)
+export const ORCHESTRATOR_PROMPT = buildOrchestratorPrompt(Object.keys(ORCHESTRATOR_AGENT_BRIEFS));
 
 // ---------------------------------------------------------------------------
 // Sub-agent prompts — focused on HOW TO THINK, not what tools to call
@@ -407,9 +436,13 @@ export function buildSubAgentDefinitions(
 function getMcpToolsForAgent(agentName: string): string[] {
   switch (agentName) {
     case "fact-checker":
-      return ["mcp__roast-evaluators__fact_check"];
+      return []; // fact-checker uses web search directly, no MCP tools
     case "fallacy-checker":
-      return ["mcp__roast-evaluators__fallacy_check"];
+      return [
+        "mcp__roast-evaluators__fallacy_extract",
+        "mcp__roast-evaluators__fallacy_charity_filter",
+        "mcp__roast-evaluators__fallacy_supported_elsewhere",
+      ];
     case "clarity-checker":
       return ["mcp__roast-evaluators__spell_check"]; // Uses spell_check MCP tool for clarity analysis
     case "math-checker":
@@ -428,39 +461,33 @@ function getMcpToolsForAgent(agentName: string): string[] {
 function getMcpToolInstructions(agentName: string): string {
   switch (agentName) {
     case "fact-checker":
-      return `## MCP Evaluation Tool
-
-You have access to \`mcp__roast-evaluators__fact_check\` - a specialized fact-checking pipeline.
-
-**Workflow:**
-1. **First**, call the MCP tool with the full document text to get structured findings
-   - It returns claims with verdicts (TRUE/FALSE/MISLEADING/etc.) and evidence
-2. **Then**, use web search to verify, expand, or challenge those findings:
-   - Verify: Search for primary sources to confirm the tool's verdicts
-   - Expand: Find additional context the tool may have missed
-   - Challenge: If something seems off, investigate with fresh searches
-3. **Synthesize**: Combine MCP findings + your research into final analysis
-   - Corroborated findings = high confidence
-   - Tool findings you couldn't verify = lower confidence, note uncertainty
-   - Issues you found that tool missed = include with your own evidence`;
+      return ""; // fact-checker uses web search directly, no MCP tools
 
     case "fallacy-checker":
-      return `## MCP Evaluation Tool
+      return `## MCP Evaluation Tools
 
-You have access to \`mcp__roast-evaluators__fallacy_check\` - a specialized logical fallacy detection pipeline.
+You have access to 3 granular fallacy analysis tools that give you full control over the pipeline:
 
-**Workflow:**
-1. **First**, call the MCP tool with the full document text to get structured findings
-   - It returns fallacies with quoted text, type classification, and explanations
-   - The tool applies principle of charity - flagged issues are likely significant
-2. **Then**, apply your own reasoning to review and refine:
-   - Verify each finding: Is this really a fallacy the author is MAKING (not explaining)?
-   - Check context: Does surrounding text justify or acknowledge the issue?
-   - Look for missed issues: Map the argument structure yourself
-3. **Synthesize**: Combine MCP findings + your analysis
-   - Keep findings where you agree with the tool's assessment
-   - Filter out findings where context shows the tool misread intent
-   - Add issues you found that the tool missed`;
+### Available Tools
+- \`mcp__roast-evaluators__fallacy_extract\` - Extract raw issues with scores (severity, confidence, importance)
+- \`mcp__roast-evaluators__fallacy_charity_filter\` - Apply principle of charity (shows both valid AND dissolved issues)
+- \`mcp__roast-evaluators__fallacy_supported_elsewhere\` - Check if issues are addressed elsewhere in document
+
+### Workflow
+1. **Extract**: Call \`fallacy_extract\` with the full document text
+   - Returns ALL detected issues with severity/confidence/importance scores and reasoning
+   - These are raw, unfiltered — you see everything the extractor found
+2. **Filter with charity**: Call \`fallacy_charity_filter\` with the document and extracted issues
+   - Pass issues as: \`[{ quotedText, issueType, reasoning }]\`
+   - Returns \`validIssues\` (hold up under charity) AND \`dissolvedIssues\` (don't hold up)
+   - **Read the dissolved issues** — they contain charitable interpretations that inform your analysis
+3. **Check support** (optional): Call \`fallacy_supported_elsewhere\` for remaining valid issues
+   - Returns \`unsupportedIssues\` (real problems) AND \`supportedIssues\` (addressed elsewhere)
+4. **Synthesize**: Use your own judgment informed by all the data:
+   - High confidence: Valid after charity + unsupported elsewhere
+   - Medium: Valid after charity but you see merit in the charitable interpretation
+   - Consider: Dissolved issues where you disagree with the charitable reading
+   - Add any issues you found that the extractor missed`;
 
     case "clarity-checker":
       return `## MCP Evaluation Tool
@@ -572,18 +599,20 @@ export function buildAgenticQueryOptions(
   // Add MCP tool names to allowed list if MCP tools are enabled
   if (config.enableMcpTools) {
     allowedTools.push(
-      "mcp__roast-evaluators__fact_check",
-      "mcp__roast-evaluators__fallacy_check",
+      "mcp__roast-evaluators__fallacy_extract",
+      "mcp__roast-evaluators__fallacy_charity_filter",
+      "mcp__roast-evaluators__fallacy_supported_elsewhere",
       "mcp__roast-evaluators__spell_check",
       "mcp__roast-evaluators__math_check",
       "mcp__roast-evaluators__forecast_check"
     );
   }
 
-  // Build orchestrator prompt with optional MCP addendum
-  let orchestratorPrompt = config.orchestratorPrompt || ORCHESTRATOR_PROMPT;
+  // Build orchestrator prompt dynamically — only list enabled agents
+  const enabledAgentNames = Object.keys(agents);
+  let orchestratorPrompt = config.orchestratorPrompt || buildOrchestratorPrompt(enabledAgentNames);
   if (config.enableMcpTools) {
-    orchestratorPrompt += ORCHESTRATOR_MCP_ADDENDUM;
+    orchestratorPrompt += buildOrchestratorMcpAddendum(enabledAgentNames);
   }
 
   return {

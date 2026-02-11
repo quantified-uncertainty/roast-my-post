@@ -116,7 +116,7 @@ export default function AgenticPage() {
   };
 
   return (
-    <div className="h-full flex">
+    <div className="h-[calc(100vh-13rem)] flex">
       {/* Left Sidebar */}
       <div className="w-72 border-r bg-gray-50 flex flex-col">
         {/* Sidebar Tabs */}
@@ -314,7 +314,7 @@ export default function AgenticPage() {
                 <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
                   <h2 className="text-sm font-medium text-gray-700">Activity Feed</h2>
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto" style={{ maxHeight: "600px" }}>
+                <div className="flex-1 min-h-0 overflow-y-auto">
                   <ActivityFeed events={stream.events} />
                 </div>
               </div>
@@ -323,7 +323,7 @@ export default function AgenticPage() {
                 <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
                   <h2 className="text-sm font-medium text-gray-700">Results</h2>
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto" style={{ maxHeight: "600px" }}>
+                <div className="flex-1 min-h-0 overflow-y-auto">
                   <ResultsPanel
                     status={stream.status}
                     result={stream.result}

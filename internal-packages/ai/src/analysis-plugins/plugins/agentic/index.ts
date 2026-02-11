@@ -93,6 +93,15 @@ export class SubAgentTracker {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Strip SDK-injected <system-reminder>...</system-reminder> tags from tool output */
+function stripSystemReminders(text: string): string {
+  return text.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, "").trim();
+}
+
+// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
@@ -392,7 +401,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
               : JSON.stringify(message.tool_use_result)
           );
         }
-        const output = parts.join("\n");
+        const rawOutput = parts.join("\n");
+        const output = stripSystemReminders(rawOutput);
         if (output) {
           this.emit(
             agentName
