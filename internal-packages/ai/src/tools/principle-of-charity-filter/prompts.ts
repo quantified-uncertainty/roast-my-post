@@ -1,11 +1,18 @@
 /**
- * Default prompts for principle-of-charity filter
+ * Prompts for two-pass principle-of-charity filter
+ *
+ * Pass 1: Generate charitable interpretations (steelman each issue)
+ * Pass 2: Validate whether issues survive those interpretations
  *
  * These are exported so they can be displayed in the profile editor UI
  * as placeholders/defaults while allowing customization.
  */
 
-export const DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT = `You are an expert at applying the Principle of Charity in argument analysis.
+/**
+ * Pass 1: Generate the strongest charitable interpretation for each issue.
+ * No judgment — just steelman.
+ */
+export const GENERATE_INTERPRETATIONS_PROMPT = `You are an expert at applying the Principle of Charity in argument analysis.
 
 The Principle of Charity requires interpreting an argument in its **strongest, most reasonable form** before critiquing it. This means:
 - Assume the author is rational and arguing in good faith
@@ -13,52 +20,76 @@ The Principle of Charity requires interpreting an argument in its **strongest, m
 - Choose the most plausible interpretation of ambiguous statements
 - Consider the full context of the argument
 
-Your task: For each flagged issue, first articulate the **strongest charitable interpretation** of the author's argument, then determine if the issue **still holds** under that interpretation.
+Your task: For each flagged issue, articulate the **strongest charitable interpretation** of the author's argument. Do NOT decide whether the issue is valid — just steelman the author's position.
 
-**FILTER OUT (issue dissolves) if**:
-- A reasonable reader would understand the author's intent without confusion
-- The issue relies on an uncharitable or overly literal reading
-- The author's meaning is clear from context even if imprecisely stated
-- The critique attacks a strawman rather than the author's actual point
-- Common rhetorical conventions explain the phrasing (e.g., "studies show" in casual writing)
-- The issue is technically correct but misses the forest for the trees
+**How to generate interpretations**:
+- Consider what a reasonable, informed reader would understand the author to mean
+- Fill in implicit context the author likely assumed their audience would know
+- Account for rhetorical conventions of the genre (blog post, essay, academic paper, etc.)
+- Consider whether the flagged text serves a different purpose than what the critique assumes
+- Think about the argument holistically — does the broader context clarify the flagged passage?
 
-**KEEP FLAGGING (issue remains valid) if**:
-- Even the most charitable interpretation has a genuine flaw
-- The logical error persists regardless of how generously we interpret the argument
-- The issue is about missing evidence that no interpretation can supply
-- The problem is fundamental to the argument, not just its expression
-- A reasonable reader would still be misled or confused
+**Rate the strength of each interpretation**:
+- **strong**: The charitable reading is natural and obvious — most readers would interpret it this way
+- **moderate**: The charitable reading is plausible but requires some inference or contextual knowledge
+- **weak**: The charitable reading is a stretch — it requires unlikely assumptions or ignores the plain meaning
 
-**Examples of issues that DISSOLVE under charity**:
+**Examples**:
 
 1. Issue: "Hasty generalization - claims 'most people prefer X' without survey data"
-   Charitable interpretation: Author is sharing a common observation, not making a statistical claim
-   → DISSOLVES - reasonable readers understand this as informal observation, not rigorous claim
+   Charitable interpretation: Author is sharing a common observation in casual writing, not making a statistical claim requiring formal evidence
+   Strength: strong (this is how informal writing is conventionally read)
 
 2. Issue: "Appeal to authority - cites 'experts' without naming them"
-   Charitable interpretation: Author is summarizing general expert consensus in a casual context
-   → DISSOLVES - in blog posts/essays, "experts say" is understood as shorthand
+   Charitable interpretation: Author is summarizing general expert consensus; in this genre (blog post), "experts say" is understood as shorthand for established knowledge
+   Strength: moderate (depends on how contentious the claim is)
 
-3. Issue: "False dichotomy - presents only two options"
-   Charitable interpretation: Author is highlighting the two most relevant options for this context
-   → DISSOLVES - reasonable simplification, not claiming these are the ONLY options
-
-**Examples of issues that REMAIN VALID under charity**:
-
-1. Issue: "Circular reasoning - conclusion assumes what it's trying to prove"
-   Charitable interpretation: Even granting all reasonable assumptions, the logic is circular
-   → REMAINS VALID - no interpretation fixes circular reasoning
-
-2. Issue: "Misrepresents source - claims paper says X when it says Y"
-   Charitable interpretation: Perhaps author misread, but the claim is factually wrong
-   → REMAINS VALID - charitable intent doesn't fix factual errors
-
-3. Issue: "Ad hominem - dismisses argument because of who made it"
-   Charitable interpretation: Author may dislike the person, but that doesn't address their argument
-   → REMAINS VALID - attacking the person instead of the argument is still a fallacy
+3. Issue: "Circular reasoning - conclusion assumes what it's trying to prove"
+   Charitable interpretation: Perhaps the author intended this as a summary statement restating their conclusion after presenting evidence, not as a premise
+   Strength: weak (the logical structure is genuinely circular regardless of intent)
 
 For each issue, provide:
 1. The most charitable interpretation of the author's argument
-2. Whether the issue remains valid under that interpretation
-3. Brief explanation of your reasoning`;
+2. The strength of that interpretation (strong/moderate/weak)`;
+
+/**
+ * Pass 2: Validate whether each issue survives its charitable interpretation.
+ * Be critical — don't rubber-stamp interpretations.
+ */
+export const VALIDATE_INTERPRETATIONS_PROMPT = `You are a critical evaluator assessing whether flagged epistemic issues survive charitable interpretation.
+
+You will receive:
+1. The original document context
+2. Flagged issues with their reasoning
+3. Charitable interpretations generated by another analyst, each with a strength rating
+
+Your task: For each issue, determine whether it **remains valid** or **dissolves** given the charitable interpretation. Be rigorous and skeptical.
+
+**DISSOLVE the issue (remainsValid = false) if**:
+- The charitable interpretation is natural and a reasonable reader would understand the author this way
+- The critique relies on an uncharitable or overly literal reading that misses the author's clear intent
+- Common rhetorical conventions fully explain the phrasing
+- The issue is technically correct but trivial — it misses the forest for the trees
+
+**KEEP the issue (remainsValid = true) if**:
+- Even the charitable interpretation cannot fix the underlying flaw
+- The charitable interpretation is a stretch (rated "weak") — don't let implausible steelmanning excuse real problems
+- The logical error persists regardless of how generously we interpret the argument
+- The issue concerns missing evidence that no interpretation can supply
+- A reasonable reader would still be misled or confused despite the charitable reading
+- The problem is fundamental to the argument, not just its expression
+
+**Critical evaluation of interpretation strength**:
+- If the interpretation is rated "strong": it takes strong evidence to override it — the issue should dissolve unless the flaw is fundamental
+- If the interpretation is rated "moderate": weigh carefully — could go either way
+- If the interpretation is rated "weak": be very skeptical of dissolving — a weak steelman that requires unlikely assumptions should NOT dissolve a real issue
+
+For each issue, provide:
+1. Whether the issue remains valid (true/false)
+2. A brief explanation of your reasoning`;
+
+/**
+ * @deprecated Use GENERATE_INTERPRETATIONS_PROMPT and VALIDATE_INTERPRETATIONS_PROMPT instead.
+ * Kept for backwards compatibility with custom prompts stored in profiles.
+ */
+export const DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT = GENERATE_INTERPRETATIONS_PROMPT;

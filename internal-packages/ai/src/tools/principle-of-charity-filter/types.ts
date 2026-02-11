@@ -88,4 +88,7 @@ export interface CharityFilterResult {
 
   /** Explanation of why the issue does/doesn't hold under charitable interpretation */
   explanation: string;
+
+  /** How plausible the charitable interpretation is (from Pass 1) */
+  strengthOfInterpretation?: 'strong' | 'moderate' | 'weak';
 }

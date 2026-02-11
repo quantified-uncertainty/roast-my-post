@@ -16,6 +16,7 @@ export interface AgenticEvaluation {
     header: string | null;
     description: string;
     importance: number | null;
+    level: string | null;
     quotedText: string;
   }[];
   telemetry: {

@@ -1,9 +1,11 @@
 /**
- * Principle of Charity Filter Tool
+ * Principle of Charity Filter Tool (Two-Pass)
  *
- * Applies the principle of charity - interpreting arguments in their strongest,
- * most reasonable form before critiquing. Filters out issues that don't hold
- * when the author's argument is charitably interpreted.
+ * Pass 1: Generate charitable interpretations (steelman each issue)
+ * Pass 2: Validate whether issues survive those interpretations
+ *
+ * Splitting generation from validation prevents the bias where a model
+ * that generates an interpretation is inclined to accept its own work.
  */
 
 import { z } from "zod";
@@ -15,16 +17,21 @@ import {
   type ProviderPreferences,
 } from "../shared/llm-filter-utils";
 import { REASONING_EFFORT_VALUES } from "../../types/common";
+import type { UnifiedUsageMetrics } from "../../utils/usageMetrics";
 import type {
   PrincipleOfCharityFilterInput,
   PrincipleOfCharityFilterOutput,
   CharityFilterResult,
 } from "./types";
-import { DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT } from "./prompts";
+import {
+  GENERATE_INTERPRETATIONS_PROMPT,
+  VALIDATE_INTERPRETATIONS_PROMPT,
+  DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT,
+} from "./prompts";
 import { principleOfCharityFilterConfig } from "./config";
 
 // ============================================================================
-// Schemas
+// Schemas (Zod — for tool config validation)
 // ============================================================================
 
 const issueSchema = z.object({
@@ -79,10 +86,51 @@ const CONTEXT_RADIUS = 500;
 const MAX_CONTEXT_LENGTH = 12000;
 
 // ============================================================================
-// Tool Schema for LLM
+// Pass 1: Generate Interpretations — LLM tool schema
 // ============================================================================
 
-const toolSchema = {
+const generateSchema = {
+  type: "object" as const,
+  properties: {
+    interpretations: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          index: {
+            type: "number",
+            description: "Index of the issue (0-based)",
+          },
+          charitableInterpretation: {
+            type: "string",
+            description: "The most charitable interpretation of the author's argument",
+          },
+          strengthOfInterpretation: {
+            type: "string",
+            enum: ["strong", "moderate", "weak"],
+            description: "How plausible this charitable reading is",
+          },
+        },
+        required: ["index", "charitableInterpretation", "strengthOfInterpretation"],
+      },
+    },
+  },
+  required: ["interpretations"],
+};
+
+interface GenerateResult {
+  interpretations: Array<{
+    index: number;
+    charitableInterpretation: string;
+    strengthOfInterpretation: 'strong' | 'moderate' | 'weak';
+  }>;
+}
+
+// ============================================================================
+// Pass 2: Validate Interpretations — LLM tool schema
+// ============================================================================
+
+const validateSchema = {
   type: "object" as const,
   properties: {
     results: {
@@ -96,32 +144,27 @@ const toolSchema = {
           },
           remainsValid: {
             type: "boolean",
-            description: "Whether issue remains valid under charitable interpretation",
-          },
-          charitableInterpretation: {
-            type: "string",
-            description: "The most charitable interpretation of the author's argument",
+            description: "Whether the issue remains valid despite the charitable interpretation",
           },
           explanation: {
             type: "string",
-            description: "Explanation of why the issue does/doesn't hold",
+            description: "Why the issue does or doesn't hold given the interpretation",
           },
         },
-        required: ["index", "remainsValid", "charitableInterpretation", "explanation"],
+        required: ["index", "remainsValid", "explanation"],
       },
     },
   },
   required: ["results"],
 };
 
-type FilterResults = {
+interface ValidateResult {
   results: Array<{
     index: number;
     remainsValid: boolean;
-    charitableInterpretation: string;
     explanation: string;
   }>;
-};
+}
 
 // ============================================================================
 // Tool Implementation
@@ -139,7 +182,6 @@ export class PrincipleOfCharityFilterTool extends Tool<
     input: PrincipleOfCharityFilterInput,
     context: ToolContext
   ): Promise<PrincipleOfCharityFilterOutput> {
-    // Log input issues
     context.logger.debug(`[${FILTER_NAME}] Starting with ${input.issues.length} issues`);
     for (let i = 0; i < input.issues.length; i++) {
       context.logger.debug(
@@ -148,18 +190,19 @@ export class PrincipleOfCharityFilterTool extends Tool<
     }
 
     context.logger.info(
-      `[${FILTER_NAME}] Evaluating ${input.issues.length} issues with principle of charity`
+      `[${FILTER_NAME}] Evaluating ${input.issues.length} issues (two-pass: generate + validate)`
     );
 
-    // If no issues, return empty result
     if (input.issues.length === 0) {
-      return {
-        validIssues: [],
-        dissolvedIssues: [],
-      };
+      return { validIssues: [], dissolvedIssues: [] };
     }
 
-    // Format issues for the LLM
+    // Prepare document context (shared across both passes)
+    const docForPrompt =
+      input.documentText.length <= 15000
+        ? input.documentText
+        : this.extractRelevantContext(input.documentText, input.issues);
+
     const formattedIssues = input.issues
       .map((issue, idx) => {
         return `**Issue ${idx}**:
@@ -170,62 +213,131 @@ Reasoning: ${issue.reasoning}
       })
       .join("\n---\n\n");
 
-    // Prepare document text (truncate if needed)
-    const docForPrompt =
-      input.documentText.length <= 15000
-        ? input.documentText
-        : this.extractRelevantContext(input.documentText, input.issues);
+    const temperature = input.temperature ?? DEFAULT_TEMPERATURE;
+    const reasoning = input.reasoning as ReasoningConfig | undefined;
+    const provider = input.provider as ProviderPreferences | undefined;
 
-    const userPrompt = `Apply the Principle of Charity to evaluate these flagged issues:
+    try {
+      // ====================================================================
+      // Pass 1: Generate charitable interpretations
+      // ====================================================================
+      const pass1Prompt = input.customPrompt || GENERATE_INTERPRETATIONS_PROMPT;
+
+      const pass1UserPrompt = `Generate the strongest charitable interpretation for each flagged issue:
 
 **Document Context**:
 ${docForPrompt}
 
-**Issues to Evaluate**:
+**Issues to Interpret**:
 
 ${formattedIssues}
 
-For each issue:
-1. First, articulate the most charitable interpretation of the author's argument
-2. Then determine if the issue still holds under that interpretation
-3. Explain your reasoning`;
+For each issue, provide:
+1. The most charitable interpretation of the author's argument
+2. The strength of that interpretation (strong/moderate/weak)`;
 
-    try {
-      // Always prepend date context to prevent false positives on recent dates
-      const basePrompt = input.customPrompt || DEFAULT_PRINCIPLE_OF_CHARITY_SYSTEM_PROMPT;
-      const result = await callLLMFilter<FilterResults>(
+      context.logger.info(`[${FILTER_NAME}] Pass 1: Generating charitable interpretations`);
+
+      const pass1Result = await callLLMFilter<GenerateResult>(
         {
           model: input.model,
           modelEnvVar: "CHARITY_FILTER_MODEL",
-          systemPrompt: withDateContext(basePrompt),
-          userPrompt,
-          temperature: input.temperature ?? DEFAULT_TEMPERATURE,
-          reasoning: input.reasoning as ReasoningConfig | undefined,
-          provider: input.provider as ProviderPreferences | undefined,
-          toolName: "principle_of_charity_results",
-          toolDescription: "Results of evaluating issues with principle of charity",
-          toolSchema,
-          filterName: FILTER_NAME,
+          systemPrompt: withDateContext(pass1Prompt),
+          userPrompt: pass1UserPrompt,
+          temperature,
+          reasoning,
+          provider,
+          toolName: "charitable_interpretations",
+          toolDescription: "Charitable interpretations for each flagged issue",
+          toolSchema: generateSchema,
+          filterName: `${FILTER_NAME}/Generate`,
         },
         context
       );
 
-      // Process results
+      // Index interpretations by issue index for lookup
+      const interpretationMap = new Map<number, GenerateResult['interpretations'][0]>();
+      for (const interp of pass1Result.toolResult.interpretations) {
+        if (interp.index >= 0 && interp.index < input.issues.length) {
+          interpretationMap.set(interp.index, interp);
+        } else {
+          context.logger.warn(`[${FILTER_NAME}] Pass 1: Invalid index ${interp.index}, skipping`);
+        }
+      }
+
+      context.logger.info(
+        `[${FILTER_NAME}] Pass 1 complete: ${interpretationMap.size}/${input.issues.length} interpretations generated`
+      );
+
+      // ====================================================================
+      // Pass 2: Validate interpretations
+      // ====================================================================
+      const formattedWithInterpretations = input.issues
+        .map((issue, idx) => {
+          const interp = interpretationMap.get(idx);
+          return `**Issue ${idx}**:
+Text: "${issue.quotedText}"
+Type: ${issue.issueType}
+Original reasoning: ${issue.reasoning}
+${interp
+    ? `Charitable interpretation: ${interp.charitableInterpretation}
+Interpretation strength: ${interp.strengthOfInterpretation}`
+    : `Charitable interpretation: (none generated — treat as if no charitable reading exists)`}
+`;
+        })
+        .join("\n---\n\n");
+
+      const pass2UserPrompt = `Evaluate whether each flagged issue survives its charitable interpretation:
+
+**Document Context**:
+${docForPrompt}
+
+**Issues with Charitable Interpretations**:
+
+${formattedWithInterpretations}
+
+For each issue, determine:
+1. Whether it remains valid (true) or dissolves (false) given the charitable interpretation
+2. Brief explanation of your reasoning`;
+
+      context.logger.info(`[${FILTER_NAME}] Pass 2: Validating interpretations`);
+
+      const pass2Result = await callLLMFilter<ValidateResult>(
+        {
+          model: input.model,
+          modelEnvVar: "CHARITY_FILTER_MODEL",
+          systemPrompt: withDateContext(VALIDATE_INTERPRETATIONS_PROMPT),
+          userPrompt: pass2UserPrompt,
+          temperature,
+          reasoning,
+          provider,
+          toolName: "principle_of_charity_results",
+          toolDescription: "Validation results for charitable interpretations",
+          toolSchema: validateSchema,
+          filterName: `${FILTER_NAME}/Validate`,
+        },
+        context
+      );
+
+      // ====================================================================
+      // Merge Pass 1 + Pass 2 into CharityFilterResult[]
+      // ====================================================================
       const validIssues: CharityFilterResult[] = [];
       const dissolvedIssues: CharityFilterResult[] = [];
 
-      for (const r of result.toolResult.results) {
-        // Validate index is in range
+      for (const r of pass2Result.toolResult.results) {
         if (r.index < 0 || r.index >= input.issues.length) {
-          context.logger.warn(`[${FILTER_NAME}] Invalid index ${r.index}, skipping`);
+          context.logger.warn(`[${FILTER_NAME}] Pass 2: Invalid index ${r.index}, skipping`);
           continue;
         }
 
+        const interp = interpretationMap.get(r.index);
         const filterResult: CharityFilterResult = {
           index: r.index,
           remainsValid: r.remainsValid,
-          charitableInterpretation: r.charitableInterpretation,
+          charitableInterpretation: interp?.charitableInterpretation ?? "No interpretation generated",
           explanation: r.explanation,
+          strengthOfInterpretation: interp?.strengthOfInterpretation,
         };
 
         if (r.remainsValid) {
@@ -235,34 +347,40 @@ For each issue:
         }
       }
 
+      // Log summary
       context.logger.info(
-        `[${FILTER_NAME}] ${dissolvedIssues.length}/${input.issues.length} issues dissolved (filtered out), ${validIssues.length} remain valid`
+        `[${FILTER_NAME}] ${dissolvedIssues.length}/${input.issues.length} issues dissolved, ${validIssues.length} remain valid`
       );
 
-      // Debug logging
       for (const issue of validIssues) {
+        const strength = issue.strengthOfInterpretation ? ` [interp: ${issue.strengthOfInterpretation}]` : '';
         context.logger.debug(
-          `[${FILTER_NAME}] Issue ${issue.index} REMAINS VALID: ${issue.explanation.substring(0, 100)}...`
+          `[${FILTER_NAME}] Issue ${issue.index} REMAINS VALID${strength}: ${issue.explanation.substring(0, 100)}...`
         );
       }
       for (const issue of dissolvedIssues) {
+        const strength = issue.strengthOfInterpretation ? ` [interp: ${issue.strengthOfInterpretation}]` : '';
         context.logger.debug(
-          `[${FILTER_NAME}] Issue ${issue.index} DISSOLVED: ${issue.explanation.substring(0, 100)}...`
+          `[${FILTER_NAME}] Issue ${issue.index} DISSOLVED${strength}: ${issue.explanation.substring(0, 100)}...`
         );
       }
 
-      if (result.unifiedUsage) {
+      // Combine usage from both passes
+      const combinedUsage = combineUsage(pass1Result.unifiedUsage, pass2Result.unifiedUsage);
+
+      if (combinedUsage) {
         context.logger.debug(
-          `[${FILTER_NAME}] Cost: $${result.unifiedUsage.costUsd.toFixed(6)}`
+          `[${FILTER_NAME}] Combined cost: $${combinedUsage.costUsd.toFixed(6)} (pass1 + pass2)`
         );
       }
 
       return {
         validIssues,
         dissolvedIssues,
-        unifiedUsage: result.unifiedUsage,
-        actualApiParams: result.actualApiParams,
-        responseMetrics: result.responseMetrics,
+        unifiedUsage: combinedUsage,
+        // Use pass 2's API params/metrics as the "primary" ones (the validation is the decision-maker)
+        actualApiParams: pass2Result.actualApiParams,
+        responseMetrics: pass2Result.responseMetrics,
       };
     } catch (error) {
       context.logger.error(`[${FILTER_NAME}] Filter failed:`, error);
@@ -321,6 +439,36 @@ For each issue:
 
     return result;
   }
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/**
+ * Combine usage metrics from two LLM calls (Pass 1 + Pass 2)
+ */
+function combineUsage(
+  a: UnifiedUsageMetrics | undefined,
+  b: UnifiedUsageMetrics | undefined
+): UnifiedUsageMetrics | undefined {
+  if (!a && !b) return undefined;
+  if (!a) return b;
+  if (!b) return a;
+
+  return {
+    inputTokens: a.inputTokens + b.inputTokens,
+    outputTokens: a.outputTokens + b.outputTokens,
+    totalTokens: a.totalTokens + b.totalTokens,
+    costUsd: a.costUsd + b.costUsd,
+    isCostFromApi: a.isCostFromApi && b.isCostFromApi,
+    cacheReadTokens: (a.cacheReadTokens ?? 0) + (b.cacheReadTokens ?? 0) || undefined,
+    cacheWriteTokens: (a.cacheWriteTokens ?? 0) + (b.cacheWriteTokens ?? 0) || undefined,
+    reasoningTokens: (a.reasoningTokens ?? 0) + (b.reasoningTokens ?? 0) || undefined,
+    provider: b.provider,
+    model: b.model,
+    latencyMs: a.latencyMs + b.latencyMs,
+  };
 }
 
 export const principleOfCharityFilterTool = new PrincipleOfCharityFilterTool();

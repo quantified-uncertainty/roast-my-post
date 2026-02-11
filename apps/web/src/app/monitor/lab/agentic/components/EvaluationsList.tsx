@@ -243,9 +243,9 @@ function EvaluationRow({ evaluation, isExpanded, onToggle }: EvaluationRowProps)
                     {comment.header && (
                       <span className="text-sm font-medium text-gray-900">{comment.header}</span>
                     )}
-                    {comment.importance !== null && (
-                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${levelBadge(comment.importance >= 7 ? "error" : comment.importance >= 4 ? "warning" : "info")}`}>
-                        {comment.importance}
+                    {comment.level && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${levelBadge(comment.level)}`}>
+                        {comment.level}
                       </span>
                     )}
                   </div>

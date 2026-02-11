@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
             header: true,
             description: true,
             importance: true,
+            level: true,
             highlight: {
               select: {
                 quotedText: true,
@@ -110,6 +111,7 @@ export async function GET(request: NextRequest) {
           header: c.header,
           description: c.description,
           importance: c.importance,
+          level: c.level,
           quotedText: c.highlight?.quotedText || "",
         })),
         // Telemetry data (matches ComparisonData structure)
