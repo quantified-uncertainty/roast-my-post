@@ -291,7 +291,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     });
 
     // Build SDK options — branches between single-agent and multi-agent modes
-    const queryOptions = buildAgenticQueryOptions(config, evaluationServer, this.workspacePath);
+    const emitFn = (event: { type: string; message: string }) => this.emit(event as AgenticStreamEvent);
+    const queryOptions = buildAgenticQueryOptions(config, evaluationServer, this.workspacePath, emitFn);
 
     // If workspace is available, tell the agent where to find the document
     const workspaceInfo = this.workspacePath

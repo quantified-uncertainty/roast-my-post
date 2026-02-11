@@ -18,32 +18,54 @@ import { logger } from "../../../shared/logger";
 
 const FILE_ACCESS_TOOLS = new Set(["Read", "Write", "Edit", "Glob", "Grep", "NotebookEdit"]);
 
-function createWorkspaceGuard(workspacePath: string) {
-  const resolvedWorkspace = resolve(workspacePath);
+// Built-in agents that should be blocked from spawning via Task tool
+const BLOCKED_BUILTIN_AGENTS = new Set(["general-purpose"]);
+
+type EmitFn = (event: { type: string; message: string }) => void;
+
+/**
+ * Combined canUseTool guard:
+ * 1. Blocks Task tool calls targeting built-in agents we don't want (e.g. general-purpose)
+ * 2. Restricts file access tools to the workspace directory
+ * Emits status events for visibility in the UI stream.
+ */
+function createToolGuard(workspacePath?: string, emit?: EmitFn) {
+  const resolvedWorkspace = workspacePath ? resolve(workspacePath) : null;
 
   return async (toolName: string, input: Record<string, unknown>) => {
-    if (!FILE_ACCESS_TOOLS.has(toolName)) {
-      return { behavior: "allow" as const, updatedInput: input };
+    // Block spawning unwanted built-in agents
+    if (toolName === "Task") {
+      const agentType = (input as { subagent_type?: string }).subagent_type;
+      if (agentType && BLOCKED_BUILTIN_AGENTS.has(agentType)) {
+        const msg = `Blocked spawning built-in agent: ${agentType}`;
+        logger.warn(msg);
+        emit?.({ type: "status", message: msg });
+        return {
+          behavior: "deny" as const,
+          message: `Agent "${agentType}" is disabled. Use the specialized sub-agents instead.`,
+        };
+      }
     }
 
-    // Extract path from tool input (different field names per tool)
-    const filePath =
-      (input as { file_path?: string }).file_path ??
-      (input as { path?: string }).path ??
-      (input as { notebook_path?: string }).notebook_path;
+    // Workspace filesystem guard
+    if (resolvedWorkspace && FILE_ACCESS_TOOLS.has(toolName)) {
+      const filePath =
+        (input as { file_path?: string }).file_path ??
+        (input as { path?: string }).path ??
+        (input as { notebook_path?: string }).notebook_path;
 
-    // If no path specified, tool defaults to cwd which is workspace — allow
-    if (!filePath || typeof filePath !== "string") {
-      return { behavior: "allow" as const, updatedInput: input };
-    }
-
-    const resolvedPath = resolve(workspacePath, filePath);
-    if (!resolvedPath.startsWith(resolvedWorkspace)) {
-      logger.warn(`Workspace guard denied ${toolName} access to: ${filePath}`);
-      return {
-        behavior: "deny" as const,
-        message: `Access denied: ${filePath} is outside workspace ${workspacePath}`,
-      };
+      if (filePath && typeof filePath === "string") {
+        const resolvedPath = resolve(workspacePath!, filePath);
+        if (!resolvedPath.startsWith(resolvedWorkspace)) {
+          const msg = `Workspace guard denied ${toolName} access to: ${filePath}`;
+          logger.warn(msg);
+          emit?.({ type: "status", message: msg });
+          return {
+            behavior: "deny" as const,
+            message: `Access denied: ${filePath} is outside workspace ${workspacePath}`,
+          };
+        }
+      }
     }
 
     return { behavior: "allow" as const, updatedInput: input };
@@ -376,17 +398,6 @@ export function buildSubAgentDefinitions(
     };
   }
 
-  // Override the built-in general-purpose agent so the orchestrator doesn't
-  // spawn it to duplicate the custom sub-agents' work. Redirect it to delegate.
-  const agentNames = Object.keys(agents);
-  agents["general-purpose"] = {
-    description: "Do NOT use this agent. Delegate to the specialized sub-agents instead: " + agentNames.join(", "),
-    prompt: `You are disabled. Do not perform any analysis yourself.
-Instead, tell the orchestrator to use the specialized sub-agents: ${agentNames.join(", ")}.
-Return immediately with a message explaining which sub-agent should handle the task.`,
-    model: "haiku",
-  };
-
   return agents;
 }
 
@@ -500,7 +511,8 @@ You have access to two specialized tools:
 export function buildAgenticQueryOptions(
   config: AgenticProfileConfig,
   evaluationServer: McpSdkServerConfigWithInstance,
-  workspacePath?: string
+  workspacePath?: string,
+  emit?: (event: { type: string; message: string }) => void
 ): Partial<Options> {
   logger.info(`buildAgenticQueryOptions: version=${config.version} enableSubAgents=${config.enableSubAgents} enableMcpTools=${config.enableMcpTools} workspace=${workspacePath ?? "none"}`);
 
@@ -510,14 +522,15 @@ export function buildAgenticQueryOptions(
     Object.entries(process.env).filter(([key]) => key !== "ANTHROPIC_API_KEY")
   ) as Record<string, string>;
 
-  // Workspace security: cwd + sandbox + canUseTool guard
+  // Security: canUseTool blocks unwanted built-in agents + restricts filesystem
+  const canUseTool = createToolGuard(workspacePath, emit);
   const workspaceOptions = workspacePath
     ? {
         cwd: workspacePath,
         sandbox: { enabled: true, allowUnsandboxedCommands: false },
-        canUseTool: createWorkspaceGuard(workspacePath),
+        canUseTool,
       }
-    : {};
+    : { canUseTool };
 
   if (!config.enableSubAgents) {
     // Single-agent mode - explicitly pass empty agents to disable built-in agents
