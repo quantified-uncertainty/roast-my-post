@@ -6,7 +6,6 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
 import { logger } from "@/infrastructure/logging/logger";
-import { mkdir, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import { join } from "path";
 
@@ -189,29 +188,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Set up workspace with document
-      try {
-        await mkdir(workspacePath, { recursive: true });
-        await mkdir(join(workspacePath, "findings"), { recursive: true });
-        await writeFile(join(workspacePath, "document.md"), fullContent, "utf-8");
-        await writeFile(
-          join(workspacePath, "metadata.json"),
-          JSON.stringify({ title: version.title, documentId: body.documentId }, null, 2),
-          "utf-8"
-        );
-        logger.info(`Created workspace at ${workspacePath}`);
-      } catch (err) {
-        logger.error("Failed to create workspace:", err);
-        sendEvent({ type: "error", message: "Failed to create analysis workspace" });
-        controller.close();
-        return;
-      }
-
       const plugin = new AgenticPlugin({
         onMessage: (event: AgenticStreamEvent) => sendEvent(event),
         maxBudgetUsd: 2.0,
         profileId: body.profileId,
-        workspacePath, // Pass workspace path to plugin
+        workspacePath,
+        documentTitle: version.title,
       });
 
       try {

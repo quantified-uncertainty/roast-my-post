@@ -362,8 +362,8 @@ export class PluginManager {
             );
             pluginLoggerInstance.processingChunks(assignedChunks.length);
 
-            // Add timeout to prevent hanging
-            const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
+            // Add timeout to prevent hanging (agentic runs multi-agent pipelines, needs longer)
+            const PLUGIN_TIMEOUT_MS = pluginName === "agentic" ? 1200000 : 300000; // 20 min for agentic, 5 min for others
             let timeoutId: NodeJS.Timeout;
 
             const timeoutPromise = new Promise<never>((_, reject) => {

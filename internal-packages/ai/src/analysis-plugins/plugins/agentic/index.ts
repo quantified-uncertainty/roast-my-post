@@ -10,6 +10,9 @@ import type {
   SDKResultSuccess,
   SDKResultError,
 } from "@anthropic-ai/claude-agent-sdk";
+import { mkdir, writeFile } from "fs/promises";
+import { join } from "path";
+import { randomUUID } from "crypto";
 
 import type { Comment } from "../../../shared/types";
 import type {
@@ -51,6 +54,8 @@ export interface AgenticPluginOptions {
   profileId?: string;
   /** Path to temp workspace where document and findings are stored */
   workspacePath?: string;
+  /** Document title for metadata.json */
+  documentTitle?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -210,6 +215,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
   private maxBudgetUsd: number;
   private profileId?: string;
   private workspacePath?: string;
+  private documentTitle?: string;
   private numTurns = 0;
 
   constructor(options?: AgenticPluginOptions) {
@@ -217,6 +223,12 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     this.maxBudgetUsd = options?.maxBudgetUsd ?? 2.0;
     this.profileId = options?.profileId;
     this.workspacePath = options?.workspacePath;
+    this.documentTitle = options?.documentTitle;
+  }
+
+  /** Returns the workspace path (created during analyze if not provided) */
+  getWorkspacePath(): string | undefined {
+    return this.workspacePath;
   }
 
   name(): string {
@@ -255,6 +267,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     }
 
     try {
+      await this.ensureWorkspace(documentText);
       const output = await this.runAgenticAnalysis(documentText);
 
       for (const finding of output.findings) {
@@ -286,6 +299,28 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     } catch {
       // Don't let callback errors break the analysis
     }
+  }
+
+  /**
+   * Ensure workspace directory exists with document.md and findings/ subdir.
+   * If workspacePath wasn't provided, generates a new temp directory.
+   */
+  private async ensureWorkspace(documentText: string): Promise<void> {
+    if (!this.workspacePath) {
+      this.workspacePath = join("/tmp", `agentic-${randomUUID()}`);
+    }
+
+    await mkdir(this.workspacePath, { recursive: true });
+    await mkdir(join(this.workspacePath, "findings"), { recursive: true });
+    await writeFile(join(this.workspacePath, "document.md"), documentText, "utf-8");
+    await writeFile(
+      join(this.workspacePath, "metadata.json"),
+      JSON.stringify({ title: this.documentTitle ?? "Untitled" }, null, 2),
+      "utf-8"
+    );
+
+    this.emit({ type: "status", message: `Workspace: ${this.workspacePath}` });
+    logger.info(`Agentic workspace ready at ${this.workspacePath}`);
   }
 
   private async runAgenticAnalysis(
