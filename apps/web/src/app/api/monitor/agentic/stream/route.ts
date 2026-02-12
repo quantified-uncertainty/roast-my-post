@@ -6,7 +6,7 @@ import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
 import { logger } from "@/infrastructure/logging/logger";
-import { mkdir, writeFile, rm } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import { join } from "path";
 
@@ -256,13 +256,8 @@ export async function POST(request: NextRequest) {
         logger.error("Agentic stream error:", error instanceof Error ? error : new Error(errorMessage));
         sendEvent({ type: "error", message: errorMessage });
       } finally {
-        // Clean up workspace
-        try {
-          await rm(workspacePath, { recursive: true, force: true });
-          logger.info(`Cleaned up workspace at ${workspacePath}`);
-        } catch (cleanupErr) {
-          logger.warn(`Failed to clean up workspace: ${cleanupErr instanceof Error ? cleanupErr.message : String(cleanupErr)}`);
-        }
+        // Workspace preserved for debugging — inspect findings/ for agent reports
+        logger.info(`Workspace preserved at ${workspacePath}`);
         controller.close();
       }
     },

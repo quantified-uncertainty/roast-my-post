@@ -37,12 +37,13 @@ export const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
   "fallacy-checker": { enabled: true, model: "sonnet" },
   "clarity-checker": { enabled: true, model: "haiku" },
   "math-checker": { enabled: true, model: "sonnet" },
+  "reviewer": { enabled: true, model: "sonnet", maxTurns: 15 },
 };
 
 export const DEFAULT_AGENTIC_CONFIG: AgenticProfileConfig = {
   version: 1,
   model: "sonnet",
-  maxTurns: 10,
+  maxTurns: 20,
   maxBudgetUsd: 2.0,
   allowedTools: ["WebSearch", "WebFetch"],
   systemPrompt: "",

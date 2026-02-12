@@ -50,6 +50,7 @@ const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
   "fallacy-checker": { enabled: true, model: "sonnet" },
   "clarity-checker": { enabled: true, model: "haiku" },
   "math-checker": { enabled: true, model: "sonnet" },
+  "reviewer": { enabled: true, model: "sonnet" },
 };
 
 // Map old names to new names for migration
@@ -60,7 +61,7 @@ const AGENT_NAME_MIGRATIONS: Record<string, string> = {
 const DEFAULT_CONFIG: AgenticConfig = {
   version: 1,
   model: "sonnet",
-  maxTurns: 10,
+  maxTurns: 20,
   maxBudgetUsd: 2.0,
   allowedTools: ["WebSearch", "WebFetch"],
   systemPrompt: "",

@@ -388,8 +388,9 @@ export async function callOpenRouterChat(
   const response = await callOpenRouter(request, clientOptions);
   const latencyMs = Date.now() - startTime;
 
-  const choice = response.choices[0];
+  const choice = response.choices?.[0];
   if (!choice) {
+    logger.error('[OpenRouter] No choices in response', { id: response.id, model: response.model, provider: response.provider });
     throw new Error('No response from OpenRouter');
   }
 
@@ -595,8 +596,9 @@ export async function callOpenRouterWithTool<T>(
   const response = await callOpenRouter(request);
   const latencyMs = Date.now() - apiCallStartTime;
 
-  const choice = response.choices[0];
+  const choice = response.choices?.[0];
   if (!choice) {
+    logger.error('[OpenRouter] No choices in response', { id: response.id, model: response.model, provider: response.provider });
     throw new Error('No response from OpenRouter');
   }
 

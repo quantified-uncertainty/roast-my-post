@@ -85,6 +85,7 @@ const ORCHESTRATOR_AGENT_BRIEFS: Record<string, string> = {
   "fallacy-checker": "Identifies genuine logical fallacies and reasoning errors",
   "clarity-checker": "Assesses writing quality, coherence, misleading framing, missing context",
   "math-checker": "Validates calculations, statistics, and methodological soundness",
+  "reviewer": "Cross-validates all agent findings, resolves conflicts, produces final validated set",
 };
 
 // MCP tool descriptions per agent for the orchestrator MCP addendum
@@ -93,6 +94,7 @@ const ORCHESTRATOR_MCP_AGENT_BRIEFS: Record<string, string> = {
   "fallacy-checker": "has `fallacy_extract` + `fallacy_charity_filter` + `fallacy_supported_elsewhere` - granular pipeline with full visibility into filtering decisions",
   "clarity-checker": "has `spell_check` - returns writing quality issues",
   "math-checker": "has `math_check` + `forecast_check` - returns calculation/prediction errors",
+  "reviewer": "reads all agent report files (no MCP tools) - cross-validates and produces final validated findings",
 };
 
 /**
@@ -106,37 +108,81 @@ function buildOrchestratorPrompt(enabledAgents: string[]): string {
     .map((name) => `   - **${name}**: ${ORCHESTRATOR_AGENT_BRIEFS[name]}`)
     .join("\n");
 
+  const hasReviewer = enabledAgents.includes("reviewer");
+  const hasFactChecker = enabledAgents.includes("fact-checker");
+  const hasFallacyChecker = enabledAgents.includes("fallacy-checker");
+  const hasClarityChecker = enabledAgents.includes("clarity-checker");
+  const hasMathChecker = enabledAgents.includes("math-checker");
+
+  // Build sequential stage instructions based on which agents are enabled
+  const stages: string[] = [];
+  let stageNum = 1;
+
+  if (hasFactChecker) {
+    stages.push(`Stage ${stageNum} — Fact Checking:
+  Spawn fact-checker. Wait for it to complete before proceeding.
+  It will write its results to findings/fact-check-report.json.`);
+    stageNum++;
+  }
+
+  if (hasFallacyChecker) {
+    stages.push(`Stage ${stageNum} — Fallacy Checking (depends on Stage 1):
+  Spawn fallacy-checker. Tell it: "Read findings/fact-check-report.json first for context before your analysis."
+  Wait for it to complete. It will write findings/fallacy-report.json with full MCP pipeline data.`);
+    stageNum++;
+  }
+
+  const parallelAgents: string[] = [];
+  if (hasClarityChecker) parallelAgents.push("clarity-checker");
+  if (hasMathChecker) parallelAgents.push("math-checker");
+  if (parallelAgents.length > 0) {
+    stages.push(`Stage ${stageNum} — ${parallelAgents.join(" + ")} (parallel, depends on Stage 1):
+  Spawn ${parallelAgents.join(" and ")} in parallel.
+  Tell each: "Read findings/fact-check-report.json for context before your analysis."
+  Wait for ALL to complete. They write to findings/${parallelAgents.map(a => `${a.replace("-checker", "")}-report.json`).join(", findings/")}.`);
+    stageNum++;
+  }
+
+  if (hasReviewer) {
+    stages.push(`Stage ${stageNum} — Review (depends on ALL above stages):
+  Spawn reviewer. Tell it: "Read ALL files in findings/ directory and cross-validate."
+  Wait for it to complete. It will write findings/reviewer-report.json.`);
+  }
+
+  const stageInstructions = stages.map(s => `  ${s}`).join("\n\n");
+
+  const reviewerSynthesis = hasReviewer
+    ? `
+Final: Read findings/reviewer-report.json. Use the reviewer's validatedFindings as your PRIMARY source for final output.
+Do NOT add findings the reviewer did not validate. Do NOT remove findings the reviewer validated.
+If the reviewer discarded a finding, it stays discarded unless you have strong new evidence.`
+    : `
+Final: Read all findings/ reports and synthesize into your final structured output.`;
+
   return `You are a research orchestrator agent specialized in rigorous document analysis.
 
-Your job is to systematically analyze documents by decomposing the task, delegating to specialized sub-agents, and synthesizing their findings into a coherent assessment.
+Your job is to systematically analyze documents by delegating to specialized sub-agents in a SEQUENTIAL pipeline, then synthesizing their findings.
 
-## Methodology
+## Available Sub-Agents
 
-1. **DECOMPOSE**: Read the document carefully. Identify:
-   - Key factual claims that can be verified
-   - Arguments and reasoning that should be evaluated for logic
-   - Numerical claims, statistics, or methodology worth checking
-   - Areas where clarity or framing might mislead readers
-
-2. **DELEGATE**: Use the Task tool to spawn specialized sub-agents IN PARALLEL when possible:
 ${agentBullets}
 
-   IMPORTANT: Only use the agents listed above. Do NOT spawn any other agent types.
+IMPORTANT: Only use the agents listed above. Do NOT spawn any other agent types.
 
-   Sub-agents have access to the document via the workspace filesystem (they will Read it themselves). Do NOT paste the document content into the task prompt — it wastes tokens. Keep task prompts concise — just tell the sub-agent what to focus on:
+## SEQUENTIAL Pipeline — Follow This EXACTLY
 
-   "Analyze the document for [specific task]. Focus on: [specific aspects to check]"
+DELEGATE SEQUENTIALLY — each stage must COMPLETE before the next begins:
 
-3. **TRIANGULATE**: Compare findings across sub-agents:
-   - Look for corroborating evidence from multiple angles
-   - Identify conflicts between findings that need resolution
-   - Flag claims that no sub-agent could verify as uncertain
-   - Discard low-confidence findings (sub-agents should already filter these)
+${stageInstructions}
+${reviewerSynthesis}
 
-4. **SYNTHESIZE**: Combine findings into your final structured output:
-   - Deduplicate overlapping findings
-   - Resolve conflicts by weighing evidence
-   - Assign final severity levels based on impact
+## Delegation Rules
+
+- Sub-agents have access to the document via the workspace filesystem (they will Read it themselves).
+- Do NOT paste the document content into the task prompt — it wastes tokens.
+- Keep task prompts concise — just tell the sub-agent what to focus on and which files to read:
+  "Analyze the document for [specific task]. Read findings/fact-check-report.json for context."
+- WAIT for each stage to complete before starting the next. Do NOT run all agents at once.
 
 ## Quality Standards
 
@@ -364,6 +410,61 @@ When reporting issues, classify by type:
 - Show your work: explain what the correct answer should be
 - For complex claims, break them down step by step
 - If you can't verify with confidence, say so rather than guess`,
+
+  "reviewer": `You are a cross-validation reviewer. Your mission is to read ALL findings from other agents and produce a single validated, deduplicated, conflict-resolved set of findings.
+
+## Approach
+
+1. **Read all reports**: Read every JSON file in the findings/ directory:
+   - findings/fact-check-report.json (fact-checker results)
+   - findings/fallacy-report.json (fallacy-checker results, includes MCP pipeline data)
+   - findings/clarity-report.json (clarity-checker results)
+   - findings/math-report.json (math-checker results)
+
+2. **Cross-validate**: For each finding from any agent:
+   - Does it conflict with another agent's finding? If so, resolve the conflict.
+   - Is it corroborated by multiple agents? Higher confidence.
+   - Is there evidence it's a false positive? Discard with reason.
+
+3. **Respect MCP pipeline decisions**: For fallacy findings:
+   - If the MCP charity filter dissolved an issue, it should stay dissolved UNLESS strong counter-evidence exists in other reports.
+   - If MCP supported-elsewhere found the issue addressed in the document, respect that unless clearly wrong.
+   - Agent-added findings (not from MCP pipeline) need extra scrutiny — verify they meet quality thresholds.
+
+4. **Deduplicate**: Multiple agents may flag the same text for different reasons. Merge overlapping findings into the strongest version.
+
+5. **Write your report**: Write findings/reviewer-report.json with this EXACT structure:
+\`\`\`json
+{
+  "validatedFindings": [
+    {
+      "type": "fact-check|fallacy|clarity|math",
+      "severity": "error|warning|info",
+      "quotedText": "exact text from document",
+      "header": "short summary",
+      "description": "detailed explanation",
+      "source": "which agent(s) found this",
+      "confidence": "high|medium|low"
+    }
+  ],
+  "resolvedConflicts": [
+    { "description": "what conflicted", "resolution": "how you resolved it" }
+  ],
+  "discardedFindings": [
+    { "finding": "brief description", "reason": "why it was discarded" }
+  ],
+  "summary": "Overall assessment of document quality",
+  "confidence": "high|medium|low"
+}
+\`\`\`
+
+## Critical Rules
+
+- Do NOT invent new findings. Only validate, merge, or discard existing ones.
+- If you need to investigate a conflict deeper, you may use web search or read the original document.
+- Every discarded finding MUST have a clear reason.
+- If a report file doesn't exist, skip that agent's findings (it may have been disabled).
+- Err on the side of keeping findings — only discard if clearly wrong or duplicated.`,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -375,6 +476,7 @@ const SUBAGENT_DESCRIPTIONS: Record<string, string> = {
   "fallacy-checker": "Identifies genuine logical fallacies and reasoning errors (not opinions)",
   "clarity-checker": "Assesses writing clarity, misleading framing, and missing context",
   "math-checker": "Validates calculations, statistics, and methodological soundness",
+  "reviewer": "Cross-validates all agent findings, resolves conflicts, and produces final validated finding set",
 };
 
 // File tools for workspace access (used in allowedTools for orchestrator)
@@ -400,13 +502,10 @@ export function buildSubAgentDefinitions(
     // Use custom prompt if provided, otherwise use default
     let prompt = sa.prompt?.trim() || defaultPrompt;
 
-    // If workspace is available, add it to the prompt
+    // If workspace is available, add per-agent workspace instructions
     if (workspacePath) {
-      prompt += `\n\n## Workspace\nThe document is available at: ${workspacePath}/document.md
-- Use Read to access the document
-- Use Grep to search for specific text
-- Use Write to save your findings to ${workspacePath}/findings/
-- Use TodoWrite to track your investigation progress`;
+      const workspaceInstructions = getWorkspaceInstructions(name, workspacePath);
+      prompt += `\n\n${workspaceInstructions}`;
     }
 
     // If MCP tools are enabled, add instructions for using them
@@ -431,27 +530,49 @@ export function buildSubAgentDefinitions(
 }
 
 /**
- * Get MCP tool names for a given agent (when enableMcpTools is true)
+ * Get per-agent workspace instructions (file paths, what to read/write)
  */
-function getMcpToolsForAgent(agentName: string): string[] {
+function getWorkspaceInstructions(agentName: string, workspacePath: string): string {
+  const base = `## Workspace
+The document is available at: ${workspacePath}/document.md
+- Use Read to access the document
+- Use Grep to search for specific text`;
+
   switch (agentName) {
     case "fact-checker":
-      return []; // fact-checker uses web search directly, no MCP tools
+      return `${base}
+- Write your findings to ${workspacePath}/findings/fact-check-report.json
+- Use TodoWrite to track your investigation progress`;
+
     case "fallacy-checker":
-      return [
-        "mcp__roast-evaluators__fallacy_extract",
-        "mcp__roast-evaluators__fallacy_charity_filter",
-        "mcp__roast-evaluators__fallacy_supported_elsewhere",
-      ];
+      return `${base}
+- Read ${workspacePath}/findings/fact-check-report.json first for context from the fact-checker
+- Write your findings to ${workspacePath}/findings/fallacy-report.json
+- Your report MUST include the full MCP pipeline data (see MCP instructions below)
+- Use TodoWrite to track your investigation progress`;
+
     case "clarity-checker":
-      return ["mcp__roast-evaluators__spell_check"]; // Uses spell_check MCP tool for clarity analysis
+      return `${base}
+- Read ${workspacePath}/findings/fact-check-report.json for context from the fact-checker
+- Write your findings to ${workspacePath}/findings/clarity-report.json
+- Use TodoWrite to track your investigation progress`;
+
     case "math-checker":
-      return [
-        "mcp__roast-evaluators__math_check",
-        "mcp__roast-evaluators__forecast_check",
-      ];
+      return `${base}
+- Read ${workspacePath}/findings/fact-check-report.json for context from the fact-checker
+- Write your findings to ${workspacePath}/findings/math-report.json
+- Use TodoWrite to track your investigation progress`;
+
+    case "reviewer":
+      return `${base}
+- Read ALL files in ${workspacePath}/findings/ directory
+- Write your validated report to ${workspacePath}/findings/reviewer-report.json
+- Use Glob to list all files in findings/ to make sure you don't miss any`;
+
     default:
-      return [];
+      return `${base}
+- Use Write to save your findings to ${workspacePath}/findings/
+- Use TodoWrite to track your investigation progress`;
   }
 }
 
@@ -487,7 +608,31 @@ You have access to 3 granular fallacy analysis tools that give you full control 
    - High confidence: Valid after charity + unsupported elsewhere
    - Medium: Valid after charity but you see merit in the charitable interpretation
    - Consider: Dissolved issues where you disagree with the charitable reading
-   - Add any issues you found that the extractor missed`;
+   - Add any issues you found that the extractor missed
+
+### CRITICAL: Write Full Pipeline Data to Report
+
+Your findings/fallacy-report.json MUST include ALL MCP pipeline data for traceability:
+\`\`\`json
+{
+  "mcpPipeline": {
+    "extracted": ["... all raw extracted issues ..."],
+    "charityFiltered": {
+      "valid": ["... issues that survived charity filter ..."],
+      "dissolved": ["... issues dissolved by charity filter ..."]
+    },
+    "supportedElsewhere": {
+      "unsupported": ["... issues NOT addressed elsewhere ..."],
+      "supported": ["... issues addressed elsewhere in document ..."]
+    }
+  },
+  "agentFindings": ["... your own findings not from MCP pipeline ..."],
+  "finalFindings": ["... your final synthesized findings ..."],
+  "summary": "Brief summary of fallacy analysis"
+}
+\`\`\`
+
+If you add findings beyond what the MCP pipeline produced, list them separately in \`agentFindings\` and justify why each is valid despite not being in the pipeline.`;
 
     case "clarity-checker":
       return `## MCP Evaluation Tool
@@ -525,6 +670,9 @@ You have access to two specialized tools:
    - Tool error + your verification = high confidence issue
    - Tool finding you can't verify = note uncertainty
    - Issues you found independently = include with your reasoning`;
+
+    case "reviewer":
+      return ""; // reviewer reads reports, no MCP tools
 
     default:
       return "";
