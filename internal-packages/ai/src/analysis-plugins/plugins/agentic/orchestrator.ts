@@ -90,7 +90,7 @@ const ORCHESTRATOR_AGENT_BRIEFS: Record<string, string> = {
 
 // MCP tool descriptions per agent for the orchestrator MCP addendum
 const ORCHESTRATOR_MCP_AGENT_BRIEFS: Record<string, string> = {
-  "fact-checker": "uses web search directly (no MCP tools)",
+  "fact-checker": "has `perplexity_research` for quick cited verification + web search for deep research",
   "fallacy-checker": "has `fallacy_extract` + `fallacy_charity_filter` + `fallacy_supported_elsewhere` - granular pipeline with full visibility into filtering decisions",
   "clarity-checker": "has `spell_check` - returns writing quality issues",
   "math-checker": "has `math_check` + `forecast_check` - returns calculation/prediction errors",
@@ -254,7 +254,7 @@ export const SUBAGENT_PROMPTS = {
    - Historical facts
    Skip opinions, predictions, and subjective assessments.
 
-2. **Search for Evidence**: Use web search to find PRIMARY sources:
+2. **Search for Evidence**: Use WebSearch and WebFetch as your primary research tools — search, read full pages, follow links, and refine your queries. Additionally, the \`perplexity_research\` MCP tool is available for quick web-grounded verification with cited sources in a single call. Use it to supplement your research, get a second perspective on a claim, or when you want a fast sanity check.
    - Official statistics (government, WHO, reputable institutions)
    - Peer-reviewed research and academic papers
    - Direct quotes from original sources
@@ -461,7 +461,8 @@ When reporting issues, classify by type:
 ## Critical Rules
 
 - Do NOT invent new findings. Only validate, merge, or discard existing ones.
-- If you need to investigate a conflict deeper, you may use web search or read the original document.
+- Do NOT use MCP tools (perplexity_research, fallacy_extract, etc.). You are a reviewer — work only with the reports provided.
+- If you need to verify something, read the original document. Do NOT do additional web research.
 - Every discarded finding MUST have a clear reason.
 - If a report file doesn't exist, skip that agent's findings (it may have been disabled).
 - Err on the side of keeping findings — only discard if clearly wrong or duplicated.`,
@@ -518,15 +519,63 @@ export function buildSubAgentDefinitions(
 
     // Don't set tools — let agents inherit ALL tools including MCP.
     // Setting tools explicitly prevents MCP access (SDK bug #13605).
+    // Instead, use disallowedTools to block MCP tools for agents that shouldn't use them.
+    const disallowedTools = getDisallowedTools(name, config.enableMcpTools ?? false);
+
     agents[name] = {
       description: SUBAGENT_DESCRIPTIONS[name] || `Specialized sub-agent: ${name}`,
       prompt,
       model: sa.model === "inherit" ? undefined : (sa.model ?? undefined),
       ...(sa.maxTurns && { maxTurns: sa.maxTurns }),
+      ...(disallowedTools.length > 0 && { disallowedTools }),
     };
   }
 
   return agents;
+}
+
+// All MCP tool names from the evaluation server
+const ALL_MCP_TOOLS = [
+  "mcp__roast-evaluators__perplexity_research",
+  "mcp__roast-evaluators__spell_check",
+  "mcp__roast-evaluators__math_check",
+  "mcp__roast-evaluators__forecast_check",
+  "mcp__roast-evaluators__fallacy_extract",
+  "mcp__roast-evaluators__fallacy_charity_filter",
+  "mcp__roast-evaluators__fallacy_supported_elsewhere",
+];
+
+// Fallacy MCP tools only
+const FALLACY_MCP_TOOLS = [
+  "mcp__roast-evaluators__fallacy_extract",
+  "mcp__roast-evaluators__fallacy_charity_filter",
+  "mcp__roast-evaluators__fallacy_supported_elsewhere",
+];
+
+/**
+ * Get disallowed tools per agent. Blocks MCP tools that an agent shouldn't access.
+ */
+function getDisallowedTools(agentName: string, mcpEnabled: boolean): string[] {
+  if (!mcpEnabled) return [];
+
+  switch (agentName) {
+    case "fact-checker":
+      // fact-checker can use perplexity_research only — block fallacy tools
+      return FALLACY_MCP_TOOLS;
+
+    case "fallacy-checker":
+      // fallacy-checker can use fallacy tools only — block perplexity
+      return ["mcp__roast-evaluators__perplexity_research"];
+
+    case "reviewer":
+    case "clarity-checker":
+    case "math-checker":
+      // These agents should NOT use any MCP tools
+      return ALL_MCP_TOOLS;
+
+    default:
+      return ALL_MCP_TOOLS;
+  }
 }
 
 /**
@@ -542,26 +591,24 @@ The document is available at: ${workspacePath}/document.md
     case "fact-checker":
       return `${base}
 - Write your findings to ${workspacePath}/findings/fact-check-report.json
-- Use TodoWrite to track your investigation progress`;
+- Do NOT use TodoWrite — it wastes time. Just do the work directly.`;
 
     case "fallacy-checker":
       return `${base}
 - Read ${workspacePath}/findings/fact-check-report.json first for context from the fact-checker
 - Write your findings to ${workspacePath}/findings/fallacy-report.json
 - Your report MUST include the full MCP pipeline data (see MCP instructions below)
-- Use TodoWrite to track your investigation progress`;
+- Do NOT use TodoWrite — it wastes time. Just do the work directly.`;
 
     case "clarity-checker":
       return `${base}
 - Read ${workspacePath}/findings/fact-check-report.json for context from the fact-checker
-- Write your findings to ${workspacePath}/findings/clarity-report.json
-- Use TodoWrite to track your investigation progress`;
+- Write your findings to ${workspacePath}/findings/clarity-report.json`;
 
     case "math-checker":
       return `${base}
 - Read ${workspacePath}/findings/fact-check-report.json for context from the fact-checker
-- Write your findings to ${workspacePath}/findings/math-report.json
-- Use TodoWrite to track your investigation progress`;
+- Write your findings to ${workspacePath}/findings/math-report.json`;
 
     case "reviewer":
       return `${base}
@@ -571,8 +618,7 @@ The document is available at: ${workspacePath}/document.md
 
     default:
       return `${base}
-- Use Write to save your findings to ${workspacePath}/findings/
-- Use TodoWrite to track your investigation progress`;
+- Use Write to save your findings to ${workspacePath}/findings/`;
   }
 }
 
@@ -582,7 +628,21 @@ The document is available at: ${workspacePath}/document.md
 function getMcpToolInstructions(agentName: string): string {
   switch (agentName) {
     case "fact-checker":
-      return ""; // fact-checker uses web search directly, no MCP tools
+      return `## MCP Evaluation Tool
+
+You have access to \`mcp__roast-evaluators__perplexity_research\` — a web-search-grounded AI research tool that returns summaries with cited sources.
+
+**When to use it:**
+- Quick verification of specific factual claims (faster than manual WebSearch + WebFetch)
+- Getting a second opinion with citations on a claim you've already researched
+- Claims where you want multiple cited sources in one call
+
+**When to prefer WebSearch/WebFetch instead:**
+- Deep investigation requiring reading full pages
+- Following specific links or checking primary sources
+- When you need to control exactly which sources to check
+
+Use both tools together for best coverage — perplexity for fast cited checks, web search for deep dives.`;
 
     case "fallacy-checker":
       return `## MCP Evaluation Tools

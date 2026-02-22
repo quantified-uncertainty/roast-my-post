@@ -15,7 +15,11 @@ export interface AgenticStreamEvent {
     | "subagent_text"
     | "subagent_tool_use"
     | "subagent_tool_result"
-    | "subagent_complete";
+    | "subagent_complete"
+    // SDK lifecycle events
+    | "tool_progress"
+    | "task_notification"
+    | "compacting";
   [key: string]: unknown;
 }
 
@@ -104,6 +108,7 @@ export function useAgenticStream() {
 
           try {
             const event = JSON.parse(trimmed.slice(6));
+            event._receivedAt = Date.now();
 
             if (event.type === "complete") {
               setState((prev) => ({

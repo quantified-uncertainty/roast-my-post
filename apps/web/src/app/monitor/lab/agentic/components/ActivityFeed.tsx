@@ -27,6 +27,7 @@ interface AgentGroupNode {
   events: AgenticStreamEvent[];
   complete: boolean;
   toolCount: number;
+  durationMs?: number;
 }
 
 type TreeNode = EventNode | AgentGroupNode;
@@ -43,6 +44,15 @@ interface FormattedEvent {
 
 function truncateStr(s: string, max: number): string {
   return s.length > max ? s.slice(0, max) + "..." : s;
+}
+
+/** Format elapsed time as mm:ss from a start timestamp */
+function formatElapsed(receivedAt: number | undefined, startTime: number): string {
+  if (!receivedAt) return "";
+  const elapsed = Math.max(0, Math.round((receivedAt - startTime) / 1000));
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 function shortenPath(path: string): string {
@@ -130,6 +140,12 @@ function getEventBadge(event: AgenticStreamEvent): string {
       return "done";
     case "cost_update":
       return "cost";
+    case "tool_progress":
+      return "wait";
+    case "task_notification":
+      return "task";
+    case "compacting":
+      return "system";
     default:
       return event.type
         .replace("subagent_", "")
@@ -214,6 +230,22 @@ function formatEventLabel(event: AgenticStreamEvent): FormattedEvent {
         label: "Complete",
         color: "text-green-500 font-medium",
       };
+    case "tool_progress":
+      return {
+        label: `${shortenToolName(String(event.toolName))} running... (${Math.round(Number(event.elapsedSeconds))}s)`,
+        color: "text-amber-500",
+        dim: true,
+      };
+    case "task_notification":
+      return {
+        label: `Task ${event.taskStatus}: ${truncateStr(String(event.summary ?? ""), 100)}`,
+        color: event.taskStatus === "completed" ? "text-green-500" : "text-red-500",
+      };
+    case "compacting":
+      return {
+        label: "Compacting conversation context...",
+        color: "text-gray-400",
+      };
     default:
       return {
         label: JSON.stringify(event),
@@ -254,7 +286,10 @@ function buildActivityTree(events: AgenticStreamEvent[]): TreeNode[] {
       if (group) {
         group.events.push(event);
         if (event.type === "subagent_tool_use") group.toolCount++;
-        if (event.type === "subagent_complete") group.complete = true;
+        if (event.type === "subagent_complete") {
+          group.complete = true;
+          if (typeof event.durationMs === "number") group.durationMs = event.durationMs;
+        }
       }
       continue;
     }
@@ -282,11 +317,12 @@ function buildActivityTree(events: AgenticStreamEvent[]): TreeNode[] {
 // Components
 // ---------------------------------------------------------------------------
 
-function EventRow({ event }: { event: AgenticStreamEvent }) {
+function EventRow({ event, startTime }: { event: AgenticStreamEvent; startTime: number }) {
   const [expanded, setExpanded] = useState(false);
   const { label, color, dim } = formatEventLabel(event);
   const isLong = label.length > 120;
   const isClickable = isLong;
+  const elapsed = formatElapsed(event._receivedAt as number | undefined, startTime);
 
   return (
     <div
@@ -297,6 +333,11 @@ function EventRow({ event }: { event: AgenticStreamEvent }) {
       }`}
       onClick={isClickable ? () => setExpanded((v) => !v) : undefined}
     >
+      {elapsed && (
+        <span className="inline-block min-w-[2.75rem] text-[10px] tabular-nums text-gray-300 mr-1">
+          {elapsed}
+        </span>
+      )}
       <span className="inline-block min-w-[3.5rem] text-[10px] uppercase text-gray-400 mr-1">
         {getEventBadge(event)}
       </span>
@@ -309,7 +350,7 @@ function EventRow({ event }: { event: AgenticStreamEvent }) {
   );
 }
 
-function AgentGroup({ node }: { node: AgentGroupNode }) {
+function AgentGroup({ node, startTime }: { node: AgentGroupNode; startTime: number }) {
   const [expanded, setExpanded] = useState(true);
 
   const statsLabel = useMemo(() => {
@@ -317,9 +358,15 @@ function AgentGroup({ node }: { node: AgentGroupNode }) {
     parts.push(
       `${node.toolCount} tool${node.toolCount !== 1 ? "s" : ""}`
     );
+    if (node.durationMs != null) {
+      const secs = Math.round(node.durationMs / 1000);
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      parts.push(m > 0 ? `${m}m ${s}s` : `${s}s`);
+    }
     if (!node.complete) parts.push("running...");
     return parts.join(", ");
-  }, [node.toolCount, node.complete]);
+  }, [node.toolCount, node.complete, node.durationMs]);
 
   return (
     <div className="my-1.5">
@@ -343,7 +390,7 @@ function AgentGroup({ node }: { node: AgentGroupNode }) {
       {expanded && (
         <div className="ml-1.5 pl-3 border-l-2 border-purple-200 space-y-0.5 mt-0.5">
           {node.events.map((event, i) => (
-            <EventRow key={i} event={event} />
+            <EventRow key={i} event={event} startTime={startTime} />
           ))}
         </div>
       )}
@@ -360,6 +407,10 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
   const [copied, setCopied] = useState(false);
 
   const tree = useMemo(() => buildActivityTree(events), [events]);
+  const startTime = useMemo(() => {
+    const first = events[0]?._receivedAt as number | undefined;
+    return first ?? Date.now();
+  }, [events]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -370,7 +421,8 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
     const text = events
       .map((event) => {
         const { label } = formatEventLabel(event);
-        return `${event.type}\t${label}`;
+        const elapsed = formatElapsed(event._receivedAt as number | undefined, startTime);
+        return `${elapsed}\t${event.type}\t${label}`;
       })
       .join("\n");
 
@@ -378,7 +430,7 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }, [events]);
+  }, [events, startTime]);
 
   if (events.length === 0) {
     return (
@@ -419,9 +471,9 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
       >
         {tree.map((node, i) =>
           node.kind === "agent_group" ? (
-            <AgentGroup key={`group-${node.agentName}`} node={node} />
+            <AgentGroup key={`group-${node.agentName}`} node={node} startTime={startTime} />
           ) : (
-            <EventRow key={i} event={node.event} />
+            <EventRow key={i} event={node.event} startTime={startTime} />
           )
         )}
       </div>

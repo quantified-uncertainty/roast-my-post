@@ -27,6 +27,8 @@ import { findTextLocation } from "../../../tools/smart-text-searcher/core";
 import { loadAgenticProfileOrDefault } from "./profile-loader";
 import { buildAgenticQueryOptions } from "./orchestrator";
 import { createEvaluationServer } from "./tools";
+import { AgenticTelemetry } from "./telemetry";
+export type { AgenticTelemetryRecord } from "./telemetry";
 
 // ---------------------------------------------------------------------------
 // Streaming event types
@@ -46,10 +48,16 @@ export type AgenticStreamEvent =
   | { type: "subagent_text"; agentName: string; text: string }
   | { type: "subagent_tool_use"; agentName: string; toolName: string; input: string }
   | { type: "subagent_tool_result"; agentName: string; output: string }
-  | { type: "subagent_complete"; agentName: string; taskId: string };
+  | { type: "subagent_complete"; agentName: string; taskId: string; durationMs?: number }
+  // SDK lifecycle events
+  | { type: "tool_progress"; toolName: string; toolUseId: string; elapsedSeconds: number }
+  | { type: "task_notification"; taskId: string; taskStatus: string; summary: string }
+  | { type: "compacting" };
 
 export interface AgenticPluginOptions {
   onMessage?: (event: AgenticStreamEvent) => void;
+  /** Called with a telemetry snapshot after key events. Used for incremental DB persistence. */
+  onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
   maxBudgetUsd?: number;
   profileId?: string;
   /** Path to temp workspace where document and findings are stored */
@@ -212,18 +220,27 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
   private gradeValue?: number;
   private processingStartTime = 0;
   private onMessage?: (event: AgenticStreamEvent) => void;
+  private onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
   private maxBudgetUsd: number;
   private profileId?: string;
   private workspacePath?: string;
   private documentTitle?: string;
   private numTurns = 0;
+  private agentStartTimes = new Map<string, number>();
+  private telemetry: AgenticTelemetry;
 
   constructor(options?: AgenticPluginOptions) {
     this.onMessage = options?.onMessage;
+    this.onTelemetryUpdate = options?.onTelemetryUpdate;
     this.maxBudgetUsd = options?.maxBudgetUsd ?? 2.0;
     this.profileId = options?.profileId;
     this.workspacePath = options?.workspacePath;
     this.documentTitle = options?.documentTitle;
+    this.telemetry = new AgenticTelemetry({
+      maxBudgetUsd: this.maxBudgetUsd,
+      profileId: this.profileId,
+      workspacePath: this.workspacePath,
+    });
   }
 
   /** Returns the workspace path (created during analyze if not provided) */
@@ -256,6 +273,11 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     };
   }
 
+  /** Returns current telemetry snapshot (partial data OK — useful on timeout) */
+  getTelemetry(): Record<string, unknown> {
+    return this.telemetry.toJSON() as unknown as Record<string, unknown>;
+  }
+
   async analyze(
     _chunks: TextChunk[],
     documentText: string
@@ -284,6 +306,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       logger.error("Agentic analysis failed:", error instanceof Error ? error : new Error(errorMessage));
+      this.telemetry.recordError(errorMessage, this.totalCost, this.numTurns);
+      this.persistTelemetry();
       this.summaryText = `Agentic analysis failed: ${errorMessage}`;
       this.analysisText = this.summaryText;
       this.emit({ type: "error", message: errorMessage });
@@ -294,10 +318,81 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
   }
 
   private emit(event: AgenticStreamEvent): void {
+    this.logEvent(event);
     try {
       this.onMessage?.(event);
     } catch {
       // Don't let callback errors break the analysis
+    }
+  }
+
+  /** Log a stream event to the console in a compact, readable format */
+  private logEvent(event: AgenticStreamEvent): void {
+    switch (event.type) {
+      case "init":
+        logger.dev(`[agentic] Init: model=${event.model} tools=${event.tools.length}`);
+        break;
+      case "subagent_start":
+        logger.dev(`[agentic] Sub-agent started: ${event.agentName} (task=${event.taskId})`);
+        break;
+      case "subagent_complete":
+        logger.dev(`[agentic] Sub-agent completed: ${event.agentName} (${event.durationMs ? `${(event.durationMs / 1000).toFixed(1)}s` : "?"})`);
+        break;
+      case "subagent_text":
+        logger.dev(`[agentic]   ${event.agentName} 💬 ${event.text.slice(0, 200)}${event.text.length > 200 ? "..." : ""}`);
+        break;
+      case "subagent_tool_use":
+        logger.dev(`[agentic]   ${event.agentName} → ${event.toolName}\n${event.input.slice(0, 500)}${event.input.length > 500 ? "..." : ""}`);
+        break;
+      case "subagent_tool_result":
+        logger.dev(`[agentic]   ${event.agentName} ← ${event.output.slice(0, 500)}${event.output.length > 500 ? "..." : ""}`);
+        break;
+      case "assistant_text":
+        logger.dev(`[agentic] 💬 ${event.text.slice(0, 200)}${event.text.length > 200 ? "..." : ""}`);
+        break;
+      case "tool_use":
+        logger.dev(`[agentic] Tool call: ${event.toolName}\n${event.input.slice(0, 500)}${event.input.length > 500 ? "..." : ""}`);
+        break;
+      case "tool_result":
+        logger.dev(`[agentic] Tool result: ${event.output.slice(0, 500)}${event.output.length > 500 ? "..." : ""}`);
+        break;
+      case "tool_progress":
+        logger.dev(`[agentic] Tool progress: ${event.toolName} ${event.elapsedSeconds}s`);
+        break;
+      case "task_notification":
+        logger.dev(`[agentic] Task notification: ${event.taskId} → ${event.taskStatus}`);
+        break;
+      case "cost_update":
+        logger.dev(`[agentic] Cost: $${event.cost.toFixed(4)} (${event.turns} turns)`);
+        break;
+      case "result":
+        logger.dev(`[agentic] Result: ${event.findings} findings, grade=${event.grade}, cost=$${event.cost.toFixed(4)}`);
+        break;
+      case "error":
+        logger.dev(`[agentic] Error: ${event.message}`);
+        break;
+      case "compacting":
+        logger.dev(`[agentic] Context compacting...`);
+        break;
+      case "status":
+        logger.dev(`[agentic] ${event.message}`);
+        break;
+    }
+  }
+
+  /** Persist current telemetry snapshot via callback (fire-and-forget) */
+  private persistTelemetry(): void {
+    if (!this.onTelemetryUpdate) return;
+    try {
+      const snapshot = this.telemetry.toJSON() as unknown as Record<string, unknown>;
+      // Fire-and-forget — don't await to avoid slowing down the message loop
+      const result = this.onTelemetryUpdate(snapshot);
+      // Catch promise rejections silently
+      if (result && typeof result === "object" && "catch" in result) {
+        (result as Promise<void>).catch(() => {});
+      }
+    } catch {
+      // Don't let persistence errors break the analysis
     }
   }
 
@@ -368,20 +463,45 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       },
     })) {
       if (message.type === "system" && "subtype" in message && message.subtype === "init") {
+        const initAgents = "agents" in message && Array.isArray(message.agents)
+          ? (message.agents as string[])
+          : undefined;
+        this.telemetry.recordInit(message.model, message.tools, initAgents);
+        this.telemetry.recordEventCompleted();
+        this.persistTelemetry();
         this.emit({
           type: "init",
           model: message.model,
           tools: message.tools,
         });
         // Only log agent info in multi-agent mode (when we've defined custom agents)
-        if (config.enableSubAgents && "agents" in message && Array.isArray(message.agents) && message.agents.length > 0) {
+        if (config.enableSubAgents && initAgents && initAgents.length > 0) {
           this.emit({
             type: "status",
-            message: `SDK initialized with agents: ${(message.agents as string[]).join(", ")}`,
+            message: `SDK initialized with agents: ${initAgents.join(", ")}`,
           });
         }
       } else if (message.type === "assistant") {
         const agentName = tracker?.getAgentName(message.parent_tool_use_id ?? undefined);
+
+        // Extract token usage from the assistant message
+        const msgUsage = message.message?.usage;
+        const tokenUsage = msgUsage ? {
+          inputTokens: msgUsage.input_tokens ?? 0,
+          outputTokens: msgUsage.output_tokens ?? 0,
+          cacheReadInputTokens: msgUsage.cache_read_input_tokens ?? undefined,
+          cacheCreationInputTokens: msgUsage.cache_creation_input_tokens ?? undefined,
+        } : undefined;
+
+        this.telemetry.recordAssistantMessage(agentName ?? undefined, tokenUsage);
+
+        // Log token usage for visibility
+        if (tokenUsage) {
+          const cacheInfo = tokenUsage.cacheReadInputTokens
+            ? ` cache_read=${tokenUsage.cacheReadInputTokens}`
+            : "";
+          logger.dev(`[agentic] ${agentName ? `  ${agentName} ` : ""}tokens: in=${tokenUsage.inputTokens} out=${tokenUsage.outputTokens}${cacheInfo}`);
+        }
 
         for (const block of message.message.content) {
           if (block.type === "text") {
@@ -395,9 +515,17 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
             if (block.name === "Task" && tracker) {
               const spawned = tracker.trackTaskSpawn(block.id, block.input);
               if (spawned) {
+                this.agentStartTimes.set(spawned, Date.now());
+                this.telemetry.recordSubAgentStart(spawned, block.id);
                 this.emit({ type: "subagent_start", agentName: spawned, taskId: block.id });
               }
             }
+
+            // Record tool call — find the parent task ID for sub-agent attribution
+            const parentTaskId = agentName
+              ? message.parent_tool_use_id ?? undefined
+              : undefined;
+            this.telemetry.recordToolCall(block.name, block.id, parentTaskId);
 
             this.emit(
               agentName
@@ -406,17 +534,20 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
             );
           }
         }
+        this.persistTelemetry();
       } else if (message.type === "user") {
         const agentName = tracker?.getAgentName(message.parent_tool_use_id ?? undefined);
 
         // Extract full tool result from message.message content blocks
         const parts: string[] = [];
+        const toolUseIds: string[] = [];
         const msg = message.message;
         if (msg && "content" in msg && Array.isArray(msg.content)) {
           for (const block of msg.content) {
             if (typeof block === "string") {
               parts.push(block);
             } else if (block.type === "tool_result") {
+              if (block.tool_use_id) toolUseIds.push(block.tool_use_id);
               const content = block.content;
               if (typeof content === "string") {
                 parts.push(content);
@@ -436,6 +567,13 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
               : JSON.stringify(message.tool_use_result)
           );
         }
+
+        // Record tool result completions in telemetry
+        for (const tuId of toolUseIds) {
+          this.telemetry.recordToolResult(tuId);
+        }
+        this.telemetry.recordEventCompleted();
+
         const rawOutput = parts.join("\n");
         const output = stripSystemReminders(rawOutput);
         if (output) {
@@ -445,6 +583,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
               : { type: "tool_result", output }
           );
         }
+        this.persistTelemetry();
       } else if (message.type === "result") {
         if (message.subtype === "success") {
           const successMsg = message as SDKResultSuccess;
@@ -460,6 +599,14 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
           const parsed = successMsg.structured_output
             ? (successMsg.structured_output as AgenticAnalysisOutput)
             : this.parseResult(successMsg.result);
+
+          this.telemetry.recordCompletion(
+            successMsg.total_cost_usd,
+            successMsg.num_turns,
+            parsed.findings.length,
+            parsed.overallGrade
+          );
+          this.persistTelemetry();
 
           this.emit({
             type: "result",
@@ -481,6 +628,9 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
               ? "budget exceeded"
               : errorMsg.errors?.join("; ") || "unknown error";
 
+        this.telemetry.recordError(reason, errorMsg.total_cost_usd, errorMsg.num_turns);
+        this.persistTelemetry();
+
         this.emit({ type: "error", message: reason });
         this.emit({
           type: "cost_update",
@@ -494,6 +644,51 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
           summary: `Analysis ended early: ${reason}`,
           overallGrade: 0,
         };
+      } else if (message.type === "tool_progress") {
+        this.telemetry.recordToolProgress(
+          message.tool_name,
+          message.tool_use_id,
+          message.elapsed_time_seconds
+        );
+        this.emit({
+          type: "tool_progress",
+          toolName: message.tool_name,
+          toolUseId: message.tool_use_id,
+          elapsedSeconds: message.elapsed_time_seconds,
+        });
+        this.persistTelemetry();
+      } else if (message.type === "system" && "subtype" in message && message.subtype === "task_notification") {
+        const taskMsg = message as { task_id: string; status: string; summary: string };
+        // Map task_id to agent name if tracked
+        const agentName = tracker?.getAgentName(taskMsg.task_id);
+        if (agentName) {
+          const startTime = this.agentStartTimes.get(agentName);
+          const durationMs = startTime ? Date.now() - startTime : undefined;
+          const taskStatus = taskMsg.status === "completed" ? "completed" as const : "failed" as const;
+          this.telemetry.recordSubAgentComplete(taskMsg.task_id, taskStatus);
+          this.emit({ type: "subagent_complete", agentName, taskId: taskMsg.task_id, durationMs });
+        }
+        this.emit({
+          type: "task_notification",
+          taskId: taskMsg.task_id,
+          taskStatus: taskMsg.status,
+          summary: taskMsg.summary,
+        });
+        this.persistTelemetry();
+      } else if (message.type === "system" && "subtype" in message && message.subtype === "compact_boundary") {
+        const compactMsg = message as { compact_metadata?: { trigger?: string; pre_tokens?: number } };
+        const preTokens = compactMsg.compact_metadata?.pre_tokens;
+        logger.dev(`[agentic] Context compacted: pre_tokens=${preTokens ?? "?"} trigger=${compactMsg.compact_metadata?.trigger ?? "?"}`);
+        this.telemetry.recordCompacting(preTokens);
+        this.emit({ type: "compacting" });
+        this.persistTelemetry();
+      } else if (message.type === "system" && "subtype" in message && message.subtype === "status") {
+        const statusMsg = message as { status: string | null };
+        if (statusMsg.status === "compacting") {
+          this.telemetry.recordCompacting();
+          this.emit({ type: "compacting" });
+          this.persistTelemetry();
+        }
       }
     }
 
@@ -569,15 +764,17 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
   }
 
   private getResults(): AnalysisResult {
+    const telemetrySnapshot = this.telemetry.toJSON() as unknown as Record<string, unknown>;
+
+    logger.dev("[agentic] Telemetry snapshot:", JSON.stringify(telemetrySnapshot, null, 2));
+
     return {
       summary: this.summaryText,
       analysis: this.analysisText,
       comments: this.comments,
       cost: this.totalCost,
       grade: this.gradeValue,
-      pipelineTelemetry: {
-        numTurns: this.numTurns,
-      },
+      pipelineTelemetry: telemetrySnapshot,
     };
   }
 }

@@ -20,6 +20,9 @@ import { logger as appLogger } from "../../../shared/logger";
 import { principleOfCharityFilterTool } from "../../../tools/principle-of-charity-filter";
 import { supportedElsewhereFilterTool } from "../../../tools/supported-elsewhere-filter";
 
+// Perplexity research tool
+import { perplexityResearchTool } from "../../../tools/perplexity-researcher";
+
 // Profile loading for fallacy checker config
 import { loadProfileOrDefault } from "../fallacy-check/profile-loader";
 import type { FallacyCheckerProfileConfig } from "../fallacy-check/profile-types";
@@ -246,6 +249,13 @@ function createFallacyExtractTool(config: EvaluationServerConfig) {
       // Return issues with pipeline metadata for agent visibility
       const output = {
         totalExtractors: pipelineResult.extractorResults.length,
+        extractors: pipelineResult.extractorResults.map((r) => ({
+          extractorId: r.extractorId,
+          durationMs: r.durationMs,
+          issueCount: r.issues.length,
+          costUsd: r.unifiedUsage?.costUsd ?? r.costUsd,
+          error: r.error,
+        })),
         dedup: pipelineResult.dedup,
         judge: pipelineResult.judge ? {
           acceptedCount: pipelineResult.judge.acceptedCount,
@@ -404,6 +414,37 @@ function createSupportedElsewhereFilterTool(config: EvaluationServerConfig) {
 }
 
 // ---------------------------------------------------------------------------
+// Perplexity Research Tool
+// ---------------------------------------------------------------------------
+
+function createPerplexityResearchTool() {
+  return tool(
+    "perplexity_research",
+    "Research a factual claim or question using Perplexity Sonar (web-search-grounded AI). Returns a summary with sources and key findings. Use this to verify factual claims with high-quality, cited web research.",
+    {
+      query: z
+        .string()
+        .describe("The research query or factual claim to verify"),
+      focusArea: z
+        .enum(["general", "academic", "news", "technical", "market"])
+        .optional()
+        .describe("Focus area for research (default: general)"),
+    },
+    async ({ query, focusArea }) => {
+      const result = await perplexityResearchTool.execute(
+        { query, focusArea: focusArea ?? "general", maxSources: 5 },
+        toolContext
+      );
+      return {
+        content: [
+          { type: "text" as const, text: JSON.stringify(result, null, 2) },
+        ],
+      };
+    }
+  );
+}
+
+// ---------------------------------------------------------------------------
 // MCP Server Factory
 // ---------------------------------------------------------------------------
 
@@ -417,8 +458,9 @@ export function createEvaluationServer(config: EvaluationServerConfig = {}) {
     name: "roast-evaluators",
     version: "1.0.0",
     tools: [
+      // Research tools
+      createPerplexityResearchTool(),
       // Bulk pipeline tools
-      // fact_check disabled — agent does its own web-search-based fact checking
       createSpellCheckTool(),
       createMathCheckTool(),
       createForecastCheckTool(),

@@ -21,11 +21,14 @@ export const AGENT_TIMEOUT_CONFIG = {
     // Fallacy check may need time for Perplexity research on claims
     'fallacy-check': 600000, // 10 minutes
 
+    // Agentic analysis runs multi-agent orchestration (fact-checker, fallacy-checker, reviewer)
+    'agentic': 7200000, // 2 hours
+
     // Add more capabilities as needed
   } as Record<string, number>,
-  
+
   // Maximum allowed timeout (safety limit)
-  MAX_TIMEOUT_MS: 1200000, // 20 minutes
+  MAX_TIMEOUT_MS: 7200000, // 2 hours
 };
 
 /**

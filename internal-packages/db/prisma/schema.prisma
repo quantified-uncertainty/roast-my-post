@@ -299,6 +299,7 @@ model Job {
   cancelledAt         DateTime?
   cancelledById       String?
   cancellationReason  String?
+  telemetryProgress   Json?              // Incremental telemetry snapshots updated during analysis
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
   evaluation          Evaluation         @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
