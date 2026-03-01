@@ -456,7 +456,7 @@ export class FallacyCheckPlugin implements SimpleAnalysisPlugin {
         judgeDecisions = pipelineResult.judge.decisions.map((d) => ({
           issueText: d.finalText,
           issueType: d.finalIssueType,
-          decision: (d.decision === 'accept' || d.decision === 'merge' ? 'accepted' : 'rejected') as 'accepted' | 'merged' | 'rejected',
+          decision: d.decision === 'merge' ? 'merged' : d.decision === 'accept' ? 'accepted' : 'rejected',
           reasoning: d.judgeReasoning,
           sourceExtractors: d.sourceExtractors,
           finalSeverity: d.finalSeverity,

@@ -51,7 +51,7 @@ export const DEFAULT_AGENTIC_CONFIG: AgenticProfileConfig = {
 };
 
 export function createDefaultAgenticConfig(): AgenticProfileConfig {
-  return { ...DEFAULT_AGENTIC_CONFIG };
+  return { ...DEFAULT_AGENTIC_CONFIG, allowedTools: [...DEFAULT_AGENTIC_CONFIG.allowedTools] };
 }
 
 export function validateAgenticConfig(raw: unknown): AgenticProfileConfig {

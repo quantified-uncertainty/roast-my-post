@@ -190,7 +190,6 @@ export async function POST(request: NextRequest) {
 
       const plugin = new AgenticPlugin({
         onMessage: (event: AgenticStreamEvent) => sendEvent(event),
-        maxBudgetUsd: 2.0,
         profileId: body.profileId,
         workspacePath,
         documentTitle: version.title,
@@ -238,8 +237,6 @@ export async function POST(request: NextRequest) {
         logger.error("Agentic stream error:", error instanceof Error ? error : new Error(errorMessage));
         sendEvent({ type: "error", message: errorMessage });
       } finally {
-        // Workspace preserved for debugging — inspect findings/ for agent reports
-        logger.info(`Workspace preserved at ${workspacePath}`);
         controller.close();
       }
     },

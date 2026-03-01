@@ -56,7 +56,9 @@ function createToolGuard(workspacePath?: string, emit?: EmitFn) {
 
       if (filePath && typeof filePath === "string") {
         const resolvedPath = resolve(workspacePath!, filePath);
-        if (!resolvedPath.startsWith(resolvedWorkspace)) {
+        // Use separator-aware check to prevent prefix-based traversal
+        // (e.g. /tmp/agentic-evil matching /tmp/agentic-abc)
+        if (!resolvedPath.startsWith(resolvedWorkspace + "/") && resolvedPath !== resolvedWorkspace) {
           const msg = `Workspace guard denied ${toolName} access to: ${filePath}`;
           logger.warn(msg);
           emit?.({ type: "status", message: msg });
@@ -126,8 +128,11 @@ function buildOrchestratorPrompt(enabledAgents: string[]): string {
   }
 
   if (hasFallacyChecker) {
-    stages.push(`Stage ${stageNum} — Fallacy Checking (depends on Stage 1):
-  Spawn fallacy-checker. Tell it: "Read findings/fact-check-report.json first for context before your analysis."
+    const fallacyContext = hasFactChecker
+      ? `Tell it: "Read findings/fact-check-report.json first for context before your analysis."`
+      : `Tell it to analyze the document directly.`;
+    stages.push(`Stage ${stageNum} — Fallacy Checking${hasFactChecker ? ` (depends on Stage 1)` : ``}:
+  Spawn fallacy-checker. ${fallacyContext}
   Wait for it to complete. It will write findings/fallacy-report.json with full MCP pipeline data.`);
     stageNum++;
   }
@@ -136,9 +141,12 @@ function buildOrchestratorPrompt(enabledAgents: string[]): string {
   if (hasClarityChecker) parallelAgents.push("clarity-checker");
   if (hasMathChecker) parallelAgents.push("math-checker");
   if (parallelAgents.length > 0) {
-    stages.push(`Stage ${stageNum} — ${parallelAgents.join(" + ")} (parallel, depends on Stage 1):
+    const parallelContext = hasFactChecker
+      ? `Tell each: "Read findings/fact-check-report.json for context before your analysis."`
+      : `Tell each to analyze the document directly.`;
+    stages.push(`Stage ${stageNum} — ${parallelAgents.join(" + ")} (parallel${hasFactChecker ? `, depends on Stage 1` : ``}):
   Spawn ${parallelAgents.join(" and ")} in parallel.
-  Tell each: "Read findings/fact-check-report.json for context before your analysis."
+  ${parallelContext}
   Wait for ALL to complete. They write to findings/${parallelAgents.map(a => `${a.replace("-checker", "")}-report.json`).join(", findings/")}.`);
     stageNum++;
   }
@@ -155,7 +163,7 @@ function buildOrchestratorPrompt(enabledAgents: string[]): string {
     ? `
 Final: Read findings/reviewer-report.json. Use the reviewer's validatedFindings as your PRIMARY source for final output.
 Do NOT add findings the reviewer did not validate. Do NOT remove findings the reviewer validated.
-If the reviewer discarded a finding, it stays discarded unless you have strong new evidence.`
+If the reviewer discarded a finding, it stays discarded.`
     : `
 Final: Read all findings/ reports and synthesize into your final structured output.`;
 
@@ -230,8 +238,6 @@ Sub-agents will:
 
 When synthesizing sub-agent results:
 - Findings verified by both MCP tool + agent research = highest confidence
-- MCP findings the agent couldn't verify = note uncertainty
-- Agent findings beyond MCP analysis = valuable additions
 `;
 }
 
@@ -429,7 +435,7 @@ When reporting issues, classify by type:
 3. **Respect MCP pipeline decisions**: For fallacy findings:
    - If the MCP charity filter dissolved an issue, it should stay dissolved UNLESS strong counter-evidence exists in other reports.
    - If MCP supported-elsewhere found the issue addressed in the document, respect that unless clearly wrong.
-   - Agent-added findings (not from MCP pipeline) need extra scrutiny — verify they meet quality thresholds.
+
 
 4. **Deduplicate**: Multiple agents may flag the same text for different reasons. Merge overlapping findings into the strongest version.
 
@@ -505,7 +511,8 @@ export function buildSubAgentDefinitions(
 
     // If workspace is available, add per-agent workspace instructions
     if (workspacePath) {
-      const workspaceInstructions = getWorkspaceInstructions(name, workspacePath);
+      const hasFactChecker = !!(subAgentConfigs["fact-checker"]?.enabled);
+      const workspaceInstructions = getWorkspaceInstructions(name, workspacePath, hasFactChecker);
       prompt += `\n\n${workspaceInstructions}`;
     }
 
@@ -581,11 +588,15 @@ function getDisallowedTools(agentName: string, mcpEnabled: boolean): string[] {
 /**
  * Get per-agent workspace instructions (file paths, what to read/write)
  */
-function getWorkspaceInstructions(agentName: string, workspacePath: string): string {
+function getWorkspaceInstructions(agentName: string, workspacePath: string, hasFactChecker: boolean): string {
   const base = `## Workspace
 The document is available at: ${workspacePath}/document.md
 - Use Read to access the document
 - Use Grep to search for specific text`;
+
+  const factCheckContext = hasFactChecker
+    ? `- Read ${workspacePath}/findings/fact-check-report.json first for context from the fact-checker`
+    : null;
 
   switch (agentName) {
     case "fact-checker":
@@ -595,20 +606,17 @@ The document is available at: ${workspacePath}/document.md
 
     case "fallacy-checker":
       return `${base}
-- Read ${workspacePath}/findings/fact-check-report.json first for context from the fact-checker
-- Write your findings to ${workspacePath}/findings/fallacy-report.json
+${factCheckContext ? `${factCheckContext}\n` : ""}- Write your findings to ${workspacePath}/findings/fallacy-report.json
 - Your report MUST include the full MCP pipeline data (see MCP instructions below)
 - Do NOT use TodoWrite — it wastes time. Just do the work directly.`;
 
     case "clarity-checker":
       return `${base}
-- Read ${workspacePath}/findings/fact-check-report.json for context from the fact-checker
-- Write your findings to ${workspacePath}/findings/clarity-report.json`;
+${factCheckContext ? `${factCheckContext}\n` : ""}- Write your findings to ${workspacePath}/findings/clarity-report.json`;
 
     case "math-checker":
       return `${base}
-- Read ${workspacePath}/findings/fact-check-report.json for context from the fact-checker
-- Write your findings to ${workspacePath}/findings/math-report.json`;
+${factCheckContext ? `${factCheckContext}\n` : ""}- Write your findings to ${workspacePath}/findings/math-report.json`;
 
     case "reviewer":
       return `${base}
@@ -664,15 +672,20 @@ You have access to 3 granular fallacy analysis tools that give you full control 
    - **Read the dissolved issues** — they contain charitable interpretations that inform your analysis
 3. **Check support** (optional): Call \`fallacy_supported_elsewhere\` for remaining valid issues
    - Returns \`unsupportedIssues\` (real problems) AND \`supportedIssues\` (addressed elsewhere)
-4. **Synthesize**: Use your own judgment informed by all the data:
-   - High confidence: Valid after charity + unsupported elsewhere
-   - Medium: Valid after charity but you see merit in the charitable interpretation
-   - Consider: Dissolved issues where you disagree with the charitable reading
-   - Add any issues you found that the extractor missed
+4. **Your own analysis**: After the MCP pipeline, identify any additional reasoning issues the extractor missed.
+   - If you find additional issues, you MUST run them through the SAME filter chain:
+     a. Call \`fallacy_charity_filter\` with your additional issues (same format as step 2)
+     b. Call \`fallacy_supported_elsewhere\` on the survivors (same as step 3)
+   - Only include your own findings that survive BOTH filters
+   - This ensures all findings — whether from the extractor or your own analysis — meet the same quality bar
+
+5. **Synthesize**: Combine MCP pipeline survivors with your own filtered survivors:
+   - High confidence: Valid after charity + unsupported elsewhere (from either source)
+   - Consider: Dissolved issues where you strongly disagree with the charitable reading (explain why)
 
 ### CRITICAL: Write Full Pipeline Data to Report
 
-Your findings/fallacy-report.json MUST include ALL MCP pipeline data for traceability:
+Your findings/fallacy-report.json MUST include ALL pipeline data for traceability:
 \`\`\`json
 {
   "mcpPipeline": {
@@ -686,13 +699,21 @@ Your findings/fallacy-report.json MUST include ALL MCP pipeline data for traceab
       "supported": ["... issues addressed elsewhere in document ..."]
     }
   },
-  "agentFindings": ["... your own findings not from MCP pipeline ..."],
-  "finalFindings": ["... your final synthesized findings ..."],
+  "agentFindings": {
+    "raw": ["... your own findings before filtering ..."],
+    "afterCharityFilter": {
+      "valid": ["... your findings that survived charity filter ..."],
+      "dissolved": ["... your findings dissolved by charity filter ..."]
+    },
+    "afterSupportedElsewhere": {
+      "unsupported": ["... your findings NOT addressed elsewhere ..."],
+      "supported": ["... your findings addressed elsewhere ..."]
+    }
+  },
+  "finalFindings": ["... combined survivors from both pipelines ..."],
   "summary": "Brief summary of fallacy analysis"
 }
-\`\`\`
-
-If you add findings beyond what the MCP pipeline produced, list them separately in \`agentFindings\` and justify why each is valid despite not being in the pipeline.`;
+\`\`\``;
 
     case "clarity-checker":
       return `## MCP Evaluation Tool

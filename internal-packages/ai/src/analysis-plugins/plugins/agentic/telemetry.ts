@@ -112,6 +112,17 @@ export interface AgenticTelemetryRecord {
   tokenUsage: CumulativeTokenUsage;
 }
 
+interface TelemetryOptions {
+  maxBudgetUsd?: number;
+  profileId?: string;
+  workspacePath?: string;
+}
+
+interface PendingToolCall {
+  metrics: ToolCallMetrics;
+  parentAgent?: string;
+}
+
 // MCP tool name prefixes we track for enriched metadata
 const MCP_TOOL_PREFIXES = ["mcp__roast-evaluators__"];
 
@@ -142,7 +153,7 @@ export class AgenticTelemetry {
 
   private subAgentMap = new Map<string, SubAgentMetrics>();
   private orchestratorToolCalls: ToolCallMetrics[] = [];
-  private pendingToolCalls = new Map<string, { metrics: ToolCallMetrics; parentAgent?: string }>();
+  private pendingToolCalls = new Map<string, PendingToolCall>();
 
   private compactingEvents: CompactingEvent[] = [];
   private toolProgressEvents: ToolProgressEvent[] = [];
@@ -157,7 +168,7 @@ export class AgenticTelemetry {
   /** Timestamp of the last non-assistant event (tool_result, init, etc.) */
   private lastNonAssistantEventAt?: string;
 
-  constructor(opts?: { maxBudgetUsd?: number; profileId?: string; workspacePath?: string }) {
+  constructor(opts?: TelemetryOptions) {
     this.startedAt = new Date().toISOString();
     this.maxBudgetUsd = opts?.maxBudgetUsd;
     this.profileId = opts?.profileId;
@@ -325,12 +336,12 @@ export class AgenticTelemetry {
       error: this.error,
       findingsCount: this.findingsCount,
       grade: this.grade,
-      subAgents: Array.from(this.subAgentMap.values()),
-      orchestratorToolCalls: this.orchestratorToolCalls,
-      compactingEvents: this.compactingEvents,
-      toolProgressEvents: this.toolProgressEvents,
-      apiCallGaps: this.apiCallGaps,
-      tokenUsage: this.cumulativeTokens,
+      subAgents: structuredClone(Array.from(this.subAgentMap.values())),
+      orchestratorToolCalls: structuredClone(this.orchestratorToolCalls),
+      compactingEvents: [...this.compactingEvents],
+      toolProgressEvents: [...this.toolProgressEvents],
+      apiCallGaps: structuredClone(this.apiCallGaps),
+      tokenUsage: { ...this.cumulativeTokens },
     };
   }
 }

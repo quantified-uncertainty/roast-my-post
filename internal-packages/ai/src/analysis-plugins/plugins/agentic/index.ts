@@ -10,7 +10,7 @@ import type {
   SDKResultSuccess,
   SDKResultError,
 } from "@anthropic-ai/claude-agent-sdk";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
 
@@ -24,6 +24,7 @@ import type {
 import { CommentBuilder } from "../../utils/CommentBuilder";
 import { logger } from "../../../shared/logger";
 import { findTextLocation } from "../../../tools/smart-text-searcher/core";
+import { aiConfig } from "../../../config";
 import { loadAgenticProfileOrDefault } from "./profile-loader";
 import { buildAgenticQueryOptions } from "./orchestrator";
 import { createEvaluationServer } from "./tools";
@@ -311,6 +312,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       this.summaryText = `Agentic analysis failed: ${errorMessage}`;
       this.analysisText = this.summaryText;
       this.emit({ type: "error", message: errorMessage });
+    } finally {
+      await this.cleanupWorkspace();
     }
 
     this.hasRun = true;
@@ -416,6 +419,25 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
 
     this.emit({ type: "status", message: `Workspace: ${this.workspacePath}` });
     logger.info(`Agentic workspace ready at ${this.workspacePath}`);
+  }
+
+  /**
+   * Remove the temp workspace directory after analysis completes.
+   * Disabled by default (workspace preserved for tuning/debugging).
+   * Set AGENTIC_CLEANUP_WORKSPACE=true to enable.
+   */
+  private async cleanupWorkspace(): Promise<void> {
+    if (!this.workspacePath) return;
+    if (!aiConfig.agenticCleanupWorkspace) {
+      logger.info(`Agentic workspace preserved at ${this.workspacePath}`);
+      return;
+    }
+    try {
+      await rm(this.workspacePath, { recursive: true, force: true });
+      logger.info(`Agentic workspace cleaned up: ${this.workspacePath}`);
+    } catch (err) {
+      logger.warn(`Failed to clean up workspace ${this.workspacePath}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   private async runAgenticAnalysis(

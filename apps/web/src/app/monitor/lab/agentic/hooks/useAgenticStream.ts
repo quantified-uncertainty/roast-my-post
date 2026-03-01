@@ -140,6 +140,40 @@ export function useAgenticStream() {
         }
       }
 
+      // Process any remaining data in the buffer
+      if (buffer.trim().startsWith("data: ")) {
+        try {
+          const event = JSON.parse(buffer.trim().slice(6));
+          event._receivedAt = Date.now();
+          if (event.type === "complete") {
+            setState((prev) => ({
+              ...prev,
+              status: "done",
+              result: {
+                summary: event.summary,
+                grade: event.grade,
+                cost: event.cost,
+                commentCount: event.commentCount,
+                comments: event.comments ?? [],
+              },
+            }));
+          } else if (event.type === "error") {
+            setState((prev) => ({
+              ...prev,
+              events: [...prev.events, event],
+              error: event.message,
+            }));
+          } else {
+            setState((prev) => ({
+              ...prev,
+              events: [...prev.events, event],
+            }));
+          }
+        } catch {
+          // Skip malformed JSON
+        }
+      }
+
       // If we finished reading without a "complete" event
       setState((prev) => {
         if (prev.status === "running") {

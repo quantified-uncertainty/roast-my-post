@@ -50,6 +50,11 @@ export const aiConfig = {
     };
   },
 
+  // Agentic plugin
+  get agenticCleanupWorkspace(): boolean {
+    return getEnv("AGENTIC_CLEANUP_WORKSPACE") === "true";
+  },
+
   // Validation
   validate(): void {
     if (!isBrowser && !this.anthropicApiKey && !this.openaiApiKey) {
