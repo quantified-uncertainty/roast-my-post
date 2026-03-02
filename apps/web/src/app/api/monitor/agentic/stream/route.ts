@@ -20,34 +20,7 @@ interface PersistParams {
 }
 
 async function persistAgenticResult({ documentId, documentVersionId, profileId, result, durationMs }: PersistParams) {
-  // Get or create the evaluation for this document + agent
-  let evaluation = await prisma.evaluation.findUnique({
-    where: {
-      documentId_agentId: {
-        documentId,
-        agentId: AGENTIC_AGENT_ID,
-      },
-    },
-  });
-
-  if (!evaluation) {
-    evaluation = await prisma.evaluation.create({
-      data: {
-        documentId,
-        agentId: AGENTIC_AGENT_ID,
-      },
-    });
-  }
-
-  // Get the next version number
-  const lastVersion = await prisma.evaluationVersion.findFirst({
-    where: { evaluationId: evaluation.id },
-    orderBy: { version: "desc" },
-    select: { version: true },
-  });
-  const nextVersion = (lastVersion?.version ?? 0) + 1;
-
-  // Get the current agent version
+  // Check for agent version before entering the transaction to fail fast
   const agentVersion = await prisma.agentVersion.findFirst({
     where: { agentId: AGENTIC_AGENT_ID },
     orderBy: { version: "desc" },
@@ -59,7 +32,7 @@ async function persistAgenticResult({ documentId, documentVersionId, profileId, 
     return null;
   }
 
-  // Fetch profile name if profileId provided
+  // Fetch profile name if profileId provided (outside transaction — read-only, no race risk)
   let profileName: string | null = null;
   if (profileId) {
     const profile = await prisma.pluginProfile.findUnique({
@@ -69,7 +42,7 @@ async function persistAgenticResult({ documentId, documentVersionId, profileId, 
     profileName = profile?.name ?? null;
   }
 
-  // Build pipeline telemetry (merge with plugin's telemetry)
+  // Build pipeline telemetry
   const pluginTelemetry = result.pipelineTelemetry ?? {};
   const pipelineTelemetry = {
     costUsd: result.cost ?? 0,
@@ -80,50 +53,77 @@ async function persistAgenticResult({ documentId, documentVersionId, profileId, 
     numTurns: (pluginTelemetry as { numTurns?: number }).numTurns ?? 0,
   };
 
-  // Create the evaluation version
-  const evalVersion = await prisma.evaluationVersion.create({
-    data: {
-      evaluationId: evaluation.id,
-      agentId: AGENTIC_AGENT_ID,
-      agentVersionId: agentVersion.id,
-      documentVersionId,
-      version: nextVersion,
-      summary: result.summary ?? null,
-      analysis: result.analysis ?? null,
-      grade: result.grade ?? null,
-      pipelineTelemetry,
-    },
+  // Wrap all writes in a single transaction to prevent partial writes and
+  // eliminate the findUnique + create race condition on concurrent requests.
+  return prisma.$transaction(async (tx) => {
+    // Upsert evaluation atomically — no race condition
+    const evaluation = await tx.evaluation.upsert({
+      where: {
+        documentId_agentId: {
+          documentId,
+          agentId: AGENTIC_AGENT_ID,
+        },
+      },
+      create: {
+        documentId,
+        agentId: AGENTIC_AGENT_ID,
+      },
+      update: {},
+    });
+
+    // Get the next version number
+    const lastVersion = await tx.evaluationVersion.findFirst({
+      where: { evaluationId: evaluation.id },
+      orderBy: { version: "desc" },
+      select: { version: true },
+    });
+    const nextVersion = (lastVersion?.version ?? 0) + 1;
+
+    // Create the evaluation version
+    const evalVersion = await tx.evaluationVersion.create({
+      data: {
+        evaluationId: evaluation.id,
+        agentId: AGENTIC_AGENT_ID,
+        agentVersionId: agentVersion.id,
+        documentVersionId,
+        version: nextVersion,
+        summary: result.summary ?? null,
+        analysis: result.analysis ?? null,
+        grade: result.grade ?? null,
+        pipelineTelemetry,
+      },
+    });
+
+    // Create comments with highlights (all inside the same transaction)
+    for (const comment of result.comments) {
+      const highlight = await tx.evaluationHighlight.create({
+        data: {
+          startOffset: comment.highlight.startOffset,
+          endOffset: comment.highlight.endOffset,
+          prefix: comment.highlight.prefix ?? null,
+          quotedText: comment.highlight.quotedText ?? "",
+          isValid: comment.highlight.isValid ?? true,
+          error: comment.highlight.error ?? null,
+        },
+      });
+
+      await tx.evaluationComment.create({
+        data: {
+          evaluationVersionId: evalVersion.id,
+          highlightId: highlight.id,
+          header: comment.header ?? null,
+          description: comment.description,
+          level: comment.level ?? "info",
+          source: comment.source ?? null,
+          importance: comment.importance ?? null,
+          grade: comment.grade ?? null,
+          metadata: comment.metadata ?? undefined,
+        },
+      });
+    }
+
+    return evalVersion.id;
   });
-
-  // Create comments with highlights
-  for (const comment of result.comments) {
-    const highlight = await prisma.evaluationHighlight.create({
-      data: {
-        startOffset: comment.highlight.startOffset,
-        endOffset: comment.highlight.endOffset,
-        prefix: comment.highlight.prefix ?? null,
-        quotedText: comment.highlight.quotedText ?? "",
-        isValid: comment.highlight.isValid ?? true,
-        error: comment.highlight.error ?? null,
-      },
-    });
-
-    await prisma.evaluationComment.create({
-      data: {
-        evaluationVersionId: evalVersion.id,
-        highlightId: highlight.id,
-        header: comment.header ?? null,
-        description: comment.description,
-        level: comment.level ?? "info",
-        source: comment.source ?? null,
-        importance: comment.importance ?? null,
-        grade: comment.grade ?? null,
-        metadata: comment.metadata ?? undefined,
-      },
-    });
-  }
-
-  return evalVersion.id;
 }
 
 export async function POST(request: NextRequest) {

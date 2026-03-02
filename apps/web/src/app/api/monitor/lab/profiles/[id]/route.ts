@@ -191,7 +191,9 @@ export async function PUT(
     }
 
     // Validate config against the appropriate schema based on pluginType
-    if (config) {
+    // Store the coerced output (configResult.data) so Zod defaults/transforms apply
+    let validatedConfig: Record<string, unknown> | undefined = undefined;
+    if (config !== undefined) {
       const configSchema = existing.pluginType === "agentic" ? agenticConfigSchema : profileConfigSchema;
       const configResult = configSchema.safeParse(config);
       if (!configResult.success) {
@@ -200,6 +202,7 @@ export async function PUT(
           { status: 400 }
         );
       }
+      validatedConfig = configResult.data as Record<string, unknown>;
     }
 
     // Check for duplicate name (excluding current profile, within same pluginType)
@@ -234,7 +237,7 @@ export async function PUT(
       data: {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
-        ...(config !== undefined && { config }),
+        ...(validatedConfig !== undefined && { config: validatedConfig }),
         ...(isDefault !== undefined && { isDefault }),
       },
     });

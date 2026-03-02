@@ -119,16 +119,7 @@ function stripSystemReminders(text: string): string {
 // Constants
 // ---------------------------------------------------------------------------
 
-export const AGENTIC_SYSTEM_PROMPT = `You are a document analyst. Analyze the provided document thoroughly for:
-
-1. **Factual errors** - Claims that are demonstrably wrong
-2. **Logical fallacies** - Flawed reasoning patterns
-3. **Unsupported claims** - Assertions without adequate evidence
-4. **Quality issues** - Unclear writing, contradictions, or misleading framing
-
-Use web search to verify factual claims when possible. Be specific - quote exact text from the document for each finding.
-
-Focus on substantive issues. Do not flag stylistic preferences or minor formatting concerns.`;
+export { AGENTIC_SYSTEM_PROMPT } from "./prompts";
 
 interface AgenticFinding {
   type: "factual_error" | "logical_fallacy" | "unsupported_claim" | "quality_issue";
@@ -342,7 +333,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
         logger.dev(`[agentic] Sub-agent completed: ${event.agentName} (${event.durationMs ? `${(event.durationMs / 1000).toFixed(1)}s` : "?"})`);
         break;
       case "subagent_text":
-        logger.dev(`[agentic]   ${event.agentName} 💬 ${event.text.slice(0, 200)}${event.text.length > 200 ? "..." : ""}`);
+        logger.dev(`[agentic]   ${event.agentName}: ${event.text.slice(0, 200)}${event.text.length > 200 ? "..." : ""}`);
         break;
       case "subagent_tool_use":
         logger.dev(`[agentic]   ${event.agentName} → ${event.toolName}\n${event.input.slice(0, 500)}${event.input.length > 500 ? "..." : ""}`);
@@ -351,7 +342,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
         logger.dev(`[agentic]   ${event.agentName} ← ${event.output.slice(0, 500)}${event.output.length > 500 ? "..." : ""}`);
         break;
       case "assistant_text":
-        logger.dev(`[agentic] 💬 ${event.text.slice(0, 200)}${event.text.length > 200 ? "..." : ""}`);
+        logger.dev(`[agentic] text: ${event.text.slice(0, 200)}${event.text.length > 200 ? "..." : ""}`);
         break;
       case "tool_use":
         logger.dev(`[agentic] Tool call: ${event.toolName}\n${event.input.slice(0, 500)}${event.input.length > 500 ? "..." : ""}`);
@@ -423,8 +414,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
 
   /**
    * Remove the temp workspace directory after analysis completes.
-   * Disabled by default (workspace preserved for tuning/debugging).
-   * Set AGENTIC_CLEANUP_WORKSPACE=true to enable.
+   * Enabled by default to prevent /tmp accumulation.
+   * Set AGENTIC_CLEANUP_WORKSPACE=false to preserve workspaces for debugging.
    */
   private async cleanupWorkspace(): Promise<void> {
     if (!this.workspacePath) return;

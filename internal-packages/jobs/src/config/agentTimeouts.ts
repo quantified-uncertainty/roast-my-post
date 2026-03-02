@@ -27,8 +27,10 @@ export const AGENT_TIMEOUT_CONFIG = {
     // Add more capabilities as needed
   } as Record<string, number>,
 
-  // Maximum allowed timeout (safety limit)
-  MAX_TIMEOUT_MS: 7200000, // 2 hours
+  // Maximum allowed timeout (safety limit — keep short so hung jobs don't block workers for hours)
+  // Note: The agentic capability uses its own 2-hour timeout via CAPABILITY_TIMEOUTS above,
+  // which is applied directly. The global cap applies only to capabilities NOT listed above.
+  MAX_TIMEOUT_MS: 1200000, // 20 minutes
 };
 
 /**
@@ -39,12 +41,15 @@ export function getAgentTimeout(extendedCapabilityId?: string | null): number {
     return AGENT_TIMEOUT_CONFIG.DEFAULT_TIMEOUT_MS;
   }
   
+  // Explicitly listed capability timeouts are intentional — return them directly
+  // without applying the MAX_TIMEOUT_MS cap, which is only a safety net for
+  // unlisted capabilities that fall through to the default.
   const specificTimeout = AGENT_TIMEOUT_CONFIG.CAPABILITY_TIMEOUTS[extendedCapabilityId];
   if (specificTimeout) {
-    return Math.min(specificTimeout, AGENT_TIMEOUT_CONFIG.MAX_TIMEOUT_MS);
+    return specificTimeout;
   }
-  
-  return AGENT_TIMEOUT_CONFIG.DEFAULT_TIMEOUT_MS;
+
+  return Math.min(AGENT_TIMEOUT_CONFIG.DEFAULT_TIMEOUT_MS, AGENT_TIMEOUT_CONFIG.MAX_TIMEOUT_MS);
 }
 
 /**

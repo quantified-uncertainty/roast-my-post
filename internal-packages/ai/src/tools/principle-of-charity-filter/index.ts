@@ -462,9 +462,15 @@ function combineUsage(
     totalTokens: a.totalTokens + b.totalTokens,
     costUsd: a.costUsd + b.costUsd,
     isCostFromApi: a.isCostFromApi && b.isCostFromApi,
-    cacheReadTokens: (a.cacheReadTokens ?? 0) + (b.cacheReadTokens ?? 0) || undefined,
-    cacheWriteTokens: (a.cacheWriteTokens ?? 0) + (b.cacheWriteTokens ?? 0) || undefined,
-    reasoningTokens: (a.reasoningTokens ?? 0) + (b.reasoningTokens ?? 0) || undefined,
+    cacheReadTokens: (a.cacheReadTokens !== undefined || b.cacheReadTokens !== undefined)
+      ? (a.cacheReadTokens ?? 0) + (b.cacheReadTokens ?? 0)
+      : undefined,
+    cacheWriteTokens: (a.cacheWriteTokens !== undefined || b.cacheWriteTokens !== undefined)
+      ? (a.cacheWriteTokens ?? 0) + (b.cacheWriteTokens ?? 0)
+      : undefined,
+    reasoningTokens: (a.reasoningTokens !== undefined || b.reasoningTokens !== undefined)
+      ? (a.reasoningTokens ?? 0) + (b.reasoningTokens ?? 0)
+      : undefined,
     provider: b.provider,
     model: b.model,
     latencyMs: a.latencyMs + b.latencyMs,
