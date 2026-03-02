@@ -15,7 +15,12 @@ import type {
   Document,
   Evaluation,
   EvaluationVersion,
+  EvaluationComment,
+  EvaluationHighlight,
+  FallacyCheckerProfile,
   Job,
+  MetaEvaluation,
+  MetaEvaluationDimension,
 } from "../../../internal-packages/db/generated/index.js";
 import {
   Prisma,
@@ -150,6 +155,43 @@ const ListDocumentEvaluationsArgsSchema = z.object({
 const GetDocumentArgsSchema = z.object({
   documentId: z.string(),
   includeStale: z.boolean().optional().default(false),
+});
+
+// --- New tool schemas (Issue #392) ---
+
+const GetPipelineTelemetryArgsSchema = z.object({
+  evaluationVersionId: z.string().optional(),
+  documentId: z.string().optional(),
+  agentId: z.string().optional(),
+  limit: z.number().optional().default(10),
+});
+
+const GetProfilesArgsSchema = z.object({
+  agentId: z.string(),
+});
+
+const GetValidationRunsArgsSchema = z.object({
+  baselineId: z.string().optional(),
+  agentId: z.string().optional(),
+  limit: z.number().optional().default(20),
+});
+
+const GetValidationRunDetailArgsSchema = z.object({
+  runId: z.string(),
+});
+
+const GetCommentDetailsArgsSchema = z.object({
+  evaluationVersionId: z.string(),
+});
+
+const GetMetaEvaluationsArgsSchema = z.object({
+  evaluationVersionId: z.string().optional(),
+  agentId: z.string().optional(),
+  limit: z.number().optional().default(20),
+});
+
+const GetBaselinesArgsSchema = z.object({
+  agentId: z.string(),
 });
 
 // Helper function to handle API errors consistently
@@ -600,6 +642,143 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {},
+        },
+      },
+      // --- New tools (Issue #392): Pipeline telemetry, Lab data, meta-evaluations ---
+      {
+        name: "get_pipeline_telemetry",
+        description:
+          "Get pipeline telemetry for evaluations: stage-by-stage issue counts, filter dissolution details, model configs, and per-stage costs. Essential for diagnosing why a pipeline produces few/many comments.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            evaluationVersionId: {
+              type: "string",
+              description: "Get telemetry for a specific evaluation version",
+            },
+            documentId: {
+              type: "string",
+              description:
+                "Get telemetry for evaluations of this document (combine with agentId to narrow)",
+            },
+            agentId: {
+              type: "string",
+              description:
+                "Filter by agent ID (useful with documentId or alone for recent telemetry)",
+            },
+            limit: {
+              type: "number",
+              description:
+                "Max results when fetching multiple (default: 10)",
+            },
+          },
+        },
+      },
+      {
+        name: "get_profiles",
+        description:
+          "Get pipeline configuration profiles (FallacyCheckerProfile) for an agent. Shows extractor models, judge config, thresholds, and filter chain settings.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            agentId: {
+              type: "string",
+              description: "Agent ID to get profiles for",
+            },
+          },
+          required: ["agentId"],
+        },
+      },
+      {
+        name: "get_validation_runs",
+        description:
+          "List validation (regression test) runs with summary stats. Shows matched/new/lost comment counts across pipeline runs compared to baselines.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            baselineId: {
+              type: "string",
+              description: "Filter runs by baseline ID",
+            },
+            agentId: {
+              type: "string",
+              description:
+                "Filter runs by agent ID (via baseline)",
+            },
+            limit: {
+              type: "number",
+              description: "Max results (default: 20)",
+            },
+          },
+        },
+      },
+      {
+        name: "get_validation_run_detail",
+        description:
+          "Get detailed per-document comparison data for a validation run. Shows matched/new/lost comments with comparison data for each document snapshot.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            runId: {
+              type: "string",
+              description: "Validation run ID",
+            },
+          },
+          required: ["runId"],
+        },
+      },
+      {
+        name: "get_comment_details",
+        description:
+          "Get detailed comment data for an evaluation version: metadata (tool chain, confidence, severity), anchor validity, highlight positions, and summary statistics including broken anchor count.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            evaluationVersionId: {
+              type: "string",
+              description: "Evaluation version ID",
+            },
+          },
+          required: ["evaluationVersionId"],
+        },
+      },
+      {
+        name: "get_meta_evaluations",
+        description:
+          "Get meta-evaluation scores (LLM judge ratings) for evaluation versions. Shows per-dimension scores (accuracy, importance, clarity, etc.) and overall scores.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            evaluationVersionId: {
+              type: "string",
+              description:
+                "Get meta-evaluations for a specific evaluation version",
+            },
+            agentId: {
+              type: "string",
+              description:
+                "Get recent meta-evaluations for all evaluations by this agent",
+            },
+            limit: {
+              type: "number",
+              description: "Max results (default: 20)",
+            },
+          },
+        },
+      },
+      {
+        name: "get_baselines",
+        description:
+          "List validation baselines for an agent. Baselines are reference snapshots used for regression testing pipeline changes.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            agentId: {
+              type: "string",
+              description: "Agent ID to get baselines for",
+            },
+          },
+          required: ["agentId"],
         },
       },
     ],
@@ -1795,6 +1974,478 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             ],
           };
         }
+      }
+
+      // --- New tool handlers (Issue #392) ---
+
+      case "get_pipeline_telemetry": {
+        const { evaluationVersionId, documentId, agentId, limit } =
+          GetPipelineTelemetryArgsSchema.parse(args);
+
+        const where: Prisma.EvaluationVersionWhereInput = {
+          pipelineTelemetry: { not: Prisma.DbNull },
+        };
+
+        if (evaluationVersionId) {
+          where.id = evaluationVersionId;
+        }
+
+        const evalFilter: Prisma.EvaluationWhereInput = {};
+        if (documentId) evalFilter.documentId = documentId;
+        if (agentId) evalFilter.agentId = agentId;
+        if (Object.keys(evalFilter).length > 0) {
+          where.evaluation = evalFilter;
+        }
+
+        const versions = await prisma.evaluationVersion.findMany({
+          where,
+          include: {
+            evaluation: {
+              include: {
+                document: {
+                  include: {
+                    versions: {
+                      orderBy: { version: "desc" as const },
+                      take: 1,
+                      select: { title: true },
+                    },
+                  },
+                },
+                agent: {
+                  include: {
+                    versions: {
+                      orderBy: { version: "desc" as const },
+                      take: 1,
+                      select: { name: true },
+                    },
+                  },
+                },
+              },
+            },
+            _count: {
+              select: { comments: true },
+            },
+          },
+          take: limit,
+          orderBy: { createdAt: "desc" },
+        });
+
+        const results = versions.map((v) => {
+          const telemetry = v.pipelineTelemetry as Record<string, unknown> | null;
+          return {
+            evaluationVersionId: v.id,
+            evaluationId: v.evaluationId,
+            documentId: v.evaluation.documentId,
+            documentTitle:
+              v.evaluation.document.versions[0]?.title || "Untitled",
+            agentName:
+              v.evaluation.agent.versions[0]?.name || "Unknown",
+            createdAt: v.createdAt,
+            commentCount: v._count.comments,
+            telemetry,
+          };
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_profiles": {
+        const { agentId } = GetProfilesArgsSchema.parse(args);
+
+        const profiles = await prisma.fallacyCheckerProfile.findMany({
+          where: { agentId },
+          orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+        });
+
+        const results = profiles.map((p: FallacyCheckerProfile) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          agentId: p.agentId,
+          isDefault: p.isDefault,
+          config: p.config,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+        }));
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_baselines": {
+        const { agentId } = GetBaselinesArgsSchema.parse(args);
+
+        const baselines = await prisma.validationBaseline.findMany({
+          where: { agentId },
+          include: {
+            _count: {
+              select: {
+                snapshots: true,
+                runs: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        });
+
+        const results = baselines.map((b) => ({
+          id: b.id,
+          name: b.name,
+          description: b.description,
+          agentId: b.agentId,
+          commitHash: b.commitHash,
+          createdAt: b.createdAt,
+          snapshotCount: b._count.snapshots,
+          runCount: b._count.runs,
+        }));
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_validation_runs": {
+        const { baselineId, agentId, limit } =
+          GetValidationRunsArgsSchema.parse(args);
+
+        const where: Prisma.ValidationRunWhereInput = {};
+        if (baselineId) {
+          where.baselineId = baselineId;
+        }
+        if (agentId) {
+          where.baseline = { agentId };
+        }
+
+        const runs = await prisma.validationRun.findMany({
+          where,
+          include: {
+            baseline: {
+              select: { id: true, name: true, agentId: true },
+            },
+            _count: {
+              select: { snapshots: true },
+            },
+            snapshots: {
+              select: { status: true },
+            },
+          },
+          take: limit,
+          orderBy: { createdAt: "desc" },
+        });
+
+        const results = runs.map((r) => {
+          const unchangedCount = r.snapshots.filter(
+            (s) => s.status === "unchanged"
+          ).length;
+          const changedCount = r.snapshots.filter(
+            (s) => s.status === "changed"
+          ).length;
+
+          return {
+            id: r.id,
+            name: r.name,
+            baselineId: r.baselineId,
+            baselineName: r.baseline.name,
+            agentId: r.baseline.agentId,
+            commitHash: r.commitHash,
+            profileId: r.profileId,
+            status: r.status,
+            summary: r.summary,
+            createdAt: r.createdAt,
+            completedAt: r.completedAt,
+            totalSnapshots: r._count.snapshots,
+            unchangedCount,
+            changedCount,
+          };
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_validation_run_detail": {
+        const { runId } = GetValidationRunDetailArgsSchema.parse(args);
+
+        const run = await prisma.validationRun.findUnique({
+          where: { id: runId },
+          include: {
+            baseline: {
+              select: { id: true, name: true, agentId: true },
+            },
+            snapshots: {
+              include: {
+                baselineSnapshot: {
+                  include: {
+                    evaluationVersion: {
+                      include: {
+                        evaluation: {
+                          include: {
+                            document: {
+                              include: {
+                                versions: {
+                                  orderBy: { version: "desc" as const },
+                                  take: 1,
+                                  select: { title: true },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                newEvaluation: {
+                  select: {
+                    id: true,
+                    grade: true,
+                    summary: true,
+                    _count: { select: { comments: true } },
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!run) {
+          throw new Error(`Validation run with ID ${runId} not found`);
+        }
+
+        const results = {
+          id: run.id,
+          name: run.name,
+          commitHash: run.commitHash,
+          profileId: run.profileId,
+          status: run.status,
+          summary: run.summary,
+          createdAt: run.createdAt,
+          completedAt: run.completedAt,
+          baseline: {
+            id: run.baseline.id,
+            name: run.baseline.name,
+            agentId: run.baseline.agentId,
+          },
+          snapshots: run.snapshots.map((s) => ({
+            id: s.id,
+            status: s.status,
+            keptCount: s.keptCount,
+            newCount: s.newCount,
+            lostCount: s.lostCount,
+            documentId:
+              s.baselineSnapshot.evaluationVersion.evaluation.documentId,
+            documentTitle:
+              s.baselineSnapshot.evaluationVersion.evaluation.document
+                .versions[0]?.title || "Untitled",
+            newEvaluationVersionId: s.newEvaluation.id,
+            newGrade: s.newEvaluation.grade,
+            newCommentCount: s.newEvaluation._count.comments,
+            comparisonData: s.comparisonData,
+          })),
+        };
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_comment_details": {
+        const { evaluationVersionId } =
+          GetCommentDetailsArgsSchema.parse(args);
+
+        const comments = await prisma.evaluationComment.findMany({
+          where: { evaluationVersionId },
+          include: {
+            highlight: true,
+          },
+          orderBy: { importance: "desc" },
+        });
+
+        interface CommentLevelCounts {
+          [level: string]: number;
+        }
+        interface CommentSourceCounts {
+          [source: string]: number;
+        }
+
+        let brokenAnchors = 0;
+        const byLevel: CommentLevelCounts = {};
+        const bySource: CommentSourceCounts = {};
+
+        const formattedComments = comments.map(
+          (c: EvaluationComment & { highlight: EvaluationHighlight }) => {
+            if (!c.highlight.isValid) brokenAnchors++;
+            if (c.level) byLevel[c.level] = (byLevel[c.level] || 0) + 1;
+            if (c.source) bySource[c.source] = (bySource[c.source] || 0) + 1;
+
+            return {
+              id: c.id,
+              header: c.header,
+              description: c.description,
+              importance: c.importance,
+              grade: c.grade,
+              level: c.level,
+              source: c.source,
+              metadata: c.metadata,
+              highlight: {
+                quotedText: c.highlight.quotedText,
+                startOffset: c.highlight.startOffset,
+                endOffset: c.highlight.endOffset,
+                isValid: c.highlight.isValid,
+                error: c.highlight.error,
+                prefix: c.highlight.prefix,
+              },
+            };
+          }
+        );
+
+        const results = {
+          evaluationVersionId,
+          totalComments: comments.length,
+          brokenAnchors,
+          byLevel,
+          bySource,
+          comments: formattedComments,
+        };
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_meta_evaluations": {
+        const { evaluationVersionId, agentId, limit } =
+          GetMetaEvaluationsArgsSchema.parse(args);
+
+        const where: Prisma.MetaEvaluationWhereInput = {};
+        if (evaluationVersionId) {
+          where.evaluationVersionId = evaluationVersionId;
+        }
+        if (agentId) {
+          where.evaluationVersion = {
+            evaluation: { agentId },
+          };
+        }
+
+        const metaEvals = await prisma.metaEvaluation.findMany({
+          where,
+          include: {
+            dimensionScores: true,
+            evaluationVersion: {
+              include: {
+                evaluation: {
+                  include: {
+                    document: {
+                      include: {
+                        versions: {
+                          orderBy: { version: "desc" as const },
+                          take: 1,
+                          select: { title: true },
+                        },
+                      },
+                    },
+                    agent: {
+                      include: {
+                        versions: {
+                          orderBy: { version: "desc" as const },
+                          take: 1,
+                          select: { name: true },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          take: limit,
+          orderBy: { createdAt: "desc" },
+        });
+
+        const results = metaEvals.map(
+          (
+            me: MetaEvaluation & {
+              dimensionScores: MetaEvaluationDimension[];
+              evaluationVersion: EvaluationVersion & {
+                evaluation: Evaluation & {
+                  document: Document & {
+                    versions: { title: string | null }[];
+                  };
+                  agent: Agent & {
+                    versions: { name: string }[];
+                  };
+                };
+              };
+            }
+          ) => ({
+            id: me.id,
+            type: me.type,
+            overallScore: me.overallScore,
+            reasoning: me.reasoning,
+            judgeModel: me.judgeModel,
+            createdAt: me.createdAt,
+            rank: me.rank,
+            relativeScore: me.relativeScore,
+            rankingSessionId: me.rankingSessionId,
+            evaluationVersionId: me.evaluationVersionId,
+            documentTitle:
+              me.evaluationVersion.evaluation.document.versions[0]?.title ||
+              "Untitled",
+            agentName:
+              me.evaluationVersion.evaluation.agent.versions[0]?.name ||
+              "Unknown",
+            dimensions: me.dimensionScores.map(
+              (d: MetaEvaluationDimension) => ({
+                name: d.name,
+                score: d.score,
+                explanation: d.explanation,
+              })
+            ),
+          })
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
       }
 
       case "verify_setup": {
