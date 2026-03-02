@@ -15,8 +15,6 @@ import type {
   Document,
   Evaluation,
   EvaluationVersion,
-  EvaluationComment,
-  EvaluationHighlight,
   FallacyCheckerProfile,
   Job,
   MetaEvaluation,
@@ -195,6 +193,25 @@ const GetMetaEvaluationsArgsSchema = z.object({
 const GetBaselinesArgsSchema = z.object({
   agentId: z.string(),
 });
+
+const GetValidationSnapshotArgsSchema = z.object({
+  snapshotId: z.string(),
+});
+
+/** Meta-evaluation with all includes for the get_meta_evaluations handler */
+interface MetaEvaluationWithIncludes extends MetaEvaluation {
+  dimensionScores: MetaEvaluationDimension[];
+  evaluationVersion: EvaluationVersion & {
+    evaluation: Evaluation & {
+      document: Document & {
+        versions: { title: string | null }[];
+      };
+      agent: Agent & {
+        versions: { name: string }[];
+      };
+    };
+  };
+}
 
 // Helper function to handle API errors consistently
 function getErrorMessage(status: number, context: string): string {
@@ -791,6 +808,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
           required: ["agentId"],
+        },
+      },
+      {
+        name: "get_validation_snapshot",
+        description:
+          "Get full comparison data for a single validation run snapshot. Returns matched/new/lost comments, filtered items, pipeline counts, and stage metrics for one document comparison.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            snapshotId: {
+              type: "string",
+              description: "Validation run snapshot ID",
+            },
+          },
+          required: ["snapshotId"],
         },
       },
     ],
@@ -2207,7 +2239,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               select: { id: true, name: true, agentId: true },
             },
             snapshots: {
-              include: {
+              select: {
+                id: true,
+                status: true,
+                keptCount: true,
+                newCount: true,
+                lostCount: true,
+                ...(includeComparisonData
+                  ? { comparisonData: true }
+                  : {}),
                 baselineSnapshot: {
                   include: {
                     evaluationVersion: {
@@ -2274,7 +2314,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             newEvaluationVersionId: s.newEvaluation.id,
             newGrade: s.newEvaluation.grade,
             newCommentCount: s.newEvaluation._count.comments,
-            ...(includeComparisonData
+            ...(includeComparisonData && "comparisonData" in s
               ? { comparisonData: s.comparisonData }
               : {}),
           })),
@@ -2296,7 +2336,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         const comments = await prisma.evaluationComment.findMany({
           where: { evaluationVersionId },
-          include: {
+          select: {
+            id: true,
+            header: true,
+            description: true,
+            importance: true,
+            grade: true,
+            level: true,
+            source: true,
+            evaluationVersionId: true,
+            ...(includeMetadata ? { metadata: true } : {}),
             highlight: true,
           },
           orderBy: { importance: "desc" },
@@ -2313,32 +2362,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const byLevel: CommentLevelCounts = {};
         const bySource: CommentSourceCounts = {};
 
-        const formattedComments = comments.map(
-          (c: EvaluationComment & { highlight: EvaluationHighlight }) => {
-            if (!c.highlight.isValid) brokenAnchors++;
-            if (c.level) byLevel[c.level] = (byLevel[c.level] || 0) + 1;
-            if (c.source) bySource[c.source] = (bySource[c.source] || 0) + 1;
+        const formattedComments = comments.map((c) => {
+          if (!c.highlight.isValid) brokenAnchors++;
+          if (c.level) byLevel[c.level] = (byLevel[c.level] || 0) + 1;
+          if (c.source) bySource[c.source] = (bySource[c.source] || 0) + 1;
 
-            return {
-              id: c.id,
-              header: c.header,
-              description: c.description,
-              importance: c.importance,
-              grade: c.grade,
-              level: c.level,
-              source: c.source,
-              ...(includeMetadata ? { metadata: c.metadata } : {}),
-              highlight: {
-                quotedText: c.highlight.quotedText,
-                startOffset: c.highlight.startOffset,
-                endOffset: c.highlight.endOffset,
-                isValid: c.highlight.isValid,
-                error: c.highlight.error,
-                prefix: c.highlight.prefix,
-              },
-            };
-          }
-        );
+          return {
+            id: c.id,
+            header: c.header,
+            description: c.description,
+            importance: c.importance,
+            grade: c.grade,
+            level: c.level,
+            source: c.source,
+            ...("metadata" in c && includeMetadata
+              ? { metadata: c.metadata }
+              : {}),
+            highlight: {
+              quotedText: c.highlight.quotedText,
+              startOffset: c.highlight.startOffset,
+              endOffset: c.highlight.endOffset,
+              isValid: c.highlight.isValid,
+              error: c.highlight.error,
+              prefix: c.highlight.prefix,
+            },
+          };
+        });
 
         const results = {
           evaluationVersionId,
@@ -2409,21 +2458,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
 
         const results = metaEvals.map(
-          (
-            me: MetaEvaluation & {
-              dimensionScores: MetaEvaluationDimension[];
-              evaluationVersion: EvaluationVersion & {
-                evaluation: Evaluation & {
-                  document: Document & {
-                    versions: { title: string | null }[];
-                  };
-                  agent: Agent & {
-                    versions: { name: string }[];
-                  };
-                };
-              };
-            }
-          ) => ({
+          (me: MetaEvaluationWithIncludes) => ({
             id: me.id,
             type: me.type,
             overallScore: me.overallScore,
@@ -2455,6 +2490,83 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: "text",
               text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_validation_snapshot": {
+        const { snapshotId } =
+          GetValidationSnapshotArgsSchema.parse(args);
+
+        const snapshot = await prisma.validationRunSnapshot.findUnique({
+          where: { id: snapshotId },
+          include: {
+            baselineSnapshot: {
+              include: {
+                evaluationVersion: {
+                  include: {
+                    evaluation: {
+                      include: {
+                        document: {
+                          include: {
+                            versions: {
+                              orderBy: { version: "desc" },
+                              take: 1,
+                              select: { title: true },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            newEvaluation: {
+              select: {
+                id: true,
+                grade: true,
+                summary: true,
+                _count: { select: { comments: true } },
+              },
+            },
+            run: {
+              select: { id: true, name: true, status: true },
+            },
+          },
+        });
+
+        if (!snapshot) {
+          throw new Error(
+            `Validation run snapshot with ID ${snapshotId} not found`
+          );
+        }
+
+        const result = {
+          id: snapshot.id,
+          status: snapshot.status,
+          keptCount: snapshot.keptCount,
+          newCount: snapshot.newCount,
+          lostCount: snapshot.lostCount,
+          comparisonData: snapshot.comparisonData,
+          documentId:
+            snapshot.baselineSnapshot.evaluationVersion.evaluation.documentId,
+          documentTitle:
+            snapshot.baselineSnapshot.evaluationVersion.evaluation.document
+              .versions[0]?.title || "Untitled",
+          newEvaluationVersionId: snapshot.newEvaluation.id,
+          newGrade: snapshot.newEvaluation.grade,
+          newSummary: snapshot.newEvaluation.summary,
+          newCommentCount: snapshot.newEvaluation._count.comments,
+          run: snapshot.run,
+        };
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
             },
           ],
         };
