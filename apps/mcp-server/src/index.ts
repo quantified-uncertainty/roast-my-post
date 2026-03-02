@@ -178,10 +178,12 @@ const GetValidationRunsArgsSchema = z.object({
 
 const GetValidationRunDetailArgsSchema = z.object({
   runId: z.string(),
+  includeComparisonData: z.boolean().optional().default(false),
 });
 
 const GetCommentDetailsArgsSchema = z.object({
   evaluationVersionId: z.string(),
+  includeMetadata: z.boolean().optional().default(false),
 });
 
 const GetMetaEvaluationsArgsSchema = z.object({
@@ -648,7 +650,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "get_pipeline_telemetry",
         description:
-          "Get pipeline telemetry for evaluations: stage-by-stage issue counts, filter dissolution details, model configs, and per-stage costs. Essential for diagnosing why a pipeline produces few/many comments.",
+          "Get pipeline telemetry for evaluations: stage-by-stage issue counts, filter dissolution details, model configs, and per-stage costs. Essential for diagnosing why a pipeline produces few/many comments. If no filters provided, returns the most recent telemetry entries across all agents/documents.",
         inputSchema: {
           type: "object",
           properties: {
@@ -715,13 +717,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "get_validation_run_detail",
         description:
-          "Get detailed per-document comparison data for a validation run. Shows matched/new/lost comments with comparison data for each document snapshot.",
+          "Get per-document snapshot results for a validation run. Returns kept/new/lost counts per document. Use includeComparisonData=true to get full matched/new/lost comment details (can be large).",
         inputSchema: {
           type: "object",
           properties: {
             runId: {
               type: "string",
               description: "Validation run ID",
+            },
+            includeComparisonData: {
+              type: "boolean",
+              description:
+                "Include full comparison JSON (matched/new/lost comments, filtered items). Can be very large. Default: false",
             },
           },
           required: ["runId"],
@@ -730,13 +737,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "get_comment_details",
         description:
-          "Get detailed comment data for an evaluation version: metadata (tool chain, confidence, severity), anchor validity, highlight positions, and summary statistics including broken anchor count.",
+          "Get detailed comment data for an evaluation version: anchor validity, highlight positions, importance/grade/level, and summary statistics (broken anchor count, by-level/source breakdowns). Use includeMetadata=true to also get full metadata JSON (tool chain, confidence, severity — can be large).",
         inputSchema: {
           type: "object",
           properties: {
             evaluationVersionId: {
               type: "string",
               description: "Evaluation version ID",
+            },
+            includeMetadata: {
+              type: "boolean",
+              description:
+                "Include full metadata JSON per comment (tool chain, confidence, severity). Can be large. Default: false",
             },
           },
           required: ["evaluationVersionId"],
@@ -2005,7 +2017,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 document: {
                   include: {
                     versions: {
-                      orderBy: { version: "desc" as const },
+                      orderBy: { version: "desc" },
                       take: 1,
                       select: { title: true },
                     },
@@ -2014,7 +2026,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 agent: {
                   include: {
                     versions: {
-                      orderBy: { version: "desc" as const },
+                      orderBy: { version: "desc" },
                       take: 1,
                       select: { name: true },
                     },
@@ -2140,9 +2152,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             baseline: {
               select: { id: true, name: true, agentId: true },
             },
-            _count: {
-              select: { snapshots: true },
-            },
             snapshots: {
               select: { status: true },
             },
@@ -2171,7 +2180,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             summary: r.summary,
             createdAt: r.createdAt,
             completedAt: r.completedAt,
-            totalSnapshots: r._count.snapshots,
+            totalSnapshots: r.snapshots.length,
             unchangedCount,
             changedCount,
           };
@@ -2188,7 +2197,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_validation_run_detail": {
-        const { runId } = GetValidationRunDetailArgsSchema.parse(args);
+        const { runId, includeComparisonData } =
+          GetValidationRunDetailArgsSchema.parse(args);
 
         const run = await prisma.validationRun.findUnique({
           where: { id: runId },
@@ -2207,7 +2217,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                             document: {
                               include: {
                                 versions: {
-                                  orderBy: { version: "desc" as const },
+                                  orderBy: { version: "desc" },
                                   take: 1,
                                   select: { title: true },
                                 },
@@ -2264,7 +2274,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             newEvaluationVersionId: s.newEvaluation.id,
             newGrade: s.newEvaluation.grade,
             newCommentCount: s.newEvaluation._count.comments,
-            comparisonData: s.comparisonData,
+            ...(includeComparisonData
+              ? { comparisonData: s.comparisonData }
+              : {}),
           })),
         };
 
@@ -2279,7 +2291,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_comment_details": {
-        const { evaluationVersionId } =
+        const { evaluationVersionId, includeMetadata } =
           GetCommentDetailsArgsSchema.parse(args);
 
         const comments = await prisma.evaluationComment.findMany({
@@ -2315,7 +2327,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               grade: c.grade,
               level: c.level,
               source: c.source,
-              metadata: c.metadata,
+              ...(includeMetadata ? { metadata: c.metadata } : {}),
               highlight: {
                 quotedText: c.highlight.quotedText,
                 startOffset: c.highlight.startOffset,
@@ -2372,7 +2384,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     document: {
                       include: {
                         versions: {
-                          orderBy: { version: "desc" as const },
+                          orderBy: { version: "desc" },
                           take: 1,
                           select: { title: true },
                         },
@@ -2381,7 +2393,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     agent: {
                       include: {
                         versions: {
-                          orderBy: { version: "desc" as const },
+                          orderBy: { version: "desc" },
                           take: 1,
                           select: { name: true },
                         },
