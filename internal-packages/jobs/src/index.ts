@@ -5,7 +5,9 @@
 // Core services
 export { JobOrchestrator, type JobOrchestratorInterface } from './core/JobOrchestrator';
 export { PgBossService } from './core/PgBossService';
-export { JobService } from './core/JobService';
+export { JobService, type BatchCompletionHandler } from './core/JobService';
+export { EmailService, type BatchCompletionEmailData } from './core/EmailService';
+export { BatchNotificationHandler } from './core/BatchNotificationHandler';
 
 // Job types
 export {
