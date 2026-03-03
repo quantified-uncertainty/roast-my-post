@@ -19,6 +19,7 @@ export * from './plugins/spelling';
 export * from './plugins/fact-check';
 export * from './plugins/forecast';
 export * from './plugins/link-analysis';
+export * from './plugins/agentic';
 
 // Utilities
 // ChunkRouter moved to server exports (uses sessionContext)

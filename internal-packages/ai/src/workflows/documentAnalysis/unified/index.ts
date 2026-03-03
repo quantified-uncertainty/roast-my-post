@@ -23,6 +23,8 @@ export interface UnifiedAnalysisOptions {
   fallacyCheckProfileId?: string;
   /** Agent ID for FallacyCheckPlugin default profile loading */
   fallacyCheckAgentId?: string;
+  /** Called with telemetry snapshots during analysis for incremental DB persistence */
+  onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
 }
 
 export async function analyzeDocumentUnified(
@@ -44,6 +46,7 @@ export async function analyzeDocumentUnified(
     // Pass profile options for FallacyCheckPlugin
     fallacyCheckProfileId: options.fallacyCheckProfileId,
     fallacyCheckAgentId: options.fallacyCheckAgentId,
+    onTelemetryUpdate: options.onTelemetryUpdate,
   });
 
   // Delegate to plugin system

@@ -96,6 +96,11 @@ psql_dev() {
     psql_local "${LOCAL_DB_NAME:-roast_my_post}" "$@"
 }
 
+psql_prod_cmd() {
+    source "$SCRIPT_DIR/dev/db/lib/db_functions.sh"
+    psql_prod "$@"
+}
+
 case "${1:-start}" in
     start)
         start_dev
@@ -116,8 +121,12 @@ case "${1:-start}" in
         shift
         psql_dev "$@"
         ;;
+    psql-prod)
+        shift
+        psql_prod_cmd "$@"
+        ;;
     *)
-        echo "Usage: $0 [start|stop|status|attach|restart|psql]"
+        echo "Usage: $0 [start|stop|status|attach|restart|psql|psql-prod]"
         exit 1
         ;;
 esac

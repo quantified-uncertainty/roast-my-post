@@ -36,7 +36,7 @@ import {
  * @throws Error if profile not found
  */
 export async function loadProfile(profileId: string): Promise<FallacyCheckerProfileConfig> {
-  const profile = await prisma.fallacyCheckerProfile.findUnique({
+  const profile = await prisma.pluginProfile.findUnique({
     where: { id: profileId },
   });
 
@@ -53,8 +53,9 @@ export async function loadProfile(profileId: string): Promise<FallacyCheckerProf
  * Returns the profile marked as default, or creates a default config if none exists.
  */
 export async function loadDefaultProfile(agentId: string): Promise<FallacyCheckerProfileConfig> {
-  const profile = await prisma.fallacyCheckerProfile.findFirst({
+  const profile = await prisma.pluginProfile.findFirst({
     where: {
+      pluginType: "fallacy-check",
       agentId,
       isDefault: true,
     },
@@ -90,8 +91,8 @@ export async function loadProfileOrDefault(
  * Get all profiles for an agent
  */
 export async function getProfilesForAgent(agentId: string): Promise<FallacyCheckerProfile[]> {
-  const profiles = await prisma.fallacyCheckerProfile.findMany({
-    where: { agentId },
+  const profiles = await prisma.pluginProfile.findMany({
+    where: { pluginType: "fallacy-check", agentId },
     orderBy: [
       { isDefault: 'desc' },
       { name: 'asc' },
@@ -391,14 +392,15 @@ export async function createProfile(
 
   // If setting as default, unset other defaults first
   if (options?.isDefault) {
-    await prisma.fallacyCheckerProfile.updateMany({
-      where: { agentId, isDefault: true },
+    await prisma.pluginProfile.updateMany({
+      where: { pluginType: "fallacy-check", agentId, isDefault: true },
       data: { isDefault: false },
     });
   }
 
-  const profile = await prisma.fallacyCheckerProfile.create({
+  const profile = await prisma.pluginProfile.create({
     data: {
+      pluginType: "fallacy-check",
       agentId,
       name,
       description: options?.description ?? null,
@@ -425,7 +427,7 @@ export async function updateProfile(
     isDefault?: boolean;
   }
 ): Promise<FallacyCheckerProfile> {
-  const existing = await prisma.fallacyCheckerProfile.findUnique({
+  const existing = await prisma.pluginProfile.findUnique({
     where: { id: profileId },
   });
 
@@ -444,13 +446,13 @@ export async function updateProfile(
 
   // If setting as default, unset other defaults first
   if (updates.isDefault) {
-    await prisma.fallacyCheckerProfile.updateMany({
-      where: { agentId: existing.agentId, isDefault: true, id: { not: profileId } },
+    await prisma.pluginProfile.updateMany({
+      where: { pluginType: "fallacy-check", agentId: existing.agentId, isDefault: true, id: { not: profileId } },
       data: { isDefault: false },
     });
   }
 
-  const profile = await prisma.fallacyCheckerProfile.update({
+  const profile = await prisma.pluginProfile.update({
     where: { id: profileId },
     data: {
       ...(updates.name !== undefined && { name: updates.name }),
@@ -470,7 +472,7 @@ export async function updateProfile(
  * Delete a profile
  */
 export async function deleteProfile(profileId: string): Promise<void> {
-  await prisma.fallacyCheckerProfile.delete({
+  await prisma.pluginProfile.delete({
     where: { id: profileId },
   });
 }

@@ -253,6 +253,7 @@ export interface FallacyCheckerProfileConfig {
  */
 export interface FallacyCheckerProfile {
   id: string;
+  pluginType: string;
   name: string;
   description: string | null;
   agentId: string;

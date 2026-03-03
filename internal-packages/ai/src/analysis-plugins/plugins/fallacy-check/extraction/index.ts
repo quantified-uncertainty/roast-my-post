@@ -7,3 +7,5 @@
 export * from './types';
 export * from './config';
 export { runMultiExtractor } from './multiExtractor';
+export { runExtractionPipeline } from './pipeline';
+export type { ExtractionPipelineInput, ExtractionPipelineResult } from './pipeline';

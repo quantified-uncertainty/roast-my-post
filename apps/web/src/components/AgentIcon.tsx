@@ -32,6 +32,9 @@ const iconMap: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
   "fallacy-check": FallacyCheckIcon,
   "fallacy-verification": FallacyVerificationIcon,
 
+  // Agentic (multi-agent orchestrator) — reuses fallacy-check icon for now
+  "agentic": FallacyCheckIcon,
+
   // Other agents
   "fact-checker": FactCheckerIcon,
   "forecast-checker": ForecastCheckerIcon,

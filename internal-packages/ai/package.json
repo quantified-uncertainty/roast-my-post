@@ -2,16 +2,16 @@
   "name": "@roast/ai",
   "version": "0.1.0",
   "description": "Core AI utilities for RoastMyPost - Claude integration, Helicone tracking, and token management",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./server": {
-      "types": "./src/server.ts",
-      "default": "./src/server.ts"
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
     },
     "./meta-eval": {
       "types": "./dist/meta-eval/index.d.ts",
@@ -76,6 +76,10 @@
     "./supported-elsewhere-filter/prompts": {
       "types": "./src/tools/supported-elsewhere-filter/prompts.ts",
       "default": "./src/tools/supported-elsewhere-filter/prompts.ts"
+    },
+    "./agentic/prompts": {
+      "types": "./src/analysis-plugins/plugins/agentic/orchestrator.ts",
+      "default": "./src/analysis-plugins/plugins/agentic/orchestrator.ts"
     }
   },
   "scripts": {
@@ -100,6 +104,7 @@
     "bulk-claims": "tsx scripts/run-claim-bulk.ts"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.50",
     "@anthropic-ai/sdk": "^0.54.0",
     "@leeoniya/ufuzzy": "^1.0.18",
     "fuse.js": "^7.1.0",

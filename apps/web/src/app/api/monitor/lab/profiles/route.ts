@@ -21,9 +21,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "agentId is required" }, { status: 400 });
   }
 
+  const pluginType = request.nextUrl.searchParams.get("pluginType") ?? "fallacy-check";
+
   try {
-    const profiles = await prisma.fallacyCheckerProfile.findMany({
-      where: { agentId },
+    const profiles = await prisma.pluginProfile.findMany({
+      where: { pluginType, agentId },
       orderBy: [
         { isDefault: "desc" },
         { name: "asc" },
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, description, agentId, config, isDefault } = body;
+    const { name, description, agentId, config, isDefault, pluginType = "fallacy-check" } = body;
 
     if (!name || !agentId) {
       return NextResponse.json(
@@ -59,9 +61,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate name
-    const existing = await prisma.fallacyCheckerProfile.findFirst({
-      where: { agentId, name },
+    // Check for duplicate name within same pluginType
+    const existing = await prisma.pluginProfile.findFirst({
+      where: { pluginType, agentId, name },
     });
 
     if (existing) {
@@ -75,18 +77,19 @@ export async function POST(request: NextRequest) {
     const profile = await prisma.$transaction(async (tx) => {
       // If setting as default, unset other defaults first
       if (isDefault) {
-        await tx.fallacyCheckerProfile.updateMany({
-          where: { agentId, isDefault: true },
+        await tx.pluginProfile.updateMany({
+          where: { pluginType, agentId, isDefault: true },
           data: { isDefault: false },
         });
       }
 
-      return tx.fallacyCheckerProfile.create({
+      return tx.pluginProfile.create({
         data: {
+          pluginType,
           name,
           description: description ?? null,
           agentId,
-          config: config ?? getDefaultConfig(),
+          config: config ?? getDefaultConfig(pluginType),
           isDefault: isDefault ?? false,
         },
       });
@@ -105,7 +108,18 @@ export async function POST(request: NextRequest) {
  * Default profile configuration - matches the real fallacy checker defaults
  * Uses the NEW filterChain array format (not the old { filters: [...] } format)
  */
-function getDefaultConfig() {
+function getDefaultConfig(pluginType: string) {
+  if (pluginType === "agentic") {
+    return {
+      version: 1,
+      model: "sonnet",
+      maxTurns: 10,
+      maxBudgetUsd: 2.0,
+      allowedTools: ["WebSearch", "WebFetch"],
+      systemPrompt: "",
+      permissionMode: "acceptEdits",
+    };
+  }
   return {
     version: 1,
     models: {

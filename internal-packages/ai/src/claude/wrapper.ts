@@ -37,6 +37,12 @@ export interface ClaudeCallOptions {
   cacheSeed?: string; // Custom cache seed for Helicone response caching
   timeout?: number; // Custom timeout in milliseconds
   /**
+   * Use streaming internally to avoid the Anthropic SDK's non-streaming timeout
+   * for long-running requests (e.g. high max_tokens with thinking enabled).
+   * The caller still gets a normal ClaudeCallResult — streaming is transparent.
+   */
+  stream?: boolean;
+  /**
    * Extended thinking mode configuration.
    * - true: Enable with default budget of 10000 tokens
    * - false/undefined: Disable extended thinking
@@ -259,13 +265,24 @@ export async function callClaude(
       // Capture timing for telemetry
       apiCallStartTime = Date.now();
 
-      const result = await Promise.race([
-        anthropic.messages.create(requestOptions),
-        timeoutPromise
-      ]).finally(() => {
-        // Clear timeout when either promise resolves/rejects
-        clearTimeout(timeoutId);
-      });
+      let result: Anthropic.Messages.Message;
+      if (options.stream) {
+        // Use streaming to avoid SDK's non-streaming timeout for long requests
+        const stream = anthropic.messages.stream(requestOptions);
+        result = await Promise.race([
+          stream.finalMessage(),
+          timeoutPromise
+        ]).finally(() => {
+          clearTimeout(timeoutId);
+        });
+      } else {
+        result = await Promise.race([
+          anthropic.messages.create(requestOptions, { timeout: timeoutMs }),
+          timeoutPromise
+        ]).finally(() => {
+          clearTimeout(timeoutId);
+        });
+      }
       
       // Response structure is validated by TypeScript types
       // result is guaranteed to have content and usage by Anthropic.Messages.Message type

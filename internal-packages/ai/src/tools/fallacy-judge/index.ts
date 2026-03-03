@@ -529,6 +529,8 @@ Group similar issues together and provide your decisions. Remember:
               system: systemPrompt,
               messages: [{ role: 'user', content: userPrompt }],
               max_tokens: maxTokens,
+              stream: true, // Avoid SDK non-streaming timeout for high max_tokens
+              timeout: 600000, // 10 min — thinking + high max_tokens is slow
               ...(resolved.temperature !== undefined && { temperature: resolved.temperature }),
               tools: [{
                 name: 'aggregate_fallacy_issues',
