@@ -94,6 +94,24 @@ export interface UpdateJobStatusData {
   attempts?: number;
 }
 
+export interface BatchCompletionResult {
+  id: string;
+  completedAt: Date;
+}
+
+export interface BatchNotificationData {
+  id: string;
+  name: string | null;
+  agentId: string;
+  agentName: string;
+  notifyOnComplete: boolean;
+  notifiedAt: Date | null;
+  userEmail: string | null;
+  completedCount: number;
+  failedCount: number;
+  totalCount: number;
+}
+
 export interface StaleJobCriteria {
   status: JobStatus;
   thresholdMs: number;
@@ -114,6 +132,9 @@ export interface JobRepositoryInterface {
   findJobsForCostUpdate(limit: number, maxAgeHours?: number): Promise<JobEntity[]>;
   updateCost(id: string, cost: number): Promise<JobEntity>;
   findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]>;
+  tryMarkBatchCompleted(batchId: string): Promise<BatchCompletionResult | null>;
+  getBatchForNotification(batchId: string): Promise<BatchNotificationData | null>;
+  markBatchNotified(batchId: string): Promise<void>;
 }
 
 export class JobRepository implements JobRepositoryInterface {
@@ -308,6 +329,76 @@ export class JobRepository implements JobRepositoryInterface {
   /**
    * Convert database record with relations to job with relations
    */
+  /**
+   * Atomically mark a batch as completed if all jobs are in terminal states.
+   * Returns the batch ID if this call "won" the completion, null otherwise.
+   * The `completedAt IS NULL` condition prevents duplicate completions.
+   */
+  async tryMarkBatchCompleted(batchId: string): Promise<BatchCompletionResult | null> {
+    const result = await this.prisma.$queryRaw<BatchCompletionResult[]>`
+      UPDATE "AgentEvalBatch"
+      SET "completedAt" = NOW()
+      WHERE id = ${batchId}
+        AND "completedAt" IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM "Job"
+          WHERE "agentEvalBatchId" = ${batchId}
+            AND status IN ('PENDING', 'RUNNING')
+        )
+      RETURNING id, "completedAt"
+    `;
+
+    return result.length > 0 ? result[0] : null;
+  }
+
+  /**
+   * Fetch batch data needed for sending completion notifications.
+   */
+  async getBatchForNotification(batchId: string): Promise<BatchNotificationData | null> {
+    const batch = await this.prisma.agentEvalBatch.findUnique({
+      where: { id: batchId },
+      include: {
+        user: { select: { email: true } },
+        agent: {
+          include: {
+            versions: { orderBy: { version: 'desc' as const }, take: 1, select: { name: true } },
+          },
+        },
+        jobs: { select: { status: true } },
+      },
+    });
+
+    if (!batch) return null;
+
+    const completedCount = batch.jobs.filter(j => j.status === 'COMPLETED').length;
+    const failedCount = batch.jobs.filter(j => j.status === 'FAILED').length;
+
+    return {
+      id: batch.id,
+      name: batch.name,
+      agentId: batch.agentId,
+      agentName: batch.agent.versions[0]?.name || 'Unknown Agent',
+      notifyOnComplete: batch.notifyOnComplete,
+      notifiedAt: batch.notifiedAt,
+      userEmail: batch.user.email,
+      completedCount,
+      failedCount,
+      totalCount: batch.jobs.length,
+    };
+  }
+
+  /**
+   * Atomically mark a batch as notified (prevents duplicate emails).
+   */
+  async markBatchNotified(batchId: string): Promise<void> {
+    await this.prisma.$queryRaw`
+      UPDATE "AgentEvalBatch"
+      SET "notifiedAt" = NOW()
+      WHERE id = ${batchId}
+        AND "notifiedAt" IS NULL
+    `;
+  }
+
   private toJobWithRelations(job: any): JobWithRelations {
     return {
       ...this.toDomainEntity(job),

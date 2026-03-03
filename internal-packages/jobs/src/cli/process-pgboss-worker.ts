@@ -31,6 +31,8 @@ import { isRetryableError } from '../errors/retryableErrors';
 import { getAgentTimeout } from '../config/agentTimeouts';
 import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
+import { EmailService } from '../core/EmailService';
+import { BatchNotificationHandler } from '../core/BatchNotificationHandler';
 
 interface JobWithAgentVersions {
   evaluation: {
@@ -58,6 +60,16 @@ class PgBossWorker {
     this.jobService = new JobService(this.jobRepository, logger, this.pgBossService);
     this.jobOrchestrator = new JobOrchestrator(this.jobRepository, logger, this.jobService);
     this.jobReconciliationService = new JobReconciliationService(this.jobRepository, this.pgBossService, logger);
+
+    // Wire up batch completion email notifications
+    const emailService = new EmailService(logger);
+    if (emailService.isConfigured) {
+      const notificationHandler = new BatchNotificationHandler(this.jobRepository, emailService, logger);
+      this.jobService.setBatchCompletionHandler(notificationHandler);
+      logger.info('Email notifications enabled for batch completions');
+    } else {
+      logger.info('Email not configured, batch completion notifications disabled');
+    }
   }
 
   public async start() {

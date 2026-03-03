@@ -5,6 +5,7 @@ import { JobStatus } from "@roast/db";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { isAdmin } from "@/infrastructure/auth/auth";
+import { getServices } from "@/application/services/ServiceFactory";
 
 export async function POST(
   request: NextRequest,
@@ -14,16 +15,16 @@ export async function POST(
   if (!userId) {
     return commonErrors.unauthorized();
   }
-  
+
   // Check if user is admin
   const adminCheck = await isAdmin();
   if (!adminCheck) {
     return commonErrors.forbidden();
   }
-  
+
   try {
     const { jobId } = await params;
-    
+
     // Parse request body for optional cancellation reason
     let cancellationReason: string | undefined;
     try {
@@ -32,20 +33,20 @@ export async function POST(
     } catch {
       // No body or invalid JSON is fine, reason is optional
     }
-    
+
     // Get the current job status
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       select: { status: true }
     });
-    
+
     if (!job) {
       return NextResponse.json(
         { error: "Job not found" },
         { status: 404 }
       );
     }
-    
+
     // Only allow cancelling PENDING or RUNNING jobs
     if (job.status !== JobStatus.PENDING && job.status !== JobStatus.RUNNING) {
       return NextResponse.json(
@@ -53,16 +54,17 @@ export async function POST(
         { status: 400 }
       );
     }
-    
-    // Update the job with cancellation info
+
+    // Cancel via JobService (handles pg-boss + DB + batch completion check)
+    const { jobService } = getServices();
+    await jobService.cancelJob(jobId);
+
+    // Set admin-specific fields (cancelledById, custom reason)
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
-        status: JobStatus.CANCELLED,
-        cancelledAt: new Date(),
         cancelledById: userId,
-        cancellationReason,
-        completedAt: new Date(), // Set completion time for cancelled jobs
+        ...(cancellationReason && { cancellationReason }),
       },
       include: {
         cancelledBy: {
@@ -74,13 +76,13 @@ export async function POST(
         }
       }
     });
-    
+
     logger.info(`Job ${jobId} cancelled by admin ${userId}`, {
       jobId,
       adminId: userId,
       reason: cancellationReason || "No reason provided"
     });
-    
+
     return NextResponse.json({
       success: true,
       job: {
@@ -91,7 +93,7 @@ export async function POST(
         cancellationReason: updatedJob.cancellationReason,
       }
     });
-    
+
   } catch (error) {
     logger.error('Error cancelling job:', error);
     return commonErrors.serverError("Failed to cancel job");
