@@ -29,6 +29,7 @@ WORKDIR /app
 
 # Install runtime dependencies
 RUN apk add --no-cache libc6-compat
+ENV SHELL=/bin/sh
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Create non-root user
