@@ -92,7 +92,7 @@ const ORCHESTRATOR_AGENT_BRIEFS: Record<string, string> = {
 
 // MCP tool descriptions per agent for the orchestrator MCP addendum
 const ORCHESTRATOR_MCP_AGENT_BRIEFS: Record<string, string> = {
-  "fact-checker": "has `perplexity_research` for quick cited verification + web search for deep research",
+  "fact-checker": "has `perplexity_research` for quick cited verification + `web_fetch` for reading full pages + web search for deep research",
   "fallacy-checker": "has `fallacy_extract` + `fallacy_charity_filter` + `fallacy_supported_elsewhere` - granular pipeline with full visibility into filtering decisions",
   "clarity-checker": "has `spell_check` - returns writing quality issues",
   "math-checker": "has `math_check` + `forecast_check` - returns calculation/prediction errors",
@@ -260,7 +260,7 @@ export const SUBAGENT_PROMPTS = {
    - Historical facts
    Skip opinions, predictions, and subjective assessments.
 
-2. **Search for Evidence**: Use WebSearch and WebFetch as your primary research tools — search, read full pages, follow links, and refine your queries. Additionally, the \`perplexity_research\` MCP tool is available for quick web-grounded verification with cited sources in a single call. Use it to supplement your research, get a second perspective on a claim, or when you want a fast sanity check.
+2. **Search for Evidence**: Use WebSearch to find sources, then use the \`mcp__roast-evaluators__web_fetch\` MCP tool to read full pages (it returns clean markdown with a 30-second timeout — much more reliable than the built-in WebFetch). Additionally, the \`perplexity_research\` MCP tool is available for quick web-grounded verification with cited sources in a single call. Use it to supplement your research, get a second perspective on a claim, or when you want a fast sanity check.
    - Official statistics (government, WHO, reputable institutions)
    - Peer-reviewed research and academic papers
    - Direct quotes from original sources
@@ -544,6 +544,7 @@ export function buildSubAgentDefinitions(
 // All MCP tool names from the evaluation server
 const ALL_MCP_TOOLS = [
   "mcp__roast-evaluators__perplexity_research",
+  "mcp__roast-evaluators__web_fetch",
   "mcp__roast-evaluators__spell_check",
   "mcp__roast-evaluators__math_check",
   "mcp__roast-evaluators__forecast_check",
@@ -567,12 +568,15 @@ function getDisallowedTools(agentName: string, mcpEnabled: boolean): string[] {
 
   switch (agentName) {
     case "fact-checker":
-      // fact-checker can use perplexity_research only — block fallacy tools
+      // fact-checker can use perplexity_research + web_fetch — block fallacy tools
       return FALLACY_MCP_TOOLS;
 
     case "fallacy-checker":
-      // fallacy-checker can use fallacy tools only — block perplexity
-      return ["mcp__roast-evaluators__perplexity_research"];
+      // fallacy-checker can use fallacy tools only — block perplexity + web_fetch
+      return [
+        "mcp__roast-evaluators__perplexity_research",
+        "mcp__roast-evaluators__web_fetch",
+      ];
 
     case "reviewer":
     case "clarity-checker":
@@ -636,21 +640,29 @@ ${factCheckContext ? `${factCheckContext}\n` : ""}- Write your findings to ${wor
 function getMcpToolInstructions(agentName: string): string {
   switch (agentName) {
     case "fact-checker":
-      return `## MCP Evaluation Tool
+      return `## MCP Evaluation Tools
 
-You have access to \`mcp__roast-evaluators__perplexity_research\` — a web-search-grounded AI research tool that returns summaries with cited sources.
+You have access to two MCP research tools:
+
+### \`mcp__roast-evaluators__perplexity_research\`
+Web-search-grounded AI research tool that returns summaries with cited sources.
 
 **When to use it:**
-- Quick verification of specific factual claims (faster than manual WebSearch + WebFetch)
+- Quick verification of specific factual claims (faster than manual searching)
 - Getting a second opinion with citations on a claim you've already researched
 - Claims where you want multiple cited sources in one call
 
-**When to prefer WebSearch/WebFetch instead:**
-- Deep investigation requiring reading full pages
-- Following specific links or checking primary sources
-- When you need to control exactly which sources to check
+### \`mcp__roast-evaluators__web_fetch\`
+Fetches a URL and returns clean markdown content with title/author metadata. Uses Firecrawl/Diffbot with a 30-second timeout — much more reliable than the built-in WebFetch.
 
-Use both tools together for best coverage — perplexity for fast cited checks, web search for deep dives.`;
+**When to use it:**
+- Reading the full content of a specific page found via WebSearch
+- Checking primary sources, following links, reading cited papers/articles
+- Any time you need to read a web page
+
+**IMPORTANT:** Always prefer \`web_fetch\` over the built-in WebFetch tool. The built-in WebFetch can hang for 20+ minutes on JS-heavy pages. The MCP \`web_fetch\` has a hard 30-second timeout and handles JS rendering via Firecrawl.
+
+**Workflow:** Use perplexity for fast cited checks, WebSearch to discover sources, and web_fetch to read full pages.`;
 
     case "fallacy-checker":
       return `## MCP Evaluation Tools
@@ -837,7 +849,8 @@ export function buildAgenticQueryOptions(
       "mcp__roast-evaluators__fallacy_supported_elsewhere",
       "mcp__roast-evaluators__spell_check",
       "mcp__roast-evaluators__math_check",
-      "mcp__roast-evaluators__forecast_check"
+      "mcp__roast-evaluators__forecast_check",
+      "mcp__roast-evaluators__web_fetch"
     );
   }
 

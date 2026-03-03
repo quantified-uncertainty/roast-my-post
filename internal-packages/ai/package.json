@@ -80,6 +80,10 @@
     "./agentic/prompts": {
       "types": "./src/analysis-plugins/plugins/agentic/orchestrator.ts",
       "default": "./src/analysis-plugins/plugins/agentic/orchestrator.ts"
+    },
+    "./utils/articleFetch": {
+      "types": "./src/utils/articleFetch.ts",
+      "default": "./src/utils/articleFetch.ts"
     }
   },
   "scripts": {
@@ -106,6 +110,9 @@
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.50",
     "@anthropic-ai/sdk": "^0.54.0",
+    "axios": "^1.13.2",
+    "jsdom": "^24.1.3",
+    "turndown": "^7.2.2",
     "@leeoniya/ufuzzy": "^1.0.18",
     "fuse.js": "^7.1.0",
     "mathjs": "^14.0.1",
@@ -117,7 +124,9 @@
     "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^22.10.6",
+    "@types/turndown": "^5.0.6",
     "@types/uuid": "^10.0.0",
     "eslint": "^8.57.1",
     "tsx": "^4.7.0",

@@ -23,6 +23,9 @@ import { supportedElsewhereFilterTool } from "../../../tools/supported-elsewhere
 // Perplexity research tool
 import { perplexityResearchTool } from "../../../tools/perplexity-researcher";
 
+// Article fetch pipeline (Diffbot → Firecrawl → GraphQL → JSDOM)
+import { processArticle } from "../../../utils/articleFetch";
+
 // Profile loading for fallacy checker config
 import { loadProfileOrDefault } from "../fallacy-check/profile-loader";
 import type { FallacyCheckerProfileConfig } from "../fallacy-check/profile-types";
@@ -421,6 +424,85 @@ function createPerplexityResearchTool() {
 }
 
 // ---------------------------------------------------------------------------
+// Web Fetch Tool (replaces SDK's built-in WebFetch which hangs on heavy pages)
+// ---------------------------------------------------------------------------
+
+/** Max content length returned to the agent (~50k chars) */
+const WEB_FETCH_MAX_CONTENT_LENGTH = 50_000;
+
+/** Hard timeout for the entire fetch pipeline (seconds) */
+const WEB_FETCH_TIMEOUT_MS = 30_000;
+
+function createWebFetchTool() {
+  return tool(
+    "web_fetch",
+    "Fetch a web page and return its content as clean markdown. Uses Diffbot/Firecrawl/JSDOM pipeline with a 30-second timeout. Returns title, author, and markdown content. Use this instead of the SDK's built-in WebFetch which can hang on JS-heavy pages.",
+    {
+      url: z
+        .string()
+        .url()
+        .describe("The URL to fetch"),
+    },
+    async ({ url }) => {
+      try {
+        const result = await Promise.race([
+          processArticle(url),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("web_fetch timed out after 30 seconds")), WEB_FETCH_TIMEOUT_MS)
+          ),
+        ]);
+
+        // Determine which source was used based on content characteristics
+        let source = "unknown";
+        if (url.includes("lesswrong.com") || url.includes("forum.effectivealtruism.org")) {
+          source = "graphql-api";
+        } else if (process.env.DIFFBOT_KEY) {
+          source = "diffbot-or-firecrawl";
+        } else if (process.env.FIRECRAWL_KEY) {
+          source = "firecrawl";
+        } else {
+          source = "jsdom-fallback";
+        }
+
+        const content = result.content.length > WEB_FETCH_MAX_CONTENT_LENGTH
+          ? result.content.slice(0, WEB_FETCH_MAX_CONTENT_LENGTH) + "\n\n[Content truncated — original was " + result.content.length + " chars]"
+          : result.content;
+
+        const output = {
+          url: result.url,
+          title: result.title,
+          author: result.author,
+          content,
+          contentLength: result.content.length,
+          source,
+        };
+
+        return {
+          content: [
+            { type: "text" as const, text: JSON.stringify(output, null, 2) },
+          ],
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        appLogger.error(`web_fetch failed for ${url}: ${message}`);
+
+        const output = {
+          url,
+          error: message,
+          suggestion: "The URL could not be fetched. Try a different URL, use WebSearch to find alternative sources, or ask the user to provide the content directly.",
+        };
+
+        return {
+          content: [
+            { type: "text" as const, text: JSON.stringify(output, null, 2) },
+          ],
+        };
+      }
+    }
+  );
+}
+
+// ---------------------------------------------------------------------------
 // MCP Server Factory
 // ---------------------------------------------------------------------------
 
@@ -436,6 +518,7 @@ export function createEvaluationServer(config: EvaluationServerConfig = {}) {
     tools: [
       // Research tools
       createPerplexityResearchTool(),
+      createWebFetchTool(),
       // Bulk pipeline tools
       createSpellCheckTool(),
       createMathCheckTool(),
