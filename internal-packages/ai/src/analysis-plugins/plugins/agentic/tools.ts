@@ -106,32 +106,8 @@ function formatPluginResult(result: {
 }
 
 // ---------------------------------------------------------------------------
-// Bulk Pipeline Tools (fact-check, spell-check, math-check, forecast-check)
+// Bulk Pipeline Tools (spell-check, math-check, forecast-check)
 // ---------------------------------------------------------------------------
-
-function createFactCheckTool() {
-  return tool(
-    "fact_check",
-    "Verify factual claims in a document. Returns findings with specific locations and verdicts.",
-    {
-      documentText: z
-        .string()
-        .describe("The full document text to analyze for factual claims"),
-    },
-    async ({ documentText }) => {
-      const manager = new PluginManager({
-        pluginSelection: { include: [PluginType.FACT_CHECK] },
-      });
-      const result = await manager.analyzeDocument(documentText);
-      const formatted = formatPluginResult(result);
-      return {
-        content: [
-          { type: "text" as const, text: JSON.stringify(formatted, null, 2) },
-        ],
-      };
-    }
-  );
-}
 
 function createSpellCheckTool() {
   return tool(

@@ -9,7 +9,7 @@ import { resolve } from "path";
 import type { AgentDefinition, Options, McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-sdk";
 import type { AgenticProfileConfig } from "./profile-types";
 import { DEFAULT_SUBAGENTS } from "./profile-types";
-import { AGENTIC_SYSTEM_PROMPT } from "./index";
+import { AGENTIC_SYSTEM_PROMPT } from "./prompts";
 import { logger } from "../../../shared/logger";
 
 // ---------------------------------------------------------------------------

@@ -5,6 +5,7 @@ import { forecastCheckerAgent } from './forecast-checker';
 import { comprehensiveCheckerAgent } from './comprehensive-checker';
 import { linkCheckerAgent } from './link-checker';
 import { fallacyCheckAgent } from './fallacy-check';
+import { agenticAgent } from './agentic';
 import { SystemAgentDefinition } from '../types';
 
 export const systemAgents: SystemAgentDefinition[] = [
@@ -15,6 +16,7 @@ export const systemAgents: SystemAgentDefinition[] = [
   comprehensiveCheckerAgent,
   linkCheckerAgent,
   fallacyCheckAgent,
+  agenticAgent,
 ];
 
 export {
@@ -25,4 +27,5 @@ export {
   comprehensiveCheckerAgent,
   linkCheckerAgent,
   fallacyCheckAgent,
+  agenticAgent,
 };

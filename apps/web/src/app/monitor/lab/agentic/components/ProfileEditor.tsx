@@ -53,10 +53,6 @@ const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
   "reviewer": { enabled: true, model: "sonnet" },
 };
 
-// Map old names to new names for migration
-const AGENT_NAME_MIGRATIONS: Record<string, string> = {
-  "spell-checker": "clarity-checker",
-};
 
 const DEFAULT_CONFIG: AgenticConfig = {
   version: 1,
