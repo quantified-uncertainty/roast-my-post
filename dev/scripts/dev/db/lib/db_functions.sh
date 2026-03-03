@@ -52,6 +52,10 @@ psql_prod() {
     run_docker_pg -e PGPASSWORD="${PGPASSWORD}" -i postgres:$POSTGRES_VERSION psql -h "${PROD_DB_HOST}" -p "${PROD_DB_PORT}" -U "${PROD_DB_USER}" -d "${PROD_DB_NAME}" --set VERBOSITY=verbose "$@"
 }
 
+psql_staging() {
+    run_docker_pg -e PGPASSWORD="${STAGING_DB_PASS}" -i postgres:$POSTGRES_VERSION psql -h "${STAGING_DB_HOST}" -p "${STAGING_DB_PORT:-25061}" -U "${STAGING_DB_USER}" -d "${STAGING_DB_NAME}" --set VERBOSITY=verbose "$@"
+}
+
 copy_data() {
     local query="$1"
     local table="$2"
