@@ -772,11 +772,15 @@ export function buildAgenticQueryOptions(
 ): Partial<Options> {
   logger.info(`buildAgenticQueryOptions: version=${config.version} enableSubAgents=${config.enableSubAgents} enableMcpTools=${config.enableMcpTools} workspace=${workspacePath ?? "none"}`);
 
-  // Strip ANTHROPIC_API_KEY from the SDK subprocess env so it uses
+  // In dev, strip ANTHROPIC_API_KEY from the SDK subprocess env so it uses
   // subscription auth, while keeping it in process.env for in-process MCP tools.
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => key !== "ANTHROPIC_API_KEY")
-  ) as Record<string, string>;
+  // In production, keep the API key so the SDK can authenticate.
+  const isDev = process.env.NODE_ENV === "development";
+  const env = isDev
+    ? (Object.fromEntries(
+        Object.entries(process.env).filter(([key]) => key !== "ANTHROPIC_API_KEY")
+      ) as Record<string, string>)
+    : undefined;
 
   // Security: canUseTool blocks unwanted built-in agents + restricts filesystem
   const canUseTool = createToolGuard(workspacePath, emit);
