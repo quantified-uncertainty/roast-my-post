@@ -81,7 +81,8 @@ export async function GET(
         ? gradesWithValues.reduce((sum, grade) => sum + grade, 0) / gradesWithValues.length 
         : null;
 
-      const progress = batch.targetCount ? (jobStats.completed / batch.targetCount) * 100 : 0;
+      const terminalCount = jobStats.completed + jobStats.failed;
+      const progress = jobStats.total > 0 ? (terminalCount / jobStats.total) * 100 : 0;
 
       return {
         id: batch.id,
@@ -96,7 +97,7 @@ export async function GET(
         totalCost,
         avgDuration: Math.round(avgDuration),
         avgGrade,
-        isComplete: batch.targetCount ? completedJobs.length === batch.targetCount : false,
+        isComplete: batch.completedAt !== null,
       };
     });
 

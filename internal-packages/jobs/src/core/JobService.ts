@@ -13,12 +13,26 @@ import { PgBossService } from './PgBossService';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import type { Logger } from '../types';
 
+export interface BatchCompletionHandler {
+  onBatchCompleted(batchId: string): Promise<void>;
+}
+
 export class JobService {
+  private batchCompletionHandler?: BatchCompletionHandler;
+
   constructor(
     private jobRepository: JobRepository,
     private logger: Logger,
     private pgBossService: PgBossService
   ) {}
+
+  /**
+   * Set an optional handler that is called when a batch completes.
+   * Used by the worker to trigger email notifications.
+   */
+  setBatchCompletionHandler(handler: BatchCompletionHandler): void {
+    this.batchCompletionHandler = handler;
+  }
 
   async initialize() {
     await this.pgBossService.initialize();
@@ -98,7 +112,9 @@ export class JobService {
     }
 
     // Update database to mark as cancelled
-    return this.markAsCancelled(jobId);
+    const cancelledJob = await this.markAsCancelled(jobId);
+    await this.checkBatchCompletion(cancelledJob);
+    return cancelledJob;
   }
 
   /**
@@ -137,24 +153,48 @@ export class JobService {
       logs: string;
     }
   ) {
-    return this.jobRepository.updateStatus(jobId, {
+    const completedJob = await this.jobRepository.updateStatus(jobId, {
       status: JobStatus.COMPLETED,
       completedAt: new Date(),
       llmThinking: data.llmThinking,
       durationInSeconds: data.durationInSeconds,
       logs: data.logs,
     });
+    await this.checkBatchCompletion(completedJob);
+    return completedJob;
   }
 
   /**
    * Mark a job as failed
    */
   async markAsFailed(jobId: string, error: unknown): Promise<JobEntity> {
-    return this.jobRepository.updateStatus(jobId, {
+    const failedJob = await this.jobRepository.updateStatus(jobId, {
       status: JobStatus.FAILED,
       error: error instanceof Error ? error.message : String(error),
       completedAt: new Date(),
     });
+    await this.checkBatchCompletion(failedJob);
+    return failedJob;
   }
 
+  /**
+   * Check if a job's batch is now complete (all jobs in terminal states).
+   * Uses an atomic UPDATE to ensure only one worker detects completion.
+   */
+  private async checkBatchCompletion(job: JobEntity): Promise<void> {
+    if (!job.agentEvalBatchId) return;
+
+    try {
+      const result = await this.jobRepository.tryMarkBatchCompleted(job.agentEvalBatchId);
+      if (result) {
+        this.logger.info(`Batch ${result.id} completed at ${result.completedAt.toISOString()}`);
+        if (this.batchCompletionHandler) {
+          await this.batchCompletionHandler.onBatchCompleted(result.id);
+        }
+      }
+    } catch (error) {
+      // Batch completion tracking is non-critical — don't fail the job
+      this.logger.error(`Failed to check batch completion for batch ${job.agentEvalBatchId}:`, error);
+    }
+  }
 }

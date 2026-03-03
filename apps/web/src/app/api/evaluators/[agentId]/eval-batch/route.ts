@@ -8,6 +8,7 @@ interface CreateBatchRequest {
   name?: string;
   targetCount?: number;
   documentIds?: string[];
+  notifyOnComplete?: boolean;
 }
 
 export async function POST(
@@ -174,6 +175,7 @@ export async function POST(
         targetCount: targetCount,
         requestedDocumentIds: requestedDocumentIds,
         userId: userId,
+        notifyOnComplete: body.notifyOnComplete ?? false,
       },
     });
 
