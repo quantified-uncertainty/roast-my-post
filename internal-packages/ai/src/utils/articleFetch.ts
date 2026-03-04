@@ -13,8 +13,10 @@ import { JSDOM } from "jsdom";
 import TurndownService from "turndown";
 import { logger } from "../shared/logger";
 
-const FIRECRAWL_API_KEY = process.env.FIRECRAWL_KEY;
-const DIFFBOT_KEY = process.env.DIFFBOT_KEY;
+// Read env vars lazily — the worker loads .env.local AFTER module imports,
+// so top-level reads would capture undefined.
+const getFirecrawlKey = () => process.env.FIRECRAWL_KEY;
+const getDiffbotKey = () => process.env.DIFFBOT_KEY;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -650,8 +652,8 @@ export function reorganizeFootnotes(content: string): string {
 
 export async function processArticle(url: string): Promise<ProcessedArticle> {
   // Try Diffbot first if available, then Firecrawl, then fallback
-  if (!DIFFBOT_KEY) {
-    logger.debug('DIFFBOT_KEY not set, skipping Diffbot');
+  if (!getDiffbotKey()) {
+    logger.info('DIFFBOT_KEY not set, skipping Diffbot');
   } else {
     try {
       return await processArticleWithDiffbot(url);
@@ -660,7 +662,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
     }
   }
 
-  if (!FIRECRAWL_API_KEY) {
+  if (!getFirecrawlKey()) {
     logger.warn('FIRECRAWL_KEY not found, using fallback method');
     return processArticleFallback(url);
   }
@@ -694,7 +696,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
       },
       {
         headers: {
-          'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+          'Authorization': `Bearer ${getFirecrawlKey()}`,
           'Content-Type': 'application/json',
         },
         timeout: 30000,
@@ -756,7 +758,7 @@ async function processArticleWithDiffbot(url: string): Promise<ProcessedArticle>
     const diffbotUrl = `https://api.diffbot.com/v3/article`;
     const response = await axios.get<DiffbotResponse>(diffbotUrl, {
       params: {
-        token: DIFFBOT_KEY,
+        token: getDiffbotKey(),
         url: url,
         discussion: false,
       },

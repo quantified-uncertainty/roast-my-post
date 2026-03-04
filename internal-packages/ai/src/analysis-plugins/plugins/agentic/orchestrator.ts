@@ -787,9 +787,10 @@ export function buildAgenticQueryOptions(
 
   // Build env for the SDK subprocess.
   // In dev, strip ANTHROPIC_API_KEY so the SDK uses subscription auth,
-  // while keeping it in process.env for in-process MCP tools.
+  // unless AGENTIC_USE_API_KEY=true overrides this (useful for testing Helicone).
   const isDev = process.env.NODE_ENV === "development";
-  const env = isDev
+  const useApiKey = process.env.AGENTIC_USE_API_KEY === "true";
+  const env = (isDev && !useApiKey)
     ? Object.fromEntries(
         Object.entries(process.env).filter(([key]) => key !== "ANTHROPIC_API_KEY")
       ) as Record<string, string>
