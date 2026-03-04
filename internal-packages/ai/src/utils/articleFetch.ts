@@ -650,7 +650,9 @@ export function reorganizeFootnotes(content: string): string {
 
 export async function processArticle(url: string): Promise<ProcessedArticle> {
   // Try Diffbot first if available, then Firecrawl, then fallback
-  if (DIFFBOT_KEY) {
+  if (!DIFFBOT_KEY) {
+    logger.debug('DIFFBOT_KEY not set, skipping Diffbot');
+  } else {
     try {
       return await processArticleWithDiffbot(url);
     } catch (_error) {
