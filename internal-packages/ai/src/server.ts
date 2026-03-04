@@ -28,8 +28,10 @@ export {
   FactCheckPlugin,
   ForecastPlugin,
   MathPlugin,
-  SpellingPlugin
+  SpellingPlugin,
+  AgenticPlugin,
 } from './analysis-plugins';
+export type { AgenticStreamEvent, AgenticPluginOptions, AgenticTelemetryRecord, AnalysisResult } from './analysis-plugins';
 
 // Job context (uses AsyncLocalStorage)
 export {

@@ -89,10 +89,34 @@ const profileConfigSchema = z.object({
   filterChain: z.array(filterChainItemSchema),
 });
 
+const subAgentConfigSchema = z.object({
+  enabled: z.boolean(),
+  model: z.enum(["sonnet", "opus", "haiku", "inherit"]).optional(),
+  maxTurns: z.number().min(1).max(50).optional(),
+});
+
+const agenticConfigSchema = z.object({
+  version: z.union([z.literal(1), z.literal(2)]),
+  model: z.enum(["sonnet", "opus", "haiku"]),
+  maxTurns: z.number().min(1).max(50),
+  maxBudgetUsd: z.number().min(0.01).max(10),
+  maxThinkingTokens: z.number().min(1024).optional(),
+  allowedTools: z.array(z.string()),
+  systemPrompt: z.string(),
+  permissionMode: z.enum(["default", "acceptEdits", "plan"]),
+  // v2 multi-agent fields
+  enableSubAgents: z.boolean().optional(),
+  subAgents: z.record(z.string(), subAgentConfigSchema).optional(),
+  orchestratorPrompt: z.string().optional(),
+  enableMcpTools: z.boolean().optional(),
+  // MCP tool configuration
+  fallacyCheckProfileId: z.string().optional(),
+});
+
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
-  config: profileConfigSchema.optional(),
+  config: z.record(z.unknown()).optional(),
   isDefault: z.boolean().optional(),
 });
 
@@ -113,7 +137,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const profile = await prisma.fallacyCheckerProfile.findUnique({
+    const profile = await prisma.pluginProfile.findUnique({
       where: { id },
     });
 
@@ -158,7 +182,7 @@ export async function PUT(
     const { name, description, config, isDefault } = parsed.data;
 
     // Check profile exists
-    const existing = await prisma.fallacyCheckerProfile.findUnique({
+    const existing = await prisma.pluginProfile.findUnique({
       where: { id },
     });
 
@@ -166,10 +190,26 @@ export async function PUT(
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Check for duplicate name (excluding current profile)
+    // Validate config against the appropriate schema based on pluginType
+    // Store the coerced output (configResult.data) so Zod defaults/transforms apply
+    let validatedConfig: Record<string, unknown> | undefined = undefined;
+    if (config !== undefined) {
+      const configSchema = existing.pluginType === "agentic" ? agenticConfigSchema : profileConfigSchema;
+      const configResult = configSchema.safeParse(config);
+      if (!configResult.success) {
+        return NextResponse.json(
+          { error: "Invalid config", details: configResult.error.errors },
+          { status: 400 }
+        );
+      }
+      validatedConfig = configResult.data as Record<string, unknown>;
+    }
+
+    // Check for duplicate name (excluding current profile, within same pluginType)
     if (name && name !== existing.name) {
-      const duplicate = await prisma.fallacyCheckerProfile.findFirst({
+      const duplicate = await prisma.pluginProfile.findFirst({
         where: {
+          pluginType: existing.pluginType,
           agentId: existing.agentId,
           name,
           id: { not: id },
@@ -184,20 +224,20 @@ export async function PUT(
       }
     }
 
-    // If setting as default, unset other defaults first
+    // If setting as default, unset other defaults first (within same pluginType)
     if (isDefault && !existing.isDefault) {
-      await prisma.fallacyCheckerProfile.updateMany({
-        where: { agentId: existing.agentId, isDefault: true, id: { not: id } },
+      await prisma.pluginProfile.updateMany({
+        where: { pluginType: existing.pluginType, agentId: existing.agentId, isDefault: true, id: { not: id } },
         data: { isDefault: false },
       });
     }
 
-    const profile = await prisma.fallacyCheckerProfile.update({
+    const profile = await prisma.pluginProfile.update({
       where: { id },
       data: {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
-        ...(config !== undefined && { config }),
+        ...(validatedConfig !== undefined && { config: validatedConfig }),
         ...(isDefault !== undefined && { isDefault }),
       },
     });
@@ -228,7 +268,7 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const existing = await prisma.fallacyCheckerProfile.findUnique({
+    const existing = await prisma.pluginProfile.findUnique({
       where: { id },
     });
 
@@ -236,7 +276,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    await prisma.fallacyCheckerProfile.delete({
+    await prisma.pluginProfile.delete({
       where: { id },
     });
 

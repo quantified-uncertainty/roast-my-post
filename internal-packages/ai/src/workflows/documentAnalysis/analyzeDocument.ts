@@ -15,6 +15,8 @@ export interface AnalyzeDocumentOptions {
   jobId?: string;
   /** Profile ID for FallacyCheckPlugin configuration */
   fallacyCheckProfileId?: string;
+  /** Called with telemetry snapshots during analysis for incremental DB persistence */
+  onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
 }
 
 export async function analyzeDocument(
@@ -73,6 +75,7 @@ export async function analyzeDocument(
       },
       fallacyCheckProfileId,
       fallacyCheckAgentId: agentInfo.id,
+      onTelemetryUpdate: options.onTelemetryUpdate,
     });
   } else {
     // No plugins configured - use traditional LLM-based comprehensive analysis

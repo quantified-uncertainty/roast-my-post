@@ -299,6 +299,7 @@ model Job {
   cancelledAt         DateTime?
   cancelledById       String?
   cancellationReason  String?
+  telemetryProgress   Json?              // Incremental telemetry snapshots updated during analysis
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
   evaluation          Evaluation         @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
@@ -525,18 +526,19 @@ model ValidationRunSnapshot {
   @@index([status])
 }
 
-/// Configuration profile for the fallacy checker pipeline
-model FallacyCheckerProfile {
+/// Configuration profile for analysis plugins (fallacy-check, agentic, etc.)
+model PluginProfile {
   id          String   @id @default(cuid())
+  pluginType  String   @default("fallacy-check") // "fallacy-check" | "agentic"
   name        String
   description String?
-  agentId     String   // Links to agent (e.g., "system-fallacy-check")
-  config      Json     // FallacyCheckerProfileConfig
+  agentId     String   // Links to agent (e.g., "system-fallacy-check", "system-agentic")
+  config      Json     // Plugin-specific config (FallacyCheckerProfileConfig | AgenticProfileConfig)
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@unique([agentId, name])
-  @@index([agentId])
+  @@unique([pluginType, agentId, name])
+  @@index([pluginType, agentId])
   @@index([isDefault])
 }

@@ -78,7 +78,8 @@ async function runSingleExtractor(
   documentText: string,
   config: ExtractorConfig,
   extractorId: string,
-  thresholds?: ExtractionThresholds
+  thresholds?: ExtractionThresholds,
+  customPrompts?: { extractorSystemPrompt?: string; extractorUserPrompt?: string }
 ): Promise<ExtractorResult> {
   const startTime = Date.now();
 
@@ -117,6 +118,9 @@ async function runSingleExtractor(
         maxIssues: thresholds?.maxIssues,
         // Pass provider preferences for OpenRouter
         ...(config.provider && { provider: config.provider }),
+        // Pass custom prompt overrides from profile
+        ...(customPrompts?.extractorSystemPrompt && { customSystemPrompt: customPrompts.extractorSystemPrompt }),
+        ...(customPrompts?.extractorUserPrompt && { customUserPrompt: customPrompts.extractorUserPrompt }),
       },
       { logger }
     );
@@ -184,7 +188,7 @@ export async function runMultiExtractor(
 
   // Run all extractors in parallel
   const extractorPromises = extractorsWithIds.map(({ config: extConfig, extractorId }) =>
-    runSingleExtractor(documentText, extConfig, extractorId, config.thresholds)
+    runSingleExtractor(documentText, extConfig, extractorId, config.thresholds, config.customPrompts)
   );
 
   const settledResults = await Promise.allSettled(extractorPromises);

@@ -9,6 +9,7 @@ export enum PluginType {
   FORECAST = 'forecast',
   LINK_ANALYSIS = 'link-analysis',
   FALLACY_CHECK = 'fallacy-check',
+  AGENTIC = 'agentic',
 }
 
 export interface SystemAgentDefinition {

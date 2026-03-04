@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
             header: true,
             description: true,
             importance: true,
+            level: true,
             highlight: {
               select: {
                 quotedText: true,
@@ -110,6 +111,7 @@ export async function GET(request: NextRequest) {
           header: c.header,
           description: c.description,
           importance: c.importance,
+          level: c.level,
           quotedText: c.highlight?.quotedText || "",
         })),
         // Telemetry data (matches ComparisonData structure)
@@ -119,10 +121,14 @@ export async function GET(request: NextRequest) {
           filteredItems: telemetry.filteredItems,
           passedItems: telemetry.passedItems,
           pipelineCounts: telemetry.finalCounts,
-          totalDurationMs: telemetry.totalDurationMs,
-          totalCostUsd: telemetry.totalCostUsd,
+          // Unified duration field: agentic uses durationMs, fallacy checker uses totalDurationMs
+          totalDurationMs: (telemetry.durationMs ?? telemetry.totalDurationMs) as number | undefined,
+          // Unified cost field: agentic uses costUsd, fallacy checker uses totalCostUsd
+          totalCostUsd: (telemetry.costUsd ?? telemetry.totalCostUsd) as number | undefined,
+          profileName: telemetry.profileName as string | undefined,
           documentLength: telemetry.documentLength,
           profileInfo: telemetry.profileInfo,
+          numTurns: telemetry.numTurns as number | undefined,
         } : null,
       };
     });

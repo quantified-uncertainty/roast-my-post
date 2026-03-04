@@ -218,12 +218,26 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     sessionManager?: HeliconeSessionManager,
     profileId?: string
   ) {
+    // Callback for incremental telemetry persistence to Job.telemetryProgress
+    const onTelemetryUpdate = async (telemetry: Record<string, unknown>) => {
+      try {
+        await prisma.job.update({
+          where: { id: jobId },
+          data: { telemetryProgress: telemetry as object },
+        });
+      } catch (err) {
+        // Don't let telemetry persistence errors break the analysis
+        this.logger.warn(this.formatLog(jobId, `Failed to persist telemetry progress: ${err instanceof Error ? err.message : String(err)}`));
+      }
+    };
+
     // Use options-based signature to pass profileId
     const analysisOptions = {
       targetWordCount: 500,
       targetHighlights: 5,
       jobId,
       fallacyCheckProfileId: profileId,
+      onTelemetryUpdate,
     };
 
     // Track the analysis phase with session manager

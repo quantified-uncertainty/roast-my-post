@@ -33,6 +33,7 @@ import { LinkPlugin } from "./plugins/link-analysis";
 import { MathPlugin } from "./plugins/math";
 import { SpellingPlugin } from "./plugins/spelling";
 import { FallacyCheckPlugin } from "./plugins/fallacy-check";
+import { AgenticPlugin } from "./plugins/agentic";
 import {
   AnalysisResult,
   SimpleAnalysisPlugin,
@@ -52,6 +53,8 @@ export interface PluginManagerConfig {
   fallacyCheckProfileId?: string;
   /** Agent ID for FallacyCheckPlugin default profile loading */
   fallacyCheckAgentId?: string;
+  /** Called with telemetry snapshots during analysis for incremental DB persistence */
+  onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
 }
 
 export interface SimpleDocumentAnalysisResult {
@@ -111,6 +114,7 @@ export class PluginManager {
   // Profile configuration for FallacyCheckPlugin
   private fallacyCheckProfileId?: string;
   private fallacyCheckAgentId?: string;
+  private onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
 
   constructor(config: PluginManagerConfig = {}) {
     // Use provided session manager, or fall back to global if available
@@ -122,6 +126,7 @@ export class PluginManager {
     // Profile configuration for FallacyCheckPlugin
     this.fallacyCheckProfileId = config.fallacyCheckProfileId;
     this.fallacyCheckAgentId = config.fallacyCheckAgentId;
+    this.onTelemetryUpdate = config.onTelemetryUpdate;
 
     // Initialize refactored components
     this.registry = new PluginRegistry();
@@ -153,6 +158,7 @@ export class PluginManager {
     this.registry.register(PluginType.LINK_ANALYSIS, LinkPlugin);
     this.registry.register(PluginType.FACT_CHECK, FactCheckPlugin);
     this.registry.register(PluginType.FALLACY_CHECK, FallacyCheckPlugin);
+    this.registry.register(PluginType.AGENTIC, AgenticPlugin);
   }
 
   /**
@@ -360,8 +366,8 @@ export class PluginManager {
             );
             pluginLoggerInstance.processingChunks(assignedChunks.length);
 
-            // Add timeout to prevent hanging
-            const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
+            // Add timeout to prevent hanging (agentic runs multi-agent pipelines, needs longer)
+            const PLUGIN_TIMEOUT_MS = pluginName.toLowerCase() === "agentic" ? 7200000 : 300000; // 2 hours for agentic, 5 min for others
             let timeoutId: NodeJS.Timeout;
 
             const timeoutPromise = new Promise<never>((_, reject) => {
@@ -458,11 +464,22 @@ export class PluginManager {
           lastError
         );
 
+        // Grab partial telemetry from plugins that support it (e.g., AgenticPlugin on timeout)
+        let partialTelemetry: Record<string, unknown> | undefined;
+        if ("getTelemetry" in plugin && typeof (plugin as { getTelemetry: () => Record<string, unknown> }).getTelemetry === "function") {
+          try {
+            partialTelemetry = (plugin as { getTelemetry: () => Record<string, unknown> }).getTelemetry();
+          } catch {
+            // Telemetry collection itself failed — don't break the flow
+          }
+        }
+
         return {
           plugin: plugin.name(),
           error: errorMessage,
           recoveryAction,
           success: false,
+          partialTelemetry,
         };
       });
 
@@ -471,12 +488,14 @@ export class PluginManager {
 
       // Process results with error tracking
       const failedPlugins: Array<{ plugin: string; error: string }> = [];
+      let failedPartialTelemetry: Record<string, unknown> | undefined;
       for (const {
         plugin,
         result,
         success,
         error,
         recoveryAction: _recoveryAction,
+        partialTelemetry,
       } of results) {
         if (success && result) {
           pluginResults.set(plugin, result);
@@ -485,6 +504,10 @@ export class PluginManager {
         } else {
           logger.warn(`Plugin ${plugin} failed: ${error}`);
           failedPlugins.push({ plugin, error: error || "Unknown error" });
+          // Preserve partial telemetry from failed plugins (e.g., agentic timeout)
+          if (partialTelemetry) {
+            failedPartialTelemetry = partialTelemetry;
+          }
         }
       }
 
@@ -529,11 +552,17 @@ export class PluginManager {
       const logSummary = this.pluginLogger.generateSummary();
       const jobLogString = this.pluginLogger.generateJobLogString();
 
-      // Collect pipeline telemetry from plugins that provide it (e.g., FALLACY_CHECK)
+      // Collect pipeline telemetry from plugins that provide it
+      // Prefer successful plugin telemetry; fall back to partial telemetry from failed plugins
       let pipelineTelemetry: Record<string, unknown> | undefined;
       const fallacyResult = pluginResults.get('FALLACY_CHECK');
+      const agenticResult = pluginResults.get('AGENTIC');
       if (fallacyResult?.pipelineTelemetry) {
         pipelineTelemetry = fallacyResult.pipelineTelemetry;
+      } else if (agenticResult?.pipelineTelemetry) {
+        pipelineTelemetry = agenticResult.pipelineTelemetry;
+      } else if (failedPartialTelemetry) {
+        pipelineTelemetry = failedPartialTelemetry;
       }
 
       return {
@@ -697,6 +726,9 @@ export class PluginManager {
       [PluginType.FALLACY_CHECK, new FallacyCheckPlugin({
         profileId: this.fallacyCheckProfileId,
         agentId: this.fallacyCheckAgentId,
+      })],
+      [PluginType.AGENTIC, new AgenticPlugin({
+        onTelemetryUpdate: this.onTelemetryUpdate,
       })],
     ]);
 

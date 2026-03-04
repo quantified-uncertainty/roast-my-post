@@ -8,6 +8,10 @@
  * - info: Errors, warnings, and info (default)
  * - debug: All logs including debug
  *
+ * logger.dev() — bypasses AI_LOG_LEVEL, controlled by AGENTIC_TELEMETRY_LOG (off by default).
+ * Use for development telemetry during local debugging.
+ * Set AGENTIC_TELEMETRY_LOG=true to enable.
+ *
  * Automatically includes worker ID and job ID from context when available.
  * Format: [timestamp] [Worker xxx] [Job yyy] [AI LEVEL] message
  */
@@ -67,6 +71,8 @@ export interface Logger {
   warn: (message: string, ...args: LoggerArgs) => void;
   error: (message: string, ...args: LoggerArgs) => void;
   debug: (message: string, ...args: LoggerArgs) => void;
+  /** Dev telemetry — bypasses AI_LOG_LEVEL, controlled by AGENTIC_TELEMETRY_LOG env var (off by default, set to "true" to enable) */
+  dev: (message: string, ...args: LoggerArgs) => void;
 }
 
 export interface LogContext {
@@ -74,6 +80,12 @@ export interface LogContext {
   documentId?: string;
   userId?: string;
   sessionId?: string;
+}
+
+function isDevLogEnabled(): boolean {
+  const val = process.env.AGENTIC_TELEMETRY_LOG;
+  // Off by default in production — set AGENTIC_TELEMETRY_LOG=true to enable verbose agentic telemetry logs
+  return val === 'true' || val === '1';
 }
 
 export const logger: Logger = {
@@ -95,6 +107,11 @@ export const logger: Logger = {
   debug: (message: string, ...args: LoggerArgs) => {
     if (shouldLog('debug')) {
       console.debug(`${getPrefix('DEBUG')} ${message}`, ...args);
+    }
+  },
+  dev: (message: string, ...args: LoggerArgs) => {
+    if (isDevLogEnabled()) {
+      console.log(`${getPrefix('DEV')} ${message}`, ...args);
     }
   },
 };

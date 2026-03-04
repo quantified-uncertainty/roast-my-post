@@ -330,6 +330,7 @@ export interface ProfileConfig {
 
 export interface Profile {
   id: string;
+  pluginType: string;
   name: string;
   description: string | null;
   agentId: string;

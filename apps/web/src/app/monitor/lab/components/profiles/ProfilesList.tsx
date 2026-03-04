@@ -1,6 +1,7 @@
 "use client";
 
-import { PlusIcon, TrashIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { PlusIcon, TrashIcon, CheckCircleIcon, PencilIcon, CheckIcon, XMarkIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../../types";
 import { formatDate } from "../../utils/formatters";
 
@@ -12,6 +13,8 @@ interface ProfilesListProps {
   onCreateProfile: () => void;
   onDeleteProfile: (id: string) => void;
   onSetDefault: (id: string) => void;
+  onRenameProfile?: (id: string, newName: string) => void;
+  onDuplicateProfile?: (profile: Profile) => void;
 }
 
 export function ProfilesList({
@@ -22,7 +25,12 @@ export function ProfilesList({
   onCreateProfile,
   onDeleteProfile,
   onSetDefault,
+  onRenameProfile,
+  onDuplicateProfile,
 }: ProfilesListProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
   const handleDelete = (e: React.MouseEvent, profile: Profile) => {
     e.stopPropagation();
     if (profile.isDefault) {
@@ -39,6 +47,32 @@ export function ProfilesList({
     onSetDefault(profile.id);
   };
 
+  const handleStartRename = (e: React.MouseEvent, profile: Profile) => {
+    e.stopPropagation();
+    setEditingId(profile.id);
+    setEditingName(profile.name);
+  };
+
+  const handleSaveRename = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (editingId && editingName.trim() && onRenameProfile) {
+      onRenameProfile(editingId, editingName.trim());
+    }
+    setEditingId(null);
+    setEditingName("");
+  };
+
+  const handleCancelRename = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingId(null);
+    setEditingName("");
+  };
+
+  const handleDuplicate = (e: React.MouseEvent, profile: Profile) => {
+    e.stopPropagation();
+    onDuplicateProfile?.(profile);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b bg-white">
@@ -52,7 +86,7 @@ export function ProfilesList({
             <PlusIcon className="h-5 w-5" />
           </button>
         </div>
-        <p className="text-xs text-gray-500">Configure fallacy checker settings for different use cases</p>
+        <p className="text-xs text-gray-500">Configure analysis settings for different use cases</p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -73,7 +107,7 @@ export function ProfilesList({
             {profiles.map((profile) => (
               <div
                 key={profile.id}
-                onClick={() => onSelectProfile(profile)}
+                onClick={() => editingId !== profile.id && onSelectProfile(profile)}
                 className={`p-3 cursor-pointer hover:bg-gray-100 ${
                   selectedProfile?.id === profile.id ? "bg-blue-50 border-l-4 border-blue-500" : ""
                 }`}
@@ -81,43 +115,98 @@ export function ProfilesList({
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900 truncate">{profile.name}</span>
-                      {profile.isDefault && (
-                        <span className="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded">
-                          Default
-                        </span>
+                      {editingId === profile.id ? (
+                        <div className="flex items-center gap-1 flex-1">
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveRename(e as unknown as React.MouseEvent);
+                              if (e.key === "Escape") handleCancelRename(e as unknown as React.MouseEvent);
+                            }}
+                            className="flex-1 px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleSaveRename}
+                            className="p-1 text-green-600 hover:bg-green-50 rounded"
+                            title="Save"
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={handleCancelRename}
+                            className="p-1 text-gray-400 hover:bg-gray-100 rounded"
+                            title="Cancel"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="font-medium text-gray-900 truncate">{profile.name}</span>
+                          {profile.isDefault && (
+                            <span className="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded">
+                              Default
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
-                    {profile.description && (
+                    {editingId !== profile.id && profile.description && (
                       <div className="text-xs text-gray-500 mt-1 truncate">{profile.description}</div>
                     )}
-                    <div className="text-xs text-gray-400 mt-1">
-                      {formatDate(profile.updatedAt)}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 ml-2">
-                    {!profile.isDefault && (
-                      <button
-                        onClick={(e) => handleSetDefault(e, profile)}
-                        className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
-                        title="Set as default"
-                      >
-                        <CheckCircleIcon className="h-4 w-4" />
-                      </button>
+                    {editingId !== profile.id && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        {formatDate(profile.updatedAt)}
+                      </div>
                     )}
-                    <button
-                      onClick={(e) => handleDelete(e, profile)}
-                      className={`p-1 rounded ${
-                        profile.isDefault
-                          ? "text-gray-300 cursor-not-allowed"
-                          : "text-gray-400 hover:text-red-600 hover:bg-red-50"
-                      }`}
-                      disabled={profile.isDefault}
-                      title={profile.isDefault ? "Cannot delete default profile" : "Delete profile"}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
                   </div>
+                  {editingId !== profile.id && (
+                    <div className="flex items-center gap-1 ml-2">
+                      {onRenameProfile && (
+                        <button
+                          onClick={(e) => handleStartRename(e, profile)}
+                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                          title="Rename profile"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                      {onDuplicateProfile && (
+                        <button
+                          onClick={(e) => handleDuplicate(e, profile)}
+                          className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                          title="Duplicate profile"
+                        >
+                          <DocumentDuplicateIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                      {!profile.isDefault && (
+                        <button
+                          onClick={(e) => handleSetDefault(e, profile)}
+                          className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+                          title="Set as default"
+                        >
+                          <CheckCircleIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => handleDelete(e, profile)}
+                        className={`p-1 rounded ${
+                          profile.isDefault
+                            ? "text-gray-300 cursor-not-allowed"
+                            : "text-gray-400 hover:text-red-600 hover:bg-red-50"
+                        }`}
+                        disabled={profile.isDefault}
+                        title={profile.isDefault ? "Cannot delete default profile" : "Delete profile"}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

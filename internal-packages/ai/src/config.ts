@@ -50,6 +50,13 @@ export const aiConfig = {
     };
   },
 
+  // Agentic plugin — workspace cleanup defaults to true to prevent /tmp accumulation.
+  // Set AGENTIC_CLEANUP_WORKSPACE=false to preserve workspaces for debugging.
+  get agenticCleanupWorkspace(): boolean {
+    const val = getEnv("AGENTIC_CLEANUP_WORKSPACE");
+    return val !== "false";
+  },
+
   // Validation
   validate(): void {
     if (!isBrowser && !this.anthropicApiKey && !this.openaiApiKey) {
