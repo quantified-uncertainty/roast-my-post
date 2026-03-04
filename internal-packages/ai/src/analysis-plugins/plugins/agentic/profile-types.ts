@@ -45,7 +45,7 @@ export const DEFAULT_AGENTIC_CONFIG: AgenticProfileConfig = {
   model: "sonnet",
   maxTurns: 20,
   maxBudgetUsd: 2.0,
-  allowedTools: ["WebSearch", "WebFetch"],
+  allowedTools: ["WebSearch"],
   systemPrompt: "",
   permissionMode: "acceptEdits",
 };
