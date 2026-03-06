@@ -168,7 +168,7 @@ const FINDINGS_JSON_SCHEMA = {
           description: {
             type: "string" as const,
             description:
-              "Detailed explanation of the issue and why it matters.",
+              "Detailed explanation of the issue and why it matters. For fact-check findings, include source URLs as markdown links.",
           },
         },
         required: ["type", "severity", "quotedText", "header", "description"],

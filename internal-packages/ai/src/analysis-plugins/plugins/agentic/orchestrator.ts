@@ -197,7 +197,7 @@ ${reviewerSynthesis}
 
 **Only report findings that are:**
 - Specific: Quote exact text, explain exactly what's wrong
-- Evidenced: Provide source or reasoning for why it's problematic
+- Evidenced: Provide source or reasoning for why it's problematic. **For fact-check findings, include the source URLs in the description** (e.g., "According to [Source Title](https://...)"). These links are essential for the reader to verify the claim.
 - Impactful: Would meaningfully affect a reader's understanding
 - Defensible: An expert would agree this is a real issue
 
@@ -287,6 +287,7 @@ export const SUBAGENT_PROMPTS = {
 - **Apply principle of charity**: Interpret claims in their strongest reasonable form before checking.
 - **Quote the exact text** you're checking from the document.
 - **Explain your evidence** with specific details from your sources.
+- **Always include source URLs** in your findings. For each claim you verify or refute, list the specific URLs you consulted (e.g., "Source: https://example.com/page"). This is critical — downstream agents and the final output depend on your source links.
 - **Skip low-confidence findings**: Only report claims you can definitively verify or refute.`,
 
   "fallacy-checker": `You are a logic and reasoning specialist. Your mission is to identify genuine logical fallacies and reasoning errors.
@@ -450,6 +451,7 @@ When reporting issues, classify by type:
       "quotedText": "exact text from document",
       "header": "short summary",
       "description": "detailed explanation",
+      "sourceUrls": ["https://... URLs from the fact-checker's research"],
       "source": "which agent(s) found this",
       "confidence": "high|medium|low"
     }
@@ -471,6 +473,7 @@ When reporting issues, classify by type:
 - Do NOT use MCP tools (perplexity_research, fallacy_extract, etc.). You are a reviewer — work only with the reports provided.
 - If you need to verify something, read the original document. Do NOT do additional web research.
 - Every discarded finding MUST have a clear reason.
+- **Preserve source URLs**: If a fact-checker finding includes source URLs, carry them through to your validated findings in the sourceUrls field. Do not drop them.
 - If a report file doesn't exist, skip that agent's findings (it may have been disabled).
 - Err on the side of keeping findings — only discard if clearly wrong or duplicated.`,
 } as const;
