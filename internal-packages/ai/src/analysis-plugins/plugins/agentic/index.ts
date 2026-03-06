@@ -132,6 +132,7 @@ interface AgenticFinding {
 interface AgenticAnalysisOutput {
   findings: AgenticFinding[];
   summary: string;
+  analysis: string;
   overallGrade: number;
 }
 
@@ -168,7 +169,7 @@ const FINDINGS_JSON_SCHEMA = {
           description: {
             type: "string" as const,
             description:
-              "Detailed explanation of the issue and why it matters.",
+              "Detailed explanation of the issue and why it matters. For fact-check findings, include source URLs as markdown links.",
           },
         },
         required: ["type", "severity", "quotedText", "header", "description"],
@@ -176,7 +177,12 @@ const FINDINGS_JSON_SCHEMA = {
     },
     summary: {
       type: "string" as const,
-      description: "Overall summary of the document analysis.",
+      description: "One-line summary of the analysis (e.g., 'Found 4 issues: 1 factual error, 2 unsupported claims, 1 clarity issue').",
+    },
+    analysis: {
+      type: "string" as const,
+      description:
+        "Detailed analysis in markdown. Include: overall document assessment, breakdown of findings by type and severity, key strengths of the document, and a brief note on the document's epistemic quality. 2-4 paragraphs.",
     },
     overallGrade: {
       type: "number" as const,
@@ -185,7 +191,7 @@ const FINDINGS_JSON_SCHEMA = {
       maximum: 100,
     },
   },
-  required: ["findings", "summary", "overallGrade"],
+  required: ["findings", "summary", "analysis", "overallGrade"],
 };
 
 const SEVERITY_TO_LEVEL: Record<
@@ -292,7 +298,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       }
 
       this.summaryText = output.summary;
-      this.analysisText = output.summary;
+      this.analysisText = output.analysis;
       this.gradeValue = output.overallGrade;
     } catch (error) {
       const errorMessage =
@@ -655,6 +661,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
         return {
           findings: [],
           summary: `Analysis ended early: ${reason}`,
+          analysis: `Analysis ended early: ${reason}`,
           overallGrade: 0,
         };
       } else if (message.type === "tool_progress") {
@@ -708,6 +715,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     return {
       findings: [],
       summary: "Analysis produced no result",
+      analysis: "Analysis produced no result",
       overallGrade: 0,
     };
   }
@@ -718,6 +726,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       return {
         findings: Array.isArray(parsed.findings) ? parsed.findings : [],
         summary: parsed.summary || "",
+        analysis: parsed.analysis || parsed.summary || "",
         overallGrade:
           typeof parsed.overallGrade === "number" ? parsed.overallGrade : 0,
       };
@@ -726,6 +735,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       return {
         findings: [],
         summary: resultText.slice(0, 500),
+        analysis: resultText.slice(0, 500),
         overallGrade: 0,
       };
     }
