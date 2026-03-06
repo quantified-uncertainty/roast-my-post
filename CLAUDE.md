@@ -227,6 +227,27 @@ dev/scripts/dev-env.sh psql -t -A -c "SELECT config FROM \"Table\" WHERE id='...
 
 **AI agents MUST use `dev/scripts/dev-env.sh psql` - no alternatives allowed.**
 
+### Kubernetes / Worker Logs
+```bash
+# Tail ALL worker pods (prod) with pod-name prefix:
+kubectl logs -f -n roast-my-post -l app.kubernetes.io/component=worker --all-containers --tail=200 --max-log-requests=10 --prefix
+
+# Tail ALL worker pods (staging):
+kubectl logs -f -n roast-my-post-staging -l app.kubernetes.io/component=worker --all-containers --tail=200 --max-log-requests=10 --prefix
+
+# List worker pods:
+kubectl get pods -n roast-my-post
+kubectl get pods -n roast-my-post-staging
+```
+
+```bash
+# Tail with stern (preferred — color-coded per pod):
+stern -n roast-my-post roast-my-post-worker --tail 50
+stern -n roast-my-post-staging roast-my-post-worker --tail 50
+```
+
+**NOTE:** `kubectl logs -f deploy/...` only tails ONE pod. Always use `-l` label selector or `stern` to tail all replicas.
+
 ### Testing
 ```bash
 # Test categories by cost/dependencies:
