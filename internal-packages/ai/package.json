@@ -78,8 +78,8 @@
       "default": "./src/tools/supported-elsewhere-filter/prompts.ts"
     },
     "./agentic/prompts": {
-      "types": "./src/analysis-plugins/plugins/agentic/orchestrator.ts",
-      "default": "./src/analysis-plugins/plugins/agentic/orchestrator.ts"
+      "types": "./src/analysis-plugins/plugins/agentic/prompts.ts",
+      "default": "./src/analysis-plugins/plugins/agentic/prompts.ts"
     },
     "./utils/articleFetch": {
       "types": "./src/utils/articleFetch.ts",
