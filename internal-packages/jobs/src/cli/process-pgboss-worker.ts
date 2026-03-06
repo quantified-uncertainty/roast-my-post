@@ -248,6 +248,12 @@ const worker = new PgBossWorker();
 
 process.on('SIGTERM', () => void worker.shutdown());
 process.on('SIGINT', () => void worker.shutdown());
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught exception:', error);
+});
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled rejection:', reason);
+});
 
 worker.start().catch(async (error) => {
   logger.error('🔥 Fatal error:', error);

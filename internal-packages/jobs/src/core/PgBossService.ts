@@ -75,6 +75,10 @@ export class PgBossService {
 
         await boss.start();
 
+        boss.on('error', (error) => {
+          this.logger.error('pg-boss error event:', error);
+        });
+
         this.boss = boss;
 
         // Create queues with policies
