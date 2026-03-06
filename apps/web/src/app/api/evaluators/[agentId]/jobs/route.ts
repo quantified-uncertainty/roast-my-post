@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma, Prisma } from "@roast/db";
 import { successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 
 export async function GET(
   request: NextRequest,
@@ -12,19 +14,24 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const batchId = searchParams.get('batchId');
 
-    // Verify agent exists (allow public access)
+    // Verify agent exists (public endpoint)
     const agent = await prisma.agent.findUnique({
       where: { id: agentId }
     });
-    
+
     if (!agent) {
       return commonErrors.notFound("Agent");
     }
+
+    // Filter out private docs the user doesn't own
+    const userId = await authenticateRequest(request);
+    const privacyFilter = PrivacyService.getEvaluationPrivacyFilter(userId ?? undefined);
 
     // Build where clause for jobs
     const whereClause: Prisma.JobWhereInput = {
       evaluation: {
         agentId: agentId,
+        ...privacyFilter,
       },
     };
 
