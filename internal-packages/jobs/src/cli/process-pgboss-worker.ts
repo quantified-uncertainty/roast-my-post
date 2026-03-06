@@ -248,6 +248,8 @@ const worker = new PgBossWorker();
 
 process.on('SIGTERM', () => void worker.shutdown());
 process.on('SIGINT', () => void worker.shutdown());
+// Intentionally log-only without process.exit — we prefer keeping the worker alive
+// over restarting on transient errors. K8s liveness probes handle truly stuck processes.
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught exception:', error);
 });
