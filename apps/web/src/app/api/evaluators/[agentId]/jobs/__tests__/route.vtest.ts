@@ -15,6 +15,16 @@ vi.mock('@roast/db', () => ({
   },
 }));
 
+vi.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('@/infrastructure/auth/privacy-service', () => ({
+  PrivacyService: {
+    getEvaluationPrivacyFilter: vi.fn().mockReturnValue({ document: { isPrivate: false } }),
+  },
+}));
+
 describe('GET /api/agents/[agentId]/jobs', () => {
   const mockAgentId = 'agent-123';
   const mockUser = { id: 'user-123', email: 'test@example.com' };
@@ -170,6 +180,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
       where: {
         evaluation: {
           agentId: mockAgentId,
+          document: { isPrivate: false },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -179,22 +190,23 @@ describe('GET /api/agents/[agentId]/jobs', () => {
   });
 
   it('should filter by batchId when provided', async () => {
-    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({ 
-      id: mockAgentId 
+    (prisma.agent.findUnique as vi.MockedFunction<any>).mockResolvedValueOnce({
+      id: mockAgentId
     });
-    
+
     const batchId = 'batch-456';
     (prisma.job.findMany as vi.MockedFunction<any>).mockResolvedValueOnce([]);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/jobs?batchId=${batchId}`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
-    
+
     expect(response.status).toBe(200);
-    
+
     expect(prisma.job.findMany).toHaveBeenCalledWith({
       where: {
         evaluation: {
           agentId: mockAgentId,
+          document: { isPrivate: false },
         },
         agentEvalBatchId: batchId,
       },
