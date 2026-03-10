@@ -36,7 +36,7 @@ vi.mock('@/infrastructure/auth/privacy-service', () => ({
   },
 }));
 
-describe('GET /api/agents/[agentId]/jobs', () => {
+describe('GET /api/evaluators/[agentId]/jobs', () => {
   const mockAgentId = 'agent-123';
 
   beforeEach(() => {
