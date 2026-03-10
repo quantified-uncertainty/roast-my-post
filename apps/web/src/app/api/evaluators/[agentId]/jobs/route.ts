@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma, Prisma } from "@roast/db";
 import { successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
+import { authenticateRequestPassive } from "@/infrastructure/auth/auth-helpers";
+import { PrivacyService } from "@/infrastructure/auth/privacy-service";
 
 export async function GET(
   request: NextRequest,
@@ -21,10 +23,15 @@ export async function GET(
       return commonErrors.notFound("Agent");
     }
 
-    // Build where clause for jobs
+    // Passive auth — identifies user without triggering NextAuth session flow
+    const userId = await authenticateRequestPassive(request);
+
+    // Build where clause for jobs — filter by document privacy
+    const privacyFilter = PrivacyService.getEvaluationPrivacyFilter(userId);
     const whereClause: Prisma.JobWhereInput = {
       evaluation: {
         agentId: agentId,
+        ...privacyFilter,
       },
     };
 
