@@ -80,7 +80,7 @@ export function EvaluationAnalysisSection({
                   defaultOpen={true}
                   action={<CopyButton text={evaluation.summary} />}
                 >
-                  <div className="prose prose-sm max-w-none text-gray-600">
+                  <div className="prose prose-lg max-w-none text-gray-600">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
@@ -100,7 +100,7 @@ export function EvaluationAnalysisSection({
                   defaultOpen={false}
                   action={<CopyButton text={evaluation.analysis} />}
                 >
-                  <div className="prose prose-sm max-w-none text-gray-600">
+                  <div className="prose prose-lg max-w-none text-gray-600">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}

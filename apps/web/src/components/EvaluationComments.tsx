@@ -176,7 +176,7 @@ export function EvaluationComments({
             </div>
             
             {/* Comment description */}
-            <div className="prose prose-gray mb-8 max-w-none rounded-lg border border-gray-100 px-4 py-3">
+            <div className="prose prose-lg prose-gray mb-8 max-w-none rounded-lg border border-gray-100 px-4 py-3">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}

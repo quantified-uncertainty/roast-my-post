@@ -146,6 +146,12 @@ ${reviewerSynthesis}
 - Impactful: Would meaningfully affect a reader's understanding
 - Defensible: An expert would agree this is a real issue
 
+**Format descriptions with rich markdown:**
+- Use **bold** for key terms, verdicts, and important conclusions
+- Use bullet points when listing multiple pieces of evidence or issues
+- Use markdown links for source URLs: [Source Title](https://...)
+- For longer descriptions, use clear paragraph breaks
+
 **Do NOT report:**
 - Stylistic preferences or nitpicks
 - Technically true but unimportant observations

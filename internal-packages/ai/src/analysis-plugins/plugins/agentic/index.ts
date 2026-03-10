@@ -169,7 +169,7 @@ const FINDINGS_JSON_SCHEMA = {
           description: {
             type: "string" as const,
             description:
-              "Detailed explanation of the issue and why it matters. For fact-check findings, include source URLs as markdown links.",
+              "Detailed explanation using markdown formatting (bold, bullets, links). For fact-check findings, include source URLs as markdown links.",
           },
         },
         required: ["type", "severity", "quotedText", "header", "description"],
@@ -182,7 +182,7 @@ const FINDINGS_JSON_SCHEMA = {
     analysis: {
       type: "string" as const,
       description:
-        "Detailed analysis in markdown. Include: overall document assessment, breakdown of findings by type and severity, key strengths of the document, and a brief note on the document's epistemic quality. 2-4 paragraphs.",
+        "Detailed analysis in structured markdown with headers (##), bullet points, and **bold** for key conclusions. Include: overall document assessment, breakdown of findings by type and severity, key strengths of the document, and a brief note on the document's epistemic quality. 2-4 paragraphs.",
     },
     overallGrade: {
       type: "number" as const,
