@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/infrastructure/auth/auth";
 import { authenticateApiKey } from "@/infrastructure/auth/auth-api";
+import { prisma } from "@roast/db";
 
 /**
  * Standardized authentication helper that tries API key first, then falls back to session auth.
@@ -39,4 +40,32 @@ export async function authenticateRequestSessionFirst(request: NextRequest): Pro
   // Fall back to API key authentication
   const apiAuth = await authenticateApiKey(request);
   return apiAuth.success ? apiAuth.userId : undefined;
+}
+
+/**
+ * Passive authentication helper for public routes that should never trigger auth flows.
+ * Tries API key first, then reads the session cookie directly from the request
+ * and looks up the session in the database — bypasses NextAuth's auth() entirely.
+ *
+ * Use this for public pages where you want to optionally identify the user
+ * (e.g. to show their private content) without risking auth side effects.
+ */
+export async function authenticateRequestPassive(request: NextRequest): Promise<string | undefined> {
+  // Try API key authentication first (just reads headers, no side effects)
+  const apiAuth = await authenticateApiKey(request);
+  if (apiAuth.success) {
+    return apiAuth.userId;
+  }
+
+  // Read session cookie directly — no NextAuth auth() call
+  const sessionToken = request.cookies.get('authjs.session-token')?.value;
+  if (!sessionToken) {
+    return undefined;
+  }
+
+  const session = await prisma.session.findFirst({
+    where: { sessionToken, expires: { gt: new Date() } },
+    select: { userId: true },
+  });
+  return session?.userId;
 }
