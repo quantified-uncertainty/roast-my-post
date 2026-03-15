@@ -219,16 +219,16 @@ export class JobService {
    * Uses an atomic UPDATE to ensure only one worker detects completion.
    */
   private async checkDocumentCompletion(job: JobEntity): Promise<void> {
-    if (!this.documentCompletionHandler) return;
-
     try {
       const documentId = await this.jobRepository.getDocumentIdForJob(job.id);
       if (!documentId) return;
 
       const result = await this.jobRepository.tryMarkDocumentCompleted(documentId);
       if (result) {
-        this.logger.info(`Document ${result.id} evaluations completed, triggering notification`);
-        await this.documentCompletionHandler.onDocumentCompleted(result.id);
+        this.logger.info(`Document ${result.id} evaluations completed`);
+        if (this.documentCompletionHandler) {
+          await this.documentCompletionHandler.onDocumentCompleted(result.id);
+        }
       }
     } catch (error) {
       // Document completion tracking is non-critical — don't fail the job

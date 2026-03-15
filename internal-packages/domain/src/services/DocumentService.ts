@@ -107,7 +107,7 @@ export class DocumentService {
         markdownPrepend,
         isPrivate: data.isPrivate || false,
         submitterNotes: data.submitterNotes,
-        notifyOnComplete: notifyOnComplete && agentIds && agentIds.length > 0 ? true : false,
+        notifyOnComplete: notifyOnComplete ?? false,
       } as RepositoryCreateDocumentData;
 
       const repoDocument = await this.docRepo.create(createData);

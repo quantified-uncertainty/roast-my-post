@@ -93,17 +93,22 @@ export class EmailService {
     `;
 
     try {
-      await this.resend.emails.send({
+      const { error: sendError } = await this.resend.emails.send({
         from: config.auth.emailFrom!,
         to: data.recipientEmail,
         subject,
         html,
       });
 
-      this.logger.info(`Batch completion email sent for batch ${data.batchId} to ${data.recipientEmail}`);
+      if (sendError) {
+        this.logger.error(`Failed to send completion email for ${data.batchId}:`, sendError);
+        return false;
+      }
+
+      this.logger.info(`Completion email sent for ${data.batchId}`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send batch completion email for batch ${data.batchId}:`, error);
+      this.logger.error(`Failed to send completion email for ${data.batchId}:`, error);
       return false;
     }
   }
