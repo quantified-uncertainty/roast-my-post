@@ -4,7 +4,7 @@
  * Finds and cleans up stale jobs abandoned due to worker crashes.
  */
 
-import { JobStatus, JobRepository } from '@roast/db';
+import { JobStatus } from '@roast/db';
 import { PgBossService } from '../core/PgBossService';
 import { JobService } from '../core/JobService';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
@@ -28,15 +28,14 @@ interface StaleJob {
 
 export class JobReconciliationService {
   constructor(
-    private readonly jobRepository: JobRepository,
+    private readonly jobService: JobService,
     private readonly pgBossService: PgBossService,
-    private readonly logger: Logger,
-    private readonly jobService?: JobService
+    private readonly logger: Logger
   ) {}
 
   async reconcileStaleJobs(): Promise<void> {
     const boss = this.pgBossService.getBoss();
-  
+
     let totalReconciled = 0;
 
     const criteria = [
@@ -44,11 +43,11 @@ export class JobReconciliationService {
       { status: JobStatus.PENDING, thresholdMs: STALE_THRESHOLDS.PENDING },
     ];
 
-    const staleJobs = await this.jobRepository.findStaleJobs(criteria);
+    const staleJobs = await this.jobService.findStaleJobs(criteria);
 
     if (staleJobs.length > 0) {
       this.logger.info(`[Reconciliation] Found ${staleJobs.length} stale job(s)`);
-      
+
       for (const job of staleJobs) {
         try {
           if (await this.shouldMarkFailed(boss, job)) {
@@ -87,23 +86,12 @@ export class JobReconciliationService {
     return !isJobActive;
   }
 
-  private async markJobFailed(
-    job: StaleJob
-  ): Promise<void> {
+  private async markJobFailed(job: StaleJob): Promise<void> {
     const staleMinutes = Math.round((Date.now() - job.updatedAt.getTime()) / 60000);
     const reason = job.pgBossJobId ? 'pg-boss job not active' : 'no pg-boss job ID';
     const error = `Job stuck in ${job.status} for ${staleMinutes}min - ${reason}`;
 
-    if (this.jobService) {
-      // Use JobService to trigger batch/document completion checks
-      await this.jobService.markAsFailed(job.id, error);
-    } else {
-      await this.jobRepository.updateStatus(job.id, {
-        status: JobStatus.FAILED,
-        error,
-        completedAt: new Date(),
-      });
-    }
+    await this.jobService.markAsFailed(job.id, error);
 
     this.logger.info(`[Reconciliation] Marked ${job.status} job ${job.id} as FAILED (${reason})`);
   }

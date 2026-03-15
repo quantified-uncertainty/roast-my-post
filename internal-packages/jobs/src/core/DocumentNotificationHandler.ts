@@ -23,6 +23,9 @@ export class DocumentNotificationHandler implements DocumentCompletionHandler {
       const doc = await this.notificationRepository.getDocumentForNotification(documentId);
       if (!doc) return;
       if (!doc.notifyOnComplete) return;
+      // notifiedAt check is intentionally omitted here — tryMarkDocumentCompleted
+      // already sets notifiedAt atomically before this handler runs, so checking
+      // it would always block. The atomic SQL provides the idempotency guarantee.
 
       if (!doc.userEmail) {
         this.logger.warn(`Document ${documentId} notification requested but user has no email`);

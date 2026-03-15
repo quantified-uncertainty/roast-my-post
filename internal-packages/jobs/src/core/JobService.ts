@@ -8,7 +8,7 @@
  * - Worker process: Initializes pg-boss to process jobs
  */
 
-import { JobStatus, type JobEntity, type JobRepository } from '@roast/db';
+import { JobStatus, type JobEntity, type JobRepository, type StaleJobCriteria, type StaleJobResult } from '@roast/db';
 import { PgBossService } from './PgBossService';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import type { Logger } from '../types';
@@ -181,6 +181,13 @@ export class JobService {
       this.checkDocumentCompletion(completedJob),
     ]);
     return completedJob;
+  }
+
+  /**
+   * Find stale jobs matching the given criteria
+   */
+  async findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]> {
+    return this.jobRepository.findStaleJobs(criteria);
   }
 
   /**
