@@ -8,7 +8,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { validateServerActionAccess } from "@/infrastructure/http/guards";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
 
-export async function importDocument(url: string, agentIds: string[] = [], isPrivate: boolean = true) {
+export async function importDocument(url: string, agentIds: string[] = [], isPrivate: boolean = true, notifyOnComplete: boolean = false) {
   try {
     // Get the current user session
     const session = await auth();
@@ -29,7 +29,7 @@ export async function importDocument(url: string, agentIds: string[] = [], isPri
     }
 
     // 2. Do expensive work (fetch, validate)
-    const result = await importDocumentService(url, session.user.id, agentIds, isPrivate);
+    const result = await importDocumentService(url, session.user.id, agentIds, isPrivate, notifyOnComplete);
 
     if (!result.success) {
       throw new Error(result.error || "Failed to import document");

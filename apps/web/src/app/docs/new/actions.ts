@@ -13,7 +13,7 @@ import { getServices } from "@/application/services/ServiceFactory";
 
 import { type DocumentInput } from "./schema";
 
-export async function createDocument(data: DocumentInput, agentIds: string[] = []) {
+export async function createDocument(data: DocumentInput, agentIds: string[] = [], notifyOnComplete: boolean = false) {
   try {
     const session = await auth();
 
@@ -40,7 +40,8 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
         isPrivate: data.isPrivate ?? true,
         submitterNotes: data.submitterNotes
       },
-      agentIds
+      agentIds,
+      notifyOnComplete
     );
 
     if (result.isError()) {

@@ -26,7 +26,9 @@ import {
   type DocumentInput,
   documentSchema,
 } from "@/app/docs/new/schema";
+import { NotificationCheckbox } from "@/components/NotificationCheckbox";
 import { updateDocument } from "./actions";
+import { setDocumentNotification } from "../actions/evaluation-actions";
 
 interface FormFieldConfig {
   name: keyof DocumentInput;
@@ -87,6 +89,7 @@ export default function EditDocumentPage({ params }: Props) {
   const [evaluationCount, setEvaluationCount] = useState(0);
   const [pendingFormData, setPendingFormData] = useState<DocumentInput | null>(null);
   const [_isPrivate, setIsPrivate] = useState(false);
+  const [notifyOnComplete, setNotifyOnComplete] = useState(false);
 
   const methods = useForm<DocumentInput>({
     defaultValues: {
@@ -135,8 +138,9 @@ export default function EditDocumentPage({ params }: Props) {
           submitterNotes: document.submitterNotes || "",
         });
         
-        // Update the local state for privacy
+        // Update the local state for privacy and notification
         setIsPrivate(document.isPrivate ?? false);
+        setNotifyOnComplete(document.notifyOnComplete ?? false);
 
         // Count the number of evaluations
         const evalCount = document.reviews?.length || 0;
@@ -157,10 +161,13 @@ export default function EditDocumentPage({ params }: Props) {
 
   const handleConfirmUpdate = async () => {
     if (!pendingFormData) return;
-    
+
     setShowWarningDialog(false);
-    
+
     try {
+      // Set notification preference before update triggers re-evaluations
+      await setDocumentNotification(docId, notifyOnComplete);
+
       const updateResult = await updateDocument({
         ...pendingFormData,
         docId: docId,
@@ -369,6 +376,15 @@ export default function EditDocumentPage({ params }: Props) {
                   </div>
                 </RadioGroup>
               </FormField>
+
+              {evaluationCount > 0 && (
+                <NotificationCheckbox
+                  id="edit-notify"
+                  checked={notifyOnComplete}
+                  onChange={setNotifyOnComplete}
+                  label="Email me when re-evaluations complete"
+                />
+              )}
 
               {errors.root && (
                 <div className="rounded-md bg-red-50 p-4">

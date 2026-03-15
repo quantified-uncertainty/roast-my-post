@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
 
-# Strict ESLint check for PR changed files only
+# Strict ESLint check for TypeScript files
 #
-# Runs strict type-aware ESLint rules on files changed in the current branch
-# compared to main. Catches real bugs without pedantic style rules.
+# Runs strict type-aware ESLint rules that catch real bugs.
+# Can check PR-changed files or all files in a directory.
 #
 # Usage:
 #   ./dev/scripts/lint-pr-strict.sh [options] [path-filter]
 #
 # Options:
+#   -a, --all              Check ALL files in path (not just PR-changed)
 #   -b, --base <branch>    Base branch to compare against (default: origin/main)
 #   -l, --list             List files that would be checked, don't run lint
 #   -h, --help             Show this help message
 #
 # Examples:
-#   ./dev/scripts/lint-pr-strict.sh                          # All changed files
-#   ./dev/scripts/lint-pr-strict.sh internal-packages/ai     # Only ai package
-#   ./dev/scripts/lint-pr-strict.sh apps/web                 # Only web app
+#   ./dev/scripts/lint-pr-strict.sh                          # PR-changed files
+#   ./dev/scripts/lint-pr-strict.sh apps/web                 # PR-changed in web
+#   ./dev/scripts/lint-pr-strict.sh -a apps/web/src/app      # ALL files in dir
+#   ./dev/scripts/lint-pr-strict.sh -a internal-packages/jobs # ALL files in jobs
 #   ./dev/scripts/lint-pr-strict.sh -l                       # List files only
-#   ./dev/scripts/lint-pr-strict.sh -b origin/develop        # Compare to develop
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -99,7 +100,7 @@ log_header()  { echo -e "\n${BOLD}${BLUE}=== $* ===${NC}\n"; }
 # ==============================================================================
 
 show_help() {
-    sed -n '3,18p' "$0" | sed 's/^# //' | sed 's/^#//'
+    sed -n '3,22p' "$0" | sed 's/^# //' | sed 's/^#//'
     exit 0
 }
 
@@ -126,6 +127,56 @@ get_changed_files() {
     echo "$files"
 }
 
+get_all_files() {
+    local path_filter="$1"
+
+    local files
+    files=$(find "$REPO_ROOT/$path_filter" -name '*.ts' -o -name '*.tsx' | sed "s|^$REPO_ROOT/||")
+
+    # Apply exclusion patterns
+    for pattern in "${EXCLUDED_PATTERNS[@]}"; do
+        files=$(echo "$files" | grep -v "$pattern" || true)
+    done
+
+    # Exclude node_modules, dist, generated
+    files=$(echo "$files" | grep -v 'node_modules/' | grep -v '/dist/' | grep -v '/generated/' | grep -v '/.next/' || true)
+
+    echo "$files"
+}
+
+# Detect the right tsconfig for a single file
+detect_tsconfig_for_file() {
+    local file="$1"
+
+    if [[ "$file" == apps/web/* ]]; then
+        echo "apps/web/tsconfig.json"
+    elif [[ "$file" == internal-packages/ai/* ]]; then
+        echo "internal-packages/ai/tsconfig.json"
+    elif [[ "$file" == internal-packages/db/* ]]; then
+        echo "internal-packages/db/tsconfig.json"
+    elif [[ "$file" == internal-packages/domain/* ]]; then
+        echo "internal-packages/domain/tsconfig.json"
+    elif [[ "$file" == internal-packages/jobs/* ]]; then
+        echo "internal-packages/jobs/tsconfig.json"
+    elif [[ "$file" == apps/mcp-server/* ]]; then
+        echo "apps/mcp-server/tsconfig.json"
+    else
+        echo "tsconfig.json"
+    fi
+}
+
+# Group files by their tsconfig
+group_files_by_tsconfig() {
+    local files="$1"
+    # Output: tsconfig\tfile lines, sorted by tsconfig
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        local tsconfig
+        tsconfig=$(detect_tsconfig_for_file "$file")
+        echo -e "${tsconfig}\t${file}"
+    done <<< "$files" | sort -t$'\t' -k1,1
+}
+
 run_eslint() {
     local files="$1"
 
@@ -145,26 +196,59 @@ run_eslint() {
         rule_args+=("--rule=$rule")
     done
 
-    # Convert newline-separated files to array
-    local file_array=()
-    while IFS= read -r file; do
-        [[ -n "$file" ]] && file_array+=("$file")
-    done <<< "$files"
-
-    # Run eslint from repo root
     cd "$REPO_ROOT"
 
-    npx eslint \
-        --config apps/web/config/eslint/.eslintrc.json \
-        "${rule_args[@]}" \
-        "${file_array[@]}"
+    # Group files by tsconfig and run eslint per group
+    local grouped
+    grouped=$(group_files_by_tsconfig "$files")
+
+    local current_tsconfig=""
+    local current_files=()
+    local had_errors=false
+
+    while IFS=$'\t' read -r tsconfig file; do
+        if [[ "$tsconfig" != "$current_tsconfig" ]]; then
+            # Run previous group if any
+            if [[ ${#current_files[@]} -gt 0 ]]; then
+                log_info "Using tsconfig: $current_tsconfig (${#current_files[@]} files)"
+                if ! npx eslint \
+                    --config apps/web/config/eslint/.eslintrc.json \
+                    --parser-options="project:$current_tsconfig" \
+                    "${rule_args[@]}" \
+                    "${current_files[@]}"; then
+                    had_errors=true
+                fi
+                echo ""
+            fi
+            current_tsconfig="$tsconfig"
+            current_files=()
+        fi
+        current_files+=("$file")
+    done <<< "$grouped"
+
+    # Run last group
+    if [[ ${#current_files[@]} -gt 0 ]]; then
+        log_info "Using tsconfig: $current_tsconfig (${#current_files[@]} files)"
+        if ! npx eslint \
+            --config apps/web/config/eslint/.eslintrc.json \
+            --parser-options="project:$current_tsconfig" \
+            "${rule_args[@]}" \
+            "${current_files[@]}"; then
+            had_errors=true
+        fi
+    fi
+
+    if $had_errors; then
+        return 1
+    fi
+    return 0
 }
 
 list_files() {
     local files="$1"
 
     if [[ -z "$files" ]]; then
-        log_warning "No TypeScript files changed in this scope."
+        log_warning "No TypeScript files in this scope."
         return 0
     fi
 
@@ -183,6 +267,7 @@ main() {
     local base_branch="$DEFAULT_BASE_BRANCH"
     local path_filter=""
     local list_only=false
+    local check_all=false
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -198,6 +283,10 @@ main() {
                 list_only=true
                 shift
                 ;;
+            -a|--all)
+                check_all=true
+                shift
+                ;;
             -*)
                 log_error "Unknown option: $1"
                 show_help
@@ -209,19 +298,31 @@ main() {
         esac
     done
 
-    log_header "Strict PR Lint Check"
-
-    log_info "Base branch: $base_branch"
-    if [[ -n "$path_filter" ]]; then
-        log_info "Path filter: $path_filter"
+    if $check_all; then
+        log_header "Strict Lint Check (all files)"
+        if [[ -z "$path_filter" ]]; then
+            log_error "Path is required with --all flag"
+            exit 1
+        fi
+        log_info "Scope: $path_filter"
     else
-        log_info "Path filter: (all changed files, excluding meta-evals)"
+        log_header "Strict PR Lint Check"
+        log_info "Base branch: $base_branch"
+        if [[ -n "$path_filter" ]]; then
+            log_info "Path filter: $path_filter"
+        else
+            log_info "Path filter: (all changed files, excluding meta-evals)"
+        fi
     fi
     echo ""
 
-    # Get changed files
+    # Get files
     local files
-    files=$(get_changed_files "$base_branch" "$path_filter")
+    if $check_all; then
+        files=$(get_all_files "$path_filter")
+    else
+        files=$(get_changed_files "$base_branch" "$path_filter")
+    fi
 
     if $list_only; then
         list_files "$files"

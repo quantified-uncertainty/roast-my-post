@@ -67,8 +67,11 @@ export function TestTab({
               const formData = new FormData(e.currentTarget);
               const name = formData.get("name") as string;
 
+              const notifyOnComplete = formData.get("notifyOnComplete") === "on";
+
               let requestBody: any = {
                 name: name || undefined,
+                notifyOnComplete,
               };
 
               if (selectionMode === "specific") {
@@ -228,6 +231,18 @@ export function TestTab({
               <li>• Results will appear in the evaluations list</li>
               <li>• Costs will be tracked and reported</li>
             </ul>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="notifyOnComplete"
+              name="notifyOnComplete"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="notifyOnComplete" className="text-sm text-gray-700">
+              Email me when this batch completes
+            </label>
           </div>
 
           <div className="flex justify-end gap-3">

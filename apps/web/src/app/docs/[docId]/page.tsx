@@ -92,6 +92,7 @@ export default async function DocumentPage({
   const documentWithBatch = await prisma.document.findUnique({
     where: { id: docId },
     select: {
+      notifyOnComplete: true,
       ephemeralBatch: {
         select: {
           trackingId: true,
@@ -351,6 +352,7 @@ export default async function DocumentPage({
                 evaluations={document.reviews || []}
                 availableAgents={availableAgents}
                 isOwner={isOwner}
+                notifyOnComplete={documentWithBatch?.notifyOnComplete ?? false}
               />
             </div>
           </div>

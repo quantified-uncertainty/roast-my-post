@@ -18,7 +18,7 @@ loadWebAppEnvironment(workspaceRoot);
 process.env.AI_LOG_LEVEL ??= 'warn';
 
 import { config } from '@roast/domain';
-import { JobRepository } from '@roast/db';
+import { JobRepository, NotificationRepository } from '@roast/db';
 import { JobOrchestrator } from '../core/JobOrchestrator';
 import { JobService } from '../core/JobService';
 import { PgBossService } from '../core/PgBossService';
@@ -31,6 +31,9 @@ import { isRetryableError } from '../errors/retryableErrors';
 import { getAgentTimeout } from '../config/agentTimeouts';
 import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
+import { EmailService } from '../core/EmailService';
+import { BatchNotificationHandler } from '../core/BatchNotificationHandler';
+import { DocumentNotificationHandler } from '../core/DocumentNotificationHandler';
 
 interface JobWithAgentVersions {
   evaluation: {
@@ -57,7 +60,23 @@ class PgBossWorker {
     this.jobRepository = new JobRepository();
     this.jobService = new JobService(this.jobRepository, logger, this.pgBossService);
     this.jobOrchestrator = new JobOrchestrator(this.jobRepository, logger, this.jobService);
-    this.jobReconciliationService = new JobReconciliationService(this.jobRepository, this.pgBossService, logger);
+    this.jobReconciliationService = new JobReconciliationService(this.jobRepository, this.pgBossService, logger, this.jobService);
+
+    // Wire up email notifications for batch and document completions
+    const emailService = new EmailService(logger);
+    if (emailService.isConfigured) {
+      const notificationRepository = new NotificationRepository();
+
+      const batchHandler = new BatchNotificationHandler(notificationRepository, emailService, logger);
+      this.jobService.setBatchCompletionHandler(batchHandler);
+
+      const documentHandler = new DocumentNotificationHandler(notificationRepository, emailService, logger);
+      this.jobService.setDocumentCompletionHandler(documentHandler);
+
+      logger.info('Email notifications enabled for batch and document completions');
+    } else {
+      logger.info('Email not configured, completion notifications disabled');
+    }
   }
 
   public async start() {

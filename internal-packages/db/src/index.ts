@@ -9,6 +9,7 @@ export { Prisma, type PrismaClient } from './client';
 export * from './repositories/DocumentRepository';
 export * from './repositories/EvaluationRepository';
 export * from './repositories/JobRepository';
+export * from './repositories/NotificationRepository';
 export * from './repositories/MetaEvaluationRepository';
 
 // Browser-safe exports (types and enums only)

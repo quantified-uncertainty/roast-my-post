@@ -29,7 +29,8 @@
     "@roast/db": "workspace:*",
     "@roast/domain": "workspace:*",
     "dotenv": "^17.2.0",
-    "pg-boss": "^12.2.0"
+    "pg-boss": "^12.2.0",
+    "resend": "^6.9.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

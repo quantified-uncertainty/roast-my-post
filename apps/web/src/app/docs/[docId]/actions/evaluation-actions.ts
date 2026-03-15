@@ -8,6 +8,7 @@ import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 import { validateServerActionAccess } from "@/infrastructure/http/guards";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
+import { getServices } from "@/application/services/ServiceFactory";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -116,6 +117,42 @@ export async function createOrRerunEvaluation(
         error instanceof Error
           ? error.message
           : "Failed to create or rerun evaluation",
+    };
+  }
+}
+
+/**
+ * Toggle email notification for document evaluation completion
+ */
+export async function setDocumentNotification(
+  documentId: string,
+  notifyOnComplete: boolean
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return { success: false, error: "User must be logged in" };
+    }
+
+    const { documentService } = getServices();
+    const result = await documentService.setNotifyOnComplete(
+      documentId,
+      session.user.id,
+      notifyOnComplete
+    );
+
+    if (result.isError()) {
+      return { success: false, error: result.error()?.message || "Failed to update notification preference" };
+    }
+
+    revalidatePath(`/docs/${documentId}`);
+    return { success: true };
+  } catch (error) {
+    logger.error("Error updating notification preference:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update notification preference",
     };
   }
 }
