@@ -8,17 +8,44 @@
  * - Worker process: Initializes pg-boss to process jobs
  */
 
-import { JobStatus, type JobEntity, type JobRepository } from '@roast/db';
+import { JobStatus, type JobEntity, type JobRepository, type StaleJobCriteria, type StaleJobResult } from '@roast/db';
 import { PgBossService } from './PgBossService';
 import { DOCUMENT_EVALUATION_JOB } from '../types/jobTypes';
 import type { Logger } from '../types';
 
+export interface BatchCompletionHandler {
+  onBatchCompleted(batchId: string): Promise<void>;
+}
+
+export interface DocumentCompletionHandler {
+  onDocumentCompleted(documentId: string): Promise<void>;
+}
+
 export class JobService {
+  private batchCompletionHandler?: BatchCompletionHandler;
+  private documentCompletionHandler?: DocumentCompletionHandler;
+
   constructor(
     private jobRepository: JobRepository,
     private logger: Logger,
     private pgBossService: PgBossService
   ) {}
+
+  /**
+   * Set an optional handler that is called when a batch completes.
+   * Used by the worker to trigger email notifications.
+   */
+  setBatchCompletionHandler(handler: BatchCompletionHandler): void {
+    this.batchCompletionHandler = handler;
+  }
+
+  /**
+   * Set an optional handler that is called when all jobs for a document complete.
+   * Used by the worker to trigger email notifications.
+   */
+  setDocumentCompletionHandler(handler: DocumentCompletionHandler): void {
+    this.documentCompletionHandler = handler;
+  }
 
   async initialize() {
     await this.pgBossService.initialize();
@@ -98,7 +125,12 @@ export class JobService {
     }
 
     // Update database to mark as cancelled
-    return this.markAsCancelled(jobId);
+    const cancelledJob = await this.markAsCancelled(jobId);
+    await Promise.all([
+      this.checkBatchCompletion(cancelledJob),
+      this.checkDocumentCompletion(cancelledJob),
+    ]);
+    return cancelledJob;
   }
 
   /**
@@ -137,24 +169,86 @@ export class JobService {
       logs: string;
     }
   ) {
-    return this.jobRepository.updateStatus(jobId, {
+    const completedJob = await this.jobRepository.updateStatus(jobId, {
       status: JobStatus.COMPLETED,
       completedAt: new Date(),
       llmThinking: data.llmThinking,
       durationInSeconds: data.durationInSeconds,
       logs: data.logs,
     });
+    await Promise.all([
+      this.checkBatchCompletion(completedJob),
+      this.checkDocumentCompletion(completedJob),
+    ]);
+    return completedJob;
+  }
+
+  /**
+   * Find stale jobs matching the given criteria
+   */
+  async findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]> {
+    return this.jobRepository.findStaleJobs(criteria);
   }
 
   /**
    * Mark a job as failed
    */
   async markAsFailed(jobId: string, error: unknown): Promise<JobEntity> {
-    return this.jobRepository.updateStatus(jobId, {
+    const failedJob = await this.jobRepository.updateStatus(jobId, {
       status: JobStatus.FAILED,
       error: error instanceof Error ? error.message : String(error),
       completedAt: new Date(),
     });
+    await Promise.all([
+      this.checkBatchCompletion(failedJob),
+      this.checkDocumentCompletion(failedJob),
+    ]);
+    return failedJob;
   }
 
+  /**
+   * Check if a job's batch is now complete (all jobs in terminal states).
+   * Uses an atomic UPDATE to ensure only one worker detects completion.
+   */
+  private async checkBatchCompletion(job: JobEntity): Promise<void> {
+    if (!job.agentEvalBatchId) return;
+
+    try {
+      const result = await this.jobRepository.tryMarkBatchCompleted(job.agentEvalBatchId);
+      if (result) {
+        this.logger.info(`Batch ${result.id} completed at ${result.completedAt.toISOString()}`);
+        if (this.batchCompletionHandler) {
+          await this.batchCompletionHandler.onBatchCompleted(result.id);
+        }
+      }
+    } catch (error) {
+      // Batch completion tracking is non-critical — don't fail the job
+      this.logger.error(`Failed to check batch completion for batch ${job.agentEvalBatchId}:`, error);
+    }
+  }
+
+  /**
+   * Check if all jobs for a document are now complete.
+   * Uses an atomic UPDATE to ensure only one worker detects completion.
+   */
+  private async checkDocumentCompletion(job: JobEntity): Promise<void> {
+    // Only detect completion when a handler is attached (worker process).
+    // Without this guard, web-side cancellations would consume the completion
+    // edge and set notifiedAt without being able to send an email.
+    if (!this.documentCompletionHandler) return;
+
+    try {
+      const documentId = await this.jobRepository.getDocumentIdForJob(job.id);
+      if (!documentId) return;
+
+      const result = await this.jobRepository.tryMarkDocumentCompleted(documentId);
+      if (result) {
+        this.logger.info(`Document ${result.id} evaluations completed`);
+        await this.documentCompletionHandler.onDocumentCompleted(result.id);
+      }
+    } catch (error) {
+      // Document completion tracking is non-critical — don't fail the job
+      this.logger.error(`Failed to check document completion for job ${job.id}:`, error);
+    }
+  }
 }

@@ -23,7 +23,8 @@ export async function importDocumentService(
   url: string,
   userId: string,
   agentIds: string[] = [],
-  isPrivate: boolean = true
+  isPrivate: boolean = true,
+  notifyOnComplete: boolean = false
 ): Promise<ImportDocumentResult> {
   try {
     logger.info(`🔄 Starting article import for URL: ${url}`);
@@ -71,7 +72,8 @@ export async function importDocumentService(
         importUrl: url,
         isPrivate,
       },
-      agentIds
+      agentIds,
+      notifyOnComplete
     );
 
     if (result.isError()) {

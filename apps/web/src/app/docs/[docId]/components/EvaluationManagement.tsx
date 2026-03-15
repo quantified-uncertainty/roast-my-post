@@ -9,8 +9,10 @@ import { useRouter } from "next/navigation";
 import {
   createOrRerunEvaluation,
   deleteEvaluation,
+  setDocumentNotification,
 } from "@/app/docs/[docId]/actions/evaluation-actions";
 import { AgentBadges } from "@/components/AgentBadges";
+import { NotificationCheckbox } from "@/components/NotificationCheckbox";
 import { AgentIcon } from "@/components/AgentIcon";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
@@ -35,6 +37,7 @@ interface EvaluationManagementProps {
   evaluations: Array<Evaluation & { jobs?: Array<{ status: string }> }>;
   availableAgents: Agent[];
   isOwner: boolean;
+  notifyOnComplete: boolean;
 }
 
 export function EvaluationManagement({
@@ -42,6 +45,7 @@ export function EvaluationManagement({
   evaluations,
   availableAgents,
   isOwner,
+  notifyOnComplete: initialNotify,
 }: EvaluationManagementProps) {
   const router = useRouter();
   const { handleRerun, runningEvals } = useEvaluationRerun({
@@ -50,6 +54,15 @@ export function EvaluationManagement({
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
   const [deletingEvals, setDeletingEvals] = useState<Set<string>>(new Set());
   const [sortedAgents, setSortedAgents] = useState<Agent[]>([]);
+  const [notifyOnComplete, setNotifyOnComplete] = useState(initialNotify);
+
+  const handleNotifyToggle = async (checked: boolean) => {
+    setNotifyOnComplete(checked);
+    const result = await setDocumentNotification(docId, checked);
+    if (!result.success) {
+      setNotifyOnComplete(!checked); // revert on failure
+    }
+  };
 
   // Sort available agents: recommended first, then regular, then deprecated
   useEffect(() => {
@@ -137,6 +150,17 @@ export function EvaluationManagement({
           )}
         </div>
       </div>
+
+      {/* Email notification toggle */}
+      {isOwner && evaluations.length > 0 && (
+        <div className="mb-8">
+          <NotificationCheckbox
+            id="notify-on-complete"
+            checked={notifyOnComplete}
+            onChange={handleNotifyToggle}
+          />
+        </div>
+      )}
 
       {/* Add More Agents */}
       {isOwner && sortedAgents.length > 0 && (

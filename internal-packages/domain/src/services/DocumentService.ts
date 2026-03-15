@@ -17,7 +17,8 @@ import { generateMarkdownPrepend } from '../utils/documentMetadata';
 import type { DocumentValidator } from '../validators/DocumentValidator';
 import type { EvaluationService } from './EvaluationService';
 import type { Logger } from '../core/logger';
-import { 
+
+import {
   DocumentEntity,
   DocumentWithEvaluations,
   CreateDocumentData,
@@ -64,7 +65,8 @@ export class DocumentService {
   async createDocument(
     userId: string,
     data: CreateDocumentRequest,
-    agentIds?: string[]
+    agentIds?: string[],
+    notifyOnComplete?: boolean
   ): Promise<Result<DocumentEntity, AppError>> {
     try {
       // Generate title if not provided
@@ -104,7 +106,8 @@ export class DocumentService {
         ephemeralBatchId: data.ephemeralBatchId,
         markdownPrepend,
         isPrivate: data.isPrivate || false,
-        submitterNotes: data.submitterNotes
+        submitterNotes: data.submitterNotes,
+        notifyOnComplete: notifyOnComplete ?? false,
       } as RepositoryCreateDocumentData;
 
       const repoDocument = await this.docRepo.create(createData);
@@ -115,7 +118,7 @@ export class DocumentService {
         const evaluationResult = await this.evaluationService.createEvaluationsForDocument({
           documentId: document.id,
           agentIds,
-          userId
+          userId,
         });
 
         if (evaluationResult.isError()) {
@@ -383,6 +386,33 @@ export class DocumentService {
       this.logger.error('Error checking document ownership', { error, docId, userId });
       return Result.fail(
         new AppError('Failed to check ownership', 'OWNERSHIP_CHECK_ERROR', 500, error)
+      );
+    }
+  }
+
+  /**
+   * Set the notification preference for a document.
+   * Only the document owner can change this setting.
+   */
+  async setNotifyOnComplete(
+    docId: string,
+    userId: string,
+    notifyOnComplete: boolean
+  ): Promise<Result<void, AppError>> {
+    try {
+      const isOwner = await this.docRepo.checkOwnership(docId, userId);
+      if (!isOwner) {
+        return Result.fail(
+          new AuthorizationError('You do not have permission to update this document')
+        );
+      }
+
+      await this.docRepo.setNotifyOnComplete(docId, notifyOnComplete);
+      return Result.ok(undefined);
+    } catch (error) {
+      this.logger.error('Error updating notification preference', { error, docId, userId });
+      return Result.fail(
+        new AppError('Failed to update notification preference', 'NOTIFICATION_UPDATE_ERROR', 500, error)
       );
     }
   }

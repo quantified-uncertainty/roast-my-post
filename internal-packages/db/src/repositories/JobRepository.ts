@@ -94,6 +94,16 @@ export interface UpdateJobStatusData {
   attempts?: number;
 }
 
+export interface BatchCompletionResult {
+  id: string;
+  completedAt: Date;
+}
+
+export interface DocumentCompletionResult {
+  id: string;
+  notifiedAt: Date;
+}
+
 export interface StaleJobCriteria {
   status: JobStatus;
   thresholdMs: number;
@@ -114,6 +124,9 @@ export interface JobRepositoryInterface {
   findJobsForCostUpdate(limit: number, maxAgeHours?: number): Promise<JobEntity[]>;
   updateCost(id: string, cost: number): Promise<JobEntity>;
   findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]>;
+  tryMarkBatchCompleted(batchId: string): Promise<BatchCompletionResult | null>;
+  getDocumentIdForJob(jobId: string): Promise<string | null>;
+  tryMarkDocumentCompleted(documentId: string): Promise<DocumentCompletionResult | null>;
 }
 
 export class JobRepository implements JobRepositoryInterface {
@@ -308,6 +321,73 @@ export class JobRepository implements JobRepositoryInterface {
   /**
    * Convert database record with relations to job with relations
    */
+  /**
+   * Atomically mark a batch as completed if all jobs are in terminal states.
+   * Returns the batch ID if this call "won" the completion, null otherwise.
+   * The `completedAt IS NULL` condition prevents duplicate completions.
+   */
+  async tryMarkBatchCompleted(batchId: string): Promise<BatchCompletionResult | null> {
+    const result = await this.prisma.$queryRaw<BatchCompletionResult[]>`
+      UPDATE "AgentEvalBatch"
+      SET "completedAt" = NOW()
+      WHERE id = ${batchId}
+        AND "completedAt" IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM "Job"
+          WHERE "agentEvalBatchId" = ${batchId}
+            AND status IN ('PENDING', 'RUNNING')
+        )
+      RETURNING id, "completedAt"
+    `;
+
+    return result.length > 0 ? result[0] : null;
+  }
+
+  /**
+   * Get the documentId associated with a job (via its evaluation).
+   */
+  async getDocumentIdForJob(jobId: string): Promise<string | null> {
+    const result = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { evaluation: { select: { documentId: true } } },
+    });
+    return result?.evaluation?.documentId ?? null;
+  }
+
+  /**
+   * Atomically mark a document as notification-sent if all jobs are terminal.
+   * Returns the document ID if this call "won" the completion, null otherwise.
+   *
+   * Supports re-evaluations: if new jobs were created after the last notification,
+   * the notification cycle resets automatically (no external reset needed).
+   */
+  async tryMarkDocumentCompleted(documentId: string): Promise<DocumentCompletionResult | null> {
+    const result = await this.prisma.$queryRaw<DocumentCompletionResult[]>`
+      UPDATE "Document"
+      SET "notifiedAt" = NOW()
+      WHERE id = ${documentId}
+        AND "notifyOnComplete" = true
+        AND NOT EXISTS (
+          SELECT 1 FROM "Job" j
+          JOIN "Evaluation" e ON e.id = j."evaluationId"
+          WHERE e."documentId" = ${documentId}
+            AND j.status IN ('PENDING', 'RUNNING')
+        )
+        AND (
+          "notifiedAt" IS NULL
+          OR EXISTS (
+            SELECT 1 FROM "Job" j
+            JOIN "Evaluation" e ON e.id = j."evaluationId"
+            WHERE e."documentId" = ${documentId}
+              AND j."createdAt" > "Document"."notifiedAt"
+          )
+        )
+      RETURNING id, "notifiedAt"
+    `;
+
+    return result.length > 0 ? result[0] : null;
+  }
+
   private toJobWithRelations(job: any): JobWithRelations {
     return {
       ...this.toDomainEntity(job),

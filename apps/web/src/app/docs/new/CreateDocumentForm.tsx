@@ -7,6 +7,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { AgentBadges } from "@/components/AgentBadges";
+import { NotificationCheckbox } from "@/components/NotificationCheckbox";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import { Label } from "@/components/ui/label";
@@ -293,6 +294,7 @@ export default function CreateDocumentForm() {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importIsPrivate, setImportIsPrivate] = useState(true); // Default to private
+  const [notifyOnComplete, setNotifyOnComplete] = useState(false);
 
   // Agent selection state
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -376,7 +378,7 @@ export default function CreateDocumentForm() {
     try {
       setIsImporting(true);
       setImportError(null);
-      await importDocument(importUrl.trim(), selectedAgentIds, importIsPrivate);
+      await importDocument(importUrl.trim(), selectedAgentIds, importIsPrivate, notifyOnComplete);
     } catch (err) {
       setImportError(
         err instanceof Error ? err.message : "Failed to import document"
@@ -389,7 +391,7 @@ export default function CreateDocumentForm() {
   const onSubmit = async (data: DocumentInput) => {
     try {
       const result = documentSchema.parse(data);
-      await createDocument(result, selectedAgentIds);
+      await createDocument(result, selectedAgentIds, notifyOnComplete);
     } catch (error) {
       // Ignore Next.js redirect errors
       if (error instanceof Error && error.message === "NEXT_REDIRECT") {
@@ -530,6 +532,14 @@ export default function CreateDocumentForm() {
                     />
                   )}
                 </>
+              )}
+
+              {selectedAgentIds.length > 0 && (
+                <NotificationCheckbox
+                  id="import-notify"
+                  checked={notifyOnComplete}
+                  onChange={setNotifyOnComplete}
+                />
               )}
 
               {importError && (
@@ -686,6 +696,14 @@ export default function CreateDocumentForm() {
                       />
                     )}
                   </>
+                )}
+
+                {selectedAgentIds.length > 0 && (
+                  <NotificationCheckbox
+                    id="manual-notify"
+                    checked={notifyOnComplete}
+                    onChange={setNotifyOnComplete}
+                  />
                 )}
 
                 {errors.root && (

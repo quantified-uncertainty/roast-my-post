@@ -243,7 +243,7 @@ kubectl get pods -n roast-my-post-staging
 ```bash
 # Tail with stern (preferred — color-coded per pod):
 stern -n roast-my-post roast-my-post-worker --tail 50
-stern -n roast-my-post-staging roast-my-post-worker --tail 50
+stern -n roast-my-post-staging roast-my-post-staging-worker --tail 50
 ```
 
 **NOTE:** `kubectl logs -f deploy/...` only tails ONE pod. Always use `-l` label selector or `stern` to tail all replicas.
