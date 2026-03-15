@@ -5,7 +5,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-COMPOSE_FILE="$HOME/dev/ozzie/dev/docker-compose.yml"
+COMPOSE_FILE="$REPO_ROOT/dev/docker-compose.dev.yml"
 SESSION_NAME="roast-dev"
 
 start_dev() {
