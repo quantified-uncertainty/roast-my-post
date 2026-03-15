@@ -7,6 +7,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { AgentBadges } from "@/components/AgentBadges";
+import { NotificationCheckbox } from "@/components/NotificationCheckbox";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 import { Label } from "@/components/ui/label";
@@ -534,18 +535,11 @@ export default function CreateDocumentForm() {
               )}
 
               {selectedAgentIds.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="import-notify"
-                    checked={notifyOnComplete}
-                    onChange={(e) => setNotifyOnComplete(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="import-notify" className="text-sm text-gray-700">
-                    Email me when evaluations complete
-                  </label>
-                </div>
+                <NotificationCheckbox
+                  id="import-notify"
+                  checked={notifyOnComplete}
+                  onChange={setNotifyOnComplete}
+                />
               )}
 
               {importError && (
@@ -705,18 +699,11 @@ export default function CreateDocumentForm() {
                 )}
 
                 {selectedAgentIds.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="manual-notify"
-                      checked={notifyOnComplete}
-                      onChange={(e) => setNotifyOnComplete(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label htmlFor="manual-notify" className="text-sm text-gray-700">
-                      Email me when evaluations complete
-                    </label>
-                  </div>
+                  <NotificationCheckbox
+                    id="manual-notify"
+                    checked={notifyOnComplete}
+                    onChange={setNotifyOnComplete}
+                  />
                 )}
 
                 {errors.root && (

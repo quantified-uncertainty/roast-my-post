@@ -26,6 +26,7 @@ import {
   type DocumentInput,
   documentSchema,
 } from "@/app/docs/new/schema";
+import { NotificationCheckbox } from "@/components/NotificationCheckbox";
 import { updateDocument } from "./actions";
 import { setDocumentNotification } from "../actions/evaluation-actions";
 
@@ -377,18 +378,12 @@ export default function EditDocumentPage({ params }: Props) {
               </FormField>
 
               {evaluationCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="edit-notify"
-                    checked={notifyOnComplete}
-                    onChange={(e) => setNotifyOnComplete(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="edit-notify" className="text-sm text-gray-700">
-                    Email me when re-evaluations complete
-                  </label>
-                </div>
+                <NotificationCheckbox
+                  id="edit-notify"
+                  checked={notifyOnComplete}
+                  onChange={setNotifyOnComplete}
+                  label="Email me when re-evaluations complete"
+                />
               )}
 
               {errors.root && (

@@ -12,6 +12,7 @@ import {
   setDocumentNotification,
 } from "@/app/docs/[docId]/actions/evaluation-actions";
 import { AgentBadges } from "@/components/AgentBadges";
+import { NotificationCheckbox } from "@/components/NotificationCheckbox";
 import { AgentIcon } from "@/components/AgentIcon";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
@@ -152,17 +153,12 @@ export function EvaluationManagement({
 
       {/* Email notification toggle */}
       {isOwner && evaluations.length > 0 && (
-        <div className="mb-8 flex items-center gap-2">
-          <input
-            type="checkbox"
+        <div className="mb-8">
+          <NotificationCheckbox
             id="notify-on-complete"
             checked={notifyOnComplete}
-            onChange={(e) => handleNotifyToggle(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            onChange={handleNotifyToggle}
           />
-          <label htmlFor="notify-on-complete" className="text-sm text-gray-700">
-            Email me when evaluations complete
-          </label>
         </div>
       )}
 
