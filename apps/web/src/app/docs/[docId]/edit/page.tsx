@@ -137,8 +137,9 @@ export default function EditDocumentPage({ params }: Props) {
           submitterNotes: document.submitterNotes || "",
         });
         
-        // Update the local state for privacy
+        // Update the local state for privacy and notification
         setIsPrivate(document.isPrivate ?? false);
+        setNotifyOnComplete(document.notifyOnComplete ?? false);
 
         // Count the number of evaluations
         const evalCount = document.reviews?.length || 0;

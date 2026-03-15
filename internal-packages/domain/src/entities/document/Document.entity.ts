@@ -165,6 +165,7 @@ export interface DocumentWithEvaluations {
   };
   importUrl?: string;
   ephemeralBatchId?: string;
+  notifyOnComplete?: boolean;
   reviews: any[]; // Will be properly typed with Evaluation entity
   intendedAgents: string[];
 }

@@ -44,6 +44,7 @@ export interface DocumentWithEvaluations {
   };
   importUrl: string | null;
   ephemeralBatchId: string | null;
+  notifyOnComplete: boolean;
   reviews: any[];
   intendedAgents: string[];
 }
@@ -633,6 +634,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
       } : undefined,
       importUrl: latestVersion.importUrl,
       ephemeralBatchId: doc.ephemeralBatchId,
+      notifyOnComplete: doc.notifyOnComplete,
       reviews,
       intendedAgents: latestVersion.intendedAgents || []
     };
