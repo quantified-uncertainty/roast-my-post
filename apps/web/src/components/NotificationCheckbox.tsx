@@ -1,7 +1,7 @@
 interface NotificationCheckboxProps {
   id: string;
   checked: boolean;
-  onChange: (checked: boolean) => void;
+  onChange: (checked: boolean) => void | Promise<void>;
   label?: string;
 }
 
@@ -17,7 +17,7 @@ export function NotificationCheckbox({
         type="checkbox"
         id={id}
         checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        onChange={(e) => void onChange(e.target.checked)}
         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
       />
       <label htmlFor={id} className="text-sm text-gray-700">
