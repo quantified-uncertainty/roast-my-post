@@ -7,6 +7,7 @@
 
 import { Resend } from 'resend';
 import { config } from '@roast/domain';
+import { escapeXml } from '@roast/ai';
 import type { Logger } from '../types';
 
 export interface BatchCompletionEmailData {
@@ -61,7 +62,7 @@ export class EmailService {
 
     const description = isDocumentNotification
       ? `Your document evaluations have finished. ${data.completedCount} of ${data.totalCount} evaluations completed successfully.`
-      : `Your evaluation batch <strong>${escapeHtml(batchLabel)}</strong> for agent <strong>${escapeHtml(data.agentName)}</strong> has finished.`;
+      : `Your evaluation batch <strong>${escapeXml(batchLabel)}</strong> for agent <strong>${escapeXml(data.agentName)}</strong> has finished.`;
 
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -112,12 +113,4 @@ export class EmailService {
       return false;
     }
   }
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }

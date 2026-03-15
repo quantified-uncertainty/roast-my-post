@@ -391,8 +391,8 @@ export class JobRepository implements JobRepositoryInterface {
 
     if (!batch) return null;
 
-    const completedCount = batch.jobs.filter(j => j.status === 'COMPLETED').length;
-    const failedCount = batch.jobs.filter(j => j.status === 'FAILED').length;
+    const completedCount = batch.jobs.filter(j => j.status === JobStatus.COMPLETED).length;
+    const failedCount = batch.jobs.filter(j => j.status === JobStatus.FAILED).length;
 
     return {
       id: batch.id,
@@ -490,8 +490,8 @@ export class JobRepository implements JobRepositoryInterface {
     if (!doc) return null;
 
     const allJobs = doc.evaluations.flatMap(e => e.jobs);
-    const completedCount = allJobs.filter(j => j.status === 'COMPLETED').length;
-    const failedCount = allJobs.filter(j => j.status === 'FAILED').length;
+    const completedCount = allJobs.filter(j => j.status === JobStatus.COMPLETED).length;
+    const failedCount = allJobs.filter(j => j.status === JobStatus.FAILED).length;
 
     return {
       id: doc.id,

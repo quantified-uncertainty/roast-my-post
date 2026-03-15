@@ -126,8 +126,10 @@ export class JobService {
 
     // Update database to mark as cancelled
     const cancelledJob = await this.markAsCancelled(jobId);
-    await this.checkBatchCompletion(cancelledJob);
-    await this.checkDocumentCompletion(cancelledJob);
+    await Promise.all([
+      this.checkBatchCompletion(cancelledJob),
+      this.checkDocumentCompletion(cancelledJob),
+    ]);
     return cancelledJob;
   }
 
@@ -174,8 +176,10 @@ export class JobService {
       durationInSeconds: data.durationInSeconds,
       logs: data.logs,
     });
-    await this.checkBatchCompletion(completedJob);
-    await this.checkDocumentCompletion(completedJob);
+    await Promise.all([
+      this.checkBatchCompletion(completedJob),
+      this.checkDocumentCompletion(completedJob),
+    ]);
     return completedJob;
   }
 
@@ -188,8 +192,10 @@ export class JobService {
       error: error instanceof Error ? error.message : String(error),
       completedAt: new Date(),
     });
-    await this.checkBatchCompletion(failedJob);
-    await this.checkDocumentCompletion(failedJob);
+    await Promise.all([
+      this.checkBatchCompletion(failedJob),
+      this.checkDocumentCompletion(failedJob),
+    ]);
     return failedJob;
   }
 
