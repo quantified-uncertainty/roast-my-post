@@ -5,6 +5,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+COMPOSE_FILE="$HOME/dev/ozzie/dev/docker-compose.yml"
 SESSION_NAME="roast-dev"
 
 start_dev() {
@@ -15,19 +16,29 @@ start_dev() {
 
     cd "$REPO_ROOT"
 
-    # Create new detached session with first window for web
-    tmux new-session -d -s "$SESSION_NAME" -n "dev" -c "$REPO_ROOT"
+    # Window 0 "db": Postgres in foreground
+    tmux new-session -d -s "$SESSION_NAME" -n "db" -c "$REPO_ROOT"
+    tmux send-keys -t "$SESSION_NAME:db" "docker compose -f $COMPOSE_FILE up" Enter
 
-    # Split vertically and run jobs in right pane
-    tmux split-window -h -t "$SESSION_NAME:dev" -c "$REPO_ROOT/internal-packages/jobs"
+    # Wait for Postgres to be ready
+    echo "Waiting for Postgres..."
+    for i in $(seq 1 30); do
+        if docker compose -f "$COMPOSE_FILE" exec -T db pg_isready -U postgres >/dev/null 2>&1; then
+            echo "Postgres ready"
+            break
+        fi
+        sleep 1
+    done
 
-    # Run web dev server in left pane
+    # Window 1 "dev": web (left) + worker (right)
+    tmux new-window -t "$SESSION_NAME" -n "dev" -c "$REPO_ROOT"
     tmux send-keys -t "$SESSION_NAME:dev.0" "pnpm run dev -H 0.0.0.0" Enter
 
-    # Run jobs processor in right pane
+    tmux split-window -h -t "$SESSION_NAME:dev" -c "$REPO_ROOT/internal-packages/jobs"
     tmux send-keys -t "$SESSION_NAME:dev.1" "NODE_ENV=development pnpm run process-pgboss" Enter
 
-    # Select left pane
+    # Start on the dev window
+    tmux select-window -t "$SESSION_NAME:dev"
     tmux select-pane -t "$SESSION_NAME:dev.0"
 
     echo "Dev session '$SESSION_NAME' started"
@@ -42,6 +53,8 @@ stop_dev() {
     else
         echo "Session '$SESSION_NAME' is not running."
     fi
+    # Stop Postgres container
+    docker compose -f "$COMPOSE_FILE" stop 2>/dev/null
 }
 
 status_dev() {
@@ -70,14 +83,14 @@ restart_dev() {
 
     echo "Restarting dev environment..."
 
-    # Send Ctrl+C to both panes to kill running processes
+    # Send Ctrl+C to web and worker panes (not postgres)
     tmux send-keys -t "$SESSION_NAME:dev.0" C-c
     tmux send-keys -t "$SESSION_NAME:dev.1" C-c
 
     # Wait a moment for processes to die
     sleep 1
 
-    # Clear visible screen and scrollback buffer in both panes
+    # Clear visible screen and scrollback buffer in web and worker panes
     tmux send-keys -t "$SESSION_NAME:dev.0" "clear" Enter
     tmux send-keys -t "$SESSION_NAME:dev.1" "clear" Enter
     sleep 0.2
