@@ -99,34 +99,9 @@ export interface BatchCompletionResult {
   completedAt: Date;
 }
 
-export interface BatchNotificationData {
-  id: string;
-  name: string | null;
-  agentId: string;
-  agentName: string;
-  notifyOnComplete: boolean;
-  notifiedAt: Date | null;
-  userEmail: string | null;
-  completedCount: number;
-  failedCount: number;
-  totalCount: number;
-  requestedDocumentIds: string[];
-}
-
 export interface DocumentCompletionResult {
   id: string;
   notifiedAt: Date;
-}
-
-export interface DocumentNotificationData {
-  id: string;
-  title: string;
-  notifyOnComplete: boolean;
-  notifiedAt: Date | null;
-  userEmail: string | null;
-  completedCount: number;
-  failedCount: number;
-  totalCount: number;
 }
 
 export interface StaleJobCriteria {
@@ -150,12 +125,8 @@ export interface JobRepositoryInterface {
   updateCost(id: string, cost: number): Promise<JobEntity>;
   findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]>;
   tryMarkBatchCompleted(batchId: string): Promise<BatchCompletionResult | null>;
-  getBatchForNotification(batchId: string): Promise<BatchNotificationData | null>;
-  markBatchNotified(batchId: string): Promise<void>;
   getDocumentIdForJob(jobId: string): Promise<string | null>;
   tryMarkDocumentCompleted(documentId: string): Promise<DocumentCompletionResult | null>;
-  getDocumentForNotification(documentId: string): Promise<DocumentNotificationData | null>;
-  resetDocumentNotification(documentId: string): Promise<void>;
 }
 
 export class JobRepository implements JobRepositoryInterface {
@@ -373,55 +344,6 @@ export class JobRepository implements JobRepositoryInterface {
   }
 
   /**
-   * Fetch batch data needed for sending completion notifications.
-   */
-  async getBatchForNotification(batchId: string): Promise<BatchNotificationData | null> {
-    const batch = await this.prisma.agentEvalBatch.findUnique({
-      where: { id: batchId },
-      include: {
-        user: { select: { email: true } },
-        agent: {
-          include: {
-            versions: { orderBy: { version: 'desc' as const }, take: 1, select: { name: true } },
-          },
-        },
-        jobs: { select: { status: true } },
-      },
-    });
-
-    if (!batch) return null;
-
-    const completedCount = batch.jobs.filter(j => j.status === JobStatus.COMPLETED).length;
-    const failedCount = batch.jobs.filter(j => j.status === JobStatus.FAILED).length;
-
-    return {
-      id: batch.id,
-      name: batch.name,
-      agentId: batch.agentId,
-      agentName: batch.agent.versions[0]?.name || 'Unknown Agent',
-      notifyOnComplete: batch.notifyOnComplete,
-      notifiedAt: batch.notifiedAt,
-      userEmail: batch.user.email,
-      completedCount,
-      failedCount,
-      totalCount: batch.jobs.length,
-      requestedDocumentIds: batch.requestedDocumentIds,
-    };
-  }
-
-  /**
-   * Atomically mark a batch as notified (prevents duplicate emails).
-   */
-  async markBatchNotified(batchId: string): Promise<void> {
-    await this.prisma.$queryRaw`
-      UPDATE "AgentEvalBatch"
-      SET "notifiedAt" = NOW()
-      WHERE id = ${batchId}
-        AND "notifiedAt" IS NULL
-    `;
-  }
-
-  /**
    * Get the documentId associated with a job (via its evaluation).
    */
   async getDocumentIdForJob(jobId: string): Promise<string | null> {
@@ -464,56 +386,6 @@ export class JobRepository implements JobRepositoryInterface {
     `;
 
     return result.length > 0 ? result[0] : null;
-  }
-
-  /**
-   * Fetch document data needed for sending completion notifications.
-   */
-  async getDocumentForNotification(documentId: string): Promise<DocumentNotificationData | null> {
-    const doc = await this.prisma.document.findUnique({
-      where: { id: documentId },
-      include: {
-        submittedBy: { select: { email: true } },
-        versions: {
-          orderBy: { version: 'desc' as const },
-          take: 1,
-          select: { title: true },
-        },
-        evaluations: {
-          include: {
-            jobs: { select: { status: true } },
-          },
-        },
-      },
-    });
-
-    if (!doc) return null;
-
-    const allJobs = doc.evaluations.flatMap(e => e.jobs);
-    const completedCount = allJobs.filter(j => j.status === JobStatus.COMPLETED).length;
-    const failedCount = allJobs.filter(j => j.status === JobStatus.FAILED).length;
-
-    return {
-      id: doc.id,
-      title: doc.versions[0]?.title || 'Untitled Document',
-      notifyOnComplete: doc.notifyOnComplete,
-      notifiedAt: doc.notifiedAt,
-      userEmail: doc.submittedBy.email,
-      completedCount,
-      failedCount,
-      totalCount: allJobs.length,
-    };
-  }
-
-  /**
-   * Reset notifiedAt so a future job transition can re-trigger notification.
-   * Used when email delivery fails after completion was already detected.
-   */
-  async resetDocumentNotification(documentId: string): Promise<void> {
-    await this.prisma.document.update({
-      where: { id: documentId },
-      data: { notifiedAt: null },
-    });
   }
 
   private toJobWithRelations(job: any): JobWithRelations {

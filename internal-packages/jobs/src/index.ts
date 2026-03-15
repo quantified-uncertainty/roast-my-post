@@ -6,7 +6,7 @@
 export { JobOrchestrator, type JobOrchestratorInterface } from './core/JobOrchestrator';
 export { PgBossService } from './core/PgBossService';
 export { JobService, type BatchCompletionHandler, type DocumentCompletionHandler } from './core/JobService';
-export { EmailService, type BatchCompletionEmailData } from './core/EmailService';
+export { EmailService, type CompletionEmailData, type BatchCompletionEmailData, type DocumentCompletionEmailData } from './core/EmailService';
 export { BatchNotificationHandler } from './core/BatchNotificationHandler';
 export { DocumentNotificationHandler } from './core/DocumentNotificationHandler';
 

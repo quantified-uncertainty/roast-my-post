@@ -93,6 +93,7 @@ export interface DocumentRepositoryInterface {
   create(data: CreateDocumentData): Promise<DocumentEntity>;
   updateContent(id: string, content: string, title: string, markdownPrepend?: string): Promise<void>;
   updateMetadata(id: string, data: { intendedAgentIds?: string[] }): Promise<void>;
+  setNotifyOnComplete(id: string, notifyOnComplete: boolean): Promise<void>;
   delete(id: string): Promise<boolean>;
   checkOwnership(docId: string, userId: string): Promise<boolean>;
   search(query: string, limit?: number, requestingUserId?: string): Promise<any[]>;
@@ -450,6 +451,16 @@ export class DocumentRepository implements DocumentRepositoryInterface {
         });
       }
     }
+  }
+
+  /**
+   * Set the notification preference for a document.
+   */
+  async setNotifyOnComplete(id: string, notifyOnComplete: boolean): Promise<void> {
+    await this.prisma.document.update({
+      where: { id },
+      data: { notifyOnComplete },
+    });
   }
 
   /**

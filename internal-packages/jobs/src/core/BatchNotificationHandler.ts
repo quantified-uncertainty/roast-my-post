@@ -5,23 +5,21 @@
  * notifications when batches complete. Used by the worker process.
  */
 
-import type { JobRepository } from '@roast/db';
+import type { NotificationRepository } from '@roast/db';
 import type { BatchCompletionHandler } from './JobService';
 import type { EmailService } from './EmailService';
 import type { Logger } from '../types';
 
 export class BatchNotificationHandler implements BatchCompletionHandler {
   constructor(
-    private jobRepository: JobRepository,
+    private notificationRepository: NotificationRepository,
     private emailService: EmailService,
     private logger: Logger
   ) {}
 
   async onBatchCompleted(batchId: string): Promise<void> {
-    if (!this.emailService.isConfigured) return;
-
     try {
-      const batch = await this.jobRepository.getBatchForNotification(batchId);
+      const batch = await this.notificationRepository.getBatchForNotification(batchId);
       if (!batch) return;
       if (!batch.notifyOnComplete) return;
       if (batch.notifiedAt) return;
@@ -31,7 +29,8 @@ export class BatchNotificationHandler implements BatchCompletionHandler {
         return;
       }
 
-      const emailSent = await this.emailService.sendBatchCompletionEmail({
+      const emailSent = await this.emailService.sendCompletionEmail({
+        type: 'batch',
         recipientEmail: batch.userEmail,
         batchName: batch.name,
         agentName: batch.agentName,
@@ -40,11 +39,10 @@ export class BatchNotificationHandler implements BatchCompletionHandler {
         failedCount: batch.failedCount,
         totalCount: batch.totalCount,
         batchId: batch.id,
-        documentId: batch.requestedDocumentIds.length === 1 ? batch.requestedDocumentIds[0] : undefined,
       });
 
       if (emailSent) {
-        await this.jobRepository.markBatchNotified(batchId);
+        await this.notificationRepository.markBatchNotified(batchId);
       }
     } catch (error) {
       // Email notification failure must not affect job processing

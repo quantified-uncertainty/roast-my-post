@@ -6,23 +6,21 @@
  * Used by the worker process.
  */
 
-import type { JobRepository } from '@roast/db';
+import type { NotificationRepository } from '@roast/db';
 import type { DocumentCompletionHandler } from './JobService';
 import type { EmailService } from './EmailService';
 import type { Logger } from '../types';
 
 export class DocumentNotificationHandler implements DocumentCompletionHandler {
   constructor(
-    private jobRepository: JobRepository,
+    private notificationRepository: NotificationRepository,
     private emailService: EmailService,
     private logger: Logger
   ) {}
 
   async onDocumentCompleted(documentId: string): Promise<void> {
-    if (!this.emailService.isConfigured) return;
-
     try {
-      const doc = await this.jobRepository.getDocumentForNotification(documentId);
+      const doc = await this.notificationRepository.getDocumentForNotification(documentId);
       if (!doc) return;
       if (!doc.notifyOnComplete) return;
 
@@ -31,23 +29,18 @@ export class DocumentNotificationHandler implements DocumentCompletionHandler {
         return;
       }
 
-      const emailSent = await this.emailService.sendBatchCompletionEmail({
+      const emailSent = await this.emailService.sendCompletionEmail({
+        type: 'document',
         recipientEmail: doc.userEmail,
-        batchName: null,
-        agentName: '',
-        agentId: '',
+        documentId,
         completedCount: doc.completedCount,
         failedCount: doc.failedCount,
         totalCount: doc.totalCount,
-        batchId: documentId,
-        documentId,
       });
 
-      if (emailSent) {
-        this.logger.info(`Document completion email sent for ${documentId}`);
-      } else {
+      if (!emailSent) {
         // Reset notifiedAt so a future job transition can re-trigger notification
-        await this.jobRepository.resetDocumentNotification(documentId);
+        await this.notificationRepository.resetDocumentNotification(documentId);
         this.logger.warn(`Document ${documentId} email failed, reset notifiedAt for retry`);
       }
     } catch (error) {

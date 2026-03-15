@@ -8,6 +8,7 @@ import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 import { validateServerActionAccess } from "@/infrastructure/http/guards";
 import { chargeQuotaForServerAction } from "@/infrastructure/rate-limiting/server-action-helpers";
+import { getServices } from "@/application/services/ServiceFactory";
 
 /**
  * Creates a new job for an evaluation, allowing it to be re-run
@@ -134,18 +135,16 @@ export async function setDocumentNotification(
       return { success: false, error: "User must be logged in" };
     }
 
-    const document = await prisma.document.findFirst({
-      where: { id: documentId, submittedById: session.user.id },
-    });
+    const { documentService } = getServices();
+    const result = await documentService.setNotifyOnComplete(
+      documentId,
+      session.user.id,
+      notifyOnComplete
+    );
 
-    if (!document) {
-      return { success: false, error: "Document not found or not owned by you" };
+    if (result.isError()) {
+      return { success: false, error: result.error()?.message || "Failed to update notification preference" };
     }
-
-    await prisma.document.update({
-      where: { id: documentId },
-      data: { notifyOnComplete },
-    });
 
     revalidatePath(`/docs/${documentId}`);
     return { success: true };

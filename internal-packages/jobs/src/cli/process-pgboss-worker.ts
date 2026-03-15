@@ -18,7 +18,7 @@ loadWebAppEnvironment(workspaceRoot);
 process.env.AI_LOG_LEVEL ??= 'warn';
 
 import { config } from '@roast/domain';
-import { JobRepository } from '@roast/db';
+import { JobRepository, NotificationRepository } from '@roast/db';
 import { JobOrchestrator } from '../core/JobOrchestrator';
 import { JobService } from '../core/JobService';
 import { PgBossService } from '../core/PgBossService';
@@ -65,10 +65,12 @@ class PgBossWorker {
     // Wire up email notifications for batch and document completions
     const emailService = new EmailService(logger);
     if (emailService.isConfigured) {
-      const batchHandler = new BatchNotificationHandler(this.jobRepository, emailService, logger);
+      const notificationRepository = new NotificationRepository();
+
+      const batchHandler = new BatchNotificationHandler(notificationRepository, emailService, logger);
       this.jobService.setBatchCompletionHandler(batchHandler);
 
-      const documentHandler = new DocumentNotificationHandler(this.jobRepository, emailService, logger);
+      const documentHandler = new DocumentNotificationHandler(notificationRepository, emailService, logger);
       this.jobService.setDocumentCompletionHandler(documentHandler);
 
       logger.info('Email notifications enabled for batch and document completions');

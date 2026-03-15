@@ -391,6 +391,33 @@ export class DocumentService {
   }
 
   /**
+   * Set the notification preference for a document.
+   * Only the document owner can change this setting.
+   */
+  async setNotifyOnComplete(
+    docId: string,
+    userId: string,
+    notifyOnComplete: boolean
+  ): Promise<Result<void, AppError>> {
+    try {
+      const isOwner = await this.docRepo.checkOwnership(docId, userId);
+      if (!isOwner) {
+        return Result.fail(
+          new AuthorizationError('You do not have permission to update this document')
+        );
+      }
+
+      await this.docRepo.setNotifyOnComplete(docId, notifyOnComplete);
+      return Result.ok(undefined);
+    } catch (error) {
+      this.logger.error('Error updating notification preference', { error, docId, userId });
+      return Result.fail(
+        new AppError('Failed to update notification preference', 'NOTIFICATION_UPDATE_ERROR', 500, error)
+      );
+    }
+  }
+
+  /**
    * Get document statistics
    */
   async getStatistics(): Promise<Result<any, AppError>> {

@@ -2,7 +2,7 @@
  * EmailService
  *
  * Sends transactional emails via Resend.
- * Used by the worker to notify users when batches complete.
+ * Used by the worker to notify users when evaluations complete.
  */
 
 import { Resend } from 'resend';
@@ -10,17 +10,27 @@ import { config } from '@roast/domain';
 import { escapeXml } from '@roast/ai';
 import type { Logger } from '../types';
 
-export interface BatchCompletionEmailData {
+interface CompletionCounts {
   recipientEmail: string;
-  batchName: string | null;
-  agentName: string;
-  agentId: string;
   completedCount: number;
   failedCount: number;
   totalCount: number;
-  batchId: string;
-  documentId?: string;
 }
+
+export interface BatchCompletionEmailData extends CompletionCounts {
+  type: 'batch';
+  batchId: string;
+  batchName: string | null;
+  agentName: string;
+  agentId: string;
+}
+
+export interface DocumentCompletionEmailData extends CompletionCounts {
+  type: 'document';
+  documentId: string;
+}
+
+export type CompletionEmailData = BatchCompletionEmailData | DocumentCompletionEmailData;
 
 export class EmailService {
   private resend: Resend | null = null;
@@ -36,33 +46,14 @@ export class EmailService {
     return this.resend !== null && !!config.auth.emailFrom;
   }
 
-  async sendBatchCompletionEmail(data: BatchCompletionEmailData): Promise<boolean> {
+  async sendCompletionEmail(data: CompletionEmailData): Promise<boolean> {
     if (!this.isConfigured || !this.resend) {
-      this.logger.warn('Email not configured, skipping batch completion notification');
+      this.logger.warn('Email not configured, skipping completion notification');
       return false;
     }
 
     const baseUrl = config.auth.nextAuthUrl || 'https://roastmypost.com';
-    const isDocumentNotification = !!data.documentId;
-    const resultsUrl = isDocumentNotification
-      ? `${baseUrl}/docs/${data.documentId}/reader`
-      : `${baseUrl}/evaluators/${data.agentId}`;
-    const batchLabel = data.batchName || `Batch ${data.batchId.slice(0, 8)}`;
-    const successRate = data.totalCount > 0
-      ? Math.round((data.completedCount / data.totalCount) * 100)
-      : 0;
-
-    const subject = isDocumentNotification
-      ? `Your document evaluations are complete (${data.completedCount}/${data.totalCount} succeeded)`
-      : `Batch complete: ${batchLabel} (${successRate}% success)`;
-
-    const heading = isDocumentNotification
-      ? 'Document Evaluations Complete'
-      : 'Batch Evaluation Complete';
-
-    const description = isDocumentNotification
-      ? `Your document evaluations have finished. ${data.completedCount} of ${data.totalCount} evaluations completed successfully.`
-      : `Your evaluation batch <strong>${escapeXml(batchLabel)}</strong> for agent <strong>${escapeXml(data.agentName)}</strong> has finished.`;
+    const { subject, heading, description, resultsUrl, logId } = this.buildEmailContent(data, baseUrl);
 
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -102,15 +93,40 @@ export class EmailService {
       });
 
       if (sendError) {
-        this.logger.error(`Failed to send completion email for ${data.batchId}:`, sendError);
+        this.logger.error(`Failed to send completion email for ${logId}:`, sendError);
         return false;
       }
 
-      this.logger.info(`Completion email sent for ${data.batchId}`);
+      this.logger.info(`Completion email sent for ${logId}`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send completion email for ${data.batchId}:`, error);
+      this.logger.error(`Failed to send completion email for ${logId}:`, error);
       return false;
     }
+  }
+
+  private buildEmailContent(data: CompletionEmailData, baseUrl: string) {
+    if (data.type === 'document') {
+      return {
+        subject: `Your document evaluations are complete (${data.completedCount}/${data.totalCount} succeeded)`,
+        heading: 'Document Evaluations Complete',
+        description: `Your document evaluations have finished. ${data.completedCount} of ${data.totalCount} evaluations completed successfully.`,
+        resultsUrl: `${baseUrl}/docs/${data.documentId}/reader`,
+        logId: `document ${data.documentId}`,
+      };
+    }
+
+    const batchLabel = data.batchName || `Batch ${data.batchId.slice(0, 8)}`;
+    const successRate = data.totalCount > 0
+      ? Math.round((data.completedCount / data.totalCount) * 100)
+      : 0;
+
+    return {
+      subject: `Batch complete: ${batchLabel} (${successRate}% success)`,
+      heading: 'Batch Evaluation Complete',
+      description: `Your evaluation batch <strong>${escapeXml(batchLabel)}</strong> for agent <strong>${escapeXml(data.agentName)}</strong> has finished.`,
+      resultsUrl: `${baseUrl}/evaluators/${data.agentId}`,
+      logId: `batch ${data.batchId}`,
+    };
   }
 }
