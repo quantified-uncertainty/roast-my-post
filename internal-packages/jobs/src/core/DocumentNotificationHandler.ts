@@ -44,7 +44,7 @@ export class DocumentNotificationHandler implements DocumentCompletionHandler {
       });
 
       // notifiedAt is already set atomically by tryMarkDocumentCompleted
-      this.logger.info(`Document completion email sent for ${documentId} to ${doc.userEmail}`);
+      this.logger.info(`Document completion email sent for ${documentId}`);
     } catch (error) {
       // Email notification failure must not affect job processing
       this.logger.error(`Failed to send notification for document ${documentId}:`, error);
