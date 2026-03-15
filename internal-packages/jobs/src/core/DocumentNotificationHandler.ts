@@ -31,7 +31,7 @@ export class DocumentNotificationHandler implements DocumentCompletionHandler {
         return;
       }
 
-      await this.emailService.sendBatchCompletionEmail({
+      const emailSent = await this.emailService.sendBatchCompletionEmail({
         recipientEmail: doc.userEmail,
         batchName: null,
         agentName: '',
@@ -43,8 +43,13 @@ export class DocumentNotificationHandler implements DocumentCompletionHandler {
         documentId,
       });
 
-      // notifiedAt is already set atomically by tryMarkDocumentCompleted
-      this.logger.info(`Document completion email sent for ${documentId}`);
+      if (emailSent) {
+        this.logger.info(`Document completion email sent for ${documentId}`);
+      } else {
+        // Reset notifiedAt so a future job transition can re-trigger notification
+        await this.jobRepository.resetDocumentNotification(documentId);
+        this.logger.warn(`Document ${documentId} email failed, reset notifiedAt for retry`);
+      }
     } catch (error) {
       // Email notification failure must not affect job processing
       this.logger.error(`Failed to send notification for document ${documentId}:`, error);

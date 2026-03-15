@@ -219,6 +219,11 @@ export class JobService {
    * Uses an atomic UPDATE to ensure only one worker detects completion.
    */
   private async checkDocumentCompletion(job: JobEntity): Promise<void> {
+    // Only detect completion when a handler is attached (worker process).
+    // Without this guard, web-side cancellations would consume the completion
+    // edge and set notifiedAt without being able to send an email.
+    if (!this.documentCompletionHandler) return;
+
     try {
       const documentId = await this.jobRepository.getDocumentIdForJob(job.id);
       if (!documentId) return;
@@ -226,9 +231,7 @@ export class JobService {
       const result = await this.jobRepository.tryMarkDocumentCompleted(documentId);
       if (result) {
         this.logger.info(`Document ${result.id} evaluations completed`);
-        if (this.documentCompletionHandler) {
-          await this.documentCompletionHandler.onDocumentCompleted(result.id);
-        }
+        await this.documentCompletionHandler.onDocumentCompleted(result.id);
       }
     } catch (error) {
       // Document completion tracking is non-critical — don't fail the job

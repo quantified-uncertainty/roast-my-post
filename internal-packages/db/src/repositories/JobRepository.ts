@@ -155,6 +155,7 @@ export interface JobRepositoryInterface {
   getDocumentIdForJob(jobId: string): Promise<string | null>;
   tryMarkDocumentCompleted(documentId: string): Promise<DocumentCompletionResult | null>;
   getDocumentForNotification(documentId: string): Promise<DocumentNotificationData | null>;
+  resetDocumentNotification(documentId: string): Promise<void>;
 }
 
 export class JobRepository implements JobRepositoryInterface {
@@ -502,6 +503,17 @@ export class JobRepository implements JobRepositoryInterface {
       failedCount,
       totalCount: allJobs.length,
     };
+  }
+
+  /**
+   * Reset notifiedAt so a future job transition can re-trigger notification.
+   * Used when email delivery fails after completion was already detected.
+   */
+  async resetDocumentNotification(documentId: string): Promise<void> {
+    await this.prisma.document.update({
+      where: { id: documentId },
+      data: { notifiedAt: null },
+    });
   }
 
   private toJobWithRelations(job: any): JobWithRelations {
