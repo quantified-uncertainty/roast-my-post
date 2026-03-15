@@ -293,6 +293,7 @@ export default function CreateDocumentForm() {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importIsPrivate, setImportIsPrivate] = useState(true); // Default to private
+  const [notifyOnComplete, setNotifyOnComplete] = useState(false);
 
   // Agent selection state
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -376,7 +377,7 @@ export default function CreateDocumentForm() {
     try {
       setIsImporting(true);
       setImportError(null);
-      await importDocument(importUrl.trim(), selectedAgentIds, importIsPrivate);
+      await importDocument(importUrl.trim(), selectedAgentIds, importIsPrivate, notifyOnComplete);
     } catch (err) {
       setImportError(
         err instanceof Error ? err.message : "Failed to import document"
@@ -389,7 +390,7 @@ export default function CreateDocumentForm() {
   const onSubmit = async (data: DocumentInput) => {
     try {
       const result = documentSchema.parse(data);
-      await createDocument(result, selectedAgentIds);
+      await createDocument(result, selectedAgentIds, notifyOnComplete);
     } catch (error) {
       // Ignore Next.js redirect errors
       if (error instanceof Error && error.message === "NEXT_REDIRECT") {
@@ -530,6 +531,21 @@ export default function CreateDocumentForm() {
                     />
                   )}
                 </>
+              )}
+
+              {selectedAgentIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="import-notify"
+                    checked={notifyOnComplete}
+                    onChange={(e) => setNotifyOnComplete(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="import-notify" className="text-sm text-gray-700">
+                    Email me when evaluations complete
+                  </label>
+                </div>
               )}
 
               {importError && (
@@ -686,6 +702,21 @@ export default function CreateDocumentForm() {
                       />
                     )}
                   </>
+                )}
+
+                {selectedAgentIds.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="manual-notify"
+                      checked={notifyOnComplete}
+                      onChange={(e) => setNotifyOnComplete(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="manual-notify" className="text-sm text-gray-700">
+                      Email me when evaluations complete
+                    </label>
+                  </div>
                 )}
 
                 {errors.root && (

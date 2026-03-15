@@ -33,6 +33,7 @@ import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
 import { EmailService } from '../core/EmailService';
 import { BatchNotificationHandler } from '../core/BatchNotificationHandler';
+import { DocumentNotificationHandler } from '../core/DocumentNotificationHandler';
 
 interface JobWithAgentVersions {
   evaluation: {
@@ -61,14 +62,18 @@ class PgBossWorker {
     this.jobOrchestrator = new JobOrchestrator(this.jobRepository, logger, this.jobService);
     this.jobReconciliationService = new JobReconciliationService(this.jobRepository, this.pgBossService, logger);
 
-    // Wire up batch completion email notifications
+    // Wire up email notifications for batch and document completions
     const emailService = new EmailService(logger);
     if (emailService.isConfigured) {
-      const notificationHandler = new BatchNotificationHandler(this.jobRepository, emailService, logger);
-      this.jobService.setBatchCompletionHandler(notificationHandler);
-      logger.info('Email notifications enabled for batch completions');
+      const batchHandler = new BatchNotificationHandler(this.jobRepository, emailService, logger);
+      this.jobService.setBatchCompletionHandler(batchHandler);
+
+      const documentHandler = new DocumentNotificationHandler(this.jobRepository, emailService, logger);
+      this.jobService.setDocumentCompletionHandler(documentHandler);
+
+      logger.info('Email notifications enabled for batch and document completions');
     } else {
-      logger.info('Email not configured, batch completion notifications disabled');
+      logger.info('Email not configured, completion notifications disabled');
     }
   }
 

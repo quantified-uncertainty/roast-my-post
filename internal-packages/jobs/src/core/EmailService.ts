@@ -18,6 +18,7 @@ export interface BatchCompletionEmailData {
   failedCount: number;
   totalCount: number;
   batchId: string;
+  documentId?: string;
 }
 
 export class EmailService {
@@ -41,19 +42,32 @@ export class EmailService {
     }
 
     const baseUrl = config.auth.nextAuthUrl || 'https://roastmypost.com';
-    const batchUrl = `${baseUrl}/evaluators/${data.agentId}`;
+    const isDocumentNotification = !!data.documentId;
+    const resultsUrl = isDocumentNotification
+      ? `${baseUrl}/docs/${data.documentId}/reader`
+      : `${baseUrl}/evaluators/${data.agentId}`;
     const batchLabel = data.batchName || `Batch ${data.batchId.slice(0, 8)}`;
     const successRate = data.totalCount > 0
       ? Math.round((data.completedCount / data.totalCount) * 100)
       : 0;
 
-    const subject = `Batch complete: ${batchLabel} (${successRate}% success)`;
+    const subject = isDocumentNotification
+      ? `Your document evaluations are complete (${data.completedCount}/${data.totalCount} succeeded)`
+      : `Batch complete: ${batchLabel} (${successRate}% success)`;
+
+    const heading = isDocumentNotification
+      ? 'Document Evaluations Complete'
+      : 'Batch Evaluation Complete';
+
+    const description = isDocumentNotification
+      ? `Your document evaluations have finished. ${data.completedCount} of ${data.totalCount} evaluations completed successfully.`
+      : `Your evaluation batch <strong>${escapeHtml(batchLabel)}</strong> for agent <strong>${escapeHtml(data.agentName)}</strong> has finished.`;
 
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #1a1a1a; margin-bottom: 16px;">Batch Evaluation Complete</h2>
+        <h2 style="color: #1a1a1a; margin-bottom: 16px;">${heading}</h2>
         <p style="color: #4a4a4a; margin-bottom: 24px;">
-          Your evaluation batch <strong>${escapeHtml(batchLabel)}</strong> for agent <strong>${escapeHtml(data.agentName)}</strong> has finished.
+          ${description}
         </p>
         <table style="border-collapse: collapse; width: 100%; margin-bottom: 24px;">
           <tr>
@@ -68,16 +82,12 @@ export class EmailService {
             <td style="padding: 8px 16px; border: 1px solid #e0e0e0; background: #f9f9f9; font-weight: 600;">Total</td>
             <td style="padding: 8px 16px; border: 1px solid #e0e0e0;">${data.totalCount}</td>
           </tr>
-          <tr>
-            <td style="padding: 8px 16px; border: 1px solid #e0e0e0; background: #f9f9f9; font-weight: 600;">Success Rate</td>
-            <td style="padding: 8px 16px; border: 1px solid #e0e0e0;">${successRate}%</td>
-          </tr>
         </table>
-        <a href="${batchUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+        <a href="${resultsUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">
           View Results
         </a>
         <p style="color: #9a9a9a; font-size: 12px; margin-top: 32px;">
-          You received this email because you checked "Email me when this batch completes" when creating the batch.
+          You received this email because you opted in to evaluation completion notifications.
         </p>
       </div>
     `;

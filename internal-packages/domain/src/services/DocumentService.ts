@@ -17,7 +17,8 @@ import { generateMarkdownPrepend } from '../utils/documentMetadata';
 import type { DocumentValidator } from '../validators/DocumentValidator';
 import type { EvaluationService } from './EvaluationService';
 import type { Logger } from '../core/logger';
-import { 
+
+import {
   DocumentEntity,
   DocumentWithEvaluations,
   CreateDocumentData,
@@ -64,7 +65,8 @@ export class DocumentService {
   async createDocument(
     userId: string,
     data: CreateDocumentRequest,
-    agentIds?: string[]
+    agentIds?: string[],
+    notifyOnComplete?: boolean
   ): Promise<Result<DocumentEntity, AppError>> {
     try {
       // Generate title if not provided
@@ -104,7 +106,8 @@ export class DocumentService {
         ephemeralBatchId: data.ephemeralBatchId,
         markdownPrepend,
         isPrivate: data.isPrivate || false,
-        submitterNotes: data.submitterNotes
+        submitterNotes: data.submitterNotes,
+        notifyOnComplete: notifyOnComplete && agentIds && agentIds.length > 0 ? true : false,
       } as RepositoryCreateDocumentData;
 
       const repoDocument = await this.docRepo.create(createData);
@@ -115,7 +118,7 @@ export class DocumentService {
         const evaluationResult = await this.evaluationService.createEvaluationsForDocument({
           documentId: document.id,
           agentIds,
-          userId
+          userId,
         });
 
         if (evaluationResult.isError()) {

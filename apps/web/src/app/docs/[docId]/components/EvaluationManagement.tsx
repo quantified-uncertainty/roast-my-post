@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import {
   createOrRerunEvaluation,
   deleteEvaluation,
+  setDocumentNotification,
 } from "@/app/docs/[docId]/actions/evaluation-actions";
 import { AgentBadges } from "@/components/AgentBadges";
 import { AgentIcon } from "@/components/AgentIcon";
@@ -35,6 +36,7 @@ interface EvaluationManagementProps {
   evaluations: Array<Evaluation & { jobs?: Array<{ status: string }> }>;
   availableAgents: Agent[];
   isOwner: boolean;
+  notifyOnComplete: boolean;
 }
 
 export function EvaluationManagement({
@@ -42,6 +44,7 @@ export function EvaluationManagement({
   evaluations,
   availableAgents,
   isOwner,
+  notifyOnComplete: initialNotify,
 }: EvaluationManagementProps) {
   const router = useRouter();
   const { handleRerun, runningEvals } = useEvaluationRerun({
@@ -50,6 +53,15 @@ export function EvaluationManagement({
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
   const [deletingEvals, setDeletingEvals] = useState<Set<string>>(new Set());
   const [sortedAgents, setSortedAgents] = useState<Agent[]>([]);
+  const [notifyOnComplete, setNotifyOnComplete] = useState(initialNotify);
+
+  const handleNotifyToggle = async (checked: boolean) => {
+    setNotifyOnComplete(checked);
+    const result = await setDocumentNotification(docId, checked);
+    if (!result.success) {
+      setNotifyOnComplete(!checked); // revert on failure
+    }
+  };
 
   // Sort available agents: recommended first, then regular, then deprecated
   useEffect(() => {
@@ -137,6 +149,22 @@ export function EvaluationManagement({
           )}
         </div>
       </div>
+
+      {/* Email notification toggle */}
+      {isOwner && evaluations.length > 0 && (
+        <div className="mb-8 flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="notify-on-complete"
+            checked={notifyOnComplete}
+            onChange={(e) => handleNotifyToggle(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="notify-on-complete" className="text-sm text-gray-700">
+            Email me when evaluations complete
+          </label>
+        </div>
+      )}
 
       {/* Add More Agents */}
       {isOwner && sortedAgents.length > 0 && (

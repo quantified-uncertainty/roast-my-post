@@ -62,6 +62,7 @@ export interface CreateDocumentData {
   markdownPrepend?: string;
   isPrivate?: boolean;
   submitterNotes?: string;
+  notifyOnComplete?: boolean;
 }
 
 export interface UpdateDocumentData {
@@ -376,6 +377,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
         submittedById: data.submittedById,
         ephemeralBatchId: data.ephemeralBatchId,
         isPrivate: data.isPrivate || false,
+        notifyOnComplete: data.notifyOnComplete || false,
         versions: {
           create: {
             title: data.title,

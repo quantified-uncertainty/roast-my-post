@@ -40,6 +40,7 @@ export class BatchNotificationHandler implements BatchCompletionHandler {
         failedCount: batch.failedCount,
         totalCount: batch.totalCount,
         batchId: batch.id,
+        documentId: batch.requestedDocumentIds.length === 1 ? batch.requestedDocumentIds[0] : undefined,
       });
 
       if (emailSent) {

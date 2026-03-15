@@ -110,6 +110,23 @@ export interface BatchNotificationData {
   completedCount: number;
   failedCount: number;
   totalCount: number;
+  requestedDocumentIds: string[];
+}
+
+export interface DocumentCompletionResult {
+  id: string;
+  notifiedAt: Date;
+}
+
+export interface DocumentNotificationData {
+  id: string;
+  title: string;
+  notifyOnComplete: boolean;
+  notifiedAt: Date | null;
+  userEmail: string | null;
+  completedCount: number;
+  failedCount: number;
+  totalCount: number;
 }
 
 export interface StaleJobCriteria {
@@ -135,6 +152,9 @@ export interface JobRepositoryInterface {
   tryMarkBatchCompleted(batchId: string): Promise<BatchCompletionResult | null>;
   getBatchForNotification(batchId: string): Promise<BatchNotificationData | null>;
   markBatchNotified(batchId: string): Promise<void>;
+  getDocumentIdForJob(jobId: string): Promise<string | null>;
+  tryMarkDocumentCompleted(documentId: string): Promise<DocumentCompletionResult | null>;
+  getDocumentForNotification(documentId: string): Promise<DocumentNotificationData | null>;
 }
 
 export class JobRepository implements JobRepositoryInterface {
@@ -384,6 +404,7 @@ export class JobRepository implements JobRepositoryInterface {
       completedCount,
       failedCount,
       totalCount: batch.jobs.length,
+      requestedDocumentIds: batch.requestedDocumentIds,
     };
   }
 
@@ -397,6 +418,90 @@ export class JobRepository implements JobRepositoryInterface {
       WHERE id = ${batchId}
         AND "notifiedAt" IS NULL
     `;
+  }
+
+  /**
+   * Get the documentId associated with a job (via its evaluation).
+   */
+  async getDocumentIdForJob(jobId: string): Promise<string | null> {
+    const result = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { evaluation: { select: { documentId: true } } },
+    });
+    return result?.evaluation?.documentId ?? null;
+  }
+
+  /**
+   * Atomically mark a document as notification-sent if all jobs are terminal.
+   * Returns the document ID if this call "won" the completion, null otherwise.
+   *
+   * Supports re-evaluations: if new jobs were created after the last notification,
+   * the notification cycle resets automatically (no external reset needed).
+   */
+  async tryMarkDocumentCompleted(documentId: string): Promise<DocumentCompletionResult | null> {
+    const result = await this.prisma.$queryRaw<DocumentCompletionResult[]>`
+      UPDATE "Document"
+      SET "notifiedAt" = NOW()
+      WHERE id = ${documentId}
+        AND "notifyOnComplete" = true
+        AND NOT EXISTS (
+          SELECT 1 FROM "Job" j
+          JOIN "Evaluation" e ON e.id = j."evaluationId"
+          WHERE e."documentId" = ${documentId}
+            AND j.status IN ('PENDING', 'RUNNING')
+        )
+        AND (
+          "notifiedAt" IS NULL
+          OR EXISTS (
+            SELECT 1 FROM "Job" j
+            JOIN "Evaluation" e ON e.id = j."evaluationId"
+            WHERE e."documentId" = ${documentId}
+              AND j."createdAt" > "Document"."notifiedAt"
+          )
+        )
+      RETURNING id, "notifiedAt"
+    `;
+
+    return result.length > 0 ? result[0] : null;
+  }
+
+  /**
+   * Fetch document data needed for sending completion notifications.
+   */
+  async getDocumentForNotification(documentId: string): Promise<DocumentNotificationData | null> {
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      include: {
+        submittedBy: { select: { email: true } },
+        versions: {
+          orderBy: { version: 'desc' as const },
+          take: 1,
+          select: { title: true },
+        },
+        evaluations: {
+          include: {
+            jobs: { select: { status: true } },
+          },
+        },
+      },
+    });
+
+    if (!doc) return null;
+
+    const allJobs = doc.evaluations.flatMap(e => e.jobs);
+    const completedCount = allJobs.filter(j => j.status === 'COMPLETED').length;
+    const failedCount = allJobs.filter(j => j.status === 'FAILED').length;
+
+    return {
+      id: doc.id,
+      title: doc.versions[0]?.title || 'Untitled Document',
+      notifyOnComplete: doc.notifyOnComplete,
+      notifiedAt: doc.notifiedAt,
+      userEmail: doc.submittedBy.email,
+      completedCount,
+      failedCount,
+      totalCount: allJobs.length,
+    };
   }
 
   private toJobWithRelations(job: any): JobWithRelations {

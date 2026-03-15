@@ -70,18 +70,20 @@ model VerificationToken {
 }
 
 model Document {
-  id               String            @id
-  publishedDate    DateTime
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  submittedById    String
-  ephemeralBatchId String?
-  isPrivate        Boolean           @default(true)
-  ephemeralBatch   AgentEvalBatch?   @relation("EphemeralDocuments", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
-  submittedBy      User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  versions         DocumentVersion[]
-  evaluations      Evaluation[]
-  series           Series[]
+  id                String            @id
+  publishedDate     DateTime
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  submittedById     String
+  ephemeralBatchId  String?
+  isPrivate         Boolean           @default(true)
+  notifyOnComplete  Boolean           @default(false)
+  notifiedAt        DateTime?
+  ephemeralBatch    AgentEvalBatch?   @relation("EphemeralDocuments", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
+  submittedBy       User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  versions          DocumentVersion[]
+  evaluations       Evaluation[]
+  series            Series[]
 
   @@index([ephemeralBatchId])
   @@index([isPrivate])

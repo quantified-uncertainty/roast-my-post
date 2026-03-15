@@ -121,6 +121,44 @@ export async function createOrRerunEvaluation(
 }
 
 /**
+ * Toggle email notification for document evaluation completion
+ */
+export async function setDocumentNotification(
+  documentId: string,
+  notifyOnComplete: boolean
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return { success: false, error: "User must be logged in" };
+    }
+
+    const document = await prisma.document.findFirst({
+      where: { id: documentId, submittedById: session.user.id },
+    });
+
+    if (!document) {
+      return { success: false, error: "Document not found or not owned by you" };
+    }
+
+    await prisma.document.update({
+      where: { id: documentId },
+      data: { notifyOnComplete },
+    });
+
+    revalidatePath(`/docs/${documentId}`);
+    return { success: true };
+  } catch (error) {
+    logger.error("Error updating notification preference:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update notification preference",
+    };
+  }
+}
+
+/**
  * Deletes an evaluation and all its related data
  */
 export async function deleteEvaluation(

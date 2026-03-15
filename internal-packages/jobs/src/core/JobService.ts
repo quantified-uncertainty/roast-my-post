@@ -17,8 +17,13 @@ export interface BatchCompletionHandler {
   onBatchCompleted(batchId: string): Promise<void>;
 }
 
+export interface DocumentCompletionHandler {
+  onDocumentCompleted(documentId: string): Promise<void>;
+}
+
 export class JobService {
   private batchCompletionHandler?: BatchCompletionHandler;
+  private documentCompletionHandler?: DocumentCompletionHandler;
 
   constructor(
     private jobRepository: JobRepository,
@@ -32,6 +37,14 @@ export class JobService {
    */
   setBatchCompletionHandler(handler: BatchCompletionHandler): void {
     this.batchCompletionHandler = handler;
+  }
+
+  /**
+   * Set an optional handler that is called when all jobs for a document complete.
+   * Used by the worker to trigger email notifications.
+   */
+  setDocumentCompletionHandler(handler: DocumentCompletionHandler): void {
+    this.documentCompletionHandler = handler;
   }
 
   async initialize() {
@@ -114,6 +127,7 @@ export class JobService {
     // Update database to mark as cancelled
     const cancelledJob = await this.markAsCancelled(jobId);
     await this.checkBatchCompletion(cancelledJob);
+    await this.checkDocumentCompletion(cancelledJob);
     return cancelledJob;
   }
 
@@ -161,6 +175,7 @@ export class JobService {
       logs: data.logs,
     });
     await this.checkBatchCompletion(completedJob);
+    await this.checkDocumentCompletion(completedJob);
     return completedJob;
   }
 
@@ -174,6 +189,7 @@ export class JobService {
       completedAt: new Date(),
     });
     await this.checkBatchCompletion(failedJob);
+    await this.checkDocumentCompletion(failedJob);
     return failedJob;
   }
 
@@ -195,6 +211,28 @@ export class JobService {
     } catch (error) {
       // Batch completion tracking is non-critical — don't fail the job
       this.logger.error(`Failed to check batch completion for batch ${job.agentEvalBatchId}:`, error);
+    }
+  }
+
+  /**
+   * Check if all jobs for a document are now complete.
+   * Uses an atomic UPDATE to ensure only one worker detects completion.
+   */
+  private async checkDocumentCompletion(job: JobEntity): Promise<void> {
+    if (!this.documentCompletionHandler) return;
+
+    try {
+      const documentId = await this.jobRepository.getDocumentIdForJob(job.id);
+      if (!documentId) return;
+
+      const result = await this.jobRepository.tryMarkDocumentCompleted(documentId);
+      if (result) {
+        this.logger.info(`Document ${result.id} evaluations completed, triggering notification`);
+        await this.documentCompletionHandler.onDocumentCompleted(result.id);
+      }
+    } catch (error) {
+      // Document completion tracking is non-critical — don't fail the job
+      this.logger.error(`Failed to check document completion for job ${job.id}:`, error);
     }
   }
 }
