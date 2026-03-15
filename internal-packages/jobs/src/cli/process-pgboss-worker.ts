@@ -60,7 +60,7 @@ class PgBossWorker {
     this.jobRepository = new JobRepository();
     this.jobService = new JobService(this.jobRepository, logger, this.pgBossService);
     this.jobOrchestrator = new JobOrchestrator(this.jobRepository, logger, this.jobService);
-    this.jobReconciliationService = new JobReconciliationService(this.jobRepository, this.pgBossService, logger);
+    this.jobReconciliationService = new JobReconciliationService(this.jobRepository, this.pgBossService, logger, this.jobService);
 
     // Wire up email notifications for batch and document completions
     const emailService = new EmailService(logger);
