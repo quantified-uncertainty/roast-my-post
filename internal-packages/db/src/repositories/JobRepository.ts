@@ -8,8 +8,6 @@
 
 import { prisma as defaultPrisma } from '../client';
 import { JobStatus } from '../types';
-import type { Job } from '../types';
-import type { PrismaClient } from '../client';
 import { generateId } from '../utils/generateId';
 import { subHours } from 'date-fns';
 
@@ -295,6 +293,7 @@ export class JobRepository implements JobRepositoryInterface {
   /**
    * Convert database record to domain entity
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Prisma result
   private toDomainEntity(job: any): JobEntity {
     return {
       id: job.id,
@@ -351,7 +350,7 @@ export class JobRepository implements JobRepositoryInterface {
       where: { id: jobId },
       select: { evaluation: { select: { documentId: true } } },
     });
-    return result?.evaluation?.documentId ?? null;
+    return result?.evaluation.documentId ?? null;
   }
 
   /**
@@ -388,6 +387,7 @@ export class JobRepository implements JobRepositoryInterface {
     return result.length > 0 ? result[0] : null;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Prisma result with complex include shape
   private toJobWithRelations(job: any): JobWithRelations {
     return {
       ...this.toDomainEntity(job),
@@ -396,6 +396,7 @@ export class JobRepository implements JobRepositoryInterface {
         document: {
           id: job.evaluation.document.id,
           publishedDate: job.evaluation.document.publishedDate,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Prisma document version
           versions: job.evaluation.document.versions.map((v: any) => ({
             id: v.id,
             title: v.title,
@@ -415,6 +416,7 @@ export class JobRepository implements JobRepositoryInterface {
             id: job.evaluation.agent.submittedBy.id,
             email: job.evaluation.agent.submittedBy.email,
           } : null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Prisma agent version
           versions: job.evaluation.agent.versions.map((v: any) => ({
             id: v.id,
             name: v.name,
