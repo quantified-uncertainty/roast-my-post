@@ -108,29 +108,29 @@
     "bulk-claims": "tsx scripts/run-claim-bulk.ts"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.50",
+    "@anthropic-ai/claude-agent-sdk": "^0.2.141",
     "@anthropic-ai/sdk": "^0.54.0",
-    "@leeoniya/ufuzzy": "^1.0.18",
-    "axios": "^1.13.2",
-    "fuse.js": "^7.1.0",
+    "@leeoniya/ufuzzy": "^1.0.19",
+    "axios": "^1.18.0",
+    "fuse.js": "^7.4.2",
     "jsdom": "^24.1.3",
     "mathjs": "^15.2.0",
-    "openai": "^4.77.0",
-    "tiktoken": "^1.0.17",
-    "turndown": "^7.2.2",
-    "uuid": "^11.1.0",
-    "yaml": "^2.8.1",
-    "zod": "^3.24.1",
-    "zod-to-json-schema": "^3.24.6"
+    "openai": "^4.104.0",
+    "tiktoken": "^1.0.22",
+    "turndown": "^7.2.4",
+    "uuid": "^11.1.1",
+    "yaml": "^2.9.0",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.7",
-    "@types/node": "^22.10.6",
+    "@types/node": "^22.19.21",
     "@types/turndown": "^5.0.6",
     "@types/uuid": "^10.0.0",
     "eslint": "^8.57.1",
-    "tsx": "^4.7.0",
-    "typescript": "^5.7.3",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.6"
   },
   "peerDependencies": {

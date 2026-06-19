@@ -17,11 +17,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@hono/node-server": "^1.17.1",
+    "@hono/node-server": "^1.19.14",
     "@types/uuid": "^10.0.0",
-    "dotenv": "^17.2.1",
-    "hono": "^4.8.10",
-    "uuid": "^11.1.0"
+    "dotenv": "^17.4.2",
+    "hono": "^4.12.26",
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "vitest": "^3.2.6"

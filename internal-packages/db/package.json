@@ -31,14 +31,14 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.13.0",
+    "@prisma/client": "^6.19.3",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
     "dotenv-cli": "^10.0.0",
-    "prisma": "^6.13.0",
-    "tsx": "^4.7.0",
-    "typescript": "^5"
+    "prisma": "^6.19.3",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18"
