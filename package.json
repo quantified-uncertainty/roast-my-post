@@ -58,20 +58,30 @@
     "docker:quick": "pnpm run docker:validate && pnpm run docker:test"
   },
   "devDependencies": {
-    "@hono/node-server": "^1.17.1",
+    "@hono/node-server": "^1.19.14",
     "@types/glob": "^8.1.0",
     "@types/iarna__toml": "^2.0.5",
     "@types/uuid": "^10.0.0",
     "dotenv-cli": "^10.0.0",
-    "hono": "^4.8.10",
-    "knip": "^5.62.0",
-    "prisma": "^6.13.0",
+    "hono": "^4.12.26",
+    "knip": "^5.88.1",
+    "prisma": "^6.19.3",
     "raw-loader": "^4.0.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.7.1",
-    "turbo": "^2.3.3",
-    "uuid": "^11.1.0"
+    "tsx": "^4.22.4",
+    "turbo": "^2.9.18",
+    "uuid": "^11.1.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild@>=0.27.3 <0.28.1": ">=0.28.1",
+      "postcss@<8.5.10": ">=8.5.10",
+      "serialize-javascript@<7.0.5": ">=7.0.5",
+      "@babel/core@<=7.29.0": ">=7.29.6",
+      "@babel/plugin-transform-modules-systemjs@<=7.29.3": ">=7.29.4",
+      "@hono/node-server@<1.19.13": ">=1.19.13"
+    }
   },
   "packageManager": "pnpm@9.15.1",
   "engines": {
