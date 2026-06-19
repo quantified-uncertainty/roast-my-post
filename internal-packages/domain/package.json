@@ -16,11 +16,11 @@
   },
   "dependencies": {
     "@roast/db": "workspace:*",
-    "zod": "^3.23.8"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
-    "typescript": "^5.5.2"
+    "@types/node": "^20.19.43",
+    "typescript": "^5.9.3"
   },
   "keywords": [
     "domain",

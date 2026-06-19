@@ -28,14 +28,14 @@
     "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
     "@roast/domain": "workspace:*",
-    "dotenv": "^17.2.0",
-    "pg-boss": "^12.2.0",
-    "resend": "^6.9.3"
+    "dotenv": "^17.4.2",
+    "pg-boss": "^12.19.1",
+    "resend": "^6.14.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3",
+    "@types/node": "^20.19.43",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.6"
   }
 }
