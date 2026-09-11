@@ -32,6 +32,8 @@ if (!process.env.CI && missingEnvVars.length > 0) {
   process.exit(1);
 }
 
+const port = Number(process.env.PORT || 3000);
+
 const config: PlaywrightTestConfig = {
   testDir: "./tests/playwright",
   testMatch: "**/*.spec.ts",
@@ -46,7 +48,7 @@ const config: PlaywrightTestConfig = {
   reporter: "html",
   use: {
     actionTimeout: 0,
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
   },
   projects: [
@@ -59,7 +61,7 @@ const config: PlaywrightTestConfig = {
   ],
   webServer: {
     command: "npm run dev",
-    port: 3000,
+    port,
     reuseExistingServer: !process.env["CI"],
     env: {
       ...process.env,

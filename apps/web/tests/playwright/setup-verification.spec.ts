@@ -41,18 +41,19 @@ test.describe('Playwright Setup Verification', () => {
     expect(hasEnvBypass).toBeTruthy();
   });
 
-  test('should be able to access fuzzy-text-locator tool with bypass', async ({ page }) => {
+  test('should be able to access smart-text-searcher tool with bypass', async ({ page }) => {
     await setupTestAuthBypass(page);
     await setupTestAuthWithEnvBypass(page);
     
-    await page.goto('/tools/fuzzy-text-locator/try');
+    await page.goto('/tools/smart-text-searcher/try');
     
     // Should be able to access the tool page (not redirected to sign-in)
-    await expect(page).toHaveURL('/tools/fuzzy-text-locator/try');
+    await expect(page).toHaveURL('/tools/smart-text-searcher/try');
     
     // Should see the tool interface - check for any h1 and textarea
     await expect(page.locator('h1').first()).toBeVisible();
-    await expect(page.locator('textarea').first()).toBeVisible();
+    // The dev server compiles the form on its first visit.
+    await expect(page.locator('textarea').first()).toBeVisible({ timeout: 30000 });
   });
 
   test('should be able to access document-chunker tool with bypass', async ({ page }) => {
@@ -66,7 +67,8 @@ test.describe('Playwright Setup Verification', () => {
     
     // Should see the tool interface - check for any h1 and textarea
     await expect(page.locator('h1').first()).toBeVisible();
-    await expect(page.locator('textarea').first()).toBeVisible();
+    // The dev server compiles the form on its first visit.
+    await expect(page.locator('textarea').first()).toBeVisible({ timeout: 30000 });
   });
 
   test('should handle auth check without bypass', async ({ page }) => {

@@ -202,7 +202,7 @@ test.describe('Tool End-to-End Validation', () => {
     startTime: Date.now(),
   };
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ request }) => {
     if (ANTHROPIC_API_KEY) {
       try {
         anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
@@ -233,25 +233,24 @@ test.describe('Tool End-to-End Validation', () => {
     const warmUpWithRetry = async (maxAttempts = 3) => {
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-          const response = await fetch('http://localhost:3000/api/tools/fuzzy-text-locator', {
-            method: 'POST',
+          const response = await request.post('/api/tools/smart-text-searcher', {
             headers: { 
               'Content-Type': 'application/json',
               'X-Test-Auth-Bypass': 'true' // Include auth bypass for warm-up
             },
-            body: JSON.stringify({
+            data: {
               documentText: 'warm up',
               searchText: 'warm'
-            }),
-            signal: AbortSignal.timeout(5000) // 5 second timeout per attempt
+            },
+            timeout: 5000 // 5 second timeout per attempt
           });
           
           // Check HTTP status
-          if (response.ok) {
+          if (response.ok()) {
             console.log('✅ Tool warm-up complete (status: 200)');
             return true;
           } else {
-            console.warn(`⚠️  Attempt ${attempt}/${maxAttempts}: Tool warm-up returned status ${response.status}`);
+            console.warn(`⚠️  Attempt ${attempt}/${maxAttempts}: Tool warm-up returned status ${response.status()}`);
           }
         } catch (e) {
           console.warn(`⚠️  Attempt ${attempt}/${maxAttempts} failed:`, e instanceof Error ? e.message : 'Unknown error');
@@ -549,9 +548,7 @@ test.describe('Tool End-to-End Validation', () => {
           hasText: metadata.buttonText 
         }).first();
         
-        if (!await submitButton.isVisible()) {
-          return; // Skip if button not found
-        }
+        await expect(submitButton).toBeVisible();
         
         // Check if button is disabled (good) or if clicking shows error
         const isDisabled = await submitButton.isDisabled();

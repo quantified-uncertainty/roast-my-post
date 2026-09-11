@@ -1,6 +1,8 @@
-name: Integration Tests on Merge
+name: Integration and Playwright Tests
 
 on:
+  pull_request:
+    branches: [main, prod]
   push:
     branches: [main, prod]
 
@@ -34,7 +36,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Cache Turbo
@@ -94,7 +96,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: post-merge-test-results-${{ github.run_number }}
+          name: integration-test-results-${{ github.run_number }}
           path: |
             apps/web/coverage/
             apps/web/test-results/
