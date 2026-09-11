@@ -10,6 +10,10 @@ import type { ConstructorOptions, WorkOptions, WorkHandler, WorkWithMetadataHand
 import { config } from '@roast/domain';
 import type { Logger } from '../types';
 
+interface PgBossOptions extends ConstructorOptions {
+  query_timeout: number;
+}
+
 /**
  * pg-boss Service
  * Manages pg-boss instance and job operations
@@ -59,7 +63,7 @@ export class PgBossService {
         }
 
         // pg-boss forwards options to node-postgres, but its types do not expose query_timeout.
-        const bossOptions: ConstructorOptions & { query_timeout: number } = {
+        const bossOptions: PgBossOptions = {
           connectionString,
           ssl: sslConfig,
           // Limit connection pool to 1 to reduce database connection usage.

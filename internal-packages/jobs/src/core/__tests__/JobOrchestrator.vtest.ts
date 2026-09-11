@@ -5,6 +5,10 @@ import { prisma, JobStatus } from '@roast/db';
 import { HeliconeSessionManager, setGlobalSessionManager } from '@roast/ai';
 import type { Logger } from '../../types';
 
+interface MockSessionManager {
+  trackAnalysis: ReturnType<typeof vi.fn>;
+}
+
 // Mock dependencies
 vi.mock('@roast/ai/server', () => ({
   analyzeDocument: vi.fn(),
@@ -51,7 +55,7 @@ describe('JobOrchestrator', () => {
   let mockJobService: any;
   let mockLogger: Logger;
   let mockAnalyzeDocument: any;
-  let mockSessionManager: { trackAnalysis: ReturnType<typeof vi.fn> };
+  let mockSessionManager: MockSessionManager;
 
   beforeEach(() => {
     vi.resetAllMocks();

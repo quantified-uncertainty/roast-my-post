@@ -60,24 +60,13 @@ subsequent queries can reconnect. This is separate from the 10-second connection
 acquisition timeout and from evaluation handler deadlines. It does not retry the
 failed query or impose a 30-second limit on an evaluation.
 
-Run the real `PgBossService` integration tests from the repository root:
-
-```bash
-bash dev/scripts/test-pgboss-read-timeout.sh
-```
-
-CI runs both `pnpm --filter @roast/jobs test:ci` and
-`pnpm --filter @roast/jobs test:pgboss` in the **Worker Tests** job. The aggregate
-**CI Status** check requires that job to succeed.
-
-The runner needs Docker and installed workspace dependencies. It creates and
-removes a disposable PostgreSQL 16 database on a random localhost port. It does
-not use the ordinary dev database, load application `.env` files, or call AI
-services. Set `PGBOSS_TEST_POSTGRES_IMAGE=postgres:17` to use the dev environment's
-PostgreSQL major version. The tests take about 80 seconds: they check an 11-second
-SQL query, a 31-second synthetic evaluation handler, and recovery after an actual
-30-second read timeout on a connection that stops responding. The last test
-fails against the configuration without `query_timeout`.
+Worker tests use Vitest: `pnpm --filter @roast/jobs test:ci` runs unit tests;
+`pnpm --filter @roast/jobs test:integration` runs database integration tests.
+For integration tests, set `DATABASE_URL` to a local PostgreSQL test database
+whose name ends in `_test`. CI supplies this through its PostgreSQL service.
+The tests take about 80 seconds and verify that a hung connection times out,
+queued work resumes, and evaluation handlers can run longer than 30 seconds.
+Both suites are required by the **Worker Tests** CI job.
 
 pg-boss `expireInSeconds` marks jobs failed but **cannot interrupt handlers**. We implement graceful timeouts:
 

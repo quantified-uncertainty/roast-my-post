@@ -141,8 +141,22 @@ jobs:
     name: Worker Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: roast_my_post_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     env:
-      DATABASE_URL: postgresql://repro:local-test-only@127.0.0.1:1/repro # Build-time only
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
       ANTHROPIC_API_KEY: ""
       OPENROUTER_API_KEY: ""
     steps:
@@ -170,8 +184,8 @@ jobs:
       - name: Run worker unit tests
         run: pnpm --filter @roast/jobs run test:ci
 
-      - name: Test database read timeout and connection recovery
-        run: pnpm --filter @roast/jobs run test:pgboss
+      - name: Run worker integration tests
+        run: pnpm --filter @roast/jobs run test:integration
 
   # Integration tests (3-4 minutes) - parallel with other jobs
   integration-tests:
