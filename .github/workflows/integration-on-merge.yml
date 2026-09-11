@@ -70,6 +70,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
 
       - name: Run Integration Tests
+        if: github.event_name != 'pull_request' # PRs run this suite in test.yml
         run: |
           echo "Starting integration tests..."
           if ! pnpm turbo run test:ci-integration --filter='@roast/web'; then

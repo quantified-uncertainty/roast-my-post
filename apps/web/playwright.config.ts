@@ -32,7 +32,13 @@ if (!process.env.CI && missingEnvVars.length > 0) {
   process.exit(1);
 }
 
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT ?? 3000);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  throw new Error('PORT must be an integer between 1 and 65535');
+}
+
+// Match the auth bypass used by the child web server in the test workers.
+process.env.BYPASS_TOOL_AUTH = 'true';
 
 const config: PlaywrightTestConfig = {
   testDir: "./tests/playwright",
