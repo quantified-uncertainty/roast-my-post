@@ -68,7 +68,7 @@ export const toolMetadata = {
     exampleText: 'The quick brown fox jumps over the lazy dog',
   },
   'link-validator': {
-    buttonText: 'Process',
+    buttonText: 'Check',
     exampleButtonType: 'numbered' as const,
     exampleIndex: 1,
   },

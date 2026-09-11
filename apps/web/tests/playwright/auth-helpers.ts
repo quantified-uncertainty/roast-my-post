@@ -116,36 +116,26 @@ export async function testAuthRequired(page: Page, toolPath: string) {
     window.localStorage.removeItem('test-auth-bypass');
   });
   
-  // Determine appropriate test payload based on tool
-  let testPayload: any = { text: 'test' }; // Default for most tools
-  
-  if (toolPath.includes('fuzzy-text-locator')) {
-    testPayload = { documentText: 'test document', searchText: 'test' };
-  } else if (toolPath.includes('document-chunker')) {
-    testPayload = { text: 'test document to chunk', maxChunkSize: 50 };
-  }
-  
+  // A null body exercises the actual route/auth check without executing a paid tool.
   // Try to call the API directly without auth
-  const response = await page.evaluate(async ({ path, payload }) => {
+  const response = await page.evaluate(async (path) => {
     const res = await fetch(path, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: 'null',
     });
     return {
       status: res.status,
       statusText: res.statusText,
     };
-  }, { path: toolPath, payload: testPayload });
+  }, toolPath);
   
   // Should be 401 Unauthorized without auth
-  // BUT: If BYPASS_TOOL_AUTH is set globally, might get 200 or 500
+  // With bypass enabled, the real route should reject the invalid body.
   if (process.env.BYPASS_TOOL_AUTH === 'true') {
-    // In test environment with bypass, we might get different status
-    // Just check that we got a response
-    expect(response.status).toBeDefined();
+    expect(response.status).toBe(400);
   } else {
     expect(response.status).toBe(401);
   }

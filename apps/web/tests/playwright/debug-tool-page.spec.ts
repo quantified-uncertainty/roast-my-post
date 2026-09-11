@@ -8,7 +8,8 @@ test('debug tool page rendering', async ({ page }) => {
   });
   
   // Navigate to the tool page
-  await page.goto('/tools/fuzzy-text-locator', { waitUntil: 'networkidle' });
+  const response = await page.goto('/tools/smart-text-searcher', { waitUntil: 'networkidle' });
+  expect(response?.status()).toBe(200);
   
   // Take a screenshot for debugging
   await page.screenshot({ path: 'debug-fuzzy-tool.png' });
