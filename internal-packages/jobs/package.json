@@ -22,6 +22,7 @@
     "test:unit": "vitest run",
     "test:integration": "vitest run",
     "test:ci": "vitest run",
+    "test:pgboss": "bash ../../dev/scripts/test-pgboss-read-timeout.sh",
     "process-pgboss": "tsx src/cli/process-pgboss-worker.ts"
   },
   "dependencies": {
