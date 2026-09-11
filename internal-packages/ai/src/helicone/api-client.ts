@@ -82,6 +82,7 @@ export interface HeliconeClickhouseQueryOptions {
   filter: any; // Using 'any' for flexibility as the filter structure is complex
   offset?: number;
   limit?: number;
+  includeInputs?: boolean;
   sort?: { created_at?: 'asc' | 'desc'; cost?: 'asc' | 'desc' };
 }
 
@@ -173,6 +174,47 @@ export class HeliconeAPIClient {
       // Re-throw other errors
       throw error;
     }
+  }
+
+  /**
+   * Page through a fixed request window, deduplicating IDs before calculating costs.
+   * Whole-second bounds avoid Helicone's fractional timestamp filter truncation.
+   * Throws on incomplete responses rather than returning a partial window.
+   */
+  async getRequestsInTimeRange(start: Date, end: Date): Promise<HeliconeClickhouseRequest[]> {
+    const startMs = Math.floor(start.getTime() / 1000) * 1000;
+    const endMs = Math.ceil(end.getTime() / 1000) * 1000;
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || startMs >= endMs) {
+      throw new Error('Invalid Helicone request time range');
+    }
+
+    const pageSize = 1000;
+    const maxPages = 100;
+    const requests = new Map<string, HeliconeClickhouseRequest>();
+    for (let page = 0; page < maxPages; page++) {
+      const response = await this.queryRequestsClickhouse({
+        filter: {
+          left: { request_response_rmt: { request_created_at: { gte: new Date(startMs).toISOString() } } },
+          operator: 'and',
+          right: { request_response_rmt: { request_created_at: { lt: new Date(endMs).toISOString() } } },
+        },
+        offset: page * pageSize,
+        limit: pageSize,
+        sort: { created_at: 'asc' },
+        includeInputs: false,
+      });
+      if (!Array.isArray(response.data)) {
+        throw new Error('Helicone request query returned no data array');
+      }
+      for (const request of response.data) {
+        if (!request.request_id) {
+          throw new Error('Helicone request is missing its ID');
+        }
+        requests.set(request.request_id, request);
+      }
+      if (response.data.length < pageSize) return [...requests.values()];
+    }
+    throw new Error('Helicone request window exceeded the pagination limit');
   }
 
   /**
@@ -555,5 +597,6 @@ export const heliconeAPI = {
   testSessionIntegration: () => heliconeAPI.instance.testSessionIntegration(),
   getUsageStats: (startDate: Date, endDate: Date) => heliconeAPI.instance.getUsageStats(startDate, endDate),
   queryRequestsClickhouse: (options: HeliconeClickhouseQueryOptions) => heliconeAPI.instance.queryRequestsClickhouse(options),
+  getRequestsInTimeRange: (start: Date, end: Date) => heliconeAPI.instance.getRequestsInTimeRange(start, end),
   querySessions: (options: HeliconeSessionQueryOptions) => heliconeAPI.instance.querySessions(options),  
 };
