@@ -30,6 +30,8 @@ WORKDIR /app
 # Install runtime dependencies (bash required by Claude Agent SDK)
 RUN apk add --no-cache libc6-compat bash
 ENV SHELL=/bin/bash
+# Worker containers provide isolation; do not start a nested bubblewrap sandbox.
+ENV AGENTIC_SANDBOX_ENABLED=false
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Create non-root user

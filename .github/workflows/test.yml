@@ -184,6 +184,9 @@ jobs:
       - name: Run worker unit tests
         run: pnpm --filter @roast/jobs run test:ci
 
+      - name: Test agentic worker sandbox configuration
+        run: pnpm --filter @roast/ai exec vitest run src/analysis-plugins/plugins/agentic/orchestrator.vtest.ts
+
       - name: Run worker integration tests
         run: pnpm --filter @roast/jobs run test:integration
 

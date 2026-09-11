@@ -227,7 +227,10 @@ export function buildAgenticQueryOptions(
   const workspaceOptions = workspacePath
     ? {
         cwd: workspacePath,
-        sandbox: { enabled: true, allowUnsandboxedCommands: false },
+        sandbox: {
+          enabled: process.env.AGENTIC_SANDBOX_ENABLED !== "false",
+          allowUnsandboxedCommands: false,
+        },
         canUseTool,
       }
     : { canUseTool };
