@@ -6,9 +6,13 @@
  */
 
 import { PgBoss } from 'pg-boss';
-import type { WorkOptions, WorkHandler, WorkWithMetadataHandler, SendOptions } from 'pg-boss';
+import type { ConstructorOptions, WorkOptions, WorkHandler, WorkWithMetadataHandler, SendOptions } from 'pg-boss';
 import { config } from '@roast/domain';
 import type { Logger } from '../types';
+
+interface PgBossOptions extends ConstructorOptions {
+  query_timeout: number;
+}
 
 /**
  * pg-boss Service
@@ -58,20 +62,25 @@ export class PgBossService {
           connectionString = connectionString.replace(/sslmode=require/, 'sslmode=no-verify');
         }
 
-        const boss = new PgBoss({
+        // pg-boss forwards options to node-postgres, but its types do not expose query_timeout.
+        const bossOptions: PgBossOptions = {
           connectionString,
           ssl: sslConfig,
           // Limit connection pool to 1 to reduce database connection usage.
           // pg-boss operations are sequential per worker, so 1 connection is sufficient.
           // With multiple workers, each gets its own pool, scaling horizontally.
           max: 1,
+          // Bound reads on an acquired connection, independently of connectionTimeoutMillis.
+          // pg-pool discards the connection on timeout so a hung query cannot hold the only slot.
+          query_timeout: 30_000,
           // Configure cron worker interval for scheduled tasks
           // cronWorkerIntervalSeconds: how often cron jobs are actually executed
           // cronMonitorIntervalSeconds: how often to check if cron jobs are due (default: 30s)
           // Note: If changing cronWorkerIntervalSeconds to something other than 30s,
           // also set cronMonitorIntervalSeconds to match for proper scheduling
           cronWorkerIntervalSeconds: config.jobs.pgBoss.cronWorkerIntervalSeconds,
-        });
+        };
+        const boss = new PgBoss(bossOptions);
 
         await boss.start();
 

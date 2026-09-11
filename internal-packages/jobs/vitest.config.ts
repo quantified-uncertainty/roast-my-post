@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
@@ -6,6 +6,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.vtest.{ts,tsx}'],
+    exclude: [...configDefaults.exclude, '**/*.integration.vtest.{ts,tsx}'],
     teardownTimeout: 10000,
     pool: 'forks',
     poolOptions: {

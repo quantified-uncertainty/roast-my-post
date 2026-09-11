@@ -1,31 +1,30 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobOrchestrator } from '../JobOrchestrator';
-import { analyzeDocument } from '@roast/ai/server';
+import { analyzeDocument, getWorkerId } from '@roast/ai/server';
 import { prisma, JobStatus } from '@roast/db';
-import { fetchJobCostWithRetry } from '@roast/ai';
+import { HeliconeSessionManager, setGlobalSessionManager } from '@roast/ai';
 import type { Logger } from '../../types';
+
+interface MockSessionManager {
+  trackAnalysis: ReturnType<typeof vi.fn>;
+}
 
 // Mock dependencies
 vi.mock('@roast/ai/server', () => ({
   analyzeDocument: vi.fn(),
+  getWorkerId: vi.fn(),
 }));
 
 vi.mock('@roast/ai', () => ({
   initializeAI: vi.fn(),
   HeliconeSessionManager: {
-    forJob: vi.fn(() => ({
-      trackAnalysis: vi.fn((type, fn) => fn()),
-    })),
+    forJob: vi.fn(),
   },
   setGlobalSessionManager: vi.fn(),
-  fetchJobCostWithRetry: vi.fn(),
 }));
 
 vi.mock('@roast/db', () => ({
   prisma: {
-    job: {
-      findUnique: vi.fn(),
-    },
     evaluationVersion: {
       findFirst: vi.fn(),
       create: vi.fn(),
@@ -46,6 +45,7 @@ vi.mock('@roast/db', () => ({
     RUNNING: 'RUNNING',
     COMPLETED: 'COMPLETED',
     FAILED: 'FAILED',
+    CANCELLED: 'CANCELLED',
   },
 }));
 
@@ -53,12 +53,17 @@ describe('JobOrchestrator', () => {
   let orchestrator: JobOrchestrator;
   let mockJobRepository: any;
   let mockJobService: any;
-  let mockLogger: any;
+  let mockLogger: Logger;
   let mockAnalyzeDocument: any;
-  let mockFetchJobCost: any;
+  let mockSessionManager: MockSessionManager;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    vi.mocked(getWorkerId).mockReturnValue(undefined);
+    mockSessionManager = { trackAnalysis: vi.fn((_type, fn) => fn()) };
+    vi.mocked(HeliconeSessionManager.forJob).mockReturnValue(
+      mockSessionManager as unknown as HeliconeSessionManager
+    );
 
     // Create mock logger
     mockLogger = {
@@ -72,12 +77,11 @@ describe('JobOrchestrator', () => {
     mockJobRepository = {
       claimNextPendingJob: vi.fn(),
       updateStatus: vi.fn(),
-      findById: vi.fn(),
+      findById: vi.fn().mockResolvedValue({ status: JobStatus.RUNNING }),
       findByIdWithRelations: vi.fn(),
     } as any;
 
     mockAnalyzeDocument = analyzeDocument;
-    mockFetchJobCost = fetchJobCostWithRetry;
 
     mockJobService = {
       markAsCompleted: vi.fn().mockResolvedValue({ id: 'job-1', status: JobStatus.COMPLETED }),
@@ -92,9 +96,7 @@ describe('JobOrchestrator', () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: JobStatus.RUNNING });
       mockAnalyzeDocument.mockResolvedValue(mockAnalysisResult);
-      mockFetchJobCost.mockResolvedValue({ totalCostUSD: 0.5 });
 
       (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
       (prisma.evaluationVersion.create as any).mockResolvedValue({ id: 'eval-version-1' });
@@ -102,6 +104,10 @@ describe('JobOrchestrator', () => {
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(true);
+      expect(mockJobRepository.findById).toHaveBeenCalledWith('job-1');
+      expect(mockJobService.markAsCompleted).toHaveBeenCalledWith('job-1', expect.objectContaining({
+        llmThinking: 'Test thinking',
+      }));
       expect(mockLogger.info).toHaveBeenCalledWith('[Job job-1] Starting processing...');
     });
 
@@ -109,7 +115,6 @@ describe('JobOrchestrator', () => {
       const mockJob = createMockJob();
       const error = new Error('Analysis failed');
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: JobStatus.RUNNING });
       mockAnalyzeDocument.mockRejectedValue(error);
 
       const result = await orchestrator.processJob(mockJob);
@@ -121,6 +126,8 @@ describe('JobOrchestrator', () => {
         error
       );
       expect(mockJobService.markAsFailed).toHaveBeenCalledWith('job-1', error);
+      expect(mockJobService.markAsCompleted).not.toHaveBeenCalled();
+      expect(setGlobalSessionManager).toHaveBeenLastCalledWith(undefined);
     });
   });
 
@@ -130,9 +137,7 @@ describe('JobOrchestrator', () => {
       const mockAnalysisResult = createMockAnalysisResult();
       const completedJob = { ...mockJob, status: JobStatus.COMPLETED };
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       mockAnalyzeDocument.mockResolvedValue(mockAnalysisResult);
-      mockFetchJobCost.mockResolvedValue({ totalCostUSD: 0.75 });
       mockJobService.markAsCompleted.mockResolvedValue(completedJob);
 
       (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
@@ -144,42 +149,51 @@ describe('JobOrchestrator', () => {
       expect(result.job).toEqual(completedJob);
       expect(result.logContent).toContain('Job Execution Log');
       expect(result.logContent).toContain('job-1');
+      expect(HeliconeSessionManager.forJob).toHaveBeenCalledWith(
+        'job-1', 'Test Agent evaluating Test Document', expect.objectContaining({ JobId: 'job-1' })
+      );
+      expect(mockSessionManager.trackAnalysis).toHaveBeenCalledWith('document', expect.any(Function));
+      expect(setGlobalSessionManager).toHaveBeenNthCalledWith(1, mockSessionManager);
+      expect(setGlobalSessionManager).toHaveBeenLastCalledWith(undefined);
     });
 
     it('should handle missing document version', async () => {
       const mockJob = createMockJob();
       mockJob.evaluation.document.versions = [];
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
-      expect(result.error?.message).toContain('Document version not found');
+      expect(mockJobService.markAsFailed).toHaveBeenCalledWith('job-1', result.error);
+      expect(mockAnalyzeDocument).not.toHaveBeenCalled();
+      expect(prisma.evaluationVersion.create).not.toHaveBeenCalled();
+      expect(mockJobService.markAsCompleted).not.toHaveBeenCalled();
     });
 
     it('should handle missing agent version', async () => {
       const mockJob = createMockJob();
       mockJob.evaluation.agent.versions = [];
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
-      expect(result.error?.message).toContain('Agent version not found');
+      expect(mockJobService.markAsFailed).toHaveBeenCalledWith('job-1', result.error);
+      expect(mockAnalyzeDocument).not.toHaveBeenCalled();
+      expect(prisma.evaluationVersion.create).not.toHaveBeenCalled();
+      expect(mockJobService.markAsCompleted).not.toHaveBeenCalled();
     });
 
     it('should save highlights to database', async () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       mockAnalysisResult.highlights = [
         {
           description: 'Test highlight',
-          importance: 'high',
-          grade: 'A',
+          importance: 70,
+          grade: 90,
           highlight: {
             startOffset: 0,
             endOffset: 10,
@@ -189,7 +203,6 @@ describe('JobOrchestrator', () => {
       ];
 
       mockAnalyzeDocument.mockResolvedValue(mockAnalysisResult);
-      mockFetchJobCost.mockResolvedValue(null);
       mockJobRepository.updateStatus.mockResolvedValue(mockJob);
 
       (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
@@ -200,19 +213,23 @@ describe('JobOrchestrator', () => {
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(true);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Saved 1 highlights'),
-        expect.objectContaining({
-          evaluationId: 'eval-1',
-          highlightCount: 1,
-        })
-      );
+      expect(prisma.evaluationHighlight.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          startOffset: 0, endOffset: 10, quotedText: 'This is te', isValid: true, error: null,
+        }),
+      });
+      expect(prisma.evaluationComment.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          evaluationVersionId: 'eval-version-1', highlightId: 'highlight-1', description: 'Test highlight',
+          importance: 70, grade: 90,
+        }),
+      });
     });
 
     it('should handle cancelled job', async () => {
       const mockJob = createMockJob();
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: 'CANCELLED' });
+      mockJobRepository.findById.mockResolvedValue({ status: JobStatus.CANCELLED });
 
       const result = await orchestrator.processJob(mockJob);
 
@@ -220,13 +237,15 @@ describe('JobOrchestrator', () => {
       expect(result.error).toBeInstanceOf(Error);
       expect(result.error?.message).toBe('Job was cancelled');
       expect(mockLogger.info).toHaveBeenCalledWith('[Job job-1] Job was cancelled, skipping processing');
+      expect(mockAnalyzeDocument).not.toHaveBeenCalled();
+      expect(mockJobService.markAsCompleted).not.toHaveBeenCalled();
+      expect(mockJobService.markAsFailed).not.toHaveBeenCalled();
     });
 
-    it('should calculate cost from tasks when Helicone unavailable', async () => {
+    it('should persist task costs and include them in the execution log', async () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
 
-      (prisma.job.findUnique as any).mockResolvedValue({ status: 'RUNNING' });
       mockAnalysisResult.tasks = [
         {
           name: 'Task 1',
@@ -245,7 +264,6 @@ describe('JobOrchestrator', () => {
       ];
 
       mockAnalyzeDocument.mockResolvedValue(mockAnalysisResult);
-      mockFetchJobCost.mockResolvedValue(null);
       mockJobService.markAsCompleted.mockResolvedValue(mockJob);
 
       (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
@@ -254,6 +272,12 @@ describe('JobOrchestrator', () => {
       const result = await orchestrator.processJob(mockJob);
 
       expect(result.success).toBe(true);
+      expect(prisma.task.create).toHaveBeenCalledTimes(2);
+      for (const task of mockAnalysisResult.tasks) {
+        expect(prisma.task.create).toHaveBeenCalledWith({ data: { ...task, jobId: 'job-1' } });
+      }
+      expect(result.logContent).toContain('Cost: $0.2500');
+      expect(result.logContent).toContain('Cost: $0.3500');
       expect(mockJobService.markAsCompleted).toHaveBeenCalledWith(
         'job-1',
         expect.objectContaining({
@@ -310,6 +334,7 @@ describe('JobOrchestrator', () => {
               selfCritiqueInstructions: null,
               providesGrades: true,
               extendedCapabilityId: null,
+              pluginIds: [],
             },
           ],
         },
@@ -321,7 +346,7 @@ describe('JobOrchestrator', () => {
     return {
       summary: 'Test summary',
       analysis: 'Test analysis',
-      grade: 'B',
+      grade: 75,
       selfCritique: null,
       highlights: [] as any[],
       thinking: 'Test thinking',
