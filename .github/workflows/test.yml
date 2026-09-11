@@ -187,6 +187,9 @@ jobs:
       - name: Test agentic worker sandbox configuration
         run: pnpm --filter @roast/ai exec vitest run src/analysis-plugins/plugins/agentic/orchestrator.vtest.ts
 
+      - name: Test Helicone request pagination
+        run: pnpm --filter @roast/ai exec vitest run src/helicone/api-client.vtest.ts
+
       - name: Run worker integration tests
         run: pnpm --filter @roast/jobs run test:integration
 
