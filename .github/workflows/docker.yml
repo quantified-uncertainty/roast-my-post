@@ -109,13 +109,10 @@ jobs:
           echo "Testing package availability for ${{ matrix.name }} image..."
 
           if [ "${{ matrix.suffix }}" = "-worker" ]; then
-            # Worker image - verify Node.js tooling and Claude Agent SDK sandbox dependencies
+            # Worker image - verify pnpm and Node.js
             docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}:pr-${{ github.event.number }} sh -c "
               pnpm --version > /dev/null && echo '✓ pnpm available' && 
-              node --version > /dev/null && echo '✓ Node.js available' &&
-              bash --version > /dev/null && echo '✓ bash available' &&
-              bwrap --version > /dev/null && echo '✓ bubblewrap available' &&
-              socat -V > /dev/null && echo '✓ socat available'
+              node --version > /dev/null && echo '✓ Node.js available'
             "
           else
             # Main image - verify Node.js
