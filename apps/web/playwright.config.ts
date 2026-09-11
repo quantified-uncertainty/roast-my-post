@@ -32,6 +32,14 @@ if (!process.env.CI && missingEnvVars.length > 0) {
   process.exit(1);
 }
 
+const port = Number(process.env.PORT ?? 3000);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  throw new Error('PORT must be an integer between 1 and 65535');
+}
+
+// Match the auth bypass used by the child web server in the test workers.
+process.env.BYPASS_TOOL_AUTH = 'true';
+
 const config: PlaywrightTestConfig = {
   testDir: "./tests/playwright",
   testMatch: "**/*.spec.ts",
@@ -46,7 +54,7 @@ const config: PlaywrightTestConfig = {
   reporter: "html",
   use: {
     actionTimeout: 0,
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
   },
   projects: [
@@ -59,7 +67,7 @@ const config: PlaywrightTestConfig = {
   ],
   webServer: {
     command: "npm run dev",
-    port: 3000,
+    port,
     reuseExistingServer: !process.env["CI"],
     env: {
       ...process.env,

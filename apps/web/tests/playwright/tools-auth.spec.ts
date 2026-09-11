@@ -1,43 +1,62 @@
 import { test, expect, Page } from '@playwright/test';
 import { AuthHelper, setupTestAuthBypass, testAuthRequired } from './auth-helpers';
+import type { ToolId } from '../../src/app/tools/tool-metadata';
 
-// Test data for different tools
+interface ToolTestData {
+  input: Record<string, string | number>;
+  response?: Record<string, unknown>;
+}
+
+// AI responses are fixed here; these tests check the browser form and result rendering.
 const toolTestData = {
-  'fuzzy-text-locator': {
+  'smart-text-searcher': {
     input: { 
       documentText: 'This is a sample document with some text to search through.',
       searchText: 'sample document'
     },
-    expectedInResult: ['found', 'location']
   },
   'document-chunker': {
     input: {
       text: 'This is a long document that needs to be split into smaller chunks for processing. ' +
             'It contains multiple paragraphs and sections that should be handled appropriately. ' +
             'The chunking algorithm should preserve meaningful boundaries where possible.',
-      maxChunkSize: 50
+      maxChunkSize: 500
     },
-    expectedInResult: ['chunks', 'text']
   },
-  'extract-math-expressions': {
+  'math-expressions-extractor': {
     input: {
       text: 'The equation 2 + 2 = 4 and the formula x^2 + y^2 = z^2 are mathematical expressions.',
       context: 'Find math expressions in text'
     },
-    expectedInResult: ['expressions', 'math']
+    response: {
+      expressions: [{
+        originalText: '2 + 2 = 4',
+        hasError: false,
+        complexityScore: 10,
+        contextImportanceScore: 50,
+        errorSeverityScore: 0,
+        verificationStatus: 'verified',
+      }],
+    }
   },
-  'detect-language-convention': {
+  'language-convention-detector': {
     input: {
       text: 'This is a colour from the neighbourhood centre that specialises in behaviour.',
       context: 'Detect language convention'
     },
-    expectedInResult: ['convention', 'language']
+    response: { convention: 'UK', confidence: 0.95, consistency: 1, evidence: [] }
   }
-};
+} satisfies Partial<Record<ToolId, ToolTestData>>;
 
 // Helper function to test a tool with authentication
-async function testToolWithAuth(page: Page, toolId: string, testData: any) {
-  const _authHelper = new AuthHelper(page);
+async function testToolWithAuth(page: Page, toolId: string, testData: ToolTestData) {
+  if (testData.response) {
+    await page.route(`**/api/tools/${toolId}`, async route => {
+      expect(route.request().method()).toBe('POST');
+      expect(route.request().postDataJSON()).toMatchObject({ text: testData.input.text });
+      await route.fulfill({ json: { success: true, result: testData.response } });
+    });
+  }
   
   // Navigate directly to the tool's try page
   await page.goto(`/tools/${toolId}/try`);
@@ -52,33 +71,21 @@ async function testToolWithAuth(page: Page, toolId: string, testData: any) {
   await page.waitForSelector('form', { timeout: 5000 });
   
   // Handle different input types based on the tool
-  if (toolId === 'fuzzy-text-locator') {
-    // Fuzzy text locator has two textareas: documentText and searchText
-    const textareas = page.locator('textarea');
-    const count = await textareas.count();
-    if (count >= 2) {
-      await textareas.nth(0).fill(testData.input.documentText || 'test document');
-      await textareas.nth(1).fill(testData.input.searchText || 'test search');
-    } else {
-      // Fallback for single textarea
-      await textareas.first().fill(testData.input.documentText || testData.input.text || 'test input');
-    }
+  if (toolId === 'smart-text-searcher') {
+    await page.getByLabel('Document Text', { exact: false }).fill(String(testData.input.documentText));
+    await page.getByLabel('Search Text', { exact: false }).fill(String(testData.input.searchText));
   } else if (toolId === 'document-chunker') {
     // Document chunker has a textarea and a number input
     const textarea = page.locator('textarea').first();
-    await textarea.fill(testData.input.text || 'test text');
+    await textarea.fill(String(testData.input.text || 'test text'));
     
-    // Look for chunk size input
-    const chunkSizeInput = page.locator('input[type="number"]').first();
-    if (await chunkSizeInput.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await chunkSizeInput.fill(String(testData.input.maxChunkSize || 50));
-    }
+    await page.getByLabel('Max Chunk Size', { exact: true }).fill(String(testData.input.maxChunkSize));
   } else {
     // Default: single textarea
     const textarea = page.locator('textarea').first();
     await expect(textarea).toBeVisible();
     const inputText = testData.input.text || testData.input.query || 'test input';
-    await textarea.fill(inputText);
+    await textarea.fill(String(inputText));
   }
   
   // Find and click the submit button
@@ -88,68 +95,13 @@ async function testToolWithAuth(page: Page, toolId: string, testData: any) {
   await expect(submitButton).toBeVisible();
   await submitButton.click();
   
-  // Wait for the request to complete (look for loading state to end)
-  // Use longer timeout for extract-math-expressions which can be slow
-  const timeout = toolId === 'extract-math-expressions' ? 30000 : 15000;
-  // Wait for button to not show loading states (containing "...")
-  await expect(submitButton).not.toHaveText(/ing\.\.\./, { timeout });
-  
-  // Check that we got some result
-  // Look for common result indicators
-  const resultIndicators = [
-    page.locator('[data-testid="tool-result"]'),  // Primary: data-testid
-    page.locator('.result'),                       // Fallback: specific class
-    page.locator('pre'),                           // Fallback: JSON results
-  ];
-  
-  let resultFound = false;
-  for (const indicator of resultIndicators) {
-    if (await indicator.isVisible()) {
-      resultFound = true;
-      break;
-    }
+  // Wait for the result container before checking the response.
+  const result = page.getByTestId('tool-result');
+  await expect(result).toBeVisible({ timeout: 30000 });
+  if (testData.response) {
+    await expect(result.locator('pre')).toHaveText(JSON.stringify(testData.response, null, 2));
   }
-  
-  // If no specific result container, check for expected content
-  if (!resultFound) {
-    for (const expectedContent of testData.expectedInResult) {
-      const contentLocator = page.locator(`text=${expectedContent}`).first();
-      if (await contentLocator.isVisible({ timeout: 1000 }).catch(() => false)) {
-        resultFound = true;
-        break;
-      }
-    }
-  }
-  
-  if (!resultFound) {
-    // Check if there's an error message
-    const errorSelectors = [
-      '[data-testid="tool-error"]',  // Primary: data-testid
-      'text=error',
-      'text=Error',
-      'text=failed',
-      'text=Failed',
-      '.error-message'  // Removed broad [class*="error"] selector
-    ];
-    
-    let errorMessage = '';
-    for (const selector of errorSelectors) {
-      const errorElement = page.locator(selector).first();
-      if (await errorElement.isVisible({ timeout: 1000 }).catch(() => false)) {
-        errorMessage = await errorElement.textContent() || '';
-        break;
-      }
-    }
-    
-    if (errorMessage) {
-      throw new Error(`Tool ${toolId} failed with error: ${errorMessage}`);
-    }
-    
-    // Take a screenshot for debugging
-    await page.screenshot({ path: `playwright-results/tool-${toolId}-debug.png`, fullPage: true });
-    throw new Error(`No result found for tool ${toolId}. Check screenshot for debugging.`);
-  }
-  
+
   return true;
 }
 
@@ -163,7 +115,7 @@ test.describe('Tool Authentication Requirements', () => {
   
   test('should redirect unauthenticated users to sign-in', async ({ page }) => {
     // Visit a tool page without being authenticated
-    await page.goto('/tools/fuzzy-text-locator');
+    await page.goto('/tools/smart-text-searcher');
     
     // Should be redirected to sign-in page or stay on tools page
     // Note: In dev mode with auth bypass, redirection might not happen
@@ -218,7 +170,7 @@ test.describe('Tools with Real Authentication', () => {
     await authHelper.signInWithEmail('test@example.com');
     
     // Test a tool
-    await testToolWithAuth(page, 'fuzzy-text-locator', toolTestData['fuzzy-text-locator']);
+    await testToolWithAuth(page, 'smart-text-searcher', toolTestData['smart-text-searcher']);
   });
 });
 
@@ -256,48 +208,21 @@ test.describe('Tool Functionality Tests', () => {
     });
   });
   
-  test('fuzzy-text-locator should find text matches', async ({ page }) => {
+  test('smart-text-searcher should find text matches', async ({ page }) => {
     await setupTestAuthBypass(page);
     
-    await page.goto('/tools/fuzzy-text-locator/try');
+    await page.goto('/tools/smart-text-searcher/try');
     
-    // Fuzzy text locator should have two textareas
-    const textareas = page.locator('textarea');
-    const textareaCount = await textareas.count();
-    
-    if (textareaCount >= 2) {
-      // Fill both textareas: documentText and searchText
-      await textareas.nth(0).fill('This is a sample document with some text to search through.');
-      await textareas.nth(1).fill('sample document');
-    } else {
-      // Fallback: try single textarea
-      await textareas.first().fill('This is a sample document with some text to search through.');
-    }
-    
-    const submitButton = page.locator('button[type="submit"]').first();
-    await submitButton.click();
-    
-    // Wait for the button to be re-enabled (indicates processing is done)
-    await expect(submitButton).toBeEnabled({ timeout: 30000 });
-    
-    // Wait for result to appear - check multiple possible selectors
-    const resultSelectors = [
-      '[data-testid="tool-result"]',
-      'pre',
-      '.result',
-      'text=/found|location|match|offset/i'
-    ];
-    
-    let hasResult = false;
-    for (const selector of resultSelectors) {
-      const element = page.locator(selector).first();
-      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
-        hasResult = true;
-        break;
-      }
-    }
-    
-    expect(hasResult).toBeTruthy();
+    await page.getByLabel('Document Text', { exact: false }).fill('This is a sample document with some text to search through.');
+    await page.getByLabel('Search Text', { exact: false }).fill('sample document');
+    await page.locator('button[type="submit"]').click();
+
+    const result = page.getByTestId('tool-result');
+    await expect(result).toBeVisible();
+    await expect(result).toContainText('"found": true');
+    await expect(result).toContainText('"quotedText": "sample document"');
+    await expect(result).toContainText('"startOffset": 10');
+    await expect(result).toContainText('"endOffset": 25');
   });
   
   test('document-chunker should split text into chunks', async ({ page }) => {
@@ -309,36 +234,14 @@ test.describe('Tool Functionality Tests', () => {
     const textarea = page.locator('textarea').first();
     await textarea.fill(toolTestData['document-chunker'].input.text);
     
-    // Fill the chunk size input if present
-    const chunkSizeInput = page.locator('input[type="number"]').first();
-    if (await chunkSizeInput.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await chunkSizeInput.fill(String(toolTestData['document-chunker'].input.maxChunkSize));
-    }
-    
-    const submitButton = page.locator('button[type="submit"]').first();
-    await submitButton.click();
-    
-    // Wait for the button to be re-enabled (indicates processing is done)
-    await expect(submitButton).toBeEnabled({ timeout: 30000 });
-    
-    // Wait for result to appear - check multiple possible selectors
-    const resultSelectors = [
-      '[data-testid="tool-result"]',
-      'pre',
-      '.result',
-      'text=/chunk|segment|split/i'
-    ];
-    
-    let hasResult = false;
-    for (const selector of resultSelectors) {
-      const element = page.locator(selector).first();
-      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
-        hasResult = true;
-        break;
-      }
-    }
-    
-    expect(hasResult).toBeTruthy();
+    await page.getByLabel('Max Chunk Size', { exact: true })
+      .fill(String(toolTestData['document-chunker'].input.maxChunkSize));
+    await page.locator('button[type="submit"]').click();
+
+    const result = page.getByTestId('tool-result');
+    await expect(result).toBeVisible();
+    await expect(result).toContainText('"chunks"');
+    await expect(result).toContainText('This is a long document');
   });
 });
 
@@ -347,7 +250,7 @@ test.describe('Tool Error Handling', () => {
   test('should handle missing input gracefully', async ({ page }) => {
     await setupTestAuthBypass(page);
     
-    await page.goto('/tools/fuzzy-text-locator/try');
+    await page.goto('/tools/smart-text-searcher/try');
     
     // Check if submit button is disabled without input
     const submitButton = page.locator('button[type="submit"]').first();

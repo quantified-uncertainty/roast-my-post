@@ -137,6 +137,56 @@ jobs:
           # Always use test:ci-nocov since coverage is handled by sharded tests
           pnpm --filter @roast/web run test:ci-nocov
 
+  worker-tests:
+    name: Worker Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: roast_my_post_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+      ANTHROPIC_API_KEY: ""
+      OPENROUTER_API_KEY: ""
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @roast/db run gen:build
+
+      - name: Build worker and dependencies
+        run: pnpm --filter @roast/jobs run build
+
+      - name: Run worker unit tests
+        run: pnpm --filter @roast/jobs run test:ci
+
+      - name: Run worker integration tests
+        run: pnpm --filter @roast/jobs run test:integration
+
   # Integration tests (3-4 minutes) - parallel with other jobs
   integration-tests:
     name: Integration Tests
@@ -311,19 +361,21 @@ jobs:
     name: CI Status
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [unit-tests, integration-tests, build, docker-test]
+    needs: [unit-tests, worker-tests, integration-tests, build, docker-test]
     if: always()
     steps:
       - name: Check CI Status
         run: |
           echo "=== CI Results ==="
           echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Worker Tests: ${{ needs.worker-tests.result }}"
           echo "Integration Tests: ${{ needs.integration-tests.result }}"
           echo "Build: ${{ needs.build.result }}"
           echo "Docker Test: ${{ needs.docker-test.result }}"
 
-          # Check for failures or cancellations (skipped is OK)
-          if [[ "${{ needs.unit-tests.result }}" == "failure" || "${{ needs.unit-tests.result }}" == "cancelled" || \
+          # Worker tests must pass; preserve existing handling for the other jobs.
+          if [[ "${{ needs.worker-tests.result }}" != "success" || \
+                "${{ needs.unit-tests.result }}" == "failure" || "${{ needs.unit-tests.result }}" == "cancelled" || \
                 "${{ needs.integration-tests.result }}" == "failure" || "${{ needs.integration-tests.result }}" == "cancelled" || \
                 "${{ needs.build.result }}" == "failure" || "${{ needs.build.result }}" == "cancelled" || \
                 "${{ needs.docker-test.result }}" == "failure" || "${{ needs.docker-test.result }}" == "cancelled" ]]; then

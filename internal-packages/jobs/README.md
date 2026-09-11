@@ -54,6 +54,20 @@ Worker ID = `hostname(4) + pid(4)`, max 8 chars. Set once at startup via `initWo
 
 ## Timeout Handling
 
+The pg-boss database pool has one connection and a 30-second node-postgres
+`query_timeout`. A timed-out query fails and pg-pool removes its connection;
+subsequent queries can reconnect. This is separate from the 10-second connection
+acquisition timeout and from evaluation handler deadlines. It does not retry the
+failed query or impose a 30-second limit on an evaluation.
+
+Worker tests use Vitest: `pnpm --filter @roast/jobs test:ci` runs unit tests;
+`pnpm --filter @roast/jobs test:integration` runs database integration tests.
+For integration tests, set `DATABASE_URL` to a local PostgreSQL test database
+whose name ends in `_test`. CI supplies this through its PostgreSQL service.
+The tests take about 80 seconds and verify that a hung connection times out,
+queued work resumes, and evaluation handlers can run longer than 30 seconds.
+Both suites are required by the **Worker Tests** CI job.
+
 pg-boss `expireInSeconds` marks jobs failed but **cannot interrupt handlers**. We implement graceful timeouts:
 
 1. **Remaining time budget** - LLM calls use `min(remainingTime, 180s)`

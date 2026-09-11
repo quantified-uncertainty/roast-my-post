@@ -20,7 +20,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run",
-    "test:integration": "vitest run",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
     "test:ci": "vitest run",
     "process-pgboss": "tsx src/cli/process-pgboss-worker.ts"
   },
