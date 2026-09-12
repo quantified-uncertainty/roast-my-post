@@ -6,6 +6,7 @@
 import { OpenAI } from 'openai';
 import { aiConfig } from '../../config';
 import { getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
+import { throwIfProviderAccessError } from '../../shared/providerErrors';
 import { logger } from '../../utils/logger';
 
 export interface PerplexityOptions {
@@ -164,6 +165,7 @@ export class PerplexityClient {
       }
       
       logger.error('[PerplexityClient] Request failed:', errorLog);
+      throwIfProviderAccessError(error);
       
       // Simplify error messages
       if (error.status === 401 || error.message?.includes('401')) {
@@ -178,4 +180,3 @@ export class PerplexityClient {
     }
   }
 }
-

@@ -2,6 +2,7 @@ import {
   getGlobalSessionManager,
 } from "../../../helicone/simpleSessionManager";
 import { logger } from "../../../shared/logger";
+import { throwIfProviderAccessError } from "../../../shared/providerErrors";
 import type {
   Comment,
   ToolChainResult,
@@ -112,6 +113,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
             extractionErrors.push(result.value.error);
           }
         } else if (result.status === "rejected") {
+          throwIfProviderAccessError(result.reason);
           const error =
             result.reason instanceof Error
               ? result.reason.message
@@ -185,6 +187,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       return this.getResults();
     } catch (error) {
       logger.error("FactCheckPlugin: Fatal error during analysis", error);
+      throwIfProviderAccessError(error);
       // Return a partial result instead of throwing
       this.hasRun = true;
       this.summary = "Analysis failed due to an error";
@@ -243,6 +246,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       };
     } catch (error) {
       logger.error("Error extracting facts from chunk:", error);
+      throwIfProviderAccessError(error);
       // Return empty result but include error info for debugging
       return {
         facts: [],
@@ -306,7 +310,12 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     const verificationPromises = facts.map((fact) =>
       this.verifySingleFact(fact)
     );
-    await Promise.allSettled(verificationPromises);
+    const results = await Promise.allSettled(verificationPromises);
+    for (const result of results) {
+      if (result.status === "rejected") {
+        throwIfProviderAccessError(result.reason);
+      }
+    }
   }
 
   private shouldUsePerplexityResearch(fact: VerifiedFact): boolean {
@@ -390,6 +399,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       fact.verification = result.result;
       fact.factCheckerOutput = result; // Store full output including Perplexity data
     } catch (error) {
+      throwIfProviderAccessError(error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown verification error";
       logger.error(`Error verifying fact "${fact.text}": ${errorMessage}`);

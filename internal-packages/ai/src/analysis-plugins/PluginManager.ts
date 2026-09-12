@@ -10,6 +10,7 @@ import {
   HeliconeSessionManager,
 } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
+import { throwIfProviderAccessError } from "../shared/providerErrors";
 import type { Comment } from "../shared/types";
 import { ANALYSIS_MODEL } from "../types";
 // Import plugin ID constants
@@ -430,6 +431,7 @@ export class PluginManager {
 
             return { plugin: pluginName, result, success: true };
           } catch (error) {
+            throwIfProviderAccessError(error);
             lastError = error;
             const errorMessage =
               error instanceof Error ? error.message : String(error);
@@ -676,6 +678,8 @@ export class PluginManager {
         "Document analysis failed:",
         error instanceof Error ? error : new Error(String(error))
       );
+
+      throwIfProviderAccessError(error);
 
       // Return a graceful fallback result instead of throwing
       const errorMessage =

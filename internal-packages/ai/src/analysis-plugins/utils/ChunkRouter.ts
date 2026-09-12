@@ -7,6 +7,7 @@
 
 import { callClaudeWithTool } from '../../claude/wrapper';
 import { logger } from '../../shared/logger';
+import { throwIfProviderAccessError } from '../../shared/providerErrors';
 import type { TextChunk } from '../TextChunk';
 import type { SimpleAnalysisPlugin, RoutingExample } from '../types';
 
@@ -108,6 +109,7 @@ export class ChunkRouter {
       };
     } catch (error) {
       logger.error('[ChunkRouter] Routing failed:', error);
+      throwIfProviderAccessError(error);
       // Conservative fallback: only route to plugins without routing examples
       // This prevents overwhelming the system while still allowing basic functionality
       const fallbackPlugins = this.pluginInfo

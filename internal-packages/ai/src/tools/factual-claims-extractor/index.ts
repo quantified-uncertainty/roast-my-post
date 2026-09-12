@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import type { DocumentHighlight } from "../../shared/types";
 import {
   Tool,
@@ -318,6 +319,7 @@ Requirements:
           };
         }
       } catch (error) {
+        throwIfProviderAccessError(error);
         context.logger.warn(
           "[ExtractFactualClaims] Failed to find location for claim:",
           {
