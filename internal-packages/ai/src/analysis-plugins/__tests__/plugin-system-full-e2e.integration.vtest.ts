@@ -367,7 +367,7 @@ describe('Plugin System DRY and Consistency Issues', () => {
           'PluginManager tracks costs',
           'Individual plugins track costs',
           'Job.ts calculates costs separately',
-          'Helicone provides costs'
+          'Local task metrics provide costs'
         ],
         problem: 'Cost calculation is spread across multiple places with potential for drift'
       },

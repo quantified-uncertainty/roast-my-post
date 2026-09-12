@@ -10,22 +10,6 @@ vi.mock('@/infrastructure/auth/auth', () => ({
   })
 }));
 
-// Mock Helicone cost tracking
-vi.mock('@roast/ai', async () => {
-  const actual = await vi.importActual('@roast/ai');
-  return {
-    ...actual,
-    fetchJobCostWithRetry: vi.fn().mockResolvedValue(null),
-    HeliconeSessionManager: {
-      forJob: vi.fn().mockReturnValue({
-        getHeaders: vi.fn().mockReturnValue({}),
-        generateRequestId: vi.fn().mockReturnValue('test-request-id')
-      })
-    },
-    setGlobalSessionManager: vi.fn()
-  };
-});
-
 // Define hoisted mocks to avoid Vitest mock hoisting issues
 const hoisted = vi.hoisted(() => {
   const mockPerplexityTool = {
@@ -79,13 +63,11 @@ describe('Perplexity Research API Route', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     process.env.OPENROUTER_API_KEY = 'test-key';
-    process.env.HELICONE_API_KEY = 'test-helicone-key';
   });
 
   afterEach(() => {
     vi.useRealTimers();
     delete process.env.OPENROUTER_API_KEY;
-    delete process.env.HELICONE_API_KEY;
   });
 
   it('should handle research request successfully', async () => {
@@ -163,4 +145,3 @@ describe('Perplexity Research API Route', () => {
     expect(data).toHaveProperty('error', 'API request failed');
   });
 });
-

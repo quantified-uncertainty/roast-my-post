@@ -267,12 +267,6 @@ Keep the response concise and focused on information directly relevant to foreca
       return false;
     }
 
-    // Check if Helicone API key is available
-    if (!process.env.HELICONE_API_KEY) {
-      context.logger.error("[PerplexityResearch] Missing HELICONE_API_KEY");
-      return false;
-    }
-
     return true;
   }
 }

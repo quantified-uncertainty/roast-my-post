@@ -6,7 +6,6 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { mathExpressionsExtractorConfig } from "../configs";
-import { generateCacheSeed } from "../shared/cache-utils";
 import type {
   MathErrorType,
   MathSeverity,
@@ -163,13 +162,6 @@ export class ExtractMathExpressionsTool extends Tool<
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
-    // Generate cache seed based on content for consistent caching
-    const cacheSeed = generateCacheSeed("math-extract", [
-      input.text,
-      input.verifyCalculations ?? true,
-      input.includeContext ?? true,
-    ]);
-
     const result = await callClaudeWithTool<{
       expressions: ExtractedMathExpression[];
     }>({
@@ -187,7 +179,6 @@ export class ExtractMathExpressionsTool extends Tool<
         "Extract ONLY mathematical expressions that appear to contain errors",
       toolSchema: this.getMathExtractionToolSchema(),
       enablePromptCaching: true,
-      cacheSeed,
     });
 
     const expressions = result.toolResult?.expressions || [];

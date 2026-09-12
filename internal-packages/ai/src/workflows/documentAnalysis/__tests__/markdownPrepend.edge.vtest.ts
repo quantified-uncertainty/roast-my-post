@@ -15,7 +15,6 @@ vi.mock("../../../claude/wrapper", () => ({
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307",
   },
-  createHeliconeHeaders: vi.fn(() => ({})),
   withTimeout: vi.fn((promise) => promise),
 }));
 

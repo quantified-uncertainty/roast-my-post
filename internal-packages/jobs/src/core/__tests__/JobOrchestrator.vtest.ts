@@ -2,12 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobOrchestrator } from '../JobOrchestrator';
 import { analyzeDocument, getWorkerId } from '@roast/ai/server';
 import { prisma, JobStatus } from '@roast/db';
-import { HeliconeSessionManager, setGlobalSessionManager } from '@roast/ai';
 import type { Logger } from '../../types';
-
-interface MockSessionManager {
-  trackAnalysis: ReturnType<typeof vi.fn>;
-}
 
 // Mock dependencies
 vi.mock('@roast/ai/server', () => ({
@@ -17,10 +12,6 @@ vi.mock('@roast/ai/server', () => ({
 
 vi.mock('@roast/ai', () => ({
   initializeAI: vi.fn(),
-  HeliconeSessionManager: {
-    forJob: vi.fn(),
-  },
-  setGlobalSessionManager: vi.fn(),
 }));
 
 vi.mock('@roast/db', () => ({
@@ -55,16 +46,10 @@ describe('JobOrchestrator', () => {
   let mockJobService: any;
   let mockLogger: Logger;
   let mockAnalyzeDocument: any;
-  let mockSessionManager: MockSessionManager;
 
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(getWorkerId).mockReturnValue(undefined);
-    mockSessionManager = { trackAnalysis: vi.fn((_type, fn) => fn()) };
-    vi.mocked(HeliconeSessionManager.forJob).mockReturnValue(
-      mockSessionManager as unknown as HeliconeSessionManager
-    );
-
     // Create mock logger
     mockLogger = {
       info: vi.fn(),
@@ -127,12 +112,11 @@ describe('JobOrchestrator', () => {
       );
       expect(mockJobService.markAsFailed).toHaveBeenCalledWith('job-1', error);
       expect(mockJobService.markAsCompleted).not.toHaveBeenCalled();
-      expect(setGlobalSessionManager).toHaveBeenLastCalledWith(undefined);
     });
   });
 
   describe('processJob', () => {
-    it('should process job with session tracking', async () => {
+    it('should return the completed job and execution log', async () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
       const completedJob = { ...mockJob, status: JobStatus.COMPLETED };
@@ -149,12 +133,6 @@ describe('JobOrchestrator', () => {
       expect(result.job).toEqual(completedJob);
       expect(result.logContent).toContain('Job Execution Log');
       expect(result.logContent).toContain('job-1');
-      expect(HeliconeSessionManager.forJob).toHaveBeenCalledWith(
-        'job-1', 'Test Agent evaluating Test Document', expect.objectContaining({ JobId: 'job-1' })
-      );
-      expect(mockSessionManager.trackAnalysis).toHaveBeenCalledWith('document', expect.any(Function));
-      expect(setGlobalSessionManager).toHaveBeenNthCalledWith(1, mockSessionManager);
-      expect(setGlobalSessionManager).toHaveBeenLastCalledWith(undefined);
     });
 
     it('should handle missing document version', async () => {
@@ -282,6 +260,7 @@ describe('JobOrchestrator', () => {
         'job-1',
         expect.objectContaining({
           llmThinking: 'Test thinking',
+          priceInDollars: 0.6,
         })
       );
     });

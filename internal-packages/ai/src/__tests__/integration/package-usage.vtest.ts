@@ -12,14 +12,14 @@ import {
  * and used as intended by consuming applications.
  */
 import {
-  callClaude,
-  callClaudeWithTool,
   initializeAI,
-  MathPlugin,
   toolRegistry,
 } from "../../index";
 import {
+  callClaude,
+  callClaudeWithTool,
   checkSpellingGrammarTool,
+  MathPlugin,
   PluginManager,
 } from "../../server";
 
@@ -29,7 +29,6 @@ describe("@roast/ai Package Integration", () => {
       expect(() => {
         initializeAI({
           anthropicApiKey: "test-key",
-          heliconeApiKey: "test-key",
         });
       }).not.toThrow();
     });

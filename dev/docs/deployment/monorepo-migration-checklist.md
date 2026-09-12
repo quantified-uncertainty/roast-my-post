@@ -93,7 +93,6 @@ git push
 ### Optional but Recommended
 - `AUTH_RESEND_KEY` - Email authentication
 - `EMAIL_FROM` - Sender email
-- `HELICONE_API_KEY` - LLM analytics
 - `FIRECRAWL_KEY` - Web scraping
 
 ## Post-Deployment Verification

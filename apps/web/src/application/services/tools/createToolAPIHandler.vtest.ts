@@ -12,7 +12,7 @@ import { Tool } from '@roast/ai';
 import { auth } from '@/infrastructure/auth/auth';
 import { logger } from '@/infrastructure/logging/logger';
 
-// Mock the AI logger and Helicone
+// Mock the AI logger
 vi.mock('@roast/ai', async () => ({
   ...await vi.importActual('@roast/ai'),
   logger: {
@@ -20,15 +20,7 @@ vi.mock('@roast/ai', async () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn()
-  },
-  fetchJobCostWithRetry: vi.fn().mockResolvedValue(null),
-  HeliconeSessionManager: {
-    forJob: vi.fn().mockReturnValue({
-      getHeaders: vi.fn().mockReturnValue({}),
-      generateRequestId: vi.fn().mockReturnValue('test-request-id')
-    })
-  },
-  setGlobalSessionManager: vi.fn()
+  }
 }));
 
 // Mock config module

@@ -11,7 +11,6 @@ import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
 import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import { LineBasedLocator } from "../../text-location/line-based";
-import { getGlobalSessionManager } from "../../helicone/simpleSessionManager";
 import type { ToolContext } from "../base/Tool";
 
 import { TextLocation } from "./types";
@@ -348,12 +347,5 @@ export async function llmSearch(
     }
   };
 
-  // Use session manager to track this as a sub-operation if available
-  const sessionManager = getGlobalSessionManager();
-  if (sessionManager) {
-    return sessionManager.withPath('/llm-fallback', { operation: 'text-location' }, executeSearch);
-  }
-
-  // Fall back to direct execution if no session manager
   return executeSearch();
 }

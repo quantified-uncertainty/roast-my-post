@@ -2,20 +2,14 @@
  * Job Orchestrator
  * 
  * Coordinates the complete job processing workflow.
- * Handles document analysis, evaluation creation, session management.
+ * Handles document analysis and evaluation creation.
  * Now uses @roast/ai workflows directly instead of dependency injection.
  */
 
 import type { JobWithRelations, JobRepository } from '@roast/db';
 import { prisma, JobStatus } from '@roast/db';
 import type { Logger, JobProcessingResult, Document } from '../types';
-import {
-  Agent,
-  PluginType,
-  HeliconeSessionManager,
-  setGlobalSessionManager,
-  Comment,
-} from '@roast/ai';
+import { Agent, PluginType, Comment } from '@roast/ai';
 import { analyzeDocument, getWorkerId, DocumentAnalysisResult } from '@roast/ai/server';
 import { JobService } from './JobService';
 
@@ -47,8 +41,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
   async processJob(job: JobWithRelations, options?: JobProcessingOptions): Promise<JobProcessingResult> {
     this.logger.info(this.formatLog(job.id, `Starting processing...${options?.profileId ? ` (profile: ${options.profileId})` : ''}`));
     const startTime = Date.now();
-    let sessionManager: HeliconeSessionManager | undefined;
-
     try {
       // Check if job was cancelled before we start processing
       const currentJob = await this.jobRepository.findById(job.id);
@@ -62,9 +54,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         };
       }
 
-      // Setup Helicone session tracking
-      sessionManager = this.setupSessionTracking(job);
-
       this.logger.info(this.formatLog(job.id, 'Preparing job data...'));
       // Extract and validate job data
       const { documentForAnalysis, agent } = this.prepareJobData(job);
@@ -75,7 +64,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         documentForAnalysis,
         agent,
         job.id,
-        sessionManager,
         options?.profileId
       );
 
@@ -101,6 +89,10 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         llmThinking: analysisResult.thinking,
         durationInSeconds,
         logs: logContent,
+        priceInDollars: analysisResult.tasks.reduce(
+          (total, task) => total + task.priceInDollars,
+          0
+        ),
       });
 
       return {
@@ -121,53 +113,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         error: error instanceof Error ? error : new Error(String(error)),
       };
 
-    } finally {
-      // Always clear session manager
-      if (sessionManager) {
-        setGlobalSessionManager(undefined);
-      }
     }
-  }
-
-
-  /**
-   * Setup Helicone session tracking for the job
-   */
-  private setupSessionTracking(job: JobWithRelations): HeliconeSessionManager | undefined {
-    try {
-      // TypeScript types guarantee these are defined (Prisma include with take: 1)
-      const documentVersion = job.evaluation.document.versions[0];
-      const agentVersion = job.evaluation.agent.versions[0];
-
-      // Use originalJobId for retries to group them under the same session
-      const sessionId = job.originalJobId || job.id;
-      const truncatedTitle = documentVersion.title.length > 50
-        ? documentVersion.title.slice(0, 50) + '...'
-        : documentVersion.title;
-
-      const sessionManager = HeliconeSessionManager.forJob(
-        sessionId,
-        `${agentVersion.name} evaluating ${truncatedTitle}`,
-        {
-          JobId: job.id,
-          JobAttempt: job.originalJobId ? 'retry' : 'initial',
-          DocumentId: job.evaluation.document.id,
-          AgentId: job.evaluation.agent.id,
-          AgentVersion: agentVersion.version.toString(),
-          EvaluationId: job.evaluation.id,
-          UserId: job.evaluation.agent.submittedBy?.id ?? 'anonymous',
-        }
-      );
-
-      // Set as global for automatic header propagation
-      setGlobalSessionManager(sessionManager);
-      return sessionManager;
-    } catch (error) {
-      this.logger.warn(this.formatLog(job.id, '⚠️ Failed to create Helicone session manager:'), error);
-      // Continue without session tracking rather than failing the job
-    }
-
-    return undefined;
   }
 
   /**
@@ -215,7 +161,6 @@ export class JobOrchestrator implements JobOrchestratorInterface {
     documentForAnalysis: Document,
     agent: Agent,
     jobId: string,
-    sessionManager?: HeliconeSessionManager,
     profileId?: string
   ) {
     // Callback for incremental telemetry persistence to Job.telemetryProgress
@@ -240,12 +185,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       onTelemetryUpdate,
     };
 
-    // Track the analysis phase with session manager
-    return await (sessionManager
-      ? sessionManager.trackAnalysis('document', async () => {
-          return analyzeDocument(documentForAnalysis, agent, analysisOptions);
-        })
-      : analyzeDocument(documentForAnalysis, agent, analysisOptions));
+    return analyzeDocument(documentForAnalysis, agent, analysisOptions);
   }
 
   /**

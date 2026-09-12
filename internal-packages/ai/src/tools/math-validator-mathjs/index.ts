@@ -10,12 +10,10 @@ import {
   callClaude,
   MODEL_CONFIG,
 } from "../../claude/wrapper";
-import { getCurrentHeliconeHeaders } from "../../helicone/simpleSessionManager";
 import { createAnthropicClient } from "../../utils/anthropic";
 import type { ToolContext } from "../base/Tool";
 import { Tool } from "../base/Tool";
 import { mathValidatorMathJsConfig } from "../configs";
-import { generateCacheSeed } from "../shared/cache-utils";
 // Import MathJS parser utilities
 import {
   formatForMathJS,
@@ -170,10 +168,7 @@ export class CheckMathWithMathJsTool extends Tool<
       `[CheckMathWithMathJsTool] Analyzing statement: "${input.statement}"`
     );
 
-    // Check for global session manager
-    const currentHeaders = getCurrentHeliconeHeaders();
-    const sessionId =
-      currentHeaders["Helicone-Session-Id"] || `math-standalone-${Date.now()}`;
+    const sessionId = `math-${Date.now()}`;
 
     let currentPrompt = "";
 
@@ -875,12 +870,6 @@ Respond with a JSON object containing:
 
     const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ""}`;
 
-    // Generate cache seed
-    const cacheSeed = generateCacheSeed("math-check-mathjs-llm", [
-      input.statement,
-      input.context || "",
-    ]);
-
     try {
       const result = await callClaude({
         system: systemPrompt,
@@ -889,7 +878,6 @@ Respond with a JSON object containing:
         temperature: 0,
         model: MODEL_CONFIG.analysis,
         enablePromptCaching: true,
-        cacheSeed,
       });
 
       // Parse the response

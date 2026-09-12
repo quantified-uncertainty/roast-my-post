@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Claude wrapper pattern provides a centralized, consistent way to interact with the Anthropic Claude API across the codebase. It handles Helicone integration, LLM interaction tracking, token counting, and error handling automatically.
+The Claude wrapper pattern provides a centralized, consistent way to interact with the Anthropic Claude API across the codebase. It handles LLM interaction tracking, token counting, and error handling automatically.
 
 **Note**: As of February 2025, the Claude wrapper has been extracted to the `@roast/ai` package for better code reuse across the monorepo.
 
@@ -10,10 +10,9 @@ The Claude wrapper pattern provides a centralized, consistent way to interact wi
 
 1. **Centralized Configuration**: All model configuration in one place
 2. **Automatic Tracking**: LLM interactions tracked automatically for debugging and cost monitoring
-3. **Helicone Integration**: Built-in support for Helicone API analytics
-4. **Type Safety**: Full TypeScript support with proper types
-5. **Consistent Error Handling**: Standardized error handling across all Claude calls
-6. **Tool Use Support**: Simplified interface for Claude's tool use feature
+3. **Type Safety**: Full TypeScript support with proper types
+4. **Consistent Error Handling**: Standardized error handling across all Claude calls
+5. **Tool Use Support**: Simplified interface for Claude's tool use feature
 
 ## Basic Usage
 

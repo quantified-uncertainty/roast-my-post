@@ -33,7 +33,7 @@ This documentation is currently being developed. Key topics to be covered:
 - On-call rotation
 
 ### Observability Tools
-- Helicone for AI API tracking
+- Structured logs for AI API tracking
 - Application Performance Monitoring (APM)
 - Custom dashboards
 - Debugging tools

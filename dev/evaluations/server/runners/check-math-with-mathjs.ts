@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
-
 import { logger } from "../../../../internal-packages/ai/src/shared/logger";
 import { checkMathWithMathJsTool } from "../../../../internal-packages/ai/src/tools/check-math-with-mathjs";
 import type { TestCase } from "../../data/check-math-with-mathjs/test-cases";
@@ -43,14 +41,9 @@ export async function runMathEvaluation(
   testCases: TestCase[],
   runsPerTest: number = 3
 ): Promise<EvaluationResult> {
-  // Create a single Helicone session for the entire evaluation
-  const evaluationId = uuidv4();
-  const sessionId = `math-evaluation-${evaluationId}`;
-
   console.log(
     `Running ${testCases.length} math tests with ${runsPerTest} runs each...`
   );
-  console.log(`Helicone Session ID: ${sessionId}`);
 
   try {
     // Run all tests in parallel
@@ -62,16 +55,14 @@ export async function runMathEvaluation(
         const start = Date.now();
 
         try {
-          // Create a context with the session
-          const contextWithSession = {
+          const context = {
             logger: logger,
             userId: "test-evaluation",
-            sessionId, // This ensures the tool uses the same session
           };
 
           const output = await checkMathWithMathJsTool.run(
             testCase.input,
-            contextWithSession
+            context
           );
           const duration = Date.now() - start;
 

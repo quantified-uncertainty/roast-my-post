@@ -34,22 +34,6 @@ export const aiConfig = {
     return getEnv("OPENAI_API_KEY");
   },
 
-  // Helicone configuration
-  get helicone() {
-    return {
-      apiKey: getEnv("HELICONE_API_KEY"),
-      enabled: getEnv("HELICONE_CACHE_ENABLED") === "true",
-      cacheMaxAge: parseInt(
-        getEnv("HELICONE_CACHE_MAX_AGE", "86400") || "86400",
-        10
-      ),
-      cacheBucketMaxSize: parseInt(
-        getEnv("HELICONE_CACHE_BUCKET_MAX_SIZE", "10") || "10",
-        10
-      ),
-    };
-  },
-
   // Agentic plugin — workspace cleanup defaults to true to prevent /tmp accumulation.
   // Set AGENTIC_CLEANUP_WORKSPACE=false to preserve workspaces for debugging.
   get agenticCleanupWorkspace(): boolean {
@@ -84,10 +68,6 @@ export interface AIConfig {
   anthropicApiKey?: string;
   openRouterApiKey?: string;
   openaiApiKey?: string;
-  heliconeApiKey?: string;
-  heliconeEnabled?: boolean;
-  heliconeMaxAge?: string;
-  heliconeMaxSize?: string;
   searchModel?: string;
   analysisModel?: string;
 }
@@ -104,14 +84,6 @@ export function initializeAI(config: AIConfig): void {
   if (config.openRouterApiKey)
     process.env.OPENROUTER_API_KEY = config.openRouterApiKey;
   if (config.openaiApiKey) process.env.OPENAI_API_KEY = config.openaiApiKey;
-  if (config.heliconeApiKey)
-    process.env.HELICONE_API_KEY = config.heliconeApiKey;
-  if (config.heliconeEnabled !== undefined)
-    process.env.HELICONE_CACHE_ENABLED = String(config.heliconeEnabled);
-  if (config.heliconeMaxAge)
-    process.env.HELICONE_CACHE_MAX_AGE = config.heliconeMaxAge;
-  if (config.heliconeMaxSize)
-    process.env.HELICONE_CACHE_BUCKET_MAX_SIZE = config.heliconeMaxSize;
   if (config.searchModel) process.env.SEARCH_MODEL = config.searchModel;
   if (config.analysisModel) process.env.ANALYSIS_MODEL = config.analysisModel;
 }

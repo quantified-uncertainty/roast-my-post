@@ -7,22 +7,6 @@ function getAnthropicApiKey() {
   return aiConfig.anthropicApiKey || process.env.ANTHROPIC_API_KEY;
 }
 
-function getHeliconeApiKey() {
-  return aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
-}
-
-function isHeliconeEnabled() {
-  return aiConfig.helicone.enabled;
-}
-
-function getHeliconeMaxAge() {
-  return aiConfig.helicone.cacheMaxAge.toString();
-}
-
-function getHeliconeMaxSize() {
-  return aiConfig.helicone.cacheBucketMaxSize.toString();
-}
-
 function getOpenRouterApiKey() {
   return process.env.OPENROUTER_API_KEY; // Not in aiConfig yet
 }
@@ -49,27 +33,11 @@ function validateOpenRouterKey() {
 export const SEARCH_MODEL = process.env.SEARCH_MODEL || 'claude-3-5-sonnet-20241022';
 export const ANALYSIS_MODEL = aiConfig.analysisModel;
 
-// Lazy Anthropic client factory for analysis tasks with Helicone integration
-export function createAnthropicClient(additionalHeaders?: Record<string, string>): Anthropic {
+// Lazy Anthropic client factory for analysis tasks
+export function createAnthropicClient(): Anthropic {
   validateAnthropicKey();
   const apiKey = getAnthropicApiKey();
-  const heliconeKey = getHeliconeApiKey();
-  
-  return new Anthropic({
-    apiKey: apiKey!,
-    ...(heliconeKey && {
-      baseURL: "https://anthropic.helicone.ai",
-      defaultHeaders: {
-        "Helicone-Auth": `Bearer ${heliconeKey}`,
-        ...(isHeliconeEnabled() && {
-          "Helicone-Cache-Enabled": "true",
-          "Cache-Control": `max-age=${getHeliconeMaxAge()}`,
-          "Helicone-Cache-Bucket-Max-Size": getHeliconeMaxSize(),
-        }),
-        ...additionalHeaders
-      }
-    })
-  });
+  return new Anthropic({ apiKey: apiKey! });
 }
 
 // Lazy OpenAI client factory via OpenRouter for search tasks

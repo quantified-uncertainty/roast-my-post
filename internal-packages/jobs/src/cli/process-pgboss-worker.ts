@@ -5,7 +5,7 @@
  *
  * Registers workers for document evaluation jobs using pg-boss.
  * Reuses existing JobOrchestrator for job processing logic.
- * Handles scheduled tasks like Helicone cost updates and job reconciliation.
+ * Handles scheduled tasks like job reconciliation.
  */
 
 import { findWorkspaceRoot, loadWebAppEnvironment } from '../utils/workspace';
@@ -29,7 +29,6 @@ import { DOCUMENT_EVALUATION_JOB, type DocumentEvaluationJobData } from '../type
 import type { JobWithMetadata } from 'pg-boss';
 import { isRetryableError } from '../errors/retryableErrors';
 import { getAgentTimeout } from '../config/agentTimeouts';
-import { updateJobCostsFromHelicone } from '../scheduled-tasks/helicone-poller';
 import { JobReconciliationService } from '../scheduled-tasks/job-reconciliation';
 import { EmailService } from '../core/EmailService';
 import { BatchNotificationHandler } from '../core/BatchNotificationHandler';
@@ -44,7 +43,6 @@ interface JobWithAgentVersions {
 }
 
 // Schedule constants
-const HELICONE_POLLER_SCHEDULE = '*/5 * * * *'; // Every 5 minutes
 const JOB_RECONCILIATION_SCHEDULE = '*/10 * * * *'; // Every 10 minutes
 
 class PgBossWorker {
@@ -117,7 +115,6 @@ class PgBossWorker {
     initializeAI({
       anthropicApiKey: process.env.ANTHROPIC_API_KEY,
       openaiApiKey: process.env.OPENAI_API_KEY,
-      heliconeApiKey: process.env.HELICONE_API_KEY,
     });
   }
 
@@ -146,13 +143,6 @@ class PgBossWorker {
 
   private async registerScheduledTasks() {
     logger.info('📅 Registering scheduled tasks...');
-
-    // Helicone cost updates
-    await this.pgBossService.work('helicone-cost-update', { batchSize: 1 }, async () => {
-      await updateJobCostsFromHelicone();
-    });
-    await this.pgBossService.schedule('helicone-cost-update', HELICONE_POLLER_SCHEDULE);
-    logger.info(`✅ Scheduled: helicone-cost-update (${HELICONE_POLLER_SCHEDULE})`);
 
     // Job reconciliation
     await this.pgBossService.work('job-reconciliation', { batchSize: 1 }, async () => {

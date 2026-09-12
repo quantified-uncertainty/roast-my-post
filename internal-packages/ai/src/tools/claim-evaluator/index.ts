@@ -2,7 +2,6 @@ import { z } from "zod";
 import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
 import { callOpenRouterChat, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
-import { HeliconeSessionManager, setGlobalSessionManager } from "../../helicone/simpleSessionManager";
 import { throwIfProviderAccessError } from "../../shared/providerErrors";
 
 // Import from new modules
@@ -139,8 +138,7 @@ const outputSchema = z.object({
 async function evaluateWithModel(
   input: ClaimEvaluatorInput,
   model: string,
-  context: ToolContext,
-  sessionManager?: HeliconeSessionManager
+  context: ToolContext
 ): Promise<EvaluationResult> {
   context.logger.info(`[ClaimEvaluator] Evaluating with ${model}`);
 
@@ -157,33 +155,11 @@ async function evaluateWithModel(
     }, TIMEOUT_MS);
   });
 
-  // Extract provider and model name for tracking
-  const provider = extractProvider(model);
-  const modelName = model.split('/').pop() || model;
-
-  // Wrap evaluation in session tracking if available
-  const runEvaluation = async () => {
-    if (sessionManager) {
-      return sessionManager.withPath(
-        `/models/${provider}`,
-        { provider, model: modelName },
-        async () => {
-          return Promise.race([
-            evaluateWithModelImpl(input, model, context),
-            timeoutPromise,
-          ]);
-        }
-      );
-    } else {
-      return Promise.race([
-        evaluateWithModelImpl(input, model, context),
-        timeoutPromise,
-      ]);
-    }
-  };
-
   try {
-    return await runEvaluation();
+    return await Promise.race([
+      evaluateWithModelImpl(input, model, context),
+      timeoutPromise,
+    ]);
   } finally {
     // Always clear timeout to prevent memory leak
     if (timeoutHandle) {
@@ -365,27 +341,6 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
       `[ClaimEvaluator] Evaluating claim with ${models.length} models, ${runs} run(s) each`
     );
 
-    // Create a unique session for this claim evaluation run
-    const sessionId = `claim-eval-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    const sessionProperties: Record<string, string> = {
-      tool: 'claim-evaluator',
-    };
-
-    // Create session name with claim prefix (first 100 chars)
-    const claimPrefix = input.claim.slice(0, 100);
-    const sessionName = `Claim Evaluator: ${claimPrefix}${input.claim.length > 100 ? '...' : ''}`;
-
-    const sessionManager = HeliconeSessionManager.forJob(
-      sessionId,
-      sessionName,
-      sessionProperties,
-      context.userId // Pass userId for Helicone-User-Id header
-    );
-
-    // Set as global session for this execution
-    const previousManager = undefined; // Will be restored in finally block
-    setGlobalSessionManager(sessionManager);
-
     try {
       // Create array of all model-run combinations
       // Each model will be run 'runs' times independently
@@ -398,7 +353,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
 
       // Evaluate with all models in parallel (across all runs)
       const results = await Promise.allSettled(
-        modelRuns.map(({ model }) => evaluateWithModel(input, model, context, sessionManager))
+        modelRuns.map(({ model }) => evaluateWithModel(input, model, context))
       );
 
       // Process results, maintaining index correspondence with modelRuns
@@ -506,9 +461,6 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
     } catch (error) {
       context.logger.error('[ClaimEvaluator] Error:', error);
       throw error;
-    } finally {
-      // Restore previous session manager
-      setGlobalSessionManager(previousManager);
     }
   }
 

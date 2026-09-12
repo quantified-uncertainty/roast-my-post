@@ -38,12 +38,10 @@ describe('PerplexityResearchTool', () => {
     vi.clearAllMocks();
     (PerplexityClient as any).mockImplementation(() => mockClient);
     process.env.OPENROUTER_API_KEY = 'test-key';
-    process.env.HELICONE_API_KEY = 'test-helicone-key';
   });
   
   afterEach(() => {
     delete process.env.OPENROUTER_API_KEY;
-    delete process.env.HELICONE_API_KEY;
   });
   
   describe('input validation', () => {
@@ -175,9 +173,8 @@ describe('PerplexityResearchTool', () => {
       );
     });
     
-    it('should pass with API keys', async () => {
+    it('should pass with an OpenRouter API key', async () => {
       process.env.OPENROUTER_API_KEY = 'test-key';
-      process.env.HELICONE_API_KEY = 'test-helicone-key';
       
       const isValid = await tool.validateAccess(mockContext);
       

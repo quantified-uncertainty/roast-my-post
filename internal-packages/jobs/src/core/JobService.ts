@@ -167,6 +167,7 @@ export class JobService {
       llmThinking: string | null;
       durationInSeconds: number;
       logs: string;
+      priceInDollars: number;
     }
   ) {
     const completedJob = await this.jobRepository.updateStatus(jobId, {
@@ -175,6 +176,7 @@ export class JobService {
       llmThinking: data.llmThinking,
       durationInSeconds: data.durationInSeconds,
       logs: data.logs,
+      priceInDollars: data.priceInDollars,
     });
     await Promise.all([
       this.checkBatchCompletion(completedJob),
