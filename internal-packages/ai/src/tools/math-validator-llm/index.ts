@@ -4,6 +4,7 @@ import {
   callClaudeWithTool,
   MODEL_CONFIG,
 } from "../../claude/wrapper";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import {
   Tool,
   ToolContext,
@@ -108,6 +109,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       return result;
     } catch (error) {
       context.logger.error("[CheckMathTool] Error analyzing statement:", error);
+      throwIfProviderAccessError(error);
       return {
         statement: input.statement,
         status: "cannot_verify",

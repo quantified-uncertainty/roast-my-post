@@ -1,4 +1,5 @@
 import { escapeXml } from "../../shared/utils/xml";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import {
   Tool,
   ToolContext,
@@ -117,6 +118,7 @@ export class CheckMathHybridTool extends Tool<
         "[CheckMathHybridTool] Error in hybrid math check:",
         error
       );
+      throwIfProviderAccessError(error);
       return {
         statement: input.statement,
         status: "cannot_verify",

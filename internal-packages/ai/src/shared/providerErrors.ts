@@ -2,7 +2,6 @@ const CREDIT_ERROR_PATTERNS = [
   /credit balance (?:is )?too low/i,
   /insufficient[_ ]+(?:credits?|quota|funds?|balance)/i,
   /not enough (?:credits?|funds?)/i,
-  /payment required/i,
   /(?:billing|spending|usage) limit (?:has been )?(?:reached|exceeded)/i,
   /quota (?:has been )?(?:exceeded|exhausted)/i,
   /(?:exceeded|reached).*quota/i,
@@ -10,10 +9,23 @@ const CREDIT_ERROR_PATTERNS = [
 
 const AUTH_ERROR_PATTERNS = [
   /invalid (?:api )?key/i,
-  /authentication (?:failed|required|error)/i,
-  /unauthorized/i,
-  /permission denied/i,
+  /(?:anthropic|openrouter|ai provider|llm|api) authentication (?:failed|required|error)/i,
 ];
+
+const PROVIDER_RESULT_PATTERNS = [
+  /^(?:error:\s*)?(?:your\s+)?credit balance (?:is )?too low(?:\s+to access[^\n]*)?[.!]?$/i,
+  /^(?:error:\s*)?insufficient[_ ]+(?:credits?|quota|funds?|balance)[^\n]{0,300}$/i,
+];
+
+interface ProviderErrorShape {
+  status?: unknown;
+  statusCode?: unknown;
+  response?: { status?: unknown };
+  cause?: unknown;
+  message?: unknown;
+  error?: unknown;
+  data?: unknown;
+}
 
 export class ProviderAccessError extends Error {
   readonly originalError: unknown;
@@ -28,12 +40,7 @@ export class ProviderAccessError extends Error {
 function getStatus(error: unknown, depth = 0): number | undefined {
   if (depth > 3 || !error || typeof error !== "object") return undefined;
 
-  const value = error as {
-    status?: unknown;
-    statusCode?: unknown;
-    response?: { status?: unknown };
-    cause?: unknown;
-  };
+  const value = error as ProviderErrorShape;
   const status = value.status ?? value.statusCode ?? value.response?.status;
   if (typeof status === "number") return status;
   return getStatus(value.cause, depth + 1);
@@ -42,12 +49,9 @@ function getStatus(error: unknown, depth = 0): number | undefined {
 function getMessages(error: unknown, depth = 0): string[] {
   if (depth > 3 || error === null || error === undefined) return [];
   if (typeof error === "string") return [error];
-  if (error instanceof Error) {
-    return [error.message, ...getMessages(error.cause, depth + 1)];
-  }
   if (typeof error !== "object") return [String(error)];
 
-  const value = error as Record<string, unknown>;
+  const value = error as ProviderErrorShape;
   return [
     ...getMessages(value.message, depth + 1),
     ...getMessages(value.error, depth + 1),
@@ -101,4 +105,15 @@ export function asProviderAccessError(
 export function throwIfProviderAccessError(error: unknown): void {
   const providerError = asProviderAccessError(error);
   if (providerError) throw providerError;
+}
+
+/** Classifies the complete, non-JSON result returned by the Agent SDK. */
+export function asProviderAccessResult(
+  result: string
+): ProviderAccessError | undefined {
+  const trimmed = result.trim();
+  if (!PROVIDER_RESULT_PATTERNS.some((pattern) => pattern.test(trimmed))) {
+    return undefined;
+  }
+  return asProviderAccessError(trimmed);
 }

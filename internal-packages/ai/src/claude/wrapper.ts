@@ -4,6 +4,7 @@ import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 // Note: withRetry was deprecated in favor of inline retry logic
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
+import { throwIfProviderAccessError } from '../shared/providerErrors';
 import { getRemainingTimeMs } from '../shared/jobContext';
 import {
   UnifiedUsageMetrics,
@@ -312,6 +313,7 @@ export async function callClaude(
       
     } catch (error) {
       _lastError = error instanceof Error ? error : new Error(String(error));
+      throwIfProviderAccessError(error);
       
       // If error is not retryable, throw immediately
       if (!isRetryableError(error)) {

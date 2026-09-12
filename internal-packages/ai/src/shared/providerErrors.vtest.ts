@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { asProviderAccessError, ProviderAccessError } from "./providerErrors";
+import {
+  asProviderAccessError,
+  asProviderAccessResult,
+  ProviderAccessError,
+} from "./providerErrors";
 
 describe("provider access errors", () => {
   it("recognizes the Anthropic low-credit response seen in production", () => {
@@ -28,12 +32,43 @@ describe("provider access errors", () => {
     );
   });
 
+  it("reads Anthropic payloads attached to Error instances", () => {
+    const error = Object.assign(new Error("Request failed"), {
+      status: 400,
+      error: {
+        type: "error",
+        error: {
+          type: "invalid_request_error",
+          message: "Your credit balance is too low",
+        },
+      },
+    });
+
+    expect(asProviderAccessError(error)).toBeInstanceOf(ProviderAccessError);
+  });
+
+  it("only classifies complete Agent SDK provider-error results", () => {
+    expect(asProviderAccessResult("Credit balance is too low")).toBeInstanceOf(
+      ProviderAccessError
+    );
+    expect(
+      asProviderAccessResult(
+        'Malformed analysis quoting the document: "payment required"'
+      )
+    ).toBeUndefined();
+  });
+
   it("does not classify ordinary analysis errors as provider access failures", () => {
     expect(
       asProviderAccessError(new Error("Invalid JSON output"))
     ).toBeUndefined();
     expect(
       asProviderAccessError({ status: 400, message: "Invalid request" })
+    ).toBeUndefined();
+    expect(
+      asProviderAccessError(
+        new Error("EACCES: permission denied, mkdir /tmp/job")
+      )
     ).toBeUndefined();
   });
 });

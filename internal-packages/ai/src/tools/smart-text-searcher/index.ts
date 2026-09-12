@@ -6,6 +6,7 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { logger } from "../../utils/logger";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import { fuzzyTextSearcherConfig } from "../configs";
 import {
   findTextLocation,
@@ -173,6 +174,7 @@ export class FuzzyTextLocatorTool extends Tool<
       }
     } catch (error) {
       context.logger.error("FuzzyTextLocator execution failed:", error);
+      throwIfProviderAccessError(error);
       throw new Error(
         `Fuzzy text locator failed: ${error instanceof Error ? error.message : "Unknown error"}`
       );

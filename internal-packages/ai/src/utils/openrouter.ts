@@ -10,6 +10,7 @@
 import { aiConfig } from '../config';
 import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
+import { asProviderAccessError } from '../shared/providerErrors';
 import {
   UnifiedUsageMetrics,
   fromOpenRouterUsage,
@@ -287,7 +288,11 @@ export async function callOpenRouter(
       }
     }
 
-    throw new Error(`OpenRouter API error (${response.status}): ${errorMessage}${errorDetails}`);
+    const error = Object.assign(
+      new Error(`OpenRouter API error (${response.status}): ${errorMessage}${errorDetails}`),
+      { status: response.status }
+    );
+    throw asProviderAccessError(error) ?? error;
   }
 
   return response.json() as Promise<OpenRouterResponse>;
