@@ -7,8 +7,6 @@
  * API Docs: https://openrouter.ai/docs/api/reference/parameters
  */
 
-import { aiConfig } from '../config';
-import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
 import { asProviderAccessError } from '../shared/providerErrors';
 import {
@@ -194,17 +192,13 @@ export interface OpenRouterError {
 
 export interface OpenRouterClientOptions {
   apiKey?: string;
-  includeSessionHeaders?: boolean;
 }
 
 /**
- * Get the base URL for OpenRouter API (with optional Helicone proxy)
+ * Get the OpenRouter API base URL.
  */
 function getBaseUrl(): string {
-  const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
-  return heliconeKey
-    ? 'https://openrouter.helicone.ai/api/v1'
-    : 'https://openrouter.ai/api/v1';
+  return 'https://openrouter.ai/api/v1';
 }
 
 /**
@@ -220,7 +214,6 @@ function buildHeaders(options: OpenRouterClientOptions = {}): Record<string, str
     );
   }
 
-  const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
   const isProduction = process.env.NODE_ENV === 'production';
   const environment = isProduction ? 'Prod' : 'Dev';
   const appTitle = `RoastMyPost Tools - ${environment}`;
@@ -233,17 +226,6 @@ function buildHeaders(options: OpenRouterClientOptions = {}): Record<string, str
     'X-Title': appTitle,
     'X-Environment': environment,
   };
-
-  // Add Helicone auth if available
-  if (heliconeKey) {
-    headers['Helicone-Auth'] = `Bearer ${heliconeKey}`;
-  }
-
-  // Add session headers if requested
-  if (options.includeSessionHeaders !== false) {
-    const sessionHeaders = getCurrentHeliconeHeaders();
-    Object.assign(headers, sessionHeaders);
-  }
 
   return headers;
 }
@@ -790,5 +772,4 @@ export function normalizeTemperature(userTemp: number, modelId: string): number 
 // but we keep the export for any code that might reference it
 export interface OpenRouterOptions {
   apiKey?: string;
-  includeSessionHeaders?: boolean;
 }

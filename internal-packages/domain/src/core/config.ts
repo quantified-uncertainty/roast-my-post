@@ -32,10 +32,6 @@ export interface AppConfig {
     readonly anthropicApiKey?: string;
     readonly openaiApiKey?: string;
     readonly openRouterApiKey?: string;
-    readonly heliconeApiKey?: string;
-    readonly heliconeEnabled: boolean;
-    readonly heliconeMaxAge: number;
-    readonly heliconeBucketMaxSize: number;
     readonly searchModel: string;
     readonly analysisModel: string;
   };
@@ -59,7 +55,6 @@ export interface AppConfig {
   };
   
   readonly jobs: {
-    readonly costUpdateStaleHours: number;
     readonly pgBoss: {
       readonly teamSize: number;
       readonly retryLimit: number;
@@ -146,21 +141,6 @@ class ConfigFactory {
           anthropicApiKey: getEnvVar('ANTHROPIC_API_KEY'),
           openaiApiKey: getEnvVar('OPENAI_API_KEY'),
           openRouterApiKey: getEnvVar('OPENROUTER_API_KEY'),
-          heliconeApiKey: getEnvVar('HELICONE_API_KEY'),
-          heliconeEnabled: ConfigValidator.validateBoolean(
-            getEnvVar('HELICONE_ENABLED'), 
-            false
-          ),
-          heliconeMaxAge: ConfigValidator.validatePositiveInteger(
-            getEnvVar('HELICONE_CACHE_MAX_AGE'),
-            3600,
-            'HELICONE_CACHE_MAX_AGE'
-          ),
-          heliconeBucketMaxSize: ConfigValidator.validatePositiveInteger(
-            getEnvVar('HELICONE_CACHE_BUCKET_MAX_SIZE'),
-            10,
-            'HELICONE_CACHE_BUCKET_MAX_SIZE'
-          ),
           searchModel: getEnvVar('SEARCH_MODEL', DEFAULT_SEARCH_MODEL),
           analysisModel: getEnvVar('ANALYSIS_MODEL', DEFAULT_ANALYSIS_MODEL),
         },
@@ -193,11 +173,6 @@ class ConfigFactory {
         },
 
         jobs: {
-          costUpdateStaleHours: ConfigValidator.validatePositiveInteger(
-            getEnvVar('COST_UPDATE_STALE_HOURS'),
-            1,
-            'COST_UPDATE_STALE_HOURS'
-          ),
           pgBoss: {
             teamSize: ConfigValidator.validatePositiveInteger(
               getEnvVar('PGBOSS_TEAM_SIZE'),
@@ -322,7 +297,6 @@ export const logConfiguration = (): void => {
       anthropicApiKey: config.ai.anthropicApiKey ? '[REDACTED]' : undefined,
       openaiApiKey: config.ai.openaiApiKey ? '[REDACTED]' : undefined,
       openRouterApiKey: config.ai.openRouterApiKey ? '[REDACTED]' : undefined,
-      heliconeApiKey: config.ai.heliconeApiKey ? '[REDACTED]' : undefined,
     },
   };
   

@@ -168,8 +168,6 @@ When adding new tools or test cases:
 
 ## Monitoring
 
-The system integrates with Helicone for usage monitoring and provides:
-- Session tracking for evaluation runs
-- Cost tracking per tool
+The system records local evaluation metrics including:
 - Performance metrics and timing
 - Error rate monitoring

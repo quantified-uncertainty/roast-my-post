@@ -31,6 +31,5 @@ May make arithmetic errors on complex calculations since it doesn't use a calcul
 - Uses ${getModelDisplayName(MODEL_CONFIG.analysis)} model for analysis
 - Response format: status (verified_true/verified_false/cannot_verify), explanation, reasoning, error details
 - Error categorization: calculation, logic, unit, notation, conceptual with severity levels
-- Uses deterministic cache seeds for more consistent responses
 `;
 }

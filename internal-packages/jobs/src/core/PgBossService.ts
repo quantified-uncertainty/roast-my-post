@@ -233,12 +233,6 @@ export class PgBossService {
       expireInSeconds: config.jobs.pgBoss.expireInSeconds,
     });
 
-    // Helicone cost update - exclusive policy to prevent overlapping runs
-    // If a scheduled job is already running, skip the next trigger
-    await boss.createQueue('helicone-cost-update', {
-      policy: 'exclusive',
-    });
-
     // Job reconciliation - exclusive policy to prevent overlapping runs
     // Cleans up stale jobs that may have been abandoned due to worker crashes
     await boss.createQueue('job-reconciliation', {

@@ -59,7 +59,6 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 ## Technical Details
 
 - All requests go through **OpenRouter** (not direct provider APIs)
-- Helicone integration for request tracking and caching
 - Parallel execution using \`Promise.allSettled()\`
 - Both successful and failed evaluations are included in results
 - Structured JSON responses with \`hasError\` boolean and optional response fields

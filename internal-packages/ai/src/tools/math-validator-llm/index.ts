@@ -10,8 +10,6 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { mathValidatorLLMConfig } from "../configs";
-// Session management is now automatic through the global session manager
-import { generateCacheSeed } from "../shared/cache-utils";
 import {
   MathErrorDetails,
   mathErrorDetailsSchema,
@@ -124,12 +122,6 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     input: CheckMathInput,
     context: ToolContext
   ): Promise<CheckMathOutput> {
-    // Generate cache seed for consistent responses
-    const cacheSeed = generateCacheSeed("math-statement-check", [
-      input.statement,
-      input.context || "",
-    ]);
-
     // Use Claude with tool output for structured response
     const systemPrompt = `Verify math statements concisely. Focus on the calculation/logic error if any.`;
 
@@ -162,8 +154,6 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
         required: ["status", "explanation", "reasoning"],
       },
       enablePromptCaching: true,
-      // Session headers are now added automatically by the wrapper
-      cacheSeed,
     });
 
     const toolResult = result.toolResult;

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { getGlobalSessionManager } from '../../helicone/simpleSessionManager';
 import type { ToolConfig, ToolContext } from './types';
 
 // Re-export types for backwards compatibility
@@ -49,25 +48,9 @@ export abstract class Tool<TInput = unknown, TOutput = unknown> {
       throw new Error('Access denied');
     }
     
-    // Get global session manager for tracking
-    const sessionManager = getGlobalSessionManager();
-    
-    // Wrap execution in session tracking if available
-    const executeWithTracking = async () => {
-      await this.beforeExecute(validatedInput, context);
-      const output = await this.execute(validatedInput, context);
-      await this.afterExecute(output, context);
-      return output;
-    };
-    
-    let output: TOutput;
-    if (sessionManager) {
-      // Track tool execution in session tracking if available
-      output = await sessionManager.trackTool(this.config.id, executeWithTracking);
-    } else {
-      // Execute without tracking
-      output = await executeWithTracking();
-    }
+    await this.beforeExecute(validatedInput, context);
+    const output = await this.execute(validatedInput, context);
+    await this.afterExecute(output, context);
     
     // Validate output
     return this.outputSchema.parse(output);

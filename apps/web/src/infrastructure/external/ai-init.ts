@@ -14,10 +14,6 @@ export function initializeAIPackage() {
   initializeAI({
     anthropicApiKey: config.ai.anthropicApiKey,
     openRouterApiKey: config.ai.openRouterApiKey,
-    heliconeApiKey: config.ai.heliconeApiKey,
-    heliconeEnabled: config.ai.heliconeEnabled,
-    heliconeMaxAge: config.ai.heliconeMaxAge.toString(),
-    heliconeMaxSize: config.ai.heliconeBucketMaxSize.toString(),
     searchModel: config.ai.searchModel,
     analysisModel: config.ai.analysisModel,
   });

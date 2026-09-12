@@ -11,7 +11,6 @@ import {
 } from "../base/Tool";
 import { spellingGrammarCheckerConfig } from "../configs";
 import { detectLanguageConventionTool } from "../language-convention-detector";
-import { generateCacheSeed } from "../shared/cache-utils";
 
 export interface SpellingGrammarError {
   text: string;
@@ -478,15 +477,6 @@ ${textWithLineNumbers}
   6. Remember: ONLY report text that actually exists in the input
 </instructions>`;
 
-    // Generate cache seed
-    const cacheSeed = generateCacheSeed("spelling-v2", [
-      input.text,
-      input.context || "",
-      input.maxErrors || 50,
-      input.convention || "auto",
-      input.strictness || "standard",
-    ]);
-
     const result = await callClaudeWithTool<{
       errors: SpellingGrammarError[];
       totalErrorsFound?: number;
@@ -575,7 +565,6 @@ ${textWithLineNumbers}
         required: ["errors"],
       },
       enablePromptCaching: true,
-      cacheSeed,
     });
 
     const rawErrors = result.toolResult.errors || [];

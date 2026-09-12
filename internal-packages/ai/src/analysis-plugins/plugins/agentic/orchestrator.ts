@@ -22,7 +22,6 @@ import {
   getMcpToolInstructions,
 } from "./prompts";
 import { logger } from "../../../shared/logger";
-import { getCurrentJobId } from "../../../shared/jobContext";
 
 // ---------------------------------------------------------------------------
 // Workspace filesystem guard — denies Read/Write/Edit/Glob/Grep outside workspace
@@ -206,7 +205,7 @@ export function buildAgenticQueryOptions(
 
   // Build env for the SDK subprocess.
   // In dev, strip ANTHROPIC_API_KEY so the SDK uses subscription auth,
-  // unless AGENTIC_USE_API_KEY=true overrides this (useful for testing Helicone).
+  // unless AGENTIC_USE_API_KEY=true overrides this.
   const isDev = process.env.NODE_ENV === "development";
   const useApiKey = process.env.AGENTIC_USE_API_KEY === "true";
   const env = (isDev && !useApiKey)
@@ -214,13 +213,6 @@ export function buildAgenticQueryOptions(
         Object.entries(process.env).filter(([key]) => key !== "ANTHROPIC_API_KEY")
       ) as Record<string, string>
     : { ...process.env } as Record<string, string>;
-
-  // Tag SDK API calls with the Helicone session ID so the cost poller
-  // can attribute them to the job. The SDK reads ANTHROPIC_CUSTOM_HEADERS.
-  const jobId = getCurrentJobId();
-  if (jobId) {
-    env.ANTHROPIC_CUSTOM_HEADERS = `Helicone-Session-Id: ${jobId}`;
-  }
 
   // Security: canUseTool blocks unwanted built-in agents + restricts filesystem
   const canUseTool = createToolGuard(workspacePath, emit);

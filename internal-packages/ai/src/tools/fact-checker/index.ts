@@ -3,7 +3,6 @@ import { z } from "zod";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import { perplexityResearchTool } from "../perplexity-researcher";
-import { generateCacheSeed } from "../shared/cache-utils";
 
 import {
   Tool,
@@ -144,13 +143,6 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
       }
     }
 
-
-    // Generate cache seed based on content for consistent caching
-    const cacheSeed = generateCacheSeed("fact-check", [
-      input.claim,
-      input.context || "",
-      input.searchForEvidence || false,
-    ]);
 
     const systemPrompt = `You are an expert fact-checker. Your job is to verify the accuracy of specific factual claims.
     
@@ -332,7 +324,6 @@ ${input.claim}
         required: ["verdict", "confidence", "explanation", "criticalText"],
       },
       enablePromptCaching: true,
-      cacheSeed,
     });
 
     context.logger.info(

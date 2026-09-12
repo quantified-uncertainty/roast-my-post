@@ -16,15 +16,6 @@ vi.mock("../../utils/openrouter", () => ({
   },
 }));
 
-vi.mock("../../helicone/simpleSessionManager", () => ({
-  HeliconeSessionManager: {
-    forJob: vi.fn(() => ({
-      withPath: vi.fn(async (_path, _properties, callback) => callback()),
-    })),
-  },
-  setGlobalSessionManager: vi.fn(),
-}));
-
 describe("claim evaluator provider failures", () => {
   it("propagates rejected provider access instead of returning failed entries", async () => {
     vi.mocked(callOpenRouterChat).mockRejectedValue(

@@ -11,7 +11,6 @@ import { JobStatus } from '../types';
 import type { Job } from '../types';
 import type { PrismaClient } from '../client';
 import { generateId } from '../utils/generateId';
-import { subHours } from 'date-fns';
 
 // Domain types defined in this package to avoid circular dependencies
 export interface JobEntity {
@@ -121,8 +120,6 @@ export interface JobRepositoryInterface {
   findByIdWithRelations(id: string): Promise<JobWithRelations | null>;
   create(data: CreateJobData): Promise<JobEntity>;
   updateStatus(id: string, data: UpdateJobStatusData): Promise<JobEntity>;
-  findJobsForCostUpdate(limit: number, maxAgeHours?: number): Promise<JobEntity[]>;
-  updateCost(id: string, cost: number): Promise<JobEntity>;
   findStaleJobs(criteria: StaleJobCriteria[]): Promise<StaleJobResult[]>;
   tryMarkBatchCompleted(batchId: string): Promise<BatchCompletionResult | null>;
   getDocumentIdForJob(jobId: string): Promise<string | null>;
@@ -230,43 +227,6 @@ export class JobRepository implements JobRepositoryInterface {
       },
     });
 
-    return this.toDomainEntity(job);
-  }
-
-  /**
-   * Find jobs that need their cost updated from Helicone
-   */
-  async findJobsForCostUpdate(limit = 10, maxAgeHours?: number): Promise<JobEntity[]> {
-    const completedAtFilter = maxAgeHours
-      ? { not: null, gte: subHours(new Date(), maxAgeHours) }
-      : { not: null };
-
-    const jobs = await this.prisma.job.findMany({
-      where: {
-        completedAt: completedAtFilter,
-        priceInDollars: null,
-        evaluation: {
-          agent: {
-            isLlmCostTracked: true,
-          },
-        },
-      },
-      take: limit,
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
-    return jobs.map(job => this.toDomainEntity(job));
-  }
-
-  /**
-   * Update the cost of a job
-   */
-  async updateCost(id: string, cost: number): Promise<JobEntity> {
-    const job = await this.prisma.job.update({
-      where: { id },
-      data: { priceInDollars: cost },
-    });
     return this.toDomainEntity(job);
   }
 

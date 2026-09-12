@@ -8,7 +8,6 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { factualClaimsExtractorConfig } from "../configs";
-import { generateCacheSeed } from "../shared/cache-utils";
 import fuzzyTextLocatorTool from "../smart-text-searcher";
 
 // Create a Zod schema from the DocumentHighlight interface
@@ -163,14 +162,6 @@ Requirements:
 - Max claims: ${input.maxClaims ?? 30}
 - Extract verifiable factual claims and score them appropriately`;
 
-    // Generate cache seed based on content for consistent caching
-    const cacheSeed = generateCacheSeed("fact-extract", [
-      input.text,
-      input.instructions || "",
-      input.minQualityThreshold || 50,
-      input.maxClaims || 30,
-    ]);
-
     const result = await callClaudeWithTool<{
       claims: ExtractedFactualClaim[];
     }>({
@@ -236,7 +227,6 @@ Requirements:
         required: ["claims"],
       },
       enablePromptCaching: true,
-      cacheSeed,
     });
 
     let allClaims = result.toolResult.claims || [];

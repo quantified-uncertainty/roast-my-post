@@ -8,12 +8,11 @@ This internal package provides centralized AI functionality that can be shared a
 
 ## Features
 
-- **Claude API Wrapper**: Centralized Claude API integration with retry logic, caching, and Helicone integration
+- **Claude API Wrapper**: Centralized Claude API integration with retry logic and prompt caching
 - **Analysis Plugins System**: Modular plugin architecture for document analysis (math checking, spell checking, fact checking, forecasting)
 - **Document Analysis Workflows**: Comprehensive analysis, self-critique, highlight extraction, and multi-epistemic evaluation
 - **AI-Powered Tools**: Suite of specialized tools for text analysis, language detection, content extraction
 - **Token Management**: Accurate token counting and estimation utilities
-- **Helicone Integration**: Cost tracking, session management, and usage analytics
 - **Type Safety**: Full TypeScript support with comprehensive types
 
 ## Installation
@@ -116,25 +115,6 @@ const spellingErrors = await checkSpellingGrammar(text, {
 });
 ```
 
-### Helicone Integration
-
-```typescript
-import { sessionContext, getHeliconeClient } from "@roast/ai";
-
-// Set session context for tracking
-sessionContext.setSession({
-  sessionId: "unique-session-id",
-  sessionName: "Analysis Session",
-  sessionPath: "/analysis/123",
-});
-
-// Get cost data
-const client = getHeliconeClient();
-const costs = await client.getCosts({
-  /* filters */
-});
-```
-
 ## Environment Variables
 
 ### Required Variables
@@ -150,11 +130,6 @@ ANTHROPIC_API_KEY=your-api-key
 # Model selection (defaults to claude-sonnet-4-5)
 ANALYSIS_MODEL=claude-sonnet-4-5
 
-# Helicone integration for cost tracking and caching
-HELICONE_API_KEY=your-helicone-key        # Required if HELICONE_CACHE_ENABLED=true
-HELICONE_CACHE_ENABLED=true               # Enable Helicone caching (default: false)
-HELICONE_CACHE_MAX_AGE=3600              # Cache TTL in seconds (default: 3600)
-HELICONE_CACHE_BUCKET_MAX_SIZE=20        # Max cached items (default: 20)
 ```
 
 ### Configuration Validation
@@ -192,7 +167,6 @@ pnpm typecheck
 The package is organized into:
 
 - `/claude` - Claude API wrapper and utilities
-- `/helicone` - Helicone integration for cost tracking
 - `/analysis-plugins` - Plugin system for modular document analysis
   - `/plugins` - Individual analysis plugins (math, spelling, fact-check, forecast)
   - `/utils` - Plugin utilities (chunk routing, comment building)

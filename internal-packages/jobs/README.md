@@ -128,10 +128,9 @@ JobTimeoutError → Worker marks FAILED (non-retryable)
 
 | Task | Schedule | Purpose |
 |------|----------|---------|
-| `job-reconciliation` | Every minute | Clean up stale RUNNING jobs (30min threshold) |
-| `helicone-cost-update` | Every 30 seconds | Fetch LLM costs from Helicone |
+| `job-reconciliation` | Every ten minutes | Clean up stale RUNNING jobs (30min threshold) |
 
-Both use **exclusive queue policy** to prevent overlapping runs.
+The reconciliation task uses an **exclusive queue policy** to prevent overlapping runs.
 
 ## Reconciliation
 
@@ -155,9 +154,6 @@ document-evaluation:
   - retryDelay: 60s
   - retryBackoff: true (exponential)
   - expireInSeconds: 3600 (job timeout)
-
-helicone-cost-update:
-  - policy: exclusive
 
 job-reconciliation:
   - policy: exclusive

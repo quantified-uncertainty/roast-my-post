@@ -19,7 +19,6 @@ vi.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307",
     forecasting: "claude-sonnet-4-5",
   },
-  createHeliconeHeaders: vi.fn(() => ({})),
   callClaude: vi.fn().mockImplementation(async (messages, options) => {
     // Simulate real Claude responses based on the prompt
     const lastMessage = messages[messages.length - 1].content;

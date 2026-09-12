@@ -1,6 +1,3 @@
-import {
-  getGlobalSessionManager,
-} from "../../../helicone/simpleSessionManager";
 import { logger } from "../../../shared/logger";
 import { throwIfProviderAccessError } from "../../../shared/providerErrors";
 import type {
@@ -215,27 +212,14 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     error?: string;
   }> {
     try {
-      // Track tool execution if session manager is available
-      const sessionManager = getGlobalSessionManager();
-      const executeExtraction = async () => {
-        return await extractFactualClaimsTool.execute(
-          {
-            text: chunk.text,
-            minQualityThreshold: THRESHOLDS.MIN_QUALITY_THRESHOLD,
-            maxClaims: LIMITS.MAX_CLAIMS_PER_CHUNK,
-          },
-          {
-            logger,
-          }
-        );
-      };
-
-      const result = sessionManager
-        ? await sessionManager.trackTool(
-            "extract-factual-claims",
-            executeExtraction
-          )
-        : await executeExtraction();
+      const result = await extractFactualClaimsTool.execute(
+        {
+          text: chunk.text,
+          minQualityThreshold: THRESHOLDS.MIN_QUALITY_THRESHOLD,
+          maxClaims: LIMITS.MAX_CLAIMS_PER_CHUNK,
+        },
+        { logger }
+      );
 
       const facts = result.claims.map(
         (claim) => new VerifiedFact(claim, chunk, this.processingStartTime)
@@ -377,24 +361,14 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       // Gather contextual information for better fact-checking
       const context = await fact.gatherContext(this.documentText);
 
-      // Track tool execution if session manager is available
-      const sessionManager = getGlobalSessionManager();
-      const executeFactCheck = async () => {
-        return await factCheckerTool.execute(
-          {
-            claim: fact.text, // Use the normalized claim text for fact-checking
-            context,
-            searchForEvidence: shouldResearch,
-          },
-          {
-            logger,
-          }
-        );
-      };
-
-      const result = sessionManager
-        ? await sessionManager.trackTool("fact-checker", executeFactCheck)
-        : await executeFactCheck();
+      const result = await factCheckerTool.execute(
+        {
+          claim: fact.text, // Use the normalized claim text for fact-checking
+          context,
+          searchForEvidence: shouldResearch,
+        },
+        { logger }
+      );
 
       fact.verification = result.result;
       fact.factCheckerOutput = result; // Store full output including Perplexity data

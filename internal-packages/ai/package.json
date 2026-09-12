@@ -1,7 +1,7 @@
 {
   "name": "@roast/ai",
   "version": "0.1.0",
-  "description": "Core AI utilities for RoastMyPost - Claude integration, Helicone tracking, and token management",
+  "description": "Core AI utilities for RoastMyPost - Claude integration and token management",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
