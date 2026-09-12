@@ -16,10 +16,6 @@ vi.mock("../../shared/logger", () => ({
   },
 }));
 
-vi.mock("../../helicone/simpleSessionManager", () => ({
-  getGlobalSessionManager: () => undefined,
-}));
-
 describe("llmSearch provider failures", () => {
   it("propagates a provider access failure instead of returning no match", async () => {
     vi.mocked(callClaudeWithTool).mockRejectedValue(
