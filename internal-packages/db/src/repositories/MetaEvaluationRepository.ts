@@ -5,6 +5,7 @@
  */
 
 import { prisma as defaultPrisma } from "../client";
+import { JobStatus } from "../types";
 
 // ============================================================================
 // Series Types (for meta-eval CLI)
@@ -21,14 +22,19 @@ export type SeriesSummary = {
   lastRunAt: Date;
 };
 
+export type ScoringResult = {
+  overallScore: number;
+  scoredAt: Date;
+};
+
 export type SeriesRun = {
   jobId: string;
   agentId: string;
   agentName: string;
   createdAt: Date;
-  status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED";
+  status: JobStatus;
   evaluationVersionId: string | null;
-  scoring: { overallScore: number; scoredAt: Date } | null;
+  scoring: ScoringResult | null;
 };
 
 export type SeriesDetail = {
@@ -53,38 +59,39 @@ export type DocumentChoice = {
   createdAt: Date;
 };
 
+export type EvaluationCommentSummary = {
+  header: string | null;
+  level: string | null;
+  description: string;
+  highlight: { quotedText: string };
+};
+
 export type EvaluationVersionWithComments = {
   id: string;
-  comments: Array<{
-    header: string | null;
-    level: string | null;
-    description: string;
-    highlight: { quotedText: string };
-  }>;
+  comments: EvaluationCommentSummary[];
 };
 
 // ============================================================================
 // Legacy Types (for scoring/ranking)
 // ============================================================================
 
+export type DocumentVersionRef = {
+  title: string;
+  content: string;
+};
+
+export type EvaluationRef = {
+  id: string;
+  agentId: string;
+};
+
 export type EvaluationVersionWithDetails = {
   id: string;
   evaluationId: string;
   documentVersionId: string;
-  documentVersion: {
-    title: string;
-    content: string;
-  };
-  comments: Array<{
-    header: string | null;
-    level: string | null;
-    description: string;
-    highlight: { quotedText: string };
-  }>;
-  evaluation: {
-    id: string;
-    agentId: string;
-  };
+  documentVersion: DocumentVersionRef;
+  comments: EvaluationCommentSummary[];
+  evaluation: EvaluationRef;
 };
 
 export type BatchWithCount = {
@@ -116,6 +123,148 @@ export type SaveRankingInput = {
   relativeScore: number;
   reasoning: string;
   judgeModel: string;
+};
+
+// ============================================================================
+// Validation / Snapshot Types
+// ============================================================================
+
+export type SnapshotComment = {
+  id: string;
+  quotedText: string;
+  header: string | null;
+  description: string;
+  importance: number | null;
+  startOffset: number;
+  endOffset: number;
+};
+
+export type EvaluationSnapshot = {
+  evaluationVersionId: string;
+  agentId: string;
+  agentName: string;
+  createdAt: Date;
+  documentId: string;
+  documentTitle: string;
+  grade: number | null;
+  pipelineTelemetry: unknown;
+  comments: SnapshotComment[];
+};
+
+export type ValidationCorpusOptions = {
+  limit?: number;
+  minContentLength?: number;
+  filter?: string;
+};
+
+export type ValidationCorpusDocument = {
+  documentId: string;
+  title: string;
+  contentLength: number;
+  lastEvaluatedAt: Date | null;
+  evaluationCount: number;
+};
+
+export type CreateSeriesInput = {
+  documentId: string;
+  name?: string;
+  description?: string;
+};
+
+export type CreateValidationBaselineInput = {
+  name: string;
+  description?: string;
+  agentId: string;
+  evaluationVersionIds: string[];
+  commitHash?: string;
+  createdById?: string;
+};
+
+export type ValidationBaselineResult = {
+  id: string;
+  name: string;
+  snapshotCount: number;
+};
+
+export type ValidationBaselineSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  commitHash: string | null;
+  createdAt: Date;
+  snapshotCount: number;
+};
+
+export type CreateValidationRunInput = {
+  baselineId: string;
+  name?: string;
+  commitHash?: string;
+  profileId?: string;
+};
+
+export type ValidationRunResult = {
+  id: string;
+  baselineId: string;
+  status: string;
+  profileId?: string;
+};
+
+export type ValidationRunStatus = "running" | "completed" | "failed";
+
+export type ValidationRunSnapshotInput = {
+  runId: string;
+  baselineSnapshotId: string;
+  newEvaluationId: string;
+  status: "unchanged" | "changed";
+  keptCount: number;
+  newCount: number;
+  lostCount: number;
+  comparisonData?: unknown;
+};
+
+export type ValidationRunSummary = {
+  id: string;
+  name: string | null;
+  commitHash: string | null;
+  status: string;
+  summary: string | null;
+  createdAt: Date;
+  completedAt: Date | null;
+  snapshotCount: number;
+  unchangedCount: number;
+  changedCount: number;
+};
+
+export type ValidationRunDetailSnapshot = {
+  id: string;
+  status: string;
+  keptCount: number;
+  newCount: number;
+  lostCount: number;
+  documentId: string;
+  documentTitle: string;
+  comparisonData: unknown;
+};
+
+export type ValidationRunDetail = {
+  id: string;
+  name: string | null;
+  commitHash: string | null;
+  status: string;
+  summary: string | null;
+  createdAt: Date;
+  completedAt: Date | null;
+  baseline: { id: string; name: string };
+  snapshots: ValidationRunDetailSnapshot[];
+};
+
+export type BaselineSnapshotRef = {
+  id: string;
+  evaluationVersionId: string;
+};
+
+export type UserEmailResult = {
+  email: string | null;
 };
 
 export class MetaEvaluationRepository {
@@ -366,11 +515,7 @@ export class MetaEvaluationRepository {
   /**
    * Create a new series for a document.
    */
-  async createSeries(input: {
-    documentId: string;
-    name?: string;
-    description?: string;
-  }) {
+  async createSeries(input: CreateSeriesInput) {
     return this.prisma.series.create({
       data: {
         documentId: input.documentId,
@@ -484,7 +629,7 @@ export class MetaEvaluationRepository {
       agentId: run.job.evaluation.agentId,
       agentName: run.job.evaluation.agent.versions[0]?.name || run.job.evaluation.agentId,
       createdAt: run.createdAt,
-      status: run.job.status as SeriesRun["status"],
+      status: run.job.status as JobStatus,
       evaluationVersionId: run.job.evaluationVersionId,
       scoring: run.job.evaluationVersionId ? scoringMap.get(run.job.evaluationVersionId) || null : null,
     }));
@@ -601,7 +746,7 @@ export class MetaEvaluationRepository {
   /**
    * Get user by ID.
    */
-  async getUserById(userId: string): Promise<{ email: string | null } | null> {
+  async getUserById(userId: string): Promise<UserEmailResult | null> {
     return this.prisma.user.findUnique({
       where: { id: userId },
       select: { email: true },
@@ -618,7 +763,7 @@ export class MetaEvaluationRepository {
       where: {
         seriesId,
         job: {
-          status: "FAILED",
+          status: JobStatus.FAILED,
         },
       },
       select: { id: true },
@@ -722,16 +867,8 @@ export class MetaEvaluationRepository {
    */
   async getValidationCorpusDocuments(
     agentId: string | undefined,
-    options: { limit?: number; minContentLength?: number; filter?: string } = {}
-  ): Promise<
-    Array<{
-      documentId: string;
-      title: string;
-      contentLength: number;
-      lastEvaluatedAt: Date | null;
-      evaluationCount: number;
-    }>
-  > {
+    options: ValidationCorpusOptions = {}
+  ): Promise<ValidationCorpusDocument[]> {
     const { limit = 50, minContentLength = 100, filter } = options;
 
     // When no agentId, return all documents directly
@@ -819,27 +956,7 @@ export class MetaEvaluationRepository {
   async getEvaluationSnapshots(
     documentIds: string[],
     agentId: string
-  ): Promise<
-    Array<{
-      evaluationVersionId: string;
-      agentId: string;
-      agentName: string;
-      createdAt: Date;
-      documentId: string;
-      documentTitle: string;
-      grade: number | null;
-      pipelineTelemetry: unknown;
-      comments: Array<{
-        id: string;
-        quotedText: string;
-        header: string | null;
-        description: string;
-        importance: number | null;
-        startOffset: number;
-        endOffset: number;
-      }>;
-    }>
-  > {
+  ): Promise<EvaluationSnapshot[]> {
     // Get the most recent evaluation version for each document
     const evaluations = await this.prisma.evaluation.findMany({
       where: {
@@ -908,25 +1025,7 @@ export class MetaEvaluationRepository {
   /**
    * Get a specific evaluation version by ID with full details for comparison.
    */
-  async getEvaluationSnapshotById(evaluationVersionId: string): Promise<{
-    evaluationVersionId: string;
-    agentId: string;
-    agentName: string;
-    createdAt: Date;
-    documentId: string;
-    documentTitle: string;
-    grade: number | null;
-    pipelineTelemetry: unknown;
-    comments: Array<{
-      id: string;
-      quotedText: string;
-      header: string | null;
-      description: string;
-      importance: number | null;
-      startOffset: number;
-      endOffset: number;
-    }>;
-  } | null> {
+  async getEvaluationSnapshotById(evaluationVersionId: string): Promise<EvaluationSnapshot | null> {
     const version = await this.prisma.evaluationVersion.findUnique({
       where: { id: evaluationVersionId },
       include: {
@@ -990,14 +1089,7 @@ export class MetaEvaluationRepository {
   /**
    * Create a new validation baseline from existing evaluation versions.
    */
-  async createValidationBaseline(input: {
-    name: string;
-    description?: string;
-    agentId: string;
-    evaluationVersionIds: string[];
-    commitHash?: string;
-    createdById?: string;
-  }): Promise<{ id: string; name: string; snapshotCount: number }> {
+  async createValidationBaseline(input: CreateValidationBaselineInput): Promise<ValidationBaselineResult> {
     const baseline = await this.prisma.validationBaseline.create({
       data: {
         name: input.name,
@@ -1026,16 +1118,7 @@ export class MetaEvaluationRepository {
   /**
    * Get all validation baselines for an agent.
    */
-  async getValidationBaselines(agentId: string): Promise<
-    Array<{
-      id: string;
-      name: string;
-      description: string | null;
-      commitHash: string | null;
-      createdAt: Date;
-      snapshotCount: number;
-    }>
-  > {
+  async getValidationBaselines(agentId: string): Promise<ValidationBaselineSummary[]> {
     const baselines = await this.prisma.validationBaseline.findMany({
       where: { agentId },
       include: {
@@ -1057,27 +1140,7 @@ export class MetaEvaluationRepository {
   /**
    * Get evaluation snapshots from a baseline.
    */
-  async getBaselineSnapshots(baselineId: string): Promise<
-    Array<{
-      evaluationVersionId: string;
-      agentId: string;
-      agentName: string;
-      createdAt: Date;
-      documentId: string;
-      documentTitle: string;
-      grade: number | null;
-      pipelineTelemetry: unknown;
-      comments: Array<{
-        id: string;
-        quotedText: string;
-        header: string | null;
-        description: string;
-        importance: number | null;
-        startOffset: number;
-        endOffset: number;
-      }>;
-    }>
-  > {
+  async getBaselineSnapshots(baselineId: string): Promise<EvaluationSnapshot[]> {
     const baseline = await this.prisma.validationBaseline.findUnique({
       where: { id: baselineId },
       include: {
@@ -1187,12 +1250,7 @@ export class MetaEvaluationRepository {
   /**
    * Create a new validation run.
    */
-  async createValidationRun(input: {
-    baselineId: string;
-    name?: string;
-    commitHash?: string;
-    profileId?: string;
-  }): Promise<{ id: string; baselineId: string; status: string; profileId?: string }> {
+  async createValidationRun(input: CreateValidationRunInput): Promise<ValidationRunResult> {
     const run = await this.prisma.validationRun.create({
       data: {
         baselineId: input.baselineId,
@@ -1216,7 +1274,7 @@ export class MetaEvaluationRepository {
    */
   async updateValidationRunStatus(
     runId: string,
-    status: "running" | "completed" | "failed",
+    status: ValidationRunStatus,
     summary?: string
   ): Promise<void> {
     await this.prisma.validationRun.update({
@@ -1232,16 +1290,7 @@ export class MetaEvaluationRepository {
   /**
    * Add a per-document result to a validation run.
    */
-  async addValidationRunSnapshot(input: {
-    runId: string;
-    baselineSnapshotId: string;
-    newEvaluationId: string;
-    status: "unchanged" | "changed";
-    keptCount: number;
-    newCount: number;
-    lostCount: number;
-    comparisonData?: unknown;
-  }): Promise<{ id: string }> {
+  async addValidationRunSnapshot(input: ValidationRunSnapshotInput): Promise<{ id: string }> {
     const snapshot = await this.prisma.validationRunSnapshot.create({
       data: {
         runId: input.runId,
@@ -1261,20 +1310,7 @@ export class MetaEvaluationRepository {
   /**
    * Get all validation runs for a baseline.
    */
-  async getValidationRuns(baselineId: string): Promise<
-    Array<{
-      id: string;
-      name: string | null;
-      commitHash: string | null;
-      status: string;
-      summary: string | null;
-      createdAt: Date;
-      completedAt: Date | null;
-      snapshotCount: number;
-      unchangedCount: number;
-      changedCount: number;
-    }>
-  > {
+  async getValidationRuns(baselineId: string): Promise<ValidationRunSummary[]> {
     const runs = await this.prisma.validationRun.findMany({
       where: { baselineId },
       include: {
@@ -1302,26 +1338,7 @@ export class MetaEvaluationRepository {
   /**
    * Get full details of a validation run including all snapshot comparisons.
    */
-  async getValidationRunDetail(runId: string): Promise<{
-    id: string;
-    name: string | null;
-    commitHash: string | null;
-    status: string;
-    summary: string | null;
-    createdAt: Date;
-    completedAt: Date | null;
-    baseline: { id: string; name: string };
-    snapshots: Array<{
-      id: string;
-      status: string;
-      keptCount: number;
-      newCount: number;
-      lostCount: number;
-      documentId: string;
-      documentTitle: string;
-      comparisonData: unknown;
-    }>;
-  } | null> {
+  async getValidationRunDetail(runId: string): Promise<ValidationRunDetail | null> {
     const run = await this.prisma.validationRun.findUnique({
       where: { id: runId },
       include: {
@@ -1397,7 +1414,7 @@ export class MetaEvaluationRepository {
   async getBaselineSnapshotByDocument(
     baselineId: string,
     documentId: string
-  ): Promise<{ id: string; evaluationVersionId: string } | null> {
+  ): Promise<BaselineSnapshotRef | null> {
     const snapshot = await this.prisma.validationBaselineSnapshot.findFirst({
       where: {
         baselineId,

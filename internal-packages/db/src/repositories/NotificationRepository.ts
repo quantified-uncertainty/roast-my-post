@@ -8,7 +8,6 @@
 
 import { prisma as defaultPrisma } from '../client';
 import { JobStatus } from '../types';
-import type { PrismaClient } from '../client';
 
 export interface BatchNotificationData {
   id: string;
