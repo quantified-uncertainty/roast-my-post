@@ -32,6 +32,19 @@ describe("provider access errors", () => {
     );
   });
 
+  it("recognizes missing Anthropic and OpenRouter credentials", () => {
+    expect(
+      asProviderAccessError(
+        new Error("Missing Anthropic API key. Set ANTHROPIC_API_KEY in .env")
+      )
+    ).toBeInstanceOf(ProviderAccessError);
+    expect(
+      asProviderAccessError(
+        new Error("OpenRouter API key is required for Perplexity integration")
+      )
+    ).toBeInstanceOf(ProviderAccessError);
+  });
+
   it("reads Anthropic payloads attached to Error instances", () => {
     const error = Object.assign(new Error("Request failed"), {
       status: 400,

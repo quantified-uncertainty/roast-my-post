@@ -10,6 +10,10 @@ const CREDIT_ERROR_PATTERNS = [
 
 const AUTH_ERROR_PATTERNS = [
   /invalid (?:api )?key/i,
+  /missing anthropic api key/i,
+  /anthropic api key is required/i,
+  /missing openrouter api key/i,
+  /openrouter api key is required/i,
   /(?:anthropic|openrouter|ai provider|llm|api) authentication (?:failed|required|error)/i,
 ];
 

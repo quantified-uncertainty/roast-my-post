@@ -3,6 +3,7 @@ import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
 import { callOpenRouterChat, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
 import { HeliconeSessionManager, setGlobalSessionManager } from "../../helicone/simpleSessionManager";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 
 // Import from new modules
 import { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
@@ -411,6 +412,7 @@ export class ClaimEvaluatorTool extends Tool<ClaimEvaluatorInput, ClaimEvaluator
         } else {
           // r.status === 'rejected'
           const error = r.reason;
+          throwIfProviderAccessError(error);
 
           // Try to extract useful error information
           let errorMessage = error?.message || String(error);

@@ -7,6 +7,7 @@ import { withTimeout } from "../../utils/timeout";
 import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import { getRandomElement, getPercentileNumber } from "../../shared/types";
 import { perplexityResearchTool } from "../perplexity-researcher/index";
 
@@ -277,6 +278,7 @@ export async function generateForecastWithAggregation(
 
       console.log("  ✓ Perplexity research completed");
     } catch (error) {
+      throwIfProviderAccessError(error);
       console.error("  ✗ Perplexity research failed:", error);
       // Continue without enhanced context
     }
@@ -296,6 +298,7 @@ export async function generateForecastWithAggregation(
           return result.forecast;
         })
         .catch((error) => {
+          throwIfProviderAccessError(error);
           console.error(`     ✗ Forecast ${i + 1} failed: ${error}`);
           return null;
         })
