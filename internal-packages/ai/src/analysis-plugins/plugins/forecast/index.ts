@@ -1,4 +1,5 @@
 import { logger } from "../../../shared/logger";
+import { throwIfProviderAccessError } from "../../../shared/providerErrors";
 import type {
   Comment,
   ToolChainResult,
@@ -107,6 +108,7 @@ class ExtractedForecast {
         prediction: this.extractedForecast.originalText,
         error,
       });
+      throwIfProviderAccessError(error);
     }
   }
 
@@ -497,6 +499,7 @@ export class ForecastPlugin implements SimpleAnalysisPlugin {
       return this.getResults();
     } catch (error) {
       logger.error("ForecastAnalyzer: Fatal error during analysis", error);
+      throwIfProviderAccessError(error);
       // Return a partial result instead of throwing
       this.hasRun = true;
       this.summary = "Analysis failed due to an error";
@@ -568,6 +571,7 @@ export class ForecastPlugin implements SimpleAnalysisPlugin {
           this.extractedForecasts.push(extractedForecast);
         }
       } else {
+        throwIfProviderAccessError(chunkResult.reason);
         logger.warn(
           `Failed to process chunk for forecasting claims: ${chunkResult.reason}`
         );
@@ -601,6 +605,9 @@ export class ForecastPlugin implements SimpleAnalysisPlugin {
     // Log any failures
     const failures = results.filter((r) => !r.result.success);
     if (failures.length > 0) {
+      for (const failure of failures) {
+        throwIfProviderAccessError(failure.result.error);
+      }
       logger.warn(
         `ForecastAnalyzer: ${failures.length} forecasts failed to generate`,
         failures.map((f) => ({ name: f.name, error: f.result.error?.message }))
@@ -901,4 +908,3 @@ The analysis may still be valid, but the highlighting won't be precise.`,
     ];
   }
 }
-

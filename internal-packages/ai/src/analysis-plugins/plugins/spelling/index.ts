@@ -1,4 +1,5 @@
 import { logger } from "../../../shared/logger";
+import { throwIfProviderAccessError } from "../../../shared/providerErrors";
 import type {
   Comment,
   LanguageConventionOption,
@@ -125,6 +126,7 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
       return this.getResults();
     } catch (error) {
       logger.error("SpellingAnalyzer: Fatal error during analysis", error);
+      throwIfProviderAccessError(error);
       // Return a partial result instead of throwing
       this.hasRun = true;
       this.summary = "Analysis failed due to an error";
@@ -233,6 +235,7 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
         }
       } catch (error) {
         logger.error(`Failed to process chunk ${chunk.id}:`, error);
+        throwIfProviderAccessError(error);
         // Continue with next chunk instead of failing entirely
       }
     }
@@ -551,4 +554,3 @@ export class SpellingPlugin implements SimpleAnalysisPlugin {
     ];
   }
 }
-

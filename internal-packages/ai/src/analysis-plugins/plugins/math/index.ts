@@ -1,4 +1,5 @@
 import { logger } from "../../../shared/logger";
+import { throwIfProviderAccessError } from "../../../shared/providerErrors";
 import type {
   Comment,
   ToolChainResult,
@@ -477,6 +478,7 @@ export class MathPlugin implements SimpleAnalysisPlugin {
       return this.getResults();
     } catch (error) {
       logger.error("MathAnalyzer: Fatal error during analysis", error);
+      throwIfProviderAccessError(error);
       // Return a partial result instead of throwing
       this.hasRun = true;
       this.summary = "Analysis failed due to an error";
@@ -529,6 +531,9 @@ export class MathPlugin implements SimpleAnalysisPlugin {
 
     // Process successful results
     for (const chunkResult of chunkResults) {
+      if (chunkResult.status === "rejected") {
+        throwIfProviderAccessError(chunkResult.reason);
+      }
       if (chunkResult.status === "fulfilled") {
         const { chunk, result } = chunkResult.value;
         for (const expression of result.expressions) {
@@ -586,6 +591,7 @@ export class MathPlugin implements SimpleAnalysisPlugin {
             expression: extractedExpr.expression.originalText,
             error,
           });
+          throwIfProviderAccessError(error);
           // Return null for failed checks
           return null;
         }
@@ -597,6 +603,9 @@ export class MathPlugin implements SimpleAnalysisPlugin {
 
     // Collect successful results
     for (const result of results) {
+      if (result.status === "rejected") {
+        throwIfProviderAccessError(result.reason);
+      }
       if (result.status === "fulfilled" && result.value !== null) {
         this.hybridErrorWrappers.push(result.value);
       }

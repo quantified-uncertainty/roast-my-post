@@ -23,6 +23,10 @@ import type {
 } from "../../types";
 import { CommentBuilder } from "../../utils/CommentBuilder";
 import { logger } from "../../../shared/logger";
+import {
+  asProviderAccessError,
+  throwIfProviderAccessError,
+} from "../../../shared/providerErrors";
 import { findTextLocation } from "../../../tools/smart-text-searcher/core";
 import { aiConfig } from "../../../config";
 import { loadAgenticProfileOrDefault } from "./profile-loader";
@@ -301,14 +305,16 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       this.analysisText = output.analysis;
       this.gradeValue = output.overallGrade;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const providerError = asProviderAccessError(error);
+      const errorMessage = providerError?.message ??
+        (error instanceof Error ? error.message : String(error));
       logger.error("Agentic analysis failed:", error instanceof Error ? error : new Error(errorMessage));
       this.telemetry.recordError(errorMessage, this.totalCost, this.numTurns);
       this.persistTelemetry();
       this.summaryText = `Agentic analysis failed: ${errorMessage}`;
       this.analysisText = this.summaryText;
       this.emit({ type: "error", message: errorMessage });
+      if (providerError) throw providerError;
     } finally {
       await this.cleanupWorkspace();
     }
@@ -647,6 +653,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
               ? "budget exceeded"
               : errorMsg.errors?.join("; ") || "unknown error";
 
+        throwIfProviderAccessError(reason);
+
         this.telemetry.recordError(reason, errorMsg.total_cost_usd, errorMsg.num_turns);
         this.persistTelemetry();
 
@@ -731,6 +739,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
           typeof parsed.overallGrade === "number" ? parsed.overallGrade : 0,
       };
     } catch {
+      throwIfProviderAccessError(resultText);
       logger.warn("Failed to parse agentic analysis result as JSON");
       return {
         findings: [],
