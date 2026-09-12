@@ -32,6 +32,7 @@ describe("provider error propagation", () => {
       analyze: async () => {
         throw Object.assign(new Error("Insufficient credits"), { status: 400 });
       },
+      getCost: () => 0,
     };
 
     await expect(

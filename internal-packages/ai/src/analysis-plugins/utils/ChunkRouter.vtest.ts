@@ -24,6 +24,7 @@ const plugin: SimpleAnalysisPlugin = {
     { chunkText: "A factual claim", shouldProcess: true },
   ],
   analyze: vi.fn(),
+  getCost: () => 0,
 };
 
 describe("ChunkRouter", () => {

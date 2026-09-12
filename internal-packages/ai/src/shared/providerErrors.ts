@@ -1,10 +1,11 @@
 const CREDIT_ERROR_PATTERNS = [
   /credit balance (?:is )?too low/i,
-  /insufficient[_ ]+(?:credits?|quota|funds?|balance)/i,
-  /not enough (?:credits?|funds?)/i,
+  /insufficient[_ ]+credits?/i,
+  /insufficient_quota/i,
+  /not enough credits?/i,
   /(?:billing|spending|usage) limit (?:has been )?(?:reached|exceeded)/i,
-  /quota (?:has been )?(?:exceeded|exhausted)/i,
-  /(?:exceeded|reached).*quota/i,
+  /(?:anthropic|openrouter|openai|ai provider|llm)[^\n]{0,100}quota[^\n]{0,40}(?:exceeded|exhausted)/i,
+  /quota[^\n]{0,40}(?:exceeded|exhausted)[^\n]{0,100}(?:anthropic|openrouter|openai|ai provider|llm|billing|plan)/i,
 ];
 
 const AUTH_ERROR_PATTERNS = [
@@ -14,13 +15,17 @@ const AUTH_ERROR_PATTERNS = [
 
 const PROVIDER_RESULT_PATTERNS = [
   /^(?:error:\s*)?(?:your\s+)?credit balance (?:is )?too low(?:\s+to access[^\n]*)?[.!]?$/i,
-  /^(?:error:\s*)?insufficient[_ ]+(?:credits?|quota|funds?|balance)[^\n]{0,300}$/i,
+  /^(?:error:\s*)?insufficient(?:[_ ]+credits?|_quota)[^\n]{0,300}$/i,
 ];
+
+interface ProviderErrorResponseShape {
+  status?: unknown;
+}
 
 interface ProviderErrorShape {
   status?: unknown;
   statusCode?: unknown;
-  response?: { status?: unknown };
+  response?: ProviderErrorResponseShape;
   cause?: unknown;
   message?: unknown;
   error?: unknown;

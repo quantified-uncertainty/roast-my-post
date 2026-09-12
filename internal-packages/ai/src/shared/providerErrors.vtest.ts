@@ -70,5 +70,11 @@ describe("provider access errors", () => {
         new Error("EACCES: permission denied, mkdir /tmp/job")
       )
     ).toBeUndefined();
+    expect(
+      asProviderAccessError(new Error("Insufficient funds for transfer"))
+    ).toBeUndefined();
+    expect(
+      asProviderAccessError(new Error("ENOSPC: disk quota exceeded"))
+    ).toBeUndefined();
   });
 });
