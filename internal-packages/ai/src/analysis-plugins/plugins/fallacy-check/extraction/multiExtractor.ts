@@ -6,6 +6,7 @@
  */
 
 import { logger } from '../../../../shared/logger';
+import { throwIfProviderAccessError } from '../../../../shared/providerErrors';
 import fallacyExtractorTool from '../../../../tools/fallacy-extractor';
 import type { ExtractedFallacyIssue } from '../../../../tools/fallacy-extractor/types';
 import type {
@@ -143,6 +144,7 @@ async function runSingleExtractor(
       unifiedUsage: result.unifiedUsage,
     };
   } catch (error) {
+    throwIfProviderAccessError(error);
     const durationMs = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
@@ -192,6 +194,12 @@ export async function runMultiExtractor(
   );
 
   const settledResults = await Promise.allSettled(extractorPromises);
+
+  for (const result of settledResults) {
+    if (result.status === 'rejected') {
+      throwIfProviderAccessError(result.reason);
+    }
+  }
 
   // Process results
   const extractorResults: ExtractorResult[] = settledResults.map((result, index) => {
