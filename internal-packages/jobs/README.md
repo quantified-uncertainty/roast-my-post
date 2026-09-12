@@ -128,7 +128,7 @@ JobTimeoutError → Worker marks FAILED (non-retryable)
 
 | Task | Schedule | Purpose |
 |------|----------|---------|
-| `job-reconciliation` | Every minute | Clean up stale RUNNING jobs (30min threshold) |
+| `job-reconciliation` | Every ten minutes | Clean up stale RUNNING jobs (30min threshold) |
 
 The reconciliation task uses an **exclusive queue policy** to prevent overlapping runs.
 

@@ -93,7 +93,6 @@ internal-packages/analyzers/
 ### 1. Mock Standardization
 Create standardized mocks for:
 - Claude API responses
-- Session context
 - Database models
 
 ### 2. Test Environment

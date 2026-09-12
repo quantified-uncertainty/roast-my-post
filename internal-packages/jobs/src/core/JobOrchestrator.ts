@@ -76,7 +76,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         where: { jobId: job.id },
         _sum: { priceInDollars: true },
       });
-      const priceInDollars = Number(taskCosts._sum.priceInDollars ?? 0);
+      const priceInDollars = Number(
+        taskCosts._sum.priceInDollars?.toFixed(6) ?? 0
+      );
 
       // Calculate duration
       const durationInSeconds = (Date.now() - startTime) / 1000;
