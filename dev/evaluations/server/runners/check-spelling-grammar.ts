@@ -1,6 +1,5 @@
-import { logger } from "../../../../internal-packages/ai/src/shared/logger";
-import { checkSpellingGrammarTool } from "../../../../internal-packages/ai/src/tools/check-spelling-grammar";
-import type { ToolContext } from "../../../../internal-packages/ai/src/tools/base/Tool";
+import type { ToolContext } from "@roast/ai";
+import { checkSpellingGrammarTool, logger } from "@roast/ai/server";
 import type { TestCase } from "../../data/check-spelling-grammar/test-cases";
 import { BaseRunner } from "../../shared/BaseRunner";
 import { SpellingRunResult } from "../../shared/TestInterfaces";

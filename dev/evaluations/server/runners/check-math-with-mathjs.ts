@@ -1,6 +1,5 @@
-import { logger } from "../../../../internal-packages/ai/src/shared/logger";
-import { checkMathWithMathJsTool } from "../../../../internal-packages/ai/src/tools/check-math-with-mathjs";
-import type { ToolContext } from "../../../../internal-packages/ai/src/tools/base/Tool";
+import type { ToolContext } from "@roast/ai";
+import { checkMathWithMathJsTool, logger } from "@roast/ai/server";
 import type { TestCase } from "../../data/check-math-with-mathjs/test-cases";
 import { BaseRunner } from "../../shared/BaseRunner";
 import { MathRunResult } from "../../shared/TestInterfaces";
