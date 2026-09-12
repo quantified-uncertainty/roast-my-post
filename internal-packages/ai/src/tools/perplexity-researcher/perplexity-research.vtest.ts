@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } 
 import { PerplexityResearchTool } from './index';
 import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
+import { ProviderAccessError } from '../../shared/providerErrors';
 
 // Mock the Perplexity client
 vi.mock('./client', () => ({
@@ -185,6 +186,36 @@ describe('PerplexityResearchTool', () => {
   });
   
   describe('error handling', () => {
+    it('should propagate provider failures before basic fallback', async () => {
+      const error = new ProviderAccessError('AI provider authentication failed');
+      mockClient.query.mockRejectedValue(error);
+
+      await expect(tool.execute({ query: 'Test query' }, mockContext))
+        .rejects.toBe(error);
+      expect(mockClient.query).toHaveBeenCalledTimes(1);
+    });
+
+    it('should propagate provider failures from forecasting context', async () => {
+      mockClient.query
+        .mockResolvedValueOnce({
+          content: JSON.stringify({
+            summary: 'Research summary',
+            keyFindings: [],
+            sources: [],
+          }),
+        })
+        .mockRejectedValueOnce(
+          new ProviderAccessError('AI provider billing rejected the request')
+        );
+
+      await expect(
+        tool.execute(
+          { query: 'Test query', includeForecastingContext: true },
+          mockContext
+        )
+      ).rejects.toBeInstanceOf(ProviderAccessError);
+    });
+
     it('should handle research errors', async () => {
       const input = { query: 'Test query' };
       const error = new Error('OpenRouter API error');

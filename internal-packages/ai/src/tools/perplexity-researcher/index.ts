@@ -7,6 +7,7 @@ import {
 import { perplexityResearcherConfig } from "../configs";
 import { PerplexityClient } from "./client";
 import { logger } from "../../utils/logger";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 
 // Define types for the tool
 export interface PerplexityResearchInput {
@@ -95,6 +96,7 @@ export class PerplexityResearchTool extends Tool<
         });
         usage = researchResult.usage;
       } catch (structuredError) {
+        throwIfProviderAccessError(structuredError);
         // Fallback to basic query if structured research fails
         context.logger.warn(
           "[PerplexityResearch] Structured research failed, using fallback mode"
@@ -133,6 +135,7 @@ export class PerplexityResearchTool extends Tool<
           forecastingContext = contextResult.content;
           forecastingUsage = contextResult.usage;
         } catch (contextError) {
+          throwIfProviderAccessError(contextError);
           context.logger.warn(
             "[PerplexityResearch] Failed to get forecasting context",
             {

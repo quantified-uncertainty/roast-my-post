@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import { perplexityResearchTool } from "../perplexity-researcher";
 import { generateCacheSeed } from "../shared/cache-utils";
 
@@ -137,6 +138,7 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
         }`;
         context.logger.info(`[FactChecker] Found ${perplexityFullOutput.sources.length} sources`);
       } catch (error) {
+        throwIfProviderAccessError(error);
         context.logger.warn(`[FactChecker] Perplexity research failed:`, { error: error instanceof Error ? error.message : String(error) });
         // Continue without research results
       }

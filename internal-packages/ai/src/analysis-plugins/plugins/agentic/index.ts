@@ -23,6 +23,12 @@ import type {
 } from "../../types";
 import { CommentBuilder } from "../../utils/CommentBuilder";
 import { logger } from "../../../shared/logger";
+import {
+  asProviderAccessError,
+  asProviderAccessResult,
+  ProviderAccessError,
+  throwIfProviderAccessError,
+} from "../../../shared/providerErrors";
 import { findTextLocation } from "../../../tools/smart-text-searcher/core";
 import { aiConfig } from "../../../config";
 import { loadAgenticProfileOrDefault } from "./profile-loader";
@@ -113,6 +119,16 @@ export class SubAgentTracker {
 /** Strip SDK-injected <system-reminder>...</system-reminder> tags from tool output */
 function stripSystemReminders(text: string): string {
   return text.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, "").trim();
+}
+
+async function* classifyProviderStreamErrors<T>(
+  stream: AsyncIterable<T>
+): AsyncGenerator<T> {
+  try {
+    for await (const message of stream) yield message;
+  } catch (error) {
+    throw asProviderAccessError(error) ?? error;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -301,14 +317,16 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       this.analysisText = output.analysis;
       this.gradeValue = output.overallGrade;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const providerError = error instanceof ProviderAccessError ? error : undefined;
+      const errorMessage = providerError?.message ??
+        (error instanceof Error ? error.message : String(error));
       logger.error("Agentic analysis failed:", error instanceof Error ? error : new Error(errorMessage));
       this.telemetry.recordError(errorMessage, this.totalCost, this.numTurns);
       this.persistTelemetry();
       this.summaryText = `Agentic analysis failed: ${errorMessage}`;
       this.analysisText = this.summaryText;
       this.emit({ type: "error", message: errorMessage });
+      if (providerError) throw providerError;
     } finally {
       await this.cleanupWorkspace();
     }
@@ -470,17 +488,21 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
       });
     }
 
-    for await (const message of query({
-      prompt,
-      options: {
-        ...queryOptions,
-        persistSession: false,
-        outputFormat: {
-          type: "json_schema",
-          schema: FINDINGS_JSON_SCHEMA,
+    const agentMessages = classifyProviderStreamErrors(
+      query({
+        prompt,
+        options: {
+          ...queryOptions,
+          persistSession: false,
+          outputFormat: {
+            type: "json_schema",
+            schema: FINDINGS_JSON_SCHEMA,
+          },
         },
-      },
-    })) {
+      })
+    );
+
+    for await (const message of agentMessages) {
       if (message.type === "system" && "subtype" in message && message.subtype === "init") {
         const initAgents = "agents" in message && Array.isArray(message.agents)
           ? (message.agents as string[])
@@ -647,6 +669,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
               ? "budget exceeded"
               : errorMsg.errors?.join("; ") || "unknown error";
 
+        throwIfProviderAccessError(reason);
+
         this.telemetry.recordError(reason, errorMsg.total_cost_usd, errorMsg.num_turns);
         this.persistTelemetry();
 
@@ -731,6 +755,8 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
           typeof parsed.overallGrade === "number" ? parsed.overallGrade : 0,
       };
     } catch {
+      const providerError = asProviderAccessResult(resultText);
+      if (providerError) throw providerError;
       logger.warn("Failed to parse agentic analysis result as JSON");
       return {
         findings: [],

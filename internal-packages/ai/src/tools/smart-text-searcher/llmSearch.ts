@@ -9,6 +9,7 @@ import {
 } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
+import { throwIfProviderAccessError } from "../../shared/providerErrors";
 import { LineBasedLocator } from "../../text-location/line-based";
 import { getGlobalSessionManager } from "../../helicone/simpleSessionManager";
 import type { ToolContext } from "../base/Tool";
@@ -342,6 +343,7 @@ export async function llmSearch(
       return convertLLMResultToLocation(result.toolResult, locator, searchText, documentText);
     } catch (error) {
       logger.error("LLM search failed:", error);
+      throwIfProviderAccessError(error);
       return null;
     }
   };
