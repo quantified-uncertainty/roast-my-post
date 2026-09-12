@@ -22,6 +22,7 @@ vi.mock('@roast/db', () => ({
     },
     task: {
       create: vi.fn(),
+      aggregate: vi.fn(),
     },
     evaluationHighlight: {
       create: vi.fn(),
@@ -67,6 +68,9 @@ describe('JobOrchestrator', () => {
     } as any;
 
     mockAnalyzeDocument = analyzeDocument;
+    (prisma.task.aggregate as any).mockResolvedValue({
+      _sum: { priceInDollars: 0.5 },
+    });
 
     mockJobService = {
       markAsCompleted: vi.fn().mockResolvedValue({ id: 'job-1', status: JobStatus.COMPLETED }),
@@ -220,7 +224,7 @@ describe('JobOrchestrator', () => {
       expect(mockJobService.markAsFailed).not.toHaveBeenCalled();
     });
 
-    it('should persist task costs and include them in the execution log', async () => {
+    it('should persist task costs and include costs from earlier attempts', async () => {
       const mockJob = createMockJob();
       const mockAnalysisResult = createMockAnalysisResult();
 
@@ -246,6 +250,9 @@ describe('JobOrchestrator', () => {
 
       (prisma.evaluationVersion.findFirst as any).mockResolvedValue(null);
       (prisma.evaluationVersion.create as any).mockResolvedValue({ id: 'eval-version-1' });
+      (prisma.task.aggregate as any).mockResolvedValue({
+        _sum: { priceInDollars: 0.85 },
+      });
 
       const result = await orchestrator.processJob(mockJob);
 
@@ -260,9 +267,13 @@ describe('JobOrchestrator', () => {
         'job-1',
         expect.objectContaining({
           llmThinking: 'Test thinking',
-          priceInDollars: 0.6,
+          priceInDollars: 0.85,
         })
       );
+      expect(prisma.task.aggregate).toHaveBeenCalledWith({
+        where: { jobId: 'job-1' },
+        _sum: { priceInDollars: true },
+      });
     });
   });
 

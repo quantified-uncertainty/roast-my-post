@@ -21,6 +21,13 @@ export interface DocumentCompletionHandler {
   onDocumentCompleted(documentId: string): Promise<void>;
 }
 
+export interface JobCompletionData {
+  llmThinking: string | null;
+  durationInSeconds: number;
+  logs: string;
+  priceInDollars: number;
+}
+
 export class JobService {
   private batchCompletionHandler?: BatchCompletionHandler;
   private documentCompletionHandler?: DocumentCompletionHandler;
@@ -163,12 +170,7 @@ export class JobService {
    */
   async markAsCompleted(
     jobId: string,
-    data: {
-      llmThinking: string | null;
-      durationInSeconds: number;
-      logs: string;
-      priceInDollars: number;
-    }
+    data: JobCompletionData
   ) {
     const completedJob = await this.jobRepository.updateStatus(jobId, {
       status: JobStatus.COMPLETED,

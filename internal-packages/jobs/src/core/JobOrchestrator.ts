@@ -71,6 +71,13 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       // Create evaluation version and save results
       await this.saveAnalysisResults(job, analysisResult, agent);
 
+      // Include task costs from earlier attempts that persisted before a retry.
+      const taskCosts = await prisma.task.aggregate({
+        where: { jobId: job.id },
+        _sum: { priceInDollars: true },
+      });
+      const priceInDollars = Number(taskCosts._sum.priceInDollars ?? 0);
+
       // Calculate duration
       const durationInSeconds = (Date.now() - startTime) / 1000;
 
@@ -89,10 +96,7 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         llmThinking: analysisResult.thinking,
         durationInSeconds,
         logs: logContent,
-        priceInDollars: analysisResult.tasks.reduce(
-          (total, task) => total + task.priceInDollars,
-          0
-        ),
+        priceInDollars,
       });
 
       return {
