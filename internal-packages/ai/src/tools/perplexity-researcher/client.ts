@@ -1,11 +1,9 @@
 /**
- * Perplexity client using OpenRouter with Helicone integration
+ * Perplexity client using OpenRouter.
  * Provides access to Perplexity's Sonar models with web search capabilities
  */
 
 import { OpenAI } from 'openai';
-import { aiConfig } from '../../config';
-import { getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
 import { throwIfProviderAccessError } from '../../shared/providerErrors';
 import { logger } from '../../utils/logger';
 
@@ -29,8 +27,6 @@ export class PerplexityClient {
       );
     }
     
-    const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
-    
     // Determine environment for better tracking
     const isProduction = process.env.NODE_ENV === 'production';
     const environment = isProduction ? 'Prod' : 'Dev';
@@ -39,29 +35,15 @@ export class PerplexityClient {
     // But X-Title might also influence the display
     const referer = isProduction ? 'https://roastmypost.org' : 'http://localhost:3000';
     
-    // Use Helicone proxy if available, otherwise direct OpenRouter
-    if (heliconeKey) {
-      this.client = new OpenAI({
-        baseURL: 'https://openrouter.helicone.ai/api/v1',
-        apiKey: key,
-        defaultHeaders: {
-          'Helicone-Auth': `Bearer ${heliconeKey}`,
-          'HTTP-Referer': referer,
-          'X-Title': appTitle,
-          'X-Environment': environment,
-        }
-      });
-    } else {
-      this.client = new OpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey: key,
-        defaultHeaders: {
-          'HTTP-Referer': referer,
-          'X-Title': appTitle,
-          'X-Environment': environment,
-        }
-      });
-    }
+    this.client = new OpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: key,
+      defaultHeaders: {
+        'HTTP-Referer': referer,
+        'X-Title': appTitle,
+        'X-Environment': environment,
+      }
+    });
   }
 
   /**
@@ -93,13 +75,9 @@ export class PerplexityClient {
     });
 
     try {
-      // Get current session headers for tracking
-      const sessionHeaders = getCurrentHeliconeHeaders();
-      
       // Add additional metadata headers
       const environment = process.env.NODE_ENV === 'production' ? 'Prod' : 'Dev';
       const enhancedHeaders = {
-        ...sessionHeaders,
         'X-Request-Source': `perplexity-research-${environment.toLowerCase()}`,
         'X-Tool-Version': '1.0.0',
         'X-Request-Time': new Date().toISOString(),

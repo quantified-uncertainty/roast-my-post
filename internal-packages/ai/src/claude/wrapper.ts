@@ -2,7 +2,6 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { createAnthropicClient } from '../utils/anthropic';
 import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 // Note: withRetry was deprecated in favor of inline retry logic
-import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 import { logger } from '../shared/logger';
 import { throwIfProviderAccessError } from '../shared/providerErrors';
 import { getRemainingTimeMs } from '../shared/jobContext';
@@ -33,9 +32,7 @@ export interface ClaudeCallOptions {
   tool_choice?: Anthropic.Messages.ToolChoice;
   max_tokens?: number;
   temperature?: number;
-  heliconeHeaders?: Record<string, string>;
   enablePromptCaching?: boolean; // Enable Anthropic prompt caching
-  cacheSeed?: string; // Custom cache seed for Helicone response caching
   timeout?: number; // Custom timeout in milliseconds
   /**
    * Use streaming internally to avoid the Anthropic SDK's non-streaming timeout
@@ -129,7 +126,6 @@ function isRetryableError(error: unknown): boolean {
 
 /**
  * Centralized Claude API wrapper that automatically handles:
- * - Helicone integration via createAnthropicClient()
  * - LLM interaction tracking with RichLLMInteraction format
  * - Consistent error handling and token counting
  * - Model configuration centralization
@@ -141,21 +137,7 @@ export async function callClaude(
 ): Promise<ClaudeCallResult> {
   const startTime = Date.now();
 
-  // Merge provided headers with global session headers
-  // Priority: provided headers > global session headers
-  const globalHeaders = getCurrentHeliconeHeaders();
-  const baseHeaders = {
-    ...globalHeaders,
-    ...options.heliconeHeaders
-  };
-  
-  // If a cache seed is provided, add it to the headers
-  const heliconeHeaders = options.cacheSeed ? {
-    ...baseHeaders,
-    'Helicone-Cache-Seed': options.cacheSeed
-  } : baseHeaders;
-  
-  const anthropic = createAnthropicClient(heliconeHeaders);
+  const anthropic = createAnthropicClient();
   
   // Use centralized model config if not specified
   const model = options.model || MODEL_CONFIG.analysis;
@@ -414,7 +396,6 @@ export async function callClaudeWithTool<T>(
     tool_choice: thinkingEnabled
       ? { type: "auto" }
       : { type: "tool", name: options.toolName },
-    cacheSeed: options.cacheSeed // Pass through cache seed
   };
 
   const result = await callClaude(toolOptions, previousInteractions);

@@ -9,10 +9,6 @@
 export interface AIConfig {
   anthropicApiKey?: string;
   openRouterApiKey?: string;
-  heliconeApiKey?: string;
-  heliconeEnabled?: boolean;
-  heliconeMaxAge?: string;
-  heliconeMaxSize?: string;
   searchModel?: string;
   analysisModel?: string;
 }
@@ -61,5 +57,3 @@ export function getOptionalConfig<K extends keyof AIConfig>(
 // Export default values
 export const DEFAULT_SEARCH_MODEL = "gpt-3.5-turbo";
 export const DEFAULT_ANALYSIS_MODEL = "claude-3-sonnet-20240229";
-export const DEFAULT_HELICONE_MAX_AGE = "2592000"; // 30 days in seconds
-export const DEFAULT_HELICONE_MAX_SIZE = "50";

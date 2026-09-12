@@ -1,4 +1,4 @@
-// LLM interaction tracking is now handled automatically by Helicone
+// Shared LLM utilities for document analysis workflows.
 // This file maintains legacy logging utilities for task results
 
 interface LogDetails {

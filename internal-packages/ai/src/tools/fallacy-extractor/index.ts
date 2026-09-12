@@ -10,7 +10,6 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { fallacyExtractorConfig } from "../configs";
-import { generateCacheSeed } from "../shared/cache-utils";
 import { withDateContext } from "../shared/llm-filter-utils";
 import fuzzyTextLocatorTool from "../smart-text-searcher";
 import { findLocationInChunk } from "../smart-text-searcher/chunk-location-finder";
@@ -171,12 +170,6 @@ export class FallacyExtractorTool extends Tool<
     const userPrompt = input.customUserPrompt
       ? `${input.customUserPrompt}\n\n${textToAnalyze}`
       : `${DEFAULT_EXTRACTOR_USER_PROMPT}\n\n${textToAnalyze}`;
-
-    const cacheSeed = generateCacheSeed("fallacy-extract", [
-      textToAnalyze,
-      MIN_SEVERITY_THRESHOLD,
-      MAX_ISSUES,
-    ]);
 
     // Shared tool schema for both Claude and OpenRouter
     const toolSchema = {
@@ -364,7 +357,6 @@ export class FallacyExtractorTool extends Tool<
         toolDescription: "Extract and score fallacy issues from text",
         toolSchema,
         enablePromptCaching: true,
-        cacheSeed,
         thinking: claudeThinkingConfig,
       });
       result = claudeResult;

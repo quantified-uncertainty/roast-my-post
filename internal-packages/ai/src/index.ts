@@ -5,17 +5,6 @@
  * For server-only exports (tools, plugins, workflows), use @roast/ai/server
  */
 
-// Helicone tracking
-export * from './helicone/api-client';
-export * from './helicone/costFetcher';
-export {
-  HeliconeSessionManager,
-  setGlobalSessionManager,
-  getGlobalSessionManager,
-  getCurrentHeliconeHeaders
-} from './helicone/simpleSessionManager';
-export type { SimpleSessionConfig } from './helicone/simpleSessionManager';
-
 // Utilities
 export * from './utils/tokenUtils';
 export * from './utils/anthropic';

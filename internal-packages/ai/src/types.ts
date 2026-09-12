@@ -58,22 +58,6 @@ export function getAnthropicApiKey(): string | undefined {
   return apiKey;
 }
 
-export function getHeliconeApiKey(): string | undefined {
-  return aiConfig.helicone.apiKey;
-}
-
-export function isHeliconeEnabled(): boolean {
-  return aiConfig.helicone.enabled;
-}
-
-export function getHeliconeMaxAge(): string {
-  return aiConfig.helicone.cacheMaxAge.toString();
-}
-
-export function getHeliconeMaxSize(): string {
-  return aiConfig.helicone.cacheBucketMaxSize.toString();
-}
-
 // Configuration validation
 export interface ConfigValidationResult {
   isValid: boolean;
@@ -93,13 +77,6 @@ export function validateConfiguration(): ConfigValidationResult {
   // Check required configurations - fail fast
   if (!aiConfig.anthropicApiKey) {
     errors.push("ANTHROPIC_API_KEY is required");
-  }
-
-  // Check Helicone configuration consistency
-  if (aiConfig.helicone.enabled && !aiConfig.helicone.apiKey) {
-    errors.push(
-      "HELICONE_CACHE_ENABLED is true but HELICONE_API_KEY is not set"
-    );
   }
 
   return {

@@ -6,7 +6,6 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { binaryForecastingClaimsExtractorConfig } from "../configs";
-import { generateCacheSeed } from "../shared/cache-utils";
 import { smallSystemPrompt } from "./prompts";
 
 // Define types for the tool
@@ -143,14 +142,6 @@ ${text}
   </requirements>
 </task>`;
 
-    // Generate cache seed for consistent responses
-    const cacheSeed = generateCacheSeed("forecast-extract", [
-      text,
-      additionalContext || "",
-      minQualityThreshold || 0,
-      maxDetailedAnalysis || 30,
-    ]);
-
     const result = await callClaudeWithTool<{ forecasts: any[] }>(
       {
         system: systemPrompt,
@@ -166,7 +157,6 @@ ${text}
         toolName: "extract_and_score_forecasts",
         toolDescription:
           "Extract forecast statements and score them for analysis priority",
-        cacheSeed,
         toolSchema: {
           type: "object",
           properties: {

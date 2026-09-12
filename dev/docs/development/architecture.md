@@ -40,7 +40,7 @@ This documentation is currently being developed. Key topics to be covered:
 ### Integration Points
 - External AI Services (Claude, OpenAI)
 - Content Import Sources
-- Monitoring (Helicone)
+- Structured application logs
 - MCP Server for database access
 
 ## Quick References

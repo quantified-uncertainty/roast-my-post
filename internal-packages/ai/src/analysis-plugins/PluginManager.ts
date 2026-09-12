@@ -5,10 +5,6 @@
  * For legacy plugin support, see BasePlugin.ts which maintains backward compatibility.
  */
 
-import {
-  getGlobalSessionManager,
-  HeliconeSessionManager,
-} from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
 import { throwIfProviderAccessError } from "../shared/providerErrors";
 import type { Comment } from "../shared/types";
@@ -46,7 +42,6 @@ import {
 import { createChunksWithTool } from "./utils/createChunksWithTool";
 
 export interface PluginManagerConfig {
-  sessionManager?: HeliconeSessionManager;
   jobId?: string; // For logging integration
   pluginSelection?: PluginSelection; // Optional plugin selection configuration
   useIsolation?: boolean; // Enable plugin state isolation
@@ -99,7 +94,6 @@ export interface FullDocumentAnalysisResult {
 }
 
 export class PluginManager {
-  private sessionManager?: HeliconeSessionManager;
   private startTime: number = 0;
   private pluginLogger: PluginLogger;
   private pluginSelection?: PluginSelection;
@@ -118,8 +112,6 @@ export class PluginManager {
   private onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
 
   constructor(config: PluginManagerConfig = {}) {
-    // Use provided session manager, or fall back to global if available
-    this.sessionManager = config.sessionManager || getGlobalSessionManager();
     this.pluginLogger = new PluginLogger(config.jobId);
     this.pluginSelection = config.pluginSelection;
     this.useIsolation = config.useIsolation || false;
@@ -185,18 +177,7 @@ export class PluginManager {
   ): Promise<SimpleDocumentAnalysisResult> {
     this.startTime = Date.now();
 
-    // Wrap in session tracking if available
-    const runAnalysis = async () => {
-      if (this.sessionManager) {
-        return this.sessionManager.withPath("/plugins", undefined, async () => {
-          return this._runPluginAnalysis(text, plugins);
-        });
-      } else {
-        return this._runPluginAnalysis(text, plugins);
-      }
-    };
-
-    return runAnalysis();
+    return this._runPluginAnalysis(text, plugins);
   }
 
   private async _runPluginAnalysis(
@@ -383,24 +364,8 @@ export class PluginManager {
               );
             });
 
-            // Wrap plugin execution in session tracking
-            const executePlugin = async () => {
-              if (this.sessionManager) {
-                // Use withPath instead of trackPlugin since we're already inside /plugins
-                return this.sessionManager.withPath(
-                  `/${pluginName}`,
-                  { plugin: pluginName },
-                  async () => {
-                    return plugin.analyze(assignedChunks, text);
-                  }
-                );
-              } else {
-                return plugin.analyze(assignedChunks, text);
-              }
-            };
-
             const result = await Promise.race([
-              executePlugin(),
+              plugin.analyze(assignedChunks, text),
               timeoutPromise,
             ]).finally(() => {
               // Clear timeout when either promise resolves/rejects

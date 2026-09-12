@@ -69,11 +69,6 @@ DATABASE_URL=postgresql://localhost:5432/my_local_db
 - `OPENROUTER_API_KEY` - OpenRouter API key (optional)
 - `OPENAI_API_KEY` - OpenAI API key (optional)
 
-### Monitoring (Optional)
-- `HELICONE_API_KEY` - Helicone API key for AI monitoring
-- `HELICONE_CACHE_ENABLED` - Enable prompt caching (true/false)
-- `HELICONE_CACHE_MAX_AGE` - Cache TTL in seconds
-
 ### External Services (Optional)
 - `FIRECRAWL_KEY` - Firecrawl API key for web scraping
 - `DIFFBOT_KEY` - Diffbot API key for article extraction

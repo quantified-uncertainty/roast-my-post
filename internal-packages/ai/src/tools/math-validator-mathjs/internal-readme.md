@@ -63,7 +63,6 @@ The tool now includes code-level deterministic comparison logic that automatical
 - **Agent approach:** Claude with tool access for complex expressions
 - **Direct evaluation:** Bypasses LLM for simple equality checks
 - **Cost optimization:** Early return for symbolic/incomplete expressions
-- **Session tracking:** Integrated with Helicone for usage monitoring
 - **Location:** Implementation in \`/internal-packages/ai/src/tools/check-math-with-mathjs/\`
 
 ## Testing

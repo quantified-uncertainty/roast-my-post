@@ -1,7 +1,5 @@
-import { v4 as uuidv4 } from "uuid";
-
-import { logger } from "../../../../internal-packages/ai/src/shared/logger";
-import { checkSpellingGrammarTool } from "../../../../internal-packages/ai/src/tools/check-spelling-grammar";
+import type { ToolContext } from "@roast/ai";
+import { checkSpellingGrammarTool, logger } from "@roast/ai/server";
 import type { TestCase } from "../../data/check-spelling-grammar/test-cases";
 import { BaseRunner } from "../../shared/BaseRunner";
 import { SpellingRunResult } from "../../shared/TestInterfaces";
@@ -41,14 +39,9 @@ export async function runEvaluation(
   testCases: TestCase[],
   runsPerTest: number = 3
 ): Promise<EvaluationResult> {
-  // Create a single Helicone session for the entire evaluation
-  const evaluationId = uuidv4();
-  const sessionId = `evaluation-${evaluationId}`;
-
   console.log(
     `Running ${testCases.length} tests with ${runsPerTest} runs each...`
   );
-  console.log(`Helicone Session ID: ${sessionId}`);
 
   try {
     // Run all tests in parallel
@@ -60,16 +53,14 @@ export async function runEvaluation(
         const start = Date.now();
 
         try {
-          // Create a context with the session
-          const contextWithSession = {
+          const context: ToolContext = {
             logger: logger,
             userId: "test-evaluation",
-            sessionId, // This ensures the tool uses the same session
           };
 
           const output = await checkSpellingGrammarTool.run(
             testCase.input,
-            contextWithSession
+            context
           );
           const duration = Date.now() - start;
 

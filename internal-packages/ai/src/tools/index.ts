@@ -8,7 +8,6 @@ export { toolRegistry } from './registry';
 export * from './all-tools';
 
 // Shared utilities
-export * from './shared/cache-utils';
 export * from './shared/math-schemas';
 
 // Individual tools - export the ones that are commonly used

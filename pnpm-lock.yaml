@@ -384,6 +384,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.19.14
         version: 1.19.14(hono@4.12.26)
+      '@roast/ai':
+        specifier: workspace:*
+        version: link:../../internal-packages/ai
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
