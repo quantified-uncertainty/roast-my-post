@@ -5,8 +5,8 @@ export async function ensureDbConnected() {
   try {
     // Simple query to check connection
     await prisma.$queryRaw`SELECT 1`;
-  } catch (error: any) {
-    if (error.message?.includes('Engine is not yet connected')) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message.includes('Engine is not yet connected')) {
       // Force reconnection
       await prisma.$connect();
     } else {
