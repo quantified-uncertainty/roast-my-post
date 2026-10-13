@@ -9,13 +9,15 @@ import { logger } from '@/infrastructure/logging/logger';
 
 // Mock Prisma
 vi.mock('@roast/db', () => ({
-  EvaluationRepository: vi.fn().mockImplementation(() => ({
-    checkDocumentAccess: vi.fn(),
-    checkAgentExists: vi.fn(),
-    findByDocumentAndAgent: vi.fn(),
-    create: vi.fn(),
-    createEvaluationWithJob: vi.fn(),
-  })),
+  EvaluationRepository: vi.fn().mockImplementation(function () {
+    return {
+      checkDocumentAccess: vi.fn(),
+      checkAgentExists: vi.fn(),
+      findByDocumentAndAgent: vi.fn(),
+      create: vi.fn(),
+      createEvaluationWithJob: vi.fn(),
+    };
+  }),
   prisma: {
     $transaction: vi.fn(),
     document: {

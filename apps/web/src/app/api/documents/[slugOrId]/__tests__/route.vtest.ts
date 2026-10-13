@@ -23,20 +23,32 @@ vi.mock('@roast/domain', async () => {
   const originalModule = await vi.importActual('@roast/domain');
   return {
     ...originalModule,
-    DocumentService: vi.fn().mockImplementation(() => ({
-      getDocumentForReader: (...args: any[]) => mockGetDocumentForReader(...args),
-      updateDocument: (...args: any[]) => mockUpdateDocument(...args),
-      deleteDocument: (...args: any[]) => mockDeleteDocument(...args),
-    })),
-    EvaluationService: vi.fn().mockImplementation(() => ({})),
-    DocumentValidator: vi.fn().mockImplementation(() => ({})),
+    DocumentService: vi.fn().mockImplementation(function () {
+      return {
+        getDocumentForReader: (...args: any[]) => mockGetDocumentForReader(...args),
+        updateDocument: (...args: any[]) => mockUpdateDocument(...args),
+        deleteDocument: (...args: any[]) => mockDeleteDocument(...args),
+      };
+    }),
+    EvaluationService: vi.fn().mockImplementation(function () {
+      return {};
+    }),
+    DocumentValidator: vi.fn().mockImplementation(function () {
+      return {};
+    }),
   };
 });
 
 vi.mock('@roast/db', () => ({
-  DocumentRepository: vi.fn().mockImplementation(() => ({})),
-  EvaluationRepository: vi.fn().mockImplementation(() => ({})),
-  JobRepository: vi.fn().mockImplementation(() => ({})),
+  DocumentRepository: vi.fn().mockImplementation(function () {
+    return {};
+  }),
+  EvaluationRepository: vi.fn().mockImplementation(function () {
+    return {};
+  }),
+  JobRepository: vi.fn().mockImplementation(function () {
+    return {};
+  }),
 }));
 
 // Now import the routes AFTER mocks are set up

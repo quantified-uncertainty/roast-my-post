@@ -26,13 +26,8 @@ export default defineConfig({
       }
     },
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        isolate: true,  // Enable isolation to prevent test interference
-        maxForks: 2,  // Reduce to 2 forks max
-      },
-    },
+    maxWorkers: 2,
+    isolate: true,
     maxConcurrency: 5,  // Limit concurrent tests per worker
     reporters: ['default'],
     bail: 0,  // Don't stop on first failure

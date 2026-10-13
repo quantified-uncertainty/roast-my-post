@@ -11,13 +11,9 @@ export default defineConfig({
     testTimeout: 120000,  // 2 minutes for LLM API calls
     teardownTimeout: 10000,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,  // Run LLM tests sequentially to avoid rate limits
-        isolate: true,
-        maxForks: 1,
-      },
-    },
+    maxWorkers: 1,
+    isolate: true,
+    fileParallelism: false,
     reporters: ['default'],
     bail: 0,
   },

@@ -1,31 +1,32 @@
 import { beforeEach, describe, expect, vi } from "vitest";
 
-import checkSpellingGrammarTool, {
-  calculateGrade,
-  countWords,
-  generateDocumentSummary,
-  generateSpellingComment,
-} from "../../../../tools/check-spelling-grammar";
+import { checkSpellingGrammarTool } from "../../../../tools/spelling-grammar-checker";
+import { calculateGrade, countWords } from "../../../../tools/spelling-grammar-checker/grading";
+import { generateDocumentSummary, generateSpellingComment } from "../../../../tools/spelling-grammar-checker/commentGeneration";
 import {
   detectLanguageConvention,
   getConventionExamples,
-} from "../../../../tools/detect-language-convention/conventionDetector";
+} from "../../../../tools/language-convention-detector/conventionDetector";
 import { CommentBuilder } from "../../../utils/CommentBuilder";
 import { SpellingPlugin } from "../index";
 
 // Mock all the dependencies
-vi.mock("../../../../tools/check-spelling-grammar", () => ({
-  default: {
-    execute: vi.fn(),
-  },
+vi.mock("../../../../tools/spelling-grammar-checker", () => ({
+  checkSpellingGrammarTool: { execute: vi.fn() },
+}));
+
+vi.mock("../../../../tools/spelling-grammar-checker/commentGeneration", () => ({
   generateSpellingComment: vi.fn(),
   generateDocumentSummary: vi.fn(),
+}));
+
+vi.mock("../../../../tools/spelling-grammar-checker/grading", () => ({
   calculateGrade: vi.fn(),
   countWords: vi.fn(),
 }));
 
 vi.mock(
-  "../../../../tools/detect-language-convention/conventionDetector",
+  "../../../../tools/language-convention-detector/conventionDetector",
   () => ({
     detectLanguageConvention: vi.fn(),
     getConventionExamples: vi.fn(),

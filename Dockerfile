@@ -3,8 +3,17 @@ FROM node:22-alpine AS builder
 WORKDIR /usr/src/app
 
 # Install dependencies for native modules and enable corepack
-RUN apk add --no-cache libc6-compat python3 make g++
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat python3 make g++
+# npm's bundled dependencies are outside the workspace overrides.
+RUN npm install --global npm@11.21.0 corepack@0.36.0 && \
+    npm install --prefix /tmp/npm-security-patches --install-strategy=nested \
+      --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false \
+      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.28.1 && \
+    for security_package in brace-expansion ip-address postcss-selector-parser undici; do \
+      rm -rf /usr/local/lib/node_modules/npm/node_modules/$security_package && \
+      cp -R /tmp/npm-security-patches/node_modules/$security_package /usr/local/lib/node_modules/npm/node_modules/$security_package || exit 1; \
+    done && rm -rf /tmp/npm-security-patches && \
+    corepack enable && corepack prepare pnpm@10.34.7 --activate
 
 # Copy all source files
 COPY . .
@@ -33,7 +42,7 @@ RUN NEXT_TELEMETRY_DISABLED=1 \
     pnpm --filter @roast/web run build
 
 # Deploy web app with dependencies
-RUN pnpm deploy --filter=@roast/web --prod /prod/web
+RUN pnpm deploy --legacy --filter=@roast/web --prod /prod/web
 
 # Copy the built Next.js app (.next directory) that pnpm deploy doesn't include
 RUN cp -r /usr/src/app/apps/web/.next /prod/web/.next
@@ -44,14 +53,26 @@ RUN mkdir -p /prod/web/node_modules/@roast/db/generated && \
 
 # Production stage
 FROM node:22-alpine AS runner
+
+# Share the prepared package manager with the non-root runtime user.
+ENV COREPACK_HOME=/usr/local/share/corepack
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install runtime dependencies and enable corepack
-RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat
+# npm's bundled dependencies are outside the workspace overrides.
+RUN npm install --global npm@11.21.0 corepack@0.36.0 && \
+    npm install --prefix /tmp/npm-security-patches --install-strategy=nested \
+      --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false \
+      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.28.1 && \
+    for security_package in brace-expansion ip-address postcss-selector-parser undici; do \
+      rm -rf /usr/local/lib/node_modules/npm/node_modules/$security_package && \
+      cp -R /tmp/npm-security-patches/node_modules/$security_package /usr/local/lib/node_modules/npm/node_modules/$security_package || exit 1; \
+    done && rm -rf /tmp/npm-security-patches && \
+    corepack enable && corepack prepare pnpm@10.34.7 --activate
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
