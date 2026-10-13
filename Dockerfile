@@ -3,8 +3,8 @@ FROM node:22-alpine AS builder
 WORKDIR /usr/src/app
 
 # Install dependencies for native modules and enable corepack
-RUN apk add --no-cache libc6-compat python3 make g++
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat python3 make g++
+RUN npm install --global npm@11.21.0 && corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Copy all source files
 COPY . .
@@ -50,8 +50,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install runtime dependencies and enable corepack
-RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat
+RUN npm install --global npm@11.21.0 && corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

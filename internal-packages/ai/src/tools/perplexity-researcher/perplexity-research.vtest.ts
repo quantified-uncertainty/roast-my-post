@@ -6,9 +6,11 @@ import { ProviderAccessError } from '../../shared/providerErrors';
 
 // Mock the Perplexity client
 vi.mock('./client', () => ({
-  PerplexityClient: vi.fn().mockImplementation(() => ({
-    query: vi.fn()
-  }))
+  PerplexityClient: vi.fn().mockImplementation(function () {
+    return {
+      query: vi.fn()
+    };
+  })
 }));
 
 import { PerplexityClient } from './client';
@@ -36,7 +38,7 @@ describe('PerplexityResearchTool', () => {
   
   beforeEach(() => {
     vi.clearAllMocks();
-    (PerplexityClient as any).mockImplementation(() => mockClient);
+    (PerplexityClient as any).mockImplementation(function () { return mockClient; });
     process.env.OPENROUTER_API_KEY = 'test-key';
   });
   

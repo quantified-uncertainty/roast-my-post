@@ -4,10 +4,10 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Install dependencies for build
-RUN apk add --no-cache libc6-compat python3 make g++
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat python3 make g++
 
 # Enable pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install --global npm@11.21.0 && corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Copy everything
 COPY . .
@@ -28,11 +28,11 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Install runtime dependencies (bash required by Claude Agent SDK)
-RUN apk add --no-cache libc6-compat bash
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat bash
 ENV SHELL=/bin/bash
 # Worker containers provide isolation; do not start a nested bubblewrap sandbox.
 ENV AGENTIC_SANDBOX_ENABLED=false
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install --global npm@11.21.0 && corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

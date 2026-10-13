@@ -11,13 +11,8 @@ export default defineConfig({
     testTimeout: 60000,  // 1 minute for integration tests
     teardownTimeout: 10000,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        isolate: false,
-        maxForks: 2,
-      },
-    },
+    maxWorkers: 2,
+    isolate: false,
     maxConcurrency: 3,  // Limit concurrent tests
     reporters: ['default'],
     bail: 0,

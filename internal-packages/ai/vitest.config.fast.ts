@@ -17,12 +17,8 @@ export default defineConfig({
     testTimeout: 5000,
     teardownTimeout: 1000,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        maxForks: 8,
-        isolate: false,
-      },
-    },
+    maxWorkers: 8,
+    isolate: false,
     reporters: ['default'],
     bail: 0,
   },
