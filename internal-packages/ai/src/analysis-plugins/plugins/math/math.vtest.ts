@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } 
 // Vitest test file
 import { MathPlugin } from './index';
 import { TextChunk } from '../../TextChunk';
-import { extractMathExpressionsTool } from '../../../tools/extract-math-expressions';
-import { checkMathHybridTool } from '../../../tools/check-math-hybrid';
+import { extractMathExpressionsTool } from '../../../tools/math-expressions-extractor';
+import { checkMathHybridTool } from '../../../tools/math-validator-hybrid';
 
-vi.mock('../../../tools/extract-math-expressions', () => ({
+vi.mock('../../../tools/math-expressions-extractor', () => ({
   extractMathExpressionsTool: {
     execute: vi.fn()
   }
 }));
 
-vi.mock('../../../tools/check-math-hybrid', () => ({
+vi.mock('../../../tools/math-validator-hybrid', () => ({
   checkMathHybridTool: {
     execute: vi.fn()
   }

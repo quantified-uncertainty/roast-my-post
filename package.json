@@ -55,12 +55,12 @@
     "docker:quick": "pnpm run docker:validate && pnpm run docker:test"
   },
   "devDependencies": {
-    "@hono/node-server": "^1.19.14",
+    "@hono/node-server": "^1.19.17",
     "@types/glob": "^8.1.0",
     "@types/iarna__toml": "^2.0.5",
     "@types/uuid": "^10.0.0",
     "dotenv-cli": "^10.0.0",
-    "hono": "^4.12.26",
+    "hono": "^4.13.13",
     "knip": "^5.88.1",
     "prisma": "^6.19.3",
     "raw-loader": "^4.0.2",
@@ -68,21 +68,41 @@
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.22.4",
     "turbo": "^2.9.18",
-    "uuid": "^11.1.1"
+    "uuid": "^11.1.1",
+    "vite": "^7.3.7"
   },
   "pnpm": {
     "overrides": {
       "esbuild@>=0.27.3 <0.28.1": ">=0.28.1",
-      "postcss@<8.5.10": ">=8.5.10",
       "serialize-javascript@<7.0.5": ">=7.0.5",
       "@babel/core@<=7.29.0": ">=7.29.6",
       "@babel/plugin-transform-modules-systemjs@<=7.29.3": ">=7.29.4",
-      "@hono/node-server@<1.19.13": ">=1.19.13"
+      "postcss@<8.5.23": "8.5.30",
+      "@hono/node-server@<1.19.15": "1.19.17",
+      "hono@<4.13.7": "4.13.13",
+      "sharp@<0.35.5": "0.35.5",
+      "@auth/core@<0.41.3": "0.41.3",
+      "brace-expansion@>=1 <2": "1.1.21",
+      "brace-expansion@>=2 <3": "2.1.7",
+      "brace-expansion@>=5 <5.0.12": "5.0.12",
+      "fast-uri@>=3 <3.1.8": "3.1.8",
+      "ip-address@>=10 <10.7.1": "10.7.4",
+      "nanoid@>=3 <3.3.18": "3.3.18",
+      "svgo@>=3 <3.3.5": "3.3.5",
+      "browserslist@<4.28.7": "4.28.7",
+      "baseline-browser-mapping@>=2 <2.11.0": "2.11.0",
+      "qs@>=6 <6.16.0": "6.16.0",
+      "smol-toml@<1.9.0": "1.9.0",
+      "source-map-js@<1.2.2": "1.2.2",
+      "proxy-addr@<2.0.8": "2.0.8",
+      "postcss-selector-parser@>=6 <7.1.6": "7.1.6",
+      "tinypool@>=2 <2.1.2": "2.1.2",
+      "@prisma/config>deepmerge-ts": "8.0.2"
     }
   },
-  "packageManager": "pnpm@9.15.1",
+  "packageManager": "pnpm@10.34.7",
   "engines": {
     "node": ">=22.12.0",
-    "pnpm": ">=9.0.0"
+    "pnpm": ">=10.34.7"
   }
 }

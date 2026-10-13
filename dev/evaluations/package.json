@@ -17,14 +17,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@hono/node-server": "^1.19.14",
+    "@hono/node-server": "^1.19.17",
     "@roast/ai": "workspace:*",
     "@types/uuid": "^10.0.0",
     "dotenv": "^17.4.2",
-    "hono": "^4.12.26",
+    "hono": "^4.13.13",
     "uuid": "^11.1.1"
   },
   "devDependencies": {
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   }
 }

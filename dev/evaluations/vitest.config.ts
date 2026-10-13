@@ -8,13 +8,8 @@ export default defineConfig({
     include: ['**/*.vtest.{ts,tsx}'],
     teardownTimeout: 10000,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        isolate: true,
-        maxForks: 4,
-      },
-    },
+    maxWorkers: 4,
+    isolate: true,
   },
   resolve: {
     alias: {
