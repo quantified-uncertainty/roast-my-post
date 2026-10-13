@@ -7,7 +7,16 @@ WORKDIR /app
 RUN apk upgrade --no-cache && apk add --no-cache libc6-compat python3 make g++
 
 # Enable pnpm
-RUN npm install --global npm@11.21.0 && corepack enable && corepack prepare pnpm@9.15.9 --activate
+# npm's bundled dependencies are outside the workspace overrides.
+RUN npm install --global npm@11.21.0 corepack@0.36.0 && \
+    npm install --prefix /tmp/npm-security-patches --install-strategy=nested \
+      --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false \
+      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.28.1 && \
+    for security_package in brace-expansion ip-address postcss-selector-parser undici; do \
+      rm -rf /usr/local/lib/node_modules/npm/node_modules/$security_package && \
+      cp -R /tmp/npm-security-patches/node_modules/$security_package /usr/local/lib/node_modules/npm/node_modules/$security_package || exit 1; \
+    done && rm -rf /tmp/npm-security-patches && \
+    corepack enable && corepack prepare pnpm@10.34.7 --activate
 
 # Copy everything
 COPY . .
@@ -25,6 +34,9 @@ RUN pnpm --filter @roast/db run build && \
 # ================================ Runner ================================
 FROM node:22-alpine AS runner
 
+# Share the prepared package manager with the non-root runtime user.
+ENV COREPACK_HOME=/usr/local/share/corepack
+
 WORKDIR /app
 
 # Install runtime dependencies (bash required by Claude Agent SDK)
@@ -32,7 +44,16 @@ RUN apk upgrade --no-cache && apk add --no-cache libc6-compat bash
 ENV SHELL=/bin/bash
 # Worker containers provide isolation; do not start a nested bubblewrap sandbox.
 ENV AGENTIC_SANDBOX_ENABLED=false
-RUN npm install --global npm@11.21.0 && corepack enable && corepack prepare pnpm@9.15.9 --activate
+# npm's bundled dependencies are outside the workspace overrides.
+RUN npm install --global npm@11.21.0 corepack@0.36.0 && \
+    npm install --prefix /tmp/npm-security-patches --install-strategy=nested \
+      --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false \
+      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.28.1 && \
+    for security_package in brace-expansion ip-address postcss-selector-parser undici; do \
+      rm -rf /usr/local/lib/node_modules/npm/node_modules/$security_package && \
+      cp -R /tmp/npm-security-patches/node_modules/$security_package /usr/local/lib/node_modules/npm/node_modules/$security_package || exit 1; \
+    done && rm -rf /tmp/npm-security-patches && \
+    corepack enable && corepack prepare pnpm@10.34.7 --activate
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
