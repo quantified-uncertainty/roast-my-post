@@ -55,7 +55,11 @@ BEGIN
       IF models_to_upgrade ? model_id THEN
         updated_config := jsonb_set(updated_config, '{models,judge,model}', models_to_upgrade->model_id);
       END IF;
-      FOR entry IN SELECT value, ordinality FROM jsonb_array_elements(COALESCE(updated_config->'filterChain', '[]'::JSONB)) WITH ORDINALITY LOOP
+      -- Legacy {filters: [...]} chains remain unchanged for the runtime loader to normalize.
+      FOR entry IN SELECT value, ordinality FROM jsonb_array_elements(
+        CASE WHEN jsonb_typeof(updated_config->'filterChain') = 'array'
+          THEN updated_config->'filterChain' ELSE '[]'::JSONB END
+      ) WITH ORDINALITY LOOP
         model_id := entry.value->>'model';
         replacement := models_to_upgrade->>model_id;
         IF model_id = 'google/gemini-3-flash-preview' THEN

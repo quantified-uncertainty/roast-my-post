@@ -164,7 +164,8 @@ export async function callClaude(
 
       // Determine if extended thinking is enabled (default: false for tool calls to save cost)
       // When thinking is enabled, temperature must be 1 and max_tokens must be > budget_tokens
-      const thinkingEnabled = options.thinking === true || typeof options.thinking === 'object';
+      const thinkingEnabled = options.reasoningEffort !== 'none' &&
+        (options.thinking === true || typeof options.thinking === 'object');
       const thinkingBudget = typeof options.thinking === 'object' && options.thinking.budget_tokens
         ? options.thinking.budget_tokens
         : 10000; // Default budget
@@ -179,14 +180,17 @@ export async function callClaude(
         ? Math.max(requestedMaxTokens, thinkingBudget + 1000)
         : requestedMaxTokens;
       const thinking: ClaudeActualParams['thinking'] = adaptive
-        ? (thinkingEnabled ? { type: 'adaptive' } : { type: requiresAutoToolChoice(model) ? 'between_tools' : 'disabled' })
+        ? (thinkingEnabled ? { type: 'adaptive' }
+          : model.includes('sonnet') ? { type: 'between_tools' }
+          : model.includes('haiku') ? { type: 'disabled' } : undefined)
         : (thinkingEnabled ? { type: 'enabled', budget_tokens: thinkingBudget } : undefined);
       // Translate legacy token budgets into effort for models that removed manual budgets.
       const outputConfig: ClaudeActualParams['outputConfig'] = adaptive && thinkingEnabled
         ? { effort: options.reasoningEffort
           ? (options.reasoningEffort === 'minimal' || options.reasoningEffort === 'low' ? 'low' : options.reasoningEffort === 'medium' ? 'medium' : 'high')
           : (thinkingBudget <= 4096 ? 'low' : thinkingBudget <= 16000 ? 'medium' : 'high') }
-        : undefined;
+        // Opus cannot disable thinking; use its lowest effort without sending an unsupported mode.
+        : adaptive && model.includes('opus') ? { effort: 'low' } : undefined;
       const modernRequest: AdaptiveMessageParams = {
         model,
         max_tokens: effectiveMaxTokens,
@@ -391,7 +395,8 @@ export async function callClaudeWithTool<T>(
 ): Promise<ClaudeCallResult & { toolResult: T }> {
   // When thinking is enabled, we must use tool_choice: 'auto' because
   // forced tool_choice is incompatible with extended thinking
-  const thinkingEnabled = options.thinking === true || typeof options.thinking === 'object';
+  const thinkingEnabled = options.reasoningEffort !== 'none' &&
+    (options.thinking === true || typeof options.thinking === 'object');
 
   const toolOptions: ClaudeCallOptions = {
     ...options,

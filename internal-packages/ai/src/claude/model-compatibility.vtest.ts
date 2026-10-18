@@ -51,6 +51,21 @@ describe('Claude request compatibility', () => {
     expect(body).not.toHaveProperty('temperature');
   });
 
+  it.each([undefined, false])('omits unsupported Opus modes with thinking=%s', async thinking => {
+    await callClaudeWithTool({ ...toolOptions, model: 'claude-opus-5-5', thinking });
+    const body = create.mock.calls.at(-1)![0];
+    expect(body).not.toHaveProperty('thinking');
+    expect(body.output_config).toEqual({ effort: 'low' });
+    expect(body.tool_choice).toEqual({ type: 'auto' });
+  });
+
+  it.each(['claude-sonnet-5-5', 'claude-haiku-5-5'])('honors explicit none effort on %s', async model => {
+    await callClaudeWithTool({ ...toolOptions, model, thinking: true, reasoningEffort: 'none' });
+    const body = create.mock.calls.at(-1)![0];
+    expect(body.thinking).toEqual({ type: model.includes('sonnet') ? 'between_tools' : 'disabled' });
+    expect(body).not.toHaveProperty('output_config');
+  });
+
   it('preserves legacy model request behavior for explicitly pinned callers', async () => {
     await callClaudeWithTool({ ...toolOptions, model: 'claude-sonnet-4-5-20250929', thinking: { type: 'enabled', budget_tokens: 8192 } });
     const body = create.mock.calls.at(-1)![0];

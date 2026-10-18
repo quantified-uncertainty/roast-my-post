@@ -17,6 +17,7 @@ vi.mock('@roast/ai', () => ({
 
 vi.mock('@roast/db', () => ({
   prisma: {
+    pluginProfile: { findUnique: vi.fn() },
     evaluationVersion: {
       findFirst: vi.fn(),
       create: vi.fn(),
@@ -102,11 +103,14 @@ describe('JobOrchestrator', () => {
     });
 
     it.each([
-      ['agentic', 'agenticProfileId', 'fallacyCheckProfileId'],
-      ['fallacy-check', 'fallacyCheckProfileId', 'agenticProfileId'],
-    ])('forwards the selected %s profile to the matching workflow', async (pluginId, option, otherOption) => {
+      ['agentic', ['agentic'], 'agenticProfileId', 'fallacyCheckProfileId'],
+      ['fallacy-check', ['fallacy-check'], 'fallacyCheckProfileId', 'agenticProfileId'],
+      ['agentic', ['agentic', 'fallacy-check'], 'agenticProfileId', 'fallacyCheckProfileId'],
+      ['fallacy-check', ['agentic', 'fallacy-check'], 'fallacyCheckProfileId', 'agenticProfileId'],
+    ])('forwards the selected %s profile to the matching workflow', async (pluginId, pluginIds, option, otherOption) => {
       const job = createMockJob();
-      job.evaluation.agent.versions[0].pluginIds = [pluginId];
+      job.evaluation.agent.versions[0].pluginIds = pluginIds;
+      vi.mocked(prisma.pluginProfile.findUnique).mockResolvedValue({ pluginType: pluginId } as never);
       mockAnalyzeDocument.mockResolvedValue(createMockAnalysisResult());
       vi.mocked(prisma.evaluationVersion.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.evaluationVersion.create).mockResolvedValue({ id: 'eval-version-1' } as never);
