@@ -35,6 +35,8 @@ Create on-demand backups through GitHub Actions:
 
 ## Backup Storage
 
+Before running backups, configure the `DATABASE_BACKUP_ENCRYPTION_KEY` repository secret with a strong, randomly generated key. Keep a separate private recovery copy: GitHub secrets cannot be read back, and losing this key makes encrypted backups unrecoverable. Preserve previous keys when rotating it until their backups expire.
+
 ### GitHub Artifacts (Default)
 
 - Automatically stores all backups
@@ -68,9 +70,9 @@ For long-term storage, configure S3:
 ### Backup Naming Convention
 
 ```
-{database_name}_{prefix}_{timestamp}.sql.gz
+{database_name}_{prefix}_{timestamp}.sql.gz.gpg
 
-Example: roast_my_post_pre-migration_20250104_143022.sql.gz
+Example: roast_my_post_pre-migration_20250104_143022.sql.gz.gpg
 ```
 
 ## Database Restoration
@@ -83,6 +85,7 @@ Use the GitHub Actions restore workflow:
 2. Click "Run workflow"
 3. Enter:
    - Backup artifact name (from a previous backup)
+   - Workflow run ID containing that artifact
    - Type "RESTORE" to confirm
    - Reason for restoration
 4. The workflow will:
@@ -97,6 +100,9 @@ For local restoration using downloaded backups:
 
 ```bash
 # Download backup from GitHub artifacts
+# Load DATABASE_BACKUP_ENCRYPTION_KEY from your private recovery copy into the environment.
+bash dev/scripts/db-backup-crypto.sh decrypt backup_file.sql.gz.gpg backup_file.sql.gz
+
 # Decompress the backup
 gunzip backup_file.sql.gz
 
@@ -137,9 +143,10 @@ npx prisma migrate deploy
 
 ### Encryption
 
-- Backups contain sensitive data
-- Use encrypted S3 buckets for storage
-- Consider additional encryption for highly sensitive data
+- GitHub Actions encrypts backups with AES-256 before uploading to artifacts or S3; uploads contain only `.sql.gz.gpg` files.
+- Recovery requires `DATABASE_BACKUP_ENCRYPTION_KEY`. The helper accepts it through the environment and passes it to GnuPG through standard input.
+- Backup jobs fail before dumping data when the encryption key is missing. Failed decryption does not expose a partial output file.
+- Artifacts in this public repository are accessible to signed-in readers. Encryption is required even when the storage service also encrypts data at rest.
 
 ### Retention Policy
 

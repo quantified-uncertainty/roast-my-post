@@ -28,6 +28,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify backup encryption and recovery
+        run: |
+          bash -n dev/scripts/db-backup-crypto.sh dev/scripts/test-db-backup-crypto.sh
+          bash dev/scripts/test-db-backup-crypto.sh
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 

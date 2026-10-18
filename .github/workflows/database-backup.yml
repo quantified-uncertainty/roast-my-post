@@ -62,7 +62,7 @@ jobs:
           sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update
-          sudo apt-get -y install postgresql-client-16
+          sudo apt-get -y install postgresql-client-16 gnupg
 
       - name: Parse database connection
         id: parse_db
@@ -81,11 +81,15 @@ jobs:
           DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
           echo "db_name=$DB_NAME" >> $GITHUB_OUTPUT
 
-      - name: Create backup
+      - name: Create encrypted backup
         id: create_backup
         env:
           PGPASSWORD: ${{ secrets.DATABASE_URL }}
+          DATABASE_BACKUP_ENCRYPTION_KEY: ${{ secrets.DATABASE_BACKUP_ENCRYPTION_KEY }}
         run: |
+          set -euo pipefail
+          umask 077
+          test -n "$DATABASE_BACKUP_ENCRYPTION_KEY" || { echo "Backup encryption key is required" >&2; exit 1; }
           # Generate backup filename
           PREFIX="${{ inputs.backup_prefix || 'scheduled' }}"
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -100,6 +104,9 @@ jobs:
           # Compress backup
           gzip "$FILENAME"
           FILENAME="${FILENAME}.gz"
+          bash dev/scripts/db-backup-crypto.sh encrypt "$FILENAME" "${FILENAME}.gpg"
+          rm -- "$FILENAME"
+          FILENAME="${FILENAME}.gpg"
           
           # Output filename for other jobs
           echo "filename=$FILENAME" >> $GITHUB_OUTPUT
@@ -107,7 +114,7 @@ jobs:
           # Show backup size
           ls -lh "$FILENAME"
 
-      - name: Upload backup to artifacts
+      - name: Upload encrypted backup to artifacts
         uses: actions/upload-artifact@v4
         with:
           name: database-backup-${{ steps.create_backup.outputs.filename }}
@@ -164,6 +171,7 @@ jobs:
             if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
               echo "- **Reason**: ${{ inputs.backup_reason }}" >> $GITHUB_STEP_SUMMARY
             fi
+            echo "- **Encryption**: AES-256; recovery requires DATABASE_BACKUP_ENCRYPTION_KEY" >> $GITHUB_STEP_SUMMARY
             echo "- **Retention**: 30 days" >> $GITHUB_STEP_SUMMARY
             if [ -n "${{ secrets.S3_BACKUP_BUCKET }}" ]; then
               echo "- **S3 Location**: s3://${{ secrets.S3_BACKUP_BUCKET }}/database-backups/" >> $GITHUB_STEP_SUMMARY
