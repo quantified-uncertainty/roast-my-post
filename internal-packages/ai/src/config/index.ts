@@ -55,5 +55,4 @@ export function getOptionalConfig<K extends keyof AIConfig>(
 }
 
 // Export default values
-export const DEFAULT_SEARCH_MODEL = "gpt-3.5-turbo";
-export const DEFAULT_ANALYSIS_MODEL = "claude-3-sonnet-20240229";
+export { DEFAULT_SEARCH_MODEL, DEFAULT_ANALYSIS_MODEL } from "../constants";

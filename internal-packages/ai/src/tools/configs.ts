@@ -153,12 +153,12 @@ export const languageConventionDetectorConfig: ToolConfig = {
 
 export const perplexityResearcherConfig: ToolConfig = {
   id: "perplexity-researcher",
-  name: "Perplexity Researcher",
+  name: "Web Researcher",
   description:
-    "Web-enhanced research using Perplexity Sonar models via OpenRouter",
+    "Web research with selectable OpenRouter models and cited sources",
   version: "1.0.0",
   category: "research",
-  costEstimate: "~$0.001-0.005 per query (via OpenRouter)",
+  costEstimate: "~$0.005 search fee plus model tokens per query (OpenRouter)",
   path: "/tools/perplexity-researcher",
   status: "stable",
 };

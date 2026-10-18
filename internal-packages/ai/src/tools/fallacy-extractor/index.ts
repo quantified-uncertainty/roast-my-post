@@ -358,6 +358,7 @@ export class FallacyExtractorTool extends Tool<
         toolSchema,
         enablePromptCaching: true,
         thinking: claudeThinkingConfig,
+        reasoningEffort: input.reasoningEffort,
       });
       result = claudeResult;
       // Capture actual API params from Claude response
@@ -366,6 +367,7 @@ export class FallacyExtractorTool extends Tool<
         temperature: claudeResult.actualParams.temperature,
         maxTokens: claudeResult.actualParams.maxTokens,
         thinking: claudeResult.actualParams.thinking,
+        outputConfig: claudeResult.actualParams.outputConfig,
       };
       responseMetrics = claudeResult.responseMetrics;
       unifiedUsage = claudeResult.unifiedUsage;

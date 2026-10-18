@@ -187,7 +187,8 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       targetWordCount: 500,
       targetHighlights: 5,
       jobId,
-      fallacyCheckProfileId: profileId,
+      fallacyCheckProfileId: agent.pluginIds?.includes(PluginType.FALLACY_CHECK) ? profileId : undefined,
+      agenticProfileId: agent.pluginIds?.includes(PluginType.AGENTIC) ? profileId : undefined,
       onTelemetryUpdate,
     };
 

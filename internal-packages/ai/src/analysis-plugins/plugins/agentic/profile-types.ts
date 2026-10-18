@@ -1,3 +1,6 @@
+import { DEFAULT_ANALYSIS_MODEL, DEFAULT_SEARCH_MODEL } from "../../../constants";
+import { DEFAULT_RESEARCH_MODEL } from "../../../modelDefaults";
+
 /**
  * Agentic Plugin Profile Configuration Types
  *
@@ -7,14 +10,14 @@
 
 export interface SubAgentConfig {
   enabled: boolean;
-  model?: "sonnet" | "opus" | "haiku" | "inherit";
+  model?: string;
   maxTurns?: number;
   prompt?: string; // Custom prompt override (empty = use default)
 }
 
 export interface AgenticProfileConfig {
   version: 1 | 2;
-  model: "sonnet" | "opus" | "haiku";
+  model: string;
   maxTurns: number;
   maxBudgetUsd: number;
   maxThinkingTokens?: number;
@@ -30,19 +33,22 @@ export interface AgenticProfileConfig {
 
   // MCP tool configuration
   fallacyCheckProfileId?: string;
+  /** OpenRouter model used by the web research tool. */
+  researchModel?: string;
 }
 
 export const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
-  "fact-checker": { enabled: true, model: "sonnet" },
-  "fallacy-checker": { enabled: true, model: "sonnet" },
-  "clarity-checker": { enabled: true, model: "haiku" },
-  "math-checker": { enabled: true, model: "sonnet" },
-  "reviewer": { enabled: true, model: "sonnet", maxTurns: 15 },
+  "fact-checker": { enabled: true, model: DEFAULT_ANALYSIS_MODEL },
+  "fallacy-checker": { enabled: true, model: DEFAULT_ANALYSIS_MODEL },
+  "clarity-checker": { enabled: true, model: DEFAULT_SEARCH_MODEL },
+  "math-checker": { enabled: true, model: DEFAULT_ANALYSIS_MODEL },
+  "reviewer": { enabled: true, model: DEFAULT_ANALYSIS_MODEL, maxTurns: 15 },
 };
 
 export const DEFAULT_AGENTIC_CONFIG: AgenticProfileConfig = {
   version: 1,
-  model: "sonnet",
+  researchModel: DEFAULT_RESEARCH_MODEL,
+  model: DEFAULT_ANALYSIS_MODEL,
   maxTurns: 20,
   maxBudgetUsd: 2.0,
   allowedTools: ["WebSearch"],
@@ -63,15 +69,18 @@ export function validateAgenticConfig(raw: unknown): AgenticProfileConfig {
 
   const config = raw as Record<string, unknown>;
 
-  const validModels = ["sonnet", "opus", "haiku"] as const;
+  const validModel = (model: unknown): model is string =>
+    typeof model === "string" && /^(sonnet|opus|haiku|claude-[a-zA-Z0-9.-]+)$/.test(model);
   const validPermissions = ["default", "acceptEdits", "plan"] as const;
-  const validSubAgentModels = ["sonnet", "opus", "haiku", "inherit"] as const;
+
 
   // Base fields (v1 + v2)
   const result: AgenticProfileConfig = {
+    researchModel: typeof config.researchModel === "string" && /^[\w.-]+\/[\w.:-]+$/.test(config.researchModel)
+      ? config.researchModel : DEFAULT_RESEARCH_MODEL,
     version:
       config.version === 2 ? 2 : 1,
-    model: validModels.includes(config.model as typeof validModels[number])
+    model: validModel(config.model)
       ? (config.model as AgenticProfileConfig["model"])
       : defaults.model,
     maxTurns:
@@ -122,7 +131,7 @@ export function validateAgenticConfig(raw: unknown): AgenticProfileConfig {
         const sa = raw as Record<string, unknown>;
         validated[name] = {
           enabled: typeof sa.enabled === "boolean" ? sa.enabled : true,
-          model: validSubAgentModels.includes(sa.model as typeof validSubAgentModels[number])
+          model: (sa.model === "inherit" || validModel(sa.model))
             ? (sa.model as SubAgentConfig["model"])
             : undefined,
           maxTurns:

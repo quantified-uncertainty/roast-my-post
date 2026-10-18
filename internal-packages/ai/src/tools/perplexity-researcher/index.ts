@@ -5,13 +5,15 @@ import {
   ToolContext,
 } from "../base/Tool";
 import { perplexityResearcherConfig } from "../configs";
-import { PerplexityClient } from "./client";
+import { PerplexityClient, type ResearchResponse } from "./client";
+import type { OpenRouterUsage } from "../../utils/openrouter-types";
 import { logger } from "../../utils/logger";
 import { throwIfProviderAccessError } from "../../shared/providerErrors";
 
 // Define types for the tool
 export interface PerplexityResearchInput {
   query: string;
+  model?: string;
   focusArea?: "general" | "academic" | "news" | "technical" | "market";
   maxSources?: number;
   includeForecastingContext?: boolean;
@@ -22,10 +24,37 @@ export interface PerplexityResearchOutput {
   sources: Array<{ title: string; url: string; snippet: string }>;
   keyFindings: string[];
   forecastingContext?: string;
+  costUsd?: number;
+}
+
+/** Preserve provider citations even if a model returns prose instead of JSON. */
+function citedSources(response: ResearchResponse, maxSources = 5): PerplexityResearchOutput['sources'] {
+  const seen = new Set<string>();
+  return (response.citations ?? []).filter(c => {
+    const url = c.url_citation?.url;
+    if (c.type !== 'url_citation' || !url || seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  }).slice(0, maxSources).map(c => ({
+    title: c.url_citation.title || c.url_citation.url,
+    url: c.url_citation.url,
+    snippet: c.url_citation.content || '',
+  }));
+}
+
+interface StructuredResearchOptions {
+  model?: string;
+  focusArea?: PerplexityResearchInput['focusArea'];
+  maxSources?: number;
+}
+
+interface StructuredResearchResult extends PerplexityResearchOutput {
+  usage?: OpenRouterUsage;
 }
 
 // Input validation schema
 const inputSchema = z.object({
+  model: z.string().regex(/^[\w.-]+\/[\w.:-]+$/).optional().describe("OpenRouter research model (default: openai/gpt-6-luna with web search)"),
   query: z.string().min(1).max(1000).describe("The research query or question"),
   focusArea: z
     .enum(["general", "academic", "news", "technical", "market"])
@@ -48,6 +77,7 @@ const inputSchema = z.object({
 
 // Output validation schema
 const outputSchema = z.object({
+  costUsd: z.number().nonnegative().optional().describe("Reported OpenRouter cost including web search, in USD"),
   summary: z.string().describe("Comprehensive summary of the research"),
   sources: z
     .array(
@@ -91,6 +121,7 @@ export class PerplexityResearchTool extends Tool<
       try {
         // First, try structured research
         researchResult = await this.structuredResearch(client, input.query, {
+          model: input.model,
           focusArea: input.focusArea,
           maxSources: input.maxSources,
         });
@@ -102,7 +133,7 @@ export class PerplexityResearchTool extends Tool<
           "[PerplexityResearch] Structured research failed, using fallback mode"
         );
 
-        const basicResponse = await client.query(input.query);
+        const basicResponse = await client.query(input.query, { model: input.model, maxSources: input.maxSources });
         usage = basicResponse.usage || {
           prompt_tokens: 0,
           completion_tokens: 0,
@@ -112,7 +143,7 @@ export class PerplexityResearchTool extends Tool<
         // Parse basic response into structured format
         researchResult = {
           summary: basicResponse.content,
-          sources: [],
+          sources: citedSources(basicResponse, input.maxSources),
           keyFindings: basicResponse.content
             .split("\n")
             .filter(
@@ -130,7 +161,8 @@ export class PerplexityResearchTool extends Tool<
         try {
           const contextResult = await this.getForecastingContext(
             client,
-            input.query
+            input.query,
+            input.model
           );
           forecastingContext = contextResult.content;
           forecastingUsage = contextResult.usage;
@@ -159,6 +191,8 @@ export class PerplexityResearchTool extends Tool<
       return {
         ...researchResult,
         forecastingContext,
+        costUsd: usage?.cost !== undefined || forecastingUsage?.cost !== undefined
+          ? (usage?.cost ?? 0) + (forecastingUsage?.cost ?? 0) : undefined,
       };
     } catch (error) {
       context.logger.error("[PerplexityResearch] Error:", error);
@@ -169,19 +203,11 @@ export class PerplexityResearchTool extends Tool<
   private async structuredResearch(
     client: PerplexityClient,
     query: string,
-    options: {
-      focusArea?: "general" | "academic" | "news" | "technical" | "market";
-      maxSources?: number;
-    } = {}
-  ): Promise<{
-    summary: string;
-    sources: Array<{ title: string; url: string; snippet: string }>;
-    keyFindings: string[];
-    usage?: any;
-  }> {
+    options: StructuredResearchOptions = {}
+  ): Promise<StructuredResearchResult> {
     const { focusArea = "general", maxSources = 5 } = options;
 
-    const systemPrompt = `You are a research assistant using Perplexity's web search capabilities. 
+    const systemPrompt = `You are a research assistant using web search through OpenRouter.
 When researching topics, provide:
 1. A comprehensive summary
 2. Key findings as bullet points
@@ -201,9 +227,11 @@ Format your response as JSON with this structure:
 }`;
 
     const response = await client.query(query, {
-      model: "perplexity/sonar",
+      model: options.model,
+      maxSources,
       systemPrompt,
-      maxTokens: 2000,
+      jsonOutput: true,
+      maxTokens: 4000,
       temperature: 0.3, // Lower temperature for more factual responses
     });
 
@@ -212,7 +240,8 @@ Format your response as JSON with this structure:
       const jsonMatch = response.content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return {
-          ...JSON.parse(jsonMatch[0]),
+          ...outputSchema.parse(JSON.parse(jsonMatch[0])),
+          ...(response.citations?.length && { sources: citedSources(response, maxSources) }),
           usage: response.usage,
         };
       }
@@ -227,9 +256,9 @@ Format your response as JSON with this structure:
         response.content.split("\n")[0] || response.content.substring(0, 500),
       keyFindings:
         response.content
-          .match(/[-•]\s*(.+)/g)
+          .match(/^\s*[-•]\s+(.+)$/gm)
           ?.map((f) => f.replace(/^[-•]\s*/, "")) || [],
-      sources: [],
+      sources: citedSources(response, maxSources),
       usage: response.usage,
     };
   }
@@ -237,8 +266,9 @@ Format your response as JSON with this structure:
   private async getForecastingContext(
     client: PerplexityClient,
     question: string,
+    model?: string,
     existingContext?: string
-  ): Promise<{ content: string; usage?: any }> {
+  ): Promise<ResearchResponse> {
     const prompt = `Research current information relevant to this forecasting question: "${question}"
     
 ${existingContext ? `Existing context: ${existingContext}\n` : ""}
@@ -252,7 +282,7 @@ Provide relevant facts, recent developments, base rates, and any information tha
 Keep the response concise and focused on information directly relevant to forecasting.`;
 
     const response = await client.query(prompt, {
-      model: "perplexity/sonar",
+      model,
       maxTokens: 1500,
       temperature: 0.5,
     });

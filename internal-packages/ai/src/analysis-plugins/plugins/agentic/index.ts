@@ -464,6 +464,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
     // Create MCP evaluation server with config (e.g., fallacy checker profile)
     const evaluationServer = createEvaluationServer({
       fallacyCheckProfileId: config.fallacyCheckProfileId,
+      researchModel: config.researchModel,
     });
 
     // Build SDK options — branches between single-agent and multi-agent modes
@@ -553,7 +554,7 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
             );
           } else if (block.type === "tool_use") {
             // Track Task tool spawns for sub-agent mapping
-            if (block.name === "Task" && tracker) {
+            if ((block.name === "Task" || block.name === "Agent") && tracker) {
               const spawned = tracker.trackTaskSpawn(block.id, block.input);
               if (spawned) {
                 this.agentStartTimes.set(spawned, Date.now());
@@ -588,7 +589,17 @@ export class AgenticPlugin implements SimpleAnalysisPlugin {
             if (typeof block === "string") {
               parts.push(block);
             } else if (block.type === "tool_result") {
-              if (block.tool_use_id) toolUseIds.push(block.tool_use_id);
+              if (block.tool_use_id) {
+                toolUseIds.push(block.tool_use_id);
+                // Foreground Agent calls finish with a tool result, without a task_notification.
+                const completedAgent = tracker?.getAgentName(block.tool_use_id);
+                if (completedAgent) {
+                  const startedAt = this.agentStartTimes.get(completedAgent);
+                  this.telemetry.recordSubAgentComplete(block.tool_use_id, block.is_error ? "failed" : "completed");
+                  this.emit({ type: "subagent_complete", agentName: completedAgent, taskId: block.tool_use_id,
+                    durationMs: startedAt ? Date.now() - startedAt : undefined });
+                }
+              }
               const content = block.content;
               if (typeof content === "string") {
                 parts.push(content);

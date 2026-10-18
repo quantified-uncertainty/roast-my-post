@@ -89,15 +89,18 @@ const profileConfigSchema = z.object({
   filterChain: z.array(filterChainItemSchema),
 });
 
+const agenticModelSchema = z.string().regex(/^(sonnet|opus|haiku|claude-[a-zA-Z0-9.-]+)$/);
+
 const subAgentConfigSchema = z.object({
+  prompt: z.string().optional(),
   enabled: z.boolean(),
-  model: z.enum(["sonnet", "opus", "haiku", "inherit"]).optional(),
+  model: z.union([agenticModelSchema, z.literal("inherit")]).optional(),
   maxTurns: z.number().min(1).max(50).optional(),
 });
 
 const agenticConfigSchema = z.object({
   version: z.union([z.literal(1), z.literal(2)]),
-  model: z.enum(["sonnet", "opus", "haiku"]),
+  model: agenticModelSchema,
   maxTurns: z.number().min(1).max(50),
   maxBudgetUsd: z.number().min(0.01).max(10),
   maxThinkingTokens: z.number().min(1024).optional(),
@@ -111,6 +114,7 @@ const agenticConfigSchema = z.object({
   enableMcpTools: z.boolean().optional(),
   // MCP tool configuration
   fallacyCheckProfileId: z.string().optional(),
+  researchModel: z.string().regex(/^[\w.-]+\/[\w.:-]+$/).optional(),
 });
 
 const updateProfileSchema = z.object({

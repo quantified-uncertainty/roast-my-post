@@ -47,6 +47,7 @@ export interface PluginManagerConfig {
   useIsolation?: boolean; // Enable plugin state isolation
   /** Profile ID for FallacyCheckPlugin configuration */
   fallacyCheckProfileId?: string;
+  agenticProfileId?: string;
   /** Agent ID for FallacyCheckPlugin default profile loading */
   fallacyCheckAgentId?: string;
   /** Called with telemetry snapshots during analysis for incremental DB persistence */
@@ -108,6 +109,7 @@ export class PluginManager {
 
   // Profile configuration for FallacyCheckPlugin
   private fallacyCheckProfileId?: string;
+  private agenticProfileId?: string;
   private fallacyCheckAgentId?: string;
   private onTelemetryUpdate?: (telemetry: Record<string, unknown>) => void | Promise<void>;
 
@@ -118,6 +120,7 @@ export class PluginManager {
 
     // Profile configuration for FallacyCheckPlugin
     this.fallacyCheckProfileId = config.fallacyCheckProfileId;
+    this.agenticProfileId = config.agenticProfileId;
     this.fallacyCheckAgentId = config.fallacyCheckAgentId;
     this.onTelemetryUpdate = config.onTelemetryUpdate;
 
@@ -697,6 +700,7 @@ export class PluginManager {
         agentId: this.fallacyCheckAgentId,
       })],
       [PluginType.AGENTIC, new AgenticPlugin({
+        profileId: this.agenticProfileId,
         onTelemetryUpdate: this.onTelemetryUpdate,
       })],
     ]);

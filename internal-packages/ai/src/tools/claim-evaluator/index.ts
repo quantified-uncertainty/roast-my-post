@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Tool, ToolContext } from "../base/Tool";
 import { claimEvaluatorConfig } from "../configs";
-import { callOpenRouterChat, OPENROUTER_MODELS, normalizeTemperature } from "../../utils/openrouter";
+import { callOpenRouterChat, normalizeTemperature } from "../../utils/openrouter";
 import { throwIfProviderAccessError } from "../../shared/providerErrors";
 
 // Import from new modules
@@ -25,16 +25,10 @@ export * from "./utils";
 export { generateClaimEvaluatorPrompt, DEFAULT_EXPLANATION_LENGTH } from "./prompt";
 export { analyzeClaimEvaluation, type AnalyzeClaimEvaluationInput, type AnalyzeClaimEvaluationOutput } from "./analysis";
 
-// Default models for claim evaluation
-const DEFAULT_MODELS = [
-  OPENROUTER_MODELS.CLAUDE_SONNET_4_5,         // Claude Sonnet 4.5 (Latest)
-  OPENROUTER_MODELS.GPT_5_MINI,                // GPT-5 Mini
-  OPENROUTER_MODELS.DEEPSEEK_CHAT_V3_1,        // DeepSeek Chat V3.1
-  OPENROUTER_MODELS.GROK_4,                    // Grok 4
-];
+import { DEFAULT_CLAIM_MODELS } from "../../modelDefaults";
 
-// Valid model IDs (all available OpenRouter models)
-const VALID_MODEL_IDS = Object.values(OPENROUTER_MODELS);
+// Default models for claim evaluation
+const DEFAULT_MODELS = DEFAULT_CLAIM_MODELS;
 
 // Input schema
 const inputSchema = z.object({
@@ -45,7 +39,7 @@ const inputSchema = z.object({
     .optional()
     .describe("Additional context about the claim (when/where made, background, domain knowledge, constraints)"),
   models: z
-    .array(z.enum(VALID_MODEL_IDS as [string, ...string[]]))
+    .array(z.string().regex(/^[\w.-]+\/[\w.:-]+$/))
     .optional()
     .describe("List of OpenRouter model IDs to use (defaults to top reasoning models)"),
   runs: z
@@ -200,7 +194,7 @@ async function evaluateWithModelImpl(
     // Gemini 2.5 models with thinking mode need significantly more tokens
     // (thinking tokens + actual response tokens)
     const isGemini = model.startsWith('google/gemini');
-    const maxTokens = isGemini ? 8000 : 1000;
+    const maxTokens = isGemini ? 8000 : 4000;
 
     // Track response time
     const startTime = Date.now();
@@ -213,6 +207,7 @@ async function evaluateWithModelImpl(
         },
       ],
       max_tokens: maxTokens,
+      reasoningEffort: /claude-(?:sonnet|haiku|opus)-5[.-]5|gpt-6|deepseek-v4/.test(model) ? "low" : undefined,
       temperature: actualTemperature, // Normalized per provider (Anthropic 0-1, others 0-2)
       // Use OpenRouter's standard response_format parameter for JSON mode
       // Works across all providers (OpenAI, Gemini, etc.) through OpenRouter

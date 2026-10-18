@@ -57,6 +57,7 @@ interface PluginToolResult {
 }
 
 export interface EvaluationServerConfig {
+  researchModel?: string;
   /** Profile ID for fallacy checker plugin */
   fallacyCheckProfileId?: string;
   /** Agent ID for fallacy checker default profile loading */
@@ -396,10 +397,10 @@ function createSupportedElsewhereFilterTool(config: EvaluationServerConfig) {
 // Perplexity Research Tool
 // ---------------------------------------------------------------------------
 
-function createPerplexityResearchTool() {
+function createPerplexityResearchTool(config: EvaluationServerConfig) {
   return tool(
     "perplexity_research",
-    "Research a factual claim or question using Perplexity Sonar (web-search-grounded AI). Returns a summary with sources and key findings. Use this to verify factual claims with high-quality, cited web research.",
+    "Research a factual claim or question using the profile-selected OpenRouter model with web search. Returns a summary with sources and key findings. Use this to verify factual claims with high-quality, cited web research.",
     {
       query: z
         .string()
@@ -411,7 +412,7 @@ function createPerplexityResearchTool() {
     },
     async ({ query, focusArea }) => {
       const result = await perplexityResearchTool.execute(
-        { query, focusArea: focusArea ?? "general", maxSources: 5 },
+        { query, model: config.researchModel, focusArea: focusArea ?? "general", maxSources: 5 },
         toolContext
       );
       return {
@@ -517,7 +518,7 @@ export function createEvaluationServer(config: EvaluationServerConfig = {}) {
     version: "1.0.0",
     tools: [
       // Research tools
-      createPerplexityResearchTool(),
+      createPerplexityResearchTool(config),
       createWebFetchTool(),
       // Bulk pipeline tools
       createSpellCheckTool(),

@@ -9,8 +9,8 @@ import { getEnvVar, requireEnvVar, isDevelopment, isProduction, isTest } from '.
 
 // Model defaults - duplicated from @roast/ai/constants to avoid circular dependency issues
 // If you need to change these, update BOTH here and in @roast/ai/constants.ts
-const DEFAULT_SEARCH_MODEL = "claude-haiku-4-5-20251001";
-const DEFAULT_ANALYSIS_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_SEARCH_MODEL = "claude-haiku-5-5";
+const DEFAULT_ANALYSIS_MODEL = "claude-sonnet-5-5";
 
 /**
  * Application Configuration Interface

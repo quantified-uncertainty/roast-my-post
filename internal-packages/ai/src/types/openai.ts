@@ -30,7 +30,7 @@ function validateOpenRouterKey() {
   }
 }
 
-export const SEARCH_MODEL = process.env.SEARCH_MODEL || 'claude-3-5-sonnet-20241022';
+export const SEARCH_MODEL = aiConfig.searchModel;
 export const ANALYSIS_MODEL = aiConfig.analysisModel;
 
 // Lazy Anthropic client factory for analysis tasks

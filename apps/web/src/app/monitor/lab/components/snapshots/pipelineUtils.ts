@@ -29,6 +29,10 @@ export function getModelDisplayName(model: string): string {
 
   // Shorten common model names
   const shortcuts: Record<string, string> = {
+    "claude-sonnet-5-5": "Claude Sonnet 5.5",
+    "claude-haiku-5-5": "Claude Haiku 5.5",
+    "gemini-4-argon": "Gemini 4 Argon",
+    "gemini-3.8-flash": "Gemini 3.8 Flash",
     "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5",
     "claude-3-5-sonnet-20241022": "Claude 3.5 Sonnet",
     "claude-3-haiku-20240307": "Claude 3 Haiku",
@@ -45,8 +49,8 @@ export function getModelDisplayName(model: string): string {
 /** Format temperature for display */
 export function formatTemperature(ext: ExtractorInfo): string {
   // Check actualApiParams first (source of truth)
-  if (ext.actualApiParams?.temperature !== undefined) {
-    return `temp ${ext.actualApiParams.temperature}`;
+  if (ext.actualApiParams) {
+    return `temp ${ext.actualApiParams.temperature ?? "default"}`;
   }
   // Fall back to temperatureConfig
   if (ext.temperatureConfig === "default") {
@@ -60,6 +64,10 @@ export function formatTemperature(ext: ExtractorInfo): string {
 
 /** Format reasoning/thinking for display */
 export function formatReasoning(ext: ExtractorInfo): string {
+  if (ext.actualApiParams?.thinking && ext.actualApiParams.thinking.type !== "enabled") {
+    const effort = ext.actualApiParams.outputConfig?.effort;
+    return `thinking ${ext.actualApiParams.thinking.type}${effort ? ` (${effort})` : ""}`;
+  }
   // Check actualApiParams for Claude-style thinking
   if (ext.actualApiParams?.thinking?.type === "enabled") {
     const budget = ext.actualApiParams.thinking.budget_tokens;

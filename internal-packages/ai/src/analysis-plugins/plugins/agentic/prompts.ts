@@ -516,7 +516,7 @@ Fetches a URL and returns clean markdown content with title/author metadata. Use
 
 **IMPORTANT:** Always prefer \`web_fetch\` over the built-in WebFetch tool. The built-in WebFetch can hang for 20+ minutes on JS-heavy pages. The MCP \`web_fetch\` has a hard 30-second timeout and handles JS rendering via Firecrawl.
 
-**Workflow:** Use perplexity for fast cited checks, WebSearch to discover sources, and web_fetch to read full pages.`;
+**Workflow:** Use perplexity_research with the profile-selected OpenRouter research model for fast cited checks, WebSearch to discover sources, and web_fetch to read full pages.`;
 
     case "fallacy-checker":
       return `## MCP Evaluation Tools

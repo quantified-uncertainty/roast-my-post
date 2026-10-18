@@ -70,7 +70,7 @@ export function FilterChainEditor({
           id,
           type: "principle-of-charity",
           enabled: true,
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-5-5",
           temperature: 0.2,
         };
         break;
@@ -79,7 +79,7 @@ export function FilterChainEditor({
           id,
           type: "supported-elsewhere",
           enabled: true,
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-5-5",
           temperature: 0.1,
         };
         break;

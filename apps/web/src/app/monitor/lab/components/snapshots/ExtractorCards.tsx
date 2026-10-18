@@ -140,8 +140,8 @@ export function ExtractorCard({ ext }: ExtractorCardProps) {
           {ext.actualApiParams && (
             <div className="text-xs text-gray-500">
               <span className="font-medium text-gray-600">API params:</span> temp=
-              {ext.actualApiParams.temperature}, maxTokens={ext.actualApiParams.maxTokens}
-              {ext.actualApiParams.thinking && (
+              {ext.actualApiParams.temperature ?? "default"}, maxTokens={ext.actualApiParams.maxTokens}
+              {ext.actualApiParams.thinking?.type === "enabled" && (
                 <span className="ml-1">
                   , thinking budget: {formatTokens(ext.actualApiParams.thinking.budget_tokens)}
                 </span>
@@ -298,9 +298,9 @@ export function DeduplicationCard({
               {extraction.judgeActualApiParams && (
                 <div className="text-gray-500">
                   <span className="font-medium text-gray-600">API params:</span> temp=
-                  {extraction.judgeActualApiParams.temperature}, maxTokens=
+                  {extraction.judgeActualApiParams.temperature ?? "default"}, maxTokens=
                   {extraction.judgeActualApiParams.maxTokens}
-                  {extraction.judgeActualApiParams.thinking && (
+                  {extraction.judgeActualApiParams.thinking?.type === "enabled" && (
                     <span className="ml-1">
                       , thinking:{" "}
                       {formatTokens(extraction.judgeActualApiParams.thinking.budget_tokens)}
