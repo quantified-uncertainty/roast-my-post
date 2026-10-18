@@ -1,3 +1,5 @@
+import type { ActualApiParams } from "@roast/ai";
+
 // Types for the Lab (Validation) feature
 
 export interface Baseline {
@@ -101,19 +103,7 @@ export interface PipelineCounts {
 }
 
 /** Actual API parameters sent to the provider */
-export interface ActualApiParams {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  thinking?: {
-    type: "enabled";
-    budget_tokens: number;
-  };
-  reasoning?: {
-    effort?: "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
-    max_tokens?: number;
-  };
-}
+export type { ActualApiParams } from "@roast/ai";
 
 /** Response metrics from API call */
 export interface ApiResponseMetrics {

@@ -3,7 +3,7 @@
  * Centralized configuration for AI/LLM services
  */
 
-import { DEFAULT_ANALYSIS_MODEL } from "./constants";
+import { DEFAULT_ANALYSIS_MODEL, DEFAULT_SEARCH_MODEL } from "./constants";
 
 // Simple browser check for the AI package
 const isBrowser = typeof window !== "undefined";
@@ -24,6 +24,10 @@ export const aiConfig = {
   // Model configuration
   get analysisModel(): string {
     return getEnv("ANALYSIS_MODEL", DEFAULT_ANALYSIS_MODEL) as string;
+  },
+
+  get searchModel(): string {
+    return getEnv("SEARCH_MODEL", DEFAULT_SEARCH_MODEL) as string;
   },
 
   // API Keys

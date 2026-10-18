@@ -10,10 +10,10 @@ import type { FallacyCheckerProfileConfig } from '../profile-types';
 import { logger } from '../../../../shared/logger';
 
 /** Default model for extraction when not configured */
-const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-4-5-20250929';
+const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-5-5';
 
 /** Default model for judge aggregation */
-const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-5-20250929';
+const DEFAULT_JUDGE_MODEL = 'claude-sonnet-5-5';
 
 /** Default temperature for Claude models */
 const DEFAULT_CLAUDE_TEMPERATURE = 0;
@@ -52,7 +52,7 @@ export function generateExtractorLabel(config: ExtractorConfig): string {
     const parts = config.model.split('/');
     shortName = parts[parts.length - 1].replace('-preview', '').replace('-latest', '');
   } else {
-    // e.g., "claude-sonnet-4-5-20250929" -> "sonnet"
+    // e.g., "claude-sonnet-5-5" -> "sonnet"
     if (config.model.includes('opus')) {
       shortName = 'opus';
     } else if (config.model.includes('sonnet')) {
@@ -116,8 +116,8 @@ export function generateExtractorId(
  * Expected format:
  * ```json
  * [
- *   {"model": "claude-sonnet-4-5-20250929"},
- *   {"model": "claude-sonnet-4-5-20250929", "temperature": 0.5},
+ *   {"model": "claude-sonnet-5-5"},
+ *   {"model": "claude-sonnet-5-5", "temperature": 0.5},
  *   {"model": "google/gemini-3-flash-preview", "temperature": 0.1}
  * ]
  * ```

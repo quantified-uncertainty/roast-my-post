@@ -32,7 +32,7 @@ export function getInitialExtractorConfigs(): ExtractorConfig[] {
     const config = getMultiExtractorConfig();
     return config.extractors;
   } catch {
-    return [{ model: "claude-sonnet-4-5-20250929", temperature: "default", thinking: false }];
+    return [{ model: "claude-sonnet-5-5", temperature: "default", thinking: false }];
   }
 }
 

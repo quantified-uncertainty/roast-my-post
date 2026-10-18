@@ -4,30 +4,12 @@ import { useState, useEffect } from "react";
 import { useAgenticDefaultPrompts } from "../hooks/useAgenticDefaultPrompts";
 import { useFallacyCheckProfiles } from "../hooks/useFallacyCheckProfiles";
 
-interface SubAgentConfig {
-  enabled: boolean;
-  model?: "sonnet" | "opus" | "haiku" | "inherit";
-  maxTurns?: number;
-  prompt?: string;
-}
-
-interface AgenticConfig {
-  version: 1 | 2;
-  model: "sonnet" | "opus" | "haiku";
-  maxTurns: number;
-  maxBudgetUsd: number;
-  maxThinkingTokens?: number;
-  allowedTools: string[];
-  systemPrompt: string;
-  permissionMode: "default" | "acceptEdits" | "plan";
-  // v2 fields
-  enableSubAgents?: boolean;
-  subAgents?: Record<string, SubAgentConfig>;
-  orchestratorPrompt?: string;
-  enableMcpTools?: boolean;
-  // MCP tool configuration
-  fallacyCheckProfileId?: string;
-}
+import {
+  CLAUDE_MODEL_CHOICES, DEFAULT_RESEARCH_MODEL, DEFAULT_AGENTIC_CONFIG,
+  DEFAULT_SUBAGENTS, type AgenticProfileConfig as AgenticConfig, type SubAgentConfig,
+} from "@roast/ai";
+import { useModels } from "../../hooks/useModels";
+import { ModelSelector } from "../../components/profiles/ModelSelector";
 
 interface ProfileEditorProps {
   config: AgenticConfig;
@@ -44,31 +26,15 @@ const ORCHESTRATOR_TOOLS = [
 // These are automatically added when workspace exists - shown for info only
 const AUTO_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "TodoWrite"];
 
-// Note: These names must match SUBAGENT_PROMPTS keys in orchestrator.ts
-const DEFAULT_SUBAGENTS: Record<string, SubAgentConfig> = {
-  "fact-checker": { enabled: true, model: "sonnet" },
-  "fallacy-checker": { enabled: true, model: "sonnet" },
-  "clarity-checker": { enabled: true, model: "haiku" },
-  "math-checker": { enabled: true, model: "sonnet" },
-  "reviewer": { enabled: true, model: "sonnet" },
-};
-
-
-const DEFAULT_CONFIG: AgenticConfig = {
-  version: 1,
-  model: "sonnet",
-  maxTurns: 20,
-  maxBudgetUsd: 2.0,
-  allowedTools: ["WebSearch", "WebFetch"],
-  systemPrompt: "",
-  permissionMode: "acceptEdits",
-};
+const DEFAULT_CONFIG = DEFAULT_AGENTIC_CONFIG;
 
 export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
   const [draft, setDraft] = useState<AgenticConfig>(() => ({
     ...DEFAULT_CONFIG,
     ...config,
   }));
+  const { models, loading: modelsLoading } = useModels();
+  const [selectingResearch, setSelectingResearch] = useState(false);
   const [dirty, setDirty] = useState(false);
   const { prompts: defaultPrompts } = useAgenticDefaultPrompts();
   const { profiles: fallacyProfiles, loading: fallacyProfilesLoading, defaultProfileId: defaultFallacyProfileId } = useFallacyCheckProfiles();
@@ -131,9 +97,8 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
             onChange={(e) => update("model", e.target.value as AgenticConfig["model"])}
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
           >
-            <option value="sonnet">Sonnet</option>
-            <option value="opus">Opus</option>
-            <option value="haiku">Haiku</option>
+            {CLAUDE_MODEL_CHOICES.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            {!CLAUDE_MODEL_CHOICES.some(m => m.id === draft.model) && <option value={draft.model}>{draft.model}</option>}
           </select>
         </div>
 
@@ -315,6 +280,20 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
             </div>
           )}
 
+          {draft.enableMcpTools && (
+            <div className="relative">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Research model</label>
+              <button type="button" onClick={() => setSelectingResearch(!selectingResearch)}
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-left">
+                {draft.researchModel ?? DEFAULT_RESEARCH_MODEL}
+              </button>
+              {selectingResearch && <ModelSelector models={models.filter(m => m.provider === "openrouter")}
+                loading={modelsLoading} onCancel={() => setSelectingResearch(false)}
+                onSelect={m => { update("researchModel", m.id); setSelectingResearch(false); }} />}
+              <p className="text-xs text-gray-400 mt-1">Web search is included through OpenRouter.</p>
+            </div>
+          )}
+
           {/* Sub-Agents */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-2">Sub-Agents</label>
@@ -341,9 +320,8 @@ export function ProfileEditor({ config, onSave, saving }: ProfileEditorProps) {
                       disabled={!sa.enabled}
                     >
                       <option value="inherit">Inherit</option>
-                      <option value="sonnet">Sonnet</option>
-                      <option value="opus">Opus</option>
-                      <option value="haiku">Haiku</option>
+                      {CLAUDE_MODEL_CHOICES.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                      {sa.model && sa.model !== "inherit" && !CLAUDE_MODEL_CHOICES.some(m => m.id === sa.model) && <option value={sa.model}>{sa.model}</option>}
                     </select>
                   </div>
                   {sa.enabled && (

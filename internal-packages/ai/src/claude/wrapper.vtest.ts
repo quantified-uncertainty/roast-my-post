@@ -99,8 +99,8 @@ describe("Claude Wrapper", () => {
 
       // This test would require more mocking setup
       // For now, just verify the model config
-      expect(MODEL_CONFIG.analysis).toBe("claude-sonnet-4-5");
-      expect(MODEL_CONFIG.routing).toBe("claude-3-haiku-20240307");
+      expect(MODEL_CONFIG.analysis).toBe("claude-sonnet-5-5");
+      expect(MODEL_CONFIG.routing).toBe("claude-haiku-5-5");
     });
   });
 });

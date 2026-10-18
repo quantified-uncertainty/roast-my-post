@@ -182,12 +182,21 @@ export class JobOrchestrator implements JobOrchestratorInterface {
       }
     };
 
+    // A mixed-plugin agent still has one selected profile; route it by the profile's type.
+    const profileType = profileId
+      ? (await prisma.pluginProfile.findUnique({
+          where: { id: profileId },
+          select: { pluginType: true },
+        }))?.pluginType
+      : undefined;
+
     // Use options-based signature to pass profileId
     const analysisOptions = {
       targetWordCount: 500,
       targetHighlights: 5,
       jobId,
-      fallacyCheckProfileId: profileId,
+      fallacyCheckProfileId: profileType === PluginType.FALLACY_CHECK ? profileId : undefined,
+      agenticProfileId: profileType === PluginType.AGENTIC ? profileId : undefined,
       onTelemetryUpdate,
     };
 

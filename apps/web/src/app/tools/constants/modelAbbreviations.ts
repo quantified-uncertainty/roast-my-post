@@ -3,6 +3,14 @@
  * Used across claim evaluator and opinion spectrum visualizations.
  */
 export const MODEL_ABBREVIATIONS: Record<string, string> = {
+  "anthropic/claude-sonnet-5.5": "S5.5",
+  "anthropic/claude-haiku-5.5": "H5.5",
+  "anthropic/claude-opus-5.5": "O5.5",
+  "google/gemini-4-argon": "G4A",
+  "google/gemini-3.8-flash": "G3.8F",
+  "openai/gpt-6-luna": "Luna",
+  "deepseek/deepseek-v4.1-flash": "DS4.1F",
+  "x-ai/grok-4.7": "G4.7",
   // Anthropic Claude models
   "anthropic/claude-sonnet-4.5": "C4.5",
   "anthropic/claude-sonnet-4": "C4",

@@ -78,6 +78,7 @@ export interface OpenRouterRequest {
   tools?: OpenRouterTool[];
   tool_choice?: OpenRouterToolChoice;
   parallel_tool_calls?: boolean;
+  plugins?: OpenRouterWebPlugin[];
   reasoning_effort?: ReasoningEffort;
   reasoning?: ReasoningConfig;
   response_format?: { type: 'json_object' | 'text' };
@@ -100,6 +101,23 @@ export interface OpenRouterToolCall {
   };
 }
 
+export interface OpenRouterWebPlugin {
+  id: 'web';
+  engine?: 'perplexity';
+  max_results?: number;
+}
+
+export interface UrlCitationData {
+  url: string;
+  title?: string;
+  content?: string;
+}
+
+export interface OpenRouterCitation {
+  type: 'url_citation';
+  url_citation: UrlCitationData;
+}
+
 /**
  * Response choice
  */
@@ -109,6 +127,7 @@ export interface OpenRouterChoice {
     role: 'assistant';
     content: string | null;
     tool_calls?: OpenRouterToolCall[];
+    annotations?: OpenRouterCitation[];
   };
   finish_reason: 'stop' | 'tool_calls' | 'length' | 'content_filter' | null;
 }
@@ -166,6 +185,7 @@ export interface OpenRouterError {
  * Provider preferences for routing
  */
 export interface ProviderPreferences {
+  require_parameters?: boolean;
   order?: string[];
   allow_fallbacks?: boolean;
 }
@@ -178,7 +198,16 @@ export interface ProviderPreferences {
  * Common OpenRouter model identifiers
  */
 export const OPENROUTER_MODELS = {
-  // Top tier - Latest and most capable models (2025)
+  CLAUDE_SONNET_5_5: 'anthropic/claude-sonnet-5.5',
+  CLAUDE_HAIKU_5_5: 'anthropic/claude-haiku-5.5',
+  CLAUDE_OPUS_5_5: 'anthropic/claude-opus-5.5',
+  GPT_6_LUNA: 'openai/gpt-6-luna',
+  GEMINI_4_ARGON: 'google/gemini-4-argon',
+  GEMINI_3_8_FLASH: 'google/gemini-3.8-flash',
+  DEEPSEEK_V4_1_FLASH: 'deepseek/deepseek-v4.1-flash',
+  GROK_4_7: 'x-ai/grok-4.7',
+  // Legacy identifiers retained for historical results and API callers.
+  // Historical identifiers (kept for existing callers and saved results)
   CLAUDE_SONNET_4_5: 'anthropic/claude-sonnet-4.5',
   CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
   GEMINI_3_PRO: 'google/gemini-3-pro-preview',
@@ -252,6 +281,6 @@ export function getProviderFromModel(modelId: string): ProviderName {
 export function normalizeTemperature(userTemp: number, modelId: string): number {
   const provider = getProviderFromModel(modelId);
   const range = PROVIDER_TEMPERATURE_RANGES[provider];
-  const normalized = Math.max(range.min, Math.min(range.max, userTemp));
+  const normalized = Math.max(range.min, Math.min(range.max, userTemp > 1 ? userTemp : userTemp * range.max));
   return Number(normalized.toFixed(2));
 }

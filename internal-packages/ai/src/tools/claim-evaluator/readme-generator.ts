@@ -23,10 +23,10 @@ Evaluates claims by polling multiple LLM models in parallel via OpenRouter. Each
 
 ## Default Models
 
-- **${OPENROUTER_MODELS.CLAUDE_SONNET_4_5}** - Claude Sonnet 4.5 (Latest)
-- **${OPENROUTER_MODELS.GPT_5_MINI}** - GPT-5 Mini
-- **${OPENROUTER_MODELS.DEEPSEEK_CHAT_V3_1}** - DeepSeek Chat V3.1
-- **${OPENROUTER_MODELS.GROK_4}** - Grok 4
+- **${OPENROUTER_MODELS.CLAUDE_SONNET_5_5}** - Claude Sonnet 5.5
+- **${OPENROUTER_MODELS.GPT_6_LUNA}** - GPT-6 Luna
+- **${OPENROUTER_MODELS.DEEPSEEK_V4_1_FLASH}** - DeepSeek V4.1 Flash
+- **${OPENROUTER_MODELS.GROK_4_7}** - Grok 4.7
 
 ## Output
 

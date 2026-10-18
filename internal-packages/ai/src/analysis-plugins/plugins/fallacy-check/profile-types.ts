@@ -270,12 +270,12 @@ export interface FallacyCheckerProfile {
 /**
  * Default extractor model
  */
-export const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-4-5-20250929';
+export const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-5-5';
 
 /**
  * Default judge model
  */
-export const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-5-20250929';
+export const DEFAULT_JUDGE_MODEL = 'claude-sonnet-5-5';
 
 /**
  * Default threshold configuration (matches existing hardcoded values)

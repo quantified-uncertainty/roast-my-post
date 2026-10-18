@@ -2,6 +2,7 @@
  * Fetch models from both Anthropic and OpenRouter APIs
  */
 
+import { isAdaptiveClaude, supportsSamplingTemperature } from "../modelDefaults";
 import Anthropic from "@anthropic-ai/sdk";
 
 export interface ModelInfo {
@@ -39,11 +40,11 @@ async function fetchAnthropicModels(): Promise<ModelInfo[]> {
       id: m.id,
       name: m.display_name,
       provider: "anthropic" as const,
-      supportsTemperature: true, // All Anthropic models support temperature
+      supportsTemperature: supportsSamplingTemperature(m.id),
       defaultTemperature: 1, // Anthropic default is 1
-      maxTemperature: 2, // Anthropic supports 0-2
+      maxTemperature: 1,
       // Claude 3.5 Sonnet and newer support extended thinking
-      supportsReasoning: m.id.includes("claude-3") || m.id.includes("claude-sonnet-4") || m.id.includes("claude-opus-4"),
+      supportsReasoning: isAdaptiveClaude(m.id) || m.id.includes("claude-3") || m.id.includes("claude-sonnet-4") || m.id.includes("claude-opus-4"),
     }));
   } catch (e) {
     console.error("Failed to fetch Anthropic models:", e);
@@ -89,7 +90,7 @@ async function fetchOpenRouterModels(): Promise<ModelInfo[]> {
         // Match the ranges in openrouter.ts PROVIDER_TEMPERATURE_RANGES
         const getMaxTemp = (modelId: string): number => {
           if (modelId.startsWith("google/") || modelId.includes("gemini")) return 2;
-          if (modelId.startsWith("anthropic/") || modelId.includes("claude")) return 2;
+          if (modelId.startsWith("anthropic/") || modelId.includes("claude")) return 1;
           if (modelId.startsWith("openai/") || modelId.includes("gpt")) return 2;
           if (modelId.startsWith("x-ai/") || modelId.includes("grok")) return 2;
           if (modelId.startsWith("deepseek/")) return 2;
@@ -105,7 +106,7 @@ async function fetchOpenRouterModels(): Promise<ModelInfo[]> {
           provider: "openrouter" as const,
           contextLength: m.context_length,
           description: m.description,
-          supportsTemperature: m.supported_parameters?.includes("temperature") ?? true,
+          supportsTemperature: supportsSamplingTemperature(m.id) && (m.supported_parameters?.includes("temperature") ?? true),
           defaultTemperature: m.default_parameters?.temperature ?? undefined,
           maxTemperature: maxTemp,
           supportsReasoning: m.supported_parameters?.includes("reasoning") ||

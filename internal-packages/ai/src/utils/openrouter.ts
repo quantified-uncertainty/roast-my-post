@@ -7,6 +7,8 @@
  * API Docs: https://openrouter.ai/docs/api/reference/parameters
  */
 
+import { normalizeTemperature } from './openrouter-types';
+import { requiresAutoToolChoice, supportsSamplingTemperature } from '../modelDefaults';
 import { logger } from '../shared/logger';
 import { asProviderAccessError } from '../shared/providerErrors';
 import {
@@ -28,163 +30,14 @@ export type ReasoningEffort = CommonReasoningEffort;
 // Types
 // ============================================================================
 
-/**
- * Reasoning configuration for fine-grained control
- */
-export interface ReasoningConfig {
-  /** Effort level (alternative to max_tokens) */
-  effort?: ReasoningEffort;
-  /** Direct token budget for reasoning */
-  max_tokens?: number;
-  /** Whether to exclude reasoning from response */
-  exclude?: boolean;
-  /** Enable reasoning with defaults */
-  enabled?: boolean;
-}
-
-/**
- * OpenRouter chat message
- */
-export interface OpenRouterMessage {
-  role: 'system' | 'user' | 'assistant' | 'tool';
-  content: string;
-  tool_call_id?: string;
-}
-
-/**
- * Tool/function definition
- */
-export interface OpenRouterTool {
-  type: 'function';
-  function: {
-    name: string;
-    description: string;
-    parameters: Record<string, unknown>;
-  };
-}
-
-/**
- * Tool choice configuration
- */
-export type OpenRouterToolChoice =
-  | 'none'
-  | 'auto'
-  | 'required'
-  | { type: 'function'; function: { name: string } };
-
-/**
- * OpenRouter API request body
- */
-export interface OpenRouterRequest {
-  model: string;
-  messages: OpenRouterMessage[];
-
-  // Generation parameters
-  max_tokens?: number;
-  temperature?: number;
-  top_p?: number;
-  top_k?: number;
-  frequency_penalty?: number;
-  presence_penalty?: number;
-  repetition_penalty?: number;
-  min_p?: number;
-  top_a?: number;
-  seed?: number;
-  stop?: string[];
-
-  // Tool calling
-  tools?: OpenRouterTool[];
-  tool_choice?: OpenRouterToolChoice;
-  parallel_tool_calls?: boolean;
-
-  // Reasoning control (OpenRouter-specific)
-  reasoning_effort?: ReasoningEffort;
-  reasoning?: ReasoningConfig;
-
-  // Output format
-  response_format?: { type: 'json_object' | 'text' };
-
-  // Provider-specific passthrough
-  provider?: {
-    order?: string[];
-    allow_fallbacks?: boolean;
-    require_parameters?: boolean;
-  };
-}
-
-/**
- * Tool call in response
- */
-export interface OpenRouterToolCall {
-  id: string;
-  type: 'function';
-  function: {
-    name: string;
-    arguments: string;
-  };
-}
-
-/**
- * Response choice
- */
-export interface OpenRouterChoice {
-  index: number;
-  message: {
-    role: 'assistant';
-    content: string | null;
-    tool_calls?: OpenRouterToolCall[];
-  };
-  finish_reason: 'stop' | 'tool_calls' | 'length' | 'content_filter' | null;
-}
-
-/**
- * Token usage with full cost details from OpenRouter
- */
-export interface OpenRouterUsage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-  cost?: number;
-  is_byok?: boolean;
-  prompt_tokens_details?: {
-    cached_tokens?: number;
-    audio_tokens?: number;
-    video_tokens?: number;
-  };
-  cost_details?: {
-    upstream_inference_cost?: number | null;
-    upstream_inference_prompt_cost?: number;
-    upstream_inference_completions_cost?: number;
-  };
-  completion_tokens_details?: {
-    reasoning_tokens?: number;
-    image_tokens?: number;
-  };
-}
-
-/**
- * OpenRouter API response
- */
-export interface OpenRouterResponse {
-  id: string;
-  model: string;
-  provider?: string;  // Which provider handled the request (e.g., "Google AI Studio", "Cerebras")
-  object: 'chat.completion';
-  created: number;
-  choices: OpenRouterChoice[];
-  usage?: OpenRouterUsage;
-}
-
-/**
- * API error response
- */
-export interface OpenRouterError {
-  error: {
-    message: string;
-    type: string;
-    code?: string;
-  };
-}
+import type {
+  OpenRouterRequest, OpenRouterResponse, OpenRouterError, ProviderPreferences,
+} from './openrouter-types';
+export type {
+  ReasoningConfig, OpenRouterMessage, OpenRouterTool, OpenRouterToolChoice,
+  OpenRouterRequest, OpenRouterToolCall, OpenRouterChoice, OpenRouterUsage,
+  OpenRouterResponse, OpenRouterError, ProviderPreferences,
+} from './openrouter-types';
 
 // ============================================================================
 // Client Configuration
@@ -285,18 +138,6 @@ export async function callOpenRouter(
 // ============================================================================
 
 /**
- * Provider routing configuration
- */
-export interface ProviderPreferences {
-  /** Ordered list of preferred providers (e.g., ["anthropic", "google"]) */
-  order?: string[];
-  /** Allow fallback to other providers if preferred ones fail */
-  allow_fallbacks?: boolean;
-  /** Require all parameters to be supported by provider */
-  require_parameters?: boolean;
-}
-
-/**
  * Options for simple chat completions (no tool calling)
  */
 export interface OpenRouterChatOptions {
@@ -352,7 +193,7 @@ export async function callOpenRouterChat(
       content: m.content,
     })),
     max_tokens: options.max_tokens || 4000,
-    temperature: options.temperature,
+    temperature: supportsSamplingTemperature(options.model) ? options.temperature : undefined,
     response_format: options.response_format,
   };
 
@@ -513,21 +354,21 @@ export async function callOpenRouterWithTool<T>(
       modelId: options.model,
       selectedProviders: options.provider?.order,
     });
-    effectiveMaxTokens = budgetResult.maxTokens;
+    effectiveMaxTokens = budgetResult.usesExplicitBudget ? budgetResult.maxTokens : effectiveMaxTokens;
 
     logger.debug(`[OpenRouter] Reasoning budget: effort=${reasoningEffort}, maxTokens=${effectiveMaxTokens}, budget=${budgetResult.displayBudget}, usesExplicit=${budgetResult.usesExplicitBudget}`);
   }
 
   // Build request
   // Only set temperature if explicitly provided - otherwise let model use its native default
-  const effectiveTemperature = options.temperature !== undefined
+  const effectiveTemperature = options.temperature !== undefined && supportsSamplingTemperature(options.model)
     ? normalizeTemperature(options.temperature, options.model)
     : undefined;
 
   const request: OpenRouterRequest = {
     model: options.model,
     messages: [
-      { role: 'system', content: options.system },
+      { role: 'system', content: `${options.system}\nReturn the result by calling the ${options.toolName} tool.` },
       ...options.messages.map(m => ({ role: m.role, content: m.content })),
     ],
     max_tokens: effectiveMaxTokens,
@@ -547,7 +388,7 @@ export async function callOpenRouterWithTool<T>(
     // - With reasoning: Use "required" (model must use a tool)
     // - With reasoning + specific provider routing: Use "auto" (some providers like z-ai
     //   don't support "required" combined with reasoning)
-    tool_choice: reasoningEffort !== undefined
+    tool_choice: requiresAutoToolChoice(options.model) ? 'auto' : reasoningEffort !== undefined
       ? (options.provider?.order ? 'auto' : 'required')
       : { type: 'function', function: { name: options.toolName } },
   };
@@ -652,124 +493,7 @@ export async function callOpenRouterWithTool<T>(
   };
 }
 
-// ============================================================================
-// Model Configuration
-// ============================================================================
-
-/**
- * Common OpenRouter model identifiers
- * Top models selected for reasoning, analysis, and evaluation tasks
- */
-export const OPENROUTER_MODELS = {
-  // Top tier - Latest and most capable models (2025)
-  CLAUDE_SONNET_4_5: 'anthropic/claude-sonnet-4.5',
-  CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
-  GEMINI_3_PRO: 'google/gemini-3-pro-preview',
-  GEMINI_3_FLASH: 'google/gemini-3-flash-preview',
-  GEMINI_2_5_PRO: 'google/gemini-2.5-pro',
-  GEMINI_2_5_FLASH: 'google/gemini-2.5-flash',
-  GPT_5: 'openai/gpt-5',
-  GPT_5_MINI: 'openai/gpt-5-mini',
-  DEEPSEEK_CHAT_V3_1: 'deepseek/deepseek-chat-v3.1',
-  GROK_4: 'x-ai/grok-4',
-
-  // High performance - Established strong models
-  CLAUDE_3_5_SONNET: 'anthropic/claude-3.5-sonnet',
-  CLAUDE_3_7_SONNET: 'anthropic/claude-3-7-sonnet-20250219',
-  GPT_4_TURBO: 'openai/gpt-4-turbo',
-  GPT_4_1: 'openai/gpt-4.1',
-  GPT_4_1_MINI: 'openai/gpt-4.1-mini-2025-04-14',
-  GROK_BETA: 'x-ai/grok-beta',
-
-  // Good value - Fast and cost-effective
-  CLAUDE_HAIKU: 'anthropic/claude-3-haiku',
-  CLAUDE_HAIKU_4_5: 'anthropic/claude-haiku-4.5',
-  GPT_35_TURBO: 'openai/gpt-3.5-turbo',
-  DEEPSEEK_CHAT: 'deepseek/deepseek-chat',
-
-  // Legacy/Alternative options
-  CLAUDE_OPUS: 'anthropic/claude-3-opus',
-  CLAUDE_4_SONNET_20250522: 'anthropic/claude-4-sonnet-20250522',
-  GPT_4: 'openai/gpt-4',
-  GEMINI_PRO: 'google/gemini-pro',
-  LLAMA_70B: 'meta-llama/llama-3-70b-instruct',
-} as const;
-
-export type OpenRouterModel = typeof OPENROUTER_MODELS[keyof typeof OPENROUTER_MODELS];
-
-// ============================================================================
-// Temperature Utilities
-// ============================================================================
-
-/**
- * Temperature range configuration by provider
- * Different providers support different temperature ranges
- */
-export const PROVIDER_TEMPERATURE_RANGES = {
-  anthropic: { min: 0, max: 1.0 },
-  openai: { min: 0, max: 2.0 },
-  google: { min: 0, max: 2.0 },
-  'x-ai': { min: 0, max: 2.0 },
-  deepseek: { min: 0, max: 2.0 },
-  'z-ai': { min: 0, max: 1.5 },
-  // Default for unknown providers - use conservative max
-  default: { min: 0, max: 1.5 },
-} as const;
-
-export type ProviderName = keyof typeof PROVIDER_TEMPERATURE_RANGES;
-
-/**
- * Extract provider name from OpenRouter model ID
- * @param modelId - Full model ID (e.g., "anthropic/claude-3-haiku")
- * @returns Provider name (e.g., "anthropic")
- */
-export function getProviderFromModel(modelId: string): ProviderName {
-  if (modelId.includes('claude') || modelId.startsWith('anthropic/')) return 'anthropic';
-  if (modelId.includes('gpt') || modelId.includes('openai') || modelId.startsWith('openai/')) return 'openai';
-  if (modelId.includes('gemini') || modelId.startsWith('google/')) return 'google';
-  if (modelId.includes('grok') || modelId.startsWith('x-ai/')) return 'x-ai';
-  if (modelId.includes('deepseek') || modelId.startsWith('deepseek/')) return 'deepseek';
-  if (modelId.startsWith('z-ai/')) return 'z-ai';
-  return 'default'; // Default fallback to conservative range
-}
-
-/**
- * Normalize temperature to the valid range for a given provider.
- *
- * Handles two input conventions:
- * - Values 0-1: Treated as normalized scale, mapped to provider's full range
- * - Values > 1: Treated as actual temperature values, capped to provider max
- *
- * @param userTemp - User-provided temperature (0-1 normalized, or actual value)
- * @param modelId - Full model ID to determine provider
- * @returns Actual temperature value capped to provider's max
- *
- * @example
- * normalizeTemperature(0.7, 'anthropic/claude-3-haiku') // Returns 0.7 (within Anthropic's 0-1 range)
- * normalizeTemperature(0.7, 'openai/gpt-4') // Returns 1.4 (0.7 * 2.0 for OpenAI's 0-2 range)
- * normalizeTemperature(1.5, 'anthropic/claude-3-haiku') // Returns 1.0 (capped to Anthropic max)
- * normalizeTemperature(1.5, 'openai/gpt-4') // Returns 1.5 (within OpenAI's 0-2 range)
- */
-export function normalizeTemperature(userTemp: number, modelId: string): number {
-  const provider = getProviderFromModel(modelId);
-  const range = PROVIDER_TEMPERATURE_RANGES[provider];
-
-  // If value is > 1, treat as actual temperature (don't scale)
-  // Just cap to provider max
-  if (userTemp > 1) {
-    return Math.min(userTemp, range.max);
-  }
-
-  // If value is 0-1, scale to provider's range
-  return userTemp * range.max;
-}
-
-// ============================================================================
-// Legacy Exports (for backwards compatibility)
-// ============================================================================
-
-// Note: createOpenRouterClient is no longer needed since we use direct HTTP
-// but we keep the export for any code that might reference it
-export interface OpenRouterOptions {
-  apiKey?: string;
-}
+export {
+  OPENROUTER_MODELS, PROVIDER_TEMPERATURE_RANGES, getProviderFromModel, normalizeTemperature,
+} from './openrouter-types';
+export type { OpenRouterModel, ProviderName } from './openrouter-types';

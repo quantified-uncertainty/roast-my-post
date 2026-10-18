@@ -1,5 +1,7 @@
 "use client";
 
+import { DEFAULT_CLAIM_MODELS, OPENROUTER_MODEL_CHOICES } from "@roast/ai";
+
 import { useState } from "react";
 import { type ToolId, toolSchemas, generateClaimEvaluatorPrompt } from '@roast/ai';
 import { GenericToolTryPage } from "./GenericToolTryPage";
@@ -346,34 +348,8 @@ export function ToolTryPageClient({ toolId }: ToolTryPageClientProps) {
         },
         models: {
           type: "checkbox-group",
-          options: [
-            {
-              value: "anthropic/claude-sonnet-4.5",
-              label: "Claude Sonnet 4.5",
-            },
-            { value: "anthropic/claude-sonnet-4", label: "Claude Sonnet 4" },
-            {
-              value: "anthropic/claude-haiku-4.5",
-              label: "Claude Haiku 4.5",
-            },
-            { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
-            { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-            { value: "openai/gpt-5", label: "GPT-5" },
-            { value: "openai/gpt-5-mini", label: "GPT-5 Mini" },
-            { value: "openai/gpt-4.1", label: "GPT-4.1" },
-            { value: "openai/gpt-4.1-mini-2025-04-14", label: "GPT-4.1 Mini" },
-            {
-              value: "deepseek/deepseek-chat-v3.1",
-              label: "DeepSeek Chat V3.1",
-            },
-            { value: "x-ai/grok-4", label: "Grok 4" },
-          ],
-          defaultValue: [
-            "anthropic/claude-sonnet-4.5",
-            "openai/gpt-5-mini",
-            "deepseek/deepseek-chat-v3.1",
-            "x-ai/grok-4",
-          ],
+          options: OPENROUTER_MODEL_CHOICES.map(m => ({ value: m.id, label: m.name })),
+          defaultValue: DEFAULT_CLAIM_MODELS,
         },
         runs: {
           type: "select",

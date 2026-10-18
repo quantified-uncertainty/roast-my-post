@@ -92,9 +92,12 @@ interface ModelPricing {
 /**
  * Anthropic model pricing table
  * Source: https://platform.claude.com/docs/en/about-claude/pricing
- * Last updated: 2025-01-18
+ * Last updated: 2026-10-18
  */
 export const ANTHROPIC_PRICING: Record<string, ModelPricing> = {
+  'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.10, cacheWrite5m: 2.50, cacheWrite1h: 4 },
+  'claude-haiku-5-5': { input: 0.10, output: 0.50, cacheRead: 0.01, cacheWrite5m: 0.125, cacheWrite1h: 0.20 },
+  'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.20, cacheWrite5m: 5, cacheWrite1h: 8 },
   // Opus models
   'claude-opus-4-5-20251101': { input: 5, output: 25, cacheRead: 0.50, cacheWrite5m: 6.25, cacheWrite1h: 10 },
   'claude-opus-4-1-20250805': { input: 15, output: 75, cacheRead: 1.50, cacheWrite5m: 18.75, cacheWrite1h: 30 },
@@ -157,12 +160,16 @@ export function calculateAnthropicCost(
   modelId: string,
   usage: AnthropicRawUsage
 ): number {
-  const pricing = getAnthropicPricing(modelId);
+  let pricing = getAnthropicPricing(modelId);
   if (!pricing) {
     console.warn(`[UsageMetrics] No pricing found for Anthropic model: ${modelId}`);
     return 0;
   }
 
+  const promptTokens = usage.input_tokens + (usage.cache_read_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0);
+  if (modelId.startsWith('claude-haiku-5-5') && promptTokens > 100_000) {
+    pricing = { input: 0.50, output: 2.50, cacheRead: 0.05, cacheWrite5m: 0.625, cacheWrite1h: 1 };
+  }
   const inputCost = (usage.input_tokens / 1_000_000) * pricing.input;
   const outputCost = (usage.output_tokens / 1_000_000) * pricing.output;
   const cacheReadCost = ((usage.cache_read_input_tokens || 0) / 1_000_000) * pricing.cacheRead;

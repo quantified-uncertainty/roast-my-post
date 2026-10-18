@@ -38,3 +38,24 @@ describe.each([false, true])("agentic sandbox with subagents=%s", (enableSubAgen
     expect(options.sandbox).toEqual({ enabled: true, allowUnsandboxedCommands: false });
   });
 });
+
+it('retains explicit model IDs, prompts, and disabled agents from a multi-agent profile', async () => {
+  const { validateAgenticConfig } = await import('./profile-types');
+  const config = validateAgenticConfig({
+    ...createDefaultAgenticConfig(), version: 2, enableSubAgents: true,
+    model: 'claude-sonnet-5-5', researchModel: 'google/gemini-4-argon', maxThinkingTokens: 8192,
+    subAgents: {
+      'fact-checker': { enabled: true, model: 'claude-sonnet-5-5', prompt: 'Custom fact-check instructions' },
+      'clarity-checker': { enabled: false, model: 'claude-haiku-5-5' },
+      'math-checker': { enabled: false, model: 'claude-sonnet-5-5' },
+    },
+  });
+  const options = buildAgenticQueryOptions(config, evaluationServer);
+  expect(config.researchModel).toBe('google/gemini-4-argon');
+  expect(options.agents?.['fact-checker']).toMatchObject({ model: 'claude-sonnet-5-5', prompt: 'Custom fact-check instructions' });
+  expect(Object.keys(options.agents ?? {})).toEqual(['fact-checker']);
+  expect(options.allowedTools).toContain('Agent');
+  expect(options.thinking).toEqual({ type: 'adaptive' });
+  expect(options.effort).toBe('medium');
+  expect(options).not.toHaveProperty('maxThinkingTokens');
+});
