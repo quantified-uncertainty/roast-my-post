@@ -2,6 +2,7 @@
  * Token counting utilities for accurate token estimation
  */
 
+import { DEFAULT_ANALYSIS_MODEL } from '../constants';
 import Anthropic from '@anthropic-ai/sdk';
 
 /**
@@ -28,7 +29,7 @@ export class TokenCounter {
    * Count tokens in text using Anthropic's tokenizer
    * Note: This requires the Anthropic SDK v0.54.0+ which includes token counting
    */
-  static async countTokens(text: string, model: string = 'claude-3-sonnet-20240229'): Promise<number> {
+  static async countTokens(text: string, model: string = DEFAULT_ANALYSIS_MODEL): Promise<number> {
     try {
       // Check if the SDK has the beta.messages.countTokens method
       const anthropic = this.getAnthropicClient();
@@ -106,7 +107,7 @@ export class TokenCounter {
   static async estimateConversationTokens(
     systemMessage: string,
     userMessage: string,
-    model: string = 'claude-3-sonnet-20240229'
+    model: string = DEFAULT_ANALYSIS_MODEL
   ): Promise<{ systemTokens: number; userTokens: number; totalTokens: number }> {
     const [systemTokens, userTokens] = await Promise.all([
       this.countTokens(systemMessage, model),
@@ -131,12 +132,15 @@ export class TokenCounter {
   /**
    * Check if text is within token limits for different Claude models
    */
-  static checkTokenLimits(tokenCount: number, model: string = 'claude-3-sonnet-20240229'): {
+  static checkTokenLimits(tokenCount: number, model: string = DEFAULT_ANALYSIS_MODEL): {
     withinLimit: boolean;
     percentUsed: number;
     maxTokens: number;
   } {
     const modelLimits: Record<string, number> = {
+      'claude-sonnet-5-5': 1_000_000,
+      'claude-opus-5-5': 1_000_000,
+      'claude-haiku-5-5': 1_000_000,
       'claude-3-sonnet-20240229': 200000,
       'claude-3-opus-20240229': 200000,
       'claude-3-haiku-20240307': 200000,

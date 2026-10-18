@@ -127,8 +127,8 @@ ANTHROPIC_API_KEY=your-api-key
 ### Optional Variables
 
 ```bash
-# Model selection (defaults to claude-sonnet-4-5)
-ANALYSIS_MODEL=claude-sonnet-4-5
+# Model selection (defaults to claude-sonnet-5-5)
+ANALYSIS_MODEL=claude-sonnet-5-5
 
 ```
 

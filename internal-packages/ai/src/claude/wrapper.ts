@@ -1,4 +1,7 @@
 import { Anthropic } from '@anthropic-ai/sdk';
+import type { ReasoningEffort, LegacyThinkingConfig, AdaptiveThinkingConfig, ClaudeOutputConfig } from '../types/common';
+import { DEFAULT_SEARCH_MODEL } from '../constants';
+import { isAdaptiveClaude, requiresAutoToolChoice } from '../modelDefaults';
 import { createAnthropicClient } from '../utils/anthropic';
 import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 // Note: withRetry was deprecated in favor of inline retry logic
@@ -14,15 +17,12 @@ import {
 // Centralized model configuration
 export const MODEL_CONFIG = {
   analysis: ANALYSIS_MODEL,
-  routing: 'claude-3-haiku-20240307', // Faster model for routing decisions
+  routing: DEFAULT_SEARCH_MODEL, // Faster model for routing decisions
   forecasting: ANALYSIS_MODEL,
 } as const;
 
 /** Extended thinking configuration */
-export interface ThinkingConfig {
-  type: "enabled";
-  budget_tokens: number;
-}
+export type ThinkingConfig = LegacyThinkingConfig;
 
 export interface ClaudeCallOptions {
   model?: string;
@@ -48,17 +48,22 @@ export interface ClaudeCallOptions {
    * Note: Extended thinking requires temperature=1, so temperature is ignored when enabled.
    */
   thinking?: boolean | ThinkingConfig;
+  reasoningEffort?: ReasoningEffort;
 }
 
 /** Actual API params as sent to Anthropic */
 export interface ClaudeActualParams {
   model: string;
-  temperature: number;
+  temperature?: number;
   maxTokens: number;
-  thinking?: {
-    type: 'enabled';
-    budget_tokens: number;
-  };
+  thinking?: ThinkingConfig | AdaptiveThinkingConfig;
+  outputConfig?: ClaudeOutputConfig;
+}
+
+/** Forward-compatible body for Claude 5.5, absent from the pinned SDK's types. */
+interface AdaptiveMessageParams extends Omit<Anthropic.Messages.MessageCreateParamsNonStreaming, 'thinking'> {
+  thinking?: ClaudeActualParams['thinking'];
+  output_config?: ClaudeActualParams['outputConfig'];
 }
 
 /** Response metrics from Claude API */
@@ -159,7 +164,8 @@ export async function callClaude(
 
       // Determine if extended thinking is enabled (default: false for tool calls to save cost)
       // When thinking is enabled, temperature must be 1 and max_tokens must be > budget_tokens
-      const thinkingEnabled = options.thinking === true || typeof options.thinking === 'object';
+      const thinkingEnabled = options.reasoningEffort !== 'none' &&
+        (options.thinking === true || typeof options.thinking === 'object');
       const thinkingBudget = typeof options.thinking === 'object' && options.thinking.budget_tokens
         ? options.thinking.budget_tokens
         : 10000; // Default budget
@@ -169,37 +175,40 @@ export async function callClaude(
       const effectiveTemperature = thinkingEnabled ? 1 : Math.min(Math.max(requestedTemp, 0), 1);
       // When thinking is enabled, max_tokens must be greater than budget_tokens
       const requestedMaxTokens = options.max_tokens || 4000;
-      const effectiveMaxTokens = thinkingEnabled
-        ? Math.max(requestedMaxTokens, thinkingBudget + 1000) // Ensure max_tokens > budget_tokens with buffer
+      const adaptive = isAdaptiveClaude(model);
+      const effectiveMaxTokens = thinkingEnabled && !adaptive
+        ? Math.max(requestedMaxTokens, thinkingBudget + 1000)
         : requestedMaxTokens;
-
-      const requestOptions: Anthropic.Messages.MessageCreateParams = {
+      const thinking: ClaudeActualParams['thinking'] = adaptive
+        ? (thinkingEnabled ? { type: 'adaptive' }
+          : model.includes('sonnet') ? { type: 'between_tools' }
+          : model.includes('haiku') ? { type: 'disabled' } : undefined)
+        : (thinkingEnabled ? { type: 'enabled', budget_tokens: thinkingBudget } : undefined);
+      // Translate legacy token budgets into effort for models that removed manual budgets.
+      const outputConfig: ClaudeActualParams['outputConfig'] = adaptive && thinkingEnabled
+        ? { effort: options.reasoningEffort
+          ? (options.reasoningEffort === 'minimal' || options.reasoningEffort === 'low' ? 'low' : options.reasoningEffort === 'medium' ? 'medium' : 'high')
+          : (thinkingBudget <= 4096 ? 'low' : thinkingBudget <= 16000 ? 'medium' : 'high') }
+        // Opus cannot disable thinking; use its lowest effort without sending an unsupported mode.
+        : adaptive && model.includes('opus') ? { effort: 'low' } : undefined;
+      const modernRequest: AdaptiveMessageParams = {
         model,
         max_tokens: effectiveMaxTokens,
-        temperature: effectiveTemperature,
+        ...(!adaptive && { temperature: effectiveTemperature }),
         messages: options.messages,
-        // Add thinking configuration when enabled
-        ...(thinkingEnabled && {
-          thinking: {
-            type: "enabled" as const,
-            budget_tokens: thinkingBudget,
-          }
-        }),
+        ...(thinking && { thinking }),
+        ...(outputConfig && { output_config: outputConfig }),
       };
-
-      // Capture actual params being sent to API (for telemetry)
+      // The SDK transports unknown fields unchanged; only its older TypeScript surface needs adapting.
+      const requestOptions = modernRequest as Anthropic.Messages.MessageCreateParamsNonStreaming;
       actualParams = {
         model,
-        temperature: effectiveTemperature,
+        ...(!adaptive && { temperature: effectiveTemperature }),
         maxTokens: effectiveMaxTokens,
-        ...(thinkingEnabled && {
-          thinking: {
-            type: 'enabled' as const,
-            budget_tokens: thinkingBudget,
-          }
-        }),
+        thinking,
+        ...(outputConfig && { outputConfig }),
       };
-      
+
       if (options.system) {
         if (options.enablePromptCaching) {
           // Add cache control for system prompt when caching is enabled
@@ -227,7 +236,10 @@ export async function callClaude(
         }
       }
       
-      if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
+      if (options.tool_choice) {
+        requestOptions.tool_choice = requiresAutoToolChoice(model) && options.tool_choice.type !== "none"
+          ? { type: "auto" } : options.tool_choice;
+      }
       
       // Add timeout to prevent hanging indefinitely
       // Use remaining job time if available, otherwise use provided/default timeout
@@ -383,17 +395,19 @@ export async function callClaudeWithTool<T>(
 ): Promise<ClaudeCallResult & { toolResult: T }> {
   // When thinking is enabled, we must use tool_choice: 'auto' because
   // forced tool_choice is incompatible with extended thinking
-  const thinkingEnabled = options.thinking === true || typeof options.thinking === 'object';
+  const thinkingEnabled = options.reasoningEffort !== 'none' &&
+    (options.thinking === true || typeof options.thinking === 'object');
 
   const toolOptions: ClaudeCallOptions = {
     ...options,
+    system: `${options.system ?? ""}\nReturn the result by calling the ${options.toolName} tool.`,
     tools: [{
       name: options.toolName,
       description: options.toolDescription,
       input_schema: options.toolSchema
     }],
     // Use 'auto' when thinking is enabled, otherwise force the specific tool
-    tool_choice: thinkingEnabled
+    tool_choice: thinkingEnabled || requiresAutoToolChoice(options.model || MODEL_CONFIG.analysis)
       ? { type: "auto" }
       : { type: "tool", name: options.toolName },
   };

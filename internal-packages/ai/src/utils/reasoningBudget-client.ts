@@ -1,3 +1,4 @@
+import { isAdaptiveClaude } from '../modelDefaults';
 /**
  * Reasoning Budget Resolver - Client-safe version
  *
@@ -131,6 +132,7 @@ function calculateOutputReserve(effectiveMax: number): number {
  * Check if model supports explicit reasoning.max_tokens
  */
 function supportsExplicitBudget(modelId: string): boolean {
+  if (isAdaptiveClaude(modelId) || /^openai\/gpt-[56]/.test(modelId)) return false;
   // Check if any prefix matches
   if (SUPPORTS_EXPLICIT_BUDGET.some(prefix => modelId.startsWith(prefix))) {
     return true;

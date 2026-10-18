@@ -82,6 +82,19 @@ export interface ProviderPreferences {
 // API Telemetry Types
 // ============================================================================
 
+export interface LegacyThinkingConfig {
+  type: 'enabled';
+  budget_tokens: number;
+}
+
+export interface AdaptiveThinkingConfig {
+  type: 'adaptive' | 'between_tools' | 'disabled';
+}
+
+export interface ClaudeOutputConfig {
+  effort: 'low' | 'medium' | 'high';
+}
+
 /**
  * Actual API request parameters as sent to the provider.
  * This is captured right before the API call for debugging/audit.
@@ -91,19 +104,17 @@ export interface ActualApiParams {
   model: string;
 
   /** Temperature sent to API */
-  temperature: number;
+  temperature?: number;
 
   /** Max tokens sent to API */
   maxTokens: number;
 
   /**
    * Claude thinking config (if applicable)
-   * Exactly as sent: { type: "enabled", budget_tokens: number }
+   * Legacy token budgets or adaptive thinking modes, exactly as sent.
    */
-  thinking?: {
-    type: 'enabled';
-    budget_tokens: number;
-  };
+  thinking?: LegacyThinkingConfig | AdaptiveThinkingConfig;
+  outputConfig?: ClaudeOutputConfig;
 
   /**
    * OpenRouter reasoning config (if applicable)

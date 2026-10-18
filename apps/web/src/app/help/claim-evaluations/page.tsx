@@ -72,7 +72,7 @@ Tags use \`/\` for hierarchy:
 {
   evaluations: [
     {
-      model: string               // e.g., "anthropic/claude-sonnet-4.5"
+      model: string               // e.g., "anthropic/claude-sonnet-5.5"
       hasError: boolean
       successfulResponse?: {
         agreement: number         // 0-100
@@ -100,8 +100,8 @@ Create a new claim evaluation.
   "claim": "Sugar is at least 10x as unhealthy as stevia",
   "context": "I'm a nutritionist recommending stevia",
   "models": [
-    "anthropic/claude-sonnet-4.5",
-    "openai/gpt-5-mini"
+    "anthropic/claude-sonnet-5.5",
+    "openai/gpt-6-luna"
   ],
   "runs": 3,
   "temperature": 0.7,
@@ -199,8 +199,8 @@ Add more evaluation runs to an existing claim evaluation.
 \`\`\`json
 {
   "runs": [
-    { "model": "anthropic/claude-sonnet-4.5", "runs": 3 },
-    { "model": "openai/gpt-5", "runs": 5 }
+    { "model": "anthropic/claude-sonnet-5.5", "runs": 3 },
+    { "model": "openai/gpt-6-luna", "runs": 5 }
   ]
 }
 \`\`\`
@@ -247,9 +247,9 @@ curl -X POST http://localhost:3000/api/claim-evaluations/run \\
   -d '{
     "claim": "SSRIs are effective for treating depression",
     "models": [
-      "anthropic/claude-sonnet-4.5",
-      "openai/gpt-5-mini",
-      "deepseek/deepseek-chat-v3.1"
+      "anthropic/claude-sonnet-5.5",
+      "openai/gpt-6-luna",
+      "deepseek/deepseek-v4.1-flash"
     ],
     "runs": 2,
     "tags": ["health", "mental-health"]
@@ -270,7 +270,7 @@ curl -X POST http://localhost:3000/api/claim-evaluations/run \\
     "variationOf": "'"$PARENT_ID"'",
     "submitterNotes": "Testing 2x magnitude",
     "tags": ["health", "magnitude/2x"],
-    "models": ["anthropic/claude-sonnet-4.5"],
+    "models": ["anthropic/claude-sonnet-5.5"],
     "runs": 3
   }'
 
@@ -281,7 +281,7 @@ curl -X POST http://localhost:3000/api/claim-evaluations/run \\
     "variationOf": "'"$PARENT_ID"'",
     "submitterNotes": "Testing 100x magnitude",
     "tags": ["health", "magnitude/100x"],
-    "models": ["anthropic/claude-sonnet-4.5"],
+    "models": ["anthropic/claude-sonnet-5.5"],
     "runs": 3
   }'
 \`\`\`
@@ -295,9 +295,9 @@ curl -X POST http://localhost:3000/api/claim-evaluations/run \\
   -d '{
     "claim": "Climate change is primarily caused by human activity",
     "models": [
-      "anthropic/claude-sonnet-4.5",
-      "openai/gpt-5-mini",
-      "deepseek/deepseek-chat-v3.1"
+      "anthropic/claude-sonnet-5.5",
+      "openai/gpt-6-luna",
+      "deepseek/deepseek-v4.1-flash"
     ],
     "runs": 1,
     "tags": ["climate", "science"]
@@ -309,7 +309,7 @@ curl -X PATCH http://localhost:3000/api/claim-evaluations/xyz789 \\
   -H "Content-Type: application/json" \\
   -d '{
     "runs": [
-      { "model": "anthropic/claude-sonnet-4.5", "runs": 5 }
+      { "model": "anthropic/claude-sonnet-5.5", "runs": 5 }
     ]
   }'
 # Response: { "addedEvaluations": 5, "totalEvaluations": 8 }
@@ -319,8 +319,8 @@ curl -X PATCH http://localhost:3000/api/claim-evaluations/xyz789 \\
   -H "Content-Type: application/json" \\
   -d '{
     "runs": [
-      { "model": "openai/gpt-5-mini", "runs": 3 },
-      { "model": "deepseek/deepseek-chat-v3.1", "runs": 3 }
+      { "model": "openai/gpt-6-luna", "runs": 3 },
+      { "model": "deepseek/deepseek-v4.1-flash", "runs": 3 }
     ]
   }'
 \`\`\`
@@ -381,7 +381,7 @@ curl -X DELETE http://localhost:3000/api/claim-evaluations/abc123
    PATCH /api/claim-evaluations/variation-id
    {
      "runs": [
-       { "model": "anthropic/claude-sonnet-4.5", "runs": 10 }
+       { "model": "anthropic/claude-sonnet-5.5", "runs": 10 }
      ]
    }
    \`\`\`
@@ -424,12 +424,12 @@ curl -X PATCH .../claim-evaluations/$VAR_50X -d '{"runs":[{"model":"...","runs":
 ## Available Models
 
 Common model identifiers:
-- \`anthropic/claude-sonnet-4.5\` - Claude Sonnet 4.5
-- \`anthropic/claude-3.7-sonnet-20250219\` - Claude 3.7
-- \`openai/gpt-5\` - GPT-5
-- \`openai/gpt-5-mini\` - GPT-5 Mini
-- \`deepseek/deepseek-chat-v3.1\` - DeepSeek Chat
-- \`google/gemini-2.5-pro\` - Gemini 2.5 Pro
+- \`anthropic/claude-sonnet-5.5\` - Claude Sonnet 5.5
+- \`anthropic/claude-haiku-5.5\` - Claude Haiku 5.5
+- \`openai/gpt-6-luna\` - GPT-6 Luna
+- \`x-ai/grok-4.7\` - Grok 4.7
+- \`deepseek/deepseek-v4.1-flash\` - DeepSeek V4.1 Flash
+- \`google/gemini-4-argon\` - Gemini 4 Argon
 
 See \`/apps/web/src/app/tools/constants/modelAbbreviations.ts\` for full list.
 

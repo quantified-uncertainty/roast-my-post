@@ -149,3 +149,8 @@ export {
   DEFAULT_EXPLANATION_LENGTH,
   DEFAULT_PROMPT_TEMPLATE
 } from './tools/claim-evaluator/prompt';
+
+export * from "./modelDefaults";
+
+export { DEFAULT_AGENTIC_CONFIG, DEFAULT_SUBAGENTS, validateAgenticConfig } from "./analysis-plugins/plugins/agentic/profile-types";
+export type { AgenticProfileConfig, SubAgentConfig } from "./analysis-plugins/plugins/agentic/profile-types";

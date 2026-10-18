@@ -107,8 +107,8 @@ export interface MultiExtractorResult {
 // Config Parsing (standalone implementation)
 // ============================================================================
 
-const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-4-5-20250929';
-const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-5-20250929';
+const DEFAULT_EXTRACTOR_MODEL = 'claude-sonnet-5-5';
+const DEFAULT_JUDGE_MODEL = 'claude-sonnet-5-5';
 const DEFAULT_CLAUDE_TEMPERATURE = 0;
 const DEFAULT_OPENROUTER_TEMPERATURE = 0.1;
 

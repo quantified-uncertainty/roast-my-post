@@ -21,6 +21,7 @@ export interface UnifiedAnalysisOptions {
   };
   /** Profile ID for FallacyCheckPlugin configuration */
   fallacyCheckProfileId?: string;
+  agenticProfileId?: string;
   /** Agent ID for FallacyCheckPlugin default profile loading */
   fallacyCheckAgentId?: string;
   /** Called with telemetry snapshots during analysis for incremental DB persistence */
@@ -45,6 +46,7 @@ export async function analyzeDocumentUnified(
     } : undefined,
     // Pass profile options for FallacyCheckPlugin
     fallacyCheckProfileId: options.fallacyCheckProfileId,
+    agenticProfileId: options.agenticProfileId,
     fallacyCheckAgentId: options.fallacyCheckAgentId,
     onTelemetryUpdate: options.onTelemetryUpdate,
   });

@@ -28,20 +28,8 @@ export interface ProviderPreferences {
   allow_fallbacks?: boolean;
 }
 
-/** Actual API parameters sent to provider */
-export interface ActualApiParams {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  thinking?: {
-    type: "enabled";
-    budget_tokens: number;
-  };
-  reasoning?: {
-    effort?: "minimal" | "low" | "medium" | "high" | "xhigh";
-    max_tokens?: number;
-  };
-}
+import type { ActualApiParams } from "../../types/common";
+export type { ActualApiParams } from "../../types/common";
 
 /** Response metrics from API call */
 export interface ApiResponseMetrics {
@@ -285,21 +273,16 @@ async function callClaudeFilter<T>(
     toolDescription: input.toolDescription,
     toolSchema: input.toolSchema,
     thinking: thinkingConfig,
+    reasoningEffort: input.reasoning && "effort" in input.reasoning ? input.reasoning.effort : undefined,
   });
 
   return {
     toolResult: result.toolResult,
     unifiedUsage: result.unifiedUsage,
-    actualApiParams: {
-      model: modelId,
-      temperature: input.temperature,
-      maxTokens,
-      thinking: thinkingConfig,
-      reasoning: thinkingConfig ? { max_tokens: thinkingConfig.budget_tokens } : undefined,
-    },
+    actualApiParams: result.actualParams,
     responseMetrics: {
       success: true,
-      latencyMs: 0, // Claude wrapper doesn't expose latency
+      latencyMs: result.responseMetrics.latencyMs,
       inputTokens: result.unifiedUsage?.inputTokens,
       outputTokens: result.unifiedUsage?.outputTokens,
       stopReason: "tool_use",

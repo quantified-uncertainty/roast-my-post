@@ -1,160 +1,45 @@
-/**
- * Perplexity client using OpenRouter.
- * Provides access to Perplexity's Sonar models with web search capabilities
- */
-
-import { OpenAI } from 'openai';
-import { throwIfProviderAccessError } from '../../shared/providerErrors';
-import { logger } from '../../utils/logger';
+/** Web research through OpenRouter; the legacy class name remains API compatible. */
+import { DEFAULT_RESEARCH_MODEL, supportsSamplingTemperature } from '../../modelDefaults';
+import { callOpenRouter } from '../../utils/openrouter';
+import type { OpenRouterCitation, OpenRouterMessage, OpenRouterUsage } from '../../utils/openrouter-types';
 
 export interface PerplexityOptions {
-  model?: 'perplexity/sonar' | 'perplexity/sonar-pro';
+  model?: string;
   maxTokens?: number;
+  maxSources?: number;
   temperature?: number;
   systemPrompt?: string;
+  jsonOutput?: boolean;
+}
+
+export interface ResearchResponse {
+  content: string;
+  usage?: OpenRouterUsage;
+  citations?: OpenRouterCitation[];
 }
 
 export class PerplexityClient {
-  private client: OpenAI;
-  
-  constructor(apiKey?: string) {
-    const key = apiKey || process.env.OPENROUTER_API_KEY || '';
-    
-    if (!key || key === 'your_openrouter_api_key_here') {
-      throw new Error(
-        'OpenRouter API key is required for Perplexity integration. ' +
-        'Please set OPENROUTER_API_KEY in your .env.local file with a valid API key from https://openrouter.ai/'
-      );
-    }
-    
-    // Determine environment for better tracking
-    const isProduction = process.env.NODE_ENV === 'production';
-    const environment = isProduction ? 'Prod' : 'Dev';
-    const appTitle = `RoastMyPost Tools - ${environment}`;
-    // OpenRouter primarily uses HTTP-Referer for the "App" column
-    // But X-Title might also influence the display
-    const referer = isProduction ? 'https://roastmypost.org' : 'http://localhost:3000';
-    
-    this.client = new OpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: key,
-      defaultHeaders: {
-        'HTTP-Referer': referer,
-        'X-Title': appTitle,
-        'X-Environment': environment,
-      }
-    });
-  }
+  constructor(private readonly apiKey?: string) {}
 
-  /**
-   * Call Perplexity Sonar model for web-enhanced responses
-   */
-  async query(
-    question: string,
-    options: PerplexityOptions = {}
-  ): Promise<{ content: string; usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number } }> {
-    const {
-      model = 'perplexity/sonar',
-      maxTokens = 1000,
-      temperature = 0.7,
-      systemPrompt
-    } = options;
-
-    const messages: OpenAI.ChatCompletionMessageParam[] = [];
-    
-    if (systemPrompt) {
-      messages.push({
-        role: 'system',
-        content: systemPrompt
-      });
-    }
-    
-    messages.push({
-      role: 'user',
-      content: question
-    });
-
-    try {
-      // Add additional metadata headers
-      const environment = process.env.NODE_ENV === 'production' ? 'Prod' : 'Dev';
-      const enhancedHeaders = {
-        'X-Request-Source': `perplexity-research-${environment.toLowerCase()}`,
-        'X-Tool-Version': '1.0.0',
-        'X-Request-Time': new Date().toISOString(),
-        // Some providers use User-Agent for additional context
-        'User-Agent': `RoastMyPost-Tools-${environment}/1.0.0`,
-      };
-      
-      // Combine default headers with enhanced headers
-      const appTitle = `RoastMyPost Tools - ${environment}`;
-      const referer = process.env.NODE_ENV === 'production' ? 'https://roastmypost.org' : 'http://localhost:3000';
-      
-      const finalHeaders = {
-        ...enhancedHeaders,
-        'HTTP-Referer': referer,
-        'X-Title': appTitle,
-      };
-      
-      logger.debug('[PerplexityClient] Request details:', {
-        model,
-        environment,
-        baseURL: this.client.baseURL,
-        hasApiKey: !!this.client.apiKey,
-        apiKeyPrefix: this.client.apiKey?.substring(0, 10),
-        appTitle,
-        headers: finalHeaders
-      });
-      
-      const completion = await this.client.chat.completions.create({
-        model,
-        messages,
-        max_tokens: maxTokens,
-        temperature,
-        stream: false
-      }, {
-        headers: finalHeaders
-      });
-      
-      if (!completion.choices || completion.choices.length === 0) {
-        throw new Error('No response from Perplexity');
-      }
-
-      return {
-        content: completion.choices[0].message.content || '',
-        usage: completion.usage ? {
-          prompt_tokens: completion.usage.prompt_tokens,
-          completion_tokens: completion.usage.completion_tokens,
-          total_tokens: completion.usage.total_tokens
-        } : undefined
-      };
-    } catch (error: any) {
-      // Log error details (verbose in dev, minimal in prod)
-      const errorLog = {
-        message: error.message,
-        status: error.status,
-        model,
-      };
-      
-      if (process.env.NODE_ENV !== 'production') {
-        Object.assign(errorLog, {
-          response: error.response?.data,
-          headers: error.response?.headers,
-        });
-      }
-      
-      logger.error('[PerplexityClient] Request failed:', errorLog);
-      throwIfProviderAccessError(error);
-      
-      // Simplify error messages
-      if (error.status === 401 || error.message?.includes('401')) {
-        throw new Error('OpenRouter authentication failed. Check API key and credits.');
-      }
-      
-      if (error.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.');
-      }
-      
-      throw error;
-    }
+  async query(question: string, options: PerplexityOptions = {}): Promise<ResearchResponse> {
+    const model = options.model ?? DEFAULT_RESEARCH_MODEL;
+    const messages: OpenRouterMessage[] = [];
+    if (options.systemPrompt) messages.push({ role: 'system', content: options.systemPrompt });
+    messages.push({ role: 'user', content: question });
+    const completion = await callOpenRouter({
+      model,
+      messages,
+      max_tokens: options.maxTokens ?? 4000,
+      ...(options.jsonOutput && { response_format: { type: "json_object" as const } }),
+      ...(supportsSamplingTemperature(model) && { temperature: options.temperature ?? 0.3 }),
+      // Sonar already performs search; other models use OpenRouter's managed search engine.
+      ...(!model.startsWith('perplexity/') && {
+        plugins: [{ id: 'web' as const, engine: 'perplexity' as const, max_results: options.maxSources ?? 5 }],
+      }),
+      ...(model === DEFAULT_RESEARCH_MODEL && { reasoning: { effort: 'low' as const } }),
+    }, { apiKey: this.apiKey });
+    const message = completion.choices?.[0]?.message;
+    if (!message?.content) throw new Error(`No research response from ${model}`);
+    return { content: message.content, usage: completion.usage, citations: message.annotations };
   }
 }

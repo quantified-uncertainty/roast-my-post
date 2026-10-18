@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       backup_artifact_name:
-        description: 'Name of the backup artifact to restore (e.g., database-backup-roast_my_post_pre-migration_20250104_120000.sql.gz)'
+        description: 'Name of the backup artifact to restore (e.g., database-backup-roast_my_post_pre-migration_20250104_120000.sql.gz.gpg)'
+        required: true
+        type: string
+      backup_run_id:
+        description: 'Workflow run ID containing the backup artifact'
         required: true
         type: string
       confirm_restore:
@@ -44,18 +48,37 @@ jobs:
           sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update
-          sudo apt-get -y install postgresql-client-16
+          sudo apt-get -y install postgresql-client-16 gnupg
 
       - name: Download backup artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.backup_artifact_name }}
           path: ./backup
+          run-id: ${{ inputs.backup_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List backup files
         run: |
           echo "📁 Backup files found:"
           ls -la ./backup/
+
+      - name: Prepare backup for restore
+        id: prepare_backup
+        env:
+          DATABASE_BACKUP_ENCRYPTION_KEY: ${{ secrets.DATABASE_BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mapfile -d '' BACKUPS < <(find ./backup -type f \( -name '*.sql.gz.gpg' -o -name '*.sql.gz' \) -print0)
+          test "${#BACKUPS[@]}" -eq 1 || { echo "Expected exactly one backup file" >&2; exit 1; }
+          RESTORE_FILE="${BACKUPS[0]}"
+          if [[ "$RESTORE_FILE" == *.gpg ]]; then
+            bash dev/scripts/db-backup-crypto.sh decrypt "$RESTORE_FILE" "${RESTORE_FILE%.gpg}"
+            RESTORE_FILE="${RESTORE_FILE%.gpg}"
+          fi
+          gzip -t "$RESTORE_FILE"
+          echo "file=$RESTORE_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Parse database connection
         id: parse_db
@@ -71,57 +94,61 @@ jobs:
           DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
           echo "db_name=$DB_NAME" >> $GITHUB_OUTPUT
 
-      - name: Create pre-restore backup
+      - name: Create encrypted pre-restore backup
         env:
           PGPASSWORD: ${{ secrets.DATABASE_URL }}
+          DATABASE_BACKUP_ENCRYPTION_KEY: ${{ secrets.DATABASE_BACKUP_ENCRYPTION_KEY }}
         run: |
+          set -euo pipefail
+          umask 077
+          test -n "$DATABASE_BACKUP_ENCRYPTION_KEY" || { echo "Backup encryption key is required" >&2; exit 1; }
           echo "🔄 Creating pre-restore backup..."
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           BACKUP_FILE="pre_restore_backup_${TIMESTAMP}.sql"
           
           pg_dump "${{ steps.parse_db.outputs.db_url }}" > "$BACKUP_FILE"
           gzip "$BACKUP_FILE"
+          bash dev/scripts/db-backup-crypto.sh encrypt "${BACKUP_FILE}.gz" "${BACKUP_FILE}.gz.gpg"
+          rm -- "${BACKUP_FILE}.gz"
           
-          echo "✅ Pre-restore backup created: ${BACKUP_FILE}.gz"
-          ls -lh "${BACKUP_FILE}.gz"
+          echo "✅ Encrypted pre-restore backup created: ${BACKUP_FILE}.gz.gpg"
+          ls -lh "${BACKUP_FILE}.gz.gpg"
 
       - name: Upload pre-restore backup
         uses: actions/upload-artifact@v4
         with:
           name: pre-restore-backup-${{ github.run_id }}
-          path: pre_restore_backup_*.sql.gz
+          path: pre_restore_backup_*.sql.gz.gpg
           retention-days: 7
 
       - name: Restore database
         env:
           PGPASSWORD: ${{ secrets.DATABASE_URL }}
+          RESTORE_FILE: ${{ steps.prepare_backup.outputs.file }}
         run: |
-          echo "🔄 Starting database restore..."
-          
-          # Find the backup file
-          BACKUP_FILE=$(find ./backup -name "*.sql.gz" -type f | head -n 1)
-          
-          if [ -z "$BACKUP_FILE" ]; then
-            echo "❌ No backup file found!"
-            exit 1
-          fi
-          
-          echo "📄 Restoring from: $BACKUP_FILE"
-          
-          # Decompress and restore
-          gunzip -c "$BACKUP_FILE" | psql "${{ steps.parse_db.outputs.db_url }}"
-          
-          echo "✅ Database restore completed"
+          set -euo pipefail
+          echo "Starting database restore from the verified backup"
+          gunzip -c "$RESTORE_FILE" | psql --set ON_ERROR_STOP=1 "${{ steps.parse_db.outputs.db_url }}"
+          echo "Database restore completed"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Run Prisma migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           echo "🔄 Ensuring database schema is up to date..."
-          npm ci
-          npx prisma generate
-          npx prisma migrate deploy
-          npx prisma migrate status
+          pnpm install --frozen-lockfile
+          pnpm --filter @roast/db exec prisma generate
+          pnpm --filter @roast/db exec prisma migrate deploy
+          pnpm --filter @roast/db exec prisma migrate status
 
       - name: Restore summary
         if: always()

@@ -18,17 +18,20 @@ export function generateReadme(): string {
 
 ${toolsSection}## How It Works
 
-Uses Perplexity's Sonar models via OpenRouter to perform web-enhanced research. Searches current information beyond AI training data and returns structured results with summaries, key findings, and source citations (3-10 sources with titles, URLs, snippets). Includes fallback mechanisms for reliability.
+Uses GPT-6 Luna by default, or another selected OpenRouter model with web search, to perform web-enhanced research. Searches current information beyond AI training data and returns structured results with summaries, key findings, and source citations (1-10 sources with titles, URLs, snippets). Includes fallback mechanisms for reliability.
 
 ## Limitations
 
-Depends on Perplexity API and OpenRouter availability. Quality varies by query complexity and available sources. Cannot access paywalled or restricted content.
+Depends on OpenRouter and search engine availability. Quality varies by query complexity and available sources. Cannot access paywalled or restricted content.
 
 ## Technical Details
 
-- Uses Perplexity Sonar models via OpenRouter API
+- Defaults to openai/gpt-6-luna with the OpenRouter web plugin (Perplexity search engine)
+- Choose any compatible OpenRouter model using the model input or Agentic profile research selector
+- Uses the existing OPENROUTER_API_KEY; no separate Perplexity key
+- Sonar models keep their built-in web search
 - Configurable focus areas: general, academic, news, technical, market
-- Returns 3-10 sources per query (configurable)
+- Returns 1-10 sources per query (configurable)
 - Fallback: structured research → basic query with parsing
 - Primary use: Supporting fact-checking and forecasting tools
 `;

@@ -10,8 +10,8 @@ export interface ModelInfo {
   createdAt: string;
 }
 
-// Default to Sonnet 4.5
-export const DEFAULT_JUDGE_MODEL = "claude-sonnet-4-5-20250929";
+// Default to Sonnet 5.5
+export const DEFAULT_JUDGE_MODEL = "claude-sonnet-5-5";
 
 let cachedModels: ModelInfo[] | null = null;
 
@@ -42,11 +42,9 @@ export async function getAvailableModels(): Promise<ModelInfo[]> {
 export function getRecommendedJudgeModels(models: ModelInfo[]): ModelInfo[] {
   // Prefer newer, more capable models for judging
   const recommendedIds = [
-    "claude-sonnet-4-5-20250929",   // Sonnet 4.5 (default)
-    "claude-opus-4-5-20251101",     // Opus 4.5
-    "claude-sonnet-4-20250514",     // Sonnet 4
-    "claude-opus-4-20250514",       // Opus 4
-    "claude-3-7-sonnet-20250219",   // Sonnet 3.7
+    "claude-sonnet-5-5",
+    "claude-opus-5-5",
+    "claude-haiku-5-5",
   ];
 
   return models.filter((m) => recommendedIds.includes(m.id));

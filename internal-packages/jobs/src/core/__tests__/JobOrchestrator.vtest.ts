@@ -12,10 +12,12 @@ vi.mock('@roast/ai/server', () => ({
 
 vi.mock('@roast/ai', () => ({
   initializeAI: vi.fn(),
+  PluginType: { AGENTIC: 'agentic', FALLACY_CHECK: 'fallacy-check' },
 }));
 
 vi.mock('@roast/db', () => ({
   prisma: {
+    pluginProfile: { findUnique: vi.fn() },
     evaluationVersion: {
       findFirst: vi.fn(),
       create: vi.fn(),
@@ -98,6 +100,26 @@ describe('JobOrchestrator', () => {
         llmThinking: 'Test thinking',
       }));
       expect(mockLogger.info).toHaveBeenCalledWith('[Job job-1] Starting processing...');
+    });
+
+    it.each([
+      ['agentic', ['agentic'], 'agenticProfileId', 'fallacyCheckProfileId'],
+      ['fallacy-check', ['fallacy-check'], 'fallacyCheckProfileId', 'agenticProfileId'],
+      ['agentic', ['agentic', 'fallacy-check'], 'agenticProfileId', 'fallacyCheckProfileId'],
+      ['fallacy-check', ['agentic', 'fallacy-check'], 'fallacyCheckProfileId', 'agenticProfileId'],
+    ])('forwards the selected %s profile to the matching workflow', async (pluginId, pluginIds, option, otherOption) => {
+      const job = createMockJob();
+      job.evaluation.agent.versions[0].pluginIds = pluginIds;
+      vi.mocked(prisma.pluginProfile.findUnique).mockResolvedValue({ pluginType: pluginId } as never);
+      mockAnalyzeDocument.mockResolvedValue(createMockAnalysisResult());
+      vi.mocked(prisma.evaluationVersion.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.evaluationVersion.create).mockResolvedValue({ id: 'eval-version-1' } as never);
+
+      const result = await orchestrator.processJob(job, { profileId: 'selected-profile' });
+
+      expect(result.success).toBe(true);
+      expect(mockAnalyzeDocument.mock.calls[0][2]).toMatchObject({ [option]: 'selected-profile' });
+      expect(mockAnalyzeDocument.mock.calls[0][2][otherOption]).toBeUndefined();
     });
 
     it('should handle job processing failure', async () => {

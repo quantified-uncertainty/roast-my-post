@@ -3,6 +3,8 @@
   "globalEnv": [
     "DATABASE_URL",
     "ANTHROPIC_API_KEY",
+    "ANALYSIS_MODEL",
+    "SEARCH_MODEL",
     "OPENAI_API_KEY",
     "OPENROUTER_API_KEY",
     "NEXTAUTH_URL",

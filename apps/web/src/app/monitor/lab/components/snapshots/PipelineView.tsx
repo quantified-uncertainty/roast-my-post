@@ -170,7 +170,7 @@ export function PipelineView({
                   {stageData?.actualApiParams && (
                     <div className="text-xs text-gray-500 mt-1">
                       <span className="font-medium text-gray-600">API params:</span> temp=
-                      {stageData.actualApiParams.temperature}, maxTokens=
+                      {stageData.actualApiParams.temperature ?? "default"}, maxTokens=
                       {stageData.actualApiParams.maxTokens}
                       {stageData.actualApiParams.reasoning?.max_tokens && (
                         <span>

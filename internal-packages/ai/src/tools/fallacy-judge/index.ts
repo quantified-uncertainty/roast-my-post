@@ -29,7 +29,7 @@ import type { UnifiedUsageMetrics } from '../../utils/usageMetrics';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT } from './prompts';
 
 // Default model for judge (can be overridden via env var)
-const DEFAULT_JUDGE_MODEL = 'claude-sonnet-4-5-20250929';
+const DEFAULT_JUDGE_MODEL = 'claude-sonnet-5-5';
 const DEFAULT_CLAUDE_TEMPERATURE = 0.1;
 const DEFAULT_OPENROUTER_TEMPERATURE = 0.1;
 
@@ -91,7 +91,7 @@ function parseJudgeConfigObject(parsed: unknown): JudgeConfig | null {
  * Also accepts array in FALLACY_JUDGE for convenience
  *
  * Example:
- * FALLACY_JUDGES='[{"model":"claude-sonnet-4-5-20250929","thinking":true},{"model":"google/gemini-3-flash-preview","thinking":false}]'
+ * FALLACY_JUDGES='[{"model":"claude-sonnet-5-5","thinking":true},{"model":"google/gemini-3-flash-preview","thinking":false}]'
  */
 export function getJudgesConfig(): JudgeConfig[] {
   // Try FALLACY_JUDGES first, then FALLACY_JUDGE (both can contain arrays)
@@ -539,6 +539,7 @@ Group similar issues together and provide your decisions. Remember:
               }],
               tool_choice: { type: 'auto' },
               thinking: resolved.claudeThinkingConfig,
+              reasoningEffort: resolved.reasoningEffort,
             },
             []
           );

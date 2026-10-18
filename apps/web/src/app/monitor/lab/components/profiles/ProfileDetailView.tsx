@@ -18,11 +18,11 @@ const DEFAULT_CONFIG: ProfileConfig = {
   version: 1,
   models: {
     extractors: [
-      { model: "claude-sonnet-4-5-20250929", temperature: 0, thinking: false },
-      { model: "google/gemini-3-flash-preview", temperature: "default", thinking: true },
-      { model: "google/gemini-2.5-flash", temperature: "default", thinking: true },
+      { model: "claude-sonnet-5-5", temperature: 0, thinking: false },
+      { model: "google/gemini-4-argon", temperature: "default", thinking: true },
+      { model: "google/gemini-3.8-flash", temperature: "default", thinking: true },
     ],
-    judge: { model: "claude-sonnet-4-5-20250929", enabled: false },
+    judge: { model: "claude-sonnet-5-5", enabled: false },
   },
   thresholds: {
     minSeverityThreshold: 60,
@@ -35,7 +35,7 @@ const DEFAULT_CONFIG: ProfileConfig = {
       id: "default-supported-elsewhere",
       type: "supported-elsewhere",
       enabled: true,
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-5-5",
       temperature: 0.1,
     },
   ],
@@ -60,7 +60,7 @@ function migrateFilterChain(config: Profile["config"] | undefined): FilterChainI
         id: "migrated-supported-elsewhere",
         type: "supported-elsewhere" as const,
         enabled: supportedElsewhere.enabled,
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-sonnet-5-5",
         temperature: 0.1,
       }];
     }

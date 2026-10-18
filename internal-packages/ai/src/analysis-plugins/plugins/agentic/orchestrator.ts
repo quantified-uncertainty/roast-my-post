@@ -21,6 +21,7 @@ import {
   getWorkspaceInstructions,
   getMcpToolInstructions,
 } from "./prompts";
+import { isAdaptiveClaude } from "../../../modelDefaults";
 import { logger } from "../../../shared/logger";
 
 // ---------------------------------------------------------------------------
@@ -45,7 +46,7 @@ function createToolGuard(workspacePath?: string, emit?: EmitFn) {
 
   return async (toolName: string, input: Record<string, unknown>) => {
     // Block spawning unwanted built-in agents
-    if (toolName === "Task") {
+    if (toolName === "Task" || toolName === "Agent") {
       const agentType = (input as { subagent_type?: string }).subagent_type;
       if (agentType && BLOCKED_BUILTIN_AGENTS.has(agentType)) {
         const msg = `Blocked spawning built-in agent: ${agentType}`;
@@ -134,7 +135,8 @@ export function buildSubAgentDefinitions(
     agents[name] = {
       description: SUBAGENT_DESCRIPTIONS[name] || `Specialized sub-agent: ${name}`,
       prompt,
-      model: sa.model === "inherit" ? undefined : (sa.model ?? undefined),
+      // SDK 0.2.x types list aliases, but its runtime accepts native model IDs.
+      model: (sa.model === "inherit" ? undefined : sa.model) as AgentDefinition["model"],
       ...(sa.maxTurns && { maxTurns: sa.maxTurns }),
       ...(disallowedTools.length > 0 && { disallowedTools }),
     };
@@ -216,6 +218,12 @@ export function buildAgenticQueryOptions(
 
   // Security: canUseTool blocks unwanted built-in agents + restricts filesystem
   const canUseTool = createToolGuard(workspacePath, emit);
+  const thinkingOptions: Partial<Options> = config.maxThinkingTokens
+    ? (isAdaptiveClaude(config.model)
+      ? { thinking: { type: "adaptive" }, effort: config.maxThinkingTokens <= 4096 ? "low" : config.maxThinkingTokens <= 16000 ? "medium" : "high" }
+      : { maxThinkingTokens: config.maxThinkingTokens })
+    : {};
+
   const workspaceOptions = workspacePath
     ? {
         cwd: workspacePath,
@@ -245,7 +253,7 @@ export function buildAgenticQueryOptions(
       agents: {}, // Disable built-in agents like Bash, Explore, etc.
       env,
       ...workspaceOptions,
-      ...(config.maxThinkingTokens && { maxThinkingTokens: config.maxThinkingTokens }),
+      ...thinkingOptions,
     };
   }
 
@@ -255,7 +263,8 @@ export function buildAgenticQueryOptions(
 
   // Build allowed tools for orchestrator
   const allowedTools = [
-    "Task", // Required for spawning sub-agents
+    "Agent", // Current SDK delegation tool
+    "Task", // Compatibility with older SDK runners
     ...config.allowedTools,
   ];
 
@@ -297,6 +306,6 @@ export function buildAgenticQueryOptions(
     permissionMode: config.permissionMode,
     env,
     ...workspaceOptions,
-    ...(config.maxThinkingTokens && { maxThinkingTokens: config.maxThinkingTokens }),
+    ...thinkingOptions,
   };
 }
