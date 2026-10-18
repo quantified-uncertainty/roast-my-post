@@ -135,8 +135,7 @@ export function buildSubAgentDefinitions(
     agents[name] = {
       description: SUBAGENT_DESCRIPTIONS[name] || `Specialized sub-agent: ${name}`,
       prompt,
-      // SDK 0.2.x types list aliases, but its runtime accepts native model IDs.
-      model: (sa.model === "inherit" ? undefined : sa.model) as AgentDefinition["model"],
+      model: sa.model === "inherit" ? undefined : sa.model,
       ...(sa.maxTurns && { maxTurns: sa.maxTurns }),
       ...(disallowedTools.length > 0 && { disallowedTools }),
     };
@@ -215,6 +214,8 @@ export function buildAgenticQueryOptions(
         Object.entries(process.env).filter(([key]) => key !== "ANTHROPIC_API_KEY")
       ) as Record<string, string>
     : { ...process.env } as Record<string, string>;
+  // SDK 0.3 enables fork agents by default; keep the configured profile's agent set.
+  env.CLAUDE_CODE_FORK_SUBAGENT ??= "0";
 
   // Security: canUseTool blocks unwanted built-in agents + restricts filesystem
   const canUseTool = createToolGuard(workspacePath, emit);

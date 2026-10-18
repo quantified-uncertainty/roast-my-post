@@ -10,7 +10,7 @@
  */
 
 import { createSdkMcpServer, tool } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod";
+import { z } from "zod4";
 import { PluginManager } from "../../PluginManager";
 import { PluginType } from "../../types/plugin-types";
 import type { Comment } from "../../../shared/types";
