@@ -103,7 +103,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.29.7",
     "@babel/preset-react": "^7.29.7",
-    "@babel/preset-typescript": "^7.29.7",
+    "@babel/preset-typescript": "^8.0.7",
     "@playwright/test": "^1.61.0",
     "@prisma/nextjs-monorepo-workaround-plugin": "^6.19.3",
     "@svgr/webpack": "^8.1.0",
