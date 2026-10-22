@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22.23.4-alpine AS builder
+FROM node:26.12.0-alpine AS builder
 WORKDIR /usr/src/app
 
 # Install dependencies for native modules and enable corepack
@@ -52,7 +52,7 @@ RUN mkdir -p /prod/web/node_modules/@roast/db/generated && \
     cp -r /usr/src/app/internal-packages/db/generated/* /prod/web/node_modules/@roast/db/generated/ || true
 
 # Production stage
-FROM node:22.23.4-alpine AS runner
+FROM node:26.12.0-alpine AS runner
 
 # Share the prepared package manager with the non-root runtime user.
 ENV COREPACK_HOME=/usr/local/share/corepack
