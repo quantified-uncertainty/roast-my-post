@@ -97,7 +97,8 @@
       "proxy-addr@<2.0.8": "2.0.8",
       "postcss-selector-parser@>=6 <7.1.6": "7.1.6",
       "tinypool@>=2 <2.1.2": "2.1.2",
-      "@prisma/config>deepmerge-ts": "8.0.2"
+      "@prisma/config>deepmerge-ts": "8.0.2",
+      "follow-redirects@<1.16.1": "1.16.1"
     }
   },
   "packageManager": "pnpm@10.34.7",
