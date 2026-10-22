@@ -90,7 +90,7 @@
     "remark-parse": "^11.0.0",
     "remark-slate-transformer": "^0.9.0",
     "server-only": "^0.0.1",
-    "slate": "^0.112.0",
+    "slate": "^0.146.0",
     "slate-history": "^0.110.3",
     "slate-react": "^0.112.1",
     "sonner": "^2.0.7",
