@@ -10,8 +10,19 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # Upgrade the Babel 7 toolchain together; preset 8 requires core 8.
+      - dependency-name: "@babel/preset-typescript"
+        update-types: ["version-update:semver-major"]
+      # These Slate versions fail typechecking and need a coordinated editor migration.
+      - dependency-name: "slate"
+        versions: [">=0.113.0 <=0.146.0"]
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # Keep Docker aligned with Node 22 in CI and Vercel until a runtime migration.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
