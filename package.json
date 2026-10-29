@@ -55,21 +55,21 @@
     "docker:quick": "pnpm run docker:validate && pnpm run docker:test"
   },
   "devDependencies": {
-    "@hono/node-server": "^1.19.17",
-    "@types/glob": "^8.1.0",
+    "@hono/node-server": "^2.1.5",
+    "@types/glob": "^9.0.0",
     "@types/iarna__toml": "^2.0.5",
     "@types/uuid": "^10.0.0",
-    "dotenv-cli": "^10.0.0",
-    "hono": "^4.13.13",
-    "knip": "^6.42.1",
-    "prisma": "^6.19.3",
+    "dotenv-cli": "^11.0.0",
+    "hono": "^4.13.14",
+    "knip": "^6.43.0",
+    "prisma": "^7.10.1",
     "raw-loader": "^4.0.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.22.4",
-    "turbo": "^2.9.18",
-    "uuid": "^11.1.1",
-    "vite": "^7.3.7"
+    "tsx": "^4.23.15",
+    "turbo": "^2.11.10",
+    "uuid": "^14.0.3",
+    "vite": "^8.3.5"
   },
   "pnpm": {
     "overrides": {
