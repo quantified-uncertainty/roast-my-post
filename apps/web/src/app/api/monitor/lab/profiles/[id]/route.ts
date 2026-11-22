@@ -120,7 +120,7 @@ const agenticConfigSchema = z.object({
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
   isDefault: z.boolean().optional(),
 });
 
@@ -178,7 +178,7 @@ export async function PUT(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid request body", details: parsed.error.errors },
+        { error: "Invalid request body", details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -202,7 +202,7 @@ export async function PUT(
       const configResult = configSchema.safeParse(config);
       if (!configResult.success) {
         return NextResponse.json(
-          { error: "Invalid config", details: configResult.error.errors },
+          { error: "Invalid config", details: configResult.error.issues },
           { status: 400 }
         );
       }

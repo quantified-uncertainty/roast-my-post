@@ -400,7 +400,7 @@ export default function CreateDocumentForm() {
 
       if (error instanceof z.ZodError) {
         let hasFieldError = false;
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           const field =
             typeof err.path?.[0] === "string"
               ? (err.path[0] as keyof DocumentInput)

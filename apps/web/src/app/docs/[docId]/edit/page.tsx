@@ -223,7 +223,7 @@ export default function EditDocumentPage({ params }: Props) {
       router.refresh(); // Force a refresh to show the updated data
     } catch (error) {
       if (error instanceof z.ZodError) {
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           if (err.path[0]) {
             setFormError(err.path[0].toString() as keyof DocumentInput, {
               message: err.message,

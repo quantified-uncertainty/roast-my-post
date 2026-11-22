@@ -16,20 +16,20 @@ describe('Generated Schemas', () => {
   
   it('should include all expected tools', () => {
     const expectedTools = [
-      'check-spelling-grammar',
-      'extract-factual-claims',
+      'spelling-grammar-checker',
+      'factual-claims-extractor',
       'fact-checker',
-      'check-math-with-mathjs',
-      'check-math',
-      'check-math-hybrid',
-      'extract-math-expressions',
-      'extract-forecasting-claims',
+      'math-validator-mathjs',
+      'math-validator-llm',
+      'math-validator-hybrid',
+      'math-expressions-extractor',
+      'binary-forecasting-claims-extractor',
       'document-chunker',
       'smart-text-searcher',
-      'detect-language-convention',
-      'forecaster',
+      'language-convention-detector',
+      'binary-forecaster',
       'link-validator',
-      'perplexity-research',
+      'perplexity-researcher',
     ];
     
     for (const toolId of expectedTools) {

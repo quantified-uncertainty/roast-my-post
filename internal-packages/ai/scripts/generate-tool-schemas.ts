@@ -9,7 +9,6 @@
 import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
 // Import all tools from centralized registry
 import { allTools } from '../src/tools/all-tools';
