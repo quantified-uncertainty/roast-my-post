@@ -155,7 +155,7 @@ export async function POST(
 
     if (error instanceof z.ZodError) {
       return errorResponse(
-        `Invalid request data: ${error.errors.map(e => e.message).join(', ')}`,
+        `Invalid request data: ${error.issues.map(e => e.message).join(', ')}`,
         400
       );
     }

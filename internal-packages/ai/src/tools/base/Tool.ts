@@ -1,9 +1,19 @@
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { ToolConfig, ToolContext } from './types';
 
 // Re-export types for backwards compatibility
 export type { ToolConfig, ToolContext } from './types';
+
+const jsonSchemaOptions = {
+  target: 'draft-07',
+  unrepresentable: 'any',
+  override({ zodSchema, jsonSchema }) {
+    if (zodSchema._zod.def.type === 'date') {
+      jsonSchema.type = 'string';
+      jsonSchema.format = 'date-time';
+    }
+  },
+} satisfies z.core.ToJSONSchemaParams;
 
 export abstract class Tool<TInput = unknown, TOutput = unknown> {
   abstract config: ToolConfig;
@@ -23,19 +33,11 @@ export abstract class Tool<TInput = unknown, TOutput = unknown> {
   
   // Schema conversion methods
   getInputJsonSchema() {
-    return zodToJsonSchema(this.inputSchema, {
-      $refStrategy: 'none',
-      errorMessages: false,
-      markdownDescription: false,
-    });
+    return z.toJSONSchema(this.inputSchema, { ...jsonSchemaOptions, io: 'input' });
   }
   
   getOutputJsonSchema() {
-    return zodToJsonSchema(this.outputSchema, {
-      $refStrategy: 'none',
-      errorMessages: false,
-      markdownDescription: false,
-    });
+    return z.toJSONSchema(this.outputSchema, jsonSchemaOptions);
   }
   
   // Common functionality

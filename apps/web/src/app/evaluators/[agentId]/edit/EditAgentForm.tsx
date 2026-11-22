@@ -164,7 +164,7 @@ export default function EditAgentForm({ agentId }: { agentId: string }) {
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
-        err.errors.forEach((e) => {
+        err.issues.forEach((e) => {
           if (e.path[0]) {
             setFormError(e.path[0].toString() as keyof AgentInput, {
               message: e.message,

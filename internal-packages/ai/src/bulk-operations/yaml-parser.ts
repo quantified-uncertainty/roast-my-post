@@ -144,7 +144,7 @@ export function parseYamlContent(yamlContent: string): BulkClaimYaml {
   // Validate structure
   const validation = bulkClaimYamlSchema.safeParse(parsed);
   if (!validation.success) {
-    const errors = validation.error.errors
+    const errors = validation.error.issues
       .map((e) => `${e.path.join('.')}: ${e.message}`)
       .join('; ');
     throw new Error(`Invalid YAML structure: ${errors}`);
@@ -200,7 +200,7 @@ export function expandClaims(bulkRequest: BulkClaimYaml): ExpandedClaim[] {
     // Step 3: Validate expanded claim
     const validation = expandedClaimSchema.safeParse(expanded);
     if (!validation.success) {
-      const errors = validation.error.errors
+      const errors = validation.error.issues
         .map((e) => `${e.path.join('.')}: ${e.message}`)
         .join('; ');
       throw new Error(

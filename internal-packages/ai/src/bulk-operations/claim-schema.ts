@@ -15,7 +15,7 @@ export const variableValueSchema = z.union([
   z.number(),
   z.boolean(),
   z.array(z.string()),
-  z.record(z.unknown()),
+  z.record(z.string(), z.unknown()),
 ]);
 
 // Template definition for claims
@@ -51,8 +51,8 @@ export const yamlClaimSchema = z.object({
 
 // Full YAML bulk request structure
 export const bulkClaimYamlSchema = z.object({
-  variables: z.record(variableValueSchema).optional(),
-  templates: z.record(claimTemplateSchema).optional(),
+  variables: z.record(z.string(), variableValueSchema).optional(),
+  templates: z.record(z.string(), claimTemplateSchema).optional(),
   claims: z.array(yamlClaimSchema).min(1),
 });
 
