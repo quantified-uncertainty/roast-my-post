@@ -8,7 +8,7 @@ RUN apk upgrade --no-cache && apk add --no-cache libc6-compat python3 make g++
 RUN npm install --global npm@11.21.0 corepack@0.36.0 && \
     npm install --prefix /tmp/npm-security-patches --install-strategy=nested \
       --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false \
-      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.28.1 && \
+      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.29.1 && \
     for security_package in brace-expansion ip-address postcss-selector-parser undici; do \
       rm -rf /usr/local/lib/node_modules/npm/node_modules/$security_package && \
       cp -R /tmp/npm-security-patches/node_modules/$security_package /usr/local/lib/node_modules/npm/node_modules/$security_package || exit 1; \
@@ -67,7 +67,7 @@ RUN apk upgrade --no-cache && apk add --no-cache libc6-compat
 RUN npm install --global npm@11.21.0 corepack@0.36.0 && \
     npm install --prefix /tmp/npm-security-patches --install-strategy=nested \
       --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false \
-      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.28.1 && \
+      brace-expansion@5.0.12 ip-address@10.7.4 postcss-selector-parser@7.1.6 undici@6.29.1 && \
     for security_package in brace-expansion ip-address postcss-selector-parser undici; do \
       rm -rf /usr/local/lib/node_modules/npm/node_modules/$security_package && \
       cp -R /tmp/npm-security-patches/node_modules/$security_package /usr/local/lib/node_modules/npm/node_modules/$security_package || exit 1; \
