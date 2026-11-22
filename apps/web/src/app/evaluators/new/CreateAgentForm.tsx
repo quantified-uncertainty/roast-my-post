@@ -192,7 +192,7 @@ export default function CreateAgentForm() {
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errorMessages = error.errors
+        const errorMessages = error.issues
           .map((err) => `${err.path.join(".")}: ${err.message}`)
           .join("\n");
         alert(`Validation errors:\n${errorMessages}`);
@@ -227,7 +227,7 @@ export default function CreateAgentForm() {
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        error.errors.forEach((err) => {
+        error.issues.forEach((err) => {
           if (err.path[0]) {
             setError(err.path[0].toString() as keyof AgentInput, {
               message: err.message,

@@ -4,6 +4,11 @@ packages:
   - 'dev/evaluations'
   - 'meta-evals'
 
+packageExtensions:
+  "@hookform/resolvers@5.4.0":
+    dependencies:
+      zod: "4.6.7"
+
 # Native/compiler dependencies whose installation scripts are required.
 allowBuilds:
   "@prisma/client": true

@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-// Add Node.js shims for OpenAI
-import 'openai/shims/node';
 
 import { analyzeDocument } from "../analyzeDocument";
 import type { Agent } from "@roast/ai";
