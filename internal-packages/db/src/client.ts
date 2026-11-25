@@ -34,10 +34,12 @@ function createExtendedClient() {
   });
 }
 
-// Simple singleton pattern for Prisma client
-const globalForPrisma = globalThis as unknown as {
+interface GlobalWithPrisma {
   prisma: ReturnType<typeof createExtendedClient> | undefined;
-};
+}
+
+// Simple singleton pattern for Prisma client
+const globalForPrisma = globalThis as unknown as GlobalWithPrisma;
 
 export const prisma = globalForPrisma.prisma ?? createExtendedClient();
 

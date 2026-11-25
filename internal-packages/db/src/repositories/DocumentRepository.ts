@@ -8,7 +8,6 @@
 
 import { prisma as defaultPrisma } from '../client';
 import { generateId } from '../utils/generateId';
-import type { PrismaClient } from '../client';
 
 // Types defined in this package to avoid circular dependencies
 export interface DocumentEntity {
@@ -27,6 +26,26 @@ export interface DocumentEntity {
   markdownPrepend?: string;
 }
 
+export interface DocumentReview {
+  id: string;
+  agentId: string;
+  agentName: string;
+  agentDescription: string;
+  status: string;
+  createdAt: Date;
+  summary: string | undefined;
+  analysis: string | undefined;
+  grade: number | null | undefined;
+  comments: unknown[];
+  completedAt: Date | undefined;
+}
+
+export interface DocumentSubmitter {
+  id: string;
+  name: string | null;
+  email: string | null;
+}
+
 export interface DocumentWithEvaluations {
   id: string;
   title: string;
@@ -37,15 +56,11 @@ export interface DocumentWithEvaluations {
   platforms: string[];
   createdAt: Date;
   updatedAt: Date;
-  submittedBy?: {
-    id: string;
-    name: string | null;
-    email: string;
-  };
+  submittedBy?: DocumentSubmitter;
   importUrl: string | null;
   ephemeralBatchId: string | null;
   notifyOnComplete: boolean;
-  reviews: any[];
+  reviews: DocumentReview[];
   intendedAgents: string[];
 }
 
@@ -70,6 +85,27 @@ export interface UpdateDocumentData {
   intendedAgentIds?: string[];
 }
 
+export interface DocumentSearchResult {
+  id: string;
+  title: string;
+  content: string;
+  document: {
+    id: string;
+    createdAt: Date;
+    submittedBy: {
+      id: string;
+      name: string | null;
+      email: string | null;
+    };
+  };
+}
+
+export interface DocumentStatistics {
+  totalDocuments: number;
+  totalEvaluations: number;
+  recentDocuments: number;
+}
+
 export interface DocumentSummary {
   id: string;
   createdAt: Date;
@@ -92,12 +128,12 @@ export interface DocumentRepositoryInterface {
   findAll(): Promise<DocumentWithEvaluations[]>;
   create(data: CreateDocumentData): Promise<DocumentEntity>;
   updateContent(id: string, content: string, title: string, markdownPrepend?: string): Promise<void>;
-  updateMetadata(id: string, data: { intendedAgentIds?: string[] }): Promise<void>;
+  updateMetadata(id: string, data: UpdateDocumentData): Promise<void>;
   setNotifyOnComplete(id: string, notifyOnComplete: boolean): Promise<void>;
   delete(id: string): Promise<boolean>;
   checkOwnership(docId: string, userId: string): Promise<boolean>;
-  search(query: string, limit?: number, requestingUserId?: string): Promise<any[]>;
-  getStatistics(): Promise<any>;
+  search(query: string, limit?: number, requestingUserId?: string): Promise<DocumentSearchResult[]>;
+  getStatistics(): Promise<DocumentStatistics>;
 }
 
 export class DocumentRepository implements DocumentRepositoryInterface {
@@ -434,7 +470,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Update document metadata (doesn't create new version)
    */
-  async updateMetadata(id: string, data: { intendedAgentIds?: string[] }): Promise<void> {
+  async updateMetadata(id: string, data: UpdateDocumentData): Promise<void> {
     // Since intendedAgents is in DocumentVersion, we need to update the latest version
     if (data.intendedAgentIds !== undefined) {
       const latestVersion = await this.prisma.documentVersion.findFirst({
@@ -492,7 +528,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Search documents
    */
-  async search(query: string, limit = 50, requestingUserId?: string): Promise<any[]> {
+  async search(query: string, limit = 50, requestingUserId?: string): Promise<DocumentSearchResult[]> {
     // Build privacy filter for the document relation
     const privacyFilter = requestingUserId
       ? {
@@ -550,7 +586,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Get document statistics
    */
-  async getStatistics(): Promise<any> {
+  async getStatistics(): Promise<DocumentStatistics> {
     const [totalDocuments, totalEvaluations, recentDocuments] = await Promise.all([
       this.prisma.document.count(),
       this.prisma.evaluation.count(),
@@ -573,6 +609,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Convert database record to domain entity
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Prisma result with complex include shape
   private toDomainEntity(doc: any): DocumentEntity {
     if (!doc.versions || doc.versions.length === 0) {
       throw new Error(`Document ${doc.id} has no versions`);
@@ -600,6 +637,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   /**
    * Convert database record to document with evaluations
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Prisma result with complex include shape
   private toDocumentWithEvaluations(doc: any): DocumentWithEvaluations {
     if (!doc.versions || doc.versions.length === 0) {
       throw new Error(`Document ${doc.id} has no versions`);
@@ -608,6 +646,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
     const latestVersion = doc.versions[0];
     
     // Process evaluations/reviews
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Prisma evaluation with complex include shape
     const reviews = (doc.evaluations || []).map((evaluation: any) => {
       const latestEvalVersion = evaluation.versions?.[0];
       const latestJob = evaluation.jobs?.[0];

@@ -22,6 +22,3 @@ export function generateId(size: number = 21): string {
   
   return result;
 }
-
-// For backwards compatibility with existing code
-export default generateId;

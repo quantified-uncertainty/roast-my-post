@@ -6,7 +6,6 @@
  */
 
 import { prisma as defaultPrisma } from '../client';
-import type { PrismaClient } from '../client';
 import { generateId } from './generateId';
 
 export interface ActivePause {
